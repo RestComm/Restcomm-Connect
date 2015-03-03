@@ -99,8 +99,6 @@ import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.IPUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
-import scala.concurrent.Await;
-import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -110,7 +108,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.util.Timeout;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -204,6 +201,7 @@ public final class Call extends UntypedActor {
     private static Boolean recording = false;
     private ActorRef outboundCall;
     private ActorRef outboundCallBridgeEndpoint;
+    private boolean liveCallModification = false;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -259,6 +257,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(acquiringMediaSession, acquiringBridge));
         transitions.add(new Transition(acquiringBridge, canceled));
         transitions.add(new Transition(acquiringBridge, acquiringRemoteConnection));
+        transitions.add(new Transition(acquiringBridge, inProgress));
         transitions.add(new Transition(acquiringRemoteConnection, canceled));
         transitions.add(new Transition(acquiringRemoteConnection, initializingRemoteConnection));
         transitions.add(new Transition(initializingRemoteConnection, canceled));
@@ -298,6 +297,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(inProgress, closingRemoteConnection));
         transitions.add(new Transition(inProgress, acquiringMediaGatewayInfo));
         transitions.add(new Transition(inProgress, failed));
+        transitions.add(new Transition(inProgress, acquiringBridge));
         transitions.add(new Transition(inProgress, inProgress));
         transitions.add(new Transition(acquiringInternalLink, closingRemoteConnection));
         transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
@@ -493,6 +493,38 @@ public final class Call extends UntypedActor {
             sender.tell(outboundCall, self);
         } else if (InitializeOutbound.class.equals(klass)) {
             fsm.transition(message, queued);
+        } else if (ChangeCallDirection.class.equals(klass)) {
+            //Needed for LiveCallModification API where an the outgoingCall needs to move to the new destination also.
+            //We need to change the Call Direction and also release the internal link
+            this.direction = INBOUND;
+            liveCallModification = true;
+            conference = null;
+            outboundCall = null;
+            if (bridge != null) {
+                logger.info("Call :"+self().path()+" Bridge endpoint: "+bridge.path()+" isTerminated: "+bridge.isTerminated());
+            } else {
+                logger.info("Call :"+self().path()+" Bridge endpoint is null");
+            }
+            if (group != null) {
+                logger.info("Call :"+self().path()+" group: "+group.path()+" isTerminated: "+group.isTerminated());
+            } else {
+                logger.info("Call :"+self().path()+" Group is null");
+            }
+            //            if (bridge != null) {
+            //                gateway.tell(new DestroyEndpoint(bridge), self());
+            //                context().stop(bridge);
+            //                bridge = null;
+            //            }
+            if (group == null || group.isTerminated()) {
+                group = getMediaGroup(message);
+            }
+//            if (internalLink != null && !internalLink.isTerminated()) {
+//                gateway.tell(new DestroyLink(internalLink), null);
+//                context().stop(internalLink);
+//                context().stop(internalLinkEndpoint);
+//                internalLink = null;
+//            }
+//            fsm.transition(message, acquiringBridge);
         } else if (Answer.class.equals(klass) || Dial.class.equals(klass)) {
             if (!inProgress.equals(state) ) {
                 fsm.transition(message, acquiringMediaGatewayInfo);
@@ -538,7 +570,11 @@ public final class Call extends UntypedActor {
             } else if (acquiringMediaSession.equals(state)) {
                 fsm.transition(message, acquiringBridge);
             } else if (acquiringBridge.equals(state)) {
-                fsm.transition(message, acquiringRemoteConnection);
+                if (!liveCallModification) {
+                    fsm.transition(message, acquiringRemoteConnection);
+                } else {
+                    fsm.transition(message, inProgress);
+                }
             } else if (acquiringRemoteConnection.equals(state)) {
                 fsm.transition(message, initializingRemoteConnection);
             } else if (acquiringInternalLink.equals(state)) {
@@ -696,10 +732,17 @@ public final class Call extends UntypedActor {
             }
         } else if (inProgress.equals(state)) {
             if (CreateMediaGroup.class.equals(klass)) {
-                if (group != null) {
-                    context.stop(group);
+//                logger.info("Before group set to null, bridge: "+bridge.path()+" isTerminated: "+bridge.isTerminated());
+//                if (group != null) {
+//                    logger.info("group was not null, will set it to null and get new one for call: "+self().path());
+//                    context.stop(group);
+//                }
+//                logger.info("After group set to null, bridge: "+bridge.path()+" isTerminated: "+bridge.isTerminated());
+                if (group == null || group.isTerminated()) {
+                    logger.info("group is null or terminated, will get new one for call: "+self().path());
+                    group = getMediaGroup(message);
                 }
-                group = getMediaGroup(message);
+                logger.info("1 MediaGroup for call: "+self().path()+ " will be sent to sender: "+sender.path());
                 sender.tell(new CallResponse<ActorRef>(group), self);
             } else if (DestroyMediaGroup.class.equals(klass)) {
                 final DestroyMediaGroup request = (DestroyMediaGroup) message;
@@ -733,11 +776,28 @@ public final class Call extends UntypedActor {
                 fsm.transition(message, notFound);
             }
         } else if (CreateMediaGroup.class.equals(klass)) {
-            if (group != null) {
-                context.stop(group);
+            if (group == null || group.isTerminated()) {
+                logger.info("group is null or terminated, will get new one for call: "+self().path());
+                group = getMediaGroup(message);
             }
-            group = getMediaGroup(message);
+            logger.info("2 MediaGroup for call: "+self().path()+ " will be sent to sender: "+sender.path());
             sender.tell(new CallResponse<ActorRef>(group), self);
+//            if (group != null) {
+//                context.stop(group);
+//            }
+//            //LCM Hack
+//            //            if (bridge == null) {
+//            //                final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+//            //                Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new CreateBridgeEndpoint(session), expires);
+//            //                MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+//            //                bridge = futureResponse.get();
+//            //                if (!bridge.isTerminated() && bridge != null) {
+//            //                    logger.info("Bridge for call: "+self().path()+" acquired and is not terminated. Will proceed to get MediaGroup");
+//            //                }
+//            //            }
+//            group = getMediaGroup(message);
+//            sender.tell(new CallResponse<ActorRef>(group), self);
+//            logger.info("2 MediaGroup for call: "+self().path()+ " created and sent to sender: "+sender.path());
         }
     }
 
@@ -822,8 +882,10 @@ public final class Call extends UntypedActor {
         final ActorRef observer = request.observer();
         if (observer != null) {
             observers.remove(observer);
+            logger.info("Call: "+self().path()+" removed observer: "+observer.path());
         } else {
             observers.clear();
+            logger.info("Call: "+self().path()+" removed all observers, List size: "+observers.size());
         }
     }
 
@@ -964,8 +1026,10 @@ public final class Call extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<MediaSession> response = (MediaGatewayResponse<MediaSession>) message;
-            session = response.get();
+            if (session == null) {
+                final MediaGatewayResponse<MediaSession> response = (MediaGatewayResponse<MediaSession>) message;
+                session = response.get();
+            }
             gateway.tell(new CreateBridgeEndpoint(session), source);
         }
     }
@@ -1010,11 +1074,21 @@ public final class Call extends UntypedActor {
             if (OUTBOUND_DIAL.equals(direction) || OUTBOUND_API.equals(direction)) {
                 open = new OpenConnection(ConnectionMode.SendRecv);
             } else {
-                final String externalIp = invite.getInitialRemoteAddr();
-                final byte[] sdp = invite.getRawContent();
-                final String offer = patch(invite.getContentType(), sdp, externalIp);
-                final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
-                open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                if (!liveCallModification) {
+                    final String externalIp = invite.getInitialRemoteAddr();
+                    final byte[] sdp = invite.getRawContent();
+                    final String offer = patch(invite.getContentType(), sdp, externalIp);
+                    final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
+                    open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                } else {
+                    if (lastResponse != null && lastResponse.getStatus()==200) {
+                        final String externalIp = lastResponse.getInitialRemoteAddr();
+                        final byte[] sdp = lastResponse.getRawContent();
+                        final String offer = patch(lastResponse.getContentType(), sdp, externalIp);
+                        final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
+                        open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                    }
+                }
             }
             remoteConn.tell(open, source);
         }
@@ -1401,7 +1475,7 @@ public final class Call extends UntypedActor {
             if (updatingInternalLink.equals(state) && conference != null) { // && direction != "outbound-dial") {
                 // If this is the outbound leg for an outbound call, conference is the initial call
                 // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
-                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint alsoo
+                // Will ask the Ivr Endpoint to get connect to that Bridge endpoint also
                 conference.tell(new JoinComplete(bridge), source);
             }
             if (openingRemoteConnection.equals(state)
@@ -1511,16 +1585,18 @@ public final class Call extends UntypedActor {
             if (bridge != null) {
                 logger.info("##################### $$ Bridge for Call "+self().path()+" is terminated: "+bridge.isTerminated());
                 if (bridge.isTerminated()) {
-                    logger.info("##################### $$ Call :"+self().path()+ " bridge is terminated. Will get a new one");
-                    final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-                    Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new CreateBridgeEndpoint(session), expires);
-                    MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                    bridge = futureResponse.get();
-                    if (!bridge.isTerminated() && bridge != null) {
-                        logger.info("Bridge for call: "+self().path()+" acquired and is not terminated");
-                    } else {
-                        logger.info("Bridge endpoint for call: "+self().path()+" is still terminated or null");
-                    }
+                    //                    fsm.transition(message, acquiringMediaGatewayInfo);
+                    //                    return;
+                    logger.info("##################### $$ Call :"+self().path()+ " bridge is terminated.");
+                    //                    final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+                    //                    Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new CreateBridgeEndpoint(session), expires);
+                    //                    MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                    //                    bridge = futureResponse.get();
+                    //                    if (!bridge.isTerminated() && bridge != null) {
+                    //                        logger.info("Bridge for call: "+self().path()+" acquired and is not terminated");
+                    //                    } else {
+                    //                        logger.info("Bridge endpoint for call: "+self().path()+" is still terminated or null");
+                    //                    }
                 }
             }
             //            if (bridge == null || bridge.isTerminated()) {
@@ -1724,6 +1800,7 @@ public final class Call extends UntypedActor {
                 internalLink = null;
             }
             if (bridge != null) {
+                logger.info("Call: "+self().path()+" about to stop bridge endpoint: "+bridge.path());
                 gateway.tell(new DestroyEndpoint(bridge), source);
                 context().stop(bridge);
                 bridge = null;

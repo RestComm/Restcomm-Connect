@@ -942,6 +942,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
             }
             call.tell(new CreateMediaGroup(), source);
+            logger.info("Voiceinterpreter: "+self().path()+" sent CreateMediaGroup to Call: "+call.path());
         }
     }
 
@@ -959,6 +960,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callMediaGroup = response.get();
                 callMediaGroup.tell(new Observe(source), source);
                 callMediaGroup.tell(new StartMediaGroup(), source);
+                logger.info("VoiceInterpreter: "+self().path()+" sent StartMediaGroup for callMediaGroup: "+callMediaGroup.path()+" CallMediaGroup isTerminated: "+callMediaGroup.isTerminated());
             } else if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
@@ -1019,7 +1021,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                        }
                     } else {
                         if (callMediaGroup == null ) {
-                            logger.info("On going call but CallMediaGroup is null, will acquire call media group");
+                            logger.info("On going call but CallMediaGroup is null, will acquire call media group. VoiceInterpreter: "+self().path());
                             fsm.transition(message, acquiringCallMediaGroup);
                             return;
                         }
@@ -2140,7 +2142,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     @Override
     public void postStop() {
         if (!fsm.state().equals(uninitialized)) {
-            logger.info("At the postStop() method. Will clean up Voice Interpreter. Keep calls: "+liveCallModification);
+            logger.info("VoiceIntepreter: "+self().path()+"At the postStop() method. Will clean up Voice Interpreter. Keep calls: "+liveCallModification);
             if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
                 outboundCall.tell(new Hangup(), null);
                 callManager.tell(new DestroyCall(outboundCall), null);

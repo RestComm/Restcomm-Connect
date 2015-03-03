@@ -153,6 +153,7 @@ public final class Link extends UntypedActor {
         } else if (StopObserving.class.equals(klass)) {
             stopObserving(message);
         } else if (InitializeLink.class.equals(klass)) {
+            logger.info("Link: "+self().path()+" ,received InitializeLink message from sender: "+sender().path());
             fsm.transition(message, initializingPrimary);
         } else if (EndpointCredentials.class.equals(klass)) {
             if (initializingPrimary.equals(state)) {
@@ -305,8 +306,12 @@ public final class Link extends UntypedActor {
             final InitializeLink request = (InitializeLink) message;
             primaryEndpoint = request.primaryEndpoint();
             secondaryEndpoint = request.secondaryEndpoint();
-            if (primaryEndpoint != null) {
+            logger.info("Link: "+self().path()+" ,state: "+fsm.state()+" ,primaryEndpoint: "+primaryEndpoint.path()+" ,secondaryEndpoint: "+secondaryEndpoint.path());
+            if (primaryEndpoint != null && !primaryEndpoint.isTerminated()) {
                 primaryEndpoint.tell(new InviteEndpoint(), source);
+                logger.info("Link: "+self().path()+" ,state: "+fsm.state()+" InviteEndpoint sent to primaryEndpoint: "+primaryEndpoint.path());
+            } else {
+                logger.info("Link: "+self().path()+" ,state: "+fsm.state()+" InviteEndpoint DIDN'T sent to primaryEndpoint: "+primaryEndpoint.path()+" primaryEndpoint is Terminated: "+primaryEndpoint.isTerminated());
             }
         }
     }
@@ -323,6 +328,7 @@ public final class Link extends UntypedActor {
             if (secondaryEndpoint != null) {
                 secondaryEndpoint.tell(new InviteEndpoint(), source);
             }
+            logger.info("Link: "+self().path()+" ,state: "+fsm.state()+" ,primaryEndpointId: "+primaryEndpointId+" ,secondaryEndpoint: "+secondaryEndpoint.path()+" secondaryEndpoint isTerminated: "+secondaryEndpoint.isTerminated());
         }
     }
 

@@ -97,6 +97,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author ivelin.ivanov@telestax.com
  * @author jean.deruelle@telestax.com
+ * @author gvagenas@telestax.com
  */
 public final class CallManager extends UntypedActor {
 
@@ -619,28 +620,15 @@ public final class CallManager extends UntypedActor {
         final ActorRef self = self();
         final ActorRef call = request.call();
         final Boolean moveConnectedCallLeg = request.moveConnecteCallLeg();
+        //Get the outbound leg of this call
         ActorRef outboundCall = request.outboundCall();
-        //        if (moveConnectedCallLeg)
-        //            outboundCall =
+
         logger.info("About to start Live Call Modification");
         logger.info("Initial Call path: "+call.path());
         if (outboundCall != null)
             logger.info("Outbound Call path: "+outboundCall.path());
 
-        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
-        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
-                Duration.create(10, TimeUnit.SECONDS));
-        List<ActorRef> callObservers = response.get();
-
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Will tell Call actors to stop observing existing Interpreters");
-            call.tell(new StopObserving(null), self());
-            if(outboundCall != null)
-                outboundCall.tell(new StopObserving(null), self());
-        }
-
+        //Prepare VoiceInterpreter
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -655,14 +643,38 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
+        //Interpreter for the first call leg
         final ActorRef interpreter = builder.build();
+
+        //Get first call leg observers and remove them
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
+        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
+                Duration.create(10, TimeUnit.SECONDS));
+        List<ActorRef> callObservers = response.get();
+
+        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
+            ActorRef existingInterpreter = (ActorRef) iterator.next();
+            logger.info("Will tell Call actors to stop observing existing Interpreters");
+            call.tell(new StopObserving(null), self());
+            if(outboundCall != null)
+                outboundCall.tell(new StopObserving(null), self());
+            logger.info("Existing observers removed from Calls actors");
+        }
+
+        //Ask first call leg to execute with the new Interpreter
         interpreter.tell(new StartInterpreter(request.call()), self);
         logger.info("New Intepreter for first call leg: "+interpreter.path()+" started");
+
+        //Check what to do with the second/outbound call leg of the call
         if (outboundCall != null) {
             if (moveConnectedCallLeg) {
-                outboundCall.tell(new CreateMediaGroup(), null);
                 final ActorRef outboundInterpreter = builder.build();
-                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
+                logger.info("About to redirect outbound Call :"+outboundCall.path()+ " with 200ms delay to outbound interpreter: "+outboundInterpreter.path());
+                system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundCall, new ChangeCallDirection(), system.dispatcher());
+                system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundInterpreter, new StartInterpreter(outboundCall), system.dispatcher());
+//                outboundCall.tell(new ChangeCallDirection(), null);
+//                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
                 logger.info("New Intepreter for Second call leg: "+outboundInterpreter.path()+" started");
             } else {
                 logger.info("moveConnectedCallLeg is: "+moveConnectedCallLeg+" so will hangup outboundCall");
@@ -677,7 +689,8 @@ public final class CallManager extends UntypedActor {
             logger.info("Existing Interpreter path: "+existingInterpreter.path()+" will be stopped");
             StopInterpreter stopInterpreter = StopInterpreter.instance();
             stopInterpreter.setLiveCallModification(true);
-            existingInterpreter.tell(stopInterpreter, null);
+            system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter, system.dispatcher());
+//            existingInterpreter.tell(stopInterpreter, null);
         }
     }
 
