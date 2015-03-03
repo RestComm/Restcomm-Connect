@@ -285,6 +285,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(processingGatherChildren, finished));
         transitions.add(new Transition(gathering, finished));
         transitions.add(new Transition(finishGathering, ready));
+        transitions.add(new Transition(finishGathering, finishGathering));
         transitions.add(new Transition(finishGathering, finished));
         transitions.add(new Transition(creatingSmsSession, finished));
         transitions.add(new Transition(sendingSms, ready));
@@ -761,7 +762,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, ready);
                 } else if (creatingRecording.equals(state)) {
                     fsm.transition(message, finishRecording);
-                } else if (gathering.equals(state)) {
+                } //This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might come later
+                else if (gathering.equals(state) || (finishGathering.equals(state) && !super.dtmfReceived)) {
                     fsm.transition(message, finishGathering);
                 } else if (initializingConferenceMediaGroup.equals(state)) {
                     fsm.transition(message, joiningConference);
