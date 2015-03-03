@@ -283,9 +283,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
             boolean isDidAssigned = true;
-            if(isRealNumber) {
-                isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
-            }
+            //Issue https://telestax.atlassian.net/browse/RESTCOMM-680. RealPhone numbers should be assigned only using the ProvisionProvider (searching etc)
+//            if(isRealNumber) {
+//                isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+//            }
             if(isDidAssigned) {
                 dao.addIncomingPhoneNumber(incomingPhoneNumber);
                 if (APPLICATION_JSON_TYPE == responseType) {
