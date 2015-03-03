@@ -548,12 +548,28 @@ public class XmsCallController extends MediaServerController {
         notifyObservers(response, self);
     }
 
-    private void onMute(Mute message, ActorRef self, ActorRef sender) throws Exception {
-        // TODO ask JSR driver to mute
+    private void onMute(Mute message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            try {
+                if (this.mediaMixer != null) {
+                    this.networkConnection.join(Direction.RECV, this.mediaMixer);
+                }
+            } catch (MsControlException e) {
+                logger.error("Could not mute call: " + e.getMessage(), e);
+            }
+        }
     }
 
     private void onUnmute(Unmute message, ActorRef self, ActorRef sender) throws Exception {
-        // TODO ask JSR driver to unmute
+        if (is(active)) {
+            try {
+                if (this.mediaMixer != null) {
+                    this.networkConnection.join(Direction.DUPLEX, this.mediaMixer);
+                }
+            } catch (MsControlException e) {
+                logger.error("Could not unmute call: " + e.getMessage(), e);
+            }
+        }
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
@@ -561,7 +577,8 @@ public class XmsCallController extends MediaServerController {
             try {
                 List<URI> uris = message.uris();
                 Parameters params = this.mediaGroup.createParameters();
-                params.put(Player.REPEAT_COUNT, message.iterations() - 1);
+                int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
+                params.put(Player.REPEAT_COUNT, repeatCount);
                 this.playerListener.setRemote(sender);
                 this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
             } catch (MsControlException e) {

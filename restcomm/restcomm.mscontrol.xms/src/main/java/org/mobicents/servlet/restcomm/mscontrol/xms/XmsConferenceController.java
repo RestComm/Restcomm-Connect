@@ -22,6 +22,7 @@
 package org.mobicents.servlet.restcomm.mscontrol.xms;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,13 +34,16 @@ import javax.media.mscontrol.MediaEventListener;
 import javax.media.mscontrol.MediaSession;
 import javax.media.mscontrol.MsControlException;
 import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.join.Joinable.Direction;
 import javax.media.mscontrol.mediagroup.MediaGroup;
+import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
 import javax.media.mscontrol.mixer.MediaMixer;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
+import javax.media.mscontrol.resource.RTC;
 
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -60,8 +64,10 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerEr
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -234,8 +240,9 @@ public class XmsConferenceController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** Call Controller Current State: \"" + state.toString());
-        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        logger.info("********** Conference Controller Current State: \"" + state.toString());
+        logger.info("********** Conference Controller Processing Message: \"" + klass.getName() + " sender : "
+                + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -249,10 +256,14 @@ public class XmsConferenceController extends MediaServerController {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (StartMediaGroup.class.equals(klass)) {
             onStartMediaGroup((StartMediaGroup) message, self, sender);
+        } else if (StopMediaGroup.class.equals(klass)) {
+            onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         } else if (QueryMediaMixer.class.equals(klass)) {
             onQueryMediaMixer((QueryMediaMixer) message, self, sender);
+        } else if (Play.class.equals(klass)) {
+            onPlay((Play) message, self, sender);
         }
 
     }
@@ -302,8 +313,6 @@ public class XmsConferenceController extends MediaServerController {
             // this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
             // this.mediaGroup.getRecorder().addListener(this.recorderListener);
 
-            // join the media group to the mixer
-            this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
             sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
         } catch (MsControlException e) {
             // TODO Auto-generated catch block
@@ -314,18 +323,25 @@ public class XmsConferenceController extends MediaServerController {
 
     private void onStartMediaGroup(StartMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
         if (is(active)) {
-            // Join network connection to audio media group
-            if (this.mediaGroup != null) {
-                this.networkConnection.join(Direction.DUPLEX, this.mediaGroup);
-            }
+            // join the media group to the mixer
+            this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
 
             // Tell observers the media group has been created
             final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
             notifyObservers(response, self);
         }
     }
+    
+    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
+        if (is(active) && this.mediaGroup != null) {
+            this.mediaGroup.stop();
+        }
+    }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && this.mediaGroup != null) {
+            this.mediaGroup.release();
+        }
         if (is(active) && this.mediaGroup != null) {
             this.mediaGroup.release();
         }
@@ -334,6 +350,23 @@ public class XmsConferenceController extends MediaServerController {
     private void onQueryMediaMixer(QueryMediaMixer message, ActorRef self, ActorRef sender) {
         MediaServerControllerResponse<MediaMixer> response = new MediaServerControllerResponse<MediaMixer>(this.mediaMixer);
         sender.tell(response, self);
+    }
+
+    private void onPlay(Play message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            try {
+                List<URI> uris = message.uris();
+                Parameters params = this.mediaGroup.createParameters();
+                int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
+                params.put(Player.REPEAT_COUNT, repeatCount);
+                this.playerListener.setRemote(sender);
+                this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+            } catch (MsControlException e) {
+                logger.error("Play failed: " + e.getMessage());
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
+            }
+        }
     }
 
     /*
