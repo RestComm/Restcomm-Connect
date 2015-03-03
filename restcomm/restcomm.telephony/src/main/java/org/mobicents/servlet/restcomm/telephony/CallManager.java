@@ -370,6 +370,51 @@ public final class CallManager extends UntypedActor {
         response.send();
     }
 
+    private void info(final SipServletRequest request) throws IOException {
+        final ActorRef self = self();
+        final SipApplicationSession application = request.getApplicationSession();
+
+        // if this response is coming from a client that is in a p2p session with another registered client
+        // we will just proxy the response
+        SipSession linkedB2BUASession = B2BUAHelper.getLinkedSession(request);
+        if (linkedB2BUASession != null) {
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("B2BUA: Got INFO request: \n %s", request));
+            }
+            request.getSession().setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, request);
+            SipServletRequest clonedInfo = linkedB2BUASession.createRequest("INFO");
+            linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedInfo);
+
+            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
+            SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
+            InetAddress infoRURI = null;
+            try {
+                infoRURI = InetAddress.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
+            } catch (UnknownHostException e) {
+            }
+            if (toInetUri != null && infoRURI == null) {
+                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the CloneBye request");
+                clonedInfo.setRequestURI(toInetUri);
+            } else if (toInetUri != null
+                    && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
+                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the CloneInfo request");
+                clonedInfo.setRequestURI(toInetUri);
+            } else if (fromInetUri != null
+                    && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
+                logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
+                        + " as a request uri of the CloneInfo request");
+                clonedInfo.setRequestURI(fromInetUri);
+            }
+            clonedInfo.send();
+        } else {
+            final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
+            call.tell(request, self);
+        }
+    }
+
     /**
      * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
@@ -517,6 +562,8 @@ public final class CallManager extends UntypedActor {
                 cancel(request);
             } else if ("BYE".equals(method)) {
                 bye(request);
+            } else if ("INFO".equals(method)) {
+                info(request);
             }
         } else if (CreateCall.class.equals(klass)) {
             try {

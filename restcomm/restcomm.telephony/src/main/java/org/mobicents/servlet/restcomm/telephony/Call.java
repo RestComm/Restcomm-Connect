@@ -658,6 +658,8 @@ public final class Call extends UntypedActor {
                 }
             } else if ("BYE".equalsIgnoreCase(method)) {
                 fsm.transition(message, closingRemoteConnection);
+            } else if ("INFO".equalsIgnoreCase(method)) {
+                processInfo(request);
             }
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
@@ -798,6 +800,25 @@ public final class Call extends UntypedActor {
 //            group = getMediaGroup(message);
 //            sender.tell(new CallResponse<ActorRef>(group), self);
 //            logger.info("2 MediaGroup for call: "+self().path()+ " created and sent to sender: "+sender.path());
+        }
+    }
+
+    private void processInfo(final SipServletRequest request) throws IOException {
+        final SipServletResponse okay = request.createResponse(SipServletResponse.SC_OK);
+        okay.send();
+        String digits = null;
+        if (request.getContentType().equalsIgnoreCase("application/dtmf-relay")){
+            final String content = new String(request.getRawContent());
+            digits = content.split("\n")[0].replaceFirst("Signal=","").trim();
+        } else {
+        digits = new String(request.getRawContent());
+        }
+        if (digits != null) {
+            MediaGroupResponse<String> infoResponse = new MediaGroupResponse<String>(digits);
+            for (final ActorRef observer : observers) {
+                observer.tell(infoResponse, self());
+            }
+            group.tell(new Stop(), self());
         }
     }
 
