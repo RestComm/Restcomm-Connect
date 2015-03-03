@@ -285,6 +285,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(processingGatherChildren, finished));
         transitions.add(new Transition(gathering, finished));
         transitions.add(new Transition(finishGathering, ready));
+        transitions.add(new Transition(finishGathering, finishGathering));
         transitions.add(new Transition(finishGathering, finished));
         transitions.add(new Transition(creatingSmsSession, finished));
         transitions.add(new Transition(sendingSms, ready));
@@ -761,7 +762,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, ready);
                 } else if (creatingRecording.equals(state)) {
                     fsm.transition(message, finishRecording);
-                } else if (gathering.equals(state)) {
+                } //This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might come later
+                else if (gathering.equals(state) || (finishGathering.equals(state) && !super.dtmfReceived)) {
                     fsm.transition(message, finishGathering);
                 } else if (initializingConferenceMediaGroup.equals(state)) {
                     fsm.transition(message, joiningConference);
@@ -2144,6 +2146,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (!fsm.state().equals(uninitialized)) {
             logger.info("VoiceIntepreter: "+self().path()+"At the postStop() method. Will clean up Voice Interpreter. Keep calls: "+liveCallModification);
             if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
+                logger.info("At postStop(), will clean up outbound call");
                 outboundCall.tell(new Hangup(), null);
                 callManager.tell(new DestroyCall(outboundCall), null);
                 outboundCall = null;
@@ -2152,33 +2155,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
             final StopMediaGroup stop = new StopMediaGroup();
             if (confInterpreter != null) {
+                logger.info("At postStop(), will clean up conference interpreter");
                 confInterpreter.tell(StopInterpreter.instance(), null);
                 getContext().stop(confInterpreter);
                 confInterpreter = null;
             }
 
-            if (conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated()) {
+            if (conference != null && conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated()) {
+                logger.info("At postStop(), will remove call from conference room");
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, null);
                 conference.tell(new StopObserving(self()), null);
-                conferenceMediaGroup.tell(stop, null);
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-                conference.tell(destroy, null);
-                getContext().stop(conferenceMediaGroup);
-                conferenceMediaGroup = null;
             }
 
-            if (conference != null)
-                getContext().stop(conference);
-
             // Destroy the media group(s).
-            if (callMediaGroup != null) {
+            if (callMediaGroup != null && !liveCallModification) {
+                logger.info("At postStop(), will stop call media group");
                 callMediaGroup.tell(stop, null);
                 getContext().stop(callMediaGroup);
                 callMediaGroup = null;
             }
 
             if (call != null && !liveCallModification) {
+                logger.info("At postStop(), will clean up call");
                 final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
                 call.tell(destroy, null);
                 callManager.tell(new DestroyCall(call), null);

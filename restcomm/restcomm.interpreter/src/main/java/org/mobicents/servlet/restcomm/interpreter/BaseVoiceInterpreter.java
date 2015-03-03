@@ -232,6 +232,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Tag verb;
     Tag gatherVerb;
     Boolean processingGather = false;
+    Boolean dtmfReceived = false;
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
@@ -1305,6 +1306,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         verb = gatherVerb;
                     final StartGathering start = StartGathering.instance();
                     source.tell(start, source);
+                    processingGather = false;
                 }
             }
         }
@@ -1356,10 +1358,12 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // Some clean up.
             gatherChildren = null;
             gatherPrompts = null;
+            dtmfReceived = false;
         }
     }
 
     final class FinishGathering extends AbstractGatherAction {
+        StringBuffer collectedDigits = new StringBuffer("");
         public FinishGathering(final ActorRef source) {
             super(source);
         }
@@ -1371,8 +1375,46 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
             // Parses "action".
             Attribute attribute = verb.attribute("action");
-            String digits = response.get();
+            String digits = "";
             final String finishOnKey = finishOnKey(verb);
+            collectedDigits.append(response.get());
+            int numberOfDigits = Short.MAX_VALUE;
+            Attribute numDigitsAttribute = verb.attribute("numDigits");
+            if (numDigitsAttribute != null) {
+                final String value = numDigitsAttribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        numberOfDigits = Integer.parseInt(value);
+                    } catch (final NumberFormatException exception) {
+                        final Notification notification = notification(WARNING_NOTIFICATION, 13314, numberOfDigits
+                                + " is not a valid numDigits value");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            //Collected digits == requested num of digits the complete the collect digits
+            if (numberOfDigits!=Short.MAX_VALUE) {
+                if (collectedDigits.length()==numberOfDigits) {
+                    dtmfReceived = true;
+                    digits = collectedDigits.toString();
+                    collectedDigits = new StringBuffer();
+                    logger.info("Digits collected: "+digits);
+                } else {
+                    dtmfReceived = false;
+                    return;
+                }
+            } else {
+                //If collected digits have finish on key at the end then complete the collect digits
+                if(collectedDigits.toString().endsWith(finishOnKey)) {
+                    dtmfReceived = true;
+                    digits = collectedDigits.toString();
+                    collectedDigits = new StringBuffer();
+                    logger.info("Digits collected: "+digits);
+                } else {
+                    dtmfReceived = false;
+                    return;
+                }
+             }
             if (digits.equals(finishOnKey)) {
                 digits = "";
             }
