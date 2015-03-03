@@ -496,4 +496,12 @@ public final class Conference extends UntypedActor {
             this.confVoiceInterpreter = null;
         }
     }
+    
+    /* (non-Javadoc)
+     * @see akka.actor.UntypedActor#postStop()
+     */
+    @Override
+    public void postStop() {
+        //Will need to clean up conference resources here
+    }
 }
