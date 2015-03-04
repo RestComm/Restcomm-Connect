@@ -89,6 +89,7 @@ public final class Conference extends UntypedActor {
 
     // Media Session Controller
     private final ActorRef mscontroller;
+    private boolean moderatorJoined;
 
     public Conference(final String name, final ActorRef msController) {
         super();
@@ -124,6 +125,7 @@ public final class Conference extends UntypedActor {
         this.mscontroller = msController;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
+        this.moderatorJoined = false;
     }
 
     private boolean is(State state) {
@@ -355,9 +357,15 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            // Tell MSController that moderator is absent
-            // causing it to close the connection
-            mscontroller.tell(new CloseConnection(), super.source);
+            if (moderatorJoined) {
+                /*
+                 * hrosa - this closes the conf room for JSR-309 implementation. Only need to close the connection IF the
+                 * moderator has joined and left the room!
+                 */
+                // Tell MSController that moderator is absent
+                // causing it to close the connection
+                mscontroller.tell(new CloseConnection(), super.source);
+            }
 
             // Notify the observers.
             final ConferenceStateChanged event = new ConferenceStateChanged(name,
@@ -375,6 +383,8 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+            moderatorJoined = true;
+
             // Stop the background music if present
             stopAndCleanConfVoiceInter(super.source);
 
