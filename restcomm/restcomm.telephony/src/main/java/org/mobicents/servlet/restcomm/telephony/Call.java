@@ -66,6 +66,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
@@ -375,6 +376,8 @@ public final class Call extends UntypedActor {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
+        } else if (Leave.class.equals(klass)) {
+            onLeave((Leave) message, self, sender);
         } else if (StartRecordingCall.class.equals(klass)) {
             onStartRecordingCall((StartRecordingCall) message, self, sender);
         } else if (StopRecordingCall.class.equals(klass)) {
@@ -610,6 +613,12 @@ public final class Call extends UntypedActor {
             // Warn controller that outbound call successfully joined
             this.msController.tell(message, self);
         }
+    }
+
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) {
+        this.conference = null;
+        this.conferenceController = null;
+        this.msController.tell(message, sender);
     }
 
     private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {

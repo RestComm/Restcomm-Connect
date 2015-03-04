@@ -74,6 +74,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
@@ -117,8 +118,6 @@ public class XmsCallController extends MediaServerController {
     // Intermediate FSM states
     private final State openingMediaSession;
     private final State updatingMediaSession;
-    private final State muting;
-    private final State unmuting;
 
     // JSR-309 runtime stuff
     private final MsControlFactory msControlFactory;
@@ -183,9 +182,6 @@ public class XmsCallController extends MediaServerController {
         // Intermediate FSM states
         this.openingMediaSession = new State("opening media session", new OpeningMediaSession(source), null);
         this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
-        // TODO initialize muting/unmuting states
-        this.muting = new State("muting", null, null);
-        this.unmuting = new State("unmuting", null, null);
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -452,6 +448,8 @@ public class XmsCallController extends MediaServerController {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
+        } else if (Leave.class.equals(klass)) {
+            onLeave((Leave) message, self, sender);
         } else if (MediaServerControllerResponse.class.equals(klass)) {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (QueryNetworkConnection.class.equals(klass)) {
@@ -751,6 +749,12 @@ public class XmsCallController extends MediaServerController {
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
                 notifyObservers(response, self);
             }
+        }
+    }
+
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active)) {
+            fsm.transition(message, inactive);
         }
     }
 

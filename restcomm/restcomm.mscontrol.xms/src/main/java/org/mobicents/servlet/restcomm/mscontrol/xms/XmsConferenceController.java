@@ -54,6 +54,7 @@ import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
@@ -252,6 +253,8 @@ public class XmsConferenceController extends MediaServerController {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
         } else if (CloseMediaSession.class.equals(klass)) {
             onCloseMediaSession((CloseMediaSession) message, self, sender);
+        } else if (CloseConnection.class.equals(klass)) {
+            onCloseConnection((CloseConnection) message, self, sender);
         } else if (CreateMediaGroup.class.equals(klass)) {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (StartMediaGroup.class.equals(klass)) {
@@ -298,6 +301,12 @@ public class XmsConferenceController extends MediaServerController {
         }
     }
 
+    private void onCloseConnection(CloseConnection message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active)) {
+            fsm.transition(message, inactive);
+        }
+    }
+
     private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
         // Release existing media group if any
         if (this.mediaGroup != null) {
@@ -331,7 +340,7 @@ public class XmsConferenceController extends MediaServerController {
             notifyObservers(response, self);
         }
     }
-    
+
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
         if (is(active) && this.mediaGroup != null) {
             this.mediaGroup.stop();
@@ -339,9 +348,6 @@ public class XmsConferenceController extends MediaServerController {
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) && this.mediaGroup != null) {
-            this.mediaGroup.release();
-        }
         if (is(active) && this.mediaGroup != null) {
             this.mediaGroup.release();
         }
