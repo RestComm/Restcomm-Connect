@@ -1488,8 +1488,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 getContext().stop(interpreter);
 
             }
+
+            // Join participants
             final AddParticipant add = new AddParticipant(outboundCall);
             call.tell(add, source);
+
+            // Stop the ringing
+            callMediaGroup.tell(new Stop(), source);
         }
     }
 
@@ -1503,7 +1508,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final int timeLimit = timeLimit(verb);
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
-            callMediaGroup.tell(new Stop(), source);
         }
     }
 

@@ -350,6 +350,7 @@ public class XmsConferenceController extends MediaServerController {
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.mediaGroup != null) {
             this.mediaGroup.release();
+            this.mediaGroup = null;
         }
     }
 
