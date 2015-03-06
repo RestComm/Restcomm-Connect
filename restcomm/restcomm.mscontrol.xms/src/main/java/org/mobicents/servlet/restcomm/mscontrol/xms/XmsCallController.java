@@ -86,6 +86,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
@@ -454,6 +455,8 @@ public class XmsCallController extends MediaServerController {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (QueryNetworkConnection.class.equals(klass)) {
             onQueryNetworkConnection((QueryNetworkConnection) message, self, sender);
+        } else if (Stop.class.equals(klass)) {
+            onStop((Stop) message, self, sender);
         }
     }
 
@@ -795,6 +798,12 @@ public class XmsCallController extends MediaServerController {
 
     private void onQueryNetworkConnection(QueryNetworkConnection message, ActorRef self, ActorRef sender) {
         sender.tell(new MediaServerControllerResponse<NetworkConnection>(this.networkConnection), self);
+    }
+
+    private void onStop(Stop message, ActorRef self, ActorRef sender) {
+        if (this.mediaGroup != null) {
+            this.mediaGroup.stop();
+        }
     }
 
     /*
