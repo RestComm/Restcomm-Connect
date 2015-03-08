@@ -125,3 +125,9 @@ App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal
 	
 	
 }]);
+
+App.controller('translateController', function($translate, $scope) {
+  $scope.changeLanguage = function (langKey) {
+    $translate.use(langKey);
+  };
+});
