@@ -1,0 +1,15 @@
+{
+	"indexPageTitle": "Restcomm Editor",
+	"indexHeadDescriptorLabel": "RESTCOMM serviço de edição visual",
+	"indexUserStatusControllerLabel": "Sair",
+
+	"loginHeadTitle": "Editor Visual",
+	"loginLoginLabel": "Identificação",
+	"loginEmailLabel": "Email",
+	"loginAccountLabel": "Conta SID",
+	"loginPasswordLabel": "Senha",
+	"loginLoginPlaceholder": "Email ou Conta SID",
+	"loginPasswordPlaceholder": "Senha",
+	"loginClearButton": "Limpar",
+	"loginLoginButton": "Entrar"
+}

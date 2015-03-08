@@ -1,0 +1,15 @@
+{
+	"indexPageTitle": "Restcomm Designer",
+	"indexHeadDescriptorLabel": "RESTCOMM visual service designer",
+	"indexUserStatusControllerLabel": "Sign Out",
+
+	"loginHeadTitle": "Visual Designer",
+	"loginLoginLabel": "Login",
+	"loginEmailLabel": "Email",
+	"loginAccountLabel": "Account SID",
+	"loginPasswordLabel": "Password",
+	"loginLoginPlaceholder": "Email or Account SID",
+	"loginPasswordPlaceholder": "Password",
+	"loginClearButton": "Clear",
+	"loginLoginButton": "Login"
+}
