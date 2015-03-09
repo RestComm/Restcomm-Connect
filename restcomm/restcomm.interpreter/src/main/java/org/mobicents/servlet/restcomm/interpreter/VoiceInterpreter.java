@@ -2122,38 +2122,48 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (!fsm.state().equals(uninitialized)) {
             logger.info("At the postStop() method. Will clean up Voice Interpreter.");
             if (fsm.state().equals(bridged) && outboundCall != null) {
+                logger.info("At postStop(), will clean up outbound call");
                 outboundCall.tell(new Hangup(), null);
+                callManager.tell(new DestroyCall(outboundCall), null);
+                outboundCall = null;
             }
 
             // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
             final StopMediaGroup stop = new StopMediaGroup();
             if (confInterpreter != null) {
+                logger.info("At postStop(), will clean up conference interpreter");
                 confInterpreter.tell(StopInterpreter.instance(), null);
                 getContext().stop(confInterpreter);
                 confInterpreter = null;
             }
 
-            if (conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated()) {
+            if (conference != null && conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated()) {
+                logger.info("At postStop(), will remove call from conference room");
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, null);
                 conference.tell(new StopObserving(self()), null);
-                conferenceMediaGroup.tell(stop, null);
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-                conference.tell(destroy, null);
-                getContext().stop(conferenceMediaGroup);
-                conferenceMediaGroup = null;
             }
 
-            if (conference != null)
+            if (conference != null) {
                 getContext().stop(conference);
+            }
 
             // Destroy the media group(s).
             if (callMediaGroup != null) {
+                // XXX only run this code if !liveCallModification
+                logger.info("At postStop(), will stop call media group");
                 callMediaGroup.tell(stop, null);
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
-                call.tell(destroy, null);
                 getContext().stop(callMediaGroup);
                 callMediaGroup = null;
+            }
+
+            if (call != null) {
+                // XXX only run this code if !liveCallModification
+                logger.info("At postStop(), will clean up call");
+                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
+                call.tell(destroy, null);
+                callManager.tell(new DestroyCall(call), null);
+                call = null;
             }
             postCleanup();
         }

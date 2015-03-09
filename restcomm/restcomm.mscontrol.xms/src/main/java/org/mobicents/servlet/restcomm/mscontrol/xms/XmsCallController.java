@@ -541,7 +541,7 @@ public class XmsCallController extends MediaServerController {
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
         // Disconnect network connection from audio media group
         if (this.mediaGroup != null) {
-            this.networkConnection.unjoin(mediaGroup);
+            this.mediaGroup.stop();
         }
 
         // Tell observers the media group has been created
@@ -734,24 +734,23 @@ public class XmsCallController extends MediaServerController {
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         if (is(active)) {
-            try {
-                // Get the media mixer of the bridge
-                this.mediaMixer = (MediaMixer) message.endpoint();
+            // try {
+            // Get the media mixer of the bridge
+            this.mediaMixer = (MediaMixer) message.endpoint();
 
-                // Release local media group (bridge already has one)
-                if (this.mediaGroup != null) {
-                    // TODO check if recording only!!
-                    this.mediaGroup.join(Direction.DUPLEX, mediaMixer);
-                }
-
-                // Warn observers that media group is active
-                final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
-                notifyObservers(response, self);
-            } catch (MsControlException e) {
-                logger.error("Call bridging failed: " + e.getMessage());
-                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                notifyObservers(response, self);
+            // Release local media group (bridge already has one)
+            if (this.mediaGroup != null) {
+                this.mediaGroup.stop();
             }
+
+            // Warn observers that media group is active
+            final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
+            notifyObservers(response, self);
+            // } catch (MsControlException e) {
+            // logger.error("Call bridging failed: " + e.getMessage());
+            // final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+            // notifyObservers(response, self);
+            // }
         }
     }
 

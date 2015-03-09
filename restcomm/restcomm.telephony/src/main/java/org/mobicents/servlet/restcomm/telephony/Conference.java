@@ -47,13 +47,13 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerEr
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -142,6 +142,11 @@ public final class Conference extends UntypedActor {
             this.confVoiceInterpreter.tell(stopInterpreter, source);
             this.confVoiceInterpreter = null;
         }
+    }
+
+    @Override
+    public void postStop() {
+        // Will need to clean up conference resources here
     }
 
     /*
@@ -252,8 +257,7 @@ public final class Conference extends UntypedActor {
         if (isRunning()) {
             ActorRef waitUrlMediaGroup = message.getWaitUrlConfMediaGroup();
             if (waitUrlMediaGroup != null && !waitUrlMediaGroup.isTerminated()) {
-                final UntypedActorContext context = getContext();
-                context.stop(waitUrlMediaGroup);
+                waitUrlMediaGroup.tell(new StopMediaGroup(), self);
             }
 
             // ConferenceVoiceInterpreter is dead now. Set it to null
@@ -300,7 +304,8 @@ public final class Conference extends UntypedActor {
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
-            this.mscontroller.tell(message, sender);
+            ActorRef mediaGroup = message.group();
+            mediaGroup.tell(message, sender);
         }
     }
 
