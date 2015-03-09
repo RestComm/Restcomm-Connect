@@ -40,7 +40,6 @@ import javax.media.mscontrol.mediagroup.MediaGroup;
 import javax.media.mscontrol.mediagroup.Player;
 import javax.media.mscontrol.mediagroup.PlayerEvent;
 import javax.media.mscontrol.mixer.MediaMixer;
-import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
@@ -105,7 +104,6 @@ public class XmsConferenceController extends MediaServerController {
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
-    private NetworkConnection networkConnection;
     private MediaGroup mediaGroup;
     private MediaMixer mediaMixer;
 
@@ -308,26 +306,23 @@ public class XmsConferenceController extends MediaServerController {
     }
 
     private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
-        // Release existing media group if any
-        if (this.mediaGroup != null) {
-            this.mediaGroup.release();
-        }
-
         try {
-            // Create new media group
-            this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+            // Only one media group per conference can be created
+            // Reuse if already exists
+            if (this.mediaGroup == null) {
+                // Create new media group
+                this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
 
-            // Prepare the Media Group resources
-            this.mediaGroup.getPlayer().addListener(this.playerListener);
-            // this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
-            // this.mediaGroup.getRecorder().addListener(this.recorderListener);
-
+                // Prepare the Media Group resources
+                this.mediaGroup.getPlayer().addListener(this.playerListener);
+                // this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
+                // this.mediaGroup.getRecorder().addListener(this.recorderListener);
+            }
             sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
         } catch (MsControlException e) {
             // TODO Auto-generated catch block
             logger.error(e.getMessage(), e);
         }
-
     }
 
     private void onStartMediaGroup(StartMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
@@ -349,6 +344,7 @@ public class XmsConferenceController extends MediaServerController {
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.mediaGroup != null) {
+            this.mediaGroup.stop();
             this.mediaGroup.release();
             this.mediaGroup = null;
         }
