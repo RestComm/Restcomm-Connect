@@ -539,14 +539,23 @@ public class XmsCallController extends MediaServerController {
     }
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
-        // Disconnect network connection from audio media group
-        if (this.mediaGroup != null) {
-            this.mediaGroup.stop();
-        }
+        try {
+            if (this.mediaGroup != null) {
+                // XXX mediaGroup.stop() not implemented on dialogic connector
+                this.mediaGroup.getPlayer().stop(true);
+                this.mediaGroup.getRecorder().stop();
+                this.mediaGroup.getSignalDetector().stop();
 
-        // Tell observers the media group has been created
-        final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
-        notifyObservers(response, self);
+                // Disconnect from connection
+                this.mediaGroup.unjoin(this.networkConnection);
+            }
+
+            // Tell observers the media group has been created
+            final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
+            notifyObservers(response, self);
+        } catch (MsControlException e) {
+            call.tell(new MediaServerControllerError(e), self);
+        }
     }
 
     private void onMute(Mute message, ActorRef self, ActorRef sender) {
@@ -740,7 +749,8 @@ public class XmsCallController extends MediaServerController {
 
             // Release local media group (bridge already has one)
             if (this.mediaGroup != null) {
-                this.mediaGroup.stop();
+                this.mediaGroup.release();
+                this.mediaGroup = null;
             }
 
             // Warn observers that media group is active
@@ -800,8 +810,13 @@ public class XmsCallController extends MediaServerController {
     }
 
     private void onStop(Stop message, ActorRef self, ActorRef sender) {
-        if (this.mediaGroup != null) {
-            this.mediaGroup.stop();
+        try {
+            // XXX mediaGroup.stop() not implemented on dialogic connector
+            this.mediaGroup.getPlayer().stop(true);
+            this.mediaGroup.getRecorder().stop();
+            this.mediaGroup.getSignalDetector().stop();
+        } catch (MsControlException e) {
+            call.tell(new MediaServerControllerError(e), self);
         }
     }
 

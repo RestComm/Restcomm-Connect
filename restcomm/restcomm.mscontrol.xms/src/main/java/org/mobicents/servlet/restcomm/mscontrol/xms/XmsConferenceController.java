@@ -338,13 +338,19 @@ public class XmsConferenceController extends MediaServerController {
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
         if (is(active) && this.mediaGroup != null) {
-            this.mediaGroup.stop();
+            try {
+                // XXX mediaGroup.stop() not implemented on dialogic connector
+                this.mediaGroup.getPlayer().stop(true);
+                this.mediaGroup.getRecorder().stop();
+                this.mediaGroup.getSignalDetector().stop();
+            } catch (MsControlException e) {
+                conference.tell(new MediaServerControllerError(e), self);
+            }
         }
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.mediaGroup != null) {
-            this.mediaGroup.stop();
             this.mediaGroup.release();
             this.mediaGroup = null;
         }
