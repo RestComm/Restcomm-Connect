@@ -23,6 +23,7 @@ package org.mobicents.servlet.restcomm.mscontrol.xms;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
@@ -53,10 +54,13 @@ import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
 import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -86,13 +90,16 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -147,11 +154,13 @@ public class XmsCallController extends MediaServerController {
     private ActorRef outboundController;
     private NetworkConnection outboundConnection;
 
-    // Call Recording
+    // Call Media Operations
     private Sid accountId;
     private Sid recordingSid;
     private URI recordingUri;
     private Boolean recording;
+    private Boolean playing;
+    private Boolean collecting;
     private DateTime recordStarted;
     private DaoManager daoManager;
 
@@ -207,6 +216,9 @@ public class XmsCallController extends MediaServerController {
         this.remoteSdp = "";
         this.callOutbound = false;
         this.connectionMode = "inactive";
+        this.recording = Boolean.FALSE;
+        this.playing = Boolean.FALSE;
+        this.collecting = Boolean.FALSE;
     }
 
     private boolean is(State state) {
@@ -290,6 +302,7 @@ public class XmsCallController extends MediaServerController {
                     MediaServerControllerException error = new MediaServerControllerException(reason);
                     response = new MediaGroupResponse<String>(error, reason);
                 }
+                playing = Boolean.FALSE;
                 super.remote.tell(response, self());
             }
         }
@@ -316,6 +329,7 @@ public class XmsCallController extends MediaServerController {
                     MediaServerControllerException error = new MediaServerControllerException(reason);
                     response = new MediaGroupResponse<String>(error, reason);
                 }
+                collecting = Boolean.FALSE;
                 super.remote.tell(response, self());
             }
         }
@@ -339,24 +353,21 @@ public class XmsCallController extends MediaServerController {
             logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
             logger.info("********** Call Controller Processing Event: \"RecorderEvent\" (type = " + eventType + ")");
 
-            MediaGroupResponse<String> response = null;
-            if (event.isSuccessful()) {
-                if (RecorderEvent.RECORD_COMPLETED.equals(eventType)) {
-                    // TODO Need a way to get Digits!!!!
+            if (RecorderEvent.RECORD_COMPLETED.equals(eventType)) {
+                MediaGroupResponse<String> response = null;
+                if (event.isSuccessful()) {
                     String digits = "";
                     if (RecorderEvent.STOPPED.equals(event.getQualifier())) {
                         digits = endOnKey;
                     }
                     response = new MediaGroupResponse<String>(digits);
+                } else {
+                    String reason = event.getErrorText();
+                    MediaServerControllerException error = new MediaServerControllerException(reason);
+                    logger.error("Recording event failed: " + reason);
+                    response = new MediaGroupResponse<String>(error, reason);
                 }
-            } else {
-                String reason = event.getErrorText();
-                MediaServerControllerException error = new MediaServerControllerException(reason);
-                logger.error("Recording event failed: " + reason);
-                response = new MediaGroupResponse<String>(error, reason);
-            }
-
-            if (response != null) {
+                recording = Boolean.FALSE;
                 super.remote.tell(response, self());
             }
         }
@@ -439,6 +450,10 @@ public class XmsCallController extends MediaServerController {
             onMute((Mute) message, self, sender);
         } else if (Unmute.class.equals(klass)) {
             onUnmute((Unmute) message, self, sender);
+        } else if (StartRecordingCall.class.equals(klass)) {
+            onStartRecordingCall((StartRecordingCall) message, self, sender);
+        } else if (StopRecordingCall.class.equals(klass)) {
+            onStopRecordingCall((StopRecordingCall) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         } else if (Collect.class.equals(klass)) {
@@ -542,9 +557,20 @@ public class XmsCallController extends MediaServerController {
         try {
             if (this.mediaGroup != null) {
                 // XXX mediaGroup.stop() not implemented on dialogic connector
-                this.mediaGroup.getPlayer().stop(true);
-                this.mediaGroup.getRecorder().stop();
-                this.mediaGroup.getSignalDetector().stop();
+                if (this.playing) {
+                    this.mediaGroup.getPlayer().stop(true);
+                    this.playing = Boolean.FALSE;
+                }
+
+                if (this.recording) {
+                    this.mediaGroup.getRecorder().stop();
+                    this.recording = Boolean.FALSE;
+                }
+
+                if (this.collecting) {
+                    this.mediaGroup.getSignalDetector().stop();
+                    this.collecting = Boolean.FALSE;
+                }
 
                 // Disconnect from connection
                 this.mediaGroup.unjoin(this.networkConnection);
@@ -582,6 +608,78 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
+    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            if (runtimeSettings == null) {
+                this.runtimeSettings = message.getRuntimeSetting();
+            }
+
+            if (daoManager == null) {
+                daoManager = message.getDaoManager();
+            }
+
+            if (accountId == null) {
+                accountId = message.getAccountId();
+            }
+
+            this.callId = message.getCallId();
+            this.recordingSid = message.getRecordingSid();
+            this.recordingUri = message.getRecordingUri();
+            this.recording = true;
+
+            logger.info("Start recording call");
+            this.recordStarted = DateTime.now();
+
+            // Tell media group to start recording
+            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#");
+            onRecord(record, self, sender);
+        }
+    }
+
+    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) {
+        if (is(active) && recording) {
+            if (runtimeSettings == null) {
+                this.runtimeSettings = message.getRuntimeSetting();
+            }
+
+            if (daoManager == null) {
+                this.daoManager = message.getDaoManager();
+            }
+
+            if (accountId == null) {
+                this.accountId = message.getAccountId();
+            }
+
+            // Tell media group to stop recording
+            logger.info("Stop recording call");
+            onStop(new Stop(), self, sender);
+
+            Double duration;
+            try {
+                duration = WavUtils.getAudioDuration(this.recordingUri);
+            } catch (UnsupportedAudioFileException | IOException e) {
+                logger.warning("Could not get recording duration:" + e.getMessage() + ". Duration will be estimated.", e);
+                final DateTime end = DateTime.now();
+                duration = new Double((end.getMillis() - this.recordStarted.getMillis()) / 1000);
+            }
+
+            final Recording.Builder builder = Recording.builder();
+            builder.setSid(this.recordingSid);
+            builder.setAccountSid(this.accountId);
+            builder.setCallSid(this.callId);
+            builder.setDuration(duration);
+            builder.setApiVersion(this.runtimeSettings.getString("api-version"));
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(this.runtimeSettings.getString("api-version")).append("/Accounts/")
+                    .append(accountId.toString());
+            buffer.append("/Recordings/").append(this.recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+            final Recording recording = builder.build();
+            RecordingsDao recordsDao = this.daoManager.getRecordingsDao();
+            recordsDao.addRecording(recording);
+        }
+    }
+
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             try {
@@ -591,6 +689,7 @@ public class XmsCallController extends MediaServerController {
                 params.put(Player.REPEAT_COUNT, repeatCount);
                 this.playerListener.setRemote(sender);
                 this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+                this.playing = Boolean.TRUE;
             } catch (MsControlException e) {
                 logger.error("Play failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
@@ -642,6 +741,7 @@ public class XmsCallController extends MediaServerController {
                 this.dtmfListener.setRemote(sender);
                 this.mediaGroup.getSignalDetector().flushBuffer();
                 this.mediaGroup.getSignalDetector().receiveSignals(message.numberOfDigits(), patternArray, RTC.NO_RTC, optargs);
+                this.collecting = Boolean.TRUE;
             } catch (MsControlException e) {
                 logger.error("DTMF recognition failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
@@ -689,6 +789,7 @@ public class XmsCallController extends MediaServerController {
                 this.recorderListener.setEndOnKey(message.endInputKey());
                 this.recorderListener.setRemote(sender);
                 this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
+                this.recording = Boolean.TRUE;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
@@ -743,24 +844,25 @@ public class XmsCallController extends MediaServerController {
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         if (is(active)) {
-            // try {
             // Get the media mixer of the bridge
             this.mediaMixer = (MediaMixer) message.endpoint();
 
-            // Release local media group (bridge already has one)
-            if (this.mediaGroup != null) {
+            // attach the media group to the media mixer
+            MediaGroupStateChanged.State mediaGroupState;
+            try {
+                this.mediaGroup.unjoin(this.networkConnection);
+                this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
+                mediaGroupState = MediaGroupStateChanged.State.ACTIVE;
+            } catch (MsControlException e) {
+                logger.error("Could not join media group to media mixer: " + e.getMessage(), e);
                 this.mediaGroup.release();
                 this.mediaGroup = null;
+                mediaGroupState = MediaGroupStateChanged.State.INACTIVE;
             }
 
-            // Warn observers that media group is active
-            final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
+            // Warn observers that media group state changed
+            final MediaGroupStateChanged response = new MediaGroupStateChanged(mediaGroupState);
             notifyObservers(response, self);
-            // } catch (MsControlException e) {
-            // logger.error("Call bridging failed: " + e.getMessage());
-            // final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-            // notifyObservers(response, self);
-            // }
         }
     }
 
@@ -812,9 +914,20 @@ public class XmsCallController extends MediaServerController {
     private void onStop(Stop message, ActorRef self, ActorRef sender) {
         try {
             // XXX mediaGroup.stop() not implemented on dialogic connector
-            this.mediaGroup.getPlayer().stop(true);
-            this.mediaGroup.getRecorder().stop();
-            this.mediaGroup.getSignalDetector().stop();
+            if (this.playing) {
+                this.mediaGroup.getPlayer().stop(true);
+                this.playing = Boolean.FALSE;
+            }
+
+            if (this.recording) {
+                this.mediaGroup.getRecorder().stop();
+                this.recording = Boolean.FALSE;
+            }
+
+            if (this.collecting) {
+                this.mediaGroup.getSignalDetector().stop();
+                this.collecting = Boolean.FALSE;
+            }
         } catch (MsControlException e) {
             call.tell(new MediaServerControllerError(e), self);
         }
