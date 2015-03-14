@@ -3,8 +3,7 @@
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="collapse navbar-collapse navbar-ex1-collapse">
 			<div class='navbar-text navbar-rvd-centered'>
-				<em>Please chose a <strong>{{projectKind}}</strong> project from the list below or create a new
-					one</em>
+				<em>{{'projectManagerChooseProjectLabel1' | translate}} <strong>{{projectKind}}</strong> {{'projectManagerChooseProjectLabel2' | translate}}</em>
 			</div>
 			<ul class="nav navbar-nav">
 			</ul>
@@ -14,9 +13,9 @@
 	<div class="row">
 		<div class="col-md-3 col-centered">
 		
-			<h3 class="text-center">Existing {{projectKind}} projects</h3>
+			<h3 class="text-center">{{'projectManagerExistingProjectsLabel1' | translate}} {{projectKind}} {{'projectManagerExistingProjectsLabel2' | translate}}</h3>
 			<br />
-			<div class="text-center" ng-show="(projectList | filter:{kind:projectKind}).length==0"><em class="text-muted"><small>No projects found</small></em></div>
+			<div class="text-center" ng-show="(projectList | filter:{kind:projectKind}).length==0"><em class="text-muted"><small>{{'projectManagerNoProjectFoundLabel' | translate}}</small></em></div>
 
 			<div ng-repeat="projectItem in filteredProjectList = (projectList | filter:{kind:projectKind})" class='row rvd-project-item' >
 				<div class="row">
@@ -28,7 +27,7 @@
 					</div>
 					
 					<div class="col-md-12 text-center confirm-delete " ng-show="projectItem.viewMode=='confirm-delete'">
-						Delete <em>{{projectItem.name}}</em> ? &nbsp;&nbsp;&nbsp;<i class="fa fa-trash-o rvd-clickable" ng-click="deleteProject(projectItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="projectItem.viewMode='view'">Cancel</a>
+						{{'projectManagerDeleteLabel1' | translate}} <em>{{projectItem.name}}</em> {{'projectManagerDeleteLabel2' | translate}} &nbsp;&nbsp;&nbsp;<i class="fa fa-trash-o rvd-clickable" ng-click="deleteProject(projectItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="projectItem.viewMode='view'">{{'projectManagerCalcelButoon' | translate}}</a>
 					</div>
 						
 					<div class="col-md-12" ng-show="projectItem.viewMode=='edit'" >
@@ -49,7 +48,7 @@
 	<div class="row">
 		<div class="col-md-3 col-centered">
 			<br />
-			<h3 class="text-center">Create new project</h3>
+			<h3 class="text-center">{{'projectManagerCreateNewLabel' | translate}}</h3>
 			<br />
 			<form ng-submit="createNewProject(newProjectName, projectKind)" name="form" novalidate>	
 				<div class="row">
@@ -61,7 +60,7 @@
 				<div class="row form-group">
 					<div class="col-md-12">
 						<button type="submit" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid" 
-							class="btn btn-primary form-control">Create</button>
+							class="btn btn-primary form-control">{{'projectManagerCreateButton' | translate}}</button>
 					</div>
 				</div>
 				<!-- 
@@ -78,10 +77,10 @@
 			<div class="form-group">
 				<div class='drop-area' ng-file-drop="onFileSelect_ImportProject($files)"
 					ng-file-drag-over-class="dropping" ng-show="dropSupported">
-					<div class="drop-prompt">Drop RVD projects (.zip) here to import</div>
+					<div class="drop-prompt">{{'projectManagerDropProjectsLabel' | translate}}</div>
 				</div>
 				<div ng-file-drop-available="dropSupported=true"
-					ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+					ng-show="!dropSupported">{{'projectManagerHtml5DropLabel' | translate}}</div>
 			</div>	
 		</div>		
 	</div>			
@@ -91,7 +90,7 @@
 		<div class="col-md-3 col-centered">	
 			<div class="row text-center">
 				<div class="col-md-12">
-					or <a href="#/home">Choose a different kind of project</a>
+					{{'projectManagerChooseDifferentLabel1' | translate}} <a href="#/home">{{'projectManagerChooseDifferentLabel2' | translate}}</a>
 				</div>
 			</div>		
 			<br/>	
