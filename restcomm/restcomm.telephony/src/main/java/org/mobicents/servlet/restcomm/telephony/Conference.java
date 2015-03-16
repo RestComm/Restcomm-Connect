@@ -149,9 +149,6 @@ public final class Conference extends UntypedActor {
         // Will need to clean up conference resources here
     }
 
-    /*
-     * EVENTS
-     */
     @Override
     public void onReceive(Object message) throws Exception {
         final Class<?> klass = message.getClass();
@@ -193,6 +190,125 @@ public final class Conference extends UntypedActor {
         }
     }
 
+    /*
+     * ACTIONS
+     */
+    private abstract class AbstractAction implements Action {
+
+        protected final ActorRef source;
+
+        public AbstractAction(final ActorRef source) {
+            super();
+            this.source = source;
+        }
+    }
+
+    private final class CreatingMediaSession extends AbstractAction {
+
+        public CreatingMediaSession(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            mscontroller.tell(new CreateMediaSession(), super.source);
+        }
+
+    }
+
+    private final class RunningModeratorAbsent extends AbstractAction {
+        public RunningModeratorAbsent(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            if (moderatorJoined) {
+                /*
+                 * hrosa - this closes the conf room for JSR-309 implementation. Only need to close the connection IF the
+                 * moderator has joined and left the room!
+                 */
+                // Tell MSController that moderator is absent
+                // causing it to close the connection
+                mscontroller.tell(new CloseConnection(), super.source);
+            }
+
+            // Notify the observers.
+            final ConferenceStateChanged event = new ConferenceStateChanged(name,
+                    ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, super.source);
+            }
+        }
+    }
+
+    private final class RunningModeratorPresent extends AbstractAction {
+        public RunningModeratorPresent(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            moderatorJoined = true;
+
+            // Stop the background music if present
+            stopAndCleanConfVoiceInter(super.source);
+
+            // Notify the observers.
+            final ConferenceStateChanged event = new ConferenceStateChanged(name,
+                    ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, super.source);
+            }
+        }
+    }
+
+    private final class Stopping extends AbstractAction {
+        public Stopping(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            // Close Media Session
+            mscontroller.tell(new CloseMediaSession(), super.source);
+        }
+    }
+
+    private final class Stopped extends AbstractAction {
+
+        public Stopped(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            // Tell every call to leave the conference room.
+            for (final ActorRef call : calls) {
+                final Leave leave = new Leave();
+                call.tell(leave, source);
+            }
+            calls.clear();
+
+            // XXX necessary? already done in "stopping" state
+            // Close Media Session
+            mscontroller.tell(new CloseMediaSession(), super.source);
+
+            // Clean up resources
+            stopAndCleanConfVoiceInter(source);
+
+            // Notify the observers.
+            final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.COMPLETED);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, source);
+            }
+            observers.clear();
+        }
+    }
+
+    /*
+     * EVENTS
+     */
     private void onObserve(Observe message, ActorRef self, ActorRef sender) {
         final ActorRef observer = message.observer();
         if (observer != null) {
@@ -326,122 +442,6 @@ public final class Conference extends UntypedActor {
             if (is(stopping)) {
                 this.fsm.transition(obj, stopped);
             }
-        }
-    }
-
-    /*
-     * ACTIONS
-     */
-    private abstract class AbstractAction implements Action {
-
-        protected final ActorRef source;
-
-        public AbstractAction(final ActorRef source) {
-            super();
-            this.source = source;
-        }
-    }
-
-    private final class CreatingMediaSession extends AbstractAction {
-
-        public CreatingMediaSession(ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            mscontroller.tell(new CreateMediaSession(), super.source);
-        }
-
-    }
-
-    private final class RunningModeratorAbsent extends AbstractAction {
-        public RunningModeratorAbsent(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            if (moderatorJoined) {
-                /*
-                 * hrosa - this closes the conf room for JSR-309 implementation. Only need to close the connection IF the
-                 * moderator has joined and left the room!
-                 */
-                // Tell MSController that moderator is absent
-                // causing it to close the connection
-                mscontroller.tell(new CloseConnection(), super.source);
-            }
-
-            // Notify the observers.
-            final ConferenceStateChanged event = new ConferenceStateChanged(name,
-                    ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, super.source);
-            }
-        }
-    }
-
-    private final class RunningModeratorPresent extends AbstractAction {
-        public RunningModeratorPresent(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            moderatorJoined = true;
-
-            // Stop the background music if present
-            stopAndCleanConfVoiceInter(super.source);
-
-            // Notify the observers.
-            final ConferenceStateChanged event = new ConferenceStateChanged(name,
-                    ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, super.source);
-            }
-        }
-    }
-
-    private final class Stopping extends AbstractAction {
-        public Stopping(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            // Close Media Session
-            mscontroller.tell(new CloseMediaSession(), super.source);
-        }
-    }
-
-    private final class Stopped extends AbstractAction {
-
-        public Stopped(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            // Tell every call to leave the conference room.
-            for (final ActorRef call : calls) {
-                final Leave leave = new Leave();
-                call.tell(leave, source);
-            }
-            calls.clear();
-
-            // XXX necessary? already done in "stopping" state
-            // Close Media Session
-            mscontroller.tell(new CloseMediaSession(), super.source);
-
-            // Clean up resources
-            stopAndCleanConfVoiceInter(source);
-
-            // Notify the observers.
-            final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.COMPLETED);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
-            observers.clear();
         }
     }
 
