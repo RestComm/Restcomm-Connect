@@ -272,15 +272,6 @@ public final class Call extends UntypedActor {
         // XXX does nothing
     }
 
-    // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
-    // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
-    // received
-    private void sendCallInfoToObservers() {
-        for (final ActorRef observer : this.observers) {
-            observer.tell(info(), self());
-        }
-    }
-
     private SipURI getInitialIpAddressPort(SipServletMessage message) throws ServletParseException, UnknownHostException {
         // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
         // First get the Initial Remote Address (real address that the request came from)
@@ -325,9 +316,6 @@ public final class Call extends UntypedActor {
         return uri;
     }
 
-    /*
-     * Events
-     */
     @Override
     public void onReceive(Object message) throws Exception {
         final Class<?> klass = message.getClass();
@@ -354,6 +342,12 @@ public final class Call extends UntypedActor {
             onDial((Dial) message, self, sender);
         } else if (Reject.class.equals(klass)) {
             onReject((Reject) message, self, sender);
+        } else if (JoinComplete.class.equals(klass)) {
+            onJoinComplete((JoinComplete) message, self, sender);
+        } else if (StartRecordingCall.class.equals(klass)) {
+            onStartRecordingCall((StartRecordingCall) message, self, sender);
+        } else if (StopRecordingCall.class.equals(klass)) {
+            onStopRecordingCall((StopRecordingCall) message, self, sender);
         } else if (Cancel.class.equals(klass)) {
             onCancel((Cancel) message, self, sender);
         } else if (message instanceof ReceiveTimeout) {
@@ -374,14 +368,8 @@ public final class Call extends UntypedActor {
             onAddParticipant((AddParticipant) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
-        } else if (JoinComplete.class.equals(klass)) {
-            onJoinComplete((JoinComplete) message, self, sender);
         } else if (Leave.class.equals(klass)) {
             onLeave((Leave) message, self, sender);
-        } else if (StartRecordingCall.class.equals(klass)) {
-            onStartRecordingCall((StartRecordingCall) message, self, sender);
-        } else if (StopRecordingCall.class.equals(klass)) {
-            onStopRecordingCall((StopRecordingCall) message, self, sender);
         } else if (CreateMediaGroup.class.equals(klass)) {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
@@ -389,247 +377,13 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
-        this.msController.tell(message, sender);
-    }
-
-    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
-        this.msController.tell(message, sender);
-    }
-
-    private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
-        final ActorRef observer = message.observer();
-        if (observer != null) {
-            synchronized (this.observers) {
-                this.observers.add(observer);
-                observer.tell(new Observing(self), self);
-            }
+    // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+    // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
+    // received
+    private void sendCallInfoToObservers() {
+        for (final ActorRef observer : this.observers) {
+            observer.tell(info(), self());
         }
-    }
-
-    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
-        final ActorRef observer = message.observer();
-        if (observer != null) {
-            this.observers.remove(observer);
-        }
-    }
-
-    private void onGetCallObservers(GetCallObservers message, ActorRef self, ActorRef sender) throws Exception {
-        sender.tell(new CallResponse<List<ActorRef>>(this.observers), self);
-    }
-
-    private void onGetCallInfo(GetCallInfo message, ActorRef self, ActorRef sender) throws Exception {
-        sender.tell(info(), self);
-    }
-
-    private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, queued);
-    }
-
-    private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, creatingMediaSession);
-    }
-
-    private void onDial(Dial message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, creatingMediaSession);
-    }
-
-    private void onReject(Reject message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, busy);
-    }
-
-    private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(creatingMediaSession) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
-            fsm.transition(message, canceling);
-        }
-    }
-
-    private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(ringing)) {
-            fsm.transition(message, failingNoAnswer);
-        } else {
-            logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
-                    + " Direction: " + direction + " From: " + from + " To: " + to);
-        }
-    }
-
-    private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
-        final String method = message.getMethod();
-        if ("INVITE".equalsIgnoreCase(method)) {
-            if (is(uninitialized)) {
-                fsm.transition(message, ringing);
-            }
-        } else if ("CANCEL".equalsIgnoreCase(method)) {
-            if (is(creatingMediaSession)) {
-                fsm.transition(message, canceling);
-            } else {
-                fsm.transition(message, canceled);
-            }
-        } else if ("BYE".equalsIgnoreCase(method)) {
-            fsm.transition(message, completing);
-        }
-    }
-
-    private void onSipServletResponse(SipServletResponse message, ActorRef self, ActorRef sender) throws Exception {
-        this.lastResponse = message;
-
-        final int code = message.getStatus();
-        switch (code) {
-            case SipServletResponse.SC_CALL_BEING_FORWARDED: {
-                forwarding(message);
-                break;
-            }
-            case SipServletResponse.SC_RINGING:
-            case SipServletResponse.SC_SESSION_PROGRESS: {
-                if (!is(ringing)) {
-                    fsm.transition(message, ringing);
-                }
-                break;
-            }
-            case SipServletResponse.SC_BUSY_HERE:
-            case SipServletResponse.SC_BUSY_EVERYWHERE: {
-                sendCallInfoToObservers();
-                if (is(dialing)) {
-                    break;
-                } else {
-                    fsm.transition(message, failingBusy);
-                }
-                break;
-            }
-            case SipServletResponse.SC_UNAUTHORIZED:
-            case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
-                // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-                if (this.username == null || this.password == null) {
-                    sendCallInfoToObservers();
-                    fsm.transition(message, failed);
-                } else {
-                    AuthInfo authInfo = this.factory.createAuthInfo();
-                    String authHeader = message.getHeader("Proxy-Authenticate");
-                    if (authHeader == null) {
-                        authHeader = message.getHeader("WWW-Authenticate");
-                    }
-                    String tempRealm = authHeader.substring(authHeader.indexOf("realm=\"") + "realm=\"".length());
-                    String realm = tempRealm.substring(0, tempRealm.indexOf("\""));
-                    authInfo.addAuthInfo(message.getStatus(), realm, this.username, this.password);
-                    SipServletRequest challengeRequest = message.getSession().createRequest(message.getRequest().getMethod());
-                    challengeRequest.addAuthHeader(message, authInfo);
-                    challengeRequest.setContent(this.invite.getContent(), this.invite.getContentType());
-                    this.invite = challengeRequest;
-                    // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
-                    this.invite.setContent(message.getRequest().getContent(), "application/sdp");
-                    challengeRequest.send();
-                }
-                break;
-            }
-            // https://github.com/Mobicents/RestComm/issues/148
-            // Session in Progress Response should trigger MMS to start the Media Session
-            // case SipServletResponse.SC_SESSION_PROGRESS:
-            case SipServletResponse.SC_OK: {
-                if (is(dialing) || (is(ringing) && !"inbound".equals(direction))) {
-                    fsm.transition(message, updatingMediaSession);
-                }
-                break;
-            }
-            default: {
-                if (code >= 400 && code != 487) {
-                    sendCallInfoToObservers();
-                    fsm.transition(message, failed);
-                }
-            }
-        }
-    }
-
-    private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(inProgress) || is(updatingMediaSession) || is(ringing) || is(queued)) {
-            fsm.transition(message, completing);
-        }
-    }
-
-    private void onNotFound(org.mobicents.servlet.restcomm.telephony.NotFound message, ActorRef self, ActorRef sender)
-            throws Exception {
-        if (is(ringing)) {
-            fsm.transition(message, notFound);
-        }
-    }
-
-    private void onMediaServerControllerError(MediaServerControllerError message, ActorRef self, ActorRef sender)
-            throws Exception {
-        if (is(creatingMediaSession)) {
-            fsm.transition(message, failed);
-        } else if (is(updatingMediaSession) || is(joining)) {
-            fsm.transition(message, failing);
-        }
-    }
-
-    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
-            throws Exception {
-        Object obj = message.get();
-        Class<?> klass = obj.getClass();
-
-        if (MediaSessionInfo.class.equals(klass)) {
-            if (is(creatingMediaSession)) {
-                if (isInbound()) {
-                    fsm.transition(message, inProgress);
-                } else {
-                    fsm.transition(message, dialing);
-                }
-            } else if (is(updatingMediaSession)) {
-                fsm.transition(message, inProgress);
-            }
-        } else if (MediaSessionClosed.class.equals(klass)) {
-            if (is(completing)) {
-                fsm.transition(message, completed);
-            } else if (is(failing)) {
-                fsm.transition(message, failed);
-            } else if (is(failingBusy)) {
-                fsm.transition(message, busy);
-            } else if (is(failingNoAnswer)) {
-                fsm.transition(message, noAnswer);
-            }
-        } else if (JoinComplete.class.equals(klass)) {
-            if (is(joining)) {
-                // MSController completed join operation
-                // Inform the conference and tell observers call is in progress
-                conference.tell(message.get(), self);
-                fsm.transition(message, inProgress);
-            }
-        }
-    }
-
-    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
-        this.outboundCall = message.call();
-        final Join join = new Join(self, this.msController, ConnectionMode.SendRecv);
-        this.outboundCall.tell(join, self);
-    }
-
-    private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
-        this.conference = sender;
-        this.conferenceController = message.mscontroller();
-        this.fsm.transition(message, joining);
-    }
-
-    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
-        if (sender.equals(outboundCall)) {
-            // Warn controller that outbound call successfully joined
-            this.msController.tell(message, self);
-        }
-    }
-
-    private void onLeave(Leave message, ActorRef self, ActorRef sender) {
-        this.conference = null;
-        this.conferenceController = null;
-        this.msController.tell(message, sender);
-    }
-
-    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
-        // Forward message for Media Session Controller to handle
-        message.setCallId(this.id);
-        this.msController.tell(message, sender);
-    }
-
-    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
-        // Forward message for Media Session Controller to handle
-        this.msController.tell(message, sender);
     }
 
     /*
@@ -1250,6 +1004,252 @@ public final class Call extends UntypedActor {
                 logger.debug("Just updated CDR for completed call");
             }
         }
+    }
+
+    /*
+     * EVENTS
+     */
+    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
+        this.msController.tell(message, sender);
+    }
+
+    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
+        this.msController.tell(message, sender);
+    }
+
+    private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
+        final ActorRef observer = message.observer();
+        if (observer != null) {
+            synchronized (this.observers) {
+                this.observers.add(observer);
+                observer.tell(new Observing(self), self);
+            }
+        }
+    }
+
+    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
+        final ActorRef observer = message.observer();
+        if (observer != null) {
+            this.observers.remove(observer);
+        }
+    }
+
+    private void onGetCallObservers(GetCallObservers message, ActorRef self, ActorRef sender) throws Exception {
+        sender.tell(new CallResponse<List<ActorRef>>(this.observers), self);
+    }
+
+    private void onGetCallInfo(GetCallInfo message, ActorRef self, ActorRef sender) throws Exception {
+        sender.tell(info(), self);
+    }
+
+    private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, queued);
+    }
+
+    private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, creatingMediaSession);
+    }
+
+    private void onDial(Dial message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, creatingMediaSession);
+    }
+
+    private void onReject(Reject message, ActorRef self, ActorRef sender) throws Exception {
+        fsm.transition(message, busy);
+    }
+
+    private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(creatingMediaSession) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
+            fsm.transition(message, canceling);
+        }
+    }
+
+    private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(ringing)) {
+            fsm.transition(message, failingNoAnswer);
+        } else {
+            logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+                    + " Direction: " + direction + " From: " + from + " To: " + to);
+        }
+    }
+
+    private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
+        final String method = message.getMethod();
+        if ("INVITE".equalsIgnoreCase(method)) {
+            if (is(uninitialized)) {
+                fsm.transition(message, ringing);
+            }
+        } else if ("CANCEL".equalsIgnoreCase(method)) {
+            if (is(creatingMediaSession)) {
+                fsm.transition(message, canceling);
+            } else {
+                fsm.transition(message, canceled);
+            }
+        } else if ("BYE".equalsIgnoreCase(method)) {
+            fsm.transition(message, completing);
+        }
+    }
+
+    private void onSipServletResponse(SipServletResponse message, ActorRef self, ActorRef sender) throws Exception {
+        this.lastResponse = message;
+
+        final int code = message.getStatus();
+        switch (code) {
+            case SipServletResponse.SC_CALL_BEING_FORWARDED: {
+                forwarding(message);
+                break;
+            }
+            case SipServletResponse.SC_RINGING:
+            case SipServletResponse.SC_SESSION_PROGRESS: {
+                if (!is(ringing)) {
+                    fsm.transition(message, ringing);
+                }
+                break;
+            }
+            case SipServletResponse.SC_BUSY_HERE:
+            case SipServletResponse.SC_BUSY_EVERYWHERE: {
+                sendCallInfoToObservers();
+                if (is(dialing)) {
+                    break;
+                } else {
+                    fsm.transition(message, failingBusy);
+                }
+                break;
+            }
+            case SipServletResponse.SC_UNAUTHORIZED:
+            case SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED: {
+                // Handles Auth for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+                if (this.username == null || this.password == null) {
+                    sendCallInfoToObservers();
+                    fsm.transition(message, failed);
+                } else {
+                    AuthInfo authInfo = this.factory.createAuthInfo();
+                    String authHeader = message.getHeader("Proxy-Authenticate");
+                    if (authHeader == null) {
+                        authHeader = message.getHeader("WWW-Authenticate");
+                    }
+                    String tempRealm = authHeader.substring(authHeader.indexOf("realm=\"") + "realm=\"".length());
+                    String realm = tempRealm.substring(0, tempRealm.indexOf("\""));
+                    authInfo.addAuthInfo(message.getStatus(), realm, this.username, this.password);
+                    SipServletRequest challengeRequest = message.getSession().createRequest(message.getRequest().getMethod());
+                    challengeRequest.addAuthHeader(message, authInfo);
+                    challengeRequest.setContent(this.invite.getContent(), this.invite.getContentType());
+                    this.invite = challengeRequest;
+                    // https://github.com/Mobicents/RestComm/issues/147 Make sure we send the SDP again
+                    this.invite.setContent(message.getRequest().getContent(), "application/sdp");
+                    challengeRequest.send();
+                }
+                break;
+            }
+            // https://github.com/Mobicents/RestComm/issues/148
+            // Session in Progress Response should trigger MMS to start the Media Session
+            // case SipServletResponse.SC_SESSION_PROGRESS:
+            case SipServletResponse.SC_OK: {
+                if (is(dialing) || (is(ringing) && !"inbound".equals(direction))) {
+                    fsm.transition(message, updatingMediaSession);
+                }
+                break;
+            }
+            default: {
+                if (code >= 400 && code != 487) {
+                    sendCallInfoToObservers();
+                    fsm.transition(message, failed);
+                }
+            }
+        }
+    }
+
+    private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(inProgress) || is(updatingMediaSession) || is(ringing) || is(queued)) {
+            fsm.transition(message, completing);
+        }
+    }
+
+    private void onNotFound(org.mobicents.servlet.restcomm.telephony.NotFound message, ActorRef self, ActorRef sender)
+            throws Exception {
+        if (is(ringing)) {
+            fsm.transition(message, notFound);
+        }
+    }
+
+    private void onMediaServerControllerError(MediaServerControllerError message, ActorRef self, ActorRef sender)
+            throws Exception {
+        if (is(creatingMediaSession)) {
+            fsm.transition(message, failed);
+        } else if (is(updatingMediaSession) || is(joining)) {
+            fsm.transition(message, failing);
+        }
+    }
+
+    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
+            throws Exception {
+        Object obj = message.get();
+        Class<?> klass = obj.getClass();
+
+        if (MediaSessionInfo.class.equals(klass)) {
+            if (is(creatingMediaSession)) {
+                if (isInbound()) {
+                    fsm.transition(message, inProgress);
+                } else {
+                    fsm.transition(message, dialing);
+                }
+            } else if (is(updatingMediaSession)) {
+                fsm.transition(message, inProgress);
+            }
+        } else if (MediaSessionClosed.class.equals(klass)) {
+            if (is(completing)) {
+                fsm.transition(message, completed);
+            } else if (is(failing)) {
+                fsm.transition(message, failed);
+            } else if (is(failingBusy)) {
+                fsm.transition(message, busy);
+            } else if (is(failingNoAnswer)) {
+                fsm.transition(message, noAnswer);
+            }
+        } else if (JoinComplete.class.equals(klass)) {
+            if (is(joining)) {
+                // MSController completed join operation
+                // Inform the conference and tell observers call is in progress
+                conference.tell(message.get(), self);
+                fsm.transition(message, inProgress);
+            }
+        }
+    }
+
+    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
+        this.outboundCall = message.call();
+        final Join join = new Join(self, this.msController, ConnectionMode.SendRecv);
+        this.outboundCall.tell(join, self);
+    }
+
+    private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
+        this.conference = sender;
+        this.conferenceController = message.mscontroller();
+        this.fsm.transition(message, joining);
+    }
+
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
+        if (sender.equals(outboundCall)) {
+            // Warn controller that outbound call successfully joined
+            this.msController.tell(message, self);
+        }
+    }
+
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) {
+        this.conference = null;
+        this.conferenceController = null;
+        this.msController.tell(message, sender);
+    }
+
+    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        // Forward message for Media Session Controller to handle
+        message.setCallId(this.id);
+        this.msController.tell(message, sender);
+    }
+
+    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+        // Forward message for Media Session Controller to handle
+        this.msController.tell(message, sender);
     }
 
 }
