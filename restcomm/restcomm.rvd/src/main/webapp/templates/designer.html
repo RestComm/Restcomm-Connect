@@ -30,9 +30,9 @@
 					</li>
 					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; {{'designerSaveLink' | translate}}</a></li>
 					<li class='rvd-appurl' ng-show="startNodeSet(project)"><a target="_blank" href='{{getStartUrl()}}'>{{'designerAppUrlLink' | translate}}</a></li>
-					<li><a href="#/project-manager/{{project.projectKind ? project.projectKind : 'voice'}}" title="Close {{projectName}}"><i class='fa fa-power-off'></i>&nbsp;</a></li>
+					<li><a href="#/project-manager/{{project.projectKind ? project.projectKind : 'voice'}}" title="{{'designerCloseTitle' | translate}} {{projectName}}"><i class='fa fa-power-off'></i>&nbsp;</a></li>
 					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Settings"><i class="fa fa-cog"></i> <b class="caret"></b></a>
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{{'designerProjectSettingsTitle' | translate}}"><i class="fa fa-cog"></i> <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">{{'designerProjectSettingsLink' | translate}}</a></li>
 							<!--<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li> -->
