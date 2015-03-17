@@ -48,8 +48,6 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-import javax.sip.header.RecordRouteHeader;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
@@ -325,8 +323,9 @@ public final class Call extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         final State state = fsm.state();
-        logger.info("********** Call's "+ self().path() +" Current State: \"" + state.toString());
-        logger.info("********** Call "+ self().path() +" Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString());
+        logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
+                + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -616,10 +615,10 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             // Explicitly invalidate the application session.
-            //            if (invite.getSession().isValid())
-            //                invite.getSession().invalidate();
-            //            if (invite.getApplicationSession().isValid())
-            //                invite.getApplicationSession().invalidate();
+            // if (invite.getSession().isValid())
+            // invite.getSession().invalidate();
+            // if (invite.getApplicationSession().isValid())
+            // invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.CANCELED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -688,10 +687,10 @@ public final class Call extends UntypedActor {
             }
 
             // Explicitly invalidate the application session.
-            //            if (invite.getSession().isValid())
-            //                invite.getSession().invalidate();
-            //            if (invite.getApplicationSession().isValid())
-            //                invite.getApplicationSession().invalidate();
+            // if (invite.getSession().isValid())
+            // invite.getSession().invalidate();
+            // if (invite.getApplicationSession().isValid())
+            // invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
             final CallStateChanged event = new CallStateChanged(external);
@@ -746,11 +745,11 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            //            // Explicitly invalidate the application session.
-            //            if (invite.getSession().isValid())
-            //                invite.getSession().invalidate();
-            //            if (invite.getApplicationSession().isValid())
-            //                invite.getApplicationSession().invalidate();
+            // // Explicitly invalidate the application session.
+            // if (invite.getSession().isValid())
+            // invite.getSession().invalidate();
+            // if (invite.getApplicationSession().isValid())
+            // invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
@@ -890,23 +889,23 @@ public final class Call extends UntypedActor {
                 answer = SdpUtils.endWithNewLine(answer);
                 okay.setContent(answer, "application/sdp");
                 okay.send();
-            } else if (openingRemoteConnection.equals(state)
-                    && invite.getSession().getState().equals(SipSession.State.CONFIRMED)) {
+            } else if (is(creatingMediaSession) && invite.getSession().getState().equals(SipSession.State.CONFIRMED)) {
                 // We have an ongoing call and Restcomm executes new RCML app on that
                 // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
                 SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
-                final ConnectionStateChanged response = (ConnectionStateChanged) message;
-                final byte[] sdp = response.descriptor().toString().getBytes();
+                MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
+                mediaSessionInfo = response.get();
+                final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
                 String answer = null;
-                if (gatewayInfo.useNat()) {
-                    final String externalIp = gatewayInfo.externalIP().getHostAddress();
-                    answer = patch("application/sdp", sdp, externalIp);
+                if (mediaSessionInfo.usesNat()) {
+                    final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                    answer = SdpUtils.patch("application/sdp", sdp, externalIp);
                 } else {
-                    answer = response.descriptor().toString();
+                    answer = mediaSessionInfo.getLocalSdp().toString();
                 }
 
                 // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-                answer = patchSdpDescription(answer);
+                answer = SdpUtils.endWithNewLine(answer);
 
                 reInvite.setContent(answer, "application/sdp");
                 reInvite.send();
@@ -970,20 +969,11 @@ public final class Call extends UntypedActor {
                     bye.setRequestURI(realInetUri);
                 }
                 bye.send();
-
-                if (recording) {
-                    logger.info("Call - Will stop recording now");
-                    stopRecordingCall();
-                }
             } else if (message instanceof SipServletRequest) {
                 // Send SIP OK to remote peer
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
                 okay.send();
-                if (recording) {
-                    logger.info("Call - Will stop recording now");
-                    stopRecordingCall();
-                }
             } else if (message instanceof SipServletResponse) {
                 final SipServletResponse resp = (SipServletResponse) message;
                 if (resp.equals(SipServletResponse.SC_BUSY_HERE) || resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)) {
