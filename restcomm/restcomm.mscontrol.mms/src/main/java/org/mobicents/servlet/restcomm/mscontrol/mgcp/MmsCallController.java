@@ -73,6 +73,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
@@ -635,8 +636,23 @@ public class MmsCallController extends MediaServerController {
             if (callOutbound) {
                 open = new OpenConnection(ConnectionMode.SendRecv);
             } else {
-                final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
-                open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                if (!liveCallModification) {
+                    final String externalIp = invite.getInitialRemoteAddr();
+                    final byte[] sdp = invite.getRawContent();
+                    final String offer = patch(invite.getContentType(), sdp, externalIp);
+                    final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
+                    open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                } else {
+                    if (lastResponse != null && lastResponse.getStatus() == 200) {
+                        final String externalIp = lastResponse.getInitialRemoteAddr();
+                        final byte[] sdp = lastResponse.getRawContent();
+                        final String offer = patch(lastResponse.getContentType(), sdp, externalIp);
+                        final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
+                        open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                    }
+                }
+                // final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
+                // open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
             }
             remoteConn.tell(open, source);
         }
@@ -721,6 +737,34 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
+
+            if (self().path().toString().equalsIgnoreCase("akka://RestComm/user/$j")) {
+                logger.info("Initializing Internal Link for the Outbound call");
+            }
+
+            if (bridge != null) {
+                logger.info("##################### $$ Bridge for Call " + self().path() + " is terminated: "
+                        + bridge.isTerminated());
+                if (bridge.isTerminated()) {
+                    // fsm.transition(message, acquiringMediaGatewayInfo);
+                    // return;
+                    logger.info("##################### $$ Call :" + self().path() + " bridge is terminated.");
+                    // final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+                    // Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new
+                    // CreateBridgeEndpoint(session), expires);
+                    // MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future,
+                    // Duration.create(10, TimeUnit.SECONDS));
+                    // bridge = futureResponse.get();
+                    // if (!bridge.isTerminated() && bridge != null) {
+                    // logger.info("Bridge for call: "+self().path()+" acquired and is not terminated");
+                    // } else {
+                    // logger.info("Bridge endpoint for call: "+self().path()+" is still terminated or null");
+                    // }
+                }
+            }
+            // if (bridge == null || bridge.isTerminated()) {
+            // System.out.println("##################### $$ Bridge for Call "+self().path()+" is null or terminated: "+bridge.isTerminated());
+            // }
             internalLink = response.get();
             internalLink.tell(new Observe(source), source);
             internalLink.tell(new InitializeLink(bridge, internalLinkEndpoint), source);
@@ -820,6 +864,89 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
+            final Class<?> klass = message.getClass();
+            if (Hangup.class.equals(klass)) {
+                final SipSession session = invite.getSession();
+                final SipServletRequest bye = session.createRequest("BYE");
+
+                SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
+                InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+
+                // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
+                // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+                // Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+                // Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
+                // Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
+                // Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
+                // Accept: application/sdp
+                // Allow: INVITE,ACK,CANCEL,BYE
+                // Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
+                // Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
+                // Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
+                // Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
+                // Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
+                // From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
+                // To: <sip:12055305520@192.168.6.219>
+                // Call-ID: 587241765_133360558@192.168.16.114
+                // CSeq: 393447729 INVITE
+                // Max-Forwards: 67
+                // Contact: <sip:+1302109762259@192.168.16.114:5060>
+                // Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
+                // Supported: replaces
+                // Content-Disposition: session;handling=required
+                // Content-Type: application/sdp
+                // Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
+                // X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
+                // X-Sip-Balancer-InitialRemotePort: 5060
+                // Route: <sip:10.13.169.214:5080;transport=udp;lr>
+                // Content-Length: 340
+
+                invite.getHeaders(RecordRouteHeader.NAME);
+
+                ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
+
+                if (invite.getHeader("X-Sip-Balancer") != null) {
+                    logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
+                    recordRouteList.next();
+                    recordRouteList.remove();
+                    recordRouteList.next();
+                    recordRouteList.remove();
+                }
+
+                if (recordRouteList.hasNext()) {
+                    logger.info("Record Route is set, wont change the Request URI");
+                } else if (realInetUri != null
+                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                            + " as a request uri of the BYE request");
+                    bye.setRequestURI(realInetUri);
+                }
+
+                bye.send();
+
+                if (recording) {
+                    logger.info("Call - Will stop recording now");
+                    stopRecordingCall();
+                }
+            } else if (message instanceof SipServletRequest) {
+                final SipServletRequest bye = (SipServletRequest) message;
+                final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
+                okay.send();
+                if (recording) {
+                    logger.info("Call - Will stop recording now");
+                    stopRecordingCall();
+                }
+            } else if (message instanceof SipServletResponse) {
+                final SipServletResponse resp = (SipServletResponse) message;
+                if (resp.equals(SipServletResponse.SC_BUSY_HERE) || resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)) {
+                    // Notify the observers.
+                    external = CallStateChanged.State.BUSY;
+                    final CallStateChanged event = new CallStateChanged(external);
+                    for (final ActorRef observer : observers) {
+                        observer.tell(event, source);
+                    }
+                }
+            }
             if (remoteConn != null) {
                 remoteConn.tell(new CloseConnection(), source);
             }
@@ -834,19 +961,30 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            // Close open resources
+            logger.info("De-activating Call Controller");
+
+            if (mediaGroup != null) {
+                mediaGroup.tell(new StopMediaGroup(), null);
+                context().stop(mediaGroup);
+            }
+
             if (remoteConn != null) {
                 mediaGateway.tell(new DestroyConnection(remoteConn), source);
+                context().stop(remoteConn);
                 remoteConn = null;
             }
 
             if (internalLink != null) {
                 mediaGateway.tell(new DestroyLink(internalLink), source);
+                context().stop(internalLink);
+                context().stop(internalLinkEndpoint);
                 internalLink = null;
             }
 
             if (bridge != null) {
+                logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridge.path());
                 mediaGateway.tell(new DestroyEndpoint(bridge), source);
+                context().stop(bridge);
                 bridge = null;
             }
 
