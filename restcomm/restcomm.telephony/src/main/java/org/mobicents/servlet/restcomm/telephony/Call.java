@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.telephony;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
@@ -66,13 +67,16 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.CallStateChanged;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -339,6 +343,8 @@ public final class Call extends UntypedActor {
             sender.tell(outboundCall, self);
         } else if (InitializeOutbound.class.equals(klass)) {
             onInitializeOutbound((InitializeOutbound) message, self, sender);
+        } else if (ChangeCallDirection.class.equals(klass)) {
+            onChangeCallDirection((ChangeCallDirection) message, self, sender);
         } else if (Answer.class.equals(klass)) {
             onAnswer((Answer) message, self, sender);
         } else if (Dial.class.equals(klass)) {
@@ -386,6 +392,25 @@ public final class Call extends UntypedActor {
     private void sendCallInfoToObservers() {
         for (final ActorRef observer : this.observers) {
             observer.tell(info(), self());
+        }
+    }
+
+    private void processInfo(final SipServletRequest request) throws IOException {
+        final SipServletResponse okay = request.createResponse(SipServletResponse.SC_OK);
+        okay.send();
+        String digits = null;
+        if (request.getContentType().equalsIgnoreCase("application/dtmf-relay")) {
+            final String content = new String(request.getRawContent());
+            digits = content.split("\n")[0].replaceFirst("Signal=", "").trim();
+        } else {
+            digits = new String(request.getRawContent());
+        }
+        if (digits != null) {
+            MediaGroupResponse<String> infoResponse = new MediaGroupResponse<String>(digits);
+            for (final ActorRef observer : observers) {
+                observer.tell(infoResponse, self());
+            }
+            this.msController.tell(new Stop(), self());
         }
     }
 
@@ -1002,10 +1027,14 @@ public final class Call extends UntypedActor {
             logger.info("Completing Call");
 
             // Explicitly invalidate the application session.
-            if (invite.getSession().isValid())
+            if (invite.getSession().isValid()) {
                 invite.getSession().invalidate();
-            if (invite.getApplicationSession().isValid())
+            }
+
+            if (invite.getApplicationSession().isValid()) {
                 invite.getApplicationSession().invalidate();
+            }
+
             // Notify the observers.
             external = CallStateChanged.State.COMPLETED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1069,6 +1098,19 @@ public final class Call extends UntypedActor {
         fsm.transition(message, queued);
     }
 
+    private void onChangeCallDirection(ChangeCallDirection message, ActorRef self, ActorRef sender) {
+        // Needed for LiveCallModification API where an the outgoingCall needs to move to the new destination also.
+        // We need to change the Call Direction and also release the internal link
+        this.direction = INBOUND;
+        this.liveCallModification = true;
+        this.conference = null;
+        this.outboundCall = null;
+
+        if (group == null || group.isTerminated()) {
+            group = getMediaGroup(message);
+        }
+    }
+
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         fsm.transition(message, creatingMediaSession);
     }
@@ -1110,6 +1152,8 @@ public final class Call extends UntypedActor {
             }
         } else if ("BYE".equalsIgnoreCase(method)) {
             fsm.transition(message, completing);
+        } else if ("INFO".equalsIgnoreCase(method)) {
+            processInfo(message);
         }
     }
 
