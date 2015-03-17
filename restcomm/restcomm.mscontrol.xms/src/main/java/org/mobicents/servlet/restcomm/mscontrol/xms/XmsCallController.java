@@ -519,18 +519,18 @@ public class XmsCallController extends MediaServerController {
     }
 
     private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
-        // Release existing media group if any
-        if (this.mediaGroup != null) {
+        // Always reuse current media group if active
+        if (this.mediaGroup == null) {
             this.mediaGroup.release();
+
+            // Create new media group
+            this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+
+            // Prepare the Media Group resources
+            this.mediaGroup.getPlayer().addListener(this.playerListener);
+            this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
+            this.mediaGroup.getRecorder().addListener(this.recorderListener);
         }
-
-        // Create new media group
-        this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
-
-        // Prepare the Media Group resources
-        this.mediaGroup.getPlayer().addListener(this.playerListener);
-        this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
-        this.mediaGroup.getRecorder().addListener(this.recorderListener);
 
         sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
     }
