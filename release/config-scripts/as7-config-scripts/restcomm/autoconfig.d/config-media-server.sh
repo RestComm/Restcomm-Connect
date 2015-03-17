@@ -11,7 +11,7 @@ configUdpManager() {
 	    -e "s|<property name=\"localSubnet\">.*<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
 	    -e 's|<property name="useSbc">.*</property>|<property name="useSbc">true</property>|' \
 	    -e 's|<property name="dtmfDetectorDbi">.*</property>|<property name="dtmfDetectorDbi">0</property>|' \
-	    -e 's|<property name="lowestPort">.*</property>|<property name="lowestPort">34534</property>|' \
+	    -e 's|<property name="lowestPort">.*</property>|<property name="lowestPort">64535</property>|' \
 	    -e 's|<property name="highestPort">.*</property>|<property name="highestPort">65535</property>|' \
 	    $FILE > $FILE.bak
 

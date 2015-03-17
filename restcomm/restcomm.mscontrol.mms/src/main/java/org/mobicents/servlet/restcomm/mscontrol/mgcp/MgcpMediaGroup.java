@@ -1,22 +1,21 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 
 package org.mobicents.servlet.restcomm.mscontrol.mgcp;
@@ -138,7 +137,8 @@ public class MgcpMediaGroup extends MediaGroup {
         transitions.add(new Transition(updatingLink, deactivating));
         transitions.add(new Transition(active, deactivating));
         transitions.add(new Transition(deactivating, inactive));
-        // Join Outbound call Bridge endpoint to IVR endpoint
+        transitions.add(new Transition(active, acquiringIvr));
+        //Join Outbound call Bridge endpoint to IVR endpoint
         transitions.add(new Transition(active, acquiringInternalLink));
         transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
         transitions.add(new Transition(initializingInternalLink, openingInternalLink));
@@ -228,6 +228,7 @@ public class MgcpMediaGroup extends MediaGroup {
                 sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE), self());
             }
         } else if (StartMediaGroup.class.equals(klass)) {
+            logger.info("MediaGroup: "+self().path()+" got StartMediaGroup from: "+sender().path()+" endpoint: "+endpoint.path()+" isTerminated: "+endpoint.isTerminated());
             fsm.transition(message, acquiringIvr);
         } else if (Join.class.equals(klass)) {
             fsm.transition(message, acquiringInternalLink);
@@ -338,6 +339,13 @@ public class MgcpMediaGroup extends MediaGroup {
 
         @Override
         public void execute(final Object message) throws Exception {
+            if (ivr != null && !ivr.isTerminated()) {
+                logger.info("MediaGroup :"+self().path()+" got request to create ivr endpoint, will stop the existing one first: "+ivr.path());
+                gateway.tell(new DestroyEndpoint(ivr), null);
+                getContext().stop(ivr);
+                ivr = null;
+            }
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" will ask to get IvrEndpoint");
             gateway.tell(new CreateIvrEndpoint(session), source);
         }
     }
@@ -353,6 +361,12 @@ public class MgcpMediaGroup extends MediaGroup {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             ivr = response.get();
             ivr.tell(new Observe(source), source);
+            if (link != null && !link.isTerminated()) {
+                logger.info("MediaGroup :"+self().path()+" got request to create link endpoint, will stop the existing one first: "+link.path());
+                gateway.tell(new DestroyLink(link), null);
+                getContext().stop(link);
+            }
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" ivr endpoint: "+ivr.path()+" will ask to get Link");
             gateway.tell(new CreateLink(session), source);
         }
     }
@@ -367,8 +381,11 @@ public class MgcpMediaGroup extends MediaGroup {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             link = response.get();
+            if(endpoint == null)
+                logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" link: "+link.path()+" endpoint is null will have exception");
             link.tell(new Observe(source), source);
             link.tell(new InitializeLink(endpoint, ivr), source);
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" link: "+link.path()+" endpoint: "+endpoint.path()+" initializeLink sent, endpoint isTerminated: "+endpoint.isTerminated());
         }
     }
 
@@ -379,6 +396,7 @@ public class MgcpMediaGroup extends MediaGroup {
 
         @Override
         public void execute(final Object message) throws Exception {
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" link: "+link.path()+" will ask to open Link");
             link.tell(new OpenLink(ConnectionMode.SendRecv), source);
         }
     }
@@ -450,8 +468,7 @@ public class MgcpMediaGroup extends MediaGroup {
             internalLink.tell(update, source);
         }
     }
-
-    // Join OutboundCall Bridge endpoint to the IVR endpoint for recording - END
+    //Join OutboundCall Bridge endpoint to the IVR endpoint for recording - END
 
     private final class Active extends AbstractAction {
         public Active(final ActorRef source) {
@@ -508,11 +525,15 @@ public class MgcpMediaGroup extends MediaGroup {
     @Override
     public void postStop() {
         if (internalLinkEndpoint != null) {
+            logger.info("MediaGroup: "+self().path()+" at postStop, about to stop intenalLinkEndpoint: "+internalLinkEndpoint.path()+" sender: "+sender().path());
             gateway.tell(new DestroyEndpoint(internalLinkEndpoint), null);
+            getContext().stop(internalLinkEndpoint);
             internalLinkEndpoint = null;
         }
         if (ivr != null) {
+            logger.info("MediaGroup :"+self().path()+" at postStop, about to stop ivr endpoint :"+ivr.path());
             gateway.tell(new DestroyEndpoint(ivr), null);
+            getContext().stop(ivr);
             ivr = null;
         }
     }
