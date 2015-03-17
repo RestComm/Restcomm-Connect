@@ -38,6 +38,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ProvisionProvider;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -110,7 +111,7 @@ public class Ping {
                     //Adds the Provision provider class name
                     post.addHeader("Provider", provider);
                     //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
-                    post.addHeader("RequestType", "Ping");
+                    post.addHeader("RequestType", ProvisionProvider.REQUEST_TYPE.PING.name());
                     //This will let LB match the DID to a node based on the node host+port
                     List<SipURI> uris = outboundInterface();
                     for (SipURI uri: uris) {

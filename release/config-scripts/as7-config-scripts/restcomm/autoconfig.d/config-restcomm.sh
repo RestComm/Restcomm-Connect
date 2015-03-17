@@ -16,7 +16,7 @@ RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
 ## Parameters : none
 configJavaOpts() {
 	FILE=$RESTCOMM_BIN/standalone.conf
-	
+
 	# Find total available memory on the instance
     TOTAL_MEM=$(free -m -t | grep 'Total:' | awk '{print $2}')
     # get 70 percent of available memory
@@ -50,7 +50,7 @@ configRestcomm() {
 		recording_address=$static_address
 	fi
 
-	if [ "$ACTIVE_PROXY" == "true" ]; then
+	if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
@@ -63,9 +63,9 @@ configRestcomm() {
 			-e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$recording_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
 			-e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
 			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
-	
-	else 
-		if [ -n "$static_address" ]; then 
+
+	else
+		if [ -n "$static_address" ]; then
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
@@ -99,15 +99,55 @@ configRestcomm() {
 ## 				3.Endpoint
 configVoipInnovations() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	
+
 	sed -e "/<voip-innovations>/ {
 		N; s|<login>.*</login>|<login>$1</login>|
         N; s|<password>.*</password>|<password>$2</password>|
         N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
 	}" $FILE > $FILE.bak
-	
+
 	mv $FILE.bak $FILE
 	echo 'Configured Voip Innovation credentials'
+}
+
+configDidProvisionManager() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
+		sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
+		# -e "s|<bandwidth>|<!\-\-<bandwidth>|" \
+		# -e "s|<\/bandwidth>|<\/bandwidth>\-\->|" \
+		# -e "s|<!\-\- <voip-innovations>|<voip-innovations>|" \
+		# -e "s|<\/voip-innovations>\-\->|<\/voip-innovations>|" \
+		# $FILE > $FILE.bak
+
+		sed -e "/<voip-innovations>/ {
+			N; s|<login>.*</login>|<login>$1</login>|
+			N; s|<password>.*</password>|<password>$2</password>|
+			N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+		}" $FILE.bak > $FILE
+		# mv $FILE.bak $FILE
+		echo 'Configured Voip Innovation credentials'
+		else
+			if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
+			sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
+			# -e "s|<voip-innovations>|<!\-\-<voip-innovations>|" \
+			# -e "s|<\/voip-innovations>|<\/voip-innovations>\-\->|" \
+			# -e "s|<!\-\- <bandwidth>|<bandwidth>|" \
+			# -e "s|<\/bandwidth>\-\->|<\/bandwidth>|" \
+			# $FILE > $FILE.bak
+
+			sed -e "/<bandwidth>/ {
+				N; s|<username>.*</username>|<username>$1</username>|
+				N; s|<password>.*</password>|<password>$2</password>|
+				N; s|<accountId>.*</accountId>|<accountId>$3</accountId>|
+				N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
+			}" $FILE.bak > $FILE
+			# mv $FILE.bak $FILE
+			echo 'Configured Bandwidth credentials'
+			fi
+		fi
+
 }
 
 ## Description: Configures Fax Service Credentials
@@ -115,27 +155,27 @@ configVoipInnovations() {
 ## 				2.Password
 configFaxService() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	
+
 	sed -e "/<fax-service.*>/ {
 		N; s|<user>.*</user>|<user>$1</user>|
 		N; s|<password>.*</password>|<password>$2</password>|
 	}" $FILE > $FILE.bak
-	
+
 	mv $FILE.bak $FILE
 	echo 'Configured Fax Service credentials'
 }
 
 ## Description: Configures Sms Aggregator
 ## Parameters : 1.Outbound endpoint IP
-## 
+##
 configSmsAggregator() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	
+
 	sed -e "/<sms-aggregator.*>/ {
 		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>#</outbound-prefix>|
 		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1:5060</outbound-endpoint>|
 	}" $FILE > $FILE.bak
-	
+
 	mv $FILE.bak $FILE
 	echo "Configured Sms Aggregator using OUTBOUND PROXY $1"
 }
@@ -144,11 +184,11 @@ configSmsAggregator() {
 ## Parameters : 1.iSpeech Key
 configSpeechRecognizer() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	
+
 	sed -e "/<speech-recognizer.*>/ {
 		N; s|<api-key.*></api-key>|<api-key production=\"true\">$1</api-key>|
 	}" $FILE > $FILE.bak
-	
+
 	mv $FILE.bak $FILE
 	echo 'Configured the Speech Recognizer'
 }
@@ -166,14 +206,14 @@ configSpeechSynthesizers() {
 ## 				3.Password
 configAcapela() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	
+
 	sed -e "/<speech-synthesizer class=\"org.mobicents.servlet.restcomm.tts.AcapelaSpeechSynthesizer\">/ {
 		N
 		N; s|<application>.*</application>|<application>$1</application>|
 		N; s|<login>.*</login>|<login>$2</login>|
 		N; s|<password>.*</password>|<password>$3</password>|
 	}" $FILE > $FILE.bak
-	
+
 	mv $FILE.bak $FILE
 	echo 'Configured Acapela Speech Synthesizer'
 }
@@ -182,11 +222,11 @@ configAcapela() {
 ## Parameters : 1.API key
 configVoiceRSS() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	
+
 	sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
 		N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
 	}" $FILE > $FILE.bak
-	
+
 	mv $FILE.bak $FILE
 	echo 'Configured VoiceRSS Speech Synthesizer'
 }
@@ -209,17 +249,30 @@ configMobicentsProperties() {
 configTelestaxProxy() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	enabled="$1"
-	if [ "$enabled" == "true" ]; then
+	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
 		sed -e "/<telestax-proxy>/ {
 			N; s|<enabled>.*</enabled>|<enabled>$1</enabled>|
 		N; s|<login>.*</login>|<login>$2</login>|
 		N; s|<password>.*</password>|<password>$3</password>|
 		N; s|<endpoint>.*</endpoint>|<endpoint>$4</endpoint>|
+		N; s|<siteId>.*</siteId>|<siteId>$6</siteId>|
 		N; s|<uri>.*</uri>|<uri>http:\/\/$5:2080</uri>|
 		}" $FILE > $FILE.bak
-	
+
 		mv $FILE.bak $FILE
-		echo 'Configured TeteStax Proxy'
+		echo 'Enabled TeteStax Proxy'
+	else
+		sed -e "/<telestax-proxy>/ {
+			N; s|<enabled>.*</enabled>|<enabled>false</enabled>|
+			N; s|<login>.*</login>|<login></login>|
+			N; s|<password>.*</password>|<password></password>|
+			N; s|<endpoint>.*</endpoint>|<endpoint></endpoint>|
+			N; s|<siteid>.*</siteid>|<siteid></siteid>|
+			N; s|<uri>.*</uri>|<uri>http:\/\/127.0.0.1:2080</uri>|
+		}" $FILE > $FILE.bak
+
+		mv $FILE.bak $FILE
+		echo 'Disabled TeteStax Proxy'
 	fi
 }
 
@@ -234,8 +287,8 @@ configMediaServerManager() {
 	enabled="$1"
 	bind_address="$2"
 	public_ip="$3"
-	
-	if [ "$enabled" == "true" ]; then
+
+	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
 		sed -e "/<mgcp-server class=\"org.mobicents.servlet.restcomm.mgcp.MediaGateway\">/ {
 			N
 			N; s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|
@@ -245,7 +298,7 @@ configMediaServerManager() {
 			N; s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|
 			N; s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$public_ip</external-address>|
 		}" $FILE > $FILE.bak
-	
+
 		mv $FILE.bak $FILE
 		echo 'Configured Media Server Manager'
 	fi
@@ -256,11 +309,12 @@ echo 'Configuring RestComm...'
 #configJavaOpts
 configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY"
-configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
+#configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
+configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$OUTBOUND_PROXY"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
-configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP"
+configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
 configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$PUBLIC_IP"
 echo 'Configured RestComm!'

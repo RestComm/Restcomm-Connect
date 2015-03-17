@@ -14,13 +14,13 @@
 startRestcomm() {
 	run_mode="$1"
 	bind_address="$2"
-	
+
 	# Check if RestComm is already running
 	if screen -list | grep -q 'restcomm'; then
 		echo 'TelScale RestComm is already running on screen session "restcomm"!'
 		exit 1;
 	fi
-	
+
 	case $run_mode in
 		'standalone'*)
 			# start restcomm on standalone mode
@@ -100,6 +100,7 @@ LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
 source $BASEDIR/restcomm.conf
+source $BASEDIR/proxy.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
@@ -156,6 +157,10 @@ BIND_ADDRESS="$PRIVATE_IP"
 
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	STATIC_ADDRESS=$BIND_ADDRESS
+fi
+
+if [[ -z "$PUBLIC_IP" ]]; then
+	PUBLIC_IP=$STATIC_ADDRESS
 fi
 
 # configure restcomm installation

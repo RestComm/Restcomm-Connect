@@ -1,22 +1,21 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2013, Telestax Inc and individual contributors
+ * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
  */
 
 package org.mobicents.servlet.restcomm.telephony;
@@ -49,6 +48,8 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sip.header.RecordRouteHeader;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
@@ -167,6 +168,8 @@ public final class Call extends UntypedActor {
     private CallDetailRecordsDao recordsDao;
     private CallDetailRecord outgoingCallRecord;
     private ActorRef outboundCall;
+    private ActorRef outboundCallBridgeEndpoint;
+    private boolean liveCallModification = false;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController) {
         super();
@@ -322,9 +325,8 @@ public final class Call extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         final State state = fsm.state();
-
-        logger.info("********** Call's Current State: \"" + state.toString());
-        logger.info("********** Call Processing Message: \"" + klass.getName() + " sender : " + sender.toString());
+        logger.info("********** Call's "+ self().path() +" Current State: \"" + state.toString());
+        logger.info("********** Call "+ self().path() +" Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -334,6 +336,8 @@ public final class Call extends UntypedActor {
             onGetCallObservers((GetCallObservers) message, self, sender);
         } else if (GetCallInfo.class.equals(klass)) {
             onGetCallInfo((GetCallInfo) message, self, sender);
+        } else if (GetOutboundCall.class.equals(klass)) {
+            sender.tell(outboundCall, self);
         } else if (InitializeOutbound.class.equals(klass)) {
             onInitializeOutbound((InitializeOutbound) message, self, sender);
         } else if (Answer.class.equals(klass)) {
@@ -612,9 +616,10 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
-
+            //            if (invite.getSession().isValid())
+            //                invite.getSession().invalidate();
+            //            if (invite.getApplicationSession().isValid())
+            //                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.CANCELED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -627,6 +632,7 @@ public final class Call extends UntypedActor {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+            fsm.transition(message, completed);
         }
     }
 
@@ -682,9 +688,10 @@ public final class Call extends UntypedActor {
             }
 
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
-
+            //            if (invite.getSession().isValid())
+            //                invite.getSession().invalidate();
+            //            if (invite.getApplicationSession().isValid())
+            //                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.BUSY;
             final CallStateChanged event = new CallStateChanged(external);
@@ -739,15 +746,11 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid()) {
-                invite.getSession().invalidate();
-            }
-
-            if (invite.getApplicationSession().isValid()) {
-                invite.getApplicationSession().invalidate();
-            }
-
+            //            // Explicitly invalidate the application session.
+            //            if (invite.getSession().isValid())
+            //                invite.getSession().invalidate();
+            //            if (invite.getApplicationSession().isValid())
+            //                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.NO_ANSWER;
             final CallStateChanged event = new CallStateChanged(external);
@@ -887,6 +890,26 @@ public final class Call extends UntypedActor {
                 answer = SdpUtils.endWithNewLine(answer);
                 okay.setContent(answer, "application/sdp");
                 okay.send();
+            } else if (openingRemoteConnection.equals(state)
+                    && invite.getSession().getState().equals(SipSession.State.CONFIRMED)) {
+                // We have an ongoing call and Restcomm executes new RCML app on that
+                // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
+                SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
+                final ConnectionStateChanged response = (ConnectionStateChanged) message;
+                final byte[] sdp = response.descriptor().toString().getBytes();
+                String answer = null;
+                if (gatewayInfo.useNat()) {
+                    final String externalIp = gatewayInfo.externalIP().getHostAddress();
+                    answer = patch("application/sdp", sdp, externalIp);
+                } else {
+                    answer = response.descriptor().toString();
+                }
+
+                // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+                answer = patchSdpDescription(answer);
+
+                reInvite.setContent(answer, "application/sdp");
+                reInvite.send();
             }
 
             if (is(creatingMediaSession) || is(updatingMediaSession)) {
@@ -947,11 +970,20 @@ public final class Call extends UntypedActor {
                     bye.setRequestURI(realInetUri);
                 }
                 bye.send();
+
+                if (recording) {
+                    logger.info("Call - Will stop recording now");
+                    stopRecordingCall();
+                }
             } else if (message instanceof SipServletRequest) {
                 // Send SIP OK to remote peer
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
                 okay.send();
+                if (recording) {
+                    logger.info("Call - Will stop recording now");
+                    stopRecordingCall();
+                }
             } else if (message instanceof SipServletResponse) {
                 final SipServletResponse resp = (SipServletResponse) message;
                 if (resp.equals(SipServletResponse.SC_BUSY_HERE) || resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)) {
@@ -980,9 +1012,10 @@ public final class Call extends UntypedActor {
             logger.info("Completing Call");
 
             // Explicitly invalidate the application session.
-            invite.getSession().invalidate();
-            invite.getApplicationSession().invalidate();
-
+            if (invite.getSession().isValid())
+                invite.getSession().invalidate();
+            if (invite.getApplicationSession().isValid())
+                invite.getApplicationSession().invalidate();
             // Notify the observers.
             external = CallStateChanged.State.COMPLETED;
             final CallStateChanged event = new CallStateChanged(external);
