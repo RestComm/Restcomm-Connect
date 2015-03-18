@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
+import javax.sdp.SdpException;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
 import javax.servlet.sip.ServletParseException;
@@ -838,12 +839,23 @@ public final class Call extends UntypedActor {
             if (isOutbound()) {
                 command = new CreateMediaSession("sendrecv", "", true);
             } else {
-                final String externalIp = invite.getInitialRemoteAddr();
-                final byte[] sdp = invite.getRawContent();
-                final String offer = SdpUtils.patch(invite.getContentType(), sdp, externalIp);
-                command = new CreateMediaSession("sendrecv", offer, false);
+                if (!liveCallModification) {
+                    command = generateRequest(invite);
+                } else {
+                    if (lastResponse != null && lastResponse.getStatus() == 200) {
+                        command = generateRequest(lastResponse);
+                    }
+                    // TODO no else may lead to NullPointerException
+                }
             }
             msController.tell(command, source);
+        }
+
+        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException {
+            final String externalIp = sipMessage.getInitialRemoteAddr();
+            final byte[] sdp = sipMessage.getRawContent();
+            final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
+            return new CreateMediaSession("sendrecv", offer, false);
         }
     }
 

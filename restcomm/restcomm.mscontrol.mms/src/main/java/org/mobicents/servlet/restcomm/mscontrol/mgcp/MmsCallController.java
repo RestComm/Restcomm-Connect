@@ -641,23 +641,8 @@ public class MmsCallController extends MediaServerController {
             if (callOutbound) {
                 open = new OpenConnection(ConnectionMode.SendRecv);
             } else {
-                if (!liveCallModification) {
-                    final String externalIp = invite.getInitialRemoteAddr();
-                    final byte[] sdp = invite.getRawContent();
-                    final String offer = patch(invite.getContentType(), sdp, externalIp);
-                    final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
-                    open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
-                } else {
-                    if (lastResponse != null && lastResponse.getStatus() == 200) {
-                        final String externalIp = lastResponse.getInitialRemoteAddr();
-                        final byte[] sdp = lastResponse.getRawContent();
-                        final String offer = patch(lastResponse.getContentType(), sdp, externalIp);
-                        final ConnectionDescriptor descriptor = new ConnectionDescriptor(offer);
-                        open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
-                    }
-                }
-                // final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
-                // open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
+                open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
             }
             remoteConn.tell(open, source);
         }
