@@ -1718,16 +1718,23 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             method = "POST";
                         }
                     }
-                    // Redirect to the action url.
-                    String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
-                    if (!httpRecordingUri.endsWith("/")) {
-                        httpRecordingUri += "/";
-                    }
-                    httpRecordingUri += recordingSid.toString() + ".wav";
-                    URI publicRecordingUri = URI.create(httpRecordingUri);
                     final List<NameValuePair> parameters = parameters();
-                    parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
-                    parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
+                    boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
+                    if (amazonS3Enabled) {
+                        //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getUri().toString()));
+                    } else {
+                        // Redirect to the action url.
+                        String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
+                        if (!httpRecordingUri.endsWith("/")) {
+                            httpRecordingUri += "/";
+                        }
+                        httpRecordingUri += recordingSid.toString() + ".wav";
+                        URI publicRecordingUri = URI.create(httpRecordingUri);
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
+                    }
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;

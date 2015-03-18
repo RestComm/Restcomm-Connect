@@ -173,6 +173,17 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
+	
+	<amazon-s3>
+		<enabled>false</enabled>
+		<bucket-name>restcomm-recordings</bucket-name>
+		<folder></folder>
+		<access-key></access-key>
+		<security-key>m0b1c3nts</security-key>
+		<reduced-redundancy>false</reduced-redundancy>
+		<days-to-retain-public-url>180</days-to-retain-public-url>
+		<remove-original-file>true</remove-original-file>
+	</amazon-s3>
 
 	<!-- The media server manager is responsible for managing the media servers
 		in use by RestComm. The default way to control media servers is using the

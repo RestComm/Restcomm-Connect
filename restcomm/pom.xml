@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
@@ -115,6 +116,7 @@
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>7.0.3.39</mgcpunit.version>
+		<aws.sdk.version>1.9.24</aws.sdk.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -142,8 +144,8 @@
 		<module>restcomm.rvd</module>
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
-    <module>restcomm.routing</module>
-  </modules>
+		<module>restcomm.routing</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -446,6 +448,12 @@
 				<artifactId>naturalvoices</artifactId>
 				<version>5.1</version>
 			</dependency>
+
+			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-s3</artifactId>
+				<version>${aws.sdk.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -571,7 +579,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g/>
+						<g />
 					</compilerArguments>
 					<source>1.7</source>
 					<target>1.7</target>
@@ -594,7 +602,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile/>
+					<useFile />
 				</configuration>
 				<dependencies>
 					<dependency>
