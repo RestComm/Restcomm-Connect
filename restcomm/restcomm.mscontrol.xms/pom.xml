@@ -73,19 +73,19 @@
 		<dependency>
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>dlgmsc</artifactId>
-			<version>4.0-su1</version>
+			<version>4.1.315</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>msmltypes</artifactId>
-			<version>4.0-su1</version>
+			<version>4.1.315</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>dlgcsmiltypes</artifactId>
-			<version>1.0</version>
+			<version>4.1.315</version>
 		</dependency>
 
 		<dependency>
