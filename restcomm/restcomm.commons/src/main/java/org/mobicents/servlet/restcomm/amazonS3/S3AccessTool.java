@@ -71,11 +71,13 @@ public class S3AccessTool {
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, securityKey);
         AmazonS3 s3client = new AmazonS3Client(credentials);
         try {
-            File file = new File(fileToUpload);
+            URI fileUri = URI.create(fileToUpload);
+            logger.info("File URL: "+fileUri.toString());
+            File file = new File(fileUri);
             logger.info("File exist: "+file.exists());
             StringBuffer bucket = new StringBuffer();
             bucket.append(bucketName);
-            if (folder != null || folder != "")
+            if (folder != null || !folder.isEmpty())
                 bucket.append("/").append(folder);
 
             PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
@@ -97,7 +99,7 @@ public class S3AccessTool {
             }
             date = cal.getTime();
             GeneratePresignedUrlRequest generatePresignedUrlRequestGET =
-                    new GeneratePresignedUrlRequest(bucketName, file.getName());
+                    new GeneratePresignedUrlRequest(bucket.toString(), file.getName());
             generatePresignedUrlRequestGET.setMethod(HttpMethod.GET);
             generatePresignedUrlRequestGET.setExpiration(date);
 

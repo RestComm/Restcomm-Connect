@@ -19,6 +19,15 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDouble;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readUri;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeUri;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,14 +37,11 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
-
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
-
+import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -62,10 +68,9 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     @Override
     public void addRecording(Recording recording) {
         if (s3AccessTool != null) {
-            URI s3Uri = s3AccessTool.uploadFile("/"+recordingPath+"/"+recording.getSid().toString()+".wav");
+            URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
             if (s3Uri != null) {
-                recording.builder().setUri(s3Uri);
-                recording = recording.builder().build();
+                recording = recording.updateUri(s3Uri);
             }
         }
         final SqlSession session = sessions.openSession();
