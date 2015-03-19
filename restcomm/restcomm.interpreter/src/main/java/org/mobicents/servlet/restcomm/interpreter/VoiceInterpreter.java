@@ -764,7 +764,33 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, finishRecording);
                 } //This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might come later
                 else if (gathering.equals(state) || (finishGathering.equals(state) && !super.dtmfReceived)) {
-                    fsm.transition(message, finishGathering);
+                    final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
+                    if(sender == call) {
+                        //DTMF using SIP INFO, check if all digits collected here
+                        collectedDigits.append(dtmfResponse.get());
+                        //Collected digits == requested num of digits the complete the collect digits
+                        if (numberOfDigits!=Short.MAX_VALUE) {
+                            if (collectedDigits.length()==numberOfDigits) {
+                                dtmfReceived = true;
+                                fsm.transition(message, finishGathering);
+                            } else {
+                                dtmfReceived = false;
+                                return;
+                            }
+                        } else {
+                            //If collected digits have finish on key at the end then complete the collect digits
+                            if(collectedDigits.toString().endsWith(finishOnKey)) {
+                                dtmfReceived = true;
+                                fsm.transition(message, finishGathering);
+                            } else {
+                                dtmfReceived = false;
+                                return;
+                            }
+                         }
+                    } else {
+                        collectedDigits.append(dtmfResponse.get());
+                        fsm.transition(message, finishGathering);
+                    }
                 } else if (initializingConferenceMediaGroup.equals(state)) {
                     fsm.transition(message, joiningConference);
                 }
