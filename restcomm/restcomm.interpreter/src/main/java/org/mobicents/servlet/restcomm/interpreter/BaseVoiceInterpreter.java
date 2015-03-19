@@ -1686,8 +1686,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
                     if (amazonS3Enabled) {
                         //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
-                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toString()));
-                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getUri().toString()));
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toURL().toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getUri().toURL().toString()));
                     } else {
                         // Redirect to the action url.
                         String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
