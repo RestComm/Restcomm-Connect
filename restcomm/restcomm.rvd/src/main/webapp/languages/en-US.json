@@ -344,13 +344,15 @@
 	"projectManagerDeleteLabel1": "Delete",
 	"projectManagerDeleteLabel2": "?",
 	"projectManagerCalcelButoon": "Cancel",
-
 	"projectManagerCreateNewLabel": "Create new project",
 	"projectManagerCreateButton": "Create",
 	"projectManagerDropProjectsLabel": "Drop RVD projects (.zip) here to import",
 	"projectManagerHtml5DropLabel": "HTML5 Drop File is not supported!",
 	"projectManagerChooseDifferentLabel1": "or",
 	"projectManagerChooseDifferentLabel2": "Choose a different kind of project",
+	"voice":"voice",
+	"ussd":"ussd",
+	"sms":"sms",
 
 	"projectSettingsModalSettingsLabel": "Settings",
 	"projectSettingsModalEnableAppLabel": "Enable application logging",
