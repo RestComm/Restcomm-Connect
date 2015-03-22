@@ -68,7 +68,7 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
   		prefix: '/restcomm-rvd/languages/',
   		suffix: '.json'
 	});
-	$translateProvider.use('enUS');
+	$translateProvider.use('en-US');
 
 }]);
 
