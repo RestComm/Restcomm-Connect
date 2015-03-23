@@ -3,7 +3,7 @@
 
 <head>
 
-	<title>Restcomm Designer</title>
+	<title>{{'indexPageTitle' | translate}}</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="">
@@ -28,7 +28,7 @@
 	<div class="navbar navbar-inverse navbar-fixed-top" role="navigation" ng-controller="mainMenuCtrl">
 		<div class="container-fluid">
 				<div class="navbar-header">
-					<span class="navbar-brand"><img class="rvd-telestax-image" src="images/telestax-logo-dark.png"/> <img src="images/restcomm-logo.png" class="rvd-phone-image" /> RESTCOMM visual service designer</span>
+					<span class="navbar-brand"><img class="rvd-telestax-image" src="images/telestax-logo-dark.png"/> <img src="images/restcomm-logo.png" class="rvd-phone-image" /> {{'indexHeadDescriptorLabel' | translate}}</span>
 				</div>
 				<nav class="collabse navbar-collapse" role="navigation">
 					<ul class="nav navbar-nav navbar-right">
@@ -36,12 +36,19 @@
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{authInfo.username}} <b class="caret"></b></a>
 							<ul id="rightMenu" class="dropdown-menu pull-right">
 								<li>
-									<a class="rvd-clickable-text" ng-click="logout()"><i class="fa fa-sign-out"></i>Sign Out</a>
+									<a class="rvd-clickable-text" ng-click="logout()"><i class="fa fa-sign-out"></i>{{'indexUserStatusControllerLabel' | translate}}</a>
 								</li>
 							</ul>
 						</li>
+						<li class="dropdown" ng-controller="translateController">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{{'indexSwitchLanguageTitle' | translate}}"><i class="fa fa-language"></i></a>
+							<ul class="dropdown-menu">
+								<li><a class="rvd-clickable-text" ng-click="changeLanguage('en-US')">en-US</a></li>
+								<li><a class="rvd-clickable-text" ng-click="changeLanguage('pt-BR')">pt-BR</a></li>
+							</ul>
+						</li>
 						<li ng-if="authInfo.rvdticket">
-							<a class="rvd-clickable-text" ng-click="showSettingsModal()" title="IDE Settings"><i class="fa fa-gear"></i></a>
+							<a class="rvd-clickable-text" ng-click="showSettingsModal()" title="{{'indexSettingsTitle' | translate}}"><i class="fa fa-gear"></i></a>
 						</li>
 					</ul>
 				</nav>
@@ -82,6 +89,8 @@
 	
 	<script src="js/upload/angular-file-upload-shim.min.js"></script>
 	<script src="js/angular-1.2.4.min.js"></script>
+	<script src="js/angular-translate.min.js"></script>
+	<script src="js/angular-translate-loader-static-files.min.js"></script>
 	<script src="js/upload/angular-file-upload.min.js"></script>
 	<script src="js/angular-route.js"></script>
 	<!-- <script src="js/angular-cookies.min.js"></script> -->
