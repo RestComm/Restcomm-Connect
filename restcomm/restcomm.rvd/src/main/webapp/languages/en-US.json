@@ -300,6 +300,8 @@
 	"indexPageTitle": "Restcomm Designer",
 	"indexHeadDescriptorLabel": "RESTCOMM visual service designer",
 	"indexUserStatusControllerLabel": "Sign Out",
+	"indexSwitchLanguageTitle": "switch UI language",
+	"indexSettingsTitle": "IDE Settings",
 
 	"loginHeadTitle": "Visual Designer",
 	"loginLoginLabel": "Login",
