@@ -1133,7 +1133,15 @@ public final class Call extends UntypedActor {
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute(Call.class.getName(), self);
-            invite = factory.createRequest(application, "INVITE", from, to);
+            if (name != null && !name.isEmpty()) {
+                //Create the from address using the inital user displayed name
+                //Example: From: "Alice" <sip:userpart@host:port>
+                final Address fromAddress = factory.createAddress(from, name);
+                final Address toAddress = factory.createAddress(to);
+                invite = factory.createRequest(application, "INVITE", fromAddress, toAddress);
+            } else {
+                invite = factory.createRequest(application, "INVITE", from, to);
+            }
             invite.pushRoute(uri);
 
             if (headers != null) {
