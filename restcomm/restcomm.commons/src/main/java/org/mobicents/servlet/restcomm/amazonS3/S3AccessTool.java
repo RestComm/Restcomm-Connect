@@ -57,37 +57,33 @@ public class S3AccessTool {
     private String folder;
     private boolean reducedRedundancy;
     private int daysToRetainPublicUrl;
+    private boolean removeOriginalFile;
 
-    public S3AccessTool(final String accessKey, final String securityKey, final String bucketName, final String folder, final boolean reducedRedundancy, final int daysToRetainPublicUrl) {
+    public S3AccessTool(final String accessKey, final String securityKey, final String bucketName, final String folder,
+            final boolean reducedRedundancy, final int daysToRetainPublicUrl, final boolean removeOriginalFile) {
         this.accessKey = accessKey;
         this.securityKey = securityKey;
         this.bucketName = bucketName;
         this.folder = folder;
         this.reducedRedundancy = reducedRedundancy;
         this.daysToRetainPublicUrl = daysToRetainPublicUrl;
+        this.removeOriginalFile = removeOriginalFile;
     }
 
     public URI uploadFile(final String fileToUpload) {
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, securityKey);
         AmazonS3 s3client = new AmazonS3Client(credentials);
         try {
-            URI fileUri = URI.create(fileToUpload);
-            logger.info("File URL: "+fileUri.toString());
-            File file = new File(fileUri);
-            logger.info("File exist: "+file.exists());
             StringBuffer bucket = new StringBuffer();
             bucket.append(bucketName);
-            if (folder != null || !folder.isEmpty())
+            if (folder != null && !folder.isEmpty())
                 bucket.append("/").append(folder);
-
-            PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(new MimetypesFileTypeMap().getContentType(file));
-            putRequest.setMetadata(metadata);
-            if (reducedRedundancy)
-                putRequest.setStorageClass(StorageClass.ReducedRedundancy);
-            s3client.putObject(putRequest);
-
+            URI fileUri = URI.create(fileToUpload);
+            logger.info("File to upload to S3: "+fileUri.toString());
+            File file = new File(fileUri);
+//            while (!file.exists()){}
+//            logger.info("File exist: "+file.exists());
+            //First generate the Presigned URL, buy some time for the file to be written on the disk
             Date date = new Date();
             Calendar cal = Calendar.getInstance();
             cal.setTime(date);
@@ -104,6 +100,20 @@ public class S3AccessTool {
             generatePresignedUrlRequestGET.setExpiration(date);
 
             URL downloadUrl = s3client.generatePresignedUrl(generatePresignedUrlRequestGET);
+
+            //Second upload the file to S3
+            while (!file.exists()){}
+            PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(new MimetypesFileTypeMap().getContentType(file));
+            putRequest.setMetadata(metadata);
+            if (reducedRedundancy)
+                putRequest.setStorageClass(StorageClass.ReducedRedundancy);
+            s3client.putObject(putRequest);
+
+            if(removeOriginalFile) {
+                removeLocalFile(file);
+            }
             return downloadUrl.toURI();
          } catch (AmazonServiceException ase) {
             logger.error("Caught an AmazonServiceException");
@@ -123,7 +133,9 @@ public class S3AccessTool {
         }
     }
 
-    public URI downloadFile(final URL url) {
-        return null;
+    private void removeLocalFile(final File file) {
+        if (!file.delete()) {
+            logger.info("Error while trying to delete the file: "+file.toString());
+        }
     }
 }
