@@ -130,4 +130,7 @@ App.controller('translateController', function($translate, $scope) {
   $scope.changeLanguage = function (langKey) {
     $translate.use(langKey);
   };
+  $scope.getCurrentLanguage = function () {
+	return $translate.use();
+  }
 });
