@@ -1,107 +1,107 @@
 <div class="rvd-packaging">
 		<div class="form-group">
 			<h1 class="page-header">{{projectName}} 
-				<small>packaging</small>  
+				<small>{{'formPackingLabel' | translate}}</small>  
 				<i class="fa fa-archive pull-right"></i>  
 				<small  class="pull-right packaging-menu"> 
-					 <a class="rvd-clickable" href='#/designer/{{projectName}}'><i class="fa fa-pencil" title="keep editing in Designer"></i></a>&nbsp;
-					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='submitPermitted && saveRapp(projectName,rapp)'><i class="fa fa-save" title="save current package configuration"></i></a>&nbsp;  
-					 <a ng-show="!isNewRapp" class="rvd-clickable" ng-disabled="true" ng-click='preparePackage(projectName)'><i class="fa fa-download" title="download package"></i></a> 
-					 <i ng-show="isNewRapp" class="fa fa-download" title="save package first to enable downloading"></i>
+					 <a class="rvd-clickable" href='#/designer/{{projectName}}'><i class="fa fa-pencil" title="{{'formKeepEditingTitle' | translate}}"></i></a>&nbsp;
+					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='submitPermitted && saveRapp(projectName,rapp)'><i class="fa fa-save" title="{{'formSaveTitle' | translate}}"></i></a>&nbsp;  
+					 <a ng-show="!isNewRapp" class="rvd-clickable" ng-disabled="true" ng-click='preparePackage(projectName)'><i class="fa fa-download" title="{{'formDownloadTitle' | translate}}"></i></a> 
+					 <i ng-show="isNewRapp" class="fa fa-download" title="{{'formDownloadNewTitle' | translate}}"></i>
 				</small>
 			</h1>
 			
 			<p class="lead">
-				Package your application to submit it to the <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}">Restcomm Application Store</a>
+				{{'formPackageAppLabel1' | translate}} <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}">{{'formPackageAppLabel2' | translate}}</a>
 			</p>
 			<p> 
-				Provide configuration options for plugging this application into the end user's environment.
+				{{'formProvideConfigurationLabel' | translate}}
 			</p>
 			
 			<form name="packagingForm" novalidate>
 <!-- -->
 				<div class="rvd-appinfo" name="appinfoForm">
-					<h3>General information</h3>
+					<h3>{{'formGeneralInfoLabel' | translate}}</h3>
 					<div class="row">
 						<div class="col-md-4">
 							<div class="form-group">
-								<label><strong>Application name</strong></label>
+								<label><strong>{{'formAppNameLabel' | translate}}</strong></label>
 								<input ng-model='rapp.info.name' class='form-control' name="name" required>
-								<div class="validation-error" ng-show="appinfoForm.name.$invalid && showErrors">Required</div>
-								<span class="help-block">Official application name for the app store</span>
+								<div class="validation-error" ng-show="appinfoForm.name.$invalid && showErrors">{{'formGeneralInfoRequiredLabel' | translate}}</div>
+								<span class="help-block">{{'formOfficialNameLabel' | translate}}</span>
 							</div>
 	
 							<div class="rvd-appversion">
-								<label><strong>Version</strong></label>
+								<label><strong>{{'formVersionLabel' | translate}}</strong></label>
 								<select ng-model='rapp.info.appVersion' class="form-control" required>
 									<option value="1">1</option>
 									<option value="2">2</option>
 									<option value="3">3</option>
 								</select>
-								<span class="help-block">The version of your application</span>
+								<span class="help-block">{{'formVersionHelp' | translate}}</span>
 							</div>
 						</div>
 						<div class="col-md-8">
-							<label><strong>Summary</strong></label>
+							<label><strong>{{'formSummaryLabel' | translate}}</strong></label>
 							<textarea ng-model='rapp.info.description' class='form-control' required></textarea>
-							<span class="help-block">Describe your application. A small text of 40-60 words is optimal.</span>
+							<span class="help-block">{{'formDescribeAppLabel' | translate}}</span>
 						</div>
 					</div>
 				</div>
  <!-- -->				
 				
 				<div class="rvd-appconfig">
-				<h3>Configuration</h3>
+				<h3>{{'formConfigurarionLabel' | translate}}</h3>
 				
-				<label>How to</label>
+				<label>{{'formHowToLabel' | translate}}</label>
 				<textarea ng-model='rapp.config.howTo' class="form-control"></textarea>
-				<span class="help-block">Type a small text describing general configuration guidelines</span>
+				<span class="help-block">{{'formHowToHelp' | translate}}</span>
 				
-				<label>Provisioning URL</label>
+				<label>{{'formConfigurationProvisioningUrlLabel'|translate}}</label>
 				<input ng-model="rapp.config.provisioningUrl" type="text" class="form-control">
-				<span class="help-block">URL for application provisioning. <em>Incoming number</em> and <em>parameters</em> hooks are supported. Read more <a href="http://{{effectiveSettings.appStoreDomain}}/application-provisioning-api-spec" target="_blank">here</a> for the REST api specification.</span>
+				<span class="help-block">{{'formConfigurationProvisioningUrlHelp1' | translate}} <a href="http://{{effectiveSettings.appStoreDomain}}/application-provisioning-api-spec" target="_blank">{{'formConfigurationProvisioningUrlHelp2' | translate}}</a> {{'formConfigurationProvisioningUrlHelp3' | translate}}</span>
 
-				<label>Web UI</label>
+				<label>{{'formConfigurationWebUILabel' | translate}}</label>
 				<input ng-model="rapp.config.bootstrapUrl" type="text" class="form-control">
-				<span class="help-block">URL for lauching application's Web UI if available	</span>
+				<span class="help-block">{{'formConfigurationWebUIHelp' | translate}} </span>
 
 				
 				<div class="rvd-spacer10">&nbsp;</div>
-				<h4>Parameters</h4>
-				<span class="help-block">Customize your app by adding parameters. Add a parameter for any piece of information you need to be adjusted by the end user. Users of this application will have the opportunity to fill in these options in order to customize their installation.</span>				
+				<h4>{{'formAppParametersLabel' | translate}}</h4>
+				<span class="help-block">{{'formAppParametersHelp' | translate}}</span>				
 				
 				<div basic-sortable list-model='rapp.config.options'>
 					<div ng-repeat="configOption in rapp.config.options" class='form-group'>
 						<rvd-panel on-close='removeConfigurationOption(configOption)' panel-title="configOption.label">
 							<div class="row">
 								<div class="form-group col-md-3">
-									<label >Name *</label>
-									<input ng-model='configOption.name' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'welcomeMsg' : ''}}" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="An identifier for this option. It will be used to map this option to an RVD variable">
+									<label >{{'formNameLabel' | translate}}</label>
+									<input ng-model='configOption.name' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'formNamePlaceholder' : '' | translate}}" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formNameTooltip' | translate}}">
 								</div>
 								<div class="form-group col-md-3">
-									<label>Label *</label>
-									<input ng-model='configOption.label' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" required placeholder="{{$index==0 ? 'Welcome Message' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A label for the generated option field. Try to choose an appropriate label.">
+									<label>{{'formLabelLabel' | translate}}</label>
+									<input ng-model='configOption.label' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" required placeholder="{{$index==0 ? 'formLabelPlaceholder' : '' | translate}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formLabelTooltip' | translate}}">
 								</div>	
 								<div class="form-group col-md-3">
-									<label>Default value</label>
-									<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'Welcome to the IVR clinic. Nice to see you.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type an optional default value for the field. It will be pre-filled with it.">
+									<label>{{'formDefaultValueLabel' | translate}}</label>
+									<input ng-model='configOption.defaultValue' class="form-control" placeholder="{{$index==0 ? 'formDefaultValuePlaceholder' : '' | translate}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formDefaultValueTooltip' | translate}}">
 								</div>	
 								<div class="form-group col-md-3">
-									<label>Required</label>
+									<label>{{'formAppParamsRequiredLabel' | translate}}</label>
 									<div>
-										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.required'  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Is this field required ?  Your application should handle absence of this field properly.">
+										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.required'  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formAppParamsRequiredTooltip' | translate}}">
 									</div>
 								</div>									
 							</div>
 							<div class="row">
 								<div class="form-group col-md-6">
 									<label>Description *</label>
-									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed"></textarea>
+									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'formDescriptionPlaceholder' : '' | translate}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formDescriptionTooltip' | translate}}"></textarea>
 								</div>
 								<div class="form-group col-md-6">
-									<label>Used for initialization</label>
+									<label>{{'formConfigurationInitOptionLabel' | translate}}</label>
 									<div>
-										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.isInitOption'  placeholder='true' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Should this field be transmitted to the backend whenever this is started ?">
+										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.isInitOption'  placeholder='true' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formConfigurationInitOptionTooltip' | translate}} ">
 									</div>
 								</div>
 							</div>				
@@ -109,16 +109,16 @@
 					</div>
 				</div>
 				
-				<button class="btn btn-primary" ng-click="addConfigurationOption('value')">Add parameter</button>
+				<button class="btn btn-primary" ng-click="addConfigurationOption('value')">{{'formAddParameterButton' | translate}}</button>
 		
 				<div class="rvd-spacer10">&nbsp;</div>
 				
-				<h4>Multitenancy</h4>
-				<p>If your application relies on multitenant external services you will need to specify <em>instanceToken</em>.
+				<h4>{{'formConfigurationMultitenancyLabel' | translate}}</h4>
+				<p>{{'formConfigurationMultitenancyMessage1' | translate}}  <em>instanceToken</em>.
 				<ul>
-					<li><strong>instanceToken</strong> - Used to identify each individual instance of this application to the backend. It also works as an authentication token.</li>
+					<li><strong>instanceToken</strong> - {{'formConfigurationMultitenancyMessage1' | translate}} </li>
 				</ul>				
-				<button ng-show="!optionExists('instanceToken')" class="btn btn-primary" ng-click="addConfigurationOption('instanceToken')">Add <em>Instance Token</em> parameter</button>
+				<button ng-show="!optionExists('instanceToken')" class="btn btn-primary" ng-click="addConfigurationOption('instanceToken')">{{'formConfigurationAddTokenButton1' | translate}} <em>Instance Token</em> {{'formConfigurationAddTokenButton2' | translate}}</button>
 			</div>
 				{{watchFormStatus(packagingForm.$valid)}}
 			</form>

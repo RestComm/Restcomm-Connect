@@ -8,9 +8,9 @@
 			<div class="col-md-12">				
 				<form lookup-context name="form" novalidate>
 					<div class="form-group">
-						<span class="help-block">Text &nbsp;<i class="fa fa-info-circle rvd-clickable" popover='Display some help message [...]' popover-placement='top'></i></span>
+						<span class="help-block">{{'ussdSayStepTextLabel' | translate}} &nbsp;<i class="fa fa-info-circle rvd-clickable" popover="{{'ussdSayStepTextLabelPopover' | translate}}" popover-placement='top'></i></span>
 						<textarea ng-model='step.text' lookup-target class="form-control medium"></textarea>	
-						<div class='help-block pull-left' ng-show='countUssdChars(step.text) > 0'>{{countUssdChars(step.text)}} characters</div>
+						<div class='help-block pull-left' ng-show='countUssdChars(step.text) > 0'>{{countUssdChars(step.text)}} {{'ussdSayStepChacarctersLabel' | translate}}</div>
 						<!--  <div class="validation-error" ng-show="countUssdChars(step.text) < 0">Text will be truncated!</div> -->
 					</div>	
 					<div class="form-group pull-right">
