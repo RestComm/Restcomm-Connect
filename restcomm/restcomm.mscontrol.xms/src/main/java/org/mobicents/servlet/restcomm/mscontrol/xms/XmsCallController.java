@@ -521,8 +521,6 @@ public class XmsCallController extends MediaServerController {
     private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         // Always reuse current media group if active
         if (this.mediaGroup == null) {
-            this.mediaGroup.release();
-
             // Create new media group
             this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
 
@@ -532,6 +530,7 @@ public class XmsCallController extends MediaServerController {
             this.mediaGroup.getRecorder().addListener(this.recorderListener);
         }
 
+        // XXX should send a MediaGroupCreated message, not the ActorRef (part of VI refactoring)
         sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
     }
 
