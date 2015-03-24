@@ -600,6 +600,14 @@ textarea.medium {
     top: 51px;
 }
 
+.navbar-brand .rvd-head {
+	color: #999;
+}
+.navbar-brand .rvd-head:hover {
+	text-decoration: none;
+	color: #CCC;
+}
+
 /* ------------------ index.html - top menu ---------------- */
 .rvd-phone-image {
 	margin-top: -6px;
