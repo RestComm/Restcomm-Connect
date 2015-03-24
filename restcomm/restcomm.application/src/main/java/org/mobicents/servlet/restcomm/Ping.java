@@ -124,13 +124,13 @@ public class Ping {
                     if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                         logger.info("Ping to Telestax Proxy was successfully sent");
                         timer.cancel();
-                        if (!subsequentTimerIsSet) {
-                            logger.info("Will set subsequent timer");
-                            boolean daemon = true;
-                            subsequentTimer = new Timer(daemon);
-                            subsequentTimer.schedule(ping, 1800000, 1800000);
-                            subsequentTimerIsSet = true;
-                        }
+//                        if (!subsequentTimerIsSet) {
+//                            logger.info("Will set subsequent timer");
+//                            boolean daemon = true;
+//                            subsequentTimer = new Timer(daemon);
+//                            subsequentTimer.schedule(ping, 1800000, 1800000);
+//                            subsequentTimerIsSet = true;
+//                        }
                         return;
                     } else {
                         logger.error("Ping to Telestax Proxy was sent, but there was a problem. Response status line: "+response.getStatusLine());
