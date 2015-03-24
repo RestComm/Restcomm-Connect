@@ -11,15 +11,15 @@ configUdpManager() {
 	    -e "s|<property name=\"localSubnet\">.*<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
 	    -e 's|<property name="useSbc">.*</property>|<property name="useSbc">true</property>|' \
 	    -e 's|<property name="dtmfDetectorDbi">.*</property>|<property name="dtmfDetectorDbi">0</property>|' \
-	    -e 's|<property name="lowestPort">.*</property>|<property name="lowestPort">64535</property>|' \
-	    -e 's|<property name="highestPort">.*</property>|<property name="highestPort">65535</property>|' \
+	    -e "s|<property name=\"lowestPort\">.*</property>|<property name=\"lowestPort\">$MEDIASERVER_LOWEST_PORT</property>|" \
+	    -e "s|<property name=\"highestPort\">.*</property>|<property name=\"highestPort\">$MEDIASERVER_HIGHEST_PORT</property>|" \
 	    $FILE > $FILE.bak
 
-	grep -q -e '<property name="lowestPort">.*</property>' $FILE.bak || sed -i '/rtpTimeout/ a\
-    <property name="lowestPort">34534</property>' $FILE.bak
+#	grep -q -e "<property name=\"lowestPort\">.*</property>" $FILE.bak || sed -i "/rtpTimeout/ a\
+#    <property name=\"lowestPort\">$MEDIASERVER_LOWEST_PORT</property>" $FILE.bak
 
-    grep -q -e '<property name="highestPort">.*</property>' $FILE.bak || sed -i '/rtpTimeout/ a\
-    <property name="highestPort">65535</property>' $FILE.bak
+#    grep -q -e "<property name=\"highestPort\">.*</property>" $FILE.bak || sed -i "/rtpTimeout/ a\
+#    <property name=\"highestPort\">$MEDIASERVER_HIGHEST_PORT</property>" $FILE.bak
 
 	mv $FILE.bak $FILE
 	echo 'Configured UDP Manager'
@@ -59,7 +59,13 @@ configLogDirectory() {
 }
 
 ## MAIN
-echo "Configuring Mobicents Media Server... BIND_ADDRESS $BIND_ADDRESS NETWORK $NETWORK SUBNET_MASK $SUBNET_MASK"
+if [[ -z "$MEDIASERVER_LOWEST_PORT" ]]; then
+	MEDIASERVER_LOWEST_PORT="34534"
+fi
+if [[ -z "$MEDIASERVER_HIGHEST_PORT" ]]; then
+	MEDIASERVER_HIGHEST_PORT="65535"
+fi
+echo "Configuring Mobicents Media Server... BIND_ADDRESS $BIND_ADDRESS NETWORK $NETWORK SUBNET_MASK $SUBNET_MASK RTP_LOW_PORT $MEDIASERVER_LOWEST_PORT RTP_HIGH_PORT $MEDIASERVER_HIGHEST_PORT"
 configUdpManager $BIND_ADDRESS $NETWORK $SUBNET_MASK
 #configJavaOpts
 configLogDirectory
