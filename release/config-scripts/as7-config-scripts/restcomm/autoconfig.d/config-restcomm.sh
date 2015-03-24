@@ -45,6 +45,8 @@ configRestcomm() {
 	bind_address="$1"
 	static_address="$2"
 	outbound_proxy="$3"
+	outbound_proxy_user="$4"
+	outbound_proxy_password="$5"
 	recording_address=$bind_address
 	if [ -n "$static_address" ]; then
 		recording_address=$static_address
@@ -62,7 +64,9 @@ configRestcomm() {
 			-e "s|<normalize-numbers-for-outbound-calls>.*<\/normalize-numbers-for-outbound-calls>|<normalize-numbers-for-outbound-calls>false<\/normalize-numbers-for-outbound-calls>|" \
 			-e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$recording_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
 			-e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
+			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
+			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
+			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 
 	else
 		if [ -n "$static_address" ]; then
@@ -76,7 +80,9 @@ configRestcomm() {
 			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$static_address:8080\/restcomm\/cache<\/cache-uri>|" \
 			-e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$recording_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
 			-e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$static_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
+			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|" \
+			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
+			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 		else
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
@@ -86,7 +92,9 @@ configRestcomm() {
 			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http:\/\/$bind_address:8080\/restcomm\/cache<\/cache-uri>|" \
 			-e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http:\/\/$recording_address:8080\/restcomm\/recordings<\/recordings-uri>|" \
 			-e "s|<error-dictionary-uri>.*<\/error-dictionary-uri>|<error-dictionary-uri>http:\/\/$bind_address:8080\/restcomm\/errors<\/error-dictionary-uri>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  $FILE > $FILE.bak;
+			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
+			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
+			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 		fi
 	fi
 	mv $FILE.bak $FILE
@@ -308,7 +316,7 @@ configMediaServerManager() {
 echo 'Configuring RestComm...'
 #configJavaOpts
 configMobicentsProperties
-configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY"
+configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
