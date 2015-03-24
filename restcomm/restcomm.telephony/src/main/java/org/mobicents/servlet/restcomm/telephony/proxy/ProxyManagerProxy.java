@@ -19,12 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony.proxy;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-
 import java.io.IOException;
 
 import javax.servlet.ServletConfig;
@@ -32,20 +26,30 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class ProxyManagerProxy extends SipServlet {
+public final class ProxyManagerProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
-
+    private static final Logger logger = Logger.getLogger(ProxyManagerProxy.class);
     private ActorSystem system;
     private ActorRef manager;
+    private ServletContext context;
 
     public ProxyManagerProxy() {
         super();
@@ -68,26 +72,42 @@ public final class ProxyManagerProxy extends SipServlet {
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
-        final ServletContext context = config.getServletContext();
-        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        configuration = configuration.subset("runtime-settings");
-        final String address = configuration.getString("external-ip");
-        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
-        manager = manager(config, factory, storage, address);
-        context.setAttribute(ProxyManager.class.getName(), manager);
+//        final ServletContext context = config.getServletContext();
+//        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+//        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+//        configuration = configuration.subset("runtime-settings");
+//        final String address = configuration.getString("external-ip");
+//        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+//        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+//        manager = manager(config, factory, storage, address);
+//        context.setAttribute(ProxyManager.class.getName(), manager);
     }
 
-    private ActorRef manager(final ServletConfig configuration, final SipFactory factory, final DaoManager storage,
+    private ActorRef manager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
             final String address) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ProxyManager(configuration, factory, storage, address);
+                return new ProxyManager(servletContext, factory, storage, address);
             }
         }));
+    }
+
+    @Override
+    public void servletInitialized(SipServletContextEvent event) {
+        if (event.getSipServlet().getClass().equals(ProxyManagerProxy.class)) {
+            logger.info("ProxyManagerProxy sip servlet initialized. Will proceed to create ProxyManager");
+            context = event.getServletContext();
+            final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+            Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+            configuration = configuration.subset("runtime-settings");
+            final String address = configuration.getString("external-ip");
+            final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+            system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            manager = manager(context, factory, storage, address);
+            context.setAttribute(ProxyManager.class.getName(), manager);
+        }
     }
 }

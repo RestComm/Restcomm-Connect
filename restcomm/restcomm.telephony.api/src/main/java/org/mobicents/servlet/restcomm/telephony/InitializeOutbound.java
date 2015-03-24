@@ -31,8 +31,11 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  */
 @Immutable
 public final class InitializeOutbound {
+    //The displayed name of the original user
     private final String name;
+    //From SipURI
     private final SipURI from;
+    //To SipURI
     private final SipURI to;
     private final String username;
     private final String password;
