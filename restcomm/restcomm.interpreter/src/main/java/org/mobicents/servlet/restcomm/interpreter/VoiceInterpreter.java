@@ -317,6 +317,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
+        transitions.add(new Transition(joiningCalls, finishDialing));
         transitions.add(new Transition(joiningCalls, bridged));
         transitions.add(new Transition(joiningCalls, hangingUp));
         transitions.add(new Transition(joiningCalls, finished));
@@ -559,7 +560,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
-                if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
+                if(joiningCalls.equals(state)) {
+                    fsm.transition(message, finishDialing);
+                } else if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
                     fsm.transition(message, finishDialing);
                 } else
                 // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
@@ -832,6 +835,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (forking.equals(state)) {
                 fsm.transition(message, finishDialing);
             } else if (bridged.equals(state)) {
+                fsm.transition(message, finishDialing);
+            } else if(joiningCalls.equals(state)) {
                 fsm.transition(message, finishDialing);
             }
         }

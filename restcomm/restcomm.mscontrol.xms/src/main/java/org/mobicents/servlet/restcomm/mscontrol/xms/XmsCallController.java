@@ -408,8 +408,14 @@ public class XmsCallController extends MediaServerController {
                     mediaMixer.removeListener(this);
                 }
             } else if (AllocationEvent.IRRECOVERABLE_FAILURE.equals(eventType)) {
-                // XXX treat exception
-                logger.error("Can't enter conference...IRRECOVERABLE_FAILURE ");
+                logger.error("Can't enter conference...IRRECOVERABLE_FAILURE");
+
+                // Media Mixer was not created
+                mediaMixer.removeListener(this);
+                mediaMixer = null;
+
+                // Terminate Call
+                call.tell(new MediaServerControllerError(), self());
             }
         }
 
@@ -1008,6 +1014,7 @@ public class XmsCallController extends MediaServerController {
             if (mediaSession != null) {
                 mediaSession.release();
                 mediaSession = null;
+                mediaGroup = null;
             }
 
             // Inform call that media session has been properly closed
