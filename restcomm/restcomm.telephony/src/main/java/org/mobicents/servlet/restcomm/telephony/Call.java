@@ -1121,7 +1121,9 @@ public final class Call extends UntypedActor {
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
-        this.msController.tell(message, sender);
+        if(is(inProgress)) {
+            this.msController.tell(message, sender);
+        }
     }
 
     private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
