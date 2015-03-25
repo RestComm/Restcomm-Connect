@@ -97,6 +97,7 @@ import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.telephony.Play;
 import org.mobicents.servlet.restcomm.telephony.Record;
+import org.mobicents.servlet.restcomm.telephony.RecordingStarted;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
@@ -1542,6 +1543,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 record = new Record(recordingUri, timeout, maxLength, finishOnKey);
             }
             callMediaGroup.tell(record, source);
+            call.tell(new RecordingStarted(), source);
         }
     }
 
@@ -1575,6 +1577,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if(duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+            } else {
+                logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }
             final Recording.Builder builder = Recording.builder();
             builder.setSid(recordingSid);
