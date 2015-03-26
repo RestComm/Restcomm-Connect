@@ -855,7 +855,7 @@ public class XmsCallController extends MediaServerController {
             // attach the media group to the media mixer
             MediaGroupStateChanged.State mediaGroupState;
             try {
-                this.mediaGroup.unjoin(this.networkConnection);
+                // this.mediaGroup.unjoin(this.networkConnection);
                 this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
                 mediaGroupState = MediaGroupStateChanged.State.ACTIVE;
             } catch (MsControlException e) {
