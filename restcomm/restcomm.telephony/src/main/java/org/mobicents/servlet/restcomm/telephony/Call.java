@@ -446,32 +446,11 @@ public final class Call extends UntypedActor {
     private void stopRecordingCall() throws UnsupportedAudioFileException, IOException {
         logger.info("Stop recording call");
         if (group != null) {
-            recording = false;
+//            recording = false;
             //No need to stop the group here, it was stopped earlier by VoiceInterpreter
             group.tell(new Stop(), null);
-//            if (recordingUri != null) {
-//                Double duration = WavUtils.getAudioDuration(recordingUri);
-//                if (duration.equals(0.0)) {
-//                    final DateTime end = DateTime.now();
-//                    duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-//                } else {
-//                    logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
-//                }
-//                final Recording.Builder builder = Recording.builder();
-//                builder.setSid(recordingSid);
-//                builder.setAccountSid(accountId);
-//                builder.setCallSid(id);
-//                builder.setDuration(duration);
-//                builder.setApiVersion(runtimeSettings.getString("api-version"));
-//                StringBuilder buffer = new StringBuilder();
-//                buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-//                .append(accountId.toString());
-//                buffer.append("/Recordings/").append(recordingSid.toString());
-//                builder.setUri(URI.create(buffer.toString()));
-//                final Recording recording = builder.build();
-//                RecordingsDao recordsDao = daoManager.getRecordingsDao();
-//                recordsDao.addRecording(recording);
-//            }
+            //VoiceInterpreter.finishDialing (if BYE sent by initial calls OR Call.ClosingRemoteConnection (if BYE sent by outbound call)
+            //Will take care to create the recording object
         } else {
             logger.info("Tried to stop recording but group was null.");
         }
@@ -1787,71 +1766,49 @@ public final class Call extends UntypedActor {
 
                 bye.send();
 
-//                if (recording) {
-//                    logger.info("Call - Will stop recording now");
-//                    stopRecordingCall();
-//                    if (recordingUri != null) {
-//                        Double duration = WavUtils.getAudioDuration(recordingUri);
-//                        if (duration.equals(0.0)) {
-//                            logger.info("At finishDialing. File doesn't exist since duration is 0");
-//                            final DateTime end = DateTime.now();
-//                            duration = 12.0;//new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-//                        } else {
-//                            logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
-//                        }
-//                        final Recording.Builder builder = Recording.builder();
-//                        builder.setSid(recordingSid);
-//                        builder.setAccountSid(accountId);
-//                        builder.setCallSid(id);
-//                        builder.setDuration(duration);
-//                        builder.setApiVersion(runtimeSettings.getString("api-version"));
-//                        StringBuilder buffer = new StringBuilder();
-//                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-//                        .append(accountId.toString());
-//                        buffer.append("/Recordings/").append(recordingSid.toString());
-//                        builder.setUri(URI.create(buffer.toString()));
-//                        final Recording recording = builder.build();
-//                        RecordingsDao recordsDao = daoManager.getRecordingsDao();
-//                        recordsDao.addRecording(recording);
-//                    }
-//                }
+                if (recording) {
+                    recording = false;
+                    logger.info("Call - Will stop recording now");
+                    if (recordingUri != null) {
+                        Double duration = WavUtils.getAudioDuration(recordingUri);
+                        if (duration.equals(0.0)) {
+                            logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                            final DateTime end = DateTime.now();
+                            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+                        } else {
+                            logger.info("Call wraping up recording. File already exists, length: "+ (new File(recordingUri).length()));
+                        }
+                        final Recording.Builder builder = Recording.builder();
+                        builder.setSid(recordingSid);
+                        builder.setAccountSid(accountId);
+                        builder.setCallSid(id);
+                        builder.setDuration(duration);
+                        builder.setApiVersion(runtimeSettings.getString("api-version"));
+                        StringBuilder buffer = new StringBuilder();
+                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                        .append(accountId.toString());
+                        buffer.append("/Recordings/").append(recordingSid.toString());
+                        builder.setUri(URI.create(buffer.toString()));
+                        final Recording recording = builder.build();
+                        RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                        recordsDao.addRecording(recording);
+                    }
+                }
             } else if (message instanceof SipServletRequest) {
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
                 okay.send();
                 if (recording) {
-                    if (direction.contains("outbound")) {
-                        logger.info("Call Direction: "+direction);
-                        logger.info("Outgoing Call - Will ask initial call to stop recording now");
-                        initialCall.tell(new StopRecordingCall(accountId, runtimeSettings, daoManager), null);
-                    } else {
+                    if (!direction.contains("outbound")) {
+                        //Initial Call sent BYE
+                        recording = false;
                         logger.info("Call Direction: "+direction);
                         logger.info("Initial Call - Will stop recording now");
-//                        stopRecordingCall();
-                        if (recordingUri != null) {
-                            Double duration = WavUtils.getAudioDuration(recordingUri);
-                            if (duration.equals(0.0)) {
-                                logger.info("At finishDialing. File doesn't exist since duration is 0");
-                                final DateTime end = DateTime.now();
-                                duration = 12.0;//new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-                            } else {
-                                logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
-                            }
-                            final Recording.Builder builder = Recording.builder();
-                            builder.setSid(recordingSid);
-                            builder.setAccountSid(accountId);
-                            builder.setCallSid(id);
-                            builder.setDuration(duration);
-                            builder.setApiVersion(runtimeSettings.getString("api-version"));
-                            StringBuilder buffer = new StringBuilder();
-                            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                            .append(accountId.toString());
-                            buffer.append("/Recordings/").append(recordingSid.toString());
-                            builder.setUri(URI.create(buffer.toString()));
-                            final Recording recording = builder.build();
-                            RecordingsDao recordsDao = daoManager.getRecordingsDao();
-                            recordsDao.addRecording(recording);
-                        }
+                        stopRecordingCall();
+                        //VoiceInterpreter will take care to prepare the Recording object
+                    } else if (conference != null) {
+                        //Outbound call sent BYE. !Important conference is the initial call here.
+                        conference.tell(new StopRecordingCall(accountId, runtimeSettings, daoManager), null);
                     }
                 }
             } else if (message instanceof SipServletResponse) {
