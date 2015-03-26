@@ -105,7 +105,7 @@ source $BASEDIR/proxy.conf
 # input parameters and default values
 RUN_MODE='standalone'
 #NET_INTERFACE=''
-STATIC_ADDRESS=''
+#STATIC_ADDRESS=''
 BIND_ADDRESS=''
 
 while getopts "s:r:i:" optname

@@ -17,35 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.interpreter;
+package org.mobicents.servlet.restcomm.entities;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import java.util.List;
+
+import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author brainslog@gmail.com (Alexandre Mendonca)
  */
-@Immutable
-public final class StopInterpreter {
-    private boolean liveCallModification = false;
+@NotThreadSafe
+public final class UsageList {
+  private final List<Usage> usages;
 
-    private static final class Singleton {
-        private static final StopInterpreter instance = new StopInterpreter();
-    }
+  public UsageList(final List<Usage> usages) {
+    super();
+    this.usages = usages;
+  }
 
-    private StopInterpreter() {
-        super();
-    }
-
-    public static StopInterpreter instance() {
-        return Singleton.instance;
-    }
-
-    public boolean isLiveCallModification() {
-        return liveCallModification;
-    }
-
-    public void setLiveCallModification(boolean liveCallModification) {
-        this.liveCallModification = liveCallModification;
-    }
-
+  public List<Usage> getUsages() {
+    return usages;
+  }
 }

@@ -25,7 +25,7 @@
 
 	<!--Telscale binaries versions-->
 	<property name="telscale-sipservlets.version" value="6.1.3.GA" />
-	<property name="sipservlets-build" value="281"/>
+	<property name="sipservlets-build" value="293"/>
         <property name="telscale-sipservlets-as7.version" value="7.0.3.${sipservlets-build}" />
 	<!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
 	<property name="telscale-media.version" value="6.1.3.436" />
@@ -87,8 +87,9 @@
         <property name="telscale-sipservlets.eap6.download.url" value="http://ci.telestax.com/job/TelScale-SIP-Servlets-Release-7/${sipservlets-build}/artifact/${telscale-sipservlets.eap6.download.distro.file}" />
         <property name="telscale-sipservlets.eap6.distro.zip.path" value="${checkout.dir}/${telscale-sipservlets.eap6.download.distro.file}" />
 
-	<property name="hsqldb.download.url" value="http://downloads.sourceforge.net/project/hsqldb/hsqldb/hsqldb_1_8_0/hsqldb_1_8_0_10.zip" />
-	<property name="hsqldb.download.distro.file" value="hsqldb_1_8_0_10.zip" />
+	<!--<property name="hsqldb.download.url" value="http://sourceforge.net/projects/hsqldb/files/hsqldb/hsqldb_2_3/hsqldb-2.3.2.zip" />-->
+	<property name="hsqldb.download.url" value="http://ufpr.dl.sourceforge.net/project/hsqldb/hsqldb/hsqldb_2_3/hsqldb-2.3.2.zip" />
+	<property name="hsqldb.download.distro.file" value="hsqldb-2.3.2.zip" />
 	<property name="hsqldb.distro.zip.path" value="${checkout.dir}/${hsqldb.download.distro.file}" />
 
 
@@ -523,8 +524,8 @@
         <copy tofile="${release.tomcat.dir}/Telestax-EULA.pdf" failonerror="true"
         	file="${basedir}/Telestax-EULA.pdf"/>
 
-	<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true"
-        	file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar"/>
+	<!--<copy tofile="${release.tomcat.dir}/lib/hsqldb.jar" failonerror="true"
+        	file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar"/>-->
         <copy file="${basedir}/telestax-license.xml" todir="${release.tomcat.dir}" failonerror="true" />
 	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
        		includes="**/*.sh"/>
@@ -582,7 +583,7 @@
         <copy tofile="${release.as7.dir}/Telestax-EULA.pdf" failonerror="true"
         	file="${basedir}/Telestax-EULA.pdf"/>
 
-	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+	<!--<copy file="${release.hsqldb.dir}//hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>-->
 	<!--<copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
 		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
@@ -645,7 +646,7 @@
         <copy tofile="${release.as7.nolce.dir}/Telestax-EULA.pdf" failonerror="true"
         	file="${basedir}/Telestax-EULA.pdf"/>
 
-	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.as7.nolce.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+	<!--<copy file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.as7.nolce.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>-->
 	<!--<copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
 		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
@@ -707,7 +708,7 @@
         <copy tofile="${release.eap6.dir}/Telestax-EULA.pdf" failonerror="true"
         	file="${basedir}/Telestax-EULA.pdf"/>
 
-	<copy file="${release.hsqldb.dir}/hsqldb/lib/hsqldb.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+	<!--<copy file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>-->
         <!--<copy todir="${release.eap6.dir}/standalone/deployments" failonerror="true"
 		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.eap6.dir}/standalone/deployments/restcomm.war" update="true">

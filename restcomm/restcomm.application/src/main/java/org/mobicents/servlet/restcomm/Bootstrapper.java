@@ -144,7 +144,7 @@ public final class Bootstrapper extends SipServlet {
     private DaoManager storage(final Configuration configuration, final ClassLoader loader) throws ObjectInstantiationException {
         final String classpath = configuration.getString("dao-manager[@class]");
         final DaoManager daoManager = (DaoManager) new ObjectFactory(loader).getObjectInstance(classpath);
-        daoManager.configure(configuration.subset("dao-manager"));
+        daoManager.configure(configuration);
         daoManager.start();
         return daoManager;
     }

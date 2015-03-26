@@ -38,7 +38,7 @@ public final class Recording {
     private final Sid callSid;
     private final Double duration;
     private final String apiVersion;
-    private final URI uri;
+    private URI uri;
 
     public Recording(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
             final Sid callSid, final Double duration, final String apiVersion, final URI uri) {
@@ -87,6 +87,11 @@ public final class Recording {
 
     public URI getUri() {
         return uri;
+    }
+
+    public Recording updateUri(URI newUri) {
+        this.uri = newUri;
+        return this;
     }
 
     @NotThreadSafe

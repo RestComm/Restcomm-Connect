@@ -17,35 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.interpreter;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+package org.mobicents.servlet.restcomm.http;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author brainslog@gmail.com (Alexandre Mendonca)
  */
-@Immutable
-public final class StopInterpreter {
-    private boolean liveCallModification = false;
-
-    private static final class Singleton {
-        private static final StopInterpreter instance = new StopInterpreter();
-    }
-
-    private StopInterpreter() {
-        super();
-    }
-
-    public static StopInterpreter instance() {
-        return Singleton.instance;
-    }
-
-    public boolean isLiveCallModification() {
-        return liveCallModification;
-    }
-
-    public void setLiveCallModification(boolean liveCallModification) {
-        this.liveCallModification = liveCallModification;
-    }
-
+public class UsageJsonEndpoint {
 }

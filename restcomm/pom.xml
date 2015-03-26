@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
@@ -86,7 +87,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>7.0.3.281</sipservletapi.version>
+		<sipservletapi.version>7.0.3.293</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -102,7 +103,7 @@
 		<libphonenumber.version>4.3</libphonenumber.version>
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
-		<hsqldb.version>1.8.0.10</hsqldb.version>
+		<hsqldb.version>2.3.2</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
 		<sip-ri.version>7.0.3.206</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
@@ -115,6 +116,7 @@
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>7.0.3.39</mgcpunit.version>
+		<aws.sdk.version>1.9.24</aws.sdk.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -142,8 +144,8 @@
 		<module>restcomm.rvd</module>
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
-    <module>restcomm.routing</module>
-  </modules>
+		<module>restcomm.routing</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -390,10 +392,9 @@
 			</dependency>
 
 			<dependency>
-				<groupId>hsqldb</groupId>
+				<groupId>org.hsqldb</groupId>
 				<artifactId>hsqldb</artifactId>
 				<version>${hsqldb.version}</version>
-				<scope>test</scope>
 			</dependency>
 
 			<dependency>
@@ -446,6 +447,12 @@
 				<groupId>att</groupId>
 				<artifactId>naturalvoices</artifactId>
 				<version>5.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-s3</artifactId>
+				<version>${aws.sdk.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -516,10 +523,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>hsqldb</groupId>
+			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>${hsqldb.version}</version>
-			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -573,7 +579,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g/>
+						<g />
 					</compilerArguments>
 					<source>1.7</source>
 					<target>1.7</target>
@@ -596,7 +602,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile/>
+					<useFile />
 				</configuration>
 				<dependencies>
 					<dependency>

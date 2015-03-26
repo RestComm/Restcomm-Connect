@@ -67,6 +67,7 @@ import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
@@ -96,6 +97,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author ivelin.ivanov@telestax.com
  * @author jean.deruelle@telestax.com
+ * @author gvagenas@telestax.com
  */
 public final class CallManager extends UntypedActor {
 
@@ -309,7 +311,7 @@ public final class CallManager extends UntypedActor {
                         + request.getRequestURI().toString());
                 Client toClient = clients.getClient(toUser);
                 if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
-                                        // the b2bua
+                    // the b2bua
                     if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
                         logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
                                 + " toHost: " + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
@@ -366,6 +368,51 @@ public final class CallManager extends UntypedActor {
         // We didn't find anyway to handle the call.
         final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
         response.send();
+    }
+
+    private void info(final SipServletRequest request) throws IOException {
+        final ActorRef self = self();
+        final SipApplicationSession application = request.getApplicationSession();
+
+        // if this response is coming from a client that is in a p2p session with another registered client
+        // we will just proxy the response
+        SipSession linkedB2BUASession = B2BUAHelper.getLinkedSession(request);
+        if (linkedB2BUASession != null) {
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("B2BUA: Got INFO request: \n %s", request));
+            }
+            request.getSession().setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, request);
+            SipServletRequest clonedInfo = linkedB2BUASession.createRequest("INFO");
+            linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedInfo);
+
+            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
+            SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
+            InetAddress infoRURI = null;
+            try {
+                infoRURI = InetAddress.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
+            } catch (UnknownHostException e) {
+            }
+            if (toInetUri != null && infoRURI == null) {
+                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the CloneBye request");
+                clonedInfo.setRequestURI(toInetUri);
+            } else if (toInetUri != null
+                    && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
+                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                        + " as a request uri of the CloneInfo request");
+                clonedInfo.setRequestURI(toInetUri);
+            } else if (fromInetUri != null
+                    && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
+                logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
+                        + " as a request uri of the CloneInfo request");
+                clonedInfo.setRequestURI(fromInetUri);
+            }
+            clonedInfo.send();
+        } else {
+            final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
+            call.tell(request, self);
+        }
     }
 
     /**
@@ -515,6 +562,8 @@ public final class CallManager extends UntypedActor {
                 cancel(request);
             } else if ("BYE".equals(method)) {
                 bye(request);
+            } else if ("INFO".equals(method)) {
+                info(request);
             }
         } else if (CreateCall.class.equals(klass)) {
             try {
@@ -617,19 +666,16 @@ public final class CallManager extends UntypedActor {
         final UpdateCallScript request = (UpdateCallScript) message;
         final ActorRef self = self();
         final ActorRef call = request.call();
+        final Boolean moveConnectedCallLeg = request.moveConnecteCallLeg();
+        //Get the outbound leg of this call
+        ActorRef outboundCall = request.outboundCall();
 
-        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
-        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
-                Duration.create(10, TimeUnit.SECONDS));
-        List<ActorRef> callObservers = response.get();
+        logger.info("About to start Live Call Modification");
+        logger.info("Initial Call path: "+call.path());
+        if (outboundCall != null)
+            logger.info("Outbound Call path: "+outboundCall.path());
 
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            getContext().stop(existingInterpreter);
-            call.tell(new StopObserving(null), self());
-        }
-
+        //Prepare VoiceInterpreter
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -644,8 +690,55 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
+        //Interpreter for the first call leg
         final ActorRef interpreter = builder.build();
+
+        //Get first call leg observers and remove them
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
+        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
+                Duration.create(10, TimeUnit.SECONDS));
+        List<ActorRef> callObservers = response.get();
+
+        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
+            ActorRef existingInterpreter = (ActorRef) iterator.next();
+            logger.info("Will tell Call actors to stop observing existing Interpreters");
+            call.tell(new StopObserving(null), self());
+            if(outboundCall != null)
+                outboundCall.tell(new StopObserving(null), self());
+            logger.info("Existing observers removed from Calls actors");
+        }
+
+        //Ask first call leg to execute with the new Interpreter
         interpreter.tell(new StartInterpreter(request.call()), self);
+        logger.info("New Intepreter for first call leg: "+interpreter.path()+" started");
+
+        //Check what to do with the second/outbound call leg of the call
+        if (outboundCall != null) {
+            if (moveConnectedCallLeg) {
+                final ActorRef outboundInterpreter = builder.build();
+                logger.info("About to redirect outbound Call :"+outboundCall.path()+ " with 200ms delay to outbound interpreter: "+outboundInterpreter.path());
+                system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundCall, new ChangeCallDirection(), system.dispatcher());
+                system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundInterpreter, new StartInterpreter(outboundCall), system.dispatcher());
+                //                outboundCall.tell(new ChangeCallDirection(), null);
+                //                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
+                logger.info("New Intepreter for Second call leg: "+outboundInterpreter.path()+" started");
+            } else {
+                logger.info("moveConnectedCallLeg is: "+moveConnectedCallLeg+" so will hangup outboundCall");
+                outboundCall.tell(new Hangup(), null);
+                getContext().stop(outboundCall);
+            }
+        }
+
+        //Cleanup existing Interpreter
+        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
+            ActorRef existingInterpreter = (ActorRef) iterator.next();
+            logger.info("Existing Interpreter path: "+existingInterpreter.path()+" will be stopped");
+            StopInterpreter stopInterpreter = StopInterpreter.instance();
+            stopInterpreter.setLiveCallModification(true);
+            system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter, system.dispatcher());
+            //            existingInterpreter.tell(stopInterpreter, null);
+        }
     }
 
     private ActorRef outbound(final Object message) throws ServletParseException {
@@ -675,13 +768,19 @@ public final class CallManager extends UntypedActor {
                 to = sipFactory.createSipURI(request.to(), uri);
                 String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
                 SipURI outboundIntf = outboundInterface(transport);
+                final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean("outboudproxy-user-at-from-header");
                 if(request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow to use it directly
                     from = (SipURI) sipFactory.createURI(request.from());
                 } else if (useLocalAddressAtFromHeader) {
                     from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
                 } else {
-                    from = sipFactory.createSipURI(request.from(), uri);
+                    if (outboudproxyUserAtFromHeader) {
+                        //https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart of the sip uri for the From header
+                        from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
+                    } else {
+                        from = sipFactory.createSipURI(request.from(), uri);
+                    }
                 }
                 break;
             }
@@ -704,8 +803,15 @@ public final class CallManager extends UntypedActor {
         }
         final ActorRef call = call();
         final ActorRef self = self();
-        final InitializeOutbound init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(),
-                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        final boolean userAtDisplayedName = runtime.subset("outbound-proxy").getBoolean("user-at-displayed-name");
+        InitializeOutbound init;
+        if (request.from() != null && !request.from().contains("@") && userAtDisplayedName) {
+            init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        } else {
+            init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(),
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        }
         call.tell(init, self);
         return call;
     }
