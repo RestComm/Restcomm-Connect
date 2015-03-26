@@ -114,7 +114,6 @@ import org.mobicents.servlet.restcomm.telephony.StartRecordingCall;
 import org.mobicents.servlet.restcomm.telephony.Stop;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.StopRecordingCall;
 import org.mobicents.servlet.restcomm.telephony.Unmute;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
@@ -559,11 +558,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
-                if (recordingCall) {
-                    Configuration runtimeSettings = configuration.subset("runtime-settings");
-                    call.tell(new StopRecordingCall(accountId, runtimeSettings, storage), sender);
-//                    callMediaGroup.tell(new Stop(), null);
-                }
                 if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
                     fsm.transition(message, finishDialing);
                 } else
@@ -1786,32 +1780,32 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (recordingCall && sender == call) {
                 Configuration runtimeSettings = configuration.subset("runtime-settings");
-//                call.tell(new StopRecordingCall(accountId, runtimeSettings, storage), source);
-                if (recordingUri != null) {
-                    Double duration = WavUtils.getAudioDuration(recordingUri);
-                    if (duration.equals(0.0)) {
-                        logger.info("At finishDialing. File doesn't exist since duration is 0");
-                        final DateTime end = DateTime.now();
-                        duration = 12.0;//new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-                    } else {
-                        logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
+                    //Its the initial call that sent BYE so we can create the recording object here
+                    if (recordingUri != null) {
+                        Double duration = WavUtils.getAudioDuration(recordingUri);
+                        if (duration.equals(0.0)) {
+                            logger.info("At finishDialing. File doesn't exist since duration is 0");
+                            final DateTime end = DateTime.now();
+                            duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
+                        } else {
+                            logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
+                        }
+                        final Recording.Builder builder = Recording.builder();
+                        builder.setSid(recordingSid);
+                        builder.setAccountSid(accountId);
+                        builder.setCallSid(callInfo.sid());
+                        builder.setDuration(duration);
+                        builder.setApiVersion(runtimeSettings.getString("api-version"));
+                        StringBuilder buffer = new StringBuilder();
+                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                        .append(accountId.toString());
+                        buffer.append("/Recordings/").append(recordingSid.toString());
+                        builder.setUri(URI.create(buffer.toString()));
+                        final Recording recording = builder.build();
+                        RecordingsDao recordsDao = storage.getRecordingsDao();
+                        recordsDao.addRecording(recording);
                     }
-                    final Recording.Builder builder = Recording.builder();
-                    builder.setSid(recordingSid);
-                    builder.setAccountSid(accountId);
-                    builder.setCallSid(callInfo.sid());
-                    builder.setDuration(duration);
-                    builder.setApiVersion(runtimeSettings.getString("api-version"));
-                    StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
-                    buffer.append("/Recordings/").append(recordingSid.toString());
-                    builder.setUri(URI.create(buffer.toString()));
-                    final Recording recording = builder.build();
-                    RecordingsDao recordsDao = storage.getRecordingsDao();
-                    recordsDao.addRecording(recording);
-                }
-                recordingCall = false;
+                    recordingCall = false;
             }
 
             if (attribute != null) {
