@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, protos, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, bundledWavs) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -7,8 +7,127 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	// console.log("routeParam:");
 	// console.log( $routeParams );
 	
-	$scope.stepService = stepService;
-	$scope.protos = protos;
+	$scope.project = project;
+	$scope.visibleNodes = editedNodes.getEditedNodes();
+	$scope.getActiveNodeName = function () {
+		var activeNode = editedNodes.getActiveNode();
+		return activeNode;
+	}
+	$scope.setActiveNode = function (nodeName) {
+		editedNodes.setActiveNode(nodeName);
+	}
+	$scope.setStartNode = function (name) {
+		console.log( 'set start node to ' + name );
+		$scope.project.startNodeName = name;
+	}
+	$scope.startNodeSet = function (project) {
+		if ( typeof(nodeRegistry.getNode(project.startNodeName)) !== 'undefined' )
+			return true;
+		return false;
+	}
+	$scope.getEditedNodeNames = function () {		
+		return editedNodes.getEditedNodes();
+	}
+	$scope.isNodeActive = function (nodeName) {
+		return editedNodes.isNodeActive(nodeName);
+	}
+	$scope.addNodeClicked = function(kind) {
+		var newnode = ModelBuilder.build( kind+"NodeModel" );
+		nodeRegistry.addNode(newnode);
+		editedNodes.addEditedNode(newnode.name);
+		editedNodes.setActiveNode(newnode.name);
+	}
+	$scope.removeNode = function(nodeName) {
+		nodeRegistry.removeNode(nodeName);
+	};
+	$scope.hideNode = function(nodeName) {
+		editedNodes.removeEditedNode(nodeName);
+	};
+	$scope.editNode = function(nodeName) {
+		editedNodes.addEditedNode(nodeName);
+		editedNodes.setActiveNode(nodeName);
+	}
+	$scope.getNodeLabel = function(nodeName) {
+		return nodeRegistry.getNode(nodeName).label;
+	};	
+	$scope.onEditNodeLabel = function (view, nodeName) {
+		if ( editedNodes.isNodeActive(nodeName) )
+			view.editLabel = !view.editLabel;
+	}
+	$scope.onEditLabelFinished = function (view,nodeName) {
+		view.editLabel = false;
+		nodeRegistry.getNode(nodeName).label = view.label;
+		console.log("label editing finished");
+	}
+	$scope.searchNodesFieldLostFocus = function () {
+		console.log("searchNodesFieldLostFocus");
+	}
+	$scope.getAllTargets = function() {
+		return nodeRegistry.getNodes();
+	}
+	$scope.clearStepWarnings = function () {
+		var nodes = nodeRegistry.getNodes();
+		for ( var i=0; i<nodes.length; i++ ) {
+			for (var j=0; j< nodes[i].steps.length; j++)
+				nodes[i].steps[j].iface.showWarning = false;
+		}
+	}
+	$scope.editFilteredNodes = function(nodes,token) {
+		var filteredNodes = $filter('filterNodesByLabel')(nodes,token);
+		for (var i=0; i<filteredNodes.length; i++) {
+			$scope.editNode(filteredNodes[i].name);
+		}
+	}
+	$scope.hideAllButStartNode = function(nodes,startNodeName) {
+		for (var i=0; i<nodes.length; i++) {
+			if (nodes[i].name != startNodeName) {
+				$scope.hideNode(nodes[i].name);
+			}
+		}
+	}
+	$scope.nodeNamed = function (name) {
+		return nodeRegistry.getNode(name);
+	}
+	$scope.getStartUrl = function () {
+		r = new RegExp("^([^#]+/)[^/#]*#");
+		m = r.exec(document.baseURI);
+		if ( m != null )
+			return m[1] + "services/apps/" + $scope.projectName + "/controller";
+		return '';
+	}	
+	$scope.addGatherMapping = function( gatherStep ) {
+		// first find max inserted digit
+		var max = 0;
+		for (var i = 0; i < gatherStep.menu.mappings.length; i ++ )
+			if ( gatherStep.menu.mappings[i].digits > max )
+				max = gatherStep.menu.mappings[i].digits;
+				
+		gatherStep.menu.mappings.push({digits:max+1, next:""});
+	};
+	$scope.removeGatherMapping = function (gatherStep, mapping) {
+		gatherStep.menu.mappings.splice( gatherStep.menu.mapwapings.indexOf(mapping), 1 );
+	}	
+	// ussd collect handles adding mappings a little differently
+	$scope.addUssdCollectMapping = function (collectStep) {
+		collectStep.menu.mappings.push({digits:"", next:""});
+	}	
+	// returns the number of conference nounds contained in the dial
+	$scope.dialContainsConference = function (dialstep) {
+		var count = 0;
+		for (var i=0; i<dialstep.dialNouns.length; i++) {
+			var noun = dialstep.dialNouns[i];
+			if (noun.dialType == "conference")
+				count ++;
+		}
+		return count;
+	}
+	$scope.selectBundledWav = function(playstep, wavUrl) {
+		playstep.remote.wavUrl = wavUrl;
+	}
+	
+
+	$scope.bundledWavs = bundledWavs;
+
 	$scope.selectedView = 'rcml';
 	$scope.settings = {}; // REMOVE THIS!!! - populate this from some resolved
 							// parameters
@@ -48,12 +167,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	// State variables
 	$scope.projectError = null; // SET when opening a project fails
 	$scope.projectName = $routeParams.projectName;
-	$scope.startNodeName = 'start';
 	
-	$scope.nodes = [];		
-	$scope.activeNode = 0 	// contains the currently active node for all kinds
+	//$scope.nodes = [];		
+	//$scope.activeNode = 0 	// contains the currently active node for all kinds
 							// of nodes
-	$scope.lastNodesId = 0	// id generators for all kinds of nodes
+	//$scope.lastNodesId = 0	// id generators for all kinds of nodes
+	
 	$scope.wavList = [];
 		
 	// Some constants to be moved elsewhere = TODO
@@ -61,84 +180,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.nullValue = null;
 	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
-	$scope.loseFocus = function () {
-		// console.log('lost focus');
-	}
-		
-	// nodes
-	$scope.nodeNamed = function (name) {
-		for ( var i=0; i<$scope.nodes.length; i++ ) {
-			var anynode = $scope.nodes[i];
-			if (anynode.name == name)
-				return anynode;
-		}
-		return null;
-	}
-	$scope.setStartNode = function (name) {
-		console.log( 'set start node to ' + name );
-		$scope.startNodeName = name;
-	}
-	$scope.startNodeSet = function () {
-		if ( typeof($scope.nodeNamed($scope.startNodeName)) !== 'undefined' )
-			return true;
-		return false;
-	}
-	$scope.getStartUrl = function () {
-		r = new RegExp("^([^#]+/)[^/#]*#");
-		m = r.exec(document.baseURI);
-		if ( m != null )
-			return m[1] + "services/apps/" + $scope.projectName + "/controller";
-		return '';
-	}
 
-	
-	$scope.isActiveNodeByIndex = function ( index) { 
-		return index == $scope.activeNode; 
-	};
-	$scope.isActiveNode = function (node) {
-		return $scope.nodes.indexOf(node) == $scope.activeNode;
-	}
-	$scope.setActiveNodeByIndex = function (newindex) {
-		$scope.activeNode = (newindex != -1) ? newindex : 0 ;
-	};
-	$scope.setActiveNode = function ( node) {
-		// console.log( "in setActiveNode" );
-		$scope.setActiveNodeByIndex( $scope.nodes.indexOf(node) );
-	};
-	$scope.setActiveNodeByName = function ( nodename) {
-		for ( node in $scope.nodes )
-			if ( node.name == nodename ) {
-				$scope.setActiveNode( node); // TODO : focus too!
-				break;
-			}
-	};
-	$scope.addNode = function( name, kind ) { // kind is based on project kind
-		$newnode = angular.copy(protos.nodes[kind]);
-		if ( typeof(name) === 'undefined' )
-			$newnode.name += ++$scope.lastNodesId;
-		else
-			$newnode.name = name;
-		$scope.nodes.push( $newnode );
-		return $newnode;
-	};
-	$scope.removeNode = function( index) {
-		if ( index < $scope.nodes.length ) {
-			$scope.nodes.splice(index,1);
-			if ( $scope.activeNode == index )
-				$scope.setActiveNode(0);
-		}
-	};
-	
-	
-	$scope.getAllTargets = function() {
-		var alltargets = [];
-		for ( var i = 0; i < $scope.nodes.length; i++ ) {
-			var anynode = $scope.nodes[i];
-			alltargets.push( {label: anynode.label, name:anynode.name} );
-		}
-		return alltargets;	
-	}
-	
 
 	/*
 	 * When targets change, broadcast an events so that all <select syncModel/>
@@ -153,111 +195,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	});
 	
 	
-	// Utility functions
-	$scope.getMapValuesByIndex = function (map, index) {
-			var values = [];
-			for ( var i = 0; i < index.length; i ++ ) {
-				if ( typeof (map[ index[i] ]) !== 'undefined' )
-					values.push (map [index [i]]);
-			}
-			return values;
-	}
-
-	
-	// gather mappings
-	$scope.addGatherMapping = function( gatherStep ) {
-		// first find max inserted digit
-		var max = 0;
-		for (var i = 0; i < gatherStep.menu.mappings.length; i ++ )
-			if ( gatherStep.menu.mappings[i].digits > max )
-				max = gatherStep.menu.mappings[i].digits;
-				
-		gatherStep.menu.mappings.push({digits:max+1, next:""});
-	};
-	$scope.removeGatherMapping = function (gatherStep, mapping) {
-		gatherStep.menu.mappings.splice( gatherStep.menu.mappings.indexOf(mapping), 1 );
-	}
-	
-	
-	// User interface
-	$scope.toggleEditControls = function (node) {
-		node.iface.edited = !node.iface.edited;
-	};
-	$scope.areSuccessiveSteps = function (node, index, kind1, kind2) {
-		if ( node.steps.length - index >= 2 ) {
-			if ( node.steps[index].kind == kind1  &&  node.steps[index+1].kind == kind2 )
-				return true;
-		} else
-		if ( node.steps.length - index == 1 ) {
-			if ( node.steps[index].kind == kind1  &&  kind2 == null )
-				return true;
-		} else
-		if ( node.steps.length - index == 0 ) {
-			if ( kind1 == null  &&  kind2 == null )
-				return true;
-		}
-
-		return false;
-	};
-	
-	
-	$scope.saveProject = function() {
-		var deferred = $q.defer();
-		
-		var state = $scope.packState();
-		$http({url: 'services/projects/'+ $scope.projectName,
-				method: "POST",
-				data: state,
-				headers: {'Content-Type': 'application/data'}
-		})
-		.success(function (data, status, headers, config) {
-			if (data.rvdStatus == 'OK' )
-				deferred.resolve('Project saved');
-			else
-				deferred.reject(data);			
-		 }).error(function (data, status, headers, config) {
-			 deferred.reject(data);
-		 });	
-		
-		return deferred.promise;
-	}
-
-	$scope.openProject = function(name) {
-		$http({url: 'services/projects/' + name,
-				method: "GET"
-		})
-		.success(function (data, status, headers, config) {
-			$scope.projectName = name;			
-			$scope.unpackState(data);
-			if ( $scope.projectKind == 'voice' )
-				$scope.refreshWavList(name);
-			// maybe override .error() also to display a message?
-		 }).error(function (data, status, headers, config) {
-			 if ( data.serverError && (data.serverError.className == 'IncompatibleProjectVersion') )
-				 $location.path("/upgrade/" + name)
-			 else
-				 $scope.projectError = data.serverError;
-		 });
-	}
-	
-	$scope.refreshWavList = function(projectName) {
-		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
-		.success(function (data, status, headers, config) {
-			$scope.wavList = data;
+	$scope.refreshWavList = function() {
+		designerService.getWavList($scope.projectName).then(function (wavList) {
+			$scope.project.wavList = wavList;
 		});
-	}
 
-	$scope.buildProject = function() {
-		var deferred = $q.defer();
-		
-		$http({url: 'services/projects/' + $scope.projectName + '/build', method: "POST"})
-		.success(function (data, status, headers, config) {
-			deferred.resolve('Build successfull');
-		 }).error(function (data, status, headers, config) {
-			 deferred.reject('buildError');
-		 });
-		
-		return deferred.promise;
 	}
 	
 	$scope.addAssignment = function(step) {
@@ -273,7 +215,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
     }
 	$scope.removeUrlParam = function(step,urlParam) {
 		step.urlParams.splice( step.urlParams.indexOf(urlParam), 1 );
-	}    
+	}
 
 	// File upload stuff for play verbs
 	$scope.onFileSelect = function($files) {
@@ -290,15 +232,14 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		    	  console.log('file uploaded successfully');
 		        // console.log(data);
 		    	  $scope.$emit("fileupload");
-		      });
+		      }).progress(function () {});
 		      // .error(...)
 		      // .then(success, error, progress);
 		    }
 	};
 	
 	$scope.$on('fileupload', function(event, data) {
-		console.log("caught event fileupload");
-		$scope.refreshWavList($scope.projectName);
+		$scope.refreshWavList();
 	});
 	
 	$scope.deleteWav = function (wavItem) {
@@ -363,10 +304,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 	
 	$scope.onSavePressed = function() {
+		var nodes = nodeRegistry.getNodes();
 		$scope.saveSpinnerShown = true;
 		$scope.clearStepWarnings();
-		$scope.saveProject()
-		.then( function () { return $scope.buildProject() } )
+		designerService.saveProject($scope.projectName, $scope.project)
+		.then( function () { return designerService.buildProject($scope.projectName) } )
 		.then(
 			function () { 
 				notifications.put({type:"success", message:"Project saved"});
@@ -382,8 +324,8 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 						var failurePath = errorItems[i].failurePath;
 						m = r.exec( errorItems[i].failurePath );
 						if ( m != null ) {
-							console.log("warning in module " + $scope.nodes[ m[1] ].name + " step " + $scope.nodes[ m[1] ].steps[m[2]].name);
-							$scope.nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
+							console.log("warning in module " + nodes[ m[1] ].name + " step " + nodes[ m[1] ].steps[m[2]].name);
+							nodes[ m[1] ].steps[m[2]].iface.showWarning = true;
 						}
 					}
 				} else
@@ -403,17 +345,9 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	}
 	
 	$scope.$on('wavfileDeleted', function (event,data) {
-		//console.log("caught event wavfileDeleted");
-		$scope.refreshWavList($scope.projectName);
+		$scope.refreshWavList();
 	});
 	
-	
-	$scope.clearStepWarnings = function () {
-		for ( var i=0; i<$scope.nodes.length; i++ ) {
-			for (var j=0; j< $scope.nodes[i].steps.length; j++)
-				$scope.nodes[i].steps[j].iface.showWarning = false;
-		}
-	}
 	
 	
 	/* USSDSay / USSDCollect functions */
@@ -482,55 +416,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	
 	$scope.removeNestedMessage = function (step,nested) {
 		step.messages.splice( step.messages.indexOf(nested), 1 );
-	}
-	
-	$scope.packState = function() {
-		var state = {header:{}, iface:{}};
-		// state.lastStepId = stepService.lastStepId;
-		state.lastStepId = stepRegistry.current();
-		state.nodes = angular.copy($scope.nodes);
-		for ( var i=0; i < state.nodes.length; i++) {
-			var node = state.nodes[i];
-			for (var j=0; j<node.steps.length; j++) {
-				var step = $scope.nodes[i].steps[j];
-				var packedStep;
-				packedStep = step.pack();
-				node.steps[j] = packedStep;
-			}
-		}
-		state.iface.activeNode = $scope.activeNode;
-		state.lastNodeId = $scope.lastNodesId;
-		state.header.startNodeName = $scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
-		state.header.projectKind = $scope.projectKind;	
-		state.header.version = $scope.version;
-		state.exceptionHandlingInfo = $scope.exceptionHandlingInfo.pack();
-		
-		return state;
-	}
-	
-	$scope.unpackState = function (packedState) {
-		stepRegistry.reset(packedState.lastStepId);
-		for ( var i=0; i < packedState.nodes.length; i++) {
-			var node = packedState.nodes[i];
-			node.iface = {};
-			for (var j=0; j<node.steps.length; j++) {
-				var step = stepPacker.unpack(node.steps[j]);
-				node.steps[j] = step;
-			}
-		}
+	}	
 
-		$scope.nodes = packedState.nodes;
-		$scope.lastNodesId = packedState.lastNodeId;
-		$scope.startNodeName = packedState.header.startNodeName;	
-		$scope.projectKind = packedState.header.projectKind;
-		$scope.version = packedState.header.version;
-		$scope.exceptionHandlingInfo = ModelBuilder.build('ExceptionHandlingInfo').init(packedState.exceptionHadlingInfo);
-		
-	}
 	
-	
+
 	// Exception controller & functionality
-	
+	/*
 	var exceptionConfigCtrl = function ($scope, $modalInstance, projectModules) {
 		$scope.moduleSummary = projectModules.getModuleSummary();
 		$scope.exceptionMappings = [];
@@ -574,6 +465,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.showWebTrigger = function (projectName) {
 		webTriggerService.showModal(projectName);
 	}
+	*/
 	
  	
 	// Application logging
@@ -583,19 +475,193 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		
 	// Run the following after all initialization are complete
 	
-	console.log( "opening project " + $scope.projectName);
-	$scope.openProject( $scope.projectName );
+	//console.log( "opening project " + $scope.projectName);
+	//$scope.openProject( $scope.projectName );
 		
      
      // UNSORTED
      // -------------
      
      
-	$scope.editLabelIfSelected = function (node) {
-		if ( $scope.isActiveNode( node ) ) {
-			node.iface.editLabel=!node.iface.editLabel;
-		}
-	}	
+	
 });
+
+angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http', 'stepPacker', 'ModelBuilder', 'nodeRegistry', 'editedNodes', function (stepRegistry, $q, $http, stepPacker, ModelBuilder, nodeRegistry, editedNodes) {
+	var service = {};
+	
+	function openProject(name) {
+		var deferred = $q.defer();
+		
+		editedNodes.clear();
+		nodeRegistry.clear();
+		
+		
+		$http({url: 'services/projects/' + name,
+			method: "GET"
+		})
+		.success(function (data, status, headers, config) {
+			var project = {};
+			project.projectName = name;			
+			unpackState(project, data);
+			if ( project.projectKind == 'voice' ) {
+				getWavList(name).then(function (wavList) {
+					project.wavList = wavList;
+					deferred.resolve(project);
+				}, function (error) {
+					deferred.reject(error);
+				});
+			} else {
+				deferred.resolve(project);
+			}
+			editedNodes.addEditedNode(project.startNodeName); // add a module tab
+			editedNodes.setActiveNode(project.startNodeName); // give focus to this tab
+			
+			
+			// maybe override .error() also to display a message?
+		 }).error(function (data, status, headers, config) {
+			 deferred.reject("IncompatibleProjectVersion")
+			 //if ( data.serverError && (data.serverError.className == 'IncompatibleProjectVersion') )
+			//	 $location.path("/upgrade/" + name)
+			// else
+			//	 $scope.projectError = data.serverError;
+		 });
+		return deferred.promise;
+	}
+	
+	function unpackState(project, packedState) {
+		nodeRegistry.reset(packedState.lastNodeId);
+		stepRegistry.reset(packedState.lastStepId);
+		for ( var i=0; i < packedState.nodes.length; i++) {
+			//var node = ModelBuilder.build( packedState.nodes[i].kind+"Node" ).init( packedState.nodes[i] );
+			var node = ModelBuilder.build( "nodeModel" ).init( packedState.nodes[i] );
+			nodeRegistry.addNode(node);
+		}
+		//project.nodes = packedState.nodes;
+		//project.lastNodesId = packedState.lastNodeId;
+		project.startNodeName = packedState.header.startNodeName;	
+		project.projectKind = packedState.header.projectKind;
+		project.version = packedState.header.version;
+		//project.exceptionHandlingInfo = ModelBuilder.build('ExceptionHandlingInfo').init(packedState.exceptionHadlingInfo);
+	}	
+	
+	function packState(project) {
+		var state = {header:{}, iface:{}};
+		// state.lastStepId = stepService.lastStepId;
+		state.lastStepId = stepRegistry.current();
+		var registry_nodes = nodeRegistry.getNodes();
+		state.nodes = angular.copy(registry_nodes);
+		for ( var i=0; i < state.nodes.length; i++) {
+			var node = state.nodes[i];
+			for (var j=0; j<node.steps.length; j++) {
+				var step = registry_nodes[i].steps[j];
+				var packedStep;
+				packedStep = step.pack();
+				node.steps[j] = packedStep;
+			}
+		}
+		//state.iface.activeNode = $scope.activeNode;
+		state.lastNodeId = nodeRegistry.lastNodeId;
+		state.header.startNodeName = project.startNodeName; //$scope.nodeNamed( $scope.startNodeName ) == null ? null : $scope.nodeNamed( $scope.startNodeName ).name;
+		state.header.projectKind = project.projectKind;	
+		state.header.version = project.version;
+		//state.exceptionHandlingInfo = $scope.exceptionHandlingInfo.pack();
+		
+		return state;
+	}
+	
+	function getWavList(projectName) {
+		var deferred = $q.defer();
+		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
+		.success(function (data, status, headers, config) {
+			//$scope.wavList = data;
+			deferred.resolve(data);
+		})
+		.error(function (data, status, headers, config) {
+			deferred.reject("wav-error");
+		});
+		return deferred.promise;
+	}
+	
+	function saveProject(projectName,project) {
+		var deferred = $q.defer();
+		
+		var state = packState(project);
+		$http({url: 'services/projects/'+ projectName,
+				method: "POST",
+				data: state,
+				headers: {'Content-Type': 'application/data'}
+		})
+		.success(function (data, status, headers, config) {
+			if (data.rvdStatus == 'OK' )
+				deferred.resolve('Project saved');
+			else
+				deferred.reject(data);			
+		 }).error(function (data, status, headers, config) {
+			 deferred.reject(data);
+		 });	
+		
+		return deferred.promise;
+	}
+	
+	function buildProject(projectName) {
+		var deferred = $q.defer();
+		
+		$http({url: 'services/projects/' + projectName + '/build', method: "POST"})
+		.success(function (data, status, headers, config) {
+			deferred.resolve('Build successfull');
+		 }).error(function (data, status, headers, config) {
+			 deferred.reject('buildError');
+		 });
+		
+		return deferred.promise;
+	}
+	
+	function getBundledWavs() {
+		var deferred = $q.defer();
+		$http({url: 'services/designer/bundledWavs', method: "GET"})
+		.success(function (data, status, headers, config) {
+			deferred.resolve(data.payload);
+		 }).error(function (data, status, headers, config) {
+			 deferred.reject('Error fetching designer bundled wavs');
+		 });
+		return deferred.promise;
+	}
+	
+	service.openProject = openProject;
+	service.getWavList = getWavList;
+	service.saveProject = saveProject;
+	service.buildProject = buildProject;
+	service.getBundledWavs = getBundledWavs;
+	
+	return service;
+	
+}]);
+
+angular.module('Rvd').controller("nodeController",["$scope", "nodeRegistry", function ($scope, nodeRegistry) {
+		$scope.node = nodeRegistry.getNode($scope.nodeSummary.name);
+}]);
+
+angular.module('Rvd').controller("nodeTabController",["$scope", "nodeRegistry", function ($scope, nodeRegistry) {
+		$scope.node = nodeRegistry.getNode($scope.nodeSummary.name);
+}]);
+
+angular.module('Rvd').filter('filterNodesByLabel', function () {
+	return function (items, token) {
+		if ( !token )
+			return items;
+			
+		var filtered = [];
+		var r = new RegExp(token,"i")
+		for (var i = 0; i < items.length; i++) {
+			var item = items[i];
+			if ( item.label.search(r) != -1 )
+			filtered.push(item);
+		}
+		return filtered;
+	};
+});
+
+
+
 
 

@@ -6,21 +6,36 @@
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<form name="form" novalidate>
 			<div class='form-group row'>
-				<div lookup-context class="col-md-12">
+				<!-- <div lookup-context class="col-md-12"> -->
+				<div class="col-md-12">
 					<span class="help-block">Type the URL resource of the .wav file</span>
 					<div class="input-group">
 						<span class='input-group-addon'>Audio resource</span>
 						<span class="input-group-addon">
-							<span>local &nbsp;</span>
+							<span title="Select a project-embedded audio resource">local &nbsp;</span>
 							<input ng-model='step.playType' value='local' type="radio">
 						</span>
 						<span class="input-group-addon">
-							<span>remote &nbsp;</span>
+							<span title="Type a custsom URL to a remote audio resource or select one from the RVD bundle">URL &nbsp;</span>
 							<input ng-model='step.playType' value='remote' type="radio">
 						</span>		
+						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.local.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in project.wavList' class="form-control" required></select>
+						
+						<!--
 						<input  name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' lookup-target type='text' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
 						<variable-lookup variable="step.remote.wavUrl" view="input-group" ng-show='step.playType=="remote"'></variable-lookup>
-						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.local.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in wavList' class="form-control" required></select>
+						-->
+						<input  name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' type='text' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
+						<div ng-show='step.playType=="remote"' class="input-group-btn">
+						  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="Select a bundled .wav resource">
+							  <span class="caret"></span>
+						  </button>  
+						  <ul class="dropdown-menu scrollable-menu" role="menu">
+							<li ng-repeat="bundledWav in bundledWavs">
+								<a ng-click='selectBundledWav(step, bundledWav.url)'>{{bundledWav.filename}}</a>
+							</li>
+						  </ul>
+						</div>					
 					</div>
 					<div class="validation-error" ng-show="step.playType=='remote' && form.wavUrl.$invalid">Type a valid .wav resource URL</div>
 					<div class="validation-error" ng-show="step.playType=='local' && form.wavLocalFilename.$invalid">Please select a file from the list</div>

@@ -57,7 +57,17 @@
 				<textarea ng-model='rapp.config.howTo' class="form-control"></textarea>
 				<span class="help-block">Type a small text describing general configuration guidelines</span>
 				
-				<h4>Application parameters</h4>
+				<label>Provisioning URL</label>
+				<input ng-model="rapp.config.provisioningUrl" type="text" class="form-control">
+				<span class="help-block">URL for application provisioning. <em>Incoming number</em> and <em>parameters</em> hooks are supported. Read more <a href="http://{{effectiveSettings.appStoreDomain}}/application-provisioning-api-spec" target="_blank">here</a> for the REST api specification.</span>
+
+				<label>Web UI</label>
+				<input ng-model="rapp.config.bootstrapUrl" type="text" class="form-control">
+				<span class="help-block">URL for lauching application's Web UI if available	</span>
+
+				
+				<div class="rvd-spacer10">&nbsp;</div>
+				<h4>Parameters</h4>
 				<span class="help-block">Customize your app by adding parameters. Add a parameter for any piece of information you need to be adjusted by the end user. Users of this application will have the opportunity to fill in these options in order to customize their installation.</span>				
 				
 				<div basic-sortable list-model='rapp.config.options'>
@@ -88,6 +98,12 @@
 									<label>Description *</label>
 									<textarea ng-model='configOption.description' class="form-control" required placeholder="{{$index==0 ? 'This is the first message you callers hear. Welcome them and inform them what comes next.' : ''}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Describe what this field is used for and how it should be completed"></textarea>
 								</div>
+								<div class="form-group col-md-6">
+									<label>Used for initialization</label>
+									<div>
+										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.isInitOption'  placeholder='true' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Should this field be transmitted to the backend whenever this is started ?">
+									</div>
+								</div>
 							</div>				
 						</rvd-panel>
 					</div>
@@ -97,25 +113,12 @@
 		
 				<div class="rvd-spacer10">&nbsp;</div>
 				
-				<h4>Application services and multitenancy</h4>
-				<p>If your application relies on multitenant external services you will need to specify <em>instanceToken</em> and <em>backendRootURL</em> parameters. For more information on this topic please see <a target="_blank" href="http://{{effectiveSettings.appStoreDomain}}/how-to/writing-multitenant-applications">Writing multitenant applications for the application store</a>.
+				<h4>Multitenancy</h4>
+				<p>If your application relies on multitenant external services you will need to specify <em>instanceToken</em>.
 				<ul>
 					<li><strong>instanceToken</strong> - Used to identify each individual instance of this application to the backend. It also works as an authentication token.</li>
-					<li><strong>backendRootURL</strong> - The root url for the REST services. Place all custom scripts under this URL.</li>
-				</ul>
-				
-				
-				
+				</ul>				
 				<button ng-show="!optionExists('instanceToken')" class="btn btn-primary" ng-click="addConfigurationOption('instanceToken')">Add <em>Instance Token</em> parameter</button>
-				&nbsp;<button ng-show="!optionExists('backendRootURL')" class="btn btn-primary" ng-click="addConfigurationOption('backendRootURL')">Add <em>Backend root URL</em> parameter</button>
-	
-	<!--
-				<div>
-					<br/>
-					Allow user to create new instance on the backend &nbsp;&nbsp; <input type='checkbox'  ng-model='rapp.config.allowInstanceCreation'>
-				</div>
-	-->
-
 			</div>
 				{{watchFormStatus(packagingForm.$valid)}}
 			</form>

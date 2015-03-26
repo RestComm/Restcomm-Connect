@@ -137,6 +137,11 @@
 		</servlet-class>
 		<load-on-startup>4</load-on-startup>
 	</servlet>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
+		</listener-class>
+	</listener>
 	<servlet>
 		<description>XMS Keep Alive Monitor</description>
 		<display-name>KeepAliveMonitor</display-name>

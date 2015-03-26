@@ -136,11 +136,16 @@
 			</div>	
 			
 			<div class='row'>
-				<div  class="col-md-12 input-group form-group">
-					<span class="input-group-addon">Recording</span>
-					<select ng-model='step.record' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
-						<option value=''></option>
-					</select>					
+				<div  class="col-md-12 form-group">
+					<div class="input-group">
+						<span class="input-group-addon">Recording</span>
+						<select ng-model='step.record' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+							<option value=''></option>
+						</select>					
+					</div>
+					<div>
+						<div class="validation-warning" ng-show="step.record==true && dialContainsConference(step)">Recording for Conference is not supported yet</div>
+					</div>
 				</div>
 			</div>
 </div>

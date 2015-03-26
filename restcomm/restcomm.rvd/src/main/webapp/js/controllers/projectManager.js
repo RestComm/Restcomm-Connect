@@ -76,13 +76,14 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: 'services/projects/'+ $scope.projectName + '/archive',
+	        url: 'services/projects',
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
 	      }).success(function(data, status, headers, config) {
 	    	  console.log('Project imported successfully');
 	    	  $scope.refreshProjectList();
+	    	  notifications.put({message:"Project imported successfully", type:"success"});
 	      }).error(function(data, status, headers, config) {
 	    	  if (status == 400) {// BAD REQUEST
 	    		  console.log(data.exception.message);

@@ -19,6 +19,15 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDouble;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readUri;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeUri;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,14 +36,12 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-
 import org.joda.time.DateTime;
-
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
+import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -43,14 +50,29 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 public final class MybatisRecordingsDao implements RecordingsDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.RecordingsDao.";
     private final SqlSessionFactory sessions;
+    private S3AccessTool s3AccessTool;
+    private String recordingPath;
 
     public MybatisRecordingsDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
     }
 
+    public MybatisRecordingsDao(final SqlSessionFactory sessions, final S3AccessTool s3AccessTool, final String recordingPath) {
+        super();
+        this.sessions = sessions;
+        this.s3AccessTool = s3AccessTool;
+        this.recordingPath = recordingPath;
+    }
+
     @Override
-    public void addRecording(final Recording recording) {
+    public void addRecording(Recording recording) {
+        if (s3AccessTool != null) {
+            URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
+            if (s3Uri != null) {
+                recording = recording.updateUri(s3Uri);
+            }
+        }
         final SqlSession session = sessions.openSession();
         try {
             session.insert(namespace + "addRecording", toMap(recording));

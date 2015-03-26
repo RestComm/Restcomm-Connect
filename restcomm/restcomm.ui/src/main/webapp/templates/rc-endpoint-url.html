@@ -2,8 +2,8 @@
     <div class="input-group-btn">
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">{{methodVar}} <span class="caret"></span></button>
         <ul class="dropdown-menu" ng-init="methodVar='POST'" >
-            <li><a href ng-click="methodVar='GET'"><span class="fa fa-check" ng-show="methodVar === 'GET'"></span> GET</a></li>
-            <li><a href ng-click="methodVar='POST'"><span class="fa fa-check" ng-show="methodVar === 'POST'"></span> POST</a></li>
+            <li><a href ng-click="setMethod('GET')"><span class="fa fa-check" ng-show="methodVar === 'GET'"></span> GET</a></li>
+            <li><a href ng-click="setMethod('POST')"><span class="fa fa-check" ng-show="methodVar === 'POST'"></span> POST</a></li>
         </ul>
     </div>
     <input type="text" class="form-control col-md-10" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="urlVar" />
@@ -11,7 +11,8 @@
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-sitemap"></i> <span class="caret"></span></button>
         <ul class="dropdown-menu">
             <li ng-repeat="app in apps">
-                <a href title="{{app.startUrl}}" ng-click="$parent.$parent.urlVar = app.startUrl">{{app.name}}</a>
+                <!-- <a href title="{{app.startUrl}}" ng-click="$parent.$parent.urlVar = app.startUrl">{{app.name}}</a> -->
+                <a href title="{{app.startUrl}}" ng-click="setUrl(app)">{{app.projectName}}</a>
             </li>
             <li class="divider"></li>
             <li><a href="/restcomm-rvd/" target="_blank"><i class="fa fa-sitemap"></i> Create New...</a></li>

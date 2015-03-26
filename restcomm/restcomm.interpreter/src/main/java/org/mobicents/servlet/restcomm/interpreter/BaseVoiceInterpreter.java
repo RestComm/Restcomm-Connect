@@ -1542,6 +1542,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 record = new Record(recordingUri, timeout, maxLength, finishOnKey);
             }
             callMediaGroup.tell(record, source);
+            call.tell(new RecordingStarted(), source);
         }
     }
 
@@ -1575,6 +1576,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+            } else {
+                logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }
             final Recording.Builder builder = Recording.builder();
             builder.setSid(recordingSid);
@@ -1682,16 +1685,23 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             method = "POST";
                         }
                     }
-                    // Redirect to the action url.
-                    String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
-                    if (!httpRecordingUri.endsWith("/")) {
-                        httpRecordingUri += "/";
-                    }
-                    httpRecordingUri += recordingSid.toString() + ".wav";
-                    URI publicRecordingUri = URI.create(httpRecordingUri);
                     final List<NameValuePair> parameters = parameters();
-                    parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
-                    parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
+                    boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
+                    if (amazonS3Enabled) {
+                        //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toURL().toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getUri().toURL().toString()));
+                    } else {
+                        // Redirect to the action url.
+                        String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
+                        if (!httpRecordingUri.endsWith("/")) {
+                            httpRecordingUri += "/";
+                        }
+                        httpRecordingUri += recordingSid.toString() + ".wav";
+                        URI publicRecordingUri = URI.create(httpRecordingUri);
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
+                    }
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;

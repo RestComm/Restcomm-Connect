@@ -32,6 +32,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -59,8 +60,10 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
+import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
 import org.mobicents.servlet.restcomm.fsm.Action;
@@ -115,6 +118,7 @@ import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -183,6 +187,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean dialActionExecuted = false;
     private ActorRef sender;
     private boolean liveCallModification = false;
+    private boolean recordingCall = true;
 
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
@@ -1570,6 +1575,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         httpRecordingUri += recordingSid.toString() + ".wav";
         this.recordingUri = URI.create(path);
         this.publicRecordingUri = URI.create(httpRecordingUri);
+        recordingCall = true;
         call.tell(new StartRecordingCall(accountId, runtimeSettings, storage, recordingSid, recordingUri), null);
     }
 
@@ -1729,7 +1735,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             Attribute attribute = verb.attribute("action");
 
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
-                logger.info("Received timeout, will cancel calls");
+                if (message instanceof ReceiveTimeout)
+                    logger.info("Received timeout, will cancel calls");
+                if (message instanceof CallStateChanged)
+                    logger.info("call state changed. New call state: "+((CallStateChanged)message).state());
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
@@ -1762,6 +1771,36 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else {
                 call.tell(new Hangup(), self());
+            }
+
+            if (recordingCall && sender == call) {
+                Configuration runtimeSettings = configuration.subset("runtime-settings");
+                    //Its the initial call that sent BYE so we can create the recording object here
+                    if (recordingUri != null) {
+                        Double duration = WavUtils.getAudioDuration(recordingUri);
+                        if (duration.equals(0.0)) {
+                            logger.info("At finishDialing. File doesn't exist since duration is 0");
+                            final DateTime end = DateTime.now();
+                            duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
+                        } else {
+                            logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
+                        }
+                        final Recording.Builder builder = Recording.builder();
+                        builder.setSid(recordingSid);
+                        builder.setAccountSid(accountId);
+                        builder.setCallSid(callInfo.sid());
+                        builder.setDuration(duration);
+                        builder.setApiVersion(runtimeSettings.getString("api-version"));
+                        StringBuilder buffer = new StringBuilder();
+                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                        .append(accountId.toString());
+                        buffer.append("/Recordings/").append(recordingSid.toString());
+                        builder.setUri(URI.create(buffer.toString()));
+                        final Recording recording = builder.build();
+                        RecordingsDao recordsDao = storage.getRecordingsDao();
+                        recordsDao.addRecording(recording);
+                    }
+                    recordingCall = false;
             }
 
             if (attribute != null) {
