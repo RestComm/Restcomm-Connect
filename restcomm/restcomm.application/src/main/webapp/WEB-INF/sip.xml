@@ -105,7 +105,22 @@
 
 	<listener>
 		<listener-class>
+			org.mobicents.servlet.restcomm.Bootstrapper
+		</listener-class>
+	</listener>
+		<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
+		</listener-class>
+	</listener>
+	<listener>
+		<listener-class>
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+		</listener-class>
+	</listener>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
 		</listener-class>
 	</listener>
 	<listener>
