@@ -1006,18 +1006,18 @@ public class ConfVoiceInterpreter extends UntypedActor {
     public void postStop() {
         final StopMediaGroup stop = new StopMediaGroup();
         // Destroy the media group(s).
-        if (conferenceMediaGroup != null) {
-            conferenceMediaGroup.tell(stop, source);
-        }
-        if (conference != null && !conference.isTerminated()) {
-            final DestroyWaitUrlConfMediaGroup destroy = new DestroyWaitUrlConfMediaGroup(conferenceMediaGroup);
-            conference.tell(destroy, source);
-        }
-
-        if (conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated())
-            getContext().stop(conferenceMediaGroup);
-
-        conferenceMediaGroup = null;
+//        if (conferenceMediaGroup != null) {
+//            conferenceMediaGroup.tell(stop, source);
+//        }
+//        if (conference != null && !conference.isTerminated()) {
+//            final DestroyWaitUrlConfMediaGroup destroy = new DestroyWaitUrlConfMediaGroup(conferenceMediaGroup);
+//            conference.tell(destroy, source);
+//        }
+//
+//        if (conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated())
+//            getContext().stop(conferenceMediaGroup);
+//
+//        conferenceMediaGroup = null;
 
         super.postStop();
     }

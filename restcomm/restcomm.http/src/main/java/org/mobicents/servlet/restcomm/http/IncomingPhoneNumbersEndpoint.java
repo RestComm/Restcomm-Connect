@@ -283,8 +283,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
             boolean isDidAssigned = true;
+            //Issue https://telestax.atlassian.net/browse/RESTCOMM-680. RealPhone numbers should be assigned only using the ProvisionProvider (searching etc)
+//            if(isRealNumber) {
+//                isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+//            }
             if(isRealNumber) {
-                isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+              //Try to register the DID with the provision provider.
+              //If this is a long SIP Number it will fail but nevertheless we will register it to the DB
+              phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
             }
             if(isDidAssigned) {
                 dao.addIncomingPhoneNumber(incomingPhoneNumber);
