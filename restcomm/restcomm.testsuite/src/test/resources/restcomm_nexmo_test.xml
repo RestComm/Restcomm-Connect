@@ -38,12 +38,14 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
+		<!-- If set to true Restcomm will authenticate users and incoming messages 
+			from those users -->
 		<authenticate>true</authenticate>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
-		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
+		<normalize-numbers-for-outbound-calls>true
+		</normalize-numbers-for-outbound-calls>
 		<!--If set to TRUE Restcomm will use the From address of initial call to 
 			proxied calls Caller A dials DID XYZ that is bind to RCML that Dials Number 
 			4321. If from-address-to-proxied-calls is TRUE Restcomm will pass callerId 
@@ -144,6 +146,17 @@
 	<mscontrol>
 		<compatibility>mms</compatibility>
 	</mscontrol>
+
+	<amazon-s3>
+		<enabled>false</enabled>
+		<bucket-name>restcomm-recordings</bucket-name>
+		<folder></folder>
+		<access-key></access-key>
+		<security-key></security-key>
+		<reduced-redundancy>false</reduced-redundancy>
+		<days-to-retain-public-url>180</days-to-retain-public-url>
+		<remove-original-file>true</remove-original-file>
+	</amazon-s3>
 
 	<!-- The media server manager is responsible for managing the media servers 
 		in use by RestComm. The default way to control media servers is using the 

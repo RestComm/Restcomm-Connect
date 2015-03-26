@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.mobicents.servlet.restcomm.telephony;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -358,6 +358,10 @@ public final class Call extends UntypedActor {
             onStartRecordingCall((StartRecordingCall) message, self, sender);
         } else if (StopRecordingCall.class.equals(klass)) {
             onStopRecordingCall((StopRecordingCall) message, self, sender);
+        } else if (RecordingStarted.class.equals(klass)) {
+          //VoiceInterpreter executed the Record verb and notified the call actor that we are in recording now
+          //so Call should wait for NTFY for Recording before complete the call
+            recording = true;
         } else if (Cancel.class.equals(klass)) {
             onCancel((Cancel) message, self, sender);
         } else if (message instanceof ReceiveTimeout) {
@@ -530,7 +534,15 @@ public final class Call extends UntypedActor {
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute(Call.class.getName(), self);
-            invite = factory.createRequest(application, "INVITE", from, to);
+            if (name != null && !name.isEmpty()) {
+                //Create the from address using the inital user displayed name
+                //Example: From: "Alice" <sip:userpart@host:port>
+                final Address fromAddress = factory.createAddress(from, name);
+                final Address toAddress = factory.createAddress(to);
+                invite = factory.createRequest(application, "INVITE", fromAddress, toAddress);
+            } else {
+                invite = factory.createRequest(application, "INVITE", from, to);
+            }
             invite.pushRoute(uri);
 
             if (headers != null) {
@@ -1050,10 +1062,52 @@ public final class Call extends UntypedActor {
                 }
 
                 bye.send();
+
+                if (recording) {
+                    recording = false;
+                    logger.info("Call - Will stop recording now");
+                    if (recordingUri != null) {
+                        Double duration = WavUtils.getAudioDuration(recordingUri);
+                        if (duration.equals(0.0)) {
+                            logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                            final DateTime end = DateTime.now();
+                            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+                        } else {
+                            logger.info("Call wraping up recording. File already exists, length: "+ (new File(recordingUri).length()));
+                        }
+                        final Recording.Builder builder = Recording.builder();
+                        builder.setSid(recordingSid);
+                        builder.setAccountSid(accountId);
+                        builder.setCallSid(id);
+                        builder.setDuration(duration);
+                        builder.setApiVersion(runtimeSettings.getString("api-version"));
+                        StringBuilder buffer = new StringBuilder();
+                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                        .append(accountId.toString());
+                        buffer.append("/Recordings/").append(recordingSid.toString());
+                        builder.setUri(URI.create(buffer.toString()));
+                        final Recording recording = builder.build();
+                        RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                        recordsDao.addRecording(recording);
+                    }
+                }
             } else if (message instanceof SipServletRequest) {
                 final SipServletRequest bye = (SipServletRequest) message;
                 final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
                 okay.send();
+                if (recording) {
+                    if (!direction.contains("outbound")) {
+                        //Initial Call sent BYE
+                        recording = false;
+                        logger.info("Call Direction: "+direction);
+                        logger.info("Initial Call - Will stop recording now");
+                        stopRecordingCall();
+                        //VoiceInterpreter will take care to prepare the Recording object
+                    } else if (conference != null) {
+                        //Outbound call sent BYE. !Important conference is the initial call here.
+                        conference.tell(new StopRecordingCall(accountId, runtimeSettings, daoManager), null);
+                    }
+                }
             } else if (message instanceof SipServletResponse) {
                 final SipServletResponse resp = (SipServletResponse) message;
                 if (resp.equals(SipServletResponse.SC_BUSY_HERE) || resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)) {

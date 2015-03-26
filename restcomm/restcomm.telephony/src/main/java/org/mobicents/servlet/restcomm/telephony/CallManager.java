@@ -721,8 +721,8 @@ public final class CallManager extends UntypedActor {
                 logger.info("About to redirect outbound Call :"+outboundCall.path()+ " with 200ms delay to outbound interpreter: "+outboundInterpreter.path());
                 system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundCall, new ChangeCallDirection(), system.dispatcher());
                 system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundInterpreter, new StartInterpreter(outboundCall), system.dispatcher());
-//                outboundCall.tell(new ChangeCallDirection(), null);
-//                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
+                //                outboundCall.tell(new ChangeCallDirection(), null);
+                //                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
                 logger.info("New Intepreter for Second call leg: "+outboundInterpreter.path()+" started");
             } else {
                 logger.info("moveConnectedCallLeg is: "+moveConnectedCallLeg+" so will hangup outboundCall");
@@ -738,7 +738,7 @@ public final class CallManager extends UntypedActor {
             StopInterpreter stopInterpreter = StopInterpreter.instance();
             stopInterpreter.setLiveCallModification(true);
             system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter, system.dispatcher());
-//            existingInterpreter.tell(stopInterpreter, null);
+            //            existingInterpreter.tell(stopInterpreter, null);
         }
     }
 
@@ -769,14 +769,19 @@ public final class CallManager extends UntypedActor {
                 to = sipFactory.createSipURI(request.to(), uri);
                 String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
                 SipURI outboundIntf = outboundInterface(transport);
-                if (request.from() != null && request.from().contains("@")) {
-                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
-                    // to use it directly
+                final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean("outboudproxy-user-at-from-header");
+                if(request.from() != null && request.from().contains("@")) {
+                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow to use it directly
                     from = (SipURI) sipFactory.createURI(request.from());
                 } else if (useLocalAddressAtFromHeader) {
                     from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
                 } else {
-                    from = sipFactory.createSipURI(request.from(), uri);
+                    if (outboudproxyUserAtFromHeader) {
+                        //https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart of the sip uri for the From header
+                        from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
+                    } else {
+                        from = sipFactory.createSipURI(request.from(), uri);
+                    }
                 }
                 break;
             }
@@ -800,8 +805,15 @@ public final class CallManager extends UntypedActor {
         }
         final ActorRef call = call();
         final ActorRef self = self();
-        final InitializeOutbound init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(),
-                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        final boolean userAtDisplayedName = runtime.subset("outbound-proxy").getBoolean("user-at-displayed-name");
+        InitializeOutbound init;
+        if (request.from() != null && !request.from().contains("@") && userAtDisplayedName) {
+            init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        } else {
+            init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(),
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        }
         call.tell(init, self);
         return call;
     }

@@ -64,6 +64,13 @@
 			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
 			<fallback-outbound-proxy-uri>127.0.0.1:5090</fallback-outbound-proxy-uri>
 
+			<!-- When set to true, Restcomm will use the username of the outbound proxy when -->
+			<!-- creating the From header, as the userpart of the sip uri. Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
+			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
+			<!-- When set to true, Restcomm will use the original user for the display name of the From header -->
+			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
+			<user-at-displayed-name>true</user-at-displayed-name>
+
 			<!-- Allow fallback to backup proxy -->
 			<allow-fallback>false</allow-fallback>
 			<!-- Number of maximum failed calls before switching from primary to the
@@ -173,6 +180,17 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
+	
+	<amazon-s3>
+		<enabled>false</enabled>
+		<bucket-name>restcomm-recordings</bucket-name>
+		<folder></folder>
+		<access-key></access-key>
+		<security-key></security-key>
+		<reduced-redundancy>false</reduced-redundancy>
+		<days-to-retain-public-url>180</days-to-retain-public-url>
+		<remove-original-file>true</remove-original-file>
+	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer. 
 		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents 

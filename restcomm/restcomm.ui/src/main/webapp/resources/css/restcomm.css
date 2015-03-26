@@ -133,6 +133,10 @@ input.ng-dirty.ng-invalid {
     margin-top: 5px;
 }
 
+.hover-underline:hover {
+	text-decoration: underline;
+}
+
 /* Index.html classes ------------------------------------------------------- */
 
 ul#rightMenu > li i {
@@ -219,7 +223,35 @@ ul#rightMenu > li i {
     margin-top: 5px;
 }
 
-/* Rapp Manager classes ---------------------------------------------------------- */
+
+
+/* App manager styles ----------------------------- */
+
+/* app list filter buttons */
+.btn.btn-default.filter.active:focus {
+	background-color: #ebebeb;
+	border-color: #adadad;	
+}
+.btn.btn-default.filter:focus {
+	background-color: #fff;
+	border-color: #ccc;
+}
+
+.rappmanager .rapp-list thead th.status-col {
+	min-width:80px;
+}
+
+.rappmanager .rapp-list thead th.type-col {
+	min-width:80px;
+}
+
+.rappmanager .rapp-list thead th.title-col {
+	min-width:150px;
+}
+
+.rappmanager .app-title-wrap:not(:first-child) {
+	margin-top: 10px;
+}
 
 .drop-area {
 	background: none repeat scroll 0% 0% rgb(248, 248, 248);
@@ -272,13 +304,10 @@ ul#rightMenu > li i {
 	margin-top: 7px;
 }
 
-.rappmanager .rapp-list thead th {
-	padding: 18px 20px 18px 0;
-}
-
 .rapp-title .thumbnail:hover {
 	opacity: 0.6;
 }
+
 
 /* Providers classes -------------------------------------------------------- */
 
