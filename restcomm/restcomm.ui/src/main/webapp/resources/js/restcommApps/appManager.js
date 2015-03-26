@@ -279,7 +279,6 @@ rappManagerCtrl.getProducts = function ($q, $http, rappManagerConfig) {
 	return deferred.promise;
 }
 
-
 rcMod.filter('appsFilter', function() {
   return function(appsList, filterType, searchFilterText) {
 	  filterType = filterType || "all";
