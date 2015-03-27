@@ -23,6 +23,7 @@ package org.mobicents.servlet.restcomm.mscontrol.xms;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -657,31 +658,7 @@ public class XmsCallController extends MediaServerController {
 
             // Tell media group to stop recording
             logger.info("Stop recording call");
-            onStop(new Stop(), self, sender);
-
-            Double duration;
-            try {
-                duration = WavUtils.getAudioDuration(this.recordingUri);
-            } catch (UnsupportedAudioFileException | IOException e) {
-                logger.warning("Could not get recording duration:" + e.getMessage() + ". Duration will be estimated.", e);
-                final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - this.recordStarted.getMillis()) / 1000);
-            }
-
-            final Recording.Builder builder = Recording.builder();
-            builder.setSid(this.recordingSid);
-            builder.setAccountSid(this.accountId);
-            builder.setCallSid(this.callId);
-            builder.setDuration(duration);
-            builder.setApiVersion(this.runtimeSettings.getString("api-version"));
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(this.runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
-            buffer.append("/Recordings/").append(this.recordingSid.toString());
-            builder.setUri(URI.create(buffer.toString()));
-            final Recording recording = builder.build();
-            RecordingsDao recordsDao = this.daoManager.getRecordingsDao();
-            recordsDao.addRecording(recording);
+            onStop(new Stop(false), self, sender);
         }
     }
 
@@ -927,6 +904,38 @@ public class XmsCallController extends MediaServerController {
             if (this.recording) {
                 this.mediaGroup.getRecorder().stop();
                 this.recording = Boolean.FALSE;
+
+                if (message.createRecord() && recordingUri != null) {
+                    Double duration;
+                    try {
+                        duration = WavUtils.getAudioDuration(recordingUri);
+                    } catch (UnsupportedAudioFileException | IOException e) {
+                        logger.error("Could not measure recording duration: " + e.getMessage(), e);
+                        duration = 0.0;
+                    }
+                    if (duration.equals(0.0)) {
+                        logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                        final DateTime end = DateTime.now();
+                        duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+                    } else {
+                        logger.info("Call wraping up recording. File already exists, length: "
+                                + (new File(recordingUri).length()));
+                    }
+                    final Recording.Builder builder = Recording.builder();
+                    builder.setSid(recordingSid);
+                    builder.setAccountSid(accountId);
+                    builder.setCallSid(callId);
+                    builder.setDuration(duration);
+                    builder.setApiVersion(runtimeSettings.getString("api-version"));
+                    StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                            .append(accountId.toString());
+                    buffer.append("/Recordings/").append(recordingSid.toString());
+                    builder.setUri(URI.create(buffer.toString()));
+                    final Recording recording = builder.build();
+                    RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                    recordsDao.addRecording(recording);
+                }
             }
 
             if (this.collecting) {

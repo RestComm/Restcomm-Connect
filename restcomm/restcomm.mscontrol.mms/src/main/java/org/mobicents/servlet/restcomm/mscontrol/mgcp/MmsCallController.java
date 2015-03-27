@@ -24,9 +24,13 @@ package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -285,31 +289,43 @@ public class MmsCallController extends MediaServerController {
         this.mediaGroup.tell(record, null);
     }
 
-    private void stopRecordingCall() throws Exception {
+    private void stopRecordingCall(Stop message) throws Exception {
         logger.info("Stop recording call");
         if (this.mediaGroup != null) {
             // Tell media group to stop recording
-            mediaGroup.tell(new Stop(), null);
+            mediaGroup.tell(message, null);
             this.recording = false;
-            Double duration = WavUtils.getAudioDuration(this.recordingUri);
-            if (duration.equals(0.0)) {
-                final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - this.recordStarted.getMillis()) / 1000);
+
+            if (message.createRecord() && recordingUri != null) {
+                Double duration;
+                try {
+                    duration = WavUtils.getAudioDuration(recordingUri);
+                } catch (UnsupportedAudioFileException | IOException e) {
+                    logger.error("Could not measure recording duration: " + e.getMessage(), e);
+                    duration = 0.0;
+                }
+                if (duration.equals(0.0)) {
+                    logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                    final DateTime end = DateTime.now();
+                    duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+                } else {
+                    logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+                }
+                final Recording.Builder builder = Recording.builder();
+                builder.setSid(recordingSid);
+                builder.setAccountSid(accountId);
+                builder.setCallSid(callId);
+                builder.setDuration(duration);
+                builder.setApiVersion(runtimeSettings.getString("api-version"));
+                StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                        .append(accountId.toString());
+                buffer.append("/Recordings/").append(recordingSid.toString());
+                builder.setUri(URI.create(buffer.toString()));
+                final Recording recording = builder.build();
+                RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                recordsDao.addRecording(recording);
             }
-            final Recording.Builder builder = Recording.builder();
-            builder.setSid(this.recordingSid);
-            builder.setAccountSid(this.accountId);
-            builder.setCallSid(this.callId);
-            builder.setDuration(duration);
-            builder.setApiVersion(this.runtimeSettings.getString("api-version"));
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(this.runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
-            buffer.append("/Recordings/").append(this.recordingSid.toString());
-            builder.setUri(URI.create(buffer.toString()));
-            final Recording recording = builder.build();
-            RecordingsDao recordsDao = this.daoManager.getRecordingsDao();
-            recordsDao.addRecording(recording);
         } else {
             logger.info("Tried to stop recording but group was null.");
         }
@@ -350,6 +366,8 @@ public class MmsCallController extends MediaServerController {
             onStartRecordingCall((StartRecordingCall) message, self, sender);
         } else if (StopRecordingCall.class.equals(klass)) {
             onStopRecordingCall((StopRecordingCall) message, self, sender);
+        } else if (Stop.class.equals(klass)) {
+            onStop((Stop) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
@@ -508,7 +526,14 @@ public class MmsCallController extends MediaServerController {
             if (accountId == null) {
                 this.accountId = message.getAccountId();
             }
-            stopRecordingCall();
+
+            onStop(new Stop(false), self, sender);
+        }
+    }
+
+    private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
+        if (this.recording) {
+            stopRecordingCall(message);
         }
     }
 
