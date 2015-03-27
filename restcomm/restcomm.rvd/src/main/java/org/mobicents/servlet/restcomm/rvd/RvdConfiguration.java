@@ -36,7 +36,7 @@ public class RvdConfiguration {
     public static final String PROJECT_LOG_FILENAME = "projectLog";
     public static final String DEFAULT_APPSTORE_DOMAIN = "apps.restcomm.com";
     public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
-    public static final String RESTCOMM_HEADER_PREFIX = "DialSipHeader_"; // the prefix added to HTTP headers from Restcomm
+    public static final String RESTCOMM_HEADER_PREFIX = "SipHeader_"; // the prefix added to HTTP headers from Restcomm
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
