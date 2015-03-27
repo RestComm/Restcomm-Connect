@@ -268,7 +268,7 @@ public class Interpreter {
 
         processBootstrapParameters();
         processRequestParameters();
-        processRequestHeaders(httpRequest);
+        //processRequestHeaders(httpRequest);
         //handleStickyParameters(); // create local copies of sticky_* parameters
 
         response = interpret(targetParam, null, null, null);
@@ -659,9 +659,14 @@ public class Interpreter {
                 //String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
                 //getVariables().put(localVariableName, variableValue);
             } else {
-                //for the rest of the parameters simply create a variable with the same name
-                String variableValue = getRequestParams().getFirst(anyVariableName);
-                getVariables().put(anyVariableName, variableValue );
+                if (isCustomRestcommHttpHeader(anyVariableName)) {
+                    String variableValue = getRequestParams().getFirst(anyVariableName);
+                    getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + normalizeHTTPHeaderName(anyVariableName), variableValue);
+                } else {
+                    //for the rest of the parameters simply create a variable with the same name
+                    String variableValue = getRequestParams().getFirst(anyVariableName);
+                    getVariables().put(anyVariableName, variableValue );
+                }
             }
         }
     }
