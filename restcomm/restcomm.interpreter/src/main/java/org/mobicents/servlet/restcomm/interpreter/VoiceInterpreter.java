@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
@@ -890,19 +892,31 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
                     parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    Iterator<String> headerIt = lastResponse.getHeaderNames();
-                    while (headerIt.hasNext()) {
-                        String headerName = headerIt.next();
-                        if (headerName.startsWith("X-")) {
-                            parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
-                                    .getHeader(headerName)));
-                        }
-                    }
+                    logger.info("%%%%%%%%%%% Passing the LAST_RESPONSE custom headers:");
+                    processCustomHeaders(lastResponse, "DialSipHeader_", parameters);
                 }
+            } else {
+                // Restcomm VoiceInterpreter should check the INVITE for custom headers and pass them to RVD
+                // https://telestax.atlassian.net/browse/RESTCOMM-710
+                logger.info("%%%%%%%%%%% Passing the INVITE custom headers:");
+                final SipServletRequest invite = callInfo.invite();
+                processCustomHeaders(invite, "SipHeader_", parameters);
             }
         }
         return parameters;
     }
+    
+    private void processCustomHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
+        Iterator<String> headerNames = sipMessage.getHeaderNames();
+        while (headerNames.hasNext()) {
+            String headerName = headerNames.next();
+            if (headerName.startsWith("X-")) {
+                logger.info("%%%%%%%%%%% Indetified customer header: " + headerName);
+                parameters.add(new BasicNameValuePair(prefix + headerName, sipMessage.getHeader(headerName)));
+            }
+        }
+    }
+    
 
     private abstract class AbstractAction implements Action {
         protected final ActorRef source;
