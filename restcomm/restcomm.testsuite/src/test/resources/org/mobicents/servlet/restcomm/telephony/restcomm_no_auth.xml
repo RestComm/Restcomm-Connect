@@ -38,17 +38,20 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- If set to true Restcomm will use the Local Address (or external address if available)
-		     in the host part of the From header for calls to the outbound proxy.
-		     Default is False, which means that Restcomm will use outbound proxy for the host part of From header -->
+		<!-- If set to true Restcomm will use the Local Address (or external address 
+			if available) in the host part of the From header for calls to the outbound 
+			proxy. Default is False, which means that Restcomm will use outbound proxy 
+			for the host part of From header -->
 		<use-local-address>false</use-local-address>
 
-		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
+		<!-- If set to true Restcomm will authenticate users and incoming messages 
+			from those users -->
 		<authenticate>false</authenticate>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
-		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
+		<normalize-numbers-for-outbound-calls>true
+		</normalize-numbers-for-outbound-calls>
 		<!--If set to TRUE Restcomm will use the From address of initial call to 
 			proxied calls Caller A dials DID XYZ that is bind to RCML that Dials Number 
 			4321. If from-address-to-proxied-calls is TRUE Restcomm will pass callerId 
@@ -117,19 +120,20 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
-	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+	<phone-number-provisioning
+		class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<callback-urls>
-			<voice url="localhost:5080" method="SIP"/>
-			<sms url="localhost:5080" method="SIP"/>
-			<fax url="localhost:5080" method="SIP"/>
-			<ussd url="localhost:5080" method="SIP"/>
+			<voice url="localhost:5080" method="SIP" />
+			<sms url="localhost:5080" method="SIP" />
+			<fax url="localhost:5080" method="SIP" />
+			<ussd url="localhost:5080" method="SIP" />
 		</callback-urls>
 		<voip-innovations>
 			<login></login>
 			<password></password>
 			<endpoint></endpoint>
 			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
-		</voip-innovations>	
+		</voip-innovations>
 	</phone-number-provisioning>
 
 	<smtp>
@@ -145,6 +149,17 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
+
+	<amazon-s3>
+		<enabled>false</enabled>
+		<bucket-name>restcomm-recordings</bucket-name>
+		<folder></folder>
+		<access-key></access-key>
+		<security-key></security-key>
+		<reduced-redundancy>false</reduced-redundancy>
+		<days-to-retain-public-url>180</days-to-retain-public-url>
+		<remove-original-file>true</remove-original-file>
+	</amazon-s3>
 
 	<!-- The media server manager is responsible for managing the media servers 
 		in use by RestComm. The default way to control media servers is using the 
