@@ -478,8 +478,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final State state = fsm.state();
         sender = sender();
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Current State: " + state.toString());
-            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Processing Message: " + klass.getName());
+            logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString());
+            logger.info(" ********** VoiceInterpreter's " + self().path() + " Processing Message: " + klass.getName());
         }
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
@@ -769,15 +769,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, ready);
                 } else if (creatingRecording.equals(state)) {
                     fsm.transition(message, finishRecording);
-                } //This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might come later
+                } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
+                  // come later
                 else if (gathering.equals(state) || (finishGathering.equals(state) && !super.dtmfReceived)) {
                     final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
-                    if(sender == call) {
-                        //DTMF using SIP INFO, check if all digits collected here
+                    if (sender == call) {
+                        // DTMF using SIP INFO, check if all digits collected here
                         collectedDigits.append(dtmfResponse.get());
-                        //Collected digits == requested num of digits the complete the collect digits
-                        if (numberOfDigits!=Short.MAX_VALUE) {
-                            if (collectedDigits.length()==numberOfDigits) {
+                        // Collected digits == requested num of digits the complete the collect digits
+                        if (numberOfDigits != Short.MAX_VALUE) {
+                            if (collectedDigits.length() == numberOfDigits) {
                                 dtmfReceived = true;
                                 fsm.transition(message, finishGathering);
                             } else {
@@ -785,15 +786,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 return;
                             }
                         } else {
-                            //If collected digits have finish on key at the end then complete the collect digits
-                            if(collectedDigits.toString().endsWith(finishOnKey)) {
+                            // If collected digits have finish on key at the end then complete the collect digits
+                            if (collectedDigits.toString().endsWith(finishOnKey)) {
                                 dtmfReceived = true;
                                 fsm.transition(message, finishGathering);
                             } else {
                                 dtmfReceived = false;
                                 return;
                             }
-                         }
+                        }
                     } else {
                         collectedDigits.append(dtmfResponse.get());
                         fsm.transition(message, finishGathering);
@@ -822,7 +823,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (FaxResponse.class.equals(klass)) {
             fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
-            this.liveCallModification = ((StopInterpreter)message).isLiveCallModification();
+            this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
             if (CallStateChanged.State.IN_PROGRESS == callState && !liveCallModification) {
                 fsm.transition(message, hangingUp);
             } else {
@@ -876,11 +877,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final String forwardedFrom = callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
+        SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
             // Adding SIP OUT Headers and SipCallId for
             // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-            SipServletResponse lastResponse = callInfo.lastResponse();
-            // logger.info("lastResponse " + lastResponse);
             if (lastResponse != null) {
                 final int statusCode = lastResponse.getStatus();
                 final String method = lastResponse.getMethod();
@@ -892,20 +892,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
                     parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    logger.info("%%%%%%%%%%% Passing the LAST_RESPONSE custom headers:");
                     processCustomHeaders(lastResponse, "DialSipHeader_", parameters);
                 }
-            } else {
-                // Restcomm VoiceInterpreter should check the INVITE for custom headers and pass them to RVD
-                // https://telestax.atlassian.net/browse/RESTCOMM-710
-                logger.info("%%%%%%%%%%% Passing the INVITE custom headers:");
-                final SipServletRequest invite = callInfo.invite();
-                processCustomHeaders(invite, "SipHeader_", parameters);
             }
         }
+
+        if (lastResponse == null) {
+            // Restcomm VoiceInterpreter should check the INVITE for custom headers and pass them to RVD
+            // https://telestax.atlassian.net/browse/RESTCOMM-710
+            final SipServletRequest invite = callInfo.invite();
+            processCustomHeaders(invite, "SipHeader_", parameters);
+        }
+
         return parameters;
     }
-    
+
     private void processCustomHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
         Iterator<String> headerNames = sipMessage.getHeaderNames();
         while (headerNames.hasNext()) {
@@ -916,7 +917,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         }
     }
-    
 
     private abstract class AbstractAction implements Action {
         protected final ActorRef source;
@@ -989,7 +989,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
             }
             call.tell(new CreateMediaGroup(), source);
-            logger.info("Voiceinterpreter: "+self().path()+" sent CreateMediaGroup to Call: "+call.path());
+            logger.info("Voiceinterpreter: " + self().path() + " sent CreateMediaGroup to Call: " + call.path());
         }
     }
 
@@ -1007,7 +1007,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callMediaGroup = response.get();
                 callMediaGroup.tell(new Observe(source), source);
                 callMediaGroup.tell(new StartMediaGroup(), source);
-                logger.info("VoiceInterpreter: "+self().path()+" sent StartMediaGroup for callMediaGroup: "+callMediaGroup.path()+" CallMediaGroup isTerminated: "+callMediaGroup.isTerminated());
+                logger.info("VoiceInterpreter: " + self().path() + " sent StartMediaGroup for callMediaGroup: "
+                        + callMediaGroup.path() + " CallMediaGroup isTerminated: " + callMediaGroup.isTerminated());
             } else if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
@@ -1060,15 +1061,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         callRecord = builder.build();
                         records.addCallDetailRecord(callRecord);
-//
-//                        if (liveCallModification) {
-//                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
-//                            fsm.transition(message, acquiringCallMediaGroup);
-//                            return;
-//                        }
+                        //
+                        // if (liveCallModification) {
+                        // logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+                        // fsm.transition(message, acquiringCallMediaGroup);
+                        // return;
+                        // }
                     } else {
-                        if (callMediaGroup == null ) {
-                            logger.info("On going call but CallMediaGroup is null, will acquire call media group. VoiceInterpreter: "+self().path());
+                        if (callMediaGroup == null) {
+                            logger.info("On going call but CallMediaGroup is null, will acquire call media group. VoiceInterpreter: "
+                                    + self().path());
                             fsm.transition(message, acquiringCallMediaGroup);
                             return;
                         }
@@ -1758,7 +1760,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (message instanceof ReceiveTimeout)
                     logger.info("Received timeout, will cancel calls");
                 if (message instanceof CallStateChanged)
-                    logger.info("call state changed. New call state: "+((CallStateChanged)message).state());
+                    logger.info("call state changed. New call state: " + ((CallStateChanged) message).state());
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
@@ -1769,8 +1771,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                         branch.tell(new Cancel(), source);
-                        //No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we destroy calls
-//                        callManager.tell(new DestroyCall(branch), source);
+                        // No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we
+                        // destroy calls
+                        // callManager.tell(new DestroyCall(branch), source);
                     }
                     callMediaGroup.tell(new Stop(), null);
                     if (attribute == null) {
@@ -1794,32 +1797,32 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (recordingCall && sender == call) {
                 Configuration runtimeSettings = configuration.subset("runtime-settings");
-                    //Its the initial call that sent BYE so we can create the recording object here
-                    if (recordingUri != null) {
-                        Double duration = WavUtils.getAudioDuration(recordingUri);
-                        if (duration.equals(0.0)) {
-                            logger.info("At finishDialing. File doesn't exist since duration is 0");
-                            final DateTime end = DateTime.now();
-                            duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
-                        } else {
-                            logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
-                        }
-                        final Recording.Builder builder = Recording.builder();
-                        builder.setSid(recordingSid);
-                        builder.setAccountSid(accountId);
-                        builder.setCallSid(callInfo.sid());
-                        builder.setDuration(duration);
-                        builder.setApiVersion(runtimeSettings.getString("api-version"));
-                        StringBuilder buffer = new StringBuilder();
-                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                        .append(accountId.toString());
-                        buffer.append("/Recordings/").append(recordingSid.toString());
-                        builder.setUri(URI.create(buffer.toString()));
-                        final Recording recording = builder.build();
-                        RecordingsDao recordsDao = storage.getRecordingsDao();
-                        recordsDao.addRecording(recording);
+                // Its the initial call that sent BYE so we can create the recording object here
+                if (recordingUri != null) {
+                    Double duration = WavUtils.getAudioDuration(recordingUri);
+                    if (duration.equals(0.0)) {
+                        logger.info("At finishDialing. File doesn't exist since duration is 0");
+                        final DateTime end = DateTime.now();
+                        duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
+                    } else {
+                        logger.info("At finishDialing. File already exists, length: " + (new File(recordingUri).length()));
                     }
-                    recordingCall = false;
+                    final Recording.Builder builder = Recording.builder();
+                    builder.setSid(recordingSid);
+                    builder.setAccountSid(accountId);
+                    builder.setCallSid(callInfo.sid());
+                    builder.setDuration(duration);
+                    builder.setApiVersion(runtimeSettings.getString("api-version"));
+                    StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                            .append(accountId.toString());
+                    buffer.append("/Recordings/").append(recordingSid.toString());
+                    builder.setUri(URI.create(buffer.toString()));
+                    final Recording recording = builder.build();
+                    RecordingsDao recordsDao = storage.getRecordingsDao();
+                    recordsDao.addRecording(recording);
+                }
+                recordingCall = false;
             }
 
             if (attribute != null) {
@@ -2223,7 +2226,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     @Override
     public void postStop() {
         if (!fsm.state().equals(uninitialized)) {
-            logger.info("VoiceIntepreter: "+self().path()+"At the postStop() method. Will clean up Voice Interpreter. Keep calls: "+liveCallModification);
+            logger.info("VoiceIntepreter: " + self().path()
+                    + "At the postStop() method. Will clean up Voice Interpreter. Keep calls: " + liveCallModification);
             if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
                 logger.info("At postStop(), will clean up outbound call");
                 outboundCall.tell(new Hangup(), null);
