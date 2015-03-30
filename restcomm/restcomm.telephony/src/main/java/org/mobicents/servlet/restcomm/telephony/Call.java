@@ -64,6 +64,7 @@ import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
@@ -396,6 +397,8 @@ public final class Call extends UntypedActor {
             onRecord((Record) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
+        } else if (Collect.class.equals(klass)) {
+            onCollect((Collect) message, self, sender);
         }
     }
 
@@ -1174,6 +1177,13 @@ public final class Call extends UntypedActor {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
+        if (is(inProgress)) {
+            // Forward to media server controller
+            this.msController.tell(message, sender);
+        }
+    }
+
+    private void onCollect(Collect message, ActorRef self, ActorRef sender) {
         if (is(inProgress)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
