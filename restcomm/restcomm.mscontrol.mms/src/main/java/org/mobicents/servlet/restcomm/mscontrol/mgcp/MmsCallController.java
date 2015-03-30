@@ -63,6 +63,7 @@ import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
@@ -385,6 +386,8 @@ public class MmsCallController extends MediaServerController {
             onRecord((Record) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
+        } else if (Collect.class.equals(klass)) {
+            onCollect((Collect) message, self, sender);
         }
     }
 
@@ -593,6 +596,13 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            // Forward message to media group to handle
+            this.mediaGroup.tell(message, sender);
+        }
+    }
+
+    private void onCollect(Collect message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             // Forward message to media group to handle
             this.mediaGroup.tell(message, sender);

@@ -1356,7 +1356,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             // Start gathering.
             final Collect collect = new Collect(gatherPrompts, null, timeout, finishOnKey, numberOfDigits);
-            callMediaGroup.tell(collect, source);
+            call.tell(collect, source);
             // Some clean up.
             gatherChildren = null;
             gatherPrompts = null;
