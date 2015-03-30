@@ -679,6 +679,8 @@ public class Interpreter {
     private boolean isCustomRestcommHttpHeader(String headerName) {
         if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) )
             return true;
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase() ) )
+            return true;
         return false;
     }
 
@@ -692,6 +694,10 @@ public class Interpreter {
     private String normalizeHTTPHeaderName(String headerName) {
         if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) ) {
             String stripedName = headerName.substring( RvdConfiguration.RESTCOMM_HEADER_PREFIX.length() ).toLowerCase();
+            return sanitizeVariableName(stripedName);
+        } else
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase() ) ) {
+            String stripedName = headerName.substring( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.length() ).toLowerCase();
             return sanitizeVariableName(stripedName);
         } else
             return headerName;
