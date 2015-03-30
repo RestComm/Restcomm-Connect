@@ -763,7 +763,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return;
             }
             final Play play = new Play(uri, 1);
-            callMediaGroup.tell(play, source);
+            call.tell(play, source);
         }
     }
 
@@ -948,7 +948,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 final DiskCacheResponse response = (DiskCacheResponse) message;
                 final Play play = new Play(response.get(), loop);
-                callMediaGroup.tell(play, source);
+                call.tell(play, source);
             }
         }
     }
@@ -1371,7 +1371,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
