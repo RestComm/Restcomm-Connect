@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -649,6 +648,10 @@ public class Interpreter {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
             } else
+            if (isCustomRestcommHttpHeader(anyVariableName)) {
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + normalizeHTTPHeaderName(anyVariableName), variableValue);
+            } else
             if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) || anyVariableName.startsWith(RvdConfiguration.MODULE_PREFIX) ) {
                 // set up sticky variables
                 String variableValue = getRequestParams().getFirst(anyVariableName);
@@ -659,14 +662,9 @@ public class Interpreter {
                 //String localVariableName = anyVariableName.substring(RvdConfiguration.STICKY_PREFIX.length());
                 //getVariables().put(localVariableName, variableValue);
             } else {
-                if (isCustomRestcommHttpHeader(anyVariableName)) {
-                    String variableValue = getRequestParams().getFirst(anyVariableName);
-                    getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + normalizeHTTPHeaderName(anyVariableName), variableValue);
-                } else {
-                    //for the rest of the parameters simply create a variable with the same name
-                    String variableValue = getRequestParams().getFirst(anyVariableName);
-                    getVariables().put(anyVariableName, variableValue );
-                }
+                //for the rest of the parameters simply create a variable with the same name
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(anyVariableName, variableValue );
             }
         }
     }
@@ -709,7 +707,9 @@ public class Interpreter {
     /**
      * Go through request's HTTP headers and create RVD variables out of them
      * @param request
+     * OBSOLETE - the values were passed as request parameters and not headers
      */
+    /*
     private void processRequestHeaders(HttpServletRequest request) {
         Enumeration<String> headerNames = (Enumeration<String>) request.getHeaderNames();
         while ( headerNames.hasMoreElements() ) {
@@ -721,6 +721,7 @@ public class Interpreter {
             }
         }
     }
+    */
 
     /** Add bootstrap parameters to the variables array. Usually these are used in application downloaded
      * from the app store.
