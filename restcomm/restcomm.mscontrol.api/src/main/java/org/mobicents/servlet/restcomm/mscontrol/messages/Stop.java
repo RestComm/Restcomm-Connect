@@ -26,20 +26,20 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class Stop {
-    
+
     private final boolean createRecord;
-    
+
     public Stop(final boolean createRecord) {
         super();
         this.createRecord = createRecord;
     }
-    
+
     public Stop() {
         this(false);
     }
-    
+
     public boolean createRecord() {
         return createRecord;
     }
-    
+
 }
