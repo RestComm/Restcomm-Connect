@@ -21,7 +21,6 @@ package org.mobicents.servlet.restcomm.telephony;
 
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -76,6 +75,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerEr
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
@@ -365,8 +365,6 @@ public final class Call extends UntypedActor {
             onStartRecordingCall((StartRecordingCall) message, self, sender);
         } else if (StopRecordingCall.class.equals(klass)) {
             onStopRecordingCall((StopRecordingCall) message, self, sender);
-        } else if (RecordingStarted.class.equals(klass)) {
-            onRecordingStarted((RecordingStarted) message, self, sender);
         } else if (Cancel.class.equals(klass)) {
             onCancel((Cancel) message, self, sender);
         } else if (message instanceof ReceiveTimeout) {
@@ -393,6 +391,8 @@ public final class Call extends UntypedActor {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (Record.class.equals(klass)) {
+            onRecord((Record) message, self, sender);
         }
     }
 
@@ -1162,6 +1162,14 @@ public final class Call extends UntypedActor {
         }
     }
 
+    private void onRecord(Record message, ActorRef self, ActorRef sender) {
+        if (is(inProgress)) {
+            // Forward to media server controller
+            this.recording = true;
+            this.msController.tell(message, sender);
+        }
+    }
+
     private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
         final ActorRef observer = message.observer();
         if (observer != null) {
@@ -1423,14 +1431,6 @@ public final class Call extends UntypedActor {
         // Forward message for Media Session Controller to handle
         this.msController.tell(message, sender);
         this.recording = false;
-    }
-
-    private void onRecordingStarted(RecordingStarted message, ActorRef self, ActorRef sender) {
-        if (is(inProgress)) {
-            // VoiceInterpreter executed the Record verb and notified the call actor that we are in recording now
-            // so Call should wait for NTFY for Recording before complete the call
-            recording = true;
-        }
     }
 
 }

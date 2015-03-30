@@ -97,7 +97,6 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
-import org.mobicents.servlet.restcomm.telephony.RecordingStarted;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
@@ -1542,8 +1541,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             } else {
                 record = new Record(recordingUri, timeout, maxLength, finishOnKey);
             }
-            callMediaGroup.tell(record, source);
-            call.tell(new RecordingStarted(), source);
+
+            call.tell(record, source);
         }
     }
 

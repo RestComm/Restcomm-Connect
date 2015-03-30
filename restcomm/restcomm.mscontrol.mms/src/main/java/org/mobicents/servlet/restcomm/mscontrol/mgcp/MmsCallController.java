@@ -380,6 +380,8 @@ public class MmsCallController extends MediaServerController {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         } else if (QueryEndpoint.class.equals(klass)) {
             onQueryEndpoint((QueryEndpoint) message, self, sender);
+        } else if (Record.class.equals(klass)) {
+            onRecord((Record) message, self, sender);
         }
     }
 
@@ -576,6 +578,13 @@ public class MmsCallController extends MediaServerController {
         if (this.mediaGroup != null && !this.mediaGroup.isTerminated()) {
             getContext().stop(this.mediaGroup);
             this.mediaGroup = null;
+        }
+    }
+
+    private void onRecord(Record message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            this.recording = Boolean.TRUE;
+            this.mediaGroup.tell(message, sender);
         }
     }
 
