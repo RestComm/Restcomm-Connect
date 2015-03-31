@@ -582,7 +582,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // fsm.transition(message, finished);
                 // }
             } else if (CallStateChanged.State.BUSY == event.state()) {
-                fsm.transition(message, finishDialing);
+                if (state != finishDialing)
+                    fsm.transition(message, finishDialing);
             } else if (CallStateChanged.State.CANCELED == event.state()) {
                 callManager.tell(new DestroyCall(sender), self());
             }
@@ -1765,6 +1766,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     dialChildren = null;
                     outboundCall = null;
+                    if (sender != call) {
+                        call.tell(new Hangup(), self());
+                    }
                     return;
                 } else if (bridged.equals(state)) {
                     outboundCall.tell(new Hangup(), source);
