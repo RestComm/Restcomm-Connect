@@ -108,4 +108,9 @@
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
 		</listener-class>
 	</listener>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
+		</listener-class>
+	</listener>
 </sip-app>

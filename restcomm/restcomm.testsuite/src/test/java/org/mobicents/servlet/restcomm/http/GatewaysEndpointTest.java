@@ -17,6 +17,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,7 +44,7 @@ public class GatewaysEndpointTest {
     private String gwProxy = "127.0.0.1:5090";
     private String gwRegister = "true";
     private String gwTTL = "3600";
-
+    
     @Before
     public void before() throws Exception {
     }
@@ -54,7 +55,7 @@ public class GatewaysEndpointTest {
 
     //Restcomm will try to register the Gateway but this will fail, we ignore that for now.
     @Test
-    public void createGatewayTest() throws ClientProtocolException, IOException, ParseException, InterruptedException {        
+    public void createGatewayTest() throws ClientProtocolException, IOException, ParseException, InterruptedException { 
         JsonObject gateway = CreateGatewaysTool.getInstance().createGateway(deploymentUrl.toString(), gwName, gwUsername , gwPassword, gwProxy, gwRegister, gwTTL);
         assertNotNull(gateway);
         assertNotNull(gateway.get("sid").getAsString());
