@@ -1180,7 +1180,6 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             if (message instanceof SipServletRequest) {
                 invite = (SipServletRequest) message;
-                invite.addHeader("X-Product-Name", "Cool Project");
                 from = (SipURI) invite.getFrom().getURI();
                 to = (SipURI) invite.getTo().getURI();
                 timeout = -1;
