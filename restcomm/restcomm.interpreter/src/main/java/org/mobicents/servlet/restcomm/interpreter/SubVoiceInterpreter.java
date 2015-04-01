@@ -68,6 +68,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStatus;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -348,7 +349,9 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
                 callInfo = response.get();
                 fsm.transition(message, downloadingRcml);
-            } else if (acquiringCallMediaGroup.equals(state)) {
+            }
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
+            if (acquiringCallMediaGroup.equals(state)) {
                 fsm.transition(message, checkingMediaGroupState);
             }
         } else if (DownloaderResponse.class.equals(klass)) {
@@ -591,8 +594,8 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            if (CallResponse.class.equals(klass)) {
-                final CallResponse<ActorRef> response = (CallResponse<ActorRef>) message;
+            if (MediaServerControllerResponse.class.equals(klass)) {
+                final MediaServerControllerResponse<ActorRef> response = (MediaServerControllerResponse<ActorRef>) message;
                 callMediaGroup = response.get();
                 // Ask CallMediaGroup to add us as Observer, if the callMediaGroup is active we will not reach
                 // InitializingCallMediaGroup where
