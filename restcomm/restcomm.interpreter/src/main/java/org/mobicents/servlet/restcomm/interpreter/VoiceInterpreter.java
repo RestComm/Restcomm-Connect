@@ -561,23 +561,23 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
                     fsm.transition(message, finishDialing);
                 } else
-                // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
-                if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
-                    fsm.transition(message, finishDialing);
-                } else if (creatingRecording.equals(state)) {
-                    // Ask callMediaGroup to stop recording so we have the recording file available
-                    // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
-                    callMediaGroup.tell(new Stop(), null);
-                    context().stop(callMediaGroup);
-                    fsm.transition(message, finishRecording);
-                } else if ((bridged.equals(state) || forking.equals(state)) && call == sender()) {
-                    if (!dialActionExecuted) {
+                    // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
+                    if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                         fsm.transition(message, finishDialing);
+                    } else if (creatingRecording.equals(state)) {
+                        // Ask callMediaGroup to stop recording so we have the recording file available
+                        // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
+                        callMediaGroup.tell(new Stop(), null);
+                        context().stop(callMediaGroup);
+                        fsm.transition(message, finishRecording);
+                    } else if ((bridged.equals(state) || forking.equals(state)) && call == sender()) {
+                        if (!dialActionExecuted) {
+                            fsm.transition(message, finishDialing);
+                        }
+                    } else {
+                        if (!finishDialing.equals(state))
+                            fsm.transition(message, finished);
                     }
-                } else {
-                    if (!finishDialing.equals(state))
-                        fsm.transition(message, finished);
-                }
                 // else if (!forking.equals(state) || call == sender()) {
                 // fsm.transition(message, finished);
                 // }
@@ -792,7 +792,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 dtmfReceived = false;
                                 return;
                             }
-                         }
+                        }
                     } else {
                         collectedDigits.append(dtmfResponse.get());
                         fsm.transition(message, finishGathering);
@@ -1047,12 +1047,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         callRecord = builder.build();
                         records.addCallDetailRecord(callRecord);
-//
-//                        if (liveCallModification) {
-//                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
-//                            fsm.transition(message, acquiringCallMediaGroup);
-//                            return;
-//                        }
+                        //
+                        //                        if (liveCallModification) {
+                        //                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+                        //                            fsm.transition(message, acquiringCallMediaGroup);
+                        //                            return;
+                        //                        }
                     } else {
                         if (callMediaGroup == null ) {
                             logger.info("On going call but CallMediaGroup is null, will acquire call media group. VoiceInterpreter: "+self().path());
@@ -1152,6 +1152,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         parser = parser("<Say>" + response.getContentAsString() + "</Say>");
                     }
                 } else {
+                    if (call != null) {
+                        call.tell(new Hangup(), null);
+                    }
                     final StopInterpreter stop = StopInterpreter.instance();
                     source.tell(stop, source);
                     return;
@@ -1757,7 +1760,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                         branch.tell(new Cancel(), source);
                         //No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we destroy calls
-//                        callManager.tell(new DestroyCall(branch), source);
+                        //                        callManager.tell(new DestroyCall(branch), source);
                     }
                     callMediaGroup.tell(new Stop(), null);
                     if (attribute == null) {
@@ -1766,9 +1769,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     dialChildren = null;
                     outboundCall = null;
-                    if (sender != call) {
-                        call.tell(new Hangup(), self());
-                    }
                     return;
                 } else if (bridged.equals(state)) {
                     outboundCall.tell(new Hangup(), source);
@@ -1784,32 +1784,32 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (recordingCall && sender == call) {
                 Configuration runtimeSettings = configuration.subset("runtime-settings");
-                    //Its the initial call that sent BYE so we can create the recording object here
-                    if (recordingUri != null) {
-                        Double duration = WavUtils.getAudioDuration(recordingUri);
-                        if (duration.equals(0.0)) {
-                            logger.info("At finishDialing. File doesn't exist since duration is 0");
-                            final DateTime end = DateTime.now();
-                            duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
-                        } else {
-                            logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
-                        }
-                        final Recording.Builder builder = Recording.builder();
-                        builder.setSid(recordingSid);
-                        builder.setAccountSid(accountId);
-                        builder.setCallSid(callInfo.sid());
-                        builder.setDuration(duration);
-                        builder.setApiVersion(runtimeSettings.getString("api-version"));
-                        StringBuilder buffer = new StringBuilder();
-                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                        .append(accountId.toString());
-                        buffer.append("/Recordings/").append(recordingSid.toString());
-                        builder.setUri(URI.create(buffer.toString()));
-                        final Recording recording = builder.build();
-                        RecordingsDao recordsDao = storage.getRecordingsDao();
-                        recordsDao.addRecording(recording);
+                //Its the initial call that sent BYE so we can create the recording object here
+                if (recordingUri != null) {
+                    Double duration = WavUtils.getAudioDuration(recordingUri);
+                    if (duration.equals(0.0)) {
+                        logger.info("At finishDialing. File doesn't exist since duration is 0");
+                        final DateTime end = DateTime.now();
+                        duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
+                    } else {
+                        logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
                     }
-                    recordingCall = false;
+                    final Recording.Builder builder = Recording.builder();
+                    builder.setSid(recordingSid);
+                    builder.setAccountSid(accountId);
+                    builder.setCallSid(callInfo.sid());
+                    builder.setDuration(duration);
+                    builder.setApiVersion(runtimeSettings.getString("api-version"));
+                    StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                    .append(accountId.toString());
+                    buffer.append("/Recordings/").append(recordingSid.toString());
+                    builder.setUri(URI.create(buffer.toString()));
+                    final Recording recording = builder.build();
+                    RecordingsDao recordsDao = storage.getRecordingsDao();
+                    recordsDao.addRecording(recording);
+                }
+                recordingCall = false;
             }
 
             if (attribute != null) {
