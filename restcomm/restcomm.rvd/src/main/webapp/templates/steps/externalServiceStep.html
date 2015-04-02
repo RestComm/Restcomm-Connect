@@ -10,29 +10,17 @@
                     	<div class="row">
 	                    	<form class='form-group' name='form'>
 	                    		<div class="col-md-12">
-			                        <div class="input-group">
+			                        <div class="input-group form-group">
 			                            <span class="input-group-addon help-tooltip" tooltip="{{'externalServiceStepServiceUrlTooltip' | translate}}" tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>{{'externalServiceStepServiceUrlLabel' | translate}}</span>
 			                            <input name="url" ng-model='step.url' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="{{'externalServiceStepServiceUrlInputPlaceholder' | translate}}" required></input>
-			                            
-			                            <span ng-show="step.iface.advancedShown" class="input-group-addon">{{'externalServiceStepMethodLabel' | translate}}</span>
-		                        		<select ng-show="step.iface.advancedShown" ng-model='step.method' class="form-control">
-											<option value='GET'>{{'externalServiceStepMethodGetOption' | translate}}</option>
-											<option value='POST'>{{'externalServiceStepMethodPostOption' | translate}}</option>
-										</select>
-		                        		<span ng-show="step.iface.advancedShown" class="input-group-addon help-tooltip" tooltip="{{'externalServiceStepUsernameTooltip' | translate}}" tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>{{'externalServiceStepUsernameLabel' | translate}}</span>
-		                        		<input ng-show="step.iface.advancedShown"  name="username" ng-model='step.username' class="form-control" type="text"></input>
-		                        		<span ng-show="step.iface.advancedShown" class="input-group-addon help-tooltip" tooltip="{{'externalServiceStepPasswordTooltip' | translate}}" tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>{{'externalServiceStepPasswordLabel' | translate}}</span>
-		                        		<input ng-show="step.iface.advancedShown" name="password" ng-model='step.password' class="form-control" type="text"></input>
-		                        		<span class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>		
-			                            
 			                        </div>
 			                        <div class="validation-error"  ng-show="form.url.$invalid">{{'externalServiceStepFormErrorLabel' | translate}}</div>
-		                        </div>
-		                    </form>
-		                </div>
-                        
+			                    </div>
+			                </form>
+			            </div>
+			            
                         <div class='row'>
-                            <div ng-repeat='urlParam in step.urlParams' class="col-md-5">
+                            <div ng-repeat='urlParam in step.urlParams' class="col-md-6">
                                 <div lookup-context class="input-group input-group-sm form-group">
                                     <span class="input-group-addon">{{'externalServiceStepUrlParamNameLabel' | translate}}</span>
                                     <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
@@ -43,7 +31,48 @@
                                 </div>
                             </div>
                         </div>
-                        <button ng-click="addUrlParam(step)" type="button" class="btn btn-xs"><span>{{'externalServiceStepAddParamButton' | translate}}</span></button>  &nbsp; <i class="fa fa-info-circle rvd-clickable" popover="{{'externalServiceStepAddParamButtonPopover' | translate}}" popover-placement='top'></i>
+                        <div class="validation-warning row col-md-12 form-group" ng-show="step.urlParams.length>0 && step.method=='POST' && step.contentType=='application/x-www-form-urlencoded' && !step.populatePostBodyFromParams">{{"Service parameters are not used in POST requests by default. Check 'Automatically populate from service parameters' to alter this behaviour" | translate}}</div>
+
+                        <div class="form-group">
+							<button ng-click="addUrlParam(step)" type="button" class="btn btn-xs"><span>{{'externalServiceStepAddParamButton' | translate}}</span></button>  &nbsp; <i class="fa fa-info-circle rvd-clickable" popover="{{'externalServiceStepAddParamButtonPopover' | translate}}" popover-placement='top'></i>
+						</div>
+						
+			            
+			            
+			            
+			            <div class="row">
+							<div class="col-md-12">
+								<div class="input-group form-group">
+									<span ng-show="step.iface.advancedShown" class="input-group-addon">{{'externalServiceStepMethodLabel' | translate}}</span>
+									<select ng-show="step.iface.advancedShown" ng-model='step.method' class="form-control form-control-inline">
+										<option value='GET'>{{'externalServiceStepMethodGetOption' | translate}}</option>
+										<option value='POST'>{{'externalServiceStepMethodPostOption' | translate}}</option>
+									</select>
+									<span ng-show="step.iface.advancedShown" class="input-group-addon" title="Use this content type when POSTing">Content Type</span>
+									<select ng-disabled="step.method != 'POST'" ng-show="step.iface.advancedShown" ng-model='step.contentType' class="form-control form-control-inline">
+										<option value='application/x-www-form-urlencoded' title='Send request data using application/x-www-form-urlencoded content type'>www form</option>
+										<option value='application/json' title='Send request data using application/json content type'>json</option>
+									</select>
+									<span ng-show="step.iface.advancedShown" class="input-group-addon" title="{{'externalServiceStepUsernameTooltip' | translate}}">{{'externalServiceStepUsernameLabel' | translate}}</span>
+									<input ng-show="step.iface.advancedShown"  name="username" ng-model='step.username' class="form-control" type="text"></input>
+									<span ng-show="step.iface.advancedShown" class="input-group-addon" title="{{'externalServiceStepPasswordTooltip' | translate}}">{{'externalServiceStepPasswordLabel' | translate}}</span>
+									<input ng-show="step.iface.advancedShown" name="password" ng-model='step.password' class="form-control" type="text"></input>
+									
+									<span class="input-group-addon fa fa-cog rvd-clickable" ng-click="step.iface.advancedShown = !step.iface.advancedShown"></span>
+									<span> </span>
+								</div>
+								
+								<div ng-show="step.iface.advancedShown && step.method=='POST'">
+									<div  class="form-group">
+										<textarea ng-disabled="step.populatePostBodyFromParams" ng-model="step.requestBody" class="form-control" placeholder="type POST content here"></textarea>
+									</div>
+									<div ng-show="step.contentType=='application/x-www-form-urlencoded'" class="form-group checkbox" title="Build request body by url-encoding the service parameters defined above.">
+										<small><input ng-model="step.populatePostBodyFromParams" type="checkbox">Automatically populate from service parameters</small>
+									</div>
+								</div>
+							</div>
+		                </div>
+                        
                      </div>
                         
 					<h4>{{'externalServiceStepAssignResponseLabel' | translate}} <i ng-click='step.iface.helpCollapsed = !step.iface.helpCollapsed' class="fa fa-info-circle rvd-clickable"></i></h4>

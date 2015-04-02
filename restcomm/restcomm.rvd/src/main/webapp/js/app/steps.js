@@ -401,6 +401,9 @@ angular.module('Rvd')
 		this.title = 'external service';
 		this.url = '';
 		this.method = undefined;
+		this.contentType = undefined; 
+		this.requestBody = undefined;
+		this.populatePostBodyFromParams = undefined;
 		this.username = undefined;
 		this.password = undefined;
 		this.urlParams = [];
