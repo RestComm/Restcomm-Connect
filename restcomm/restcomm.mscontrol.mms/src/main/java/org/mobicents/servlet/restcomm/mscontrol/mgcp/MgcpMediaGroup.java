@@ -271,7 +271,7 @@ public class MgcpMediaGroup extends MediaGroup {
         } else if (StopMediaGroup.class.equals(klass)) {
             if (acquiringLink.equals(state) || initializingLink.equals(state)) {
                 fsm.transition(message, inactive);
-            } else {
+            } else if (active.equals(state) || openingLink.equals(state) || updatingLink.equals(state)) {
                 fsm.transition(message, deactivating);
             }
         } else if (active.equals(state)) {

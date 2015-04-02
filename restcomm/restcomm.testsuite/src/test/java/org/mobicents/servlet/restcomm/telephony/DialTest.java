@@ -265,10 +265,10 @@ public class DialTest {
         fotiniCall.initiateOutgoingCall(fotiniContact, dialConf, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(fotiniCall);
         assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
-        int responseBob = fotiniCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+        int responseFotini = fotiniCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseFotini == Response.TRYING || responseFotini == Response.RINGING);
 
-        if (responseBob == Response.TRYING) {
+        if (responseFotini == Response.TRYING) {
             assertTrue(fotiniCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, fotiniCall.getLastReceivedResponse().getStatusCode());
         }
@@ -720,7 +720,7 @@ public class DialTest {
 
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         SipRequest georgeInvite = georgeCall.getLastReceivedRequest();
-        assertTrue(((FromHeader)georgeInvite.getMessage().getHeader("From")).getAddress().getURI().toString().contains("bob"));
+        assertTrue(((FromHeader)georgeInvite.getMessage().getHeader("From")).getAddress().getDisplayName().contains("bob"));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
         String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
         assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
@@ -1187,7 +1187,7 @@ public class DialTest {
     
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-    private String rcmlToReturn = "<Dial timeout=\"5\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
+    private String rcmlToReturn = "<Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException {
@@ -1274,14 +1274,14 @@ public class DialTest {
         assertTrue(fotiniCall.sendIncomingCallResponse(180, "Ringing-Fotini", 600));
         String receivedBody = new String(fotiniCall.getLastReceivedRequest().getRawContent());
         assertTrue(fotiniCall.sendIncomingCallResponse(Response.OK, "OK-Fotini", 3600, receivedBody, "application", "sdp", null, null));
-        
+        assertTrue(fotiniCall.waitForAck(5000));
         fotiniCall.listenForDisconnect();
 
         Thread.sleep(2000);
 
         // hangup.
 
-        bobCall.disconnect();
+        assertTrue(bobCall.disconnect());
 
         assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
 
