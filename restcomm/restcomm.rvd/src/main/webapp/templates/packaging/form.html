@@ -19,7 +19,6 @@
 			</p>
 			
 			<form name="packagingForm" novalidate>
-<!-- -->
 				<div class="rvd-appinfo" name="appinfoForm">
 					<h3>{{'formGeneralInfoLabel' | translate}}</h3>
 					<div class="row">
@@ -33,11 +32,7 @@
 	
 							<div class="rvd-appversion">
 								<label><strong>{{'formVersionLabel' | translate}}</strong></label>
-								<select ng-model='rapp.info.appVersion' class="form-control" required>
-									<option value="1">1</option>
-									<option value="2">2</option>
-									<option value="3">3</option>
-								</select>
+								<input type="text" ng-model="rapp.info.appVersion" class="form-control">
 								<span class="help-block">{{'formVersionHelp' | translate}}</span>
 							</div>
 						</div>
