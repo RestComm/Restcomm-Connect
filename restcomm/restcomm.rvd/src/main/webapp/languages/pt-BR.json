@@ -153,7 +153,7 @@
 	"externalServiceStepFormErrorLabel": "Especifique uma URL válida que retorna JSON",
 	"externalServiceStepUrlParamNameLabel": "Nome",
 	"externalServiceStepUrlParamValueLabel": "Valor",
-	"externalServiceStepAddParamButton": "Adicionar parâmetro de URL",
+	"externalServiceStepAddParamButton": "TRANSLATE: Adicionar parâmetro",
 	"externalServiceStepAddParamButtonPopover": "Adicione um nome ao parâmetro. Use '$variable' para passar variáveis RVD",
 	"externalServiceStepAssignResponseLabel": "Atribuir respostas às variáveis",
 	"externalServiceStepAssignResponseText1": "Atribuir campos de resposta JSON para variáveis RVD acessarem as informaçoes retornadas de componentes RVD. Criar uma atribuição para cada uma das informações necessárias.",

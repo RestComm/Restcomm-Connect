@@ -365,6 +365,12 @@ li.verb {
  * BOOTSTRAP CUSTOMIZATIONS 
  * 
  */
+ 
+.form-control.form-control-inline {
+    min-width: 0;
+    width: auto;
+    display: inline;
+}
 
 .col-centered{
     float: none;

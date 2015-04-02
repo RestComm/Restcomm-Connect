@@ -153,7 +153,7 @@
 	"externalServiceStepFormErrorLabel": "Specify a valid URL that returns JSON",
 	"externalServiceStepUrlParamNameLabel": "Name",
 	"externalServiceStepUrlParamValueLabel": "Value",
-	"externalServiceStepAddParamButton": "Add URL parameter",
+	"externalServiceStepAddParamButton": "Add service parameter",
 	"externalServiceStepAddParamButtonPopover": "Add a name-value query parameter. Use '$variable' values to pass RVD variables",
 	"externalServiceStepAssignResponseLabel": "Assign response to variables",
 	"externalServiceStepAssignResponseText1": "Assign JSON response fields to RVD variables to access the data returned from RVD components. Create an assignment for each separate piece of information you need.",
