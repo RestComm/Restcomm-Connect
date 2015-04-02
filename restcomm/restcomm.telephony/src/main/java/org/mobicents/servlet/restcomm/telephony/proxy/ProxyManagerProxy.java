@@ -73,15 +73,16 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
 
     @Override
     public void init(final ServletConfig config) throws ServletException {
-//        final ServletContext context = config.getServletContext();
-//        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-//        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-//        configuration = configuration.subset("runtime-settings");
-//        final String address = configuration.getString("external-ip");
-//        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-//        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
-//        manager = manager(config, factory, storage, address);
-//        context.setAttribute(ProxyManager.class.getName(), manager);
+        super.init(config);
+        // final ServletContext context = config.getServletContext();
+        // final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+        // Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        // configuration = configuration.subset("runtime-settings");
+        // final String address = configuration.getString("external-ip");
+        // final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        // system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+        // manager = manager(config, factory, storage, address);
+        // context.setAttribute(ProxyManager.class.getName(), manager);
     }
 
     private ActorRef manager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
