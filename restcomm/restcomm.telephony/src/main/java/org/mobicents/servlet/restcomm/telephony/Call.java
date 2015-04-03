@@ -207,13 +207,13 @@ public final class Call extends UntypedActor {
         // Intermediate states
         this.canceling = new State("canceling", new Canceling(source), null);
         this.dialing = new State("dialing", new Dialing(source), null);
-        this.closingMediaSession = new State("completing", new ClosingMediaSession(source), null);
+        this.closingMediaSession = new State("closing media session", new ClosingMediaSession(source), null);
         this.failingBusy = new State("failing busy", new FailingBusy(source), null);
         this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
         this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
         this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
-        this.creatingMediaGroup = new State("creating media group", null, null);
-        this.destroyingMediaGroup = new State("destroying media group", null, null);
+        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
+        this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(source), null);
         this.joining = new State("joining", new Joining(source), null);
 
         // Transitions for the FSM.
@@ -411,7 +411,7 @@ public final class Call extends UntypedActor {
             onPlay((Play) message, self, sender);
         } else if (Collect.class.equals(klass)) {
             onCollect((Collect) message, self, sender);
-        } else if(StopMediaGroup.class.equals(klass)) {
+        } else if (StopMediaGroup.class.equals(klass)) {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
         }
     }
@@ -930,17 +930,16 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private final class InProgress extends AbstractAction {
+    private final class CreatingMediaGroup extends AbstractAction {
 
-        public InProgress(final ActorRef source) {
+        public CreatingMediaGroup(final ActorRef source) {
             super(source);
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public void execute(final Object message) throws Exception {
+        public void execute(Object message) throws Exception {
             SipSession.State sessionState = invite.getSession().getState();
-
             if (is(creatingMediaSession)
                     && !(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
                 MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
@@ -985,6 +984,34 @@ public final class Call extends UntypedActor {
                 invite.getApplicationSession().setExpires(0);
             }
 
+            msController.tell(new CreateMediaGroup(), super.source);
+        }
+
+    }
+
+    private final class DestroyingMediaGroup extends AbstractAction {
+
+        public DestroyingMediaGroup(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            msController.tell(new StopMediaGroup(), super.source);
+            msController.tell(new DestroyMediaGroup(), super.source);
+        }
+
+    }
+
+    private final class InProgress extends AbstractAction {
+
+        public InProgress(final ActorRef source) {
+            super(source);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void execute(final Object message) throws Exception {
             // Notify the observers.
             external = CallStateChanged.State.IN_PROGRESS;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1023,101 +1050,6 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            final Class<?> klass = message.getClass();
-            if (Hangup.class.equals(klass)) {
-                final SipSession session = invite.getSession();
-                final SipServletRequest bye = session.createRequest("BYE");
-
-                SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
-                InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
-
-                // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
-                // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
-                // Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
-                // Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
-                // Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
-                // Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
-                // Accept: application/sdp
-                // Allow: INVITE,ACK,CANCEL,BYE
-                // Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
-                // Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
-                // Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
-                // Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
-                // Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
-                // From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
-                // To: <sip:12055305520@192.168.6.219>
-                // Call-ID: 587241765_133360558@192.168.16.114
-                // CSeq: 393447729 INVITE
-                // Max-Forwards: 67
-                // Contact: <sip:+1302109762259@192.168.16.114:5060>
-                // Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
-                // Supported: replaces
-                // Content-Disposition: session;handling=required
-                // Content-Type: application/sdp
-                // Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
-                // X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
-                // X-Sip-Balancer-InitialRemotePort: 5060
-                // Route: <sip:10.13.169.214:5080;transport=udp;lr>
-                // Content-Length: 340
-
-                invite.getHeaders(RecordRouteHeader.NAME);
-
-                ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
-
-                if (invite.getHeader("X-Sip-Balancer") != null) {
-                    logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
-                    recordRouteList.next();
-                    recordRouteList.remove();
-                    recordRouteList.next();
-                    recordRouteList.remove();
-                }
-
-                if (recordRouteList.hasNext()) {
-                    logger.info("Record Route is set, wont change the Request URI");
-                } else if (realInetUri != null
-                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                            + " as a request uri of the BYE request");
-                    bye.setRequestURI(realInetUri);
-                }
-
-                bye.send();
-
-                if (recording) {
-                    recording = false;
-                    logger.info("Call - Will stop recording now");
-                    msController.tell(new Stop(true), super.source);
-                }
-            } else if (message instanceof SipServletRequest) {
-                final SipServletRequest bye = (SipServletRequest) message;
-                final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
-                okay.send();
-                if (recording) {
-                    if (!direction.contains("outbound")) {
-                        // Initial Call sent BYE
-                        recording = false;
-                        logger.info("Call Direction: " + direction);
-                        logger.info("Initial Call - Will stop recording now");
-                        msController.tell(new Stop(false), super.source);
-                        // VoiceInterpreter will take care to prepare the Recording object
-                    } else if (conference != null) {
-                        // Outbound call sent BYE. !Important conference is the initial call here.
-                        conference.tell(new StopRecordingCall(accountId, runtimeSettings, daoManager), null);
-                    }
-                }
-            } else if (message instanceof SipServletResponse) {
-                final SipServletResponse resp = (SipServletResponse) message;
-                if (resp.getStatus() == SipServletResponse.SC_BUSY_HERE
-                        || resp.getStatus() == SipServletResponse.SC_BUSY_EVERYWHERE) {
-                    // Notify the observers.
-                    external = CallStateChanged.State.BUSY;
-                    final CallStateChanged event = new CallStateChanged(external);
-                    for (final ActorRef observer : observers) {
-                        observer.tell(event, source);
-                    }
-                }
-            }
-
             // Destroy current media session
             msController.tell(new CloseMediaSession(), source);
         }
@@ -1301,6 +1233,27 @@ public final class Call extends UntypedActor {
             }
             // XXX can receive SIP cancel any other time?
         } else if ("BYE".equalsIgnoreCase(method)) {
+            // Reply to BYE with OK
+            final SipServletRequest bye = (SipServletRequest) message;
+            final SipServletResponse okay = bye.createResponse(SipServletResponse.SC_OK);
+            okay.send();
+
+            // Stop recording if necessary
+            if (recording) {
+                if (!direction.contains("outbound")) {
+                    // Initial Call sent BYE
+                    recording = false;
+                    logger.info("Call Direction: " + direction);
+                    logger.info("Initial Call - Will stop recording now");
+                    msController.tell(new Stop(false), self);
+                    // VoiceInterpreter will take care to prepare the Recording object
+                } else if (conference != null) {
+                    // Outbound call sent BYE. !Important conference is the initial call here.
+                    conference.tell(new StopRecordingCall(accountId, runtimeSettings, daoManager), null);
+                }
+            }
+
+            // Destroy media resources as necessary
             if (is(inProgress) || is(joining)) {
                 fsm.transition(message, destroyingMediaGroup);
             } else {
@@ -1330,6 +1283,14 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_BUSY_HERE:
             case SipServletResponse.SC_BUSY_EVERYWHERE: {
                 sendCallInfoToObservers();
+
+                // Notify the observers.
+                external = CallStateChanged.State.BUSY;
+                final CallStateChanged event = new CallStateChanged(external);
+                for (final ActorRef observer : observers) {
+                    observer.tell(event, self);
+                }
+
                 // XXX shouldnt it move to failingBusy IF dialing ????
                 if (is(dialing)) {
                     break;
@@ -1383,6 +1344,70 @@ public final class Call extends UntypedActor {
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
+        final SipSession session = invite.getSession();
+        final SipServletRequest bye = session.createRequest("BYE");
+
+        SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
+        InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+
+        // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
+        // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+        // Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+        // Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
+        // Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
+        // Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
+        // Accept: application/sdp
+        // Allow: INVITE,ACK,CANCEL,BYE
+        // Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
+        // Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
+        // Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
+        // Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
+        // Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
+        // From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
+        // To: <sip:12055305520@192.168.6.219>
+        // Call-ID: 587241765_133360558@192.168.16.114
+        // CSeq: 393447729 INVITE
+        // Max-Forwards: 67
+        // Contact: <sip:+1302109762259@192.168.16.114:5060>
+        // Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
+        // Supported: replaces
+        // Content-Disposition: session;handling=required
+        // Content-Type: application/sdp
+        // Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
+        // X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
+        // X-Sip-Balancer-InitialRemotePort: 5060
+        // Route: <sip:10.13.169.214:5080;transport=udp;lr>
+        // Content-Length: 340
+
+        invite.getHeaders(RecordRouteHeader.NAME);
+
+        ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
+
+        if (invite.getHeader("X-Sip-Balancer") != null) {
+            logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
+            recordRouteList.next();
+            recordRouteList.remove();
+            recordRouteList.next();
+            recordRouteList.remove();
+        }
+
+        if (recordRouteList.hasNext()) {
+            logger.info("Record Route is set, wont change the Request URI");
+        } else if (realInetUri != null
+                && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+            logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                    + " as a request uri of the BYE request");
+            bye.setRequestURI(realInetUri);
+        }
+
+        bye.send();
+
+        if (recording) {
+            recording = false;
+            logger.info("Call - Will stop recording now");
+            msController.tell(new Stop(true), self);
+        }
+
         if (is(updatingMediaSession) || is(ringing) || is(queued)) {
             fsm.transition(message, closingMediaSession);
         } else if (is(inProgress)) {
@@ -1422,7 +1447,7 @@ public final class Call extends UntypedActor {
         if (MediaSessionInfo.class.equals(klass)) {
             if (is(creatingMediaSession)) {
                 if (isInbound()) {
-                    fsm.transition(message, inProgress);
+                    fsm.transition(message, creatingMediaGroup);
                 } else {
                     fsm.transition(message, dialing);
                 }

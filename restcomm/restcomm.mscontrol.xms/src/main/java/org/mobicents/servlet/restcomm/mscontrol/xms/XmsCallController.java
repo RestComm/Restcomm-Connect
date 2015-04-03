@@ -92,7 +92,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
@@ -451,8 +450,6 @@ public class XmsCallController extends MediaServerController {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
-        } else if (StartMediaGroup.class.equals(klass)) {
-            onStartMediaGroup((StartMediaGroup) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (Mute.class.equals(klass)) {
@@ -529,7 +526,7 @@ public class XmsCallController extends MediaServerController {
 
     private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
         // Always reuse current media group if active
-        if (this.mediaGroup == null && sender.equals(this.call)) {
+        if (this.mediaGroup == null) {
             // Create new media group
             try {
                 this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
@@ -538,6 +535,9 @@ public class XmsCallController extends MediaServerController {
                 this.mediaGroup.getPlayer().addListener(this.playerListener);
                 this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
                 this.mediaGroup.getRecorder().addListener(this.recorderListener);
+
+                // Initialize Media Group
+                this.networkConnection.join(Direction.DUPLEX, this.mediaGroup);
 
                 // Warn call the media group has been created
                 final MediaGroupCreated mgCreated = new MediaGroupCreated();
@@ -561,17 +561,6 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
-    private void onStartMediaGroup(StartMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
-        // Join network connection to audio media group
-        if (this.mediaGroup != null) {
-            this.networkConnection.join(Direction.DUPLEX, this.mediaGroup);
-        }
-
-        // Tell observers the media group has been created
-        final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
-        notifyObservers(response, self);
-    }
-
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
         try {
             if (this.mediaGroup != null) {
@@ -590,9 +579,6 @@ public class XmsCallController extends MediaServerController {
                     this.mediaGroup.getSignalDetector().stop();
                     this.collecting = Boolean.FALSE;
                 }
-
-                // Disconnect from connection
-                this.mediaGroup.unjoin(this.networkConnection);
             }
 
             // Tell observers the media group has been created

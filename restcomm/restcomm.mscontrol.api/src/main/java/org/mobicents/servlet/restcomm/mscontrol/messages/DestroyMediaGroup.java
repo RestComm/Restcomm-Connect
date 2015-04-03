@@ -36,6 +36,10 @@ public final class DestroyMediaGroup {
         this.group = group;
     }
 
+    public DestroyMediaGroup() {
+        this(null);
+    }
+
     public ActorRef group() {
         return group;
     }
