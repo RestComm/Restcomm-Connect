@@ -405,8 +405,12 @@ public class XmsConferenceController extends MediaServerController {
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
 
+                // Set number of ports for the available participants and possible media group
+                Parameters mixerParams = mediaSession.createParameters();
+                mixerParams.put(MediaMixer.MAX_PORTS, 10);
+
                 // Create the conference room also
-                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO);
+                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
                 mediaMixer.addListener(mixerAllocationListener);
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference

@@ -80,6 +80,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -880,7 +881,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
                 final DiskCacheRequest request = new DiskCacheRequest(response.get());
                 cache.tell(request, source);
-            } else if (Tag.class.equals(klass) || MediaGroupStateChanged.class.equals(klass)) {
+            } else if (Tag.class.equals(klass)) {
                 if (Tag.class.equals(klass)) {
                     verb = (Tag) message;
                 }
@@ -1161,9 +1162,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             } else {
                 if (Tag.class.equals(klass)) {
                     verb = (Tag) message;
-                    gatherPrompts = new ArrayList<URI>();
-                    gatherChildren = new ArrayList<Tag>(verb.children());
-                } else if (MediaGroupStateChanged.class.equals(klass)) {
                     gatherPrompts = new ArrayList<URI>();
                     gatherChildren = new ArrayList<Tag>(verb.children());
                 } else if (DiskCacheResponse.class.equals(klass)) {
