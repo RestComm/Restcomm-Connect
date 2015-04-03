@@ -1290,7 +1290,7 @@ public final class Call extends UntypedActor {
             }
             // XXX can receive SIP cancel any other time?
         } else if ("BYE".equalsIgnoreCase(method)) {
-            if(is(inProgress) || is(joining)) {
+            if (is(inProgress) || is(joining)) {
                 fsm.transition(message, destroyingMediaGroup);
             } else {
                 fsm.transition(message, closingMediaSession);
@@ -1372,8 +1372,10 @@ public final class Call extends UntypedActor {
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(inProgress) || is(updatingMediaSession) || is(ringing) || is(queued)) {
+        if (is(updatingMediaSession) || is(ringing) || is(queued)) {
             fsm.transition(message, closingMediaSession);
+        } else if (is(inProgress)) {
+            fsm.transition(message, destroyingMediaGroup);
         }
     }
 
@@ -1389,7 +1391,7 @@ public final class Call extends UntypedActor {
         State nextState = null;
         if (is(creatingMediaSession)) {
             nextState = failed;
-        } else if (is(updatingMediaSession)) {
+        } else if (is(updatingMediaSession) || is(creatingMediaGroup)) {
             nextState = closingMediaSession;
         } else if (is(joining)) {
             nextState = destroyingMediaGroup;
@@ -1443,54 +1445,63 @@ public final class Call extends UntypedActor {
     }
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
-        this.outboundCall = message.call();
-        final Join join = new Join(self, this.msController, ConnectionMode.SendRecv);
-        this.outboundCall.tell(join, self);
+        if (is(inProgress)) {
+            this.outboundCall = message.call();
+            final Join join = new Join(self, this.msController, ConnectionMode.SendRecv);
+            this.outboundCall.tell(join, self);
+        }
     }
 
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
-        this.conference = sender;
-        this.conferenceController = message.mscontroller();
-        this.fsm.transition(message, joining);
+        if (is(inProgress)) {
+            this.conference = sender;
+            this.conferenceController = message.mscontroller();
+            this.fsm.transition(message, joining);
+        }
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
-        if (sender.equals(outboundCall)) {
+        if (is(joining) && sender.equals(outboundCall)) {
             // Warn controller that outbound call successfully joined
             this.msController.tell(message, self);
         }
     }
 
     private void onLeave(Leave message, ActorRef self, ActorRef sender) {
-        this.conference = null;
-        this.conferenceController = null;
-        this.msController.tell(message, sender);
+        if (is(inProgress) && sender.equals(this.conference)) {
+            this.conference = null;
+            this.conferenceController = null;
+            this.msController.tell(message, sender);
+        }
     }
 
     private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
-        if (runtimeSettings == null) {
-            this.runtimeSettings = message.getRuntimeSetting();
+        if (is(inProgress)) {
+            if (runtimeSettings == null) {
+                this.runtimeSettings = message.getRuntimeSetting();
+            }
+
+            if (daoManager == null) {
+                daoManager = message.getDaoManager();
+            }
+
+            if (accountId == null) {
+                accountId = message.getAccountId();
+            }
+
+            // Forward message for Media Session Controller to handle
+            message.setCallId(this.id);
+            this.msController.tell(message, sender);
+            this.recording = true;
         }
-
-        if (daoManager == null) {
-            daoManager = message.getDaoManager();
-        }
-
-        if (accountId == null) {
-            accountId = message.getAccountId();
-        }
-
-        // Forward message for Media Session Controller to handle
-        message.setCallId(this.id);
-        this.msController.tell(message, sender);
-        this.recording = true;
-
     }
 
     private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
-        // Forward message for Media Session Controller to handle
-        this.msController.tell(message, sender);
-        this.recording = false;
+        if (is(inProgress) && this.recording) {
+            // Forward message for Media Session Controller to handle
+            this.msController.tell(message, sender);
+            this.recording = false;
+        }
     }
 
 }
