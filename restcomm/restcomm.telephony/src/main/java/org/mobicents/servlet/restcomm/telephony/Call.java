@@ -71,6 +71,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
@@ -129,12 +130,13 @@ public final class Call extends UntypedActor {
     // Intermediate states
     private final State canceling;
     private final State dialing;
-    private final State completing;
-    private final State failing;
     private final State failingBusy;
     private final State failingNoAnswer;
     private final State creatingMediaSession;
     private final State updatingMediaSession;
+    private final State closingMediaSession;
+    private final State creatingMediaGroup;
+    private final State destroyingMediaGroup;
     private final State joining;
 
     // FSM.
@@ -170,6 +172,7 @@ public final class Call extends UntypedActor {
     // Media Session Control runtime stuff
     private final ActorRef msController;
     private MediaSessionInfo mediaSessionInfo;
+    private boolean fail;
 
     // Media Group runtime stuff
     private CallDetailRecord outgoingCallRecord;
@@ -177,8 +180,8 @@ public final class Call extends UntypedActor {
     private DaoManager daoManager;
     private ActorRef outboundCall;
     private ActorRef outboundCallBridgeEndpoint;
-    private boolean liveCallModification = false;
-    private boolean recording = false;
+    private boolean liveCallModification;
+    private boolean recording;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -202,12 +205,13 @@ public final class Call extends UntypedActor {
         // Intermediate states
         this.canceling = new State("canceling", new Canceling(source), null);
         this.dialing = new State("dialing", new Dialing(source), null);
-        this.completing = new State("completing", new Completing(source), null);
-        this.failing = new State("failing", new Failing(source), null);
+        this.closingMediaSession = new State("completing", new ClosingMediaSession(source), null);
         this.failingBusy = new State("failing busy", new FailingBusy(source), null);
         this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
         this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
         this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
+        this.creatingMediaGroup = new State("creating media group", null, null);
+        this.destroyingMediaGroup = new State("destroying media group", null, null);
         this.joining = new State("joining", new Joining(source), null);
 
         // Transitions for the FSM.
@@ -224,30 +228,31 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.ringing, this.noAnswer));
         transitions.add(new Transition(this.ringing, this.creatingMediaSession));
         transitions.add(new Transition(this.ringing, this.updatingMediaSession));
-        transitions.add(new Transition(this.ringing, this.completing));
+        transitions.add(new Transition(this.ringing, this.closingMediaSession));
         transitions.add(new Transition(this.creatingMediaSession, this.canceling));
         transitions.add(new Transition(this.creatingMediaSession, this.dialing));
         transitions.add(new Transition(this.creatingMediaSession, this.failed));
-        transitions.add(new Transition(this.creatingMediaSession, this.inProgress));
+        transitions.add(new Transition(this.creatingMediaSession, this.creatingMediaGroup));
+        transitions.add(new Transition(this.creatingMediaGroup, this.inProgress));
+        transitions.add(new Transition(this.creatingMediaGroup, this.closingMediaSession));
+        transitions.add(new Transition(this.destroyingMediaGroup, this.closingMediaSession));
         transitions.add(new Transition(this.dialing, this.canceling));
-        transitions.add(new Transition(this.dialing, this.failing));
+        transitions.add(new Transition(this.dialing, this.closingMediaSession));
         transitions.add(new Transition(this.dialing, this.failingBusy));
-        transitions.add(new Transition(this.dialing, this.failingNoAnswer));
         transitions.add(new Transition(this.dialing, this.ringing));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
-        transitions.add(new Transition(this.inProgress, this.completing));
+        transitions.add(new Transition(this.inProgress, this.destroyingMediaGroup));
         transitions.add(new Transition(this.inProgress, this.joining));
         transitions.add(new Transition(this.joining, this.inProgress));
-        transitions.add(new Transition(this.joining, this.completing));
-        transitions.add(new Transition(this.joining, this.failing));
+        transitions.add(new Transition(this.joining, this.destroyingMediaGroup));
         transitions.add(new Transition(this.canceling, this.canceled));
-        transitions.add(new Transition(this.failing, this.failed));
         transitions.add(new Transition(this.failingBusy, this.busy));
         transitions.add(new Transition(this.failingNoAnswer, this.noAnswer));
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
         transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
-        transitions.add(new Transition(this.updatingMediaSession, this.completing));
-        transitions.add(new Transition(this.completing, this.completed));
+        transitions.add(new Transition(this.updatingMediaSession, this.closingMediaSession));
+        transitions.add(new Transition(this.closingMediaSession, this.completed));
+        transitions.add(new Transition(this.closingMediaSession, this.failed));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
@@ -257,11 +262,16 @@ public final class Call extends UntypedActor {
 
         // Media Session Control runtime stuff.
         this.msController = mediaSessionController;
+        this.fail = false;
 
         // Initialize the runtime stuff.
         this.id = Sid.generate(Sid.Type.CALL);
         this.created = DateTime.now();
         this.observers = Collections.synchronizedList(new ArrayList<ActorRef>());
+
+        // Media Group runtime stuff
+        this.liveCallModification = false;
+        this.recording = false;
     }
 
     private boolean is(State state) {
@@ -350,7 +360,7 @@ public final class Call extends UntypedActor {
         } else if (GetCallInfo.class.equals(klass)) {
             onGetCallInfo((GetCallInfo) message, self, sender);
         } else if (GetOutboundCall.class.equals(klass)) {
-            sender.tell(outboundCall, self);
+            onGetOutboundCall((GetOutboundCall) message, self, sender);
         } else if (InitializeOutbound.class.equals(klass)) {
             onInitializeOutbound((InitializeOutbound) message, self, sender);
         } else if (ChangeCallDirection.class.equals(klass)) {
@@ -657,18 +667,13 @@ public final class Call extends UntypedActor {
     }
 
     private final class Canceled extends AbstractAction {
+
         public Canceled(ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            // Explicitly invalidate the application session.
-            // if (invite.getSession().isValid())
-            // invite.getSession().invalidate();
-            // if (invite.getApplicationSession().isValid())
-            // invite.getApplicationSession().invalidate();
-            // Notify the observers.
             external = CallStateChanged.State.CANCELED;
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
@@ -684,7 +689,7 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private class Failing extends AbstractAction {
+    private abstract class Failing extends AbstractAction {
         public Failing(final ActorRef source) {
             super(source);
         }
@@ -1006,9 +1011,9 @@ public final class Call extends UntypedActor {
 
     }
 
-    private final class Completing extends AbstractAction {
+    private final class ClosingMediaSession extends AbstractAction {
 
-        public Completing(final ActorRef source) {
+        public ClosingMediaSession(final ActorRef source) {
             super(source);
         }
 
@@ -1098,7 +1103,8 @@ public final class Call extends UntypedActor {
                 }
             } else if (message instanceof SipServletResponse) {
                 final SipServletResponse resp = (SipServletResponse) message;
-                if (resp.getStatus() == SipServletResponse.SC_BUSY_HERE || resp.getStatus() == SipServletResponse.SC_BUSY_EVERYWHERE) {
+                if (resp.getStatus() == SipServletResponse.SC_BUSY_HERE
+                        || resp.getStatus() == SipServletResponse.SC_BUSY_EVERYWHERE) {
                     // Notify the observers.
                     external = CallStateChanged.State.BUSY;
                     final CallStateChanged event = new CallStateChanged(external);
@@ -1215,8 +1221,14 @@ public final class Call extends UntypedActor {
         sender.tell(info(), self);
     }
 
+    private void onGetOutboundCall(GetOutboundCall message, ActorRef self, ActorRef sender) throws Exception {
+        sender.tell(this.outboundCall, self);
+    }
+
     private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, queued);
+        if (is(uninitialized)) {
+            fsm.transition(message, queued);
+        }
     }
 
     private void onChangeCallDirection(ChangeCallDirection message, ActorRef self, ActorRef sender) {
@@ -1227,19 +1239,26 @@ public final class Call extends UntypedActor {
         this.conference = null;
         this.outboundCall = null;
 
+        // XXX why not keep current media group?
         this.msController.tell(new CreateMediaGroup(), self);
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, creatingMediaSession);
+        if (is(ringing)) {
+            fsm.transition(message, creatingMediaSession);
+        }
     }
 
     private void onDial(Dial message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, creatingMediaSession);
+        if (is(queued)) {
+            fsm.transition(message, creatingMediaSession);
+        }
     }
 
     private void onReject(Reject message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, busy);
+        if (is(ringing)) {
+            fsm.transition(message, busy);
+        }
     }
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
@@ -1266,11 +1285,16 @@ public final class Call extends UntypedActor {
         } else if ("CANCEL".equalsIgnoreCase(method)) {
             if (is(creatingMediaSession)) {
                 fsm.transition(message, canceling);
-            } else {
+            } else if (is(ringing) && isInbound()) {
                 fsm.transition(message, canceled);
             }
+            // XXX can receive SIP cancel any other time?
         } else if ("BYE".equalsIgnoreCase(method)) {
-            fsm.transition(message, completing);
+            if(is(inProgress) || is(joining)) {
+                fsm.transition(message, destroyingMediaGroup);
+            } else {
+                fsm.transition(message, closingMediaSession);
+            }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
         }
@@ -1295,6 +1319,7 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_BUSY_HERE:
             case SipServletResponse.SC_BUSY_EVERYWHERE: {
                 sendCallInfoToObservers();
+                // XXX shouldnt it move to failingBusy IF dialing ????
                 if (is(dialing)) {
                     break;
                 } else {
@@ -1338,8 +1363,9 @@ public final class Call extends UntypedActor {
             }
             default: {
                 if (code >= 400 && code != 487) {
+                    this.fail = true;
                     sendCallInfoToObservers();
-                    fsm.transition(message, failed);
+                    fsm.transition(message, closingMediaSession);
                 }
             }
         }
@@ -1347,7 +1373,7 @@ public final class Call extends UntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress) || is(updatingMediaSession) || is(ringing) || is(queued)) {
-            fsm.transition(message, completing);
+            fsm.transition(message, closingMediaSession);
         }
     }
 
@@ -1360,10 +1386,18 @@ public final class Call extends UntypedActor {
 
     private void onMediaServerControllerError(MediaServerControllerError message, ActorRef self, ActorRef sender)
             throws Exception {
+        State nextState = null;
         if (is(creatingMediaSession)) {
-            fsm.transition(message, failed);
-        } else if (is(updatingMediaSession) || is(joining)) {
-            fsm.transition(message, failing);
+            nextState = failed;
+        } else if (is(updatingMediaSession)) {
+            nextState = closingMediaSession;
+        } else if (is(joining)) {
+            nextState = destroyingMediaGroup;
+        }
+
+        if (nextState != null) {
+            this.fail = true;
+            fsm.transition(message, nextState);
         }
     }
 
@@ -1383,10 +1417,12 @@ public final class Call extends UntypedActor {
                 fsm.transition(message, inProgress);
             }
         } else if (MediaSessionClosed.class.equals(klass)) {
-            if (is(completing)) {
-                fsm.transition(message, completed);
-            } else if (is(failing)) {
-                fsm.transition(message, failed);
+            if (is(closingMediaSession)) {
+                if (this.fail) {
+                    fsm.transition(message, failed);
+                } else {
+                    fsm.transition(message, completed);
+                }
             } else if (is(failingBusy)) {
                 fsm.transition(message, busy);
             } else if (is(failingNoAnswer)) {
@@ -1398,6 +1434,10 @@ public final class Call extends UntypedActor {
                 // Inform the conference and tell observers call is in progress
                 conference.tell(message.get(), self);
                 fsm.transition(message, inProgress);
+            }
+        } else if (MediaGroupDestroyed.class.equals(klass)) {
+            if (is(destroyingMediaGroup)) {
+                fsm.transition(message, closingMediaSession);
             }
         }
     }
