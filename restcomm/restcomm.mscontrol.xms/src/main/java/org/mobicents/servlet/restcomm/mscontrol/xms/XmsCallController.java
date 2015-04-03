@@ -525,20 +525,24 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
+    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
         // Always reuse current media group if active
         if (this.mediaGroup == null) {
             // Create new media group
-            this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+            try {
+                this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
 
-            // Prepare the Media Group resources
-            this.mediaGroup.getPlayer().addListener(this.playerListener);
-            this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
-            this.mediaGroup.getRecorder().addListener(this.recorderListener);
+                // Prepare the Media Group resources
+                this.mediaGroup.getPlayer().addListener(this.playerListener);
+                this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
+                this.mediaGroup.getRecorder().addListener(this.recorderListener);
+
+                // XXX should send a MediaGroupCreated message, not the ActorRef (part of VI refactoring)
+                sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
+            } catch (MsControlException e) {
+                sender.tell(new MediaServerControllerError(e), self);
+            }
         }
-
-        // XXX should send a MediaGroupCreated message, not the ActorRef (part of VI refactoring)
-        sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
@@ -971,9 +975,7 @@ public class XmsCallController extends MediaServerController {
                     networkConnection.getSdpPortManager().processSdpOffer(remoteSdp.getBytes());
                 }
             } catch (MsControlException e) {
-                // XXX Move to failing state
-                final MediaServerControllerError response = new MediaServerControllerError(e);
-                sender().tell(new MediaServerControllerResponse<MediaServerControllerError>(response), super.source);
+                sender().tell(new MediaServerControllerError(e), super.source);
             }
         }
 
@@ -990,9 +992,7 @@ public class XmsCallController extends MediaServerController {
             try {
                 networkConnection.getSdpPortManager().processSdpAnswer(remoteSdp.getBytes());
             } catch (MsControlException e) {
-                // XXX Move to failing state
-                final MediaServerControllerError response = new MediaServerControllerError(e);
-                sender().tell(new MediaServerControllerResponse<MediaServerControllerError>(response), super.source);
+                sender().tell(new MediaServerControllerError(e), super.source);
             }
         }
 
