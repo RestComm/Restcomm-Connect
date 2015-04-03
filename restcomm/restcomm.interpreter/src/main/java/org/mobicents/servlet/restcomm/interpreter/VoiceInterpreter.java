@@ -86,7 +86,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -157,8 +156,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private final State downloadingRcml;
     private final State downloadingFallbackRcml;
     private final State initializingCall;
-    private final State initializingCallMediaGroup;
-    private final State acquiringCallMediaGroup;
+    private final State initializedCall;
     private final State ready;
     private final State notFound;
     private final State rejecting;
@@ -195,11 +193,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
         super();
         final ActorRef source = self();
-        acquiringCallMediaGroup = new State("acquiring call media group", new AcquiringCallMediaGroup(source), null);
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
         downloadingFallbackRcml = new State("downloading fallback rcml", new DownloadingFallbackRcml(source), null);
         initializingCall = new State("initializing call", new InitializingCall(source), null);
-        initializingCallMediaGroup = new State("initializing call media group", new InitializingCallMediaGroup(source), null);
+        initializedCall = new State("initialized call", new InitializedCall(source), null);
         ready = new State("ready", new Ready(source), null);
         notFound = new State("notFound", new NotFound(source), null);
         rejecting = new State("rejecting", new Rejecting(source), null);
@@ -228,34 +225,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
-        transitions.add(new Transition(acquiringCallInfo, acquiringCallMediaGroup));
-        transitions.add(new Transition(initializingCall, acquiringCallMediaGroup));
+        transitions.add(new Transition(initializingCall, initializedCall));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
-        transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
-        transitions.add(new Transition(acquiringCallMediaGroup, hangingUp));
-        transitions.add(new Transition(acquiringCallMediaGroup, finished));
-        transitions.add(new Transition(initializingCallMediaGroup, faxing));
-        transitions.add(new Transition(initializingCallMediaGroup, downloadingRcml));
-        transitions.add(new Transition(initializingCallMediaGroup, playingRejectionPrompt));
-        transitions.add(new Transition(initializingCallMediaGroup, pausing));
-        transitions.add(new Transition(initializingCallMediaGroup, checkingCache));
-        transitions.add(new Transition(initializingCallMediaGroup, caching));
-        transitions.add(new Transition(initializingCallMediaGroup, synthesizing));
-        transitions.add(new Transition(initializingCallMediaGroup, redirecting));
-        transitions.add(new Transition(initializingCallMediaGroup, processingGatherChildren));
-        transitions.add(new Transition(initializingCallMediaGroup, creatingRecording));
-        transitions.add(new Transition(initializingCallMediaGroup, creatingSmsSession));
-        transitions.add(new Transition(initializingCallMediaGroup, startDialing));
-        transitions.add(new Transition(initializingCallMediaGroup, hangingUp));
-        transitions.add(new Transition(initializingCallMediaGroup, finished));
+        transitions.add(new Transition(initializedCall, faxing));
+        transitions.add(new Transition(initializedCall, downloadingRcml));
+        transitions.add(new Transition(initializedCall, playingRejectionPrompt));
+        transitions.add(new Transition(initializedCall, pausing));
+        transitions.add(new Transition(initializedCall, checkingCache));
+        transitions.add(new Transition(initializedCall, caching));
+        transitions.add(new Transition(initializedCall, synthesizing));
+        transitions.add(new Transition(initializedCall, redirecting));
+        transitions.add(new Transition(initializedCall, processingGatherChildren));
+        transitions.add(new Transition(initializedCall, creatingRecording));
+        transitions.add(new Transition(initializedCall, creatingSmsSession));
+        transitions.add(new Transition(initializedCall, startDialing));
+        transitions.add(new Transition(initializedCall, hangingUp));
+        transitions.add(new Transition(initializedCall, finished));
         transitions.add(new Transition(downloadingRcml, ready));
         transitions.add(new Transition(downloadingRcml, notFound));
         transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
         transitions.add(new Transition(downloadingRcml, hangingUp));
         transitions.add(new Transition(downloadingRcml, finished));
-        transitions.add(new Transition(downloadingRcml, acquiringCallMediaGroup));
-        transitions.add(new Transition(downloadingRcml, initializingCallMediaGroup));
+        transitions.add(new Transition(downloadingRcml, initializedCall));
         transitions.add(new Transition(downloadingFallbackRcml, ready));
         transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
         transitions.add(new Transition(downloadingFallbackRcml, finished));
@@ -275,7 +267,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(ready, finished));
         transitions.add(new Transition(pausing, ready));
         transitions.add(new Transition(pausing, finished));
-        transitions.add(new Transition(rejecting, acquiringCallMediaGroup));
+        transitions.add(new Transition(rejecting, initializedCall));
         transitions.add(new Transition(rejecting, finished));
         transitions.add(new Transition(faxing, ready));
         transitions.add(new Transition(faxing, finished));
@@ -478,8 +470,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final State state = fsm.state();
         sender = sender();
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Current State: " + state.toString());
-            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Processing Message: " + klass.getName());
+            logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString());
+            logger.info(" ********** VoiceInterpreter's " + self().path() + " Processing Message: " + klass.getName());
         }
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
@@ -536,12 +528,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (acquiringOutboundCallInfo.equals(state)) {
                 fsm.transition(message, joiningCalls);
             }
-        } else if (MediaServerControllerResponse.class.equals(klass)) {
-            if (acquiringCallMediaGroup.equals(state) || downloadingRcml.equals(state)) {
-                fsm.transition(message, initializingCallMediaGroup);
-            } else if (acquiringConferenceMediaGroup.equals(state)) {
-                fsm.transition(message, initializingConferenceMediaGroup);
-            }
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
             callState = event.state();
@@ -552,7 +538,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // update db and callback statusCallback url.
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
-                    fsm.transition(message, acquiringCallMediaGroup);
+                    fsm.transition(message, initializedCall);
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
@@ -565,28 +551,27 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
-                if(joiningCalls.equals(state)) {
+                if (joiningCalls.equals(state)) {
                     fsm.transition(message, finishDialing);
                 } else if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
                     fsm.transition(message, finishDialing);
                 } else
-                    // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
-                    if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
+                // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
+                if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
+                    fsm.transition(message, finishDialing);
+                } else if (creatingRecording.equals(state)) {
+                    // Ask callMediaGroup to stop recording so we have the recording file available
+                    // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
+                    call.tell(new StopMediaGroup(), null);
+                    fsm.transition(message, finishRecording);
+                } else if ((bridged.equals(state) || forking.equals(state)) && call == sender()) {
+                    if (!dialActionExecuted) {
                         fsm.transition(message, finishDialing);
-                    } else if (creatingRecording.equals(state)) {
-                        // Ask callMediaGroup to stop recording so we have the recording file available
-                        // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
-                        callMediaGroup.tell(new Stop(), null);
-                        context().stop(callMediaGroup);
-                        fsm.transition(message, finishRecording);
-                    } else if ((bridged.equals(state) || forking.equals(state)) && call == sender()) {
-                        if (!dialActionExecuted) {
-                            fsm.transition(message, finishDialing);
-                        }
-                    } else {
-                        if (!finishDialing.equals(state))
-                            fsm.transition(message, finished);
                     }
+                } else {
+                    if (!finishDialing.equals(state))
+                        fsm.transition(message, finished);
+                }
                 // else if (!forking.equals(state) || call == sender()) {
                 // fsm.transition(message, finished);
                 // }
@@ -721,7 +706,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (MediaGroupStateChanged.class.equals(klass)) {
             final MediaGroupStateChanged event = (MediaGroupStateChanged) message;
             if (MediaGroupStateChanged.State.ACTIVE == event.state()) {
-                if (initializingCallMediaGroup.equals(state)) {
+                if (initializedCall.equals(state)) {
                     final String direction = callInfo.direction();
                     if ("inbound".equals(direction) && verb != null) {
                         if (reject.equals(verb.name())) {
@@ -775,15 +760,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, ready);
                 } else if (creatingRecording.equals(state)) {
                     fsm.transition(message, finishRecording);
-                } //This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might come later
+                } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
+                  // come later
                 else if (gathering.equals(state) || (finishGathering.equals(state) && !super.dtmfReceived)) {
                     final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
-                    if(sender == call) {
-                        //DTMF using SIP INFO, check if all digits collected here
+                    if (sender == call) {
+                        // DTMF using SIP INFO, check if all digits collected here
                         collectedDigits.append(dtmfResponse.get());
-                        //Collected digits == requested num of digits the complete the collect digits
-                        if (numberOfDigits!=Short.MAX_VALUE) {
-                            if (collectedDigits.length()==numberOfDigits) {
+                        // Collected digits == requested num of digits the complete the collect digits
+                        if (numberOfDigits != Short.MAX_VALUE) {
+                            if (collectedDigits.length() == numberOfDigits) {
                                 dtmfReceived = true;
                                 fsm.transition(message, finishGathering);
                             } else {
@@ -791,8 +777,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 return;
                             }
                         } else {
-                            //If collected digits have finish on key at the end then complete the collect digits
-                            if(collectedDigits.toString().endsWith(finishOnKey)) {
+                            // If collected digits have finish on key at the end then complete the collect digits
+                            if (collectedDigits.toString().endsWith(finishOnKey)) {
                                 dtmfReceived = true;
                                 fsm.transition(message, finishGathering);
                             } else {
@@ -828,7 +814,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (FaxResponse.class.equals(klass)) {
             fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
-            this.liveCallModification = ((StopInterpreter)message).isLiveCallModification();
+            this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
             if (CallStateChanged.State.IN_PROGRESS == callState && !liveCallModification) {
                 fsm.transition(message, hangingUp);
             } else {
@@ -843,7 +829,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, finishDialing);
             } else if (bridged.equals(state)) {
                 fsm.transition(message, finishDialing);
-            } else if(joiningCalls.equals(state)) {
+            } else if (joiningCalls.equals(state)) {
                 fsm.transition(message, finishDialing);
             }
         }
@@ -962,8 +948,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private final class AcquiringCallMediaGroup extends AbstractAction {
-        public AcquiringCallMediaGroup(final ActorRef source) {
+    private final class InitializedCall extends AbstractAction {
+
+        public InitializedCall(final ActorRef source) {
             super(source);
         }
 
@@ -974,6 +961,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Update the interpreter state.
                 final CallStateChanged event = (CallStateChanged) message;
                 callState = event.state();
+
                 // Update the storage.
                 if (callRecord != null) {
                     callRecord = callRecord.setStatus(callState.toString());
@@ -981,29 +969,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
+
                 // Update the application.
                 callback();
-            }
-            call.tell(new CreateMediaGroup(), source);
-            logger.info("Voiceinterpreter: "+self().path()+" sent CreateMediaGroup to Call: "+call.path());
-        }
-    }
-
-    private final class InitializingCallMediaGroup extends AbstractAction {
-        public InitializingCallMediaGroup(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
-            if (MediaServerControllerResponse.class.equals(klass)) {
-                final MediaServerControllerResponse<ActorRef> response = (MediaServerControllerResponse<ActorRef>) message;
-                callMediaGroup = response.get();
-                callMediaGroup.tell(new Observe(source), source);
-                callMediaGroup.tell(new StartMediaGroup(), source);
-                logger.info("VoiceInterpreter: "+self().path()+" sent StartMediaGroup for callMediaGroup: "+callMediaGroup.path()+" CallMediaGroup isTerminated: "+callMediaGroup.isTerminated());
             } else if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
@@ -1057,18 +1025,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         callRecord = builder.build();
                         records.addCallDetailRecord(callRecord);
                         //
-                        //                        if (liveCallModification) {
-                        //                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
-                        //                            fsm.transition(message, acquiringCallMediaGroup);
-                        //                            return;
-                        //                        }
-                    } else {
-                        if (callMediaGroup == null ) {
-                            logger.info("On going call but CallMediaGroup is null, will acquire call media group. VoiceInterpreter: "+self().path());
-                            fsm.transition(message, acquiringCallMediaGroup);
-                            return;
-                        }
+                        // if (liveCallModification) {
+                        // logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+                        // fsm.transition(message, acquiringCallMediaGroup);
+                        // return;
+                        // }
                     }
+
                     // Update the application.
                     callback();
                 }
@@ -1122,7 +1085,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final UntypedActorContext context = getContext();
             final State state = fsm.state();
-            if (initializingCallMediaGroup.equals(state)) {
+            if (initializedCall.equals(state)) {
                 // Handle pending verbs.
                 source.tell(verb, source);
                 return;
@@ -1463,7 +1426,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 return;
             }
             final Play play = new Play(uri, Short.MAX_VALUE);
-            callMediaGroup.tell(play, source);
+            call.tell(play, source);
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeout(verb), TimeUnit.SECONDS));
         }
@@ -1547,7 +1510,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             call.tell(add, source);
 
             // Stop the ringing
-            callMediaGroup.tell(new Stop(), source);
+            call.tell(new StopMediaGroup(), source);
         }
     }
 
@@ -1743,7 +1706,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (message instanceof ReceiveTimeout)
                     logger.info("Received timeout, will cancel calls");
                 if (message instanceof CallStateChanged)
-                    logger.info("call state changed. New call state: "+((CallStateChanged)message).state());
+                    logger.info("call state changed. New call state: " + ((CallStateChanged) message).state());
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
@@ -1754,10 +1717,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                         branch.tell(new Cancel(), source);
-                        //No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we destroy calls
-                        //                        callManager.tell(new DestroyCall(branch), source);
+                        // No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we
+                        // destroy calls
+                        // callManager.tell(new DestroyCall(branch), source);
                     }
-                    callMediaGroup.tell(new Stop(), null);
+                    call.tell(new StopMediaGroup(), null);
                     if (attribute == null) {
                         final GetNextVerb next = GetNextVerb.instance();
                         parser.tell(next, source);
@@ -1780,7 +1744,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (recordingCall && sender == call) {
                 Configuration runtimeSettings = configuration.subset("runtime-settings");
-                //Its the initial call that sent BYE so we can create the recording object here
+                // Its the initial call that sent BYE so we can create the recording object here
                 if (recordingUri != null) {
                     Double duration = WavUtils.getAudioDuration(recordingUri);
                     if (duration.equals(0.0)) {
@@ -1788,7 +1752,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         final DateTime end = DateTime.now();
                         duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
                     } else {
-                        logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
+                        logger.info("At finishDialing. File already exists, length: " + (new File(recordingUri).length()));
                     }
                     final Recording.Builder builder = Recording.builder();
                     builder.setSid(recordingSid);
@@ -1798,7 +1762,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     builder.setApiVersion(runtimeSettings.getString("api-version"));
                     StringBuilder buffer = new StringBuilder();
                     buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
+                            .append(accountId.toString());
                     buffer.append("/Recordings/").append(recordingSid.toString());
                     builder.setUri(URI.create(buffer.toString()));
                     final Recording recording = builder.build();
@@ -2065,8 +2029,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
-            // Clean up.\
-            callMediaGroup.tell(new StopMediaGroup(), source);
+            // Clean up
+            call.tell(new StopMediaGroup(), source);
             final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
             conference.tell(destroy, source);
             conferenceMediaGroup = null;
@@ -2178,14 +2142,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
-            // Destroy the media group(s).
-            if (callMediaGroup != null) {
-                callMediaGroup.tell(stop, source);
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
-                call.tell(destroy, source);
-                context().stop(callMediaGroup);
-                callMediaGroup = null;
-            }
+
             if (!liveCallModification) {
                 // Destroy the Call(s).
                 callManager.tell(new DestroyCall(call), source);
@@ -2209,7 +2166,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     @Override
     public void postStop() {
         if (!fsm.state().equals(uninitialized)) {
-            logger.info("VoiceIntepreter: "+self().path()+"At the postStop() method. Will clean up Voice Interpreter. Keep calls: "+liveCallModification);
+            logger.info("VoiceIntepreter: " + self().path()
+                    + "At the postStop() method. Will clean up Voice Interpreter. Keep calls: " + liveCallModification);
             if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
                 logger.info("At postStop(), will clean up outbound call");
                 outboundCall.tell(new Hangup(), null);
@@ -2218,7 +2176,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
-            final StopMediaGroup stop = new StopMediaGroup();
             if (confInterpreter != null) {
                 logger.info("At postStop(), will clean up conference interpreter");
                 confInterpreter.tell(StopInterpreter.instance(), null);
@@ -2233,24 +2190,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conference.tell(new StopObserving(self()), null);
             }
 
-            // Destroy the media group(s).
-            if (callMediaGroup != null && !liveCallModification) {
-                logger.info("At postStop(), will stop call media group");
-                callMediaGroup.tell(stop, null);
-                getContext().stop(callMediaGroup);
-                callMediaGroup = null;
-            }
-
             if (call != null && !liveCallModification) {
                 logger.info("At postStop(), will clean up call");
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(callMediaGroup);
-                call.tell(destroy, null);
                 callManager.tell(new DestroyCall(call), null);
                 call = null;
             }
 
             getContext().stop(self());
-
             postCleanup();
         }
         super.postStop();
