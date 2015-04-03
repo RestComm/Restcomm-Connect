@@ -71,6 +71,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
@@ -1445,6 +1446,10 @@ public final class Call extends UntypedActor {
                 // MSController completed join operation
                 // Inform the conference and tell observers call is in progress
                 conference.tell(message.get(), self);
+                fsm.transition(message, inProgress);
+            }
+        } else if (MediaGroupCreated.class.equals(klass)) {
+            if (is(creatingMediaGroup)) {
                 fsm.transition(message, inProgress);
             }
         } else if (MediaGroupDestroyed.class.equals(klass)) {
