@@ -80,8 +80,6 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -193,7 +191,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     SpeechSynthesizerInfo synthesizerInfo = null;
     // The call being handled by this interpreter.
     ActorRef call = null;
-    ActorRef callMediaGroup = null;
     // The information for this call.
     CallInfo callInfo = null;
     // The call state.
