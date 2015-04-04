@@ -58,15 +58,15 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -262,8 +262,6 @@ public class XmsConferenceController extends MediaServerController {
             onCloseConnection((CloseConnection) message, self, sender);
         } else if (CreateMediaGroup.class.equals(klass)) {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
-        } else if (StartMediaGroup.class.equals(klass)) {
-            onStartMediaGroup((StartMediaGroup) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
@@ -273,7 +271,6 @@ public class XmsConferenceController extends MediaServerController {
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         }
-
     }
 
     private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
@@ -318,28 +315,21 @@ public class XmsConferenceController extends MediaServerController {
             // Reuse if already exists
             if (this.mediaGroup == null) {
                 // Create new media group
-                this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+                this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER);
 
                 // Prepare the Media Group resources
                 this.mediaGroup.getPlayer().addListener(this.playerListener);
                 // this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
                 // this.mediaGroup.getRecorder().addListener(this.recorderListener);
+
+                // join the media group to the mixer
+                this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
             }
-            sender.tell(new MediaServerControllerResponse<ActorRef>(self), self);
+
+            final MediaGroupCreated mgCreated = new MediaGroupCreated();
+            sender.tell(new MediaServerControllerResponse<MediaGroupCreated>(mgCreated), self);
         } catch (MsControlException e) {
-            // TODO Auto-generated catch block
-            logger.error(e.getMessage(), e);
-        }
-    }
-
-    private void onStartMediaGroup(StartMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
-        if (is(active)) {
-            // join the media group to the mixer
-            this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
-
-            // Tell observers the media group has been created
-            final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.ACTIVE);
-            notifyObservers(response, self);
+            sender.tell(new MediaServerControllerError(e), self);
         }
     }
 
@@ -364,6 +354,9 @@ public class XmsConferenceController extends MediaServerController {
             this.mediaGroup.release();
             this.mediaGroup = null;
         }
+
+        final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
+        sender.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
     }
 
     private void onQueryMediaMixer(QueryMediaMixer message, ActorRef self, ActorRef sender) {

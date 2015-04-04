@@ -31,9 +31,6 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
-import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
@@ -41,10 +38,13 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -59,7 +59,6 @@ import akka.event.LoggingAdapter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  * @author henrique.rosa@telestax.com (Henrique Rosa)
- *
  */
 @Immutable
 public final class Conference extends UntypedActor {
@@ -71,23 +70,23 @@ public final class Conference extends UntypedActor {
 
     // Finite States
     private final State uninitialized;
-    private final State runningModeratorAbsent;
-    private final State runningModeratorPresent;
+    private final State waiting;
+    private final State running;
     private final State stopped;
 
     // Intermediate states
     private final State creatingMediaSession;
-    private final State stopping;
+    private final State closingMediaSession;
+    private final State creatingMediaGroup;
+    private final State destroyingMediaGroup;
 
     // Runtime stuff
     private final String name;
-    private ActorRef confVoiceInterpreter;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
 
     // Media Session Controller
     private final ActorRef mscontroller;
-    private boolean moderatorJoined;
 
     public Conference(final String name, final ActorRef msController) {
         super();
@@ -95,25 +94,29 @@ public final class Conference extends UntypedActor {
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
-        this.runningModeratorAbsent = new State("running moderator absent", new RunningModeratorAbsent(source), null);
-        this.runningModeratorPresent = new State("running moderator present", new RunningModeratorPresent(source), null);
+        this.waiting = new State("waiting", new Waiting(source), null);
+        this.running = new State("running", new Running(source), null);
         this.stopped = new State("completed", new Stopped(source), null);
 
         // Intermediate states
         this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
-        this.stopping = new State("stopping", new Stopping(source), null);
+        this.closingMediaSession = new State("closing media session", new ClosingMediaSession(source), null);
+        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
+        this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(source), null);
 
         // State transitions
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, creatingMediaSession));
-        transitions.add(new Transition(creatingMediaSession, runningModeratorPresent));
-        transitions.add(new Transition(creatingMediaSession, runningModeratorAbsent));
+        transitions.add(new Transition(creatingMediaSession, creatingMediaGroup));
         transitions.add(new Transition(creatingMediaSession, stopped));
-        transitions.add(new Transition(runningModeratorPresent, stopping));
-        transitions.add(new Transition(runningModeratorPresent, runningModeratorAbsent));
-        transitions.add(new Transition(runningModeratorAbsent, stopping));
-        transitions.add(new Transition(runningModeratorAbsent, runningModeratorPresent));
-        transitions.add(new Transition(stopping, stopped));
+        transitions.add(new Transition(creatingMediaGroup, waiting));
+        transitions.add(new Transition(creatingMediaGroup, closingMediaSession));
+        transitions.add(new Transition(running, destroyingMediaGroup));
+        transitions.add(new Transition(running, waiting));
+        transitions.add(new Transition(waiting, destroyingMediaGroup));
+        transitions.add(new Transition(waiting, running));
+        transitions.add(new Transition(destroyingMediaGroup, closingMediaSession));
+        transitions.add(new Transition(closingMediaSession, stopped));
 
         // Finite state machine
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -123,7 +126,6 @@ public final class Conference extends UntypedActor {
         this.mscontroller = msController;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
-        this.moderatorJoined = false;
     }
 
     private boolean is(State state) {
@@ -131,15 +133,7 @@ public final class Conference extends UntypedActor {
     }
 
     private boolean isRunning() {
-        return is(runningModeratorAbsent) || is(runningModeratorPresent);
-    }
-
-    private void stopAndCleanConfVoiceInter(final ActorRef source) {
-        if (this.confVoiceInterpreter != null) {
-            StopInterpreter stopInterpreter = StopInterpreter.instance();
-            this.confVoiceInterpreter.tell(stopInterpreter, source);
-            this.confVoiceInterpreter = null;
-        }
+        return is(waiting) || is(running);
     }
 
     @Override
@@ -155,8 +149,8 @@ public final class Conference extends UntypedActor {
         final State state = fsm.state();
 
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** Conference "+self().path()+" Current State: " + state.toString());
-            logger.info(" ********** Conference "+self().path()+" Processing Message: " + klass.getName());
+            logger.info(" ********** Conference " + self().path() + " Current State: " + state.toString());
+            logger.info(" ********** Conference " + self().path() + " Processing Message: " + klass.getName());
         }
 
         if (Observe.class.equals(klass)) {
@@ -173,20 +167,14 @@ public final class Conference extends UntypedActor {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (ConferenceModeratorPresent.class.equals(klass)) {
             onConferenceModeratorPresent((ConferenceModeratorPresent) message, self, sender);
-        } else if (CreateWaitUrlConfMediaGroup.class.equals(klass)) {
-            onCreateWaitUrlConfMediaGroup((CreateWaitUrlConfMediaGroup) message, self, sender);
-        } else if (DestroyWaitUrlConfMediaGroup.class.equals(klass)) {
-            onDestroyWaitUrlConfMediaGroup((DestroyWaitUrlConfMediaGroup) message, self, sender);
         } else if (AddParticipant.class.equals(klass)) {
             onAddParticipant((AddParticipant) message, self, sender);
         } else if (RemoveParticipant.class.equals(klass)) {
             onRemoveParticipant((RemoveParticipant) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        } else if (CreateMediaGroup.class.equals(klass)) {
-            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
-        } else if (DestroyMediaGroup.class.equals(klass)) {
-            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (Play.class.equals(klass)) {
+            onPlay((Play) message, self, sender);
         }
     }
 
@@ -216,23 +204,13 @@ public final class Conference extends UntypedActor {
 
     }
 
-    private final class RunningModeratorAbsent extends AbstractAction {
-        public RunningModeratorAbsent(final ActorRef source) {
+    private final class Waiting extends AbstractAction {
+        public Waiting(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (moderatorJoined) {
-                /*
-                 * hrosa - this closes the conf room for JSR-309 implementation. Only need to close the connection IF the
-                 * moderator has joined and left the room!
-                 */
-                // Tell MSController that moderator is absent
-                // causing it to close the connection
-                mscontroller.tell(new CloseConnection(), super.source);
-            }
-
             // Notify the observers.
             final ConferenceStateChanged event = new ConferenceStateChanged(name,
                     ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
@@ -242,19 +220,17 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private final class RunningModeratorPresent extends AbstractAction {
-        public RunningModeratorPresent(final ActorRef source) {
+    private final class Running extends AbstractAction {
+        public Running(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            moderatorJoined = true;
-
             // Stop the background music if present
-            stopAndCleanConfVoiceInter(super.source);
+            mscontroller.tell(new StopMediaGroup(), super.source);
 
-            // Notify the observers.
+            // Notify the observers
             final ConferenceStateChanged event = new ConferenceStateChanged(name,
                     ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
             for (final ActorRef observer : observers) {
@@ -263,16 +239,43 @@ public final class Conference extends UntypedActor {
         }
     }
 
-    private final class Stopping extends AbstractAction {
-        public Stopping(final ActorRef source) {
+    private final class CreatingMediaGroup extends AbstractAction {
+
+        public CreatingMediaGroup(ActorRef source) {
             super(source);
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
-            // Close Media Session
+        public void execute(Object message) throws Exception {
+            mscontroller.tell(new CreateMediaGroup(), super.source);
+        }
+
+    }
+
+    private final class DestroyingMediaGroup extends AbstractAction {
+
+        public DestroyingMediaGroup(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            mscontroller.tell(new DestroyMediaGroup(), super.source);
+        }
+
+    }
+
+    private final class ClosingMediaSession extends AbstractAction {
+
+        public ClosingMediaSession(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
             mscontroller.tell(new CloseMediaSession(), super.source);
         }
+
     }
 
     private final class Stopped extends AbstractAction {
@@ -289,13 +292,6 @@ public final class Conference extends UntypedActor {
                 call.tell(leave, source);
             }
             calls.clear();
-
-            // XXX necessary? already done in "stopping" state
-            // Close Media Session
-            mscontroller.tell(new CloseMediaSession(), super.source);
-
-            // Clean up resources
-            stopAndCleanConfVoiceInter(source);
 
             // Notify the observers.
             final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.COMPLETED);
@@ -326,9 +322,9 @@ public final class Conference extends UntypedActor {
 
     private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
         ConferenceInfo information = null;
-        if (is(runningModeratorAbsent)) {
+        if (is(waiting)) {
             information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
-        } else if (is(runningModeratorPresent)) {
+        } else if (is(running)) {
             information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
         } else if (is(stopped)) {
             information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED);
@@ -343,41 +339,15 @@ public final class Conference extends UntypedActor {
     private void onStopConference(StopConference message, ActorRef self, ActorRef sender) throws Exception {
         if (is(creatingMediaSession)) {
             this.fsm.transition(message, stopped);
-        } else if (is(runningModeratorAbsent) || is(runningModeratorPresent)) {
-            this.fsm.transition(message, stopping);
+        } else if (is(waiting) || is(running)) {
+            this.fsm.transition(message, destroyingMediaGroup);
         }
     }
 
     private void onConferenceModeratorPresent(ConferenceModeratorPresent message, ActorRef self, ActorRef sender)
             throws Exception {
-        if (is(runningModeratorAbsent)) {
-            this.fsm.transition(message, runningModeratorPresent);
-        }
-    }
-
-    private void onCreateWaitUrlConfMediaGroup(CreateWaitUrlConfMediaGroup message, ActorRef self, ActorRef sender) {
-        if (isRunning()) {
-            ActorRef confVoiceInterpreterTmp = message.getConfVoiceInterpreter();
-            if (this.confVoiceInterpreter == null) {
-                this.confVoiceInterpreter = confVoiceInterpreterTmp;
-                final StartInterpreter startInterpreter = new StartInterpreter(self);
-                this.confVoiceInterpreter.tell(startInterpreter, self);
-            } else {
-                StopInterpreter stopInterpreter = StopInterpreter.instance();
-                confVoiceInterpreterTmp.tell(stopInterpreter, self);
-            }
-        }
-    }
-
-    private void onDestroyWaitUrlConfMediaGroup(DestroyWaitUrlConfMediaGroup message, ActorRef self, ActorRef sender) {
-        if (isRunning()) {
-            ActorRef waitUrlMediaGroup = message.getWaitUrlConfMediaGroup();
-            if (waitUrlMediaGroup != null && !waitUrlMediaGroup.isTerminated()) {
-                waitUrlMediaGroup.tell(new StopMediaGroup(), self);
-            }
-
-            // ConferenceVoiceInterpreter is dead now. Set it to null
-            this.confVoiceInterpreter = null;
+        if (is(waiting)) {
+            this.fsm.transition(message, running);
         }
     }
 
@@ -398,12 +368,9 @@ public final class Conference extends UntypedActor {
             }
 
             if (calls.size() == 0) {
-                // If no more participants and back ground music was on, we should stop it now.
+                // If no more participants we should stop it now.
                 logger.info("calls size is zero in conference " + name);
-                stopAndCleanConfVoiceInter(self);
-                if (is(runningModeratorPresent)) {
-                    fsm.transition(message, runningModeratorAbsent);
-                }
+                fsm.transition(message, destroyingMediaGroup);
             }
         }
     }
@@ -412,16 +379,10 @@ public final class Conference extends UntypedActor {
         this.calls.add(sender);
     }
 
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
+    private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
+            // Forward message to media server controller
             this.mscontroller.tell(message, sender);
-        }
-    }
-
-    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
-        if (isRunning()) {
-            ActorRef mediaGroup = message.group();
-            mediaGroup.tell(message, sender);
         }
     }
 
@@ -432,14 +393,24 @@ public final class Conference extends UntypedActor {
 
         if (MediaSessionInfo.class.equals(klass)) {
             if (is(creatingMediaSession)) {
-                this.fsm.transition(obj, runningModeratorAbsent);
+                this.fsm.transition(obj, creatingMediaGroup);
+            }
+        } else if (MediaGroupCreated.class.equals(klass)) {
+            if (is(creatingMediaGroup)) {
+                this.fsm.transition(obj, waiting);
             }
         } else if (MediaServerControllerError.class.equals(klass)) {
             if (is(creatingMediaSession)) {
                 this.fsm.transition(obj, stopped);
+            } else if (is(creatingMediaGroup)) {
+                this.fsm.transition(obj, closingMediaSession);
+            }
+        } else if (MediaGroupDestroyed.class.equals(klass)) {
+            if (is(destroyingMediaGroup)) {
+                this.fsm.transition(obj, closingMediaSession);
             }
         } else if (MediaSessionClosed.class.equals(klass)) {
-            if (is(stopping)) {
+            if (is(closingMediaSession)) {
                 this.fsm.transition(obj, stopped);
             }
         }
