@@ -550,15 +550,16 @@ public class XmsCallController extends MediaServerController {
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
-        if (this.mediaGroup != null && sender.equals(this.call)) {
+        if (this.mediaGroup != null) {
             // Destroy media group
             this.mediaGroup.release();
             this.mediaGroup = null;
-
-            // Warn call the media group has been destroyed
-            final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
-            this.call.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
         }
+
+        // XXX always send this message (may be null in bridged calls)
+        // Warn call the media group has been destroyed
+        final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
+        this.call.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
     }
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
