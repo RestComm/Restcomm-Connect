@@ -29,7 +29,6 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  * </p>
  *
  * @author Amit Bhayani
- *
  */
 @Immutable
 public class ConferenceModeratorPresent {

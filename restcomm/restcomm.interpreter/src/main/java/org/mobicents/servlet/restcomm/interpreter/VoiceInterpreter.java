@@ -77,13 +77,9 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
@@ -105,7 +101,6 @@ import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
 import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.CreateConference;
-import org.mobicents.servlet.restcomm.telephony.CreateWaitUrlConfMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.DestroyCall;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
@@ -147,8 +142,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private final State bridged;
     private final State finishDialing;
     private final State acquiringConferenceInfo;
-    private final State acquiringConferenceMediaGroup;
-    private final State initializingConferenceMediaGroup;
     private final State joiningConference;
     private final State conferencing;
     private final State finishConferencing;
@@ -179,7 +172,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean callMuted;
     private boolean startConferenceOnEnter = true;
     private ActorRef confSubVoiceInterpreter;
-    private ActorRef conferenceMediaGroup;
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
     private ActorRef sender;
@@ -207,10 +199,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         bridged = new State("bridged", new Bridged(source), null);
         finishDialing = new State("finish dialing", new FinishDialing(source), null);
         acquiringConferenceInfo = new State("acquiring conference info", new AcquiringConferenceInfo(source), null);
-        acquiringConferenceMediaGroup = new State("acquiring conference media group",
-                new AcquiringConferenceMediaGroup(source), null);
-        initializingConferenceMediaGroup = new State("initializing conference media group",
-                new InitializingConferenceMediaGroup(source), null);
         joiningConference = new State("joining conference", new JoiningConference(source), null);
         conferencing = new State("conferencing", new Conferencing(source), null);
         finishConferencing = new State("finish conferencing", new FinishConferencing(source), null);
@@ -335,25 +323,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(finishDialing, hangingUp));
         transitions.add(new Transition(finishDialing, finished));
         transitions.add(new Transition(finishDialing, initializingCall));
-        transitions.add(new Transition(acquiringConferenceInfo, acquiringConferenceMediaGroup));
+        transitions.add(new Transition(acquiringConferenceInfo, joiningConference));
         transitions.add(new Transition(acquiringConferenceInfo, hangingUp));
         transitions.add(new Transition(acquiringConferenceInfo, finished));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, initializingConferenceMediaGroup));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, faxing));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, pausing));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, checkingCache));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, caching));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, synthesizing));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, redirecting));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, processingGatherChildren));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, creatingRecording));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, creatingSmsSession));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, startDialing));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, hangingUp));
-        transitions.add(new Transition(acquiringConferenceMediaGroup, finished));
-        transitions.add(new Transition(initializingConferenceMediaGroup, joiningConference));
-        transitions.add(new Transition(initializingConferenceMediaGroup, hangingUp));
-        transitions.add(new Transition(initializingConferenceMediaGroup, finished));
+        // transitions.add(new Transition(acquiringConferenceInfo, faxing));
+        // transitions.add(new Transition(acquiringConferenceInfo, pausing));
+        // transitions.add(new Transition(acquiringConferenceInfo, checkingCache));
+        // transitions.add(new Transition(acquiringConferenceInfo, caching));
+        // transitions.add(new Transition(acquiringConferenceInfo, synthesizing));
+        // transitions.add(new Transition(acquiringConferenceInfo, redirecting));
+        // transitions.add(new Transition(acquiringConferenceInfo, processingGatherChildren));
+        // transitions.add(new Transition(acquiringConferenceInfo, creatingRecording));
+        // transitions.add(new Transition(acquiringConferenceInfo, creatingSmsSession));
+        // transitions.add(new Transition(acquiringConferenceInfo, startDialing));
         transitions.add(new Transition(joiningConference, conferencing));
         transitions.add(new Transition(joiningConference, hangingUp));
         transitions.add(new Transition(joiningConference, finished));
@@ -607,7 +589,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         } else if (ConferenceResponse.class.equals(klass)) {
             if (acquiringConferenceInfo.equals(state)) {
-                fsm.transition(message, acquiringConferenceMediaGroup);
+                fsm.transition(message, joiningConference);
             }
         } else if (ConferenceStateChanged.class.equals(klass)) {
             final ConferenceStateChanged event = (ConferenceStateChanged) message;
@@ -742,8 +724,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         collectedDigits.append(dtmfResponse.get());
                         fsm.transition(message, finishGathering);
                     }
-                } else if (initializingConferenceMediaGroup.equals(state)) {
-                    fsm.transition(message, joiningConference);
                 }
             } else {
                 fsm.transition(message, hangingUp);
@@ -1819,8 +1799,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private final class AcquiringConferenceMediaGroup extends AbstractDialAction {
-        public AcquiringConferenceMediaGroup(final ActorRef source) {
+    private final class JoiningConference extends AbstractDialAction {
+        public JoiningConference(final ActorRef source) {
             super(source);
         }
 
@@ -1831,6 +1811,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             conferenceInfo = response.get();
             conferenceState = conferenceInfo.state();
             final Tag child = conference(verb);
+
             // If there is room join the conference.
             int max = 40;
             Attribute attribute = child.attribute("maxParticipants");
@@ -1843,74 +1824,46 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
             }
+
             if (conferenceInfo.participants().size() < max) {
-                final CreateMediaGroup request = new CreateMediaGroup();
+                // Play beep.
+                boolean beep = true;
+                attribute = child.attribute("beep");
+                if (attribute != null) {
+                    final String value = attribute.value();
+                    if (value != null && !value.isEmpty()) {
+                        beep = Boolean.parseBoolean(value);
+                    }
+                }
+                if (beep) {
+                    String path = configuration.subset("runtime-settings").getString("prompts-uri");
+                    if (!path.endsWith("/")) {
+                        path += "/";
+                    }
+                    path += "beep.wav";
+                    URI uri = null;
+                    try {
+                        uri = URI.create(path);
+                    } catch (final Exception exception) {
+                        final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        notifications.addNotification(notification);
+                        sendMail(notification);
+                        final StopInterpreter stop = StopInterpreter.instance();
+                        source.tell(stop, source);
+                        return;
+                    }
+                    final Play play = new Play(uri, 1);
+                    conference.tell(play, source);
+                }
+                // Join the conference.
+                final AddParticipant request = new AddParticipant(call);
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, source);
             }
-        }
-    }
-
-    private final class InitializingConferenceMediaGroup extends AbstractDialAction {
-        public InitializingConferenceMediaGroup(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaServerControllerResponse<ActorRef> response = (MediaServerControllerResponse<ActorRef>) message;
-            conferenceMediaGroup = response.get();
-            conferenceMediaGroup.tell(new Observe(source), source);
-            final StartMediaGroup request = new StartMediaGroup();
-            conferenceMediaGroup.tell(request, source);
-        }
-    }
-
-    private final class JoiningConference extends AbstractDialAction {
-        public JoiningConference(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final Tag child = conference(verb);
-            // Play beep.
-            boolean beep = true;
-            Attribute attribute = child.attribute("beep");
-            if (attribute != null) {
-                final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
-                    beep = Boolean.parseBoolean(value);
-                }
-            }
-            if (beep) {
-                String path = configuration.subset("runtime-settings").getString("prompts-uri");
-                if (!path.endsWith("/")) {
-                    path += "/";
-                }
-                path += "beep.wav";
-                URI uri = null;
-                try {
-                    uri = URI.create(path);
-                } catch (final Exception exception) {
-                    final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
-                    final NotificationsDao notifications = storage.getNotificationsDao();
-                    notifications.addNotification(notification);
-                    sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
-                    source.tell(stop, source);
-                    return;
-                }
-                final Play play = new Play(uri, 1);
-                conferenceMediaGroup.tell(play, source);
-            }
-            // Join the conference.
-            final AddParticipant request = new AddParticipant(call);
-            conference.tell(request, source);
         }
     }
 
@@ -1923,8 +1876,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
             final Tag child = conference(verb);
-            // Mute
 
+            // Mute
             Attribute attribute = child.attribute("muted");
             if (attribute != null) {
                 final String value = attribute.value();
@@ -1937,8 +1890,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final Mute mute = new Mute();
                 call.tell(mute, source);
             }
-            // Parse start conference.
 
+            // Parse start conference.
             attribute = child.attribute("startConferenceOnEnter");
             if (attribute != null) {
                 final String value = attribute.value();
@@ -1948,7 +1901,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
-
                 if (!callMuted) {
                     final Mute mute = new Mute();
                     logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " callMuted = "
@@ -1996,30 +1948,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         method = "POST";
                     }
                 }
-                // Start the waitUrl media player.
 
+                // XXX only play waiting music if conference IS NOT currently doing that
+                // Tell conference to play music to participants on hold
                 if (waitUrl != null) {
-                    final ConfVoiceInterpreterBuilder confVoiceInterpreterBuilder = new ConfVoiceInterpreterBuilder(
-                            getContext().system());
-                    confVoiceInterpreterBuilder.setAccount(accountId);
-                    confVoiceInterpreterBuilder.setCallInfo(callInfo);
-                    confVoiceInterpreterBuilder.setConference(conference);
-                    confVoiceInterpreterBuilder.setConfiguration(configuration);
-                    confVoiceInterpreterBuilder.setEmailAddress(emailAddress);
-                    confVoiceInterpreterBuilder.setMethod(method);
-                    confVoiceInterpreterBuilder.setStorage(storage);
-                    confVoiceInterpreterBuilder.setUrl(waitUrl);
-                    confVoiceInterpreterBuilder.setVersion(version);
-
-                    confInterpreter = confVoiceInterpreterBuilder.build();
-
-                    CreateWaitUrlConfMediaGroup createWaitUrlConfMediaGroup = new CreateWaitUrlConfMediaGroup(confInterpreter);
-                    conference.tell(createWaitUrlConfMediaGroup, source);
+                    conference.tell(new Play(waitUrl, Short.MAX_VALUE), super.source);
                 }
-
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 conference.tell(new ConferenceModeratorPresent(), source);
             }
+
             // Set timer.
             final int timeLimit = timeLimit(verb);
             final UntypedActorContext context = getContext();
@@ -2042,9 +1980,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Clean up
             call.tell(new StopMediaGroup(), source);
-            final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-            conference.tell(destroy, source);
-            conferenceMediaGroup = null;
             conference = null;
             // Parse remaining conference attributes.
             final NotificationsDao notifications = storage.getNotificationsDao();
@@ -2140,14 +2075,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     outboundCall.tell(new Hangup(), null);
                 }
             }
-            // If we still have a conference media group release it.
-            final StopMediaGroup stop = new StopMediaGroup();
-            if (conferenceMediaGroup != null && !liveCallModification) {
-                conferenceMediaGroup.tell(stop, source);
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-                conference.tell(destroy, source);
-                conferenceMediaGroup = null;
-            }
+
             // If the call is in a conference remove it.
             if (conference != null && !liveCallModification) {
                 final RemoveParticipant remove = new RemoveParticipant(call);
@@ -2194,7 +2122,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 confInterpreter = null;
             }
 
-            if (conference != null && conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated()) {
+            if (conference != null) {
                 logger.info("At postStop(), will remove call from conference room");
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, null);
