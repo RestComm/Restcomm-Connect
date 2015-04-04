@@ -166,6 +166,7 @@ public class DialActionTest {
             georgeSipStack.dispose();
         }
         
+        DialActionResources.resetData();
         Thread.sleep(2000);
     }
 
@@ -200,6 +201,7 @@ public class DialActionTest {
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
 
+        assertNotNull(data);
         assertTrue(data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -275,6 +277,7 @@ public class DialActionTest {
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
 
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -349,7 +352,8 @@ public class DialActionTest {
         }
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-
+        
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -424,7 +428,7 @@ public class DialActionTest {
         }
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        
+
         assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
@@ -497,6 +501,7 @@ public class DialActionTest {
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
 
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -566,6 +571,7 @@ public class DialActionTest {
         
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
         
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
