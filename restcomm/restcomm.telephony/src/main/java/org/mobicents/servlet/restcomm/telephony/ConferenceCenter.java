@@ -26,19 +26,23 @@ import java.util.Map;
 
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class ConferenceCenter extends UntypedActor {
+
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
     private final MediaServerControllerFactory factory;
     private final Map<String, ActorRef> conferences;
     private final Map<String, List<ActorRef>> initializing;
@@ -88,27 +92,57 @@ public final class ConferenceCenter extends UntypedActor {
         final ConferenceStateChanged update = (ConferenceStateChanged) message;
         final String name = update.name();
         final ActorRef self = self();
+
         // Stop observing events from the conference room.
-        sender.tell(new StopObserving(self), self);
+        // sender.tell(new StopObserving(self), self);
+
         // Figure out what happened.
         ConferenceCenterResponse response = null;
-        if (ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT == update.state()
-                || ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT == update.state()) {
-            conferences.put(name, sender);
-            response = new ConferenceCenterResponse(sender);
-        } else {
-            final StringBuilder buffer = new StringBuilder();
-            buffer.append("The conference room ").append(name).append(" failed to initialize.");
-            final CreateConferenceException exception = new CreateConferenceException(buffer.toString());
-            response = new ConferenceCenterResponse(exception);
+        if (isRunning(update.state())) {
+            // Only executes during a conference initialization
+            // Adds conference to collection if started successfully
+            if (!conferences.containsKey(name)) {
+                logger.info("Conference " + name + " started successfully");
+                conferences.put(name, sender);
+                response = new ConferenceCenterResponse(sender);
+            }
+        } else if (ConferenceStateChanged.State.COMPLETED.equals(update.state())) {
+            // A conference completed with no errors
+            // Remove it from conference collection and stop the actor
+            logger.info("Conference " + name + " completed without errors");
+            ActorRef conference = conferences.remove(update.name());
+            context().stop(conference);
+        } else if (ConferenceStateChanged.State.FAILED.equals(update.state())) {
+            if (conferences.containsKey(name)) {
+                // A conference completed with errors
+                // Remove it from conference collection and stop the actor
+                logger.info("Conference " + name + " completed with errors");
+                ActorRef conference = conferences.remove(update.name());
+                context().stop(conference);
+            } else {
+                // Failed to initialize a conference
+                // Warn voice interpreter conference initialization failed
+                logger.info("Conference " + name + " failed to initialize");
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("The conference room ").append(name).append(" failed to initialize.");
+                final CreateConferenceException exception = new CreateConferenceException(buffer.toString());
+                response = new ConferenceCenterResponse(exception);
+            }
         }
-        // Notify the observers.
+
+        // Notify the observers if any
         final List<ActorRef> observers = initializing.remove(name);
-        for (final ActorRef observer : observers) {
-            observer.tell(response, self);
+        if (observers != null) {
+            for (final ActorRef observer : observers) {
+                observer.tell(response, self);
+            }
+            observers.clear();
         }
-        // Clean up.
-        observers.clear();
+    }
+
+    private boolean isRunning(ConferenceStateChanged.State state) {
+        return ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT.equals(state)
+                || ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.equals(state);
     }
 
     private void create(final Object message, final ActorRef sender) {

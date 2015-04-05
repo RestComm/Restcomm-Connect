@@ -79,7 +79,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
@@ -470,8 +469,6 @@ public class XmsCallController extends MediaServerController {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        } else if (Leave.class.equals(klass)) {
-            onLeave((Leave) message, self, sender);
         } else if (MediaServerControllerResponse.class.equals(klass)) {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (QueryNetworkConnection.class.equals(klass)) {
@@ -842,12 +839,6 @@ public class XmsCallController extends MediaServerController {
                 this.mediaGroup = null;
                 this.call.tell(new MediaServerControllerError(e), self);
             }
-        }
-    }
-
-    private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
-            fsm.transition(message, inactive);
         }
     }
 
