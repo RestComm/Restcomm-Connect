@@ -168,7 +168,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // The conferencing stuff.
     private ActorRef conference;
     private ConferenceInfo conferenceInfo;
-    private ActorRef confInterpreter;
     private ConferenceStateChanged.State conferenceState;
     private boolean callMuted;
     private boolean startConferenceOnEnter = true;
@@ -216,27 +215,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(initializingCall, ready));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
-        // transitions.add(new Transition(initializedCall, faxing));
-        // transitions.add(new Transition(initializedCall, downloadingRcml));
-        // transitions.add(new Transition(initializedCall, playingRejectionPrompt));
-        // transitions.add(new Transition(initializedCall, pausing));
-        // transitions.add(new Transition(initializedCall, checkingCache));
-        // transitions.add(new Transition(initializedCall, caching));
-        // transitions.add(new Transition(initializedCall, synthesizing));
-        // transitions.add(new Transition(initializedCall, redirecting));
-        // transitions.add(new Transition(initializedCall, processingGatherChildren));
-        // transitions.add(new Transition(initializedCall, creatingRecording));
-        // transitions.add(new Transition(initializedCall, creatingSmsSession));
-        // transitions.add(new Transition(initializedCall, startDialing));
-        // transitions.add(new Transition(initializedCall, ready));
-        // transitions.add(new Transition(initializedCall, hangingUp));
-        // transitions.add(new Transition(initializedCall, finished));
         transitions.add(new Transition(downloadingRcml, ready));
         transitions.add(new Transition(downloadingRcml, notFound));
         transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
         transitions.add(new Transition(downloadingRcml, hangingUp));
         transitions.add(new Transition(downloadingRcml, finished));
-        // transitions.add(new Transition(downloadingRcml, initializedCall));
         transitions.add(new Transition(downloadingFallbackRcml, ready));
         transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
         transitions.add(new Transition(downloadingFallbackRcml, finished));
@@ -256,7 +239,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(ready, finished));
         transitions.add(new Transition(pausing, ready));
         transitions.add(new Transition(pausing, finished));
-        // transitions.add(new Transition(rejecting, initializedCall));
         transitions.add(new Transition(rejecting, finished));
         transitions.add(new Transition(faxing, ready));
         transitions.add(new Transition(faxing, finished));
@@ -327,16 +309,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringConferenceInfo, joiningConference));
         transitions.add(new Transition(acquiringConferenceInfo, hangingUp));
         transitions.add(new Transition(acquiringConferenceInfo, finished));
-        // transitions.add(new Transition(acquiringConferenceInfo, faxing));
-        // transitions.add(new Transition(acquiringConferenceInfo, pausing));
-        // transitions.add(new Transition(acquiringConferenceInfo, checkingCache));
-        // transitions.add(new Transition(acquiringConferenceInfo, caching));
-        // transitions.add(new Transition(acquiringConferenceInfo, synthesizing));
-        // transitions.add(new Transition(acquiringConferenceInfo, redirecting));
-        // transitions.add(new Transition(acquiringConferenceInfo, processingGatherChildren));
-        // transitions.add(new Transition(acquiringConferenceInfo, creatingRecording));
-        // transitions.add(new Transition(acquiringConferenceInfo, creatingSmsSession));
-        // transitions.add(new Transition(acquiringConferenceInfo, startDialing));
         transitions.add(new Transition(joiningConference, conferencing));
         transitions.add(new Transition(joiningConference, hangingUp));
         transitions.add(new Transition(joiningConference, finished));
@@ -891,71 +863,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Answer the call.
                 call.tell(new Answer(), source);
             }
-        }
-    }
-
-    private final class InitializedCall extends AbstractAction {
-
-        public InitializedCall(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
-            final String direction = callInfo.direction();
-
-            // Update the interpreter state.
-            final CallStateChanged event = (CallStateChanged) message;
-            callState = event.state();
-
-            // Update the application.
-            callback();
-
-            // Update the storage.
-            if (callRecord != null) {
-                callRecord = callRecord.setStatus(callState.toString());
-                callRecord = callRecord.setStartTime(DateTime.now());
-                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                records.updateCallDetailRecord(callRecord);
-            }
-
-            // Start processing rcml
-            fsm.transition(message, ready);
-
-            // // Start processing the application
-            // if ("inbound".equals(direction) && verb != null) {
-            // if (reject.equals(verb.name())) {
-            // fsm.transition(message, playingRejectionPrompt);
-            // } else if (dial.equals(verb.name())) {
-            // dialRecordAttribute = verb.attribute("record");
-            // fsm.transition(message, startDialing);
-            // } else if (fax.equals(verb.name())) {
-            // fsm.transition(message, caching);
-            // } else if (play.equals(verb.name())) {
-            // fsm.transition(message, caching);
-            // } else if (say.equals(verb.name())) {
-            // // fsm.transition(message, synthesizing);
-            // fsm.transition(message, checkingCache);
-            // } else if (gather.equals(verb.name())) {
-            // gatherVerb = verb;
-            // fsm.transition(message, processingGatherChildren);
-            // } else if (pause.equals(verb.name())) {
-            // fsm.transition(message, pausing);
-            // } else if (hangup.equals(verb.name())) {
-            // fsm.transition(message, hangingUp);
-            // } else if (redirect.equals(verb.name())) {
-            // fsm.transition(message, redirecting);
-            // } else if (record.equals(verb.name())) {
-            // fsm.transition(message, creatingRecording);
-            // } else if (sms.equals(verb.name())) {
-            // fsm.transition(message, creatingSmsSession);
-            // } else {
-            // invalidVerb(verb);
-            // }
-            // } else {
-            // fsm.transition(message, downloadingRcml);
-            // }
         }
     }
 
@@ -2086,6 +1993,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
 
+                // Stop Observing the conference
+                conference.tell(new StopObserving(self()), null);
+
+                // Stop the conference if endConferenceOnExit is true
                 if (endOnExit) {
                     final StopConference stop = new StopConference();
                     conference.tell(stop, source);
@@ -2099,6 +2010,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     callManager.tell(new DestroyCall(outboundCall), source);
                 }
             }
+
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
             context.stop(mailer);
@@ -2107,6 +2019,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             context.stop(faxService);
             context.stop(cache);
             context.stop(synthesizer);
+
             // Stop the interpreter.
             postCleanup();
         }
@@ -2122,21 +2035,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 outboundCall.tell(new Hangup(), null);
                 callManager.tell(new DestroyCall(outboundCall), null);
                 outboundCall = null;
-            }
-
-            // Issue https://bitbucket.org/telestax/telscale-restcomm/issue/247/
-            if (confInterpreter != null) {
-                logger.info("At postStop(), will clean up conference interpreter");
-                confInterpreter.tell(StopInterpreter.instance(), null);
-                getContext().stop(confInterpreter);
-                confInterpreter = null;
-            }
-
-            if (conference != null) {
-                logger.info("At postStop(), will remove call from conference room");
-                final RemoveParticipant remove = new RemoveParticipant(call);
-                conference.tell(remove, null);
-                conference.tell(new StopObserving(self()), null);
             }
 
             if (call != null && !liveCallModification) {
