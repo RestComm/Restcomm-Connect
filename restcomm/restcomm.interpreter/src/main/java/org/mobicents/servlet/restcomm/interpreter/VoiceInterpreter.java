@@ -102,6 +102,7 @@ import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.CreateConference;
 import org.mobicents.servlet.restcomm.telephony.DestroyCall;
+import org.mobicents.servlet.restcomm.telephony.DestroyConference;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
@@ -554,9 +555,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (!finishDialing.equals(state))
                         fsm.transition(message, finished);
                 }
-                // else if (!forking.equals(state) || call == sender()) {
-                // fsm.transition(message, finished);
-                // }
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 if (state != finishDialing)
                     fsm.transition(message, finishDialing);
@@ -593,14 +591,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         } else if (ConferenceStateChanged.class.equals(klass)) {
             final ConferenceStateChanged event = (ConferenceStateChanged) message;
-            if (ConferenceStateChanged.State.COMPLETED == event.state()) {
-                if (conferencing.equals(state)) {
-                    fsm.transition(message, finishConferencing);
-                }
-            } else if (ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT == event.state()) {
+            if (ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT == event.state()) {
                 conferenceState = event.state();
                 conferenceStateModeratorPresent(message);
             }
+
+            // !!IMPORTANT!!
+            // Do not listen to COMPLETED nor FAILED conference state changes
+            // When a conference stops it will ask all its calls to Leave
+            // Then the call state will change and the voice interpreter will take proper action then
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
@@ -838,6 +837,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public AbstractAction(final ActorRef source) {
             super();
             this.source = source;
+        }
+
+        protected Tag conference(final Tag container) {
+            final List<Tag> children = container.children();
+            for (final Tag child : children) {
+                if (Nouns.conference.equals(child.name())) {
+                    return child;
+                }
+            }
+            return null;
         }
     }
 
@@ -1202,16 +1211,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             return callerId;
-        }
-
-        protected Tag conference(final Tag container) {
-            final List<Tag> children = container.children();
-            for (final Tag child : children) {
-                if (Nouns.conference.equals(child.name())) {
-                    return child;
-                }
-            }
-            return null;
         }
 
         protected int timeout(final Tag container) {
@@ -1978,27 +1977,23 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
+
             // Clean up
-            call.tell(new StopMediaGroup(), source);
-            conference = null;
-            // Parse remaining conference attributes.
-            final NotificationsDao notifications = storage.getNotificationsDao();
-            final Tag child = conference(verb);
-            // Parse "endConferenceOnExit"
-            boolean endOnExit = false;
-            Attribute attribute = child.attribute("endConferenceOnExit");
-            if (attribute != null) {
-                final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
-                    endOnExit = Boolean.parseBoolean(value);
+            if (ConferenceStateChanged.class.equals(message)) {
+                // Destroy conference if state changed to completed (last participant in call)
+                ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
+                if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
+                    DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
+                    conferenceManager.tell(destroyConference, super.source);
                 }
             }
-            if (endOnExit) {
-                final StopConference stop = new StopConference();
-                conference.tell(stop, source);
-            }
+            conference = null;
+
+            // Parse remaining conference attributes.
+            final NotificationsDao notifications = storage.getNotificationsDao();
+
             // Parse "action".
-            attribute = verb.attribute("action");
+            Attribute attribute = verb.attribute("action");
             if (attribute != null) {
                 String action = attribute.value();
                 if (action != null && !action.isEmpty()) {
@@ -2039,6 +2034,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
             }
+
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);
@@ -2067,6 +2063,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 callback();
             }
+
             // Cleanup the outbound call if necessary.
             final State state = fsm.state();
             if (bridged.equals(state) || forking.equals(state)) {
@@ -2078,8 +2075,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // If the call is in a conference remove it.
             if (conference != null && !liveCallModification) {
-                final RemoveParticipant remove = new RemoveParticipant(call);
-                conference.tell(remove, source);
+                final Tag child = conference(verb);
+                // Parse "endConferenceOnExit"
+                boolean endOnExit = false;
+                Attribute attribute = child.attribute("endConferenceOnExit");
+                if (attribute != null) {
+                    final String value = attribute.value();
+                    if (value != null && !value.isEmpty()) {
+                        endOnExit = Boolean.parseBoolean(value);
+                    }
+                }
+
+                if (endOnExit) {
+                    final StopConference stop = new StopConference();
+                    conference.tell(stop, source);
+                }
             }
 
             if (!liveCallModification) {

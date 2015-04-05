@@ -1272,11 +1272,15 @@ public final class Call extends UntypedActor {
                 }
             }
 
-            // Destroy media resources as necessary
-            if (is(inProgress) || is(joining)) {
-                fsm.transition(message, destroyingMediaGroup);
+            if (this.conference == null) {
+                // Destroy media resources as necessary
+                if (is(inProgress) || is(joining)) {
+                    fsm.transition(message, destroyingMediaGroup);
+                } else {
+                    fsm.transition(message, closingMediaSession);
+                }
             } else {
-                fsm.transition(message, closingMediaSession);
+                conference.tell(new RemoveParticipant(self), self);
             }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
@@ -1534,11 +1538,11 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onLeave(Leave message, ActorRef self, ActorRef sender) {
-        if (is(inProgress) && sender.equals(this.conference)) {
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(inProgress)) {
             this.conference = null;
             this.conferenceController = null;
-            this.msController.tell(message, sender);
+            this.fsm.transition(message, destroyingMediaGroup);
         }
     }
 

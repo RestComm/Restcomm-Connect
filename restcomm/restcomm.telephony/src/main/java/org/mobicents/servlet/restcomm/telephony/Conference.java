@@ -73,6 +73,7 @@ public final class Conference extends UntypedActor {
     private final State waiting;
     private final State running;
     private final State stopped;
+    private final State failed;
 
     // Intermediate states
     private final State creatingMediaSession;
@@ -87,6 +88,7 @@ public final class Conference extends UntypedActor {
 
     // Media Session Controller
     private final ActorRef mscontroller;
+    private boolean fail;
 
     public Conference(final String name, final ActorRef msController) {
         super();
@@ -96,7 +98,8 @@ public final class Conference extends UntypedActor {
         this.uninitialized = new State("uninitialized", null, null);
         this.waiting = new State("waiting", new Waiting(source), null);
         this.running = new State("running", new Running(source), null);
-        this.stopped = new State("completed", new Stopped(source), null);
+        this.stopped = new State("stopped", new Stopped(source), null);
+        this.failed = new State("failed", new Failed(source), null);
 
         // Intermediate states
         this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
@@ -108,7 +111,7 @@ public final class Conference extends UntypedActor {
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, creatingMediaSession));
         transitions.add(new Transition(creatingMediaSession, creatingMediaGroup));
-        transitions.add(new Transition(creatingMediaSession, stopped));
+        transitions.add(new Transition(creatingMediaSession, failed));
         transitions.add(new Transition(creatingMediaGroup, waiting));
         transitions.add(new Transition(creatingMediaGroup, closingMediaSession));
         transitions.add(new Transition(running, destroyingMediaGroup));
@@ -117,6 +120,7 @@ public final class Conference extends UntypedActor {
         transitions.add(new Transition(waiting, running));
         transitions.add(new Transition(destroyingMediaGroup, closingMediaSession));
         transitions.add(new Transition(closingMediaSession, stopped));
+        transitions.add(new Transition(closingMediaSession, failed));
 
         // Finite state machine
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -124,6 +128,7 @@ public final class Conference extends UntypedActor {
         // Runtime stuff
         this.name = name;
         this.mscontroller = msController;
+        this.fail = false;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
     }
@@ -165,6 +170,8 @@ public final class Conference extends UntypedActor {
             onStopConference((StopConference) message, self, sender);
         } else if (MediaServerControllerResponse.class.equals(klass)) {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
+        } else if (MediaServerControllerError.class.equals(klass)) {
+            onMediaServerControllerError((MediaServerControllerError) message, self, sender);
         } else if (ConferenceModeratorPresent.class.equals(klass)) {
             onConferenceModeratorPresent((ConferenceModeratorPresent) message, self, sender);
         } else if (AddParticipant.class.equals(klass)) {
@@ -278,14 +285,17 @@ public final class Conference extends UntypedActor {
 
     }
 
-    private final class Stopped extends AbstractAction {
+    private abstract class FinalizingAction extends AbstractAction {
 
-        public Stopped(final ActorRef source) {
+        protected final ConferenceStateChanged.State finalState;
+
+        public FinalizingAction(ActorRef source, ConferenceStateChanged.State state) {
             super(source);
+            finalState = state;
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
+        public void execute(Object message) throws Exception {
             // Tell every call to leave the conference room.
             for (final ActorRef call : calls) {
                 final Leave leave = new Leave();
@@ -294,12 +304,29 @@ public final class Conference extends UntypedActor {
             calls.clear();
 
             // Notify the observers.
-            final ConferenceStateChanged event = new ConferenceStateChanged(name, ConferenceStateChanged.State.COMPLETED);
+            final ConferenceStateChanged event = new ConferenceStateChanged(name, this.finalState);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
             observers.clear();
         }
+
+    }
+
+    private final class Stopped extends FinalizingAction {
+
+        public Stopped(final ActorRef source) {
+            super(source, ConferenceStateChanged.State.COMPLETED);
+        }
+
+    }
+
+    private final class Failed extends FinalizingAction {
+
+        public Failed(final ActorRef source) {
+            super(source, ConferenceStateChanged.State.FAILED);
+        }
+
     }
 
     /*
@@ -323,11 +350,11 @@ public final class Conference extends UntypedActor {
     private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
         ConferenceInfo information = null;
         if (is(waiting)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT);
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name);
         } else if (is(running)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT);
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED);
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED, name);
         }
         sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
     }
@@ -386,6 +413,17 @@ public final class Conference extends UntypedActor {
         }
     }
 
+    private void onMediaServerControllerError(MediaServerControllerError message, ActorRef self, ActorRef sender)
+            throws Exception {
+        if (is(creatingMediaSession)) {
+            this.fail = true;
+            this.fsm.transition(message, stopped);
+        } else if (is(creatingMediaGroup)) {
+            this.fail = true;
+            this.fsm.transition(message, closingMediaSession);
+        }
+    }
+
     private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
         Object obj = message.get();
@@ -399,19 +437,17 @@ public final class Conference extends UntypedActor {
             if (is(creatingMediaGroup)) {
                 this.fsm.transition(obj, waiting);
             }
-        } else if (MediaServerControllerError.class.equals(klass)) {
-            if (is(creatingMediaSession)) {
-                this.fsm.transition(obj, stopped);
-            } else if (is(creatingMediaGroup)) {
-                this.fsm.transition(obj, closingMediaSession);
-            }
         } else if (MediaGroupDestroyed.class.equals(klass)) {
             if (is(destroyingMediaGroup)) {
                 this.fsm.transition(obj, closingMediaSession);
             }
         } else if (MediaSessionClosed.class.equals(klass)) {
             if (is(closingMediaSession)) {
-                this.fsm.transition(obj, stopped);
+                if (fail) {
+                    this.fsm.transition(obj, failed);
+                } else {
+                    this.fsm.transition(obj, stopped);
+                }
             }
         }
     }
