@@ -385,22 +385,29 @@ public class XmsConferenceController extends MediaServerController {
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             try {
-                List<URI> uris = message.uris();
-                Parameters params = this.mediaGroup.createParameters();
-                int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
-                params.put(Player.REPEAT_COUNT, repeatCount);
-                this.playerListener.setRemote(sender);
-
                 if (message.isBackground()) {
                     if (this.ephemeralMediaGroup == null) {
                         logger.info("%%%%%%%%%%%%%% Creating ephemeral media group");
                         this.ephemeralMediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER);
+
+                        logger.info("%%%%%%%%%%%%%% Starting ephemeral media group");
                         this.ephemeralMediaGroup.join(Direction.DUPLEX, this.mediaMixer);
+
                         logger.info("%%%%%%%%%%%%%% Playing background music");
+                        List<URI> uris = message.uris();
+                        Parameters params = this.ephemeralMediaGroup.createParameters();
+                        int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
+                        params.put(Player.REPEAT_COUNT, repeatCount);
                         this.ephemeralMediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
                         this.playingBackground = Boolean.TRUE;
                     }
                 } else {
+                    logger.info("%%%%%%%%%%%%%% Playing beep [already playing? " + this.playing + "]");
+                    List<URI> uris = message.uris();
+                    Parameters params = this.mediaGroup.createParameters();
+                    int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
+                    params.put(Player.REPEAT_COUNT, repeatCount);
+                    this.playerListener.setRemote(sender);
                     this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
                     this.playing = Boolean.TRUE;
                 }
