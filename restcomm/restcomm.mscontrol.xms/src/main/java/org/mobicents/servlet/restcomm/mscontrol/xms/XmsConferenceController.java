@@ -105,6 +105,7 @@ public class XmsConferenceController extends MediaServerController {
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
     private MediaGroup mediaGroup;
+    private MediaGroup ephemeralMediaGroup;
     private MediaMixer mediaMixer;
 
     private final PlayerListener playerListener;
@@ -112,6 +113,7 @@ public class XmsConferenceController extends MediaServerController {
 
     // Media Operations
     private Boolean playing;
+    private Boolean playingBackground;
 
     // Observers
     private final List<ActorRef> observers;
@@ -199,7 +201,16 @@ public class XmsConferenceController extends MediaServerController {
                     MediaServerControllerException error = new MediaServerControllerException(reason);
                     response = new MediaGroupResponse<String>(error, reason);
                 }
-                playing = Boolean.FALSE;
+
+                if (event.getSource() == ephemeralMediaGroup) {
+                    logger.info("%%%%%%%%%%%%%% Destroying ephemeral media group");
+                    playingBackground = Boolean.FALSE;
+                    ephemeralMediaGroup.release();
+                    ephemeralMediaGroup = null;
+                } else {
+                    playing = Boolean.FALSE;
+                }
+
                 super.remote.tell(response, self());
             }
         }
@@ -336,6 +347,13 @@ public class XmsConferenceController extends MediaServerController {
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
         if (is(active) && this.mediaGroup != null) {
             try {
+                if (this.playingBackground) {
+                    this.ephemeralMediaGroup.getPlayer().stop(true);
+                    this.ephemeralMediaGroup.release();
+                    this.ephemeralMediaGroup = null;
+                    this.playingBackground = Boolean.FALSE;
+                }
+
                 // XXX mediaGroup.stop() not implemented on dialogic connector
                 if (this.playing) {
                     this.mediaGroup.getPlayer().stop(true);
@@ -372,8 +390,20 @@ public class XmsConferenceController extends MediaServerController {
                 int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
                 params.put(Player.REPEAT_COUNT, repeatCount);
                 this.playerListener.setRemote(sender);
-                this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
-                this.playing = Boolean.TRUE;
+
+                if (message.isBackground()) {
+                    if (this.ephemeralMediaGroup == null) {
+                        logger.info("%%%%%%%%%%%%%% Creating ephemeral media group");
+                        this.ephemeralMediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER);
+                        this.ephemeralMediaGroup.join(Direction.DUPLEX, this.mediaMixer);
+                        logger.info("%%%%%%%%%%%%%% Playing background music");
+                        this.ephemeralMediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+                        this.playingBackground = Boolean.TRUE;
+                    }
+                } else {
+                    this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+                    this.playing = Boolean.TRUE;
+                }
             } catch (MsControlException e) {
                 logger.error("Play failed: " + e.getMessage());
                 this.playing = Boolean.FALSE;
