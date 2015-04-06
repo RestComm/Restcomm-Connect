@@ -27,8 +27,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.sip.address.SipURI;
+import javax.sip.header.Header;
 import javax.sip.message.Response;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -69,10 +72,10 @@ public class DialActionTest {
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
-        53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
-        48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
-        13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
-        86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
+            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
+            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
+            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
+            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
     private static final String body = new String(bytes);
 
     @ArquillianResource
@@ -107,7 +110,7 @@ public class DialActionTest {
     private String georgeContact = "sip:+131313@127.0.0.1:5070";
 
     private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5080";
-    
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -165,7 +168,7 @@ public class DialActionTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-        
+
         Thread.sleep(2000);
     }
 
@@ -218,7 +221,8 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallSid"));
 
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance()
+                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
@@ -291,9 +295,10 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-        
+
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance()
+                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
@@ -366,12 +371,13 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-        
+
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance()
+                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
-    
+
     @Test
     public void testDialActionAliceAnswersBobDisconnects() throws ParseException, InterruptedException {
 
@@ -424,7 +430,7 @@ public class DialActionTest {
         }
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        
+
         assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
@@ -442,12 +448,13 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-        
+
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance()
+                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
-    
+
     @Test
     public void testDialActionAliceNOAnswer() throws ParseException, InterruptedException {
 
@@ -513,9 +520,10 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-        
+
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance()
+                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
@@ -554,7 +562,6 @@ public class DialActionTest {
         assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
-
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
         assertTrue(bobCall.respondToDisconnect());
@@ -564,9 +571,9 @@ public class DialActionTest {
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
         }
-        
+
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        
+
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -583,9 +590,81 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-        
+
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance()
+                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
+    }
+
+    @Test
+    public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        
+        // Add custom headers to the SIP INVITE
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        List<String> headers = new ArrayList<String>();
+        Header customHeader = aliceSipStack.getHeaderFactory().createHeader("X-My-Custom-Header", "My Custom Value");
+        Header otherHeader = aliceSipStack.getHeaderFactory().createHeader("X-OtherHeader", "Other Value");
+        Header anotherHeader = aliceSipStack.getHeaderFactory().createHeader("X-another-header", "another value");
+        headers.add(customHeader.toString());
+        headers.add(otherHeader.toString());
+        headers.add(anotherHeader.toString());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        aliceCall.disconnect();
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+        try {
+            Thread.sleep(50 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+
+        // Assert custom headers were sent to the Action URL with prefix SipHeader_
+        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
+        assertTrue(data.getFirst("SipHeader_My-Custom-Header").equals("My Custom Value"));
+        assertTrue(data.getFirst("SipHeader_OtherHeader").equals("Other Value"));
+        assertTrue(data.getFirst("SipHeader_another-header").equals("another value"));
+
+        String sid = data.getFirst("DialCallSid");
+        JsonObject cdr = RestcommCallsTool.getInstance()
+                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
