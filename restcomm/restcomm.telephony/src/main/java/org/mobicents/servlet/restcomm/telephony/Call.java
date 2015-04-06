@@ -171,8 +171,14 @@ public final class Call extends UntypedActor {
     private final List<ActorRef> observers;
     private boolean receivedBye;
 
+    // Conferencing
     private ActorRef conference;
     private ActorRef conferenceController;
+    private boolean conferencing;
+
+    // Call Bridging
+    private ActorRef outboundCall;
+    private ActorRef outboundCallBridgeEndpoint;
 
     // Media Session Control runtime stuff
     private final ActorRef msController;
@@ -183,8 +189,6 @@ public final class Call extends UntypedActor {
     private CallDetailRecord outgoingCallRecord;
     private CallDetailRecordsDao recordsDao;
     private DaoManager daoManager;
-    private ActorRef outboundCall;
-    private ActorRef outboundCallBridgeEndpoint;
     private boolean liveCallModification;
     private boolean recording;
 
@@ -219,7 +223,7 @@ public final class Call extends UntypedActor {
         this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(source), null);
         this.joining = new State("joining", new Joining(source), null);
 
-        // Transitions for the FSM.
+        // Transitions for the FSM
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.ringing));
         transitions.add(new Transition(this.uninitialized, this.queued));
@@ -264,6 +268,9 @@ public final class Call extends UntypedActor {
 
         // SIP runtime stuff.
         this.factory = factory;
+
+        // Conferencing
+        this.conferencing = false;
 
         // Media Session Control runtime stuff.
         this.msController = mediaSessionController;
@@ -1275,15 +1282,15 @@ public final class Call extends UntypedActor {
                 }
             }
 
-            if (this.conference == null) {
+            if (conferencing) {
+                conference.tell(new RemoveParticipant(self), self);
+            } else {
                 // Destroy media resources as necessary
                 if (is(inProgress) || is(joining)) {
                     fsm.transition(message, destroyingMediaGroup);
                 } else {
                     fsm.transition(message, closingMediaSession);
                 }
-            } else {
-                conference.tell(new RemoveParticipant(self), self);
             }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
@@ -1508,7 +1515,11 @@ public final class Call extends UntypedActor {
             if (is(joining)) {
                 // MSController completed join operation
                 // Inform the conference and tell observers call is in progress
-                conference.tell(message.get(), self);
+                if(conferencing) {
+                    conference.tell(message.get(), self);
+                } else {
+                    outboundCall.tell(message.get(), self);
+                }
                 fsm.transition(message, inProgress);
             }
         } else if (MediaGroupCreated.class.equals(klass)) {
@@ -1532,8 +1543,14 @@ public final class Call extends UntypedActor {
 
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
-            this.conference = sender;
-            this.conferenceController = message.mscontroller();
+            this.conferencing = ConnectionMode.Confrnce.equals(message.mode());
+            if (this.conferencing) {
+                this.conference = sender;
+                this.conferenceController = message.mscontroller();
+            } else {
+                this.outboundCall = sender;
+                this.outboundCallBridgeEndpoint = message.mscontroller();
+            }
             this.fsm.transition(message, joining);
         }
     }

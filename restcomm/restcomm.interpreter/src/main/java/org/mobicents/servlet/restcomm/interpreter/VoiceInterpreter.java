@@ -1395,7 +1395,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Stop SubVoiceInterpreter
                 outboundCall.tell(new StopObserving(interpreter), null);
                 getContext().stop(interpreter);
-
             }
 
             // Join participants

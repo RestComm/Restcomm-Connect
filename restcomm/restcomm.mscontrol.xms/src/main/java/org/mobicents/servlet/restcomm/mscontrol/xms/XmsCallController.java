@@ -794,12 +794,6 @@ public class XmsCallController extends MediaServerController {
                 } else {
                     /* CALL BRIDGING - no media mixer has been created yet */
 
-                    // Prepare for new call configuration
-                    if (this.mediaGroup != null) {
-                        this.mediaGroup.release();
-                        this.mediaGroup = null;
-                    }
-
                     // Create Mixer and join connection to it
                     Parameters mixerParams = this.mediaSession.createParameters();
                     // Limit number of ports for the two bridged participants and possible media group
