@@ -30,20 +30,32 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class Play {
+
     private final List<URI> uris;
     private final int iterations;
+    private final boolean background;
 
-    public Play(final List<URI> uris, final int iterations) {
+    public Play(final List<URI> uris, final int iterations, boolean background) {
         super();
         this.uris = uris;
         this.iterations = iterations;
+        this.background = false;
     }
 
-    public Play(final URI uri, final int iterations) {
+    public Play(final List<URI> uris, final int iterations) {
+        this(uris, iterations, false);
+    }
+
+    public Play(final URI uri, final int iterations, boolean background) {
         super();
         this.uris = new ArrayList<URI>();
         uris.add(uri);
         this.iterations = iterations;
+        this.background = background;
+    }
+
+    public Play(final URI uri, final int iterations) {
+        this(uri, iterations, false);
     }
 
     public List<URI> uris() {
@@ -52,5 +64,9 @@ public final class Play {
 
     public int iterations() {
         return iterations;
+    }
+
+    public boolean isBackground() {
+        return background;
     }
 }
