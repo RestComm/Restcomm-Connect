@@ -784,23 +784,22 @@ public class XmsCallController extends MediaServerController {
             this.outboundController = message.mscontroller();
 
             try {
-                // Prepare for new call configuration
-                if (this.mediaGroup != null) {
-                    this.mediaGroup.release();
-                    this.mediaGroup = null;
-                }
-
-                if (this.mediaMixer != null) {
-                    this.mediaMixer.release();
-                }
 
                 if (ConnectionMode.Confrnce.equals(message.mode())) {
                     /* CONFERENCING - conference already owns media mixer */
+
                     // Ask conference controller what is the media mixer so the call can join
                     QueryMediaMixer query = new QueryMediaMixer();
                     outboundController.tell(query, self);
                 } else {
                     /* CALL BRIDGING - no media mixer has been created yet */
+
+                    // Prepare for new call configuration
+                    if (this.mediaGroup != null) {
+                        this.mediaGroup.release();
+                        this.mediaGroup = null;
+                    }
+
                     // Create Mixer and join connection to it
                     Parameters mixerParams = this.mediaSession.createParameters();
                     // Limit number of ports for the two bridged participants and possible media group
