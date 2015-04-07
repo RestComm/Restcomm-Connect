@@ -48,11 +48,12 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		$http({url: '/restcomm-rvd/services/ras/apps/' + appName + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
-				//console.log("succesfull retrieved app config");
 				defer.resolve(data.payload);
-			} else {
+			} else
+			if (data.rvdStatus == "NOT_FOUND")
+				defer.reject("application has no RAS capabilities");
+			else
 				defer.reject("error getting app config")
-			}
 		})
 		.error(function () {
 			console.log("error getting app config"); 
@@ -114,7 +115,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 								}
 							} // the instance id should be added here as well
 						}).error(function (data, status) {
-							Notifications.warn("Number provisioning failed with status " + status + " - " + appConfig.provisioningUrl);
+							Notifications.warn("Number provisioning failed with status " + status + " - " + appConfig.provisioningUrl );
+							if ( status == 404)
+								console.log( "This maybe a CORS issue. Make sure the provisioning server supports CORS requests.");
 						}).success(function(data) {
 							if (data) {
 								if (data.status == "ok")

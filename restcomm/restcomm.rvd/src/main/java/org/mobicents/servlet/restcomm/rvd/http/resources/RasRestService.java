@@ -315,6 +315,8 @@ public class RasRestService extends RestService {
             try {
                 rappConfig = rasService.getRappConfig(projectName);
                 return buildOkResponse(rappConfig);
+            } catch (StorageEntityNotFound e) {
+                return buildErrorResponse(Status.OK, RvdResponse.Status.NOT_FOUND, e);
             } catch (StorageException e) {
                 logger.error(e.getMessage(), e);
                 return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
