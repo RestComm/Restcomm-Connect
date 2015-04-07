@@ -72,10 +72,10 @@ public class DialActionTest {
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
-            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
-            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
-            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
-            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
+        53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
+        48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
+        13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
+        86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
     private static final String body = new String(bytes);
 
     @ArquillianResource
@@ -168,7 +168,8 @@ public class DialActionTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-
+        
+        DialActionResources.resetData();
         Thread.sleep(2000);
     }
 
@@ -203,6 +204,7 @@ public class DialActionTest {
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
 
+        assertNotNull(data);
         assertTrue(data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -221,8 +223,7 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallSid"));
 
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance()
-                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
@@ -279,6 +280,7 @@ public class DialActionTest {
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
 
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -295,10 +297,9 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-
+        
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance()
-                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
@@ -354,7 +355,8 @@ public class DialActionTest {
         }
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-
+        
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -371,13 +373,12 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-
+        
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance()
-                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
-
+    
     @Test
     public void testDialActionAliceAnswersBobDisconnects() throws ParseException, InterruptedException {
 
@@ -430,7 +431,7 @@ public class DialActionTest {
         }
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-
+        
         assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
@@ -448,13 +449,12 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-
+        
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance()
-                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
-
+    
     @Test
     public void testDialActionAliceNOAnswer() throws ParseException, InterruptedException {
 
@@ -504,6 +504,7 @@ public class DialActionTest {
 
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
 
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -520,10 +521,9 @@ public class DialActionTest {
         assertTrue(data.containsKey("CallerName"));
         assertTrue(data.containsKey("ForwardedFrom"));
         assertTrue(data.containsKey("CallSid"));
-
+        
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance()
-                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
@@ -556,14 +556,14 @@ public class DialActionTest {
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCall.listenForDisconnect();
 
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
-        bobCall.listenForDisconnect();
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
         assertTrue(bobCall.respondToDisconnect());
 
         try {
@@ -571,9 +571,10 @@ public class DialActionTest {
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
         }
-
+        
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-
+        
+        assertNotNull(data);
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
@@ -663,8 +664,7 @@ public class DialActionTest {
         assertTrue(data.getFirst("SipHeader_another-header").equals("another value"));
 
         String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance()
-                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
     }
 
