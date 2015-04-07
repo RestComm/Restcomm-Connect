@@ -256,20 +256,20 @@ public class XmsCallController extends MediaServerController {
             logger.info("********** Call Controller Processing Event: \"SdpPortManagerEvent\" (type = " + eventType + ")");
 
             try {
-                if(event.isSuccessful()) {
-                    if(is(openingMediaSession) || is(updatingMediaSession)) {
+                if (event.isSuccessful()) {
+                    if (is(openingMediaSession) || is(updatingMediaSession)) {
                         networkConnection.getSdpPortManager().removeListener(this);
-                        if(SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
+                        if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
                             localSdp = new String(event.getMediaServerSdp());
                             fsm.transition(event, active);
                         } else if (SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
                             localSdp = new String(event.getMediaServerSdp());
                             fsm.transition(event, active);
-                        } else if(SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
+                        } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
                             fsm.transition(event, active);
                         } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
                             throw new MsControlException("Network stream failure");
-                        }                        
+                        }
                     }
                 } else {
                     throw new MsControlException("SDP processing failed");
