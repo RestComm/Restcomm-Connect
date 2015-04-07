@@ -14,7 +14,7 @@ import com.google.gson.Gson;
  */
 public class RvdResponse {
 
-    public enum Status { OK, INVALID, ERROR }
+    public enum Status { OK, INVALID, ERROR, NOT_FOUND }
     Status rvdStatus; // ok - invalid - error
     ExceptionResult exception;
     ValidationReport report; // this may be reduntant data since there is always such a field inside ExceptionResult-exception
@@ -43,8 +43,8 @@ public class RvdResponse {
 
     public RvdResponse setException(RvdException e) {
         if (e != null) {
-        exception = e.getExceptionSummary();
-        rvdStatus = Status.ERROR;
+            exception = e.getExceptionSummary();
+            //rvdStatus = Status.ERROR;
         }
         return this;
     }
