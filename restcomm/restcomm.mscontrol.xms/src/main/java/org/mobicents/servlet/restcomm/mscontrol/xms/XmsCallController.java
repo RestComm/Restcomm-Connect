@@ -66,9 +66,6 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.fsm.TransitionFailedException;
-import org.mobicents.servlet.restcomm.fsm.TransitionNotFoundException;
-import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
@@ -259,25 +256,26 @@ public class XmsCallController extends MediaServerController {
             logger.info("********** Call Controller Processing Event: \"SdpPortManagerEvent\" (type = " + eventType + ")");
 
             try {
-                if (event.getError() == SdpPortManagerEvent.NO_ERROR) {
-                    if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)
-                            || SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
-                        if (event.isSuccessful()) {
+                if(event.isSuccessful()) {
+                    if(is(openingMediaSession) || is(updatingMediaSession)) {
+                        networkConnection.getSdpPortManager().removeListener(this);
+                        if(SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
                             localSdp = new String(event.getMediaServerSdp());
                             fsm.transition(event, active);
-                        } else {
-                            fsm.transition(event, failed);
-                        }
-                    } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
-                        fsm.transition(event, active);
-                    } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
-                        fsm.transition(event, failed);
+                        } else if (SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
+                            localSdp = new String(event.getMediaServerSdp());
+                            fsm.transition(event, active);
+                        } else if(SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
+                            fsm.transition(event, active);
+                        } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
+                            throw new MsControlException("Network stream failure");
+                        }                        
                     }
                 } else {
-                    fsm.transition(event, failed);
+                    throw new MsControlException("SDP processing failed");
                 }
-            } catch (TransitionFailedException | TransitionNotFoundException | TransitionRollbackException e) {
-                logger.error(e, e.getMessage());
+            } catch (Exception e) {
+                call.tell(new MediaServerControllerError(e), self());
             }
         }
 
@@ -966,6 +964,7 @@ public class XmsCallController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
+                networkConnection.getSdpPortManager().addListener(sdpListener);
                 networkConnection.getSdpPortManager().processSdpAnswer(remoteSdp.getBytes());
             } catch (MsControlException e) {
                 sender().tell(new MediaServerControllerError(e), super.source);
