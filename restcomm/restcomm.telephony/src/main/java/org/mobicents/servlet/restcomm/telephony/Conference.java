@@ -417,7 +417,7 @@ public final class Conference extends UntypedActor {
             throws Exception {
         if (is(creatingMediaSession)) {
             this.fail = true;
-            this.fsm.transition(message, stopped);
+            this.fsm.transition(message, failed);
         } else if (is(creatingMediaGroup)) {
             this.fail = true;
             this.fsm.transition(message, closingMediaSession);
