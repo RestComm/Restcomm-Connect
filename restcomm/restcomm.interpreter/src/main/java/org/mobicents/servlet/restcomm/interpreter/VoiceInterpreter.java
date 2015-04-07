@@ -1417,7 +1417,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
 
-            if ("true".equalsIgnoreCase(dialRecordAttribute.value())) {
+            if (dialRecordAttribute != null && "true".equalsIgnoreCase(dialRecordAttribute.value())) {
                 recordCall();
             }
         }
