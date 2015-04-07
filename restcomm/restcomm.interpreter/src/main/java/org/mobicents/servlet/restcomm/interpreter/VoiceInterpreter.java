@@ -872,9 +872,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ApiVersion", version));
         final String direction = callInfo.direction();
         parameters.add(new BasicNameValuePair("Direction", direction));
-        final String callerName = nonNull(callInfo.fromName());
+        final String callerName = callInfo.fromName();
         parameters.add(new BasicNameValuePair("CallerName", callerName));
-        final String forwardedFrom = nonNull(callInfo.forwardedFrom());
+        final String forwardedFrom = callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
@@ -905,10 +905,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         return parameters;
-    }
-
-    private String nonNull(String value) {
-        return value == null ? "" : value;
     }
 
     private void processCustomHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
@@ -1191,7 +1187,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
