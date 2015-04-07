@@ -1813,7 +1813,7 @@ public final class Call extends UntypedActor {
                 }
             } else if (message instanceof SipServletResponse) {
                 final SipServletResponse resp = (SipServletResponse) message;
-                if (resp.equals(SipServletResponse.SC_BUSY_HERE) || resp.equals(SipServletResponse.SC_BUSY_EVERYWHERE)) {
+                if (resp.getStatus() == SipServletResponse.SC_BUSY_HERE || resp.getStatus() == SipServletResponse.SC_BUSY_EVERYWHERE) {
                     // Notify the observers.
                     external = CallStateChanged.State.BUSY;
                     final CallStateChanged event = new CallStateChanged(external);

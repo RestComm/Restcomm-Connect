@@ -299,70 +299,85 @@ public final class CallManager extends UntypedActor {
         logger.info("mediaExternalIp: "+mediaExternalIp);
         logger.info("proxyIp: "+proxyIp);
 
-        // Try to see if the request is destined for an application we are hosting.
-        if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(toHost) || proxyIp.equalsIgnoreCase(ruri) || myHostIp.equalsIgnoreCase(ruri))
-                && redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
-            return;
-            // Next try to see if the request is destined to another registered client
-        } else {
-            if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have
-                // little control over
-                logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "
-                        + request.getRequestURI().toString());
-                Client toClient = clients.getClient(toUser);
-                if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
-                    // the b2bua
-                    if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
-                        logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                                + " toHost: " + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
-                        // if all goes well with proxying the invitation on to the next client
-                        // then we can end further processing of this INVITE
-                        return;
-                    } else {
-                        logger.info("Failed to redirect to other client: " + toClient.getUri());
-                    }
+        if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have
+            // little control over
+            logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "
+                    + request.getRequestURI().toString());
+            Client toClient = clients.getClient(toUser);
+            if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
+                // the b2bua
+                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
+                    logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+                            + " toHost: " + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
+                    // if all goes well with proxying the invitation on to the next client
+                    // then we can end further processing of this INVITE
+                    return;
                 } else {
-                    logger.info("Destination Client is null");
-                    // https://telestax.atlassian.net/browse/RESTCOMM-335
-                    final String proxyURI = activeProxy;
-                    final String proxyUsername = activeProxyUsername;
-                    final String proxyPassword = activeProxyPassword;
-                    SipURI from = null;
-                    SipURI to = null;
-                    boolean callToSipUri = false;
-                    if (proxyURI != null) {
-                        final Configuration runtime = configuration.subset("runtime-settings");
-                        final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
-                        if (myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) {
-                            logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                                    + " toHost: " + toHost + " proxyUri: " + proxyURI);
-                            try {
-                                if (useLocalAddressAtFromHeader) {
+                    logger.info("Failed to redirect to other client: " + toClient.getUri());
+                }
+            } else {
+                // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered DID (application)
+                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+                    //This is a call to a registered DID (application)
+                    return;
+                }
+                //This call is not a registered DID (application). Try to proxy out this call.
+                logger.info("Destination Client is null");
+                // https://telestax.atlassian.net/browse/RESTCOMM-335
+                final String proxyURI = activeProxy;
+                final String proxyUsername = activeProxyUsername;
+                final String proxyPassword = activeProxyPassword;
+                SipURI from = null;
+                SipURI to = null;
+                boolean callToSipUri = false;
+                if (proxyURI != null) {
+                    final Configuration runtime = configuration.subset("runtime-settings");
+                    final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
+                    final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean("outboudproxy-user-at-from-header", true);
+                    if (myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) {
+                        logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+                                + " toHost: " + toHost + " proxyUri: " + proxyURI);
+                        try {
+                            if (useLocalAddressAtFromHeader) {
+                                if (outboudproxyUserAtFromHeader) {
+                                    from = (SipURI) sipFactory.createSipURI(proxyUsername, mediaExternalIp + ":" + outboundIntf.getPort());
+                                } else {
                                     from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(),
                                             mediaExternalIp + ":" + outboundIntf.getPort());
-                                } else {
-                                    from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(), proxyURI);
                                 }
-                                to = sipFactory.createSipURI(((SipURI) request.getTo().getURI()).getUser(), proxyURI);
-                            } catch (Exception exception) {
-                                logger.info("Exception: " + exception);
+                            } else {
+                                if (outboudproxyUserAtFromHeader) {
+                                    //https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart of the sip uri for the From header
+                                    from = (SipURI) sipFactory.createSipURI(proxyUsername, proxyURI);
+                                } else {
+                                    from = sipFactory.createSipURI( ((SipURI)request.getFrom().getURI()).getUser(), proxyURI);
+                                }
                             }
-                        } else {
-                            logger.info("Call to SIP URI. myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
-                                    + " toHost: " + toHost + " proxyUri: " + proxyURI);
-                            from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(),
-                                    outboundIntf.getHost() + ":" + outboundIntf.getPort());
-                            to = sipFactory.createSipURI(toUser, toHost + ":" + toPort);
-                            callToSipUri = true;
-                        }
-                        if (B2BUAHelper.redirectToB2BUA(request, client, from, to, proxyUsername, proxyPassword, storage,
-                                sipFactory, callToSipUri)) {
-                            return;
+                            to = sipFactory.createSipURI(((SipURI) request.getTo().getURI()).getUser(), proxyURI);
+                        } catch (Exception exception) {
+                            logger.info("Exception: " + exception);
                         }
                     } else {
-                        logger.info("Active Proxy is null. Check configuration");
+                        logger.info("Call to SIP URI. myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
+                                + " toHost: " + toHost + " proxyUri: " + proxyURI);
+                        from = sipFactory.createSipURI(((SipURI) request.getFrom().getURI()).getUser(),
+                                outboundIntf.getHost() + ":" + outboundIntf.getPort());
+                        to = sipFactory.createSipURI(toUser, toHost + ":" + toPort);
+                        callToSipUri = true;
                     }
+                    if (B2BUAHelper.redirectToB2BUA(request, client, from, to, proxyUsername, proxyPassword, storage,
+                            sipFactory, callToSipUri)) {
+                        return;
+                    }
+                } else {
+                    logger.info("Active Proxy is null. Check configuration");
                 }
+            }
+        } else {
+            // Client is null, check if this call is for a registered DID (application)
+            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+                // This is a call to a registered DID (application)
+                return;
             }
         }
         // We didn't find anyway to handle the call.
@@ -604,22 +619,24 @@ public final class CallManager extends UntypedActor {
         // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
         if (response != null) {
             SipServletRequest ack = response.createAck();
-            InetAddress ackRURI = null;
-            try {
-                ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
-            } catch (UnknownHostException e) {
-            }
-            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
-            if (toInetUri != null && ackRURI == null) {
-                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the ACK request");
-                ack.setRequestURI(toInetUri);
-            } else if (toInetUri != null
-                    && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
-                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the ACK request");
-                ack.setRequestURI(toInetUri);
+            if (!ack.getHeaders("Route").hasNext()) {
+                InetAddress ackRURI = null;
+                try {
+                    ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                } catch (UnknownHostException e) {
+                }
+                // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+                SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
+                if (toInetUri != null && ackRURI == null) {
+                    logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                            + " as a request uri of the ACK request");
+                    ack.setRequestURI(toInetUri);
+                } else if (toInetUri != null
+                        && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
+                    logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                            + " as a request uri of the ACK request");
+                    ack.setRequestURI(toInetUri);
+                }
             }
             ack.send();
             SipApplicationSession sipApplicationSession = request.getApplicationSession();
@@ -870,34 +887,36 @@ public final class CallManager extends UntypedActor {
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
 
-            // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
-            SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
-            SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
-            InetAddress byeRURI = null;
-            try {
-                byeRURI = InetAddress.getByName(((SipURI) clonedBye.getRequestURI()).getHost());
-            } catch (UnknownHostException e) {
+            if(!clonedBye.getHeaders("Route").hasNext()) {
+                // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
+                SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
+                SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
+                InetAddress byeRURI = null;
+                try {
+                    byeRURI = InetAddress.getByName(((SipURI) clonedBye.getRequestURI()).getHost());
+                } catch (UnknownHostException e) {
+                }
+                if (toInetUri != null && byeRURI == null) {
+                    logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                            + " as a request uri of the CloneBye request");
+                    clonedBye.setRequestURI(toInetUri);
+                } else if (toInetUri != null
+                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                    logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                            + " as a request uri of the CloneBye request");
+                    clonedBye.setRequestURI(toInetUri);
+                } else if (fromInetUri != null
+                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                    logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
+                            + " as a request uri of the CloneBye request");
+                    clonedBye.setRequestURI(fromInetUri);
+                }
             }
-            if (toInetUri != null && byeRURI == null) {
-                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the CloneBye request");
-                clonedBye.setRequestURI(toInetUri);
-            } else if (toInetUri != null
-                    && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the CloneBye request");
-                clonedBye.setRequestURI(toInetUri);
-            } else if (fromInetUri != null
-                    && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
-                        + " as a request uri of the CloneBye request");
-                clonedBye.setRequestURI(fromInetUri);
-            }
-
             clonedBye.send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-            call.tell(request, self);
+            if (call != null)
+                call.tell(request, self);
         }
     }
 
