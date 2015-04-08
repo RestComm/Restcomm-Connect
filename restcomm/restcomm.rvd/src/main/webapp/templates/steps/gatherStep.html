@@ -5,8 +5,8 @@
 		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 			<div class="row">
 				<div class="col-md-6">
-					<h4>Prompt</h4>
-					<p class="text-muted">Drag <em>say</em> commands  below to prompt the user to type some digits</p>
+					<h4>{{'gatherStepPromptLabel' | translate}}</h4>
+					<p class="text-muted">{{'gatherStepDescriptionLabel1' | translate}} <em>{{'gatherStepDescriptionLabel2' | translate}}</em> {{'gatherStepDescriptionLabel3' | translate}}</p>
 					<small>
 						<!-- <div class='sortable-steps nested' sortable-steps> -->
 						<div basic-sortable  list-model="step.steps" class='steps nested-steps' item-added='addStep'>
@@ -30,11 +30,11 @@
 					</small>					
 				</div>
 				<div class="col-md-6">
-					<h4>Create a menu or collect digits</h4>
+					<h4>{{'gatherStepCreateMenuLabel' | translate}}</h4>
 					<div ng-show="!step.iface.advancedView">
 						<div class="form-group">
-								<input type="radio" ng-model="step.gatherType" value="menu"> Menu 
-								<input type="radio" ng-model="step.gatherType" value="collectdigits"> Collect digits
+								<input type="radio" ng-model="step.gatherType" value="menu"> {{'gatherStepMenuInput' | translate}} 
+								<input type="radio" ng-model="step.gatherType" value="collectdigits"> {{'gatherStepCollectDigitsInput' | translate}}
 								<!-- <input type="radio" ng-model="step.gatherType" value="custom"> Custom -->						
 						</div>
 						<div ng-if="step.gatherType=='menu'">
@@ -43,21 +43,21 @@
 									<div class='col-md-4'>
 										
 											<div class="input-group input-group-sm">
-												<span class="input-group-addon">Digit</span>
-												<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="123" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits' required></input>
+												<span class="input-group-addon">{{'gatherStepDigitLabel' | translate}}</span>
+												<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="{{'gatherStepDigitInputPlaceholder' | translate}}" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits' required></input>
 											</div>
-											<div class="validation-error"  ng-show="form.digits.$invalid">Invalid digit value</div>
+											<div class="validation-error"  ng-show="form.digits.$invalid">{{'gatherStepDigitValidationErrorLabel' | translate}}</div>
 										
 	
 									</div>
 									<div class='col-md-6'>
 										<div class="input-group input-group-sm">
-											<span class="input-group-addon">Target</span>
+											<span class="input-group-addon">{{'gatherStepTargetLabel' | translate}}</span>
 											<select sync-model name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
 												<option value=""></option>
 											</select>
 										</div>
-										<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
+										<div class="validation-error" ng-show="form.next.$invalid">{{'gatherStepNoTargetLabel' | translate}}</div>
 									</div>	
 									<div class='col-md-1'>
 										<button ng-click="removeGatherMapping(step,mapping)" type="button" class="close" aria-hidden="true">&times;</button>
@@ -65,7 +65,7 @@
 								</form>							
 							</div>					
 							<div class="form-group">
-								<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>Add mapping</span></button>
+								<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>{{'gatherStepAddMappingButton' | translate}}</span></button>
 							</div>	
 						</div>
 						<div ng-if="step.gatherType=='collectdigits'">
@@ -73,26 +73,26 @@
 								<div class='form-group row'>
 									<div class='col-md-12'>
 										<div class="input-group">
-											<span class="input-group-addon">Assign to</span>
-											<input rvd-variable='step.collectdigits.collectVariable' ng-model="step.collectdigits.collectVariable" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name"   required></input>
-											<span class="input-group-addon">Scope</span>
+											<span class="input-group-addon">{{'gatherStepAssignToLabel' | translate}}</span>
+											<input rvd-variable='step.collectdigits.collectVariable' ng-model="step.collectdigits.collectVariable" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="{{'gatherStepAssignToInputPlaceholder' | translate}}"   required></input>
+											<span class="input-group-addon">{{'gatherStepScopeLabel' | translate}}</span>
 											<select ng-model='step.collectdigits.scope' class="form-control">
-												<option value='module'>module</option>
-												<option value='application'>application</option>
+												<option value='module'>{{'gatherStepScopeSelectOption1' | translate}}</option>
+												<option value='application'>{{'gatherStepScopeSelectOption2' | translate}}</option>
 											</select>
 										</div>
-										<div class="validation-error" ng-show="form.collectVariable.$invalid">Type a valid variable name</div>
+										<div class="validation-error" ng-show="form.collectVariable.$invalid">{{'gatherStepInvalidVariableErrorLabel' | translate}}</div>
 									</div>
 								</div>
 								<div class='form-group row'>
 									<div class='col-md-12'>
 										<div class="input-group">
-											<span class="input-group-addon">Continue to</span>
+											<span class="input-group-addon">{{'gatherStepContinueToLabel' | translate}}</span>
 											<select sync-model name='next' ng-model='step.collectdigits.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control">
 												<option value=""></option>
 											</select>
 										</div>
-										<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+										<div class="validation-error" ng-show="form.next.$invalid">{{'gatherStepChooseTargetLabel' | translate}}</div>
 									</div>
 									
 								</div>
@@ -100,11 +100,11 @@
 						</div>	
 						
 						<div>
-							<h4>Validation</h4>
+							<h4>{{'gatherStepValidationLabel' | translate}}</h4>
 							<div ng-show="step.gatherType=='collectdigits'" class="form-group">
 								<div class="input-group">
-									<span class="input-group-addon help-tooltip"  tooltip='Define acceptable input by using a regex pattern. Leave blank for no validation.' tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>
-										Validation pattern
+									<span class="input-group-addon help-tooltip"  tooltip="{{'gatherStepValidationPatternTooltip' | translate}}" tooltip-trigger='mouseenter' tooltip-popup-delay='1000'>
+										{{'gatherStepValidationPatternLabel' | translate}}
 									</span>
 									<input ng-if='getEffectiveValidationType()=="Regex"' ng-model='step.validation.regexPattern' class="form-control">
 									<input ng-if='getEffectiveValidationType()=="One of"' ng-model='step.validation.userPattern' class="form-control">
@@ -116,8 +116,8 @@
 										  <span class="caret"></span>
 									  </button>
 									  <ul class="dropdown-menu pull-right" role="menu">
-										<li><a ng-click='setValidationTypeOneOf()'>One of</a></li>
-										<li><a ng-click='setValidationTypeRegex()'>Regex</a></li>
+										<li><a ng-click='setValidationTypeOneOf()'>{{'gatherStepValidationPatternOption1' | translate}}</a></li>
+										<li><a ng-click='setValidationTypeRegex()'>{{'gatherStepValidationPatternOption2' | translate}}</a></li>
 									  </ul>
 									</div>
 								</div>
@@ -128,8 +128,8 @@
 								<!-- <span class="help-block"><small>{{step}}</small></span> -->
 							</div>
 							
-							<label>Say if invalid</label>
-							<textarea ng-model='step.invalidMessage.phrase' type="text" class="form-control" placeholder='You typed a wrong option. Please try again'></textarea>
+							<label>{{'gatherStepSayInvalidLabel' | translate}}</label>
+							<textarea ng-model='step.invalidMessage.phrase' type="text" class="form-control" placeholder="{{'gatherStepSayInvalidPlaceholder' | translate}}"></textarea>
 							<!--<div basic-droppable drop-model='step.invalidInputStep' drop-accept='.verb-button.button-say' style="width:50px; height:100px; background-color:grey;">
 							</div>-->
 						</div>
@@ -166,8 +166,8 @@
 					</div>
 					-->
 					<div class="col-lg-3 input-group input-group-sm">
-					  <span class="input-group-addon">Finish on key</span>
-					  <input ng-model='step.finishOnKey' auto-clear ng-pattern='/^[0-9\#\*]$/' type="text" class="form-control" placeholder="#*123...">
+					  <span class="input-group-addon">{{'gatherStepFinishLabel' | translate}}</span>
+					  <input ng-model='step.finishOnKey' auto-clear ng-pattern='/^[0-9\#\*]$/' type="text" class="form-control" placeholder="{{'gatherStepFinishPlaceholder' | translate}}">
 					</div>
 					
 					<!--
@@ -178,8 +178,8 @@
 					-->
 
 					<div class="col-lg-3 input-group input-group-sm">
-					  <span class="input-group-addon">Number of digits</span>
-					  <input ng-model='step.numDigits' auto-clear ng-pattern='/^[0-9\#\*]{1,2}$/' type="number" class="form-control" placeholder="123">
+					  <span class="input-group-addon">{{'gatherStepNumberDigitsLabel' | translate}}</span>
+					  <input ng-model='step.numDigits' auto-clear ng-pattern='/^[0-9\#\*]{1,2}$/' type="number" class="form-control" placeholder="{{'gatherStepNumberDigitsPlaceholder' | translate}}">
 					</div>
 					<!--					
 					<div class="form-group col-lg-3">
