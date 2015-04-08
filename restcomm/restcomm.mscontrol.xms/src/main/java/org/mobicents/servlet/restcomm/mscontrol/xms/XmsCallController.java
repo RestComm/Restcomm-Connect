@@ -150,6 +150,7 @@ public class XmsCallController extends MediaServerController {
     // Conference runtime stuff
     private ActorRef conference;
     private ActorRef outboundController;
+    private Boolean conferencing;
     private NetworkConnection outboundConnection;
 
     // Call Media Operations
@@ -213,6 +214,7 @@ public class XmsCallController extends MediaServerController {
         this.localSdp = "";
         this.remoteSdp = "";
         this.callOutbound = false;
+        this.conferencing = Boolean.FALSE;
         this.connectionMode = "inactive";
         this.recording = Boolean.FALSE;
         this.playing = Boolean.FALSE;
@@ -785,7 +787,7 @@ public class XmsCallController extends MediaServerController {
 
                 if (ConnectionMode.Confrnce.equals(message.mode())) {
                     /* CONFERENCING - conference already owns media mixer */
-
+                    this.conferencing = Boolean.TRUE;
                     // Ask conference controller what is the media mixer so the call can join
                     QueryMediaMixer query = new QueryMediaMixer();
                     outboundController.tell(query, self);
@@ -995,6 +997,11 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
+            if (conferencing) {
+                networkConnection.unjoin(mediaMixer);
+                mediaMixer = null;
+            }
+
             if (mediaSession != null) {
                 mediaSession.release();
                 mediaSession = null;
