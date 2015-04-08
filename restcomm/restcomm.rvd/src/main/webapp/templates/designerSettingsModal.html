@@ -1,31 +1,31 @@
 <div class="modal-header">
-	<h3 class="modal-title"><i class="fa fa-cog"></i> Settings</h3>
+	<h3 class="modal-title"><i class="fa fa-cog"></i> {{'designerSettingsModalSettingLabel' | translate}}</h3>
 </div>
 <div class="modal-body">
 	
-	<p class="lead">Restcomm API</p>
+	<p class="lead">{{'designerSettingsModalRestcommAPILabel' | translate}}</p>
 	
 	<form name="settingsForm" novalidate>
-		<div class="help-block">Override default host and port when contacting Restcomm API Server. Leave blank if RVD is on the same machine as Restcomm.</div>
+		<div class="help-block">{{'designerSettingsModalOverrideDefaultLabel' | translate}}</div>
 		<div class="row form-group">
 			<div class="col-md-6 input-group">
-				<span class="input-group-addon">Host</span>
+				<span class="input-group-addon">{{'designerSettingsModalHostInput' | translate}}</span>
 				<input ng-model="settings.apiServerHost" auto-clear type="text" class="form-control">
 			</div>
 			<div class="col-md-6 input-group">
-				<span class="input-group-addon">Port</span>
+				<span class="input-group-addon">{{'designerSettingsModalPortInput' | translate}}</span>
 				<input ng-model="settings.apiServerRestPort" auto-clear ng-pattern="/^[0-9]*$/" type="number" class="form-control">
 			</div>			
 		</div>
 	
-		<div class="help-block">Credentials for accessing Restcomm API. You should provide these if <i>Web Trigger</i> is enabled.</div>
+		<div class="help-block">{{'designerSettingsModalCredencialsLabel1' | translate}} <i>{{'designerSettingsModalCredencialsLabel2' | translate}}</i> {{'designerSettingsModalCredencialsLabel3' | translate}}</div>
 		<div class="row form-group">
 			<div class="col-md-6 input-group">
-				<span class="input-group-addon">Username</span>
+				<span class="input-group-addon">{{'designerSettingsModalUsernameInput' | translate}}</span>
 				<input ng-model="settings.apiServerUsername" type="text" class="form-control">
 			</div>
 			<div class="col-md-6 input-group">
-				<span class="input-group-addon">Password</span>
+				<span class="input-group-addon">{{'designerSettingsModalPasswordInput' | translate}}</span>
 				<input ng-model="settings.apiServerPass" type="text" class="form-control">
 			</div>			
 		</div>
@@ -44,7 +44,7 @@
 	</form>
 </div>
 <div class="modal-footer">
-	<button ng-disabled="preventSubmit" class="btn btn-primary" ng-click="ok()">OK</button>
-	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+	<button ng-disabled="preventSubmit" class="btn btn-primary" ng-click="ok()">{{'designerSettingsModalOkButton' | translate}}</button>
+	<button class="btn btn-warning" ng-click="cancel()">{{'designerSettingsModalCancelButton' | translate}}</button>
 	<div ng-show="alertMessage">{{alertMessage}}</div>
 </div>
