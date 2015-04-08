@@ -610,7 +610,16 @@ public class DialActionTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
+        ArrayList<String> additionalHeaders = new ArrayList<String>();
+        Header customHeader = aliceSipStack.getHeaderFactory().createHeader("X-My-Custom-Header", "My Custom Value");
+        Header otherHeader = aliceSipStack.getHeaderFactory().createHeader("X-OtherHeader", "Other Value");
+        Header anotherHeader = aliceSipStack.getHeaderFactory().createHeader("X-another-header", "another value");
+        additionalHeaders.add(customHeader.toString());
+        additionalHeaders.add(otherHeader.toString());
+        additionalHeaders.add(anotherHeader.toString());
+//        bobCall.initiateOutgoingCall(fromUri, toUri, viaNonProxyRoute, body, contentType, contentSubType, additionalHeaders, replaceHeaders)
+//        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, additionalHeaders, null, body);
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", additionalHeaders, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -631,16 +640,8 @@ public class DialActionTest {
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         
         // Add custom headers to the SIP INVITE
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
-        List<String> headers = new ArrayList<String>();
-        Header customHeader = aliceSipStack.getHeaderFactory().createHeader("X-My-Custom-Header", "My Custom Value");
-        Header otherHeader = aliceSipStack.getHeaderFactory().createHeader("X-OtherHeader", "Other Value");
-        Header anotherHeader = aliceSipStack.getHeaderFactory().createHeader("X-another-header", "another value");
-        headers.add(customHeader.toString());
-        headers.add(otherHeader.toString());
-        headers.add(anotherHeader.toString());
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
-                null));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent()); 
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, null, null, receivedBody));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -659,9 +660,10 @@ public class DialActionTest {
 
         // Assert custom headers were sent to the Action URL with prefix SipHeader_
         MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        assertTrue(data.getFirst("SipHeader_My-Custom-Header").equals("My Custom Value"));
-        assertTrue(data.getFirst("SipHeader_OtherHeader").equals("Other Value"));
-        assertTrue(data.getFirst("SipHeader_another-header").equals("another value"));
+        assertNotNull(data);
+        assertTrue(data.getFirst("SipHeader_X-My-Custom-Header").equals("My Custom Value"));
+        assertTrue(data.getFirst("SipHeader_X-OtherHeader").equals("Other Value"));
+        assertTrue(data.getFirst("SipHeader_X-another-header").equals("another value"));
 
         String sid = data.getFirst("DialCallSid");
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);

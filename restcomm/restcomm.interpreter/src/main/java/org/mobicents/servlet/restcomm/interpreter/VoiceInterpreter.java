@@ -913,7 +913,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         while (headerNames.hasNext()) {
             String headerName = headerNames.next();
             if (headerName.startsWith("X-")) {
-                logger.info("%%%%%%%%%%% Indetified customer header: " + headerName);
+                logger.debug("%%%%%%%%%%% Indetified customer header: " + headerName);
                 parameters.add(new BasicNameValuePair(prefix + headerName, sipMessage.getHeader(headerName)));
             }
         }
