@@ -131,6 +131,7 @@ public class XmsConferenceController extends MediaServerController {
 
         // Media Operations
         this.playing = Boolean.FALSE;
+        this.playingBackground = Boolean.FALSE;
 
         // Initialize the states for the FSM
         this.uninitialized = new State("uninitialized", null, null);
@@ -345,7 +346,7 @@ public class XmsConferenceController extends MediaServerController {
     }
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
-        if (is(active) && this.mediaGroup != null) {
+        if (is(active)) {
             try {
                 if (this.playingBackground) {
                     this.ephemeralMediaGroup.getPlayer().stop(true);
