@@ -221,7 +221,7 @@
 	"formHowToLabel": "Guia de Configuração",
 	"formHowToHelp": "Escreva um pequeno texto descrevendo informações de configurações gerais",	
 	"formConfigurationProvisioningUrlLabel": "TRANSLATE: Provisioning URL",
-	"formConfigurationProvisioningUrlHelp1": "TRANSLATE: URL for application provisioning. <em>Incoming number</em> and <em>parameters</em> hooks are supported. Read more",
+	"formConfigurationProvisioningUrlHelp1": "TRANSLATE: URL for application provisioning. Incoming number and parameters hooks are supported. Read more",
 	"formConfigurationProvisioningUrlHelp2": "TRANSLATE: here",
 	"formConfigurationProvisioningUrlHelp3": "TRANSLATE: for the REST api specification.",
 	"formConfigurationWebUILabel": "TRANSLATE: Web UI",
