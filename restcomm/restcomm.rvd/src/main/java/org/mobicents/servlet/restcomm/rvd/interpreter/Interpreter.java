@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -268,7 +267,7 @@ public class Interpreter {
 
         processBootstrapParameters();
         processRequestParameters();
-        processRequestHeaders(httpRequest);
+        //processRequestHeaders(httpRequest);
         //handleStickyParameters(); // create local copies of sticky_* parameters
 
         response = interpret(targetParam, null, null, null);
@@ -649,6 +648,10 @@ public class Interpreter {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
             } else
+            if (isCustomRestcommHttpHeader(anyVariableName)) {
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + normalizeHTTPHeaderName(anyVariableName), variableValue);
+            } else
             if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) || anyVariableName.startsWith(RvdConfiguration.MODULE_PREFIX) ) {
                 // set up sticky variables
                 String variableValue = getRequestParams().getFirst(anyVariableName);
@@ -676,6 +679,8 @@ public class Interpreter {
     private boolean isCustomRestcommHttpHeader(String headerName) {
         if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) )
             return true;
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase() ) )
+            return true;
         return false;
     }
 
@@ -691,6 +696,10 @@ public class Interpreter {
             String stripedName = headerName.substring( RvdConfiguration.RESTCOMM_HEADER_PREFIX.length() ).toLowerCase();
             return sanitizeVariableName(stripedName);
         } else
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase() ) ) {
+            String stripedName = headerName.substring( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.length() ).toLowerCase();
+            return sanitizeVariableName(stripedName);
+        } else
             return headerName;
     }
 
@@ -704,7 +713,9 @@ public class Interpreter {
     /**
      * Go through request's HTTP headers and create RVD variables out of them
      * @param request
+     * OBSOLETE - the values were passed as request parameters and not headers
      */
+    /*
     private void processRequestHeaders(HttpServletRequest request) {
         Enumeration<String> headerNames = (Enumeration<String>) request.getHeaderNames();
         while ( headerNames.hasMoreElements() ) {
@@ -716,6 +727,7 @@ public class Interpreter {
             }
         }
     }
+    */
 
     /** Add bootstrap parameters to the variables array. Usually these are used in application downloaded
      * from the app store.
