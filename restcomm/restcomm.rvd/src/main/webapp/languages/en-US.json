@@ -221,7 +221,7 @@
 	"formHowToLabel": "How to",
 	"formHowToHelp": "Type a small text describing general configuration guidelines",
 	"formConfigurationProvisioningUrlLabel": "Provisioning URL",
-	"formConfigurationProvisioningUrlHelp1": "URL for application provisioning. <em>Incoming number</em> and <em>parameters</em> hooks are supported. Read more",
+	"formConfigurationProvisioningUrlHelp1": "URL for application provisioning. Incoming number and parameters hooks are supported. Read more",
 	"formConfigurationProvisioningUrlHelp2": "here",
 	"formConfigurationProvisioningUrlHelp3": "for the REST api specification.",
 	"formConfigurationWebUILabel": "Web UI",
