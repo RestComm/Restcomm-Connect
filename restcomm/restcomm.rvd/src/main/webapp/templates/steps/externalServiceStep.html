@@ -174,6 +174,7 @@
 								<!-- this is just a placeholder -->
 								<input ng-hide='step.doRouting' ng-disabled='true' class="form-control height-fix">
 							</div>
+							<div ng-show="step.nextType=='responseBased'" class="form-group validation-warning"><span translate='externalServiceStepDynamicWarning'></span></div>
 							<div>
 								<div class="form-group">
 									<button ng-show="step.nextType=='mapped'" ng-click="step.addRouteMapping()" type="button" class="btn btn-primary btn-sm"><span>{{'externalServiceStepAddMappingButton' | translate}}</span></button>

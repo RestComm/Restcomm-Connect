@@ -183,6 +183,7 @@
 	"externalServiceStepFixedRadio": "fixed",
 	"externalServiceStepDynamicRadio": "dynamic",
 	"externalServiceStepMappedRadio": "mapped",
+	"externalServiceStepDynamicWarning": "Warning! <strong>dynamic</strong> routing is an obsolete feature and will be removed from future versions of RVD. Please use <strong>mapped</strong> routing instead",
 	"externalServiceStepAddMappingButton": "Add mapping",
 	"externalServiceStepValueLabel": "Value",
 	"externalServiceStepContinueToLabel": "Continue to",
