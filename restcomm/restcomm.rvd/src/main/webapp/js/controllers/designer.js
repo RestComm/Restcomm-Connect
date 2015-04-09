@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $upload, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, bundledWavs) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, bundledWavs) {
 	
 	$scope.logger = function(s) {
 		console.log(s);
@@ -216,41 +216,10 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.removeUrlParam = function(step,urlParam) {
 		step.urlParams.splice( step.urlParams.indexOf(urlParam), 1 );
 	}
-
-	// File upload stuff for play verbs
-	$scope.onFileSelect = function($files) {
-		    // $files: an array of files selected, each file has name, size, and
-			// type.
-		    for (var i = 0; i < $files.length; i++) {
-		      var file = $files[i];
-		      $scope.upload = $upload.upload({
-
-		        url: 'services/projects/' + $scope.projectName + '/wavs',
-		        file: file,
-		      }).success(function(data, status, headers, config) {
-		        // file is uploaded successfully
-		    	  console.log('file uploaded successfully');
-		        // console.log(data);
-		    	  $scope.$emit("fileupload");
-		      }).progress(function () {});
-		      // .error(...)
-		      // .then(success, error, progress);
-		    }
-	};
 	
 	$scope.$on('fileupload', function(event, data) {
 		$scope.refreshWavList();
 	});
-	
-	$scope.deleteWav = function (wavItem) {
-		$http({url: 'services/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
-		.success(function (data, status, headers, config) {
-			console.log("Deleted " + wavItem.filename);
-			$scope.$emit('wavfileDeleted', wavItem);
-		}).error(function (data, status, headers, config) {
-			console.log("Error deleting " + wavItem.filename);
-		});
-	}
 	
 	$scope.addDialNoun = function (classAttribute, pos, listmodel) {
 		// console.log("adding dial noun");
@@ -344,7 +313,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		// .then( function () { console.log('project saved and built')});
 	}
 	
-	$scope.$on('wavfileDeleted', function (event,data) {
+	$scope.$on('project-wav-removed', function (event,data) {
 		$scope.refreshWavList();
 	});
 	
@@ -660,8 +629,4 @@ angular.module('Rvd').filter('filterNodesByLabel', function () {
 		return filtered;
 	};
 });
-
-
-
-
 
