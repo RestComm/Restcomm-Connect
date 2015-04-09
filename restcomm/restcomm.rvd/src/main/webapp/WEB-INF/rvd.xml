@@ -9,7 +9,7 @@
 		Relative path example:
 			workspace
 	-->
-	<workspaceLocation>/home/nando/rvd/AlwaysonWorkspace30032015</workspaceLocation>
+	<workspaceLocation>workspace</workspaceLocation>
 	
 	<!-- Use a fixed ip address on the URL resources generated such as links to recorded .wav files etc. If not defined,
 		the destination ip of the request made by Restcomm to the RVD controller will be used. 
