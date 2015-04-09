@@ -154,7 +154,7 @@
 	"externalServiceStepUrlParamNameLabel": "Nome",
 	"externalServiceStepUrlParamValueLabel": "Valor",
 	"externalServiceStepAddParamButton": "TRANSLATE: Adicionar parâmetro",
-	"externalServiceStepAddParamButtonPopover": "Adicione um nome ao parâmetro. Use '$variable' para passar variáveis RVD",
+	"externalServiceStepAddParamButtonPopover": "TRANSLATE: Add a name-value parameter. Depending on the method and content-type parameters are placed in the query of the body of the request",
 	"externalServiceStepAssignResponseLabel": "Atribuir respostas às variáveis",
 	"externalServiceStepAssignResponseText1": "Atribuir campos de resposta JSON para variáveis RVD acessarem as informaçoes retornadas de componentes RVD. Criar uma atribuição para cada uma das informações necessárias.",
 	"externalServiceStepAssignResponseText2": "Para cada atribuição:",
