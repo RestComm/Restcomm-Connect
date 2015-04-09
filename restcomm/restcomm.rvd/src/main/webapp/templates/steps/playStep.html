@@ -1,5 +1,5 @@
 
-<div class="step play-step panel panel-rvdstep">
+<div ng-controller="playStepController" class="step play-step panel panel-rvdstep">
 	<div class="panel-heading">
 			<step-heading></step-heading>
 	</div>
@@ -41,6 +41,7 @@
 					<div class="validation-error" ng-show="step.playType=='local' && form.wavLocalFilename.$invalid">{{'playStepUrlFileError2' | translate}}</div>
 				</div>	
 			</div>	
+			{{step}}
 			
 			<div class="row">
 				<div class='col-md-12'>
