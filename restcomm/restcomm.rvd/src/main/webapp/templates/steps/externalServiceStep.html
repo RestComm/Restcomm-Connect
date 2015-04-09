@@ -34,7 +34,7 @@
                         <div class="validation-warning row col-md-12 form-group" ng-show="step.urlParams.length>0 && step.method=='POST' && step.contentType=='application/x-www-form-urlencoded' && !step.populatePostBodyFromParams">{{"Service parameters are not used in POST requests by default. Check 'Automatically populate from service parameters' to alter this behaviour" | translate}}</div>
 
                         <div class="form-group">
-							<button ng-click="addUrlParam(step)" type="button" class="btn btn-xs"><span>{{'externalServiceStepAddParamButton' | translate}}</span></button>  &nbsp; <i class="fa fa-info-circle rvd-clickable" popover="{{'externalServiceStepAddParamButtonPopover' | translate}}" popover-placement='top'></i>
+							<button ng-click="addUrlParam(step)" type="button" class="btn btn-xs" title="{{'externalServiceStepAddParamButtonPopover' | translate}}"><span>{{'externalServiceStepAddParamButton' | translate}}</span></button>
 						</div>
 						
 			            
