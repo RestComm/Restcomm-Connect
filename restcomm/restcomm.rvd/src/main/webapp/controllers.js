@@ -134,3 +134,45 @@ App.controller('translateController', function($translate, $scope) {
 	return $translate.use();
   }
 });
+
+angular.module('Rvd').controller('wavManagerController', function ($rootScope, $scope, $http, $upload) {
+	$scope.deleteWav = function (wavItem) {
+		$http({url: 'services/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
+		.success(function (data, status, headers, config) {
+			console.log("Deleted " + wavItem.filename);
+			throwRemoveWavEvent(wavItem.filename);
+		}).error(function (data, status, headers, config) {
+			console.log("Error deleting " + wavItem.filename);
+		});
+	}
+	
+	// File upload stuff for play verbs
+	$scope.onFileSelect = function($files) {
+		    // $files: an array of files selected, each file has name, size, and
+			// type.
+		    for (var i = 0; i < $files.length; i++) {
+		      var file = $files[i];
+		      $scope.upload = $upload.upload({
+		        url: 'services/projects/' + $scope.projectName + '/wavs',
+		        file: file,
+		      }).success(function(data, status, headers, config) {
+		        // file is uploaded successfully
+		    	  console.log('file uploaded successfully');
+		    	  $rootScope.$broadcast("fileupload");
+		      }).progress(function () {});
+		      // .error(...)
+		      // .then(success, error, progress);
+		    }
+	};
+	
+	function throwRemoveWavEvent(wavname) {
+		$rootScope.$broadcast("project-wav-removed", wavname);
+	} 
+});
+
+angular.module('Rvd').controller('playStepController', function ($scope) {
+	$scope.$on('project-wav-removed', function (event, data) {
+		if ( data == $scope.step.local.wavLocalFilename )
+			$scope.step.local.wavLocalFilename = "";
+	});
+});
