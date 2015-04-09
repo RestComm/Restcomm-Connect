@@ -154,7 +154,7 @@
 	"externalServiceStepUrlParamNameLabel": "Name",
 	"externalServiceStepUrlParamValueLabel": "Value",
 	"externalServiceStepAddParamButton": "Add service parameter",
-	"externalServiceStepAddParamButtonPopover": "Add a name-value query parameter. Use '$variable' values to pass RVD variables",
+	"externalServiceStepAddParamButtonPopover": "Add a name-value service parameter. Depending on the method and content-type parameters are placed in the query or the body of the request",
 	"externalServiceStepAssignResponseLabel": "Assign response to variables",
 	"externalServiceStepAssignResponseText1": "Assign JSON response fields to RVD variables to access the data returned from RVD components. Create an assignment for each separate piece of information you need.",
 	"externalServiceStepAssignResponseText2": "For each assignment:",
