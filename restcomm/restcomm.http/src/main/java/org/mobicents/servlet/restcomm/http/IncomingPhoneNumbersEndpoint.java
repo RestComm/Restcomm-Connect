@@ -282,11 +282,17 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
-            boolean isDidAssigned = true;
-            if(isRealNumber) {
-                isDidAssigned = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+            org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber phoneNumber = null;
+            if(phoneNumberProvisioningManager != null) {
+                phoneNumber = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
             }
-            if(isDidAssigned) {
+            if(phoneNumber != null) {
+                if(phoneNumber.getFriendlyName() != null) {
+                    incomingPhoneNumber.setFriendlyName(phoneNumber.getFriendlyName());
+                }
+                if(phoneNumber.getPhoneNumber() != null) {
+                    incomingPhoneNumber.setPhoneNumber(phoneNumber.getPhoneNumber());
+                }
                 dao.addIncomingPhoneNumber(incomingPhoneNumber);
                 if (APPLICATION_JSON_TYPE == responseType) {
                     return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
