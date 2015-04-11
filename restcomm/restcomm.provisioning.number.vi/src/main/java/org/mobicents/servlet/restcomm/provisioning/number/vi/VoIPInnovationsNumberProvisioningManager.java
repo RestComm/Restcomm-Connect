@@ -254,7 +254,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#buyNumber(java.lang.String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters)
      */
     @Override
-    public boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+    public PhoneNumber buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+        PhoneNumber phoneNumberObject =  new PhoneNumber(null, phoneNumber, null, null, null, null, null, null, null);
         phoneNumber = phoneNumber.substring(2);
         // Provision the number from VoIP Innovations if they own it.
         if (isValidDid(phoneNumber)) {
@@ -292,7 +293,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                     if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                         final String content = StringUtils.toString(response.getEntity().getContent());
                         if (content.contains("<statuscode>100</statuscode>")) {
-                            return true;
+                            return phoneNumberObject;
                         }
                     }
                 } catch (final Exception ignored) {
@@ -300,7 +301,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
             }
         }
 
-        return false;
+        return null;
     }
 
     protected boolean isValidDid(final String did) {
