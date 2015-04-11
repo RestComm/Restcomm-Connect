@@ -6,7 +6,7 @@
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 		<div class="row">
 			<div class="col-md-12 form-group">	
-				<div basic-draggable drop-target='.ussd-collect-messages' class="label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
+				<div basic-draggable drop-target='.ussd-collect-messages' class="label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;{{'ussdCollectStepUssdMessageLabel' | translate}}</div>
 			</div>
 		</div>
 
@@ -16,14 +16,14 @@
 					<div ng-repeat='message in step.messages'>
 						<div lookup-context class="input-group input-group form-group rvd-handle">
 							<span class="input-group-addon"><i class='fa fa-phone'></i></span>
-							<input ng-model='message.text' lookup-target type='text' class='form-control' placeholder='message text here...' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Type the message text. Add multiple messages to display separate lines.">
+							<input ng-model='message.text' lookup-target type='text' class='form-control' placeholder="{{'ussdCollectStepUssdMessagePlaceholder' | translate}}" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'ussdCollectStepUssdMessageTooltip' | translate}}">
 							<!-- <span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.advancedShown = !dialnoun.advancedShown"></span> -->
 							<variable-lookup variable="message.text" view="input-group"></variable-lookup>
 							<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeNestedMessage(step,message)"></span>
 						</div>
 					</div>
 				</div>
-				<div class='help-block' ng-show='countUssdCollectChars(step) > 0'>{{countUssdCollectChars(step)}} occupied</div>				
+				<div class='help-block' ng-show='countUssdCollectChars(step) > 0'>{{countUssdCollectChars(step)}} {{'ussdCollectStepUssdMessageOccupiedLabel' | translate}}</div>				
 					
 					
 				<!--		
@@ -37,8 +37,8 @@
 				
 				<br/>
 				<div class="btn-group form-group">
-				  <button ng-click="step.gatherType='menu'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='menu'}"><i class="fa fa-sitemap">&nbsp;&nbsp;&nbsp;</i>Menu</button>
-				  <button ng-click="step.gatherType='collectdigits'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='collectdigits'}"><i class="fa fa-keyboard-o">&nbsp;&nbsp;&nbsp;</i>Collect reply</button>
+				  <button ng-click="step.gatherType='menu'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='menu'}"><i class="fa fa-sitemap">&nbsp;&nbsp;&nbsp;</i>{{'ussdCollectStepMenuButton | translate'}}</button>
+				  <button ng-click="step.gatherType='collectdigits'" type="button" class="btn btn-default" ng-class="{active:step.gatherType=='collectdigits'}"><i class="fa fa-keyboard-o">&nbsp;&nbsp;&nbsp;</i>{{'ussdCollectStepCollectButton' | translate}}</button>
 				</div>
 					
 				<div ng-show="step.gatherType=='menu'">
@@ -46,19 +46,19 @@
 						<form name="form" novalidate>
 							<div class='col-md-5 form-group'>
 									<div class="input-group input-group-sm">
-										<span class="input-group-addon">Reply</span>
-										<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="123" ng-model='mapping.digits' required></input>
+										<span class="input-group-addon">{{'ussdCollectStepReplyLabel' | translate}}</span>
+										<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="{{'ussdCollectStepReplyInputPlaceholder' | translate}" ng-model='mapping.digits' required></input>
 									</div>
-									<div class="validation-error"  ng-show="form.digits.$invalid">Invalid reply value</div>
+									<div class="validation-error"  ng-show="form.digits.$invalid">{{'ussdCollectStepReplyErrorLabel' | translate}}</div>
 							</div>
 							<div class='col-md-6 form-group'>
 								<div class="input-group input-group-sm">
-									<span class="input-group-addon">Continue to	</span>
+									<span class="input-group-addon">{{'ussdCollectStepContinueToLabel' | translate}}	</span>
 									<select sync-model name="next" ng-model='mapping.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control input-sm" required>
 										<option value=""></option>
 									</select>
 								</div>
-								<div class="validation-error" ng-show="form.next.$invalid">No target specified</div>
+								<div class="validation-error" ng-show="form.next.$invalid">{{'ussdCollectStepContinueToErrorLabel' | translate}}</div>
 							</div>	
 							<div class='col-md-1 form-group'>
 								<button ng-click="removeGatherMapping(step,mapping)" type="button" class="close" aria-hidden="true">&times;</button>
@@ -66,7 +66,7 @@
 						</form>							
 					</div>					
 					<div class="form-group">
-						<button ng-click="addGatherMapping(step)" type="button" class="btn btn-primary btn-xs"><span>Add option</span></button>
+						<button ng-click="addUssdCollectMapping(step)" type="button" class="btn btn-primary btn-xs"><span>{{'ussdCollectStepAddOptionButton' | translate}}</span></button>
 					</div>	
 					
 					<!-- 
@@ -90,24 +90,24 @@
 						<div class='row'>
 							<div class='col-md-6 form-group'>
 								<div class="input-group input-group-sm">
-									<span class="input-group-addon">Assign reply to</span>
-									<input null-if-empty name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="type the variable name" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
-									<span class="input-group-addon">Scope</span>
+									<span class="input-group-addon">{{'ussdCollectStepAssignLabel' | translate}}</span>
+									<input null-if-empty name='collectVariable' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="{{'ussdCollectStepAssignInputPlaceholder' | translate}}" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" ng-model="step.collectdigits.collectVariable" required></input>
+									<span class="input-group-addon">{{'ussdCollectStepScopeLabel' | translate}}</span>
 									<select ng-model='step.collectdigits.scope' class="form-control">
-										<option value='module'>module</option>
-										<option value='application'>application</option>
+										<option value='module'>{{'ussdCollectStepScopeSelectOption1' | translate}}</option>
+										<option value='application'>{{'ussdCollectStepScopeSelectOption2' | translate}}</option>
 									</select>
 								</div>
-								<div class="validation-error" ng-show="form.collectVariable.$invalid">Type a valid variable name</div>
+								<div class="validation-error" ng-show="form.collectVariable.$invalid">{{'ussdCollectStepScopeErrorLabel' | translate}}</div>
 							</div>
 							<div class='col-md-6 form-group'>
 								<div class="input-group input-group-sm">
-									<span class="input-group-addon">Continue to</span>
+									<span class="input-group-addon">{{'ussdCollectStepDigitsContinueToLabel' | translate}}</span>
 									<select sync-model name='next' ng-model='step.collectdigits.next' ng-options='target.name as target.label for target in getAllTargets()' required class="form-control input-sm">
 										<option value=""></option>
 									</select>
 								</div>
-								<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+								<div class="validation-error" ng-show="form.next.$invalid">{{'ussdCollectStepChooseTarget' | translate}}</div>
 							</div>
 							
 						</div>

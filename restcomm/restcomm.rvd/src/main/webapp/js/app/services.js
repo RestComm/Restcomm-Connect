@@ -20,6 +20,7 @@ angular.module('Rvd')
 	return notifications;
 }]);
 
+/*
 angular.module('Rvd').service('projectModules', [function () {
 	var serviceInstance = {moduleData: []};
 	
@@ -43,6 +44,7 @@ angular.module('Rvd').service('projectModules', [function () {
 	
 	return serviceInstance;
 }]);
+*/
 
 angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', function ($http, $browser, $q) {
 	//console.log("Creating authentication service");
@@ -335,7 +337,7 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 
 angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q) {
 	var service = {data:{}};
-	var defaultSettings = {appStoreDomain:"restcommapps.wpengine.com"};
+	var defaultSettings = {appStoreDomain:"apps.restcomm.com"};
 	var effectiveSettings = {};
 	
 	function updateEffectiveSettings (retrievedSettings) {
@@ -445,7 +447,216 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	// after fax
 	registerVariable("core_FaxSid");
 	registerVariable("core_FaxStatus");
-	 
+	// SMS project
+	registerVariable("core_Body");
+	
 	
 	return service;
 }]);
+
+// An simple inter-service communications service
+angular.module('Rvd').service('communications', [function () {
+	// for each type of event create a new set of *Handlers array, a subscribe and a publish function
+	var newNodeHandlers = [];
+	var nodeRemovedHandlers = [];
+	return {
+		subscribeNewNodeEvent: function (handler) {
+			newNodeHandlers.push(handler);
+		},
+		publishNewNodeEvent: function (data) {
+			angular.forEach(newNodeHandlers, function (handler) {
+				handler(data);
+			});
+		},
+		subscribeNodeRemovedEvent: function (handler) {
+			nodeRemovedHandlers.push(handler);
+		},
+		publishNodeRemovedEvent: function (data) {
+			angular.forEach(nodeRemovedHandlers, function (handler) {
+				handler(data);
+			});
+		}		
+	}
+}]);
+
+angular.module('Rvd').service('editedNodes', ['communications', function (communications) {
+	var service = {
+		nodes: [],
+		activeNodeIndex : -1 // no node is active (visible)
+	}
+	
+	// makes a node edited. The node should already exist in the registry (this is not verified)
+	function addEditedNode(nodeName) {
+		// maybe check if the node exists
+		if ( getNodeIndex(nodeName) == -1 ) {
+			service.nodes.push({name:nodeName});
+		} 
+	}
+	
+	// a new node has been added to the registry
+	function onNewNodeHandler(nodeName) {
+		console.log("editedNodes: new node created: " + nodeName );
+		addEditedNode(nodeName);
+	}
+	
+	// Finds the node's index by name. Returns -1 if not found
+	function getNodeIndex(nodeName) {
+		for (var i=0; i<service.nodes.length; i++) {
+			if ( service.nodes[i].name == nodeName ) {
+				return i;
+				break;
+			}
+		}
+		return -1;
+	}
+	
+	function setActiveNode(nodeName) {
+		service.activeNodeIndex = getNodeIndex(nodeName);
+	}
+	
+	function isNodeActive(nodeName) {
+		var i = getNodeIndex(nodeName);
+		if ( i != -1 && i == service.activeNodeIndex )
+			return true;
+		return false;
+	}
+	
+	function getActiveNode(nodeName) {
+		if ( service.activeNodeIndex != -1 )
+			return service.nodes[service.activeNodeIndex].name;
+		// else return undefined
+	}
+	
+	
+	// triggered when a node will be removed form the registry. We remove this editedNode and update actieNodeIndex accordingly
+	function onNodeRemovedHandler(nodeName) {
+		// if this is the active node, activate the next one
+		var i = getNodeIndex(nodeName);
+
+		if ( i != -1 ) {
+			service.nodes.splice(i,1);
+			
+			if ( i < service.activeNodeIndex )
+				service.activeNodeIndex --;
+			if (i >= service.nodes.length)
+				service.activeNodeIndex = service.nodes.length - 1; // this even works whan the last node is removed
+		} else
+			console.log("Error removing module " + nodeName +". It does not exist");
+
+	}
+	
+	function getEditedNodes() {
+		return service.nodes;
+	}
+	
+	function clear() {
+		service.nodes = [];
+		service.activeNodeIndex = -1;
+	}
+		
+	
+	// event handlers
+	communications.subscribeNewNodeEvent(onNewNodeHandler);
+	communications.subscribeNodeRemovedEvent(onNodeRemovedHandler);
+	
+	// public interface
+	service.setActiveNode = setActiveNode;
+	service.getActiveNode = getActiveNode;
+	service.addEditedNode = addEditedNode;
+	service.getEditedNodes = getEditedNodes;
+	service.isNodeActive = isNodeActive;
+	service.clear = clear;
+	service.removeEditedNode = onNodeRemovedHandler;
+	
+	return service;
+}]);
+
+angular.module('Rvd').service('nodeRegistry', ['communications', function (communications) {
+
+	var service = {
+		lastNodeId: 0,
+		nodes: [],
+		nodesByName : {}
+	};
+	
+	function newName() {
+		var id = ++service.lastNodeId;
+		return "module" + id;
+	}
+	
+	// Pushes a new node in the registry If it doesn't have an id it assigns one to it
+	function addNode(node) {
+		if (node.name) {
+			// Node already has an id. Update lastNodeId if required
+			//if (lastNodeId < node.id)
+			//	lastNodeId = node.id;
+			// it is dangerous to add a node with an id less that lastNodeId
+			// else ...
+		} else {
+			var name = newName();
+			node.setName(name);	
+		}
+		service.nodes.push(node);
+		service.nodesByName[node.name] = node;
+		
+		//communications.publishNewNodeEvent(node.name);
+	}
+	function removeNode(nodeName) {
+		var node = getNode(nodeName);
+		if ( node ) {
+			communications.publishNodeRemovedEvent(node.name);
+			service.nodes.splice(service.nodes.indexOf(node), 1);
+			delete service.nodesByName[node.name];
+		} else
+			console.log("Cannot remove node " + nodeName + ". Node does not exist");
+	}
+	function getNode(name) {
+		return service.nodesByName[name];
+		//for (var i=0; i < service.nodes.length; i ++) {
+		//	if ( service.nodes[i].name == name )
+		//		return service.nodes[i];
+		//}
+	}
+	// dangerous! nodesByName object can be changed and trash service structure
+	//function getNodesByName() {
+	//	return service.nodesByName;
+	//}
+	function getNodes() {
+		return service.nodes;
+	}
+	function reset(lastId) {
+		if ( ! lastId )
+			service.lastNodeId = 0;
+		else
+			service.lastNodeId = lastId;
+	}
+	function clear() {
+		service.lastNodeId = 0;
+		service.nodes = [];
+		service.nodesByName = {};
+	}
+	
+	// public interface
+	service.addNode = addNode;
+	service.removeNode = removeNode;
+	service.getNode = getNode;
+	service.getNodes = getNodes;
+	service.reset = reset;
+	service.clear = clear;
+	
+	return service;
+}]);
+
+angular.module('Rvd').factory('stepService', [function() {
+	var stepService = {
+		serviceName: 'stepService',
+		lastStepId: 0,
+			 
+		newStepName: function () {
+			return 'step' + (++this.lastStepId);
+		}		 
+	};
+	
+	return stepService;
+}]);
+

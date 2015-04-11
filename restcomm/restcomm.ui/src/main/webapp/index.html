@@ -117,11 +117,18 @@
         <script type="text/javascript" src="resources/js/controllers/logs-transcriptions.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-incoming.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-outgoing.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/rappmanager.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>        
+        <script type="text/javascript" src="resources/js/controllers/events.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
         <script type="text/javascript" src="resources/js/directives.js"></script>
+        
+        <!-- Restcomm Apps dependencies -->
+        <script type="text/javascript" src="resources/js/restcommApps/Module.js"></script>
+        <script type="text/javascript" src="resources/js/restcommApps/appManager.js"></script>
+        <script type="text/javascript" src="resources/js/restcommApps/appConfig.js"></script>
+        <script type="text/javascript" src="resources/js/restcommApps/services.js"></script>
+        
     </head>
     <body>
         <div id="wrap">
@@ -193,5 +200,6 @@
                 </div>
             </div>
         </div>
+        <div ng-controller="EventsCtrl"><!-- a dummy controller for global event handling --></div>
     </body>
 </html>

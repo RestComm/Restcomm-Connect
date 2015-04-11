@@ -1,12 +1,12 @@
 <div class="rvd-packaging-download">
 		
-	<h3>Download application package for {{projectName}}</h3>
+	<h3>{{'downloadApplicationPackageLabel' | translate}} {{projectName}}</h3>
 	<p ng-hide="binaryInfo.exists">
-		Sorry, your application package is not available
+		{{'downloadNotAvailableLabel' | translate}}
 	</p>
 	<p ng-show="binaryInfo.exists">
-		Your application binary package is available. Click <a href='/restcomm-rvd/services/ras/packaging/download?name={{projectName}}'>here</a> to download.
+		{{'downloadIsAvailableLabel1' | translate}} <a href='/restcomm-rvd/services/ras/packaging/download?name={{projectName}}'>{{'downloadIsAvailableLabel2' | translate}}</a> {{'downloadIsAvailableLabel3' | translate}}
 	</p>
-	<p>You can continue with <a href="#/designer/{{projectName}}">editing this app in Visual Designer</a>, <a href="#/packaging/{{projectName}}">try packaging again</a> or <a href="#/home">open another.</a></p>
+	<p>{{'downloadContinueLabel1' | translate}} <a href="#/designer/{{projectName}}">{{'downloadContinueLabel2' | translate}}</a>, <a href="#/packaging/{{projectName}}">{{'downloadContinueLabel3' | translate}}</a> {{'downloadContinueLabel4' | translate}} <a href="#/home">{{'downloadContinueLabel5' | translate}}</a></p>
 
 </div>

@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
@@ -29,11 +30,16 @@ public class Unzipper {
               String fileName = zipEntry.getName();
               String pathname = outputDirectory.getPath() + File.separator + fileName;
 
-              if (zipEntry.isDirectory()) {
+              String destinationDirPath = FilenameUtils.getFullPath(pathname);
+              File destinationDir = new File(destinationDirPath);
+
+              // create the destination directory if it does not exist (works for both file and dir entries)
+              if (!destinationDir.exists()) {
                   logger.debug("creating new directory from zip: " + pathname);
-                  new File(pathname).mkdirs();
+                  destinationDir.mkdirs();
               }
-              else {
+
+              if (!zipEntry.isDirectory()) {
                   logger.debug("creating new file from zip: " + pathname);
                   FileOutputStream fileEntryStream = new FileOutputStream(new File(pathname));
                   IOUtils.copy(zipInputStream, fileEntryStream);

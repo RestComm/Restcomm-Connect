@@ -35,6 +35,11 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
+import org.mobicents.servlet.restcomm.dao.ClientsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.entities.Client;
+import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -58,21 +63,25 @@ public final class SmsSession extends UntypedActor {
     private final List<ActorRef> observers;
     private final SipURI transport;
     private final Map<String, Object> attributes;
-    //Map for custom headers from inbound SIP MESSAGE
+    // Map for custom headers from inbound SIP MESSAGE
     private ConcurrentHashMap<String, String> customRequestHeaderMap = new ConcurrentHashMap<String, String>();
-    //Map for custom headers from HTTP App Server (when creating outbound SIP MESSAGE)
+    // Map for custom headers from HTTP App Server (when creating outbound SIP MESSAGE)
     private ConcurrentHashMap<String, String> customHttpHeaderMap;
+
+    private final DaoManager storage;
 
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
 
-    public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport) {
+    public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
+            final DaoManager storage) {
         super();
         this.configuration = configuration;
         this.factory = factory;
         this.observers = new ArrayList<ActorRef>();
         this.transport = transport;
         this.attributes = new HashMap<String, Object>();
+        this.storage = storage;
     }
 
     private void inbound(final Object message) throws IOException {
@@ -137,7 +146,7 @@ public final class SmsSession extends UntypedActor {
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
         } else if (SmsSessionRequest.class.equals(klass)) {
-            customHttpHeaderMap = ((SmsSessionRequest)message).headers();
+            customHttpHeaderMap = ((SmsSessionRequest) message).headers();
             outbound(message);
         } else if (message instanceof SipServletRequest) {
             inbound(message);
@@ -177,16 +186,29 @@ public final class SmsSession extends UntypedActor {
         if (service == null) {
             return;
         }
+
+        final ClientsDao clients = storage.getClientsDao();
+        final Client toClient = clients.getClient(to);
+        Registration toClientRegistration = null;
+        if (toClient != null) {
+            final RegistrationsDao registrations = storage.getRegistrationsDao();
+            toClientRegistration = registrations.getRegistration(toClient.getLogin());
+        }
+
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
         buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
         final String sender = buffer.toString();
         buffer = new StringBuilder();
-        buffer.append("sip:");
-        if (prefix != null) {
-            buffer.append(prefix);
+        if (toClient != null && toClientRegistration != null) {
+            buffer.append(toClientRegistration.getLocation());
+        } else {
+            buffer.append("sip:");
+            if (prefix != null) {
+                buffer.append(prefix);
+            }
+            buffer.append(to).append("@").append(service);
         }
-        buffer.append(to).append("@").append(service);
         final String recipient = buffer.toString();
         try {
             application.setAttribute(SmsSession.class.getName(), self);
@@ -197,9 +219,9 @@ public final class SmsSession extends UntypedActor {
             sms.setContent(body, "text/plain");
             final SipSession session = sms.getSession();
             session.setHandler("SmsService");
-            if(customHttpHeaderMap != null && !customHttpHeaderMap.isEmpty()) {
+            if (customHttpHeaderMap != null && !customHttpHeaderMap.isEmpty()) {
                 Iterator<String> iter = customHttpHeaderMap.keySet().iterator();
-                while(iter.hasNext()){
+                while (iter.hasNext()) {
                     String headerName = iter.next();
                     sms.setHeader(headerName, customHttpHeaderMap.get(headerName));
                 }

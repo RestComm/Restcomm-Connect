@@ -3,15 +3,12 @@ package org.mobicents.servlet.restcomm.rvd.interpreter;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,7 +67,6 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.ussdlanguage.UssdLanguageR
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayRcml;
 import org.mobicents.servlet.restcomm.rvd.model.steps.ussdsay.UssdSayStepConverter;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.ProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -88,7 +84,6 @@ public class Interpreter {
     static final Logger logger = Logger.getLogger(Interpreter.class.getName());
 
     private RvdConfiguration rvdSettings;
-    private ProjectStorage projectStorage;
     private HttpServletRequest httpRequest;
     private ProjectLogger projectLogger;
     private ProjectAwareRvdContext rvdContext;
@@ -107,10 +102,6 @@ public class Interpreter {
 
     public void setRvdSettings(RvdConfiguration rvdSettings) {
         this.rvdSettings = rvdSettings;
-    }
-
-    public void setProjectStorage(ProjectStorage projectStorage) {
-        this.projectStorage = projectStorage;
     }
 
     private WorkspaceStorage workspaceStorage;
@@ -137,7 +128,6 @@ public class Interpreter {
     public Interpreter(ProjectAwareRvdContext rvdContext, String targetParam, String appName, HttpServletRequest httpRequest, MultivaluedMap<String, String> requestParams, WorkspaceStorage workspaceStorage) {
         this.rvdContext = rvdContext;
         this.rvdSettings = rvdContext.getSettings();
-        this.projectStorage = rvdContext.getProjectStorage();
         this.httpRequest = httpRequest;
         this.targetParam = requestParams.getFirst("target");
         //this.targetParam = targetParam;
@@ -277,6 +267,7 @@ public class Interpreter {
 
         processBootstrapParameters();
         processRequestParameters();
+        //processRequestHeaders(httpRequest);
         //handleStickyParameters(); // create local copies of sticky_* parameters
 
         response = interpret(targetParam, null, null, null);
@@ -365,9 +356,7 @@ public class Interpreter {
     }
 
     private Step loadStep(String stepname) throws StorageException  {
-        //String stepfile_json = FileUtils.readFileToString(new File(projectBasePath + File.separator + "data/"
-        //        + target.getNodename() + "." + stepname));
-        String stepfile_json = projectStorage.loadStep(appName, target.getNodename(), stepname);
+        String stepfile_json = FsProjectStorage.loadStep(appName, target.getNodename(), stepname, workspaceStorage);
         Step step = gson.fromJson(stepfile_json, Step.class);
 
         return step;
@@ -653,11 +642,15 @@ public class Interpreter {
      * prefix in their names. Also, sticky_* prefixed parameters have their local copied variables created as well.
      */
     private void processRequestParameters() {
-        Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
+        //Set<String> validNames = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
         for ( String anyVariableName : getRequestParams().keySet() ) {
-            if ( validNames.contains(anyVariableName) ) {
+            if ( RvdConfiguration.builtinRestcommParameters.contains(anyVariableName) ) {
                 String variableValue = getRequestParams().getFirst(anyVariableName);
                 getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + anyVariableName, variableValue );
+            } else
+            if (isCustomRestcommHttpHeader(anyVariableName)) {
+                String variableValue = getRequestParams().getFirst(anyVariableName);
+                getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + normalizeHTTPHeaderName(anyVariableName), variableValue);
             } else
             if ( anyVariableName.startsWith(RvdConfiguration.STICKY_PREFIX) || anyVariableName.startsWith(RvdConfiguration.MODULE_PREFIX) ) {
                 // set up sticky variables
@@ -675,6 +668,66 @@ public class Interpreter {
             }
         }
     }
+
+    /**
+     * Determines whether an HTTP header is a Restcomm-added header and should be copied to a respective RVD variable.
+     * Case INSENSITIVE comparison is made.
+     *
+     * @param headerName
+     * @return
+     */
+    private boolean isCustomRestcommHttpHeader(String headerName) {
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) )
+            return true;
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase() ) )
+            return true;
+        return false;
+    }
+
+    /**
+     * Sanitizes customer headers added by restcomm so that they can take a valid RVD variable name.
+     * Other headers are returned as is.
+     *
+     * @param headerName
+     * @return
+     */
+    private String normalizeHTTPHeaderName(String headerName) {
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) ) {
+            String stripedName = headerName.substring( RvdConfiguration.RESTCOMM_HEADER_PREFIX.length() ).toLowerCase();
+            return sanitizeVariableName(stripedName);
+        } else
+        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase() ) ) {
+            String stripedName = headerName.substring( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.length() ).toLowerCase();
+            return sanitizeVariableName(stripedName);
+        } else
+            return headerName;
+    }
+
+
+    private String sanitizeVariableName(String name) {
+        if (name != null)
+            return name.replaceAll("[^A-Za-z0-9_]", "_");
+        return null;
+    }
+
+    /**
+     * Go through request's HTTP headers and create RVD variables out of them
+     * @param request
+     * OBSOLETE - the values were passed as request parameters and not headers
+     */
+    /*
+    private void processRequestHeaders(HttpServletRequest request) {
+        Enumeration<String> headerNames = (Enumeration<String>) request.getHeaderNames();
+        while ( headerNames.hasMoreElements() ) {
+            String name = headerNames.nextElement();
+            if (isCustomRestcommHttpHeader(name)) {
+                String value = request.getHeader(name);
+                name = normalizeHTTPHeaderName(name);
+                getVariables().put(RvdConfiguration.CORE_VARIABLE_PREFIX + name, value);
+            }
+        }
+    }
+    */
 
     /** Add bootstrap parameters to the variables array. Usually these are used in application downloaded
      * from the app store.
