@@ -350,6 +350,7 @@ public class XmsConferenceController extends MediaServerController {
             try {
                 if (this.playingBackground) {
                     this.ephemeralMediaGroup.getPlayer().stop(true);
+                    this.ephemeralMediaGroup.unjoin(this.mediaMixer);
                     this.ephemeralMediaGroup.release();
                     this.ephemeralMediaGroup = null;
                     this.playingBackground = Boolean.FALSE;
@@ -370,6 +371,7 @@ public class XmsConferenceController extends MediaServerController {
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.mediaGroup != null) {
+            this.mediaGroup.unjoin(this.mediaMixer);
             this.mediaGroup.release();
             this.mediaGroup = null;
         }
@@ -435,6 +437,9 @@ public class XmsConferenceController extends MediaServerController {
             try {
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
+
+                // Set default conference video resolution to 720p
+                mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
 
                 // Set number of ports for the available participants and possible media group
                 Parameters mixerParams = mediaSession.createParameters();
