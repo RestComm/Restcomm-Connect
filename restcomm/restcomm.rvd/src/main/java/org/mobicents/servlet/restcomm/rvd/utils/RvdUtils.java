@@ -40,6 +40,13 @@ public class RvdUtils {
         return false;
     }
 
+    // returns True when either the value is True OR null
+    public static boolean isEmpty( Boolean value) {
+        if ( value == null || value == false )
+            return true;
+        return false;
+    }
+
     public static boolean safeEquals(String value1, String value2) {
         return value1 == null ? (value1 == value2) : (value1.equals(value2));
     }

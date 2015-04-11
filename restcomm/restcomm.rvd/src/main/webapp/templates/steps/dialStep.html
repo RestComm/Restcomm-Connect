@@ -6,10 +6,10 @@
 		<div class="panel-body" ng-hide='step.iface.isCollapsed'>
 			<div class='row'>
 				<div class='col-md-12 form-group'>
-					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-number label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Number</div>
-					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-client label label-primary rvd-pickable"><i class='fa fa-user'></i> &nbsp;Client</div>
-					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-conference label label-primary rvd-pickable"><i class='fa fa-group'></i> &nbsp;Conference</div>
-					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-sipuri label label-primary rvd-pickable">Sip URI</div>
+					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-number label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;{{'dialStepNumberLabel' | translate}}</div>
+					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-client label label-primary rvd-pickable"><i class='fa fa-user'></i> &nbsp;{{'dialStepClientLabel' | translate}}</div>
+					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-conference label label-primary rvd-pickable"><i class='fa fa-group'></i> &nbsp;{{'dialStepConcefenceLabel' | translate}}</div>
+					<div basic-draggable drop-target='.dial-nouns' class="dial-noun dial-noun-sipuri label label-primary rvd-pickable">{{'dialStepSipUriLabel' | translate}}</div>
 				</div>
 			</div>
 			
@@ -21,7 +21,7 @@
 									
 						<div class="drop-area drop-area-nouns" ng-if="step.dialNouns.length == 0">
 						    <div class="drop-prompt">
-						        <em>Drag one or more Number/Client/Conference/SipURI nouns to add destinations</em>
+						        <em>{{'dialStepDropAreaLabel' | translate}}</em>
 						    </div>
 						</div>
 					
@@ -29,18 +29,18 @@
 								<div ng-if="dialnoun.dialType=='number'">
 									<div lookup-context class="input-group input-group-sm form-group">
 										<span class="input-group-addon rvd-handle"><i class='fa fa-phone'></i></span>
-										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='1-444-555-6666' tooltip="Dial to number">
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder="{{'dialStepNumberDestinationInputPlaceholder' | translate}}" tooltip="{{'dialStepNumberDestinationInputTooltip' | translate}}">
 										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>
 																			
-										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Send these DTMF tones after dialing the number">Send digits</span>
-										<input ng-model='dialnoun.sendDigits' auto-clear ng-show='dialnoun.iface.advancedShown'  type='text' class='form-control' placeholder='wwww1234' >
+										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepNumberSendDigitsTooltip' | translate}}">{{'dialStepNumberSendDigitsLabel' | translate}}</span>
+										<input ng-model='dialnoun.sendDigits' auto-clear ng-show='dialnoun.iface.advancedShown'  type='text' class='form-control' placeholder="{{'dialStepNumberSendDigitsInputPlaceholder' | translate}}" >
 										
-										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Play or say information to the called party, or provide a chance to decline the phone call using 'Collect' and 'Hangup'">Before connect</span>
+										<span ng-show='dialnoun.iface.advancedShown' class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepNumberBeforeConnectTooltip' | translate}}'">{{'dialStepNumberBeforeConnectLabel' | translate}}</span>
 										<select ng-show='dialnoun.iface.advancedShown' auto-clear sync-modules name='beforeConnectModule' ng-model='dialnoun.beforeConnectModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
 											<option value=""></option>
 										</select>
 										
-										<div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>
+										<div class="validation-error" ng-show="form.next.$invalid">{{'dialStepNumberChooseTargetLabel' | translate}}</div>
 										
 										<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.iface.advancedShown = !dialnoun.iface.advancedShown"></span>
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
@@ -49,7 +49,7 @@
 								<div ng-if="dialnoun.dialType=='client'">								
 									<div lookup-context class="input-group input-group-sm form-group">
 										<span class="input-group-addon rvd-handle"><i class='fa fa-user'></i></span>
-										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='thomas' tooltip="Dial to client">
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder="{{'dialStepClientDestinationInputPlaceholder' | translate}}" tooltip="{{'dialStepClientDestinationInputTooltip' | translate}}">
 										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>										
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
@@ -57,7 +57,7 @@
 								<div ng-if="dialnoun.dialType=='conference'" class='form-group conference-noun'>
 									<div lookup-context class="input-group input-group-sm">
 										<span class="input-group-addon rvd-handle"><i class='fa fa-group'></i></span>
-										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='1234' tooltip="Dial to conference">
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder="{{'dialStepConferenceInputPlaceholder' | translate}}" tooltip="{{'dialStepConferenceInputTooltip' | translate}}">
 										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>
 										<!-- 
 										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="'">After hangup</span>
@@ -65,7 +65,7 @@
 											<option value=""></option>
 										</select>
 										-->
-										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A module to run while waiting to be added to the conference. Fill it with 'Play' or 'Say' steps">While waiting</span>
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceWaitTooltip' | translate}}">{{'dialStepConferenceWaitLabel' | translate}}</span>
 										<select sync-modules auto-clear name='waitModule' ng-model='dialnoun.waitModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
 											<option value=""></option>
 										</select>
@@ -75,35 +75,35 @@
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
 									<div ng-show='dialnoun.iface.advancedShown' class="input-group input-group-sm form-group noun-advanced">										
-										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Specify whether a participant can speak in the conference">Muted</span>
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceMutedTooltip' | translate}}">{{'dialStepConferenceMutedLabel' | translate}}</span>
 										<select ng-model='dialnoun.muted' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
-										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="A notification beep is played to the conference when a participant joins or leaves the conference">Beep</span>
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceBeepTooltip' | translate}}">{{'dialStepConferenceBeepLabel' | translate}}</span>
 										<select ng-model='dialnoun.beep' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
-										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="Start conference on enter">Start on enter</span>
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceStartTooltip' | translate}}">{{'dialStepConferenceStartLabel' | translate}}</span>
 										<select ng-model='dialnoun.startConferenceOnEnter' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
-										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="End conference on exit">End on exit</span>
+										<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceEndTooltip' | translate}}">{{'dialStepConferenceEndLabel' | translate}}</span>
 										<select ng-model='dialnoun.endConferenceOnExit' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 											<option value=''></option>
 										</select>	
 
 										
-										<span class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum number of participants allowed in the conference">Max participants</span>
-										<input ng-model='dialnoun.maxParticipants' auto-clear style="width:50px;" type='number' class='form-control' placeholder='3'>
+										<span class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceMaxTooltip' | translate}}">{{'dialStepConferenceMaxLabel' | translate}}</span>
+										<input ng-model='dialnoun.maxParticipants' auto-clear style="width:50px;" type='number' class='form-control' placeholder="{{'dialStepConferenceMaxPlaceholder' | translate}}">
 									</div>
 								</div>		
 								<div ng-if="dialnoun.dialType=='sipuri'">								
 									<div lookup-context class="input-group input-group-sm form-group">
-										<span class="input-group-addon rvd-handle">sip:</span>
-										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder='sip:thomas@127.0.0.1:5080' tooltip="Dial to SIP URI">
+										<span class="input-group-addon rvd-handle">{{'dialStepSipUriInputLabel' | translate}}</span>
+										<input ng-model='dialnoun.destination' lookup-target type='text' class='form-control' placeholder="{{'dialStepSipUriInputPlaceholder' | translate}}" tooltip="{{'dialStepSipUriInputTooltip' | translate}}">
 										<variable-lookup variable="dialnoun.destination" view="input-group"></variable-lookup>
 										<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 									</div>
@@ -115,19 +115,19 @@
 		
 			<div class='row'>	
 				<div lookup-context class="col-md-12 input-group form-group">
-					<span class="input-group-addon help-tooltip"  tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip='Choose the module to continue to after the end of the call. "core_DialCallStatus", "core_DialCallSid", "core_DialCallDuration" and "core_RecordingUrl" (if Recording is enabled) variables will be available.'>Continue to</span>
+					<span class="input-group-addon help-tooltip"  tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'dialStepContinueTooltip' | translate}}">{{'dialStepContinueLabel' | translate}}</span>
 					<select auto-clear ng-model='step.nextModule' sync-modules name='nextModule' ng-options='target.name as target.label for target in getAllTargets()' class="form-control"  style="min-width:140px;">
 						<option value=""></option>
 					</select>
 					<!-- <div class="validation-error" ng-show="form.next.$invalid">Choose a target</div>  -->
 					
-					<span  ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The limit in seconds that Dial waits for the called party to answer the call">Timeout</span>
-					<input ng-show='step.iface.advancedShown' ng-model='step.timeout' auto-clear type='number' class='form-control small-input' placeholder='30'>
+					<span  ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepContinueTimeoutTooltip' | translate}}">{{'dialStepContinueTimeoutLabel' | translate}}</span>
+					<input ng-show='step.iface.advancedShown' ng-model='step.timeout' auto-clear type='number' class='form-control small-input' placeholder="{{'dialStepContinueTimeoutInputPlaceholder' | translate}}">
 					
-					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The maximum duration of the Dial in seconds">Time limit</span>
-					<input ng-show='step.iface.advancedShown' ng-model='step.timeLimit' auto-clear type='number' class='form-control small-input' placeholder='14400'>
+					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepContinueTimeLimitTooltip' | translate}}">{{'dialStepContinueTimeLimitLabel' | translate}}</span>
+					<input ng-show='step.iface.advancedShown' ng-model='step.timeLimit' auto-clear type='number' class='form-control small-input' placeholder="{{'dialStepContinueTimeLimitInputPlaceholder' | translate}}">
 	
-					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="The caller ID that will appear to the called party when RestComm calls">Caller ID</span>
+					<span ng-show='step.iface.advancedShown' class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepContinueCalledIdTooltip' | translate}}">{{'dialStepContinueCalledIdLabel' | translate}}</span>
 					<input ng-show='step.iface.advancedShown' ng-model='step.callerId' lookup-target auto-clear type='text' class='form-control'>
 					<variable-lookup ng-show='step.iface.advancedShown' variable="step.callerId" view="input-group"></variable-lookup>
 					
@@ -136,11 +136,16 @@
 			</div>	
 			
 			<div class='row'>
-				<div  class="col-md-12 input-group form-group">
-					<span class="input-group-addon">Recording</span>
-					<select ng-model='step.record' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
-						<option value=''></option>
-					</select>					
+				<div  class="col-md-12 form-group">
+					<div class="input-group">
+						<span class="input-group-addon">{{'dialStepRecordingLabel' | translate}}</span>
+						<select ng-model='step.record' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
+							<option value=''></option>
+						</select>					
+					</div>
+					<div>
+						<div class="validation-warning" ng-show="step.record==true && dialContainsConference(step)">{{'dialStepRecordingConferenctWarning' | translate}}</div>
+					</div>
 				</div>
 			</div>
 </div>

@@ -1,3 +1,10 @@
+.dropdown-menu.scrollable-menu {
+    height: auto;
+    max-height: 200px;
+    overflow-x: hidden;
+    right: 0;
+    left: inherit;
+}
 
 .ng-invalid {
 	/*background-color: #0ff;*/
@@ -33,6 +40,12 @@ label {
 .validation-error, .error-message {
 	font-size: 85%;
 	color: rgba(255, 0, 0, 0.6);
+	font-style: italic;
+}
+
+.validation-warning, .error-message {
+	font-size: 85%;
+	color: #FFA500;
 	font-style: italic;
 }
 
@@ -352,6 +365,12 @@ li.verb {
  * BOOTSTRAP CUSTOMIZATIONS 
  * 
  */
+ 
+.form-control.form-control-inline {
+    min-width: 0;
+    width: auto;
+    display: inline;
+}
 
 .col-centered{
     float: none;
@@ -585,6 +604,14 @@ textarea.medium {
     width: 100%;
     z-index: 2000;
     top: 51px;
+}
+
+.navbar-brand .rvd-head {
+	color: #999;
+}
+.navbar-brand .rvd-head:hover {
+	text-decoration: none;
+	color: #CCC;
 }
 
 /* ------------------ index.html - top menu ---------------- */

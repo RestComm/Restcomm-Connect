@@ -268,7 +268,7 @@ public class DialActionTest {
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
         assertTrue(bobCall.respondToDisconnect());
         try {
-            Thread.sleep(10 * 1000);
+            Thread.sleep(50 * 1000);
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
         }

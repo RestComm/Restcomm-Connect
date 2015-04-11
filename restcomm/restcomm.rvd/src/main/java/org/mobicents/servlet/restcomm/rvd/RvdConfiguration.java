@@ -21,10 +21,12 @@ public class RvdConfiguration {
 
     private static final String WORKSPACE_DIRECTORY_NAME = "workspace";
     public static final String PROTO_DIRECTORY_PREFIX = "_proto";
+    public static final String REST_SERVICES_PATH = "services"; // the "services" from the /restcomm-rvd/services/apps/... path
 
     public static final String WAVS_DIRECTORY_NAME = "wavs";
-    private static final String RVD_PROJECT_VERSION = "1.2"; // version for rvd project syntax
+    private static final String RVD_PROJECT_VERSION = "1.3"; // version for rvd project syntax
     private static final String PACKAGING_VERSION = "1.0";
+    private static final String RAS_APPLICATION_VERSION = "2"; // version of the RAS application specification
     public static final String STICKY_PREFIX = "sticky_"; // a  prefix for rvd sticky variable names
     public static final String MODULE_PREFIX = "module_"; // a  prefix for rvd module-scoped variable names
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
@@ -33,6 +35,9 @@ public class RvdConfiguration {
     private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"})); // the names of the parameters supplied by restcomm request when starting an application
     public static final String PROJECT_LOG_FILENAME = "projectLog";
     public static final String DEFAULT_APPSTORE_DOMAIN = "apps.restcomm.com";
+    public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
+    public static final String RESTCOMM_HEADER_PREFIX = "SipHeader_"; // the prefix added to HTTP headers from Restcomm
+    public static final String RESTCOMM_HEADER_PREFIX_DIAL = "DialSipHeader_"; // another prefix
 
     private String workspaceBasePath;
     private String prototypeProjectsPath;
@@ -92,6 +97,10 @@ public class RvdConfiguration {
 
     public static String getPackagingVersion() {
         return PACKAGING_VERSION;
+    }
+
+    public static String getRasApplicationVersion() {
+        return RAS_APPLICATION_VERSION;
     }
 
     public String getExternalServiceBase() {

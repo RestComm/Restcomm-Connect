@@ -4,6 +4,7 @@ var rcMod = angular.module('rcApp', [
   'rcApp.services',
   'rcApp.directives',
   'rcApp.controllers',
+  'rcApp.restcommApps',
   'ngResource',
   'ui.bootstrap',
   'angular-md5',
@@ -31,7 +32,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
         providerCountries: function(RCommAvailableNumbers, SessionService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:SessionService.get("sid")}).$promise; }
       }
     }).
-    when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;} }}).
+    when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).
     when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl'}).
     when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;} }}).
     when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl'}).
@@ -46,8 +47,6 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
     when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl'}).
     when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
     when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
-    when('/ras', {templateUrl: 'modules/rappmanager.html', controller: 'RappManagerCtrl', resolve: {products: rappManagerCtrl.getProducts, localApps: rappManagerCtrl.getLocalApps} }).
-    when('/ras/config/:projectName', {templateUrl: 'modules/rappmanager-config.html', controller: 'RappManagerConfigCtrl', resolve: { rappConfig : rappManagerConfigCtrl.loadRappConfig, bootstrapObject : rappManagerConfigCtrl.loadBootstapObject }}).    	
     otherwise({redirectTo: '/dashboard'});
 
   // $locationProvider.html5Mode(true);

@@ -2,13 +2,14 @@ package org.mobicents.servlet.restcomm.rvd.bootstrap;
 
 import javax.ws.rs.core.Application;
 
-import org.mobicents.servlet.restcomm.rvd.http.LoginRestService;
 import org.mobicents.servlet.restcomm.rvd.http.ProjectDoesNotExistMapper;
-import org.mobicents.servlet.restcomm.rvd.http.RasRestService;
-import org.mobicents.servlet.restcomm.rvd.http.RvdController;
-import org.mobicents.servlet.restcomm.rvd.http.ProjectRestService;
-import org.mobicents.servlet.restcomm.rvd.http.SettingsRestService;
 import org.mobicents.servlet.restcomm.rvd.http.StorageExceptionMapper;
+import org.mobicents.servlet.restcomm.rvd.http.resources.DesignerRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.LoginRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.ProjectRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.RasRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.RvdController;
+import org.mobicents.servlet.restcomm.rvd.http.resources.SettingsRestService;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +29,7 @@ public class RvdRestApplication extends Application {
         classes.add(RasRestService.class);
         classes.add(LoginRestService.class);
         classes.add(SettingsRestService.class);
+        classes.add(DesignerRestService.class);
         classes.add(ProjectDoesNotExistMapper.class);
         classes.add(StorageExceptionMapper.class);
         return classes;
