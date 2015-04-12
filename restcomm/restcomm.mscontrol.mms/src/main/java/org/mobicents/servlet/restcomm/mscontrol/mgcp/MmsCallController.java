@@ -70,6 +70,8 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
@@ -77,6 +79,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
@@ -127,6 +130,7 @@ public class MmsCallController extends MediaServerController {
     private final State openingInternalLink;
     private final State updatingInternalLink;
     private final State closingInternalLink;
+    private final State creatingMediaGroup;
     private final State muting;
     private final State unmuting;
     private final State pending;
@@ -192,6 +196,7 @@ public class MmsCallController extends MediaServerController {
         this.updatingInternalLink = new State("updating internal link", new UpdatingInternalLink(source), null);
         this.closingInternalLink = new State("closing internal link", new EnteringClosingInternalLink(source),
                 new ExitingClosingInternalLink(source));
+        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
         this.muting = new State("muting", new Muting(source), null);
         this.unmuting = new State("unmuting", new Unmuting(source), null);
         this.pending = new State("pending", new Pending(source), null);
@@ -213,6 +218,9 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.active, this.closingRemoteConnection));
         transitions.add(new Transition(this.active, this.acquiringInternalLink));
         transitions.add(new Transition(this.active, this.closingInternalLink));
+        transitions.add(new Transition(this.active, this.creatingMediaGroup));
+        transitions.add(new Transition(this.creatingMediaGroup, this.active));
+        // XXX add transition from CreatingMediaGroup to a failing state
         transitions.add(new Transition(this.pending, this.active));
         transitions.add(new Transition(this.pending, this.failed));
         transitions.add(new Transition(this.pending, this.updatingRemoteConnection));
@@ -370,6 +378,8 @@ public class MmsCallController extends MediaServerController {
             onStopRecordingCall((StopRecordingCall) message, self, sender);
         } else if (Stop.class.equals(klass)) {
             onStop((Stop) message, self, sender);
+        } else if (StopMediaGroup.class.equals(klass)) {
+            onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
@@ -380,6 +390,8 @@ public class MmsCallController extends MediaServerController {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (MediaGroupStateChanged.class.equals(klass)) {
+            onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         } else if (QueryEndpoint.class.equals(klass)) {
             onQueryEndpoint((QueryEndpoint) message, self, sender);
         } else if (Record.class.equals(klass)) {
@@ -545,6 +557,12 @@ public class MmsCallController extends MediaServerController {
         }
     }
 
+    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active)) {
+            this.mediaGroup.tell(new Stop(), self);
+        }
+    }
+
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
         // Ask the remote media session controller for the bridge endpoint
         this.conference = message.endpoint();
@@ -572,18 +590,28 @@ public class MmsCallController extends MediaServerController {
         }
     }
 
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
-        if (this.mediaGroup != null) {
-            getContext().stop(this.mediaGroup);
+    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active)) {
+            this.fsm.transition(message, creatingMediaGroup);
         }
-        this.mediaGroup = createMediaGroup(message);
-        sender.tell(new MediaServerControllerResponse<ActorRef>(this.mediaGroup), self);
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
         if (this.mediaGroup != null && !this.mediaGroup.isTerminated()) {
-            getContext().stop(this.mediaGroup);
+            this.mediaGroup.tell(new StopMediaGroup(), self);
             this.mediaGroup = null;
+        }
+    }
+
+    private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(creatingMediaGroup)) {
+            if (MediaGroupStateChanged.State.ACTIVE.equals(message.state())) {
+                final MediaGroupCreated mgCreated = new MediaGroupCreated();
+                this.call.tell(new MediaServerControllerResponse<MediaGroupCreated>(mgCreated), sender);
+                fsm.transition(message, active);
+            } else if (MediaGroupStateChanged.State.INACTIVE.equals(message.state())) {
+                // XXX Add transition to a failing state
+            }
         }
     }
 
@@ -840,6 +868,28 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             final UpdateLink update = new UpdateLink(ConnectionMode.SendRecv, UpdateLink.Type.PRIMARY);
             internalLink.tell(update, source);
+        }
+
+    }
+
+    private final class CreatingMediaGroup extends AbstractAction {
+
+        public CreatingMediaGroup(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Always reuse current media group if active
+            if (mediaGroup == null) {
+                mediaGroup = createMediaGroup(message);
+
+                // start monitoring state changes in the media group
+                mediaGroup.tell(new Observe(super.source), super.source);
+
+                // start the media group to enable media operations
+                mediaGroup.tell(new StartMediaGroup(), super.source);
+            }
         }
 
     }
