@@ -313,17 +313,17 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        String number = incomingPhoneNumber.getPhoneNumber();
-        // cater to SIP numbers
-        boolean isRealNumber = true;
-        try {
-            number = e164(number);
-        } catch (NumberParseException e) {
-            isRealNumber = false;
-        }
+//        String number = incomingPhoneNumber.getPhoneNumber();
+//        // cater to SIP numbers
+//        boolean isRealNumber = true;
+//        try {
+//            number = e164(number);
+//        } catch (NumberParseException e) {
+//            isRealNumber = false;
+//        }
         boolean updated = true;
-        if(isRealNumber) {
-            updated = phoneNumberProvisioningManager.updateNumber(incomingPhoneNumber.getPhoneNumber(), phoneNumberParameters);
+        if(phoneNumberProvisioningManager != null) {
+            updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
         }
         if(updated) {
             dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
@@ -427,8 +427,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         } catch (NumberParseException e) {
             isRealNumber = false;
         }
-        if(isRealNumber) {
-            phoneNumberProvisioningManager.cancelNumber(number);
+        if(phoneNumberProvisioningManager != null) {
+            phoneNumberProvisioningManager.cancelNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber));
         }
         dao.removeIncomingPhoneNumber(new Sid(sid));
         return noContent().build();
@@ -438,5 +438,23 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     private List<SipURI> getOutboundInterfaces() {
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         return uris;
+    }
+
+    protected org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber convertIncomingPhoneNumbertoPhoneNumber(IncomingPhoneNumber incomingPhoneNumber) {
+        return new org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber(
+                incomingPhoneNumber.getFriendlyName(),
+                incomingPhoneNumber.getPhoneNumber(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                incomingPhoneNumber.isVoiceCapable(),
+                incomingPhoneNumber.isSmsCapable(),
+                incomingPhoneNumber.isMmsCapable(),
+                incomingPhoneNumber.isFaxCapable(),
+                false);
     }
 }

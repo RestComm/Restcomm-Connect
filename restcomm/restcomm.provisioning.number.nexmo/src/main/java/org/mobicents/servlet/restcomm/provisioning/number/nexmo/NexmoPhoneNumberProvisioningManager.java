@@ -261,7 +261,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
 //                }
             final HttpResponse response = client.execute(post);
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                updateNumber(phoneNumber, phoneNumberParameters);
+                updateNumber(phoneNumberObject, phoneNumberParameters);
                 // we always return true as the phone number was bought
                 return phoneNumberObject;
             } else {
@@ -276,7 +276,8 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
     }
 
     @Override
-    public boolean updateNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+    public boolean updateNumber(PhoneNumber phoneNumberObj, PhoneNumberParameters phoneNumberParameters) {
+        String phoneNumber = phoneNumberObj.getPhoneNumber();
         PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
         String country = null;
         try {
@@ -331,7 +332,8 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
     }
 
     @Override
-    public boolean cancelNumber(String phoneNumber) {
+    public boolean cancelNumber(PhoneNumber phoneNumberObj) {
+        String phoneNumber = phoneNumberObj.getPhoneNumber();
         PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
         String country = null;
         try {
