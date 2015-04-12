@@ -131,9 +131,9 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "5833");
+        formData.add("PhoneNumber", "6557");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-        formData.add("FriendlyName", "USA-ALBERTA-434");
+        formData.add("FriendlyName", "USA-ABBEVILLE-337");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
@@ -145,6 +145,11 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         
         System.out.println(jsonResponse.toString());
         
+        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+        webResource = jerseyClient.resource(provisioningURL);
+        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 204);
         //assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
     }
     
