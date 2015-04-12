@@ -176,6 +176,7 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setEndInputKey(request.endInputKey());
         builder.setMaxNumberOfDigits(request.numberOfDigits());
         stop();
+        this.originator = sender();
         ivr.tell(builder.build(), self);
         ivrInUse = true;
     }
@@ -317,6 +318,7 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setEndInputKey(request.endInputKey());
         builder.setRecordingId(request.destination());
         stop();
+        this.originator = sender();
         ivr.tell(builder.build(), self);
         ivrInUse = true;
     }
