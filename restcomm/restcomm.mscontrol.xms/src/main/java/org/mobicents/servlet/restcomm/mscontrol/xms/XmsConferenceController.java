@@ -439,7 +439,7 @@ public class XmsConferenceController extends MediaServerController {
                 mediaSession = msControlFactory.createMediaSession();
 
                 // Set default conference video resolution to 720p
-                mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
+                // mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
 
                 // Set number of ports for the available participants and possible media group
                 Parameters mixerParams = mediaSession.createParameters();

@@ -92,6 +92,7 @@ public class MgcpMediaGroup extends MediaGroup {
 
     // FSM.
     private final FiniteStateMachine fsm;
+
     // MGCP runtime stuff.
     private final ActorRef gateway;
     private final ActorRef endpoint;
@@ -99,8 +100,10 @@ public class MgcpMediaGroup extends MediaGroup {
     private ActorRef link;
     private ActorRef ivr;
     private boolean ivrInUse;
+
     // Runtime stuff.
     private final List<ActorRef> observers;
+    private ActorRef originator;
 
     private ActorRef internalLinkEndpoint;
     private ActorRef internalLink;
@@ -184,6 +187,7 @@ public class MgcpMediaGroup extends MediaGroup {
         final int iterations = request.iterations();
         final org.mobicents.servlet.restcomm.mgcp.Play play = new org.mobicents.servlet.restcomm.mgcp.Play(uris, iterations);
         stop();
+        this.originator = sender();
         ivr.tell(play, self);
         ivrInUse = true;
     }
@@ -198,9 +202,10 @@ public class MgcpMediaGroup extends MediaGroup {
         } else {
             event = new MediaGroupResponse<String>(response.cause(), response.error());
         }
-        for (final ActorRef observer : observers) {
-            observer.tell(event, self);
-        }
+        // for (final ActorRef observer : observers) {
+        // observer.tell(event, self);
+        // }
+        this.originator.tell(event, self);
         ivrInUse = false;
     }
 
@@ -219,6 +224,11 @@ public class MgcpMediaGroup extends MediaGroup {
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
+        final ActorRef sender = sender();
+
+        logger.info("********** Media Group " + self().path() + " Current State: \"" + state.toString());
+        logger.info("********** Media Group " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
+                + sender.getClass());
 
         if (Observe.class.equals(klass)) {
             observe(message);
@@ -316,6 +326,7 @@ public class MgcpMediaGroup extends MediaGroup {
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(), self);
             ivrInUse = false;
+            originator = null;
         }
     }
 
@@ -509,15 +520,20 @@ public class MgcpMediaGroup extends MediaGroup {
                 gateway.tell(new DestroyLink(link), source);
                 link = null;
             }
+
             if (internalLink != null) {
                 gateway.tell(new DestroyLink(internalLink), source);
                 internalLink = null;
             }
+
             // Notify the observers.
             final MediaGroupStateChanged event = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+
+            // Terminate the actor
+            getContext().stop(self());
         }
     }
 
