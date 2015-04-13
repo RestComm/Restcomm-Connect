@@ -219,8 +219,8 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
     }
 
     @Override
-    public PhoneNumber buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
-        PhoneNumber phoneNumberObject =  new PhoneNumber(null, phoneNumber, null, null, null, null, null, null, null);
+    public boolean buyNumber(PhoneNumber phoneNumberObject, PhoneNumberParameters phoneNumberParameters) {
+        String phoneNumber = phoneNumberObject.getPhoneNumber();
         PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
         String country = null;
         try {
@@ -236,7 +236,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
         } catch (NumberParseException e) {
             if(logger.isDebugEnabled())
                 logger.debug("problem parsing phone number " + phoneNumber, e);
-            return null;
+            return false;
         }
         String queryUri = null;
         if(phoneNumber.startsWith("+")) {
@@ -263,7 +263,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 updateNumber(phoneNumberObject, phoneNumberParameters);
                 // we always return true as the phone number was bought
-                return phoneNumberObject;
+                return true;
             } else {
                 if(logger.isDebugEnabled())
                     logger.debug("Couldn't buy Phone Number " + phoneNumber + ". Response status was: "+ response.getStatusLine().getStatusCode());
@@ -272,7 +272,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             logger.warn("Couldn't reach uri for buying Phone Numbers" + uri, e);
         }
 
-        return null;
+        return false;
     }
 
     @Override

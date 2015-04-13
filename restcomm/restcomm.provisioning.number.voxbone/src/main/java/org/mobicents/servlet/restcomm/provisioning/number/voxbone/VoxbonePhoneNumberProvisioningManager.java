@@ -219,7 +219,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         } else {
             webResource = webResource.queryParam(PAGE_SIZE, "50");
         }
-        ClientResponse clientResponse = webResource.accept(CONTENT_TYPE)
+        ClientResponse clientResponse = webResource.accept(CONTENT_TYPE).type(CONTENT_TYPE)
                 .get(ClientResponse.class);
 
         String response = clientResponse.getEntity(String.class);
@@ -247,8 +247,8 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
     }
 
     @Override
-    public PhoneNumber buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
-        PhoneNumber phoneNumberObject =  new PhoneNumber(null, phoneNumber, null, null, null, null, null, null, null);
+    public boolean buyNumber(PhoneNumber phoneNumberObject, PhoneNumberParameters phoneNumberParameters) {
+        String phoneNumber = phoneNumberObject.getPhoneNumber();
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
 
@@ -333,15 +333,15 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
                             phoneNumberObject.setPhoneNumber(e164);
                             updateNumber(phoneNumberObject, phoneNumberParameters);
                         } else {
-                            return null;
+                            return false;
                         }
                     } else {
-                        return null;
+                        return false;
                     }
                     // we always return true as the phone number was bought
-                    return phoneNumberObject;
+                    return true;
                 } else {
-                    return null;
+                    return false;
                 }
             } else {
                 if(logger.isDebugEnabled())
@@ -351,7 +351,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
             logger.warn("Couldn't reach uri for buying Phone Numbers" + uri, e);
         }
 
-        return null;
+        return false;
     }
 
     @Override
@@ -416,7 +416,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         WebResource webResource = jerseyClient.resource(countriesURI);
 
         // http://www.voxbone.com/apidoc/resource_InventoryServiceRest.html#path__country.html
-        ClientResponse clientResponse = webResource.queryParam(PAGE_NUMBER,"0").queryParam(PAGE_SIZE,"300").accept(CONTENT_TYPE)
+        ClientResponse clientResponse = webResource.queryParam(PAGE_NUMBER,"0").queryParam(PAGE_SIZE,"300").accept(CONTENT_TYPE).type(CONTENT_TYPE)
                 .get(ClientResponse.class);
 
         String response = clientResponse.getEntity(String.class);

@@ -150,6 +150,21 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         String phoneNumber = data.getFirst("PhoneNumber");
         builder.setPhoneNumber(phoneNumber);
         builder.setFriendlyName(getFriendlyName(phoneNumber, data));
+        if (data.containsKey("VoiceCapable")) {
+            builder.setVoiceCapable(Boolean.parseBoolean(data.getFirst("VoiceCapable")));
+        }
+        if (data.containsKey("SmsCapable")) {
+            builder.setSmsCapable(Boolean.parseBoolean(data.getFirst("SmsCapable")));
+        }
+        if (data.containsKey("MmsCapable")) {
+            builder.setMmsCapable(Boolean.parseBoolean(data.getFirst("MmsCapable")));
+        }
+        if (data.containsKey("FaxCapable")) {
+            builder.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
+        }
+        if (data.containsKey("isSIP")) {
+            builder.setPureSip(Boolean.parseBoolean(data.getFirst("isSIP")));
+        }
         final String apiVersion = getApiVersion(data);
         builder.setApiVersion(apiVersion);
         builder.setVoiceUrl(getUrl("VoiceUrl", data));
@@ -282,11 +297,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
-            org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber phoneNumber = null;
+            org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber phoneNumber = convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber);
+            boolean hasSuceeded = false;
             if(phoneNumberProvisioningManager != null && isSIP == null) {
-                phoneNumber = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
+                hasSuceeded = phoneNumberProvisioningManager.buyNumber(phoneNumber, phoneNumberParameters);
+            } else if (isSIP != null) {
+                hasSuceeded = true;
             }
-            if(phoneNumber != null) {
+            if(hasSuceeded) {
                 if(phoneNumber.getFriendlyName() != null) {
                     incomingPhoneNumber.setFriendlyName(phoneNumber.getFriendlyName());
                 }
@@ -314,7 +332,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         boolean updated = true;
-        if(phoneNumberProvisioningManager != null) {
+        if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
             updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
         }
         if(updated) {
@@ -411,7 +429,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        if(phoneNumberProvisioningManager != null) {
+        if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
             phoneNumberProvisioningManager.cancelNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber));
         }
         dao.removeIncomingPhoneNumber(new Sid(sid));

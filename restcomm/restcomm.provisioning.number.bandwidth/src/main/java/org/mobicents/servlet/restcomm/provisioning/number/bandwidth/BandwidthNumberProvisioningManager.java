@@ -109,8 +109,8 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         return countries;
     }
 
-    public PhoneNumber buyNumber(String phoneNumber, PhoneNumberParameters parameters) {
-        PhoneNumber phoneNumberObject =  new PhoneNumber(null, phoneNumber, null, null, null, null, null, null, null);
+    public boolean buyNumber(PhoneNumber phoneNumberObject, PhoneNumberParameters parameters) {
+        String phoneNumber = phoneNumberObject.getPhoneNumber();
         boolean isSucceeded = false;
         phoneNumber = phoneNumber.substring(2); //we don't want the +1
         Order order = new Order();
@@ -131,10 +131,7 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             logger.error("Error creating order: " + e.getMessage());
             isSucceeded = false;
         }
-        if(isSucceeded)
-            return phoneNumberObject;
-        else
-            return null;
+        return isSucceeded;
     }
 
     public boolean cancelNumber(PhoneNumber phoneNumberObj) {
