@@ -65,7 +65,7 @@ public interface PhoneNumberProvisioningManager {
      * @param phoneNumberParameters parameters set on the phone number purchase so the Provider knows where to route incoming messages (be it voice or SMS, MMS, USSD)
      * @return true if the number was bought successfully, false otherwise.
      */
-    PhoneNumber buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters);
+    boolean buyNumber(PhoneNumber phoneNumber, PhoneNumberParameters phoneNumberParameters);
 
     /**
      * Update the parameters for an already purchased phone number.
