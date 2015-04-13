@@ -144,7 +144,7 @@
 							<div class="col-md-3">
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-search" title="{{'designerInputSearchLabelTitle' | translate}}"></i></span>
-									<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" >
+									<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
 									<div class="input-group-btn" ng-class='{open:showNodesDropdown}' >
 									  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
 										  <span class="caret"></span>
@@ -157,6 +157,7 @@
 									  </ul>
 									</div>
 								</div>
+								<div class="help-block" style="margin-top: 0px;"><small><i>{{'designerInputSearchHelp' | translate}}</i></small></div>
 							</div>
 						</div>
 						
