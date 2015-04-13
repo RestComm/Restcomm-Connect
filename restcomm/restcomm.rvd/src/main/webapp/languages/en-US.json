@@ -54,6 +54,8 @@
 	"designerValidationErrorLabel3": "is set",
 	"designerInputSearchLabelTitle": "Search modules by label",
 	"designerInputSearchRegexTitle": "Type the module label to search for or simply filter the list of modules. Regex syntax supported",
+	"designerInputSearchPlaceholder": "module label",
+	"designerInputSearchHelp": "Search for modules",
 	"designerEditListedLinkTitle": "Open listed modules for editing",
 	"designerEditListedLink": "Edit listed",
 	"designerHideAllLinkTitle": "Hide all modules except startup",
