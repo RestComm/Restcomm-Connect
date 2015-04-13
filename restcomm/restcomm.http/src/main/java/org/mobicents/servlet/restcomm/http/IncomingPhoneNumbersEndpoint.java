@@ -271,19 +271,19 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         String number = data.getFirst("PhoneNumber");
+        String isSIP = data.getFirst("isSIP");
         // cater to SIP numbers
-        boolean isRealNumber = true;
-        try {
-            number = e164(number);
-        } catch (NumberParseException e) {
-            isRealNumber = false;
+        if(isSIP == null) {
+            try {
+                number = e164(number);
+            } catch (NumberParseException e) {}
         }
         IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(number);
         if (incomingPhoneNumber == null) {
             incomingPhoneNumber = createFrom(new Sid(accountSid), data);
             phoneNumberParameters.setPhoneNumberType(phoneNumberType);
             org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber phoneNumber = null;
-            if(phoneNumberProvisioningManager != null) {
+            if(phoneNumberProvisioningManager != null && isSIP == null) {
                 phoneNumber = phoneNumberProvisioningManager.buyNumber(number, phoneNumberParameters);
             }
             if(phoneNumber != null) {
@@ -313,14 +313,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-//        String number = incomingPhoneNumber.getPhoneNumber();
-//        // cater to SIP numbers
-//        boolean isRealNumber = true;
-//        try {
-//            number = e164(number);
-//        } catch (NumberParseException e) {
-//            isRealNumber = false;
-//        }
         boolean updated = true;
         if(phoneNumberProvisioningManager != null) {
             updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
@@ -419,14 +411,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
-        String number = incomingPhoneNumber.getPhoneNumber();
-        // cater to SIP numbers
-        boolean isRealNumber = true;
-        try {
-            number = e164(number);
-        } catch (NumberParseException e) {
-            isRealNumber = false;
-        }
         if(phoneNumberProvisioningManager != null) {
             phoneNumberProvisioningManager.cancelNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber));
         }
