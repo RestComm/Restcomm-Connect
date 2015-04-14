@@ -429,12 +429,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		  // $log.info('Modal dismissed at: ' + new Date());
 		});
 	}	
-		
+	*/	
 	// Web Trigger
 	$scope.showWebTrigger = function (projectName) {
 		webTriggerService.showModal(projectName);
 	}
-	*/
 	
  	
 	// Application logging
