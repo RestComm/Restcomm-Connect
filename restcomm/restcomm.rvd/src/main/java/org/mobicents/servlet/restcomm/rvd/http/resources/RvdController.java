@@ -335,12 +335,11 @@ public class RvdController extends RestService {
                 URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
                 MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
                 for ( String paramName : requestParams.keySet() ) {
-                    if ( "token".equals(paramName) )
-                        continue; // skip token parameter since it is used by this service for authentication and is not intented to get passed to the RVD application
-                    // skip builtin parameters supplied by restcomm
+                    if ( "token".equals(paramName) || "from".equals(paramName) || "to".equals(paramName) )
+                        continue; // skip parameters that are used by WebTrigger it self
+                    // also, skip builtin parameters that will be supplied by restcomm when it reaches for the controller
                     if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
-                        if ( !("From".equals(paramName) || "To".equals(paramName) || "Url".equals(paramName ) ) )  // filter out params for the executeAction() itself. Pass only parameters intended for the rcml application.
-                                uriBuilder.addParameter(paramName, requestParams.getFirst(paramName));
+                        uriBuilder.addParameter(Interpreter.nameModuleRequestParam(paramName), requestParams.getFirst(paramName));
                 }
                 rcmlUrl = uriBuilder.build().toString();
             } catch (URISyntaxException e) {
