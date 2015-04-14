@@ -629,6 +629,14 @@ public class Interpreter {
             variables.put(RvdConfiguration.STICKY_PREFIX + name, value);
     }
 
+    // Build the name for a sticky request parameter. This is needed when we need to pass application (sticky) variables to the controller.
+    public static String nameStickyRequestParam(String name) {
+        return RvdConfiguration.STICKY_PREFIX + name;
+    }
+    public static String nameModuleRequestParam(String name) {
+        return RvdConfiguration.MODULE_PREFIX + name;
+    }
+
     public void putModuleVariable(String name, String value) {
         variables.put(RvdConfiguration.MODULE_PREFIX + name, value);
     }

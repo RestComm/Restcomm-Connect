@@ -462,7 +462,7 @@
 	"webTriggerModalWebTriggerUrlHelp5": "podem ser omitidos se os valores",
 	"webTriggerModalWebTriggerUrlHelp6": "fallback",
 	"webTriggerModalWebTriggerUrlHelp7": "foram definidos. Além disto, parâmetros adicionais podem ser concatenados à URL. Eles ficarão disponíveis como",
-	"webTriggerModalWebTriggerUrlHelp8": "variáveis de escopo",
+	"webTriggerModalWebTriggerUrlHelp8": "TRANSLATE: module scoped",
 	"webTriggerModalWebTriggerUrlHelp9": "do RVD quando a aplicação incializar",
 	"webTriggerModalAccessTokenLabel": "Token de acesso",
 	"webTriggerModalAccessTokenHelp1": "Proteja a URL de seu Gatilho Trigger com um token de acesso. Se definido, certifique-se de informar o mesmo parametro",
