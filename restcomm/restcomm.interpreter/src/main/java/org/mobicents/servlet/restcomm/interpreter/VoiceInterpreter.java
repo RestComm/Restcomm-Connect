@@ -2070,11 +2070,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conference.tell(remove, source);
             }
             // Clean up.\
-            callMediaGroup.tell(new StopMediaGroup(), source);
-            final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-            conference.tell(destroy, source);
-            conferenceMediaGroup = null;
-            conference = null;
+//            callMediaGroup.tell(new StopMediaGroup(), source);
+//            final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
+//            conference.tell(destroy, source);
+//            conferenceMediaGroup = null;
+//            conference = null;
             // Parse remaining conference attributes.
             final NotificationsDao notifications = storage.getNotificationsDao();
             final Tag child = conference(verb);
@@ -2088,6 +2088,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             if (endOnExit) {
+                logger.info("EndConferenceOnExit is true. Will stop Conference");
                 final StopConference stop = new StopConference();
                 conference.tell(stop, source);
             }
@@ -2169,14 +2170,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     outboundCall.tell(new Hangup(), null);
                 }
             }
+          final StopMediaGroup stop = new StopMediaGroup();
             // If we still have a conference media group release it.
-            final StopMediaGroup stop = new StopMediaGroup();
-            if (conferenceMediaGroup != null && !liveCallModification) {
-                conferenceMediaGroup.tell(stop, source);
-                final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
-                conference.tell(destroy, source);
-                conferenceMediaGroup = null;
-            }
+//            if (conferenceMediaGroup != null && !liveCallModification) {
+//                conferenceMediaGroup.tell(stop, source);
+//                final DestroyMediaGroup destroy = new DestroyMediaGroup(conferenceMediaGroup);
+//                conference.tell(destroy, source);
+//                conferenceMediaGroup = null;
+//            }
             // If the call is in a conference remove it.
             if (conference != null && !liveCallModification) {
                 final RemoveParticipant remove = new RemoveParticipant(call);

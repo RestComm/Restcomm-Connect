@@ -735,8 +735,9 @@ public final class CallManager extends UntypedActor {
             if (moveConnectedCallLeg) {
                 final ActorRef outboundInterpreter = builder.build();
                 logger.info("About to redirect outbound Call :"+outboundCall.path()+ " with 200ms delay to outbound interpreter: "+outboundInterpreter.path());
-                system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundCall, new ChangeCallDirection(), system.dispatcher());
-                system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundInterpreter, new StartInterpreter(outboundCall), system.dispatcher());
+                outboundCall.tell(new ChangeCallDirection(), null);
+//                system.scheduler().scheduleOnce(Duration.create(1000, TimeUnit.MILLISECONDS), outboundCall, new ChangeCallDirection(), system.dispatcher());
+                system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), outboundInterpreter, new StartInterpreter(outboundCall), system.dispatcher());
                 //                outboundCall.tell(new ChangeCallDirection(), null);
                 //                outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
                 logger.info("New Intepreter for Second call leg: "+outboundInterpreter.path()+" started");
@@ -753,7 +754,7 @@ public final class CallManager extends UntypedActor {
             logger.info("Existing Interpreter path: "+existingInterpreter.path()+" will be stopped");
             StopInterpreter stopInterpreter = StopInterpreter.instance();
             stopInterpreter.setLiveCallModification(true);
-            system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter, system.dispatcher());
+            system.scheduler().scheduleOnce(Duration.create(6000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter, system.dispatcher());
             //            existingInterpreter.tell(stopInterpreter, null);
         }
     }
