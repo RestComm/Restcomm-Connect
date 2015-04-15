@@ -495,18 +495,29 @@ public final class Call extends UntypedActor {
             } else {
                 logger.info("Call :"+self().path()+" Group is null");
             }
+//            internalLink.tell(new CloseLink(), null);
+//            gateway.tell(new DestroyLink(internalLink), null);
+//            internalLink = null;
+//            internalLinkEndpoint = null;
+//            internalLinkMode = null;
             //            if (bridge != null) {
             //                gateway.tell(new DestroyEndpoint(bridge), self());
             //                context().stop(bridge);
             //                bridge = null;
             //            }
-            if (group == null || group.isTerminated()) {
-                group = getMediaGroup(message);
+            if (group != null) {
+                group.tell(new StopMediaGroup(), null);
+                context.stop(group);
+                group = null;
             }
+            group = getMediaGroup(message);
+//            if (group == null || group.isTerminated()) {
+//                group = getMediaGroup(message);
+//            }
 //            if (internalLink != null && !internalLink.isTerminated()) {
 //                gateway.tell(new DestroyLink(internalLink), null);
 //                context().stop(internalLink);
-//                context().stop(internalLinkEndpoint);
+////                context().stop(internalLinkEndpoint);
 //                internalLink = null;
 //            }
 //            fsm.transition(message, acquiringBridge);
@@ -561,8 +572,10 @@ public final class Call extends UntypedActor {
                 fsm.transition(message, acquiringBridge);
             } else if (acquiringBridge.equals(state)) {
                 if (!liveCallModification) {
+                    //This is the normal flow for an inbound or outbound call
                     fsm.transition(message, acquiringRemoteConnection);
                 } else {
+                    //Will move to inprogress only for an outbound call with liveCallModification=true (moveConnectedLeg=true)
                     fsm.transition(message, inProgress);
                 }
             } else if (acquiringRemoteConnection.equals(state)) {
