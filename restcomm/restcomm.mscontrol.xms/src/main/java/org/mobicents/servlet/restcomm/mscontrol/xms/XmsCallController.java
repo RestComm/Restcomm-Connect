@@ -579,7 +579,7 @@ public class XmsCallController extends MediaServerController {
                 }
             }
 
-            // Tell observers the media group has been created
+            // Tell observers the media group has been stopped
             final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
             notifyObservers(response, self);
         } catch (MsControlException e) {
