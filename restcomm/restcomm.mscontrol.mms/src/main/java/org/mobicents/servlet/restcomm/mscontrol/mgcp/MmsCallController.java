@@ -71,6 +71,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
@@ -558,7 +559,7 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
+        if (is(active) && this.mediaGroup != null) {
             this.mediaGroup.tell(new Stop(), self);
         }
     }
@@ -601,6 +602,11 @@ public class MmsCallController extends MediaServerController {
             this.mediaGroup.tell(new StopMediaGroup(), self);
             this.mediaGroup = null;
         }
+
+        // XXX always send this message (may be null in bridged calls)
+        // Warn call the media group has been destroyed
+        final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
+        this.call.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
     }
 
     private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
