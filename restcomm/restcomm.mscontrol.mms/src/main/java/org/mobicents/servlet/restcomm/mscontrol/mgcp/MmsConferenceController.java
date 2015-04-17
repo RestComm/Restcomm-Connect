@@ -46,8 +46,16 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.EndpointInfo;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryEndpoint;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -83,6 +91,7 @@ public final class MmsConferenceController extends MediaServerController {
     private final State initializingConnection;
     private final State openingConnection;
     private final State closingConnection;
+    private final State creatingMediaGroup;
     private final State stopping;
 
     // MGCP runtime stuff.
@@ -93,6 +102,10 @@ public final class MmsConferenceController extends MediaServerController {
 
     // Conference runtime stuff
     private ActorRef conference;
+    private ActorRef mediaGroup;
+
+    // Runtime media operations
+    private Boolean playing;
 
     public MmsConferenceController(ActorRef mediaGateway) {
         super();
@@ -110,6 +123,7 @@ public final class MmsConferenceController extends MediaServerController {
         this.initializingConnection = new State("initializing connection", new InitializingConnection(source), null);
         this.openingConnection = new State("opening connection", new OpeningConnection(source), null);
         this.closingConnection = new State("closing connection", new ClosingConnection(source), null);
+        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
         this.stopping = new State("stopping", new Stopping(source), null);
 
         // Initialize the transitions for the FSM.
@@ -129,6 +143,8 @@ public final class MmsConferenceController extends MediaServerController {
         transitions.add(new Transition(closingConnection, stopping));
         transitions.add(new Transition(closingConnection, active));
         transitions.add(new Transition(active, inactive));
+        transitions.add(new Transition(active, creatingMediaGroup));
+        transitions.add(new Transition(creatingMediaGroup, active));
         transitions.add(new Transition(stopping, inactive));
 
         // Finite State Machine
@@ -136,6 +152,9 @@ public final class MmsConferenceController extends MediaServerController {
 
         // MGCP runtime stuff
         this.mediaGateway = mediaGateway;
+
+        // Runtime media operations
+        this.playing = Boolean.FALSE;
     }
 
     private boolean is(State state) {
@@ -178,16 +197,15 @@ public final class MmsConferenceController extends MediaServerController {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (MediaGroupStateChanged.class.equals(klass)) {
+            onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         } else if (org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection.class.equals(klass)) {
             onCloseConnection((org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection) message, self, sender);
         } else if (QueryEndpoint.class.equals(klass)) {
             onQueryEndpoint((QueryEndpoint) message, self, sender);
+        } else if (Play.class.equals(klass)) {
+            onPlay((Play) message, self, sender);
         }
-    }
-
-    private void onQueryEndpoint(QueryEndpoint message, ActorRef self, ActorRef sender) {
-        final EndpointInfo endpointInfo = new EndpointInfo(cnfEndpoint, ConnectionMode.Confrnce);
-        sender.tell(new MediaServerControllerResponse<EndpointInfo>(endpointInfo), self);
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
@@ -256,18 +274,62 @@ public final class MmsConferenceController extends MediaServerController {
     }
 
     private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
-        final ActorRef group = createMediaGroup(message);
-        sender.tell(new MediaServerControllerResponse<ActorRef>(group), sender);
+        if (is(active)) {
+            fsm.transition(message, creatingMediaGroup);
+        }
     }
 
     private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
-        getContext().stop(message.group());
+        if (is(active) && this.mediaGroup != null) {
+            this.mediaGroup.tell(new StopMediaGroup(), self);
+            this.mediaGroup = null;
+        }
+
+        final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
+        sender.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
+    }
+
+    private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(creatingMediaGroup)) {
+            fsm.transition(message, active);
+        }
     }
 
     private void onCloseConnection(org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection message, ActorRef self,
             ActorRef sender) {
         mediaGateway.tell(new DestroyConnection(connection), self);
         connection = null;
+    }
+
+    private void onQueryEndpoint(QueryEndpoint message, ActorRef self, ActorRef sender) {
+        final EndpointInfo endpointInfo = new EndpointInfo(cnfEndpoint, ConnectionMode.Confrnce);
+        sender.tell(new MediaServerControllerResponse<EndpointInfo>(endpointInfo), self);
+    }
+
+    private void onPlay(Play message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            if (message.isBackground()) {
+                // if (this.ephemeralMediaGroup == null) {
+                // logger.info("%%%%%%%%%%%%%% Creating ephemeral media group");
+                // this.ephemeralMediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER);
+                //
+                // logger.info("%%%%%%%%%%%%%% Starting ephemeral media group");
+                // this.ephemeralMediaGroup.join(Direction.DUPLEX, this.mediaMixer);
+                //
+                // logger.info("%%%%%%%%%%%%%% Playing background music");
+                // List<URI> uris = message.uris();
+                // Parameters params = this.ephemeralMediaGroup.createParameters();
+                // int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
+                // params.put(Player.REPEAT_COUNT, repeatCount);
+                // this.ephemeralMediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
+                // this.playingBackground = Boolean.TRUE;
+                // }
+            } else {
+                logger.info("%%%%%%%%%%%%%% Playing beep [already playing? " + this.playing + "]");
+                this.mediaGroup.tell(message, sender);
+                this.playing = Boolean.TRUE;
+            }
+        }
     }
 
     /*
@@ -359,6 +421,21 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
+    private final class CreatingMediaGroup extends AbstractAction {
+
+        public CreatingMediaGroup(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            mediaGroup = createMediaGroup(message);
+            mediaGroup.tell(new Observe(super.source), super.source);
+            mediaGroup.tell(new StartMediaGroup(), super.source);
+        }
+
+    }
+
     private final class Stopping extends AbstractAction {
 
         public Stopping(final ActorRef source) {
@@ -389,6 +466,10 @@ public final class MmsConferenceController extends MediaServerController {
                 mediaGateway.tell(new DestroyEndpoint(cnfEndpoint), super.source);
                 cnfEndpoint = null;
             }
+
+            // Inform conference that media session has been properly closed
+            final MediaSessionClosed response = new MediaSessionClosed();
+            conference.tell(new MediaServerControllerResponse<MediaSessionClosed>(response), super.source);
         }
     }
 
@@ -400,7 +481,18 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            conference.tell(new MediaServerControllerResponse<MediaSessionInfo>(new MediaSessionInfo()), super.source);
+            Class<?> klass = message.getClass();
+            if (MediaGroupStateChanged.class.equals(klass)) {
+                MediaGroupStateChanged.State mgState = ((MediaGroupStateChanged) message).state();
+                if (MediaGroupStateChanged.State.ACTIVE.equals(mgState)) {
+                    final MediaGroupCreated mgCreated = new MediaGroupCreated();
+                    conference.tell(new MediaServerControllerResponse<MediaGroupCreated>(mgCreated), super.source);
+                } else if (MediaGroupStateChanged.State.INACTIVE.equals(mgState)) {
+                    conference.tell(new MediaServerControllerError(), super.source);
+                }
+            } else {
+                conference.tell(new MediaServerControllerResponse<MediaSessionInfo>(new MediaSessionInfo()), super.source);
+            }
         }
     }
 
