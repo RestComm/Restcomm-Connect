@@ -1740,7 +1740,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         beep = Boolean.parseBoolean(value);
                     }
                 }
-                if (beep) {
+
+                // Only play beep if conference is already running
+                // Do not play it while participants are listening to background music
+                if (beep && ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.equals(conferenceInfo.state())) {
                     String path = configuration.subset("runtime-settings").getString("prompts-uri");
                     if (!path.endsWith("/")) {
                         path += "/";
@@ -1857,7 +1860,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // XXX only play waiting music if conference IS NOT currently doing that
                 // Tell conference to play music to participants on hold
                 if (waitUrl != null) {
-                    conference.tell(new Play(waitUrl, Short.MAX_VALUE, true), super.source);
+                    conference.tell(new Play(waitUrl, Short.MAX_VALUE), super.source);
                 }
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 conference.tell(new ConferenceModeratorPresent(), source);

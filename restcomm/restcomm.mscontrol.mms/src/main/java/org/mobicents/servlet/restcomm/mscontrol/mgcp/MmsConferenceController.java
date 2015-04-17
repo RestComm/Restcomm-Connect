@@ -55,6 +55,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.EndpointInfo;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryEndpoint;
@@ -199,6 +200,8 @@ public final class MmsConferenceController extends MediaServerController {
             onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         } else if (MediaGroupStateChanged.class.equals(klass)) {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
+        } else if (StopMediaGroup.class.equals(klass)) {
+            onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection.class.equals(klass)) {
             onCloseConnection((org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection) message, self, sender);
         } else if (QueryEndpoint.class.equals(klass)) {
@@ -295,6 +298,14 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
+    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            // Stop the primary media group
+            this.playing = Boolean.FALSE;
+            this.mediaGroup.tell(new Stop(), self);
+        }
+    }
+
     private void onCloseConnection(org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection message, ActorRef self,
             ActorRef sender) {
         mediaGateway.tell(new DestroyConnection(connection), self);
@@ -307,28 +318,9 @@ public final class MmsConferenceController extends MediaServerController {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
-            if (message.isBackground()) {
-                // if (this.ephemeralMediaGroup == null) {
-                // logger.info("%%%%%%%%%%%%%% Creating ephemeral media group");
-                // this.ephemeralMediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER);
-                //
-                // logger.info("%%%%%%%%%%%%%% Starting ephemeral media group");
-                // this.ephemeralMediaGroup.join(Direction.DUPLEX, this.mediaMixer);
-                //
-                // logger.info("%%%%%%%%%%%%%% Playing background music");
-                // List<URI> uris = message.uris();
-                // Parameters params = this.ephemeralMediaGroup.createParameters();
-                // int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
-                // params.put(Player.REPEAT_COUNT, repeatCount);
-                // this.ephemeralMediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
-                // this.playingBackground = Boolean.TRUE;
-                // }
-            } else {
-                logger.info("%%%%%%%%%%%%%% Playing beep [already playing? " + this.playing + "]");
-                this.mediaGroup.tell(message, sender);
-                this.playing = Boolean.TRUE;
-            }
+        if (is(active) && !playing) {
+            this.playing = Boolean.TRUE;
+            this.mediaGroup.tell(message, sender);
         }
     }
 
