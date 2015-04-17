@@ -1816,51 +1816,56 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     call.tell(mute, source);
                 }
 
-                // Parse wait url.
-                URI waitUrl = new URL(
-                        "http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav").toURI();
-                attribute = child.attribute("waitUrl");
-                if (attribute != null) {
-                    String value = attribute.value();
-                    if (value != null && !value.isEmpty()) {
-                        try {
-                            waitUrl = URI.create(value);
-                        } catch (final Exception exception) {
-                            final Notification notification = notification(ERROR_NOTIFICATION, 13233, method
-                                    + " is not a valid waitUrl value for <Conference>");
-                            notifications.addNotification(notification);
-                            sendMail(notification);
-                            final StopInterpreter stop = StopInterpreter.instance();
-                            source.tell(stop, source);
+                // Only play background music if conference is not doing that already
+                // If conference state is RUNNING_MODERATOR_ABSENT and participants > 0 then BG music is playing already
+                boolean playBackground = conferenceInfo.participants().size() == 0;
+                if (playBackground) {
+                    // Parse wait url.
+                    URI waitUrl = new URL(
+                            "http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav")
+                            .toURI();
+                    attribute = child.attribute("waitUrl");
+                    if (attribute != null) {
+                        String value = attribute.value();
+                        if (value != null && !value.isEmpty()) {
+                            try {
+                                waitUrl = URI.create(value);
+                            } catch (final Exception exception) {
+                                final Notification notification = notification(ERROR_NOTIFICATION, 13233, method
+                                        + " is not a valid waitUrl value for <Conference>");
+                                notifications.addNotification(notification);
+                                sendMail(notification);
+                                final StopInterpreter stop = StopInterpreter.instance();
+                                source.tell(stop, source);
 
-                            // TODO shouldn't we return here?
+                                // TODO shouldn't we return here?
+                            }
                         }
                     }
-                }
 
-                final URI base = request.getUri();
-                waitUrl = UriUtils.resolve(base, waitUrl);
-                // Parse method.
-                String method = "POST";
-                attribute = child.attribute("waitMethod");
-                if (attribute != null) {
-                    method = attribute.value();
-                    if (method != null && !method.isEmpty()) {
-                        if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                            final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
-                                    + " is not a valid waitMethod value for <Conference>");
-                            notifications.addNotification(notification);
+                    final URI base = request.getUri();
+                    waitUrl = UriUtils.resolve(base, waitUrl);
+                    // Parse method.
+                    String method = "POST";
+                    attribute = child.attribute("waitMethod");
+                    if (attribute != null) {
+                        method = attribute.value();
+                        if (method != null && !method.isEmpty()) {
+                            if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
+                                final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
+                                        + " is not a valid waitMethod value for <Conference>");
+                                notifications.addNotification(notification);
+                                method = "POST";
+                            }
+                        } else {
                             method = "POST";
                         }
-                    } else {
-                        method = "POST";
                     }
-                }
 
-                // XXX only play waiting music if conference IS NOT currently doing that
-                // Tell conference to play music to participants on hold
-                if (waitUrl != null) {
-                    conference.tell(new Play(waitUrl, Short.MAX_VALUE), super.source);
+                    // Tell conference to play music to participants on hold
+                    if (waitUrl != null) {
+                        conference.tell(new Play(waitUrl, Short.MAX_VALUE), super.source);
+                    }
                 }
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 conference.tell(new ConferenceModeratorPresent(), source);
