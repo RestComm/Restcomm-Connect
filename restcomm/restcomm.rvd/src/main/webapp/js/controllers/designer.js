@@ -105,7 +105,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		gatherStep.menu.mappings.push({digits:max+1, next:""});
 	};
 	$scope.removeGatherMapping = function (gatherStep, mapping) {
-		gatherStep.menu.mappings.splice( gatherStep.menu.mapwapings.indexOf(mapping), 1 );
+		gatherStep.menu.mappings.splice( gatherStep.menu.mappings.indexOf(mapping), 1 );
 	}	
 	// ussd collect handles adding mappings a little differently
 	$scope.addUssdCollectMapping = function (collectStep) {
@@ -429,12 +429,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		  // $log.info('Modal dismissed at: ' + new Date());
 		});
 	}	
-		
+	*/	
 	// Web Trigger
 	$scope.showWebTrigger = function (projectName) {
 		webTriggerService.showModal(projectName);
 	}
-	*/
 	
  	
 	// Application logging
