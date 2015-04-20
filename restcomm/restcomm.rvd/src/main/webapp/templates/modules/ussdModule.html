@@ -1,5 +1,5 @@
 <div ussd-module>
-	<div class="ussd-letter-counter form-group"><span class="label" ng-class="{'label-default':node.iface.remainingChars>10,'label-warning':node.iface.remainingChars<=10 && node.iface.remainingChars>=0, 'label-danger':node.iface.remainingChars < 0}"><span ng-show='node.iface.remainingChars>=0'>{{node.iface.remainingChars}} characters left</span>  <span ng-show='node.iface.remainingChars<0'>{{-node.iface.remainingChars}} characters will be truncated</span>   </span></div>
+	<div class="ussd-letter-counter form-group"><span class="label" ng-class="{'label-default':node.iface.remainingChars>10,'label-warning':node.iface.remainingChars<=10 && node.iface.remainingChars>=0, 'label-danger':node.iface.remainingChars < 0}"><span ng-show='node.iface.remainingChars>=0'>{{node.iface.remainingChars}} {{'ussdModuleCharactersLeftLabel' | translate}}</span>  <span ng-show='node.iface.remainingChars<0'>{{-node.iface.remainingChars}} {{'ussdModuleCharactersTruncatedLabel' | translate}}</span>   </span></div>
 	<div basic-sortable list-model="node.steps" class='steps step-list' item-added='addStep'>	
 		<div class='step' ng-repeat='step in node.steps'>
 			<ng-include src="'templates/steps/' + step.kind + 'Step.html'"></ng-include>
