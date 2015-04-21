@@ -58,13 +58,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>2.6</version>
-		</dependency>
-
-
-		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
 		</dependency>
@@ -174,13 +167,31 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.acapela</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.tts.voicerss</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.att</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.tts.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mgcp</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
