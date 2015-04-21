@@ -247,7 +247,7 @@ public class LiveCallModificationTest {
                 callSid, null, rcmlUrl);
 
         georgeCall.listenForDisconnect();
-        assertTrue(georgeCall.waitForDisconnect(5000));
+        assertTrue(georgeCall.waitForDisconnect(10000));
         assertTrue(georgeCall.respondToDisconnect());
         
         // Restcomm now should execute the new RCML and create a call to Alice Restcomm client

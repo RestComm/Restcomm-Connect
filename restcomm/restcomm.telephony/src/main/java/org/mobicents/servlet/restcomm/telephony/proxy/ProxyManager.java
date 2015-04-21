@@ -27,7 +27,6 @@ import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
@@ -61,15 +60,15 @@ public final class ProxyManager extends UntypedActor {
 
     private static final int ttl = 1800;
 
-    private final ServletConfig configuration;
+    private final ServletContext servletContext;
     private final SipFactory factory;
     private final DaoManager storage;
     private final String address;
 
-    public ProxyManager(final ServletConfig configuration, final SipFactory factory, final DaoManager storage,
+    public ProxyManager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
             final String address) {
         super();
-        this.configuration = configuration;
+        this.servletContext = servletContext;
         this.factory = factory;
         this.storage = storage;
         this.address = address;
@@ -107,7 +106,10 @@ public final class ProxyManager extends UntypedActor {
             outboundInterface = (SipURI) factory.createSipURI(null, address);
         final String user = gateway.getUserName();
         final String host = outboundInterface.getHost();
-        final int port = outboundInterface.getPort();
+        int port = outboundInterface.getPort();
+        if (port == -1) {
+            port = outboundInterface().getPort();
+        }
         final StringBuilder buffer = new StringBuilder();
         buffer.append("sip:").append(user).append("@").append(host).append(":").append(port);
         final Address contact = factory.createAddress(buffer.toString());
@@ -137,7 +139,7 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private SipURI outboundInterface() {
-        final ServletContext context = configuration.getServletContext();
+        final ServletContext context = servletContext;
         SipURI result = null;
         @SuppressWarnings("unchecked")
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
@@ -151,7 +153,7 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private SipURI outboundInterface(String address, String transport) {
-        final ServletContext context = configuration.getServletContext();
+        final ServletContext context = servletContext;
         SipURI result = null;
         @SuppressWarnings("unchecked")
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);

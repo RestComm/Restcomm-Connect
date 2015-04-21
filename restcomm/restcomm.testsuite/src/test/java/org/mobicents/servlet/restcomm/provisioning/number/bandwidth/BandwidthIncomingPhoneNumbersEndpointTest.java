@@ -28,6 +28,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -36,6 +37,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +45,7 @@ import org.mobicents.servlet.restcomm.provisioning.number.vi.IncomingPhoneNumber
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
 import java.net.URL;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -71,8 +74,6 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-
-
 
     @Test
     public void testBuyNumber() {
@@ -111,14 +112,13 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
 
     @Test
     public void testCancelNumber() {
-
         String ordersUrl = "/v1.0/accounts/12345/orders.*";
         stubFor(post(urlMatching(ordersUrl))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/xml")
                         .withBody(BandwidthIncomingPhoneNumbersEndpointTestUtils.validOrderResponseXml)));
-
+        
         String disconnectUrl = "/v1.0/accounts/12345/disconnects.*";
         stubFor(post(urlMatching(disconnectUrl))
                 .willReturn(aResponse()
@@ -130,6 +130,7 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+        System.out.println(provisioningURL);
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();

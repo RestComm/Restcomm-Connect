@@ -52,11 +52,15 @@ import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class MediaGroup extends UntypedActor {
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
     // Finite state machine stuff.
     private final State uninitialized;
     private final State active;
@@ -124,6 +128,7 @@ public final class MediaGroup extends UntypedActor {
         transitions.add(new Transition(updatingLink, deactivating));
         transitions.add(new Transition(active, deactivating));
         transitions.add(new Transition(deactivating, inactive));
+        transitions.add(new Transition(active, acquiringIvr));
         //Join Outbound call Bridge endpoint to IVR endpoint
         transitions.add(new Transition(active, acquiringInternalLink));
         transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
@@ -214,6 +219,7 @@ public final class MediaGroup extends UntypedActor {
                 sender().tell(new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE), self());
             }
         } else if (StartMediaGroup.class.equals(klass)) {
+            logger.info("MediaGroup: "+self().path()+" got StartMediaGroup from: "+sender().path()+" endpoint: "+endpoint.path()+" isTerminated: "+endpoint.isTerminated());
             fsm.transition(message, acquiringIvr);
         } else if (Join.class.equals(klass)) {
             fsm.transition(message, acquiringInternalLink);
@@ -321,6 +327,13 @@ public final class MediaGroup extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+            if (ivr != null && !ivr.isTerminated()) {
+                logger.info("MediaGroup :"+self().path()+" got request to create ivr endpoint, will stop the existing one first: "+ivr.path());
+                gateway.tell(new DestroyEndpoint(ivr), null);
+                getContext().stop(ivr);
+                ivr = null;
+            }
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" will ask to get IvrEndpoint");
             gateway.tell(new CreateIvrEndpoint(session), source);
         }
     }
@@ -336,6 +349,12 @@ public final class MediaGroup extends UntypedActor {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             ivr = response.get();
             ivr.tell(new Observe(source), source);
+            if (link != null && !link.isTerminated()) {
+                logger.info("MediaGroup :"+self().path()+" got request to create link endpoint, will stop the existing one first: "+link.path());
+                gateway.tell(new DestroyLink(link), null);
+                getContext().stop(link);
+            }
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" ivr endpoint: "+ivr.path()+" will ask to get Link");
             gateway.tell(new CreateLink(session), source);
         }
     }
@@ -350,8 +369,11 @@ public final class MediaGroup extends UntypedActor {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             link = response.get();
+            if(endpoint == null)
+                logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" link: "+link.path()+" endpoint is null will have exception");
             link.tell(new Observe(source), source);
             link.tell(new InitializeLink(endpoint, ivr), source);
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" link: "+link.path()+" endpoint: "+endpoint.path()+" initializeLink sent, endpoint isTerminated: "+endpoint.isTerminated());
         }
     }
 
@@ -362,6 +384,7 @@ public final class MediaGroup extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+            logger.info("MediaGroup :"+self().path()+" state: "+fsm.state().toString()+" session: "+session.id()+" link: "+link.path()+" will ask to open Link");
             link.tell(new OpenLink(ConnectionMode.SendRecv), source);
         }
     }
@@ -490,11 +513,15 @@ public final class MediaGroup extends UntypedActor {
     @Override
     public void postStop() {
         if (internalLinkEndpoint != null) {
+            logger.info("MediaGroup: "+self().path()+" at postStop, about to stop intenalLinkEndpoint: "+internalLinkEndpoint.path()+" sender: "+sender().path());
             gateway.tell(new DestroyEndpoint(internalLinkEndpoint), null);
+            getContext().stop(internalLinkEndpoint);
             internalLinkEndpoint = null;
         }
         if (ivr != null) {
+            logger.info("MediaGroup :"+self().path()+" at postStop, about to stop ivr endpoint :"+ivr.path());
             gateway.tell(new DestroyEndpoint(ivr), null);
+            getContext().stop(ivr);
             ivr = null;
         }
     }
