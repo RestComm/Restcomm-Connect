@@ -20,9 +20,18 @@
 
 package org.mobicents.servlet.restcomm.provisioning.number.bandwidth;
 
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import javax.servlet.sip.SipURI;
+import javax.xml.stream.XMLInputFactory;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -43,14 +52,10 @@ import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParamet
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberType;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ProvisionProvider;
 import org.mobicents.servlet.restcomm.provisioning.number.bandwidth.utils.XmlUtils;
 
-import javax.xml.stream.XMLInputFactory;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 /**
  * @author sbarstow@bandwidth.com
@@ -84,9 +89,9 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         telestaxProxyEnabled = telestaxProxyConfiguration.getBoolean("enabled", false);
         if (telestaxProxyEnabled) {
             uri = telestaxProxyConfiguration.getString("uri");
-            username = telestaxProxyConfiguration.getString("username");
+            username = telestaxProxyConfiguration.getString("login");
             password = telestaxProxyConfiguration.getString("password");
-            accountId = telestaxProxyConfiguration.getString("accountId");
+            accountId = telestaxProxyConfiguration.getString("endpoint");
             siteId = telestaxProxyConfiguration.getString("siteId");
             activeConfiguration = telestaxProxyConfiguration;
         } else {
@@ -120,8 +125,11 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         order.setExistingTelephoneNumberOrderType(existingTelephoneNumberOrderType);
         try {
             HttpPost post = new HttpPost(buildOrdersUri());
-            StringEntity entity = new StringEntity(XmlUtils.toXml(order), ContentType.APPLICATION_XML);
+            String xml = XmlUtils.toXml(order);
+            StringEntity entity = new StringEntity(xml, ContentType.APPLICATION_XML);
             post.setEntity(entity);
+            if (telestaxProxyEnabled)
+                addTelestaxProxyHeaders(post, ProvisionProvider.REQUEST_TYPE.ASSIGNDID.name());
             OrderResponse response = (OrderResponse) XmlUtils.fromXml(executeRequest(post), OrderResponse.class);
             if (response.getOrder().getExistingTelephoneNumberOrderType().getTelephoneNumberList().get(0).equals(phoneNumber)) {
                 isSucceeded = true;
@@ -146,6 +154,8 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             HttpPost post = new HttpPost(buildDisconnectsUri());
             StringEntity entity = new StringEntity(XmlUtils.toXml(order), ContentType.APPLICATION_XML);
             post.setEntity(entity);
+            if (telestaxProxyEnabled)
+                addTelestaxProxyHeaders(post, ProvisionProvider.REQUEST_TYPE.RELEASEDID.name());
             DisconnectTelephoneNumberOrderResponse response = (DisconnectTelephoneNumberOrderResponse)
                     XmlUtils.fromXml(executeRequest(post), DisconnectTelephoneNumberOrderResponse.class);
             if (response.getErrorList().size() == 0 && response.getorderRequest().
@@ -176,6 +186,8 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
         try {
             String uri = buildSearchUri(listFilters);
             HttpGet httpGet = new HttpGet(uri);
+            if (telestaxProxyEnabled)
+                addTelestaxProxyHeaders(httpGet, ProvisionProvider.REQUEST_TYPE.GETDIDS.name());
             String response = executeRequest(httpGet);
             availableNumbers = toPhoneNumbers((SearchResult) XmlUtils.fromXml(response, SearchResult.class));
             return availableNumbers;
@@ -241,7 +253,7 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             logger.error("Phone Number Type: " + filters.getPhoneNumberTypeSearch().name() + " is not supported");
         }
         builder.addParameter("quantity", String.valueOf(filters.getRangeSize() == -1 ? 5 : filters.getRangeSize()));
-        logger.info("building uri: " + builder.build().toString());
+        logger.debug("building uri: " + builder.build().toString());
         return builder.build().toString();
     }
 
@@ -286,6 +298,22 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             return friendlyName;
         } catch (final Exception ignored) {
             return number;
+        }
+    }
+
+    private void addTelestaxProxyHeaders(HttpRequest httpRequest, String requestType) {
+        //This will work as a flag for LB that this request will need to be modified and proxied to VI
+        httpRequest.addHeader("TelestaxProxy", "true");
+        //Adds the Provision provider class name
+        httpRequest.addHeader("Provider", ProvisionProvider.bandiwidthClass);
+        //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+        httpRequest.addHeader("RequestType", requestType);
+        //This is will add the instance id for the CancelNumber request that is missing SiteId from the request body
+        httpRequest.addHeader("SiteId", siteId);
+        //This will let LB match the DID to a node based on the node host+port
+        List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
+        for (SipURI uri: uris) {
+            httpRequest.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
         }
     }
 

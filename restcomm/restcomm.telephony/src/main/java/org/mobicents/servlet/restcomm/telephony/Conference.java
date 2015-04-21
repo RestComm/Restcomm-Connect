@@ -179,6 +179,7 @@ public final class Conference extends UntypedActor {
         final Join join = new Join(cnf, ConnectionMode.Confrnce);
         final ActorRef call = request.call();
         final ActorRef self = self();
+        logger.info("Conference: "+self().path()+" about to join call: "+call.path());
         call.tell(join, self);
     }
 
@@ -201,8 +202,8 @@ public final class Conference extends UntypedActor {
         final State state = fsm.state();
 
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** Conference Current State: " + state.toString());
-            logger.info(" ********** Conference Processing Message: " + klass.getName());
+            logger.info(" ********** Conference "+self().path()+" Current State: " + state.toString());
+            logger.info(" ********** Conference "+self().path()+" Processing Message: " + klass.getName());
         }
 
         if (Observe.class.equals(klass)) {
@@ -475,6 +476,7 @@ public final class Conference extends UntypedActor {
                 connection = null;
             }
             if (cnf != null) {
+                logger.info("Conference: "+self().path()+" at Completed, about to stop cnfEndpoint: "+cnf.path());
                 gateway.tell(new DestroyEndpoint(cnf), self);
                 cnf = null;
             }
@@ -495,5 +497,10 @@ public final class Conference extends UntypedActor {
             this.confVoiceInterpreter.tell(stopInterpreter, source);
             this.confVoiceInterpreter = null;
         }
+    }
+
+    @Override
+    public void postStop() {
+        //Will need to clean up conference resources here
     }
 }

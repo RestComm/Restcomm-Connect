@@ -87,7 +87,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>3.0.564</sipservletapi.version>
+		<sipservletapi.version>3.1.601</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -103,7 +103,7 @@
 		<libphonenumber.version>4.3</libphonenumber.version>
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
-		<hsqldb.version>1.8.0.10</hsqldb.version>
+		<hsqldb.version>2.3.2</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
 		<sip-ri.version>1.2.228</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
@@ -116,6 +116,7 @@
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
+		<aws.sdk.version>1.9.24</aws.sdk.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -123,6 +124,7 @@
 		<module>restcomm.commons</module>
 		<module>restcomm.dao</module>
 		<module>restcomm.asr</module>
+		<module>restcomm.tts.acapela</module>
 		<module>restcomm.mgcp</module>
 		<module>restcomm.fax</module>
 		<module>restcomm.sms.api</module>
@@ -133,17 +135,17 @@
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
-        <module>restcomm.provisioning.number.bandwidth</module>
+		<module>restcomm.provisioning.number.bandwidth</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
-		<module>restcomm.tts.acapela</module>
-		<module>restcomm.tts.att</module>
 		<module>restcomm.testsuite</module>
-		<module>restcomm.ussd</module>
 		<module>restcomm.ui</module>
 		<module>restcomm.rvd</module>
-    </modules>
+		<module>restcomm.tts.att</module>
+		<module>restcomm.ussd</module>
+		<module>restcomm.routing</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -242,7 +244,7 @@
 				<scope>provided</scope>
 			</dependency>
 
-			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
+			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
 				<version>${servlet-api.version}</version> </dependency -->
 
 			<dependency>
@@ -390,10 +392,9 @@
 			</dependency>
 
 			<dependency>
-				<groupId>hsqldb</groupId>
+				<groupId>org.hsqldb</groupId>
 				<artifactId>hsqldb</artifactId>
 				<version>${hsqldb.version}</version>
-				<scope>test</scope>
 			</dependency>
 
 			<dependency>
@@ -446,6 +447,12 @@
 				<groupId>att</groupId>
 				<artifactId>naturalvoices</artifactId>
 				<version>5.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-s3</artifactId>
+				<version>${aws.sdk.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -516,10 +523,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>hsqldb</groupId>
+			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>${hsqldb.version}</version>
-			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -562,7 +568,7 @@
 			<version>${mobicents.checkstyle.version}</version>
 		</dependency>
 
-		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
 			<version>5.1</version> </dependency -->
 	</dependencies>
 
@@ -760,7 +766,7 @@
 		</repository>
 
 		<!-- Local repository for the ATT TTS Java wrapper library -->
-		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
 			</repository> -->
 	</repositories>
 

@@ -25,10 +25,8 @@ import java.io.Reader;
 import java.util.Properties;
 
 import org.apache.commons.configuration.Configuration;
-
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.AnnouncementsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
@@ -46,6 +44,8 @@ import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.restcomm.dao.UsageDao;
+import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
@@ -54,6 +54,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 @ThreadSafe
 public final class MybatisDaoManager implements DaoManager {
     private Configuration configuration;
+    private Configuration amazonS3Configuration;
+    private Configuration runtimeConfiguration;
+    private S3AccessTool s3AccessTool;
     private AccountsDao accountsDao;
     private ApplicationsDao applicationsDao;
     private AvailablePhoneNumbersDao availablePhoneNumbersDao;
@@ -67,6 +70,7 @@ public final class MybatisDaoManager implements DaoManager {
     private RecordingsDao recordingsDao;
     private ShortCodesDao shortCodesDao;
     private SmsMessagesDao smsMessagesDao;
+    private UsageDao usageDao;
     private TranscriptionsDao transcriptionsDao;
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
@@ -77,7 +81,9 @@ public final class MybatisDaoManager implements DaoManager {
 
     @Override
     public void configure(final Configuration configuration) {
-        this.configuration = configuration;
+        this.configuration = configuration.subset("dao-manager");
+        this.amazonS3Configuration = configuration.subset("amazon-s3");
+        this.runtimeConfiguration = configuration.subset("runtime-settings");
     }
 
     @Override
@@ -151,6 +157,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public UsageDao getUsageDao() {
+        return usageDao;
+    }
+
+    @Override
     public TranscriptionsDao getTranscriptionsDao() {
         return transcriptionsDao;
     }
@@ -184,6 +195,17 @@ public final class MybatisDaoManager implements DaoManager {
         properties.setProperty("data", dataFiles);
         properties.setProperty("sql", sqlFiles);
         final SqlSessionFactory sessions = builder.build(reader, properties);
+        boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
+        if (amazonS3Enabled) {
+            final String accessKey = amazonS3Configuration.getString("access-key");
+            final String securityKey = amazonS3Configuration.getString("security-key");
+            final String bucketName = amazonS3Configuration.getString("bucket-name");
+            final String folder = amazonS3Configuration.getString("folder");
+            final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
+            final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
+            final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
+            s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile);
+        }
         start(sessions);
     }
 
@@ -200,9 +222,15 @@ public final class MybatisDaoManager implements DaoManager {
         notificationsDao = new MybatisNotificationsDao(sessions);
         outgoingCallerIdsDao = new MybatisOutgoingCallerIdsDao(sessions);
         presenceRecordsDao = new MybatisRegistrationsDao(sessions);
-        recordingsDao = new MybatisRecordingsDao(sessions);
+        if (s3AccessTool != null) {
+            final String recordingPath = runtimeConfiguration.getString("recordings-path");
+            recordingsDao = new MybatisRecordingsDao(sessions, s3AccessTool, recordingPath);
+        } else {
+            recordingsDao = new MybatisRecordingsDao(sessions);
+        }
         shortCodesDao = new MybatisShortCodesDao(sessions);
         smsMessagesDao = new MybatisSmsMessagesDao(sessions);
+        usageDao = new MybatisUsageDao(sessions);
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
     }
