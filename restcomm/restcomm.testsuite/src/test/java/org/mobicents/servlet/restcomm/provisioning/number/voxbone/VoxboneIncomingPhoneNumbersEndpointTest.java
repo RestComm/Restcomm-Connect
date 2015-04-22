@@ -119,21 +119,45 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
     }
     
     /*
-     * https://docs.nexmo.com/index.php/developer-api/number-buy
+     * 
      */
     @Test
-    public void testPurchasePhoneNumberSuccess() {
-//        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902867"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "application/json")
-//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
-//        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/US/14156902867.*"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "application/json")
-//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+    public void testPurchaseAndDeletePhoneNumberSuccess() {
+        stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.VoiceURIJSonResponse)));
+        stubFor(put(urlEqualTo("/test/ordering/cart"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseOrderingCartSuccessResponse)));
+        stubFor(post(urlEqualTo("/test/ordering/cart/30018/product"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.addToCartSuccessResponse)));
+        stubFor(get(urlEqualTo("/test/ordering/cart/30018/checkout?cartIdentifier=30018"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.checkoutCartSuccessResponse)));
+        stubFor(get(urlEqualTo("/test/inventory/did?orderReference=62252DS997341&pageNumber=0&pageSize=50"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.inventoryDidSuccessResponse)));
+        stubFor(post(urlEqualTo("/test/configuration/configuration"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.updateDidSuccessResponse)));
+        stubFor(post(urlEqualTo("/test/ordering/cancel"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.cancelDidSuccessResponse)));
         
         // Get Account using admin email address and user email address
     	Client jerseyClient = Client.create();
@@ -143,9 +167,9 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "6557");
+        formData.add("PhoneNumber", "22073");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-        formData.add("FriendlyName", "USA-ABBEVILLE-337");
+        formData.add("FriendlyName", "USA-ACKLEY-641");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         assertTrue(clientResponse.getStatus() == 200);
@@ -156,66 +180,65 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         
         System.out.println(jsonResponse.toString());
+        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
         
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 204);
-        //assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
     }
     
     /*
-     * https://docs.nexmo.com/index.php/developer-api/number-cancel
      */
-    @Test
-    public void testDeletePhoneNumberSuccess() {
-        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/ES/34911067000"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        
-        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/ES/34911067000.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        
-        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/ES/34911067000"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-        // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-
-        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "+34911067000");
-        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-        formData.add("FriendlyName", "My Company Line");
-        formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
-        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-        JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        
-        System.out.println(jsonResponse.toString());
-        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
-        
-        String phoneNumberSid = jsonResponse.get("sid").getAsString();
-        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-        assertTrue(clientResponse.getStatus() == 204);
-    }
+//    @Test
+//    public void testDeletePhoneNumberSuccess() {
+//        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/ES/34911067000"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "application/json")
+//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+//        
+//        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/ES/34911067000.*"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "application/json")
+//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+//        
+//        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/ES/34911067000"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "application/json")
+//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+//        // Get Account using admin email address and user email address
+//        Client jerseyClient = Client.create();
+//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+//
+//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+//        WebResource webResource = jerseyClient.resource(provisioningURL);
+//
+//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+//        formData.add("PhoneNumber", "+34911067000");
+//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+//        formData.add("FriendlyName", "My Company Line");
+//        formData.add("VoiceMethod", "GET");
+//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+//        assertTrue(clientResponse.getStatus() == 200);
+//        String response = clientResponse.getEntity(String.class);
+//        System.out.println(response);
+//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+//        JsonParser parser = new JsonParser();
+//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+//        
+//        System.out.println(jsonResponse.toString());
+//        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
+//        
+//        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+//        webResource = jerseyClient.resource(provisioningURL);
+//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+//        assertTrue(clientResponse.getStatus() == 204);
+//    }
     
     /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
@@ -238,11 +261,6 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(400)
                     .withHeader("Content-Type", "application/json")));
-//        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902868"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "application/json")
-//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
@@ -269,74 +287,72 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
     /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#instance-post-example-1
      * Set the VoiceUrl and SmsUrl on a phone number
-     * 
-     * https://docs.nexmo.com/index.php/developer-api/number-update
      */
-    @Test
-    public void testUpdatePhoneNumberSuccess() {
-        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/FR/33911067000"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        
-        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        
-        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/FR/33911067000"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-        // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-
-        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "+33911067000");
-        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
-        formData.add("FriendlyName", "My Company Line");
-        formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
-        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-        JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        
-        System.out.println(jsonResponse.toString());
-        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
-
-        String phoneNumberSid = jsonResponse.get("sid").getAsString();
-        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
-        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
-        formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
-        formData.add("VoiceMethod", "POST");
-        formData.add("SMSMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
-        System.out.println(response);
-        assertTrue(!response.trim().equalsIgnoreCase("[]"));
-        parser = new JsonParser();
-        jsonResponse = parser.parse(response).getAsJsonObject();
-        System.out.println(jsonResponse.toString());
-        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
-        
-        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
-        assertTrue(clientResponse.getStatus() == 204);
-    }
+//    @Test
+//    public void testUpdatePhoneNumberSuccess() {
+//        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/FR/33911067000"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "application/json")
+//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+//        
+//        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "application/json")
+//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+//        
+//        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/FR/33911067000"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "application/json")
+//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+//        // Get Account using admin email address and user email address
+//        Client jerseyClient = Client.create();
+//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+//
+//        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
+//        WebResource webResource = jerseyClient.resource(provisioningURL);
+//
+//        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+//        formData.add("PhoneNumber", "+33911067000");
+//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
+//        formData.add("FriendlyName", "My Company Line");
+//        formData.add("VoiceMethod", "GET");
+//        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+//        assertTrue(clientResponse.getStatus() == 200);
+//        String response = clientResponse.getEntity(String.class);
+//        System.out.println(response);
+//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+//        JsonParser parser = new JsonParser();
+//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+//        
+//        System.out.println(jsonResponse.toString());
+//        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
+//
+//        String phoneNumberSid = jsonResponse.get("sid").getAsString();
+//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+//        webResource = jerseyClient.resource(provisioningURL);
+//        formData = new MultivaluedMapImpl();
+//        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
+//        formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
+//        formData.add("VoiceMethod", "POST");
+//        formData.add("SMSMethod", "GET");
+//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+//        assertTrue(clientResponse.getStatus() == 200);
+//        response = clientResponse.getEntity(String.class);
+//        System.out.println(response);
+//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+//        parser = new JsonParser();
+//        jsonResponse = parser.parse(response).getAsJsonObject();
+//        System.out.println(jsonResponse.toString());
+//        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
+//        
+//        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
+//        webResource = jerseyClient.resource(provisioningURL);
+//        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+//        assertTrue(clientResponse.getStatus() == 204);
+//    }
     
     @Deployment(name = "VoxboneIncomingPhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
