@@ -3,16 +3,16 @@
 	<nav class="navbar navbar-default" role="navigation">
 		<div class="collapse navbar-collapse navbar-ex1-collapse">
 			<div ng-show="upgradeStatus=='pending'" class='navbar-text navbar-rvd-centered'>
-				Retrieving project status...
+				{{'upgradePendingStatusLabel' | translate}}
 			</div>
 			<div ng-show="upgradeStatus=='needsUpgrade'" class='navbar-text navbar-rvd-centered'>
-				Project <em>{{projectName}}</em> was created using a different version of RVD. <a class="rvd-clickable-text" ng-click="onUpgradePressed(projectName)">Upgrade</a> or <a href="#">view available projects</a>
+				{{'upgradeNeedsUpgradeLabel1' | translate}} <em>{{projectName}}</em> {{'upgradeNeedsUpgradeLabel2' | translate}} <a class="rvd-clickable-text" ng-click="onUpgradePressed(projectName)">{{'upgradeNeedsUpgradeLabel3' | translate}}</a> {{'upgradeNeedsUpgradeLabel4' | translate}} <a href="#">{{'upgradeNeedsUpgradeLabel5' | translate}}</a>
 			</div>
 			<div ng-show="upgradeStatus=='alreadyUpgraded'" class='navbar-text navbar-rvd-centered'>
-				Project  <em>{{projectName}}</em> is already upgraded. <a href="#/designer/{{projectName}}">Open</a> it or <a href="#">view available projects</a>
+				{{'upgradeAlreadyUpgradedLabel1' | translate}}  <em>{{projectName}}</em> {{'upgradeAlreadyUpgradedLabel2' | translate}} <a href="#/designer/{{projectName}}">{{'upgradeAlreadyUpgradedLabel3' | translate}}</a> {{'upgradeAlreadyUpgradedLabel4' | translate}} <a href="#">{{'upgradeAlreadyUpgradedLabel5' | translate}}</a>
 			</div>
 			<div ng-show="upgradeStatus=='upgradeError'" class='navbar-text navbar-rvd-centered'>
-				Error upgrading <em>{{projectName}}</em>. <a href="#">View available projects</a>
+				{{'upgradeUpgradeErrorLabel1' | translate}} <em>{{projectName}}</em>{{'upgradeUpgradeErrorLabel2' | translate}} <a href="#">{{'upgradeUpgradeErrorLabel3' | translate}}</a>
 			</div>	
 		</div>
 	</nav>

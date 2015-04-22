@@ -9,13 +9,35 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="form-group">
-			<div class='drop-area' ng-file-drop="onFileSelect($files)"
-				ng-file-drag-over-class="dropping" ng-show="dropSupported">
-				<div class="drop-prompt">Drop packaged apps here</div>
+		<div class="col-md-3">
+			<form ng-submit="searchTextClicked(filterText)">
+				<div class="input-group">
+					<input ng-model="filterText" type="text" class="form-control" placeholder="My app">
+					<span class="input-group-btn">
+						<button type="submit" class="filter btn btn-default" title="Search listed applications"><i class="fa fa-search"></i></button>
+					</span>
+				</div>
+			</form>
+		</div>
+		<div class="col-md-3">
+			<div class="btn-group center-block" style="width:160px;" role="group">
+			  <button ng-click="setFilter('all',filterText)" type="button" ng-class="{'active': filter=='all'}" class="filter btn btn-default" title="Display all applications, either locally installed or available from RAS">All</button>
+			  <button ng-click="setFilter('local',filterText)" type="button" ng-class="{'active': filter=='local'}" class="filter btn btn-default" title="Display local applications">Local</button>
+			  <!--<button ng-click="setFilter('imported',filterText)" type="button" ng-class="{'active': filter=='imported'}" class="filter btn btn-default" title="Display applications imported as packages from RAS or other means">Imported</button>
+			  <button ng-click="setFilter('packaged',filterText)" type="button" ng-class="{'active': filter=='packaged'}" class="filter btn btn-default" title="Display packaged applications to be exported">Packaged</button>-->
+			  <button ng-click="setFilter('ras',filterText)" type="button" ng-class="{'active': filter=='ras'}" class="filter btn btn-default" title="Display applications available from RAS">RAS</button>
+			  &nbsp;
 			</div>
-			<div ng-file-drop-available="dropSupported=true"
-				ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+		</div>
+		<div class="col-md-6">
+			<div class="form-group">
+				<div class='drop-area' ng-file-drop="importPackage($files)"
+					ng-file-drag-over-class="dropping" ng-show="dropSupported">
+					<div class="drop-prompt">Drop packaged apps here</div>
+				</div>
+				<div ng-file-drop-available="dropSupported=true"
+					ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+			</div>
 		</div>
 	</div>
 	
@@ -23,64 +45,72 @@
 		<table class="table">
 			<thead>
 				<tr class="text-muted">
-					<th class="text-center">Title</th>
-					<th>Status</th>
-					<th>Categories</th>
-					<th>Description</th>
+					<th class="title-col text-center clickable" ng-click="sortPredicate = switchOrder('title',sortPredicate)"><span class="hover-underline">Title</span> &nbsp;<i ng-show="sortPredicate=='title'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-title'" class="fa fa-sort-desc"></i></th>
+					<th class="type-col text-center clickable" ng-click="sortPredicate = switchOrder('type',sortPredicate)"><span class="hover-underline">Type</span> &nbsp;<i ng-show="sortPredicate=='type'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-type'" class="fa fa-sort-desc"></i></th>
+					<th class="status-col text-center clickable" ng-click="sortPredicate = switchOrder('status',sortPredicate)"><span class="hover-underline">Status</span>  &nbsp;<i ng-show="sortPredicate=='status'" class="fa fa-sort-asc"></i><i ng-show="sortPredicate=='-status'" class="fa fa-sort-desc"></i></th>
+					<th class="categories-col">Categories</th>
+					<th class="description-col">Description</th>
 					<th></th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="app in apps" class="rapp-item">
+				<tr ng-repeat="app in filteredApps | orderBy:sortPredicate" class="rapp-item">
 					<!-- Title -->
-					<td ng-show="selectedListItemView(app) == 'online'" class="rapp-title">
+					<td class="title-col" ng-show="app.isOnline" class="rapp-title">
 						<div class="rapp-title-cell">
-							<a href="{{app.online.info.link}}" target="_blank"><img class="img-thumbnail thumbnail" src="{{app.online.info.thumbnail}}"></a>
-							<a href="{{app.online.info.link}}" target="_blank"><h4 class="text-center">{{app.online.info.title}}</h4></a>
-							<div class="text-center text-muted" title="application unique id">{{app.online.info.appId}}</div>
+							<a href="{{app.link}}" target="_blank"><img class="img-thumbnail thumbnail" src="{{app.thumbnail}}"></a>
+							<div class="text-center app-title-wrap app-ras">
+								<a ng-show="app.isLocal" href="/restcomm-rvd/#/designer/{{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
+								<span ng-show="!app.isLocal">{{app.title}}</span>
+							</div>
+							<!--<div class="text-center text-muted" title="application unique id">{{app.appId}}</div>-->
 						</div>
 					</td>
-					<td ng-show="selectedListItemView(app) == 'local'">
-						<div class="text-center">{{app.local.rappInfo.name}}</div>
-						<div class="text-center text-muted">{{app.local.rappInfo.id}}</div>
-					</td>			
+					<td class="title-col" ng-show="!app.isOnline" class="status-col">
+						<div class="text-center app-title-wrap">
+							<a href="/restcomm-rvd/#/designer/{{app.projectName}}" target="_blank" title="{{app.appId}}">{{app.title}}</a>
+						</div>
+						<!--<div class="text-center text-muted">{{app.appId}}</div>-->
+					</td>	
+					
+					<td class="status-col text-center text-muted">
+						{{getTypeForApp(app)}}
+					</td>
+							
 					
 					<!-- Status -->
-					<td class="status-col">
+					<td class="app-status status-col text-center text-muted">
 						<div>
-						{{buildStatusMessage(app)}}
+						{{getStatusForApp(app)}}
 						</div>
 					</td>
 					
 					<!-- Categories -->
-					<td>
-						<span ng-show="selectedListItemView(app) == 'online'" ng-repeat="(catid, category) in product.info.category" class="label label-default category-tag">{{category.name}}</span>
+					<td class="categories-col">
+						<span ng-show="app.isOnline" ng-repeat="(catid, category) in app.category" class="label label-default category-tag">{{category.name}}</span>
 					</td>
 					
 					<!-- Summary -->
-					<td ng-show="selectedListItemView(app) == 'online'">
+					<td class="description-col" ng-show="app.isOnline">
 						<div class="rapp-summary-cell">
-							{{app.online.info.excerpt}}
+							{{app.description}}
 						</div>
 					</td>
-					<td ng-show="selectedListItemView(app) == 'local'">{{app.local.rappInfo.description}}</td>
+					<td class="description-col" ng-show="!app.isOnline">{{app.description}}</td>
 					
 					<!-- Actions -->
 					<td class="action-col">
-						<a ng-show="!app.local" href="{{app.online.info.link}}" target="_blank" type="button" class="btn btn-primary">Get application</a>
-						<a ng-show="app.local && app.online" href="{{app.online.info.link}}" target="_blank">View in AppStore</a>
-						<div ng-show="app.local && app.local.status.indexOf('Installed')!==-1">
-							<a href="#/ras/config/{{app.local.projectName}}" ng-class="{'ras-bold': app.local.status.indexOf('Unconfigured') !== -1}">Configure</a>
+						<a ng-show="app.isOnline && !app.isLocal" href="{{app.link}}" target="_blank" type="button" class="btn btn-primary">Get application</a>
+						<a ng-show="app.isOnline && app.isLocal" href="{{app.link}}" target="_blank">View in AppStore</a>
+						<div ng-show="app.hasPackaging || app.wasImported">
+							<a href="#/ras/config/{{app.projectName}}{{(app.hasPackaging ? '/dev':'')}}" ng-class="{'ras-bold': (!app.hasBootstrap)}">Configure</a>
 						</div>
-						<div ng-show="app.local && app.local.status.indexOf('Installed')!==-1">
-							<a href="/restcomm-rvd/#/designer/{{app.local.projectName}}" target="_blank">Design</a>
-						</div>						
 					</td>
 				</tr>
 			</tbody>
 			<tfoot>
 				<tr>
-					<th colspan="5">Displaying {{apps.length}} applications</th>
+					<th colspan="5">Displaying {{filteredApps.length}} applications</th>
 				</tr>
 			</tfoot>
 		</table>

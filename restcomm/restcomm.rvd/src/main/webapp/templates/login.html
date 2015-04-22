@@ -1,24 +1,24 @@
 <div class="row">
-    <h3 class="text-center">Visual Designer</h3>
+    <h3 class="text-center">{{'loginHeadTitle' | translate}}</h3>
 </div>
 
 <div class="row">
     <div class="col-md-8 col-md-offset-2 well well-large">
-        <legend>Login</legend>
+        <legend>{{'loginLoginLabel' | translate}}</legend>
         <form name="loginForm" class="form-horizontal">
             <div class="form-group">
-                <label class="col-md-4 control-label" for="inputAccSID">Email <span class="text-muted">/</span> Account SID</label>
+                <label class="col-md-4 control-label" for="inputAccSID">{{'loginEmailLabel' | translate}} <span class="text-muted">/</span> {{'loginAccountLabel' | translate}}</label>
                 <div class="controls">
                     <div class="input-group col-md-6">
-                        <span class="input-group-addon"><i class="fa fa-user"></i> </span><input id="inputAccSID" type="text" class="form-control" placeholder="Email or Account SID" ng-model="username" required autofocus />
+                        <span class="input-group-addon"><i class="fa fa-user"></i> </span><input id="inputAccSID" type="text" class="form-control" placeholder="{{'loginLoginPlaceholder' | translate}}" ng-model="username" required autofocus />
                     </div>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-md-4 control-label" for="inputAuthToken">Password</label>
+                <label class="col-md-4 control-label" for="inputAuthToken">{{'loginPasswordLabel' | translate}}</label>
                 <div class="controls">
                     <div class="input-group col-md-6">
-                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="inputAuthToken" type="password" class="form-control" placeholder="Password" ng-model="password" required />
+                        <span class="input-group-addon"><i class="fa fa-lock"></i> </span><input id="inputAuthToken" type="password" class="form-control" placeholder="{{'loginPasswordPlaceholder' | translate}}" ng-model="password" required />
                     </div>
                 </div>
             </div>
@@ -34,8 +34,8 @@
 
             <div>
                 <div class="controls pull-right">
-                    <button class="btn btn-default" type="reset">Clear</button>
-                    <button class="btn btn-primary" ng-click="doLogin(username, password)">Login</button>
+                    <button class="btn btn-default" type="reset">{{'loginClearButton' | translate}}</button>
+                    <button class="btn btn-primary" ng-click="doLogin(username, password)">{{'loginLoginButton' | translate}}</button>
                 </div>
             </div>
             <!-- 

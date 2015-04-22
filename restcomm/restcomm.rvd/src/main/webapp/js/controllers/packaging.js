@@ -106,25 +106,29 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 	//var types = ['value'];
 	
 	function ConfigOption(type) {
-		// {name:'', label:'', type:'value', description:'', defaultValue:'', required: true }
+		// {name:'', label:'', type:'value', description:'', defaultValue:'', required: true, isInitOption = false }
 		//this.type = type;
 		if ( type == 'instanceToken') {
 			this.name = 'instanceToken';
 			this.label = 'Instance token';
 			this.description = 'An instance token your application needs to access the multitenant backend';
 			this.required = true;
-		} else
-		if ( type == 'backendRootURL') {
-			this.name = 'backendRootURL';
-			this.label = 'Backend root URL';
-			this.description = 'Root URL of application backend. Storage, UI are hosted under this URL. Do not change this unless the application Vendor asks you to.';
-			this.required = true;
-		}		
+			this.isInitOption = true;
+		} /* else {
+			this.isInitOption = false;
+			if ( type == 'backendRootURL') {
+				this.name = 'backendRootURL';
+				this.label = 'Backend root URL';
+				this.description = 'Root URL of application backend. Storage, UI are hosted under this URL. Do not change this unless the application Vendor asks you to.';
+				this.required = true;
+			}
+		}*/
 	};
 	ConfigOption.prototype = new rvdModel();
 	ConfigOption.prototype.constructor = ConfigOption;
 	ConfigOption.getTypeByLabel = function(type) { return typesByLabel[type];	}
 	ConfigOption.getTypeLabels = function() {	return labels;	}
+
 	return ConfigOption;
 }])
 .factory('RappConfig', ['rvdModel', 'ConfigOption', function (rvdModel, ConfigOption) {
@@ -144,6 +148,14 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 		for (var i=0; i<this.options.length; i++) 
 			if (this.options[i].name == name) return true;
 		return false;
+	}
+	RappConfig.prototype.init = function (from) {
+		angular.extend(this, from);
+		for (var i=0; i<from.options.length; i++) {
+			var option = new ConfigOption().init(from.options[i]);
+			this.options[i] = option;
+		}
+		return this;
 	}
 	return RappConfig;
 }])

@@ -3,7 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.model;
 import java.lang.reflect.Type;
 
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
-import org.mobicents.servlet.restcomm.rvd.packaging.model.RappInfo;
+import org.mobicents.servlet.restcomm.rvd.model.packaging.RappInfo;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
