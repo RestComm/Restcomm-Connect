@@ -159,11 +159,16 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
      */
     @Test
     public void testSearchUSPhoneNumbersRangeIndexAndSize() {
-//        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?index=2&size=5"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/json")
-//                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
+        stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.VoiceURIJSonResponse)));
+        stubFor(get(urlEqualTo("/test/inventory/didgroup?countryCodeA3=USA&pageNumber=2&pageSize=5"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
