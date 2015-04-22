@@ -22,7 +22,9 @@ package org.mobicents.servlet.restcomm.provisioning.number.voxbone;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
@@ -85,6 +87,16 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
      */
     @Test
     public void testGetAvailableCountries() {
+        stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.VoiceURIJSonResponse)));
+        stubFor(get(urlEqualTo("/test/inventory/country?pageNumber=0&pageSize=300"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.listCountries)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -103,7 +115,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         System.out.println(jsonResponse.toString());
         System.out.println(jsonResponse.size());
         
-        assertTrue(jsonResponse.size() == 58);
+        assertTrue(jsonResponse.size() == 57);
     }
     
     /*
@@ -212,11 +224,25 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
      */
     @Test
     public void testPurchasePhoneNumberNoPhoneNumberFound() {
-        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902868"))
+        stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.VoiceURIJSonResponse)));
+        stubFor(put(urlEqualTo("/test/ordering/cart"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.orderingCartSuccessResponse)));
+        stubFor(post(urlEqualTo("/test/ordering/cart/30007/product"))
+                .willReturn(aResponse()
+                    .withStatus(400)
+                    .withHeader("Content-Type", "application/json")));
+//        stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902868"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "application/json")
+//                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
