@@ -25,11 +25,7 @@ angular.module('Rvd')
 }])
 .factory('rvdModel', function () {
 	function RvdModel() {
-		//this.test = function () {
-		//	console.log('testing from RvdModel: ' + this.kind);
-		//}
 		this.pack = function () {
-			//console.log("rvdModel:pack()");
 			var clone = angular.copy(this);
 			return clone;
 		}
@@ -405,6 +401,9 @@ angular.module('Rvd')
 		this.title = 'external service';
 		this.url = '';
 		this.method = undefined;
+		this.contentType = undefined; 
+		this.requestBody = undefined;
+		this.populatePostBodyFromParams = undefined;
 		this.username = undefined;
 		this.password = undefined;
 		this.urlParams = [];

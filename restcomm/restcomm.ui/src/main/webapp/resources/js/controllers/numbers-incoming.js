@@ -55,7 +55,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
 
   // are we editing details...
   //if($scope.phoneSid === $routeParams.phoneSid) {
@@ -64,6 +64,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     $scope.phoneSid = $routeParams.phoneSid
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
+    
   //} // or registering a new one ?
   //else {
   //  // start optional items collapsed
@@ -76,6 +77,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
 
   // query for available apps
   $scope.availableApps = RCommApps.query();
+  $scope.localApps = localApps;
 
   //$scope.countries = countries;
   $scope.countries = allCountries;
@@ -102,6 +104,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     RCommNumbers.update({accountSid: $scope.sid, phoneSid: $scope.phoneSid}, $.param(params),
       function() { // success
         Notifications.success('Number "' + number.phone_number + '" updated successfully!');
+        $rootScope.$broadcast("incoming-number-updated", {phoneSid:$scope.phoneSid, params: params});
         $location.path( "/numbers/incoming/" );
       },
       function() { // error

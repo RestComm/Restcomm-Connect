@@ -153,6 +153,9 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         }
         final Gateway gateway = createFrom(data);
         dao.addGateway(gateway);
+        if (proxyManager == null) {
+            proxyManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.proxy.ProxyManager");
+        }
         proxyManager.tell(new RegisterGateway(gateway), null);
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(gateway);

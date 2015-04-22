@@ -58,7 +58,8 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
 
     @Override
     public void destroy() {
-        system.stop(manager);
+        if (system != null)
+            system.stop(manager);
     }
 
     @Override
