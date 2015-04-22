@@ -250,7 +250,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 
         String createCartResponse = clientResponse.getEntity(String.class);
         if(logger.isDebugEnabled())
-            logger.debug("response " + createCartResponse);
+            logger.debug("createCartResponse " + createCartResponse);
 
         JsonParser parser = new JsonParser();
         JsonObject jsonCreateCartResponse = parser.parse(createCartResponse).getAsJsonObject();
@@ -268,7 +268,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
             if (addToCartResponse.getClientResponseStatus() == Status.OK) {
                 String addToCartResponseString = addToCartResponse.getEntity(String.class);
                 if(logger.isDebugEnabled())
-                    logger.debug("response " + addToCartResponseString);
+                    logger.debug("addToCartResponse " + addToCartResponseString);
 
                 JsonObject jsonAddToCartResponse = parser.parse(addToCartResponseString).getAsJsonObject();
 
@@ -282,35 +282,40 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
                     if (checkoutCartResponse.getClientResponseStatus() == Status.OK) {
                         String checkoutCartResponseString = checkoutCartResponse.getEntity(String.class);
                         if(logger.isDebugEnabled())
-                            logger.debug("response " + checkoutCartResponseString);
+                            logger.debug("checkoutCartResponse " + checkoutCartResponseString);
 
                         JsonObject jsonCheckoutCartResponse = parser.parse(checkoutCartResponseString).getAsJsonObject();
-                        String orderReference = jsonCheckoutCartResponse.get("productCheckoutList").getAsJsonArray().get(0).getAsJsonObject().get("orderReference").getAsString();
-                        Client listDidsJerseyClient = Client.create();
-                        listDidsJerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+                        if(jsonCheckoutCartResponse.get("status").getAsString().equalsIgnoreCase("SUCCESS")) {
+                            String orderReference = jsonCheckoutCartResponse.get("productCheckoutList").getAsJsonArray().get(0).getAsJsonObject().get("orderReference").getAsString();
+                            Client listDidsJerseyClient = Client.create();
+                            listDidsJerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
 
-                        WebResource listDidsWebResource = listDidsJerseyClient.resource(listDidsURI);
-                        ClientResponse listDidsResponse = listDidsWebResource.
-                                queryParam("orderReference", orderReference).
-                                queryParam(PAGE_NUMBER, "0").
-                                queryParam(PAGE_SIZE, "50").
-                                accept(CONTENT_TYPE).
-                                type(CONTENT_TYPE).
-                                get(ClientResponse.class);
+                            WebResource listDidsWebResource = listDidsJerseyClient.resource(listDidsURI);
+                            ClientResponse listDidsResponse = listDidsWebResource.
+                                    queryParam("orderReference", orderReference).
+                                    queryParam(PAGE_NUMBER, "0").
+                                    queryParam(PAGE_SIZE, "50").
+                                    accept(CONTENT_TYPE).
+                                    type(CONTENT_TYPE).
+                                    get(ClientResponse.class);
 
-                        if (listDidsResponse.getClientResponseStatus() == Status.OK) {
-                            String listDidsResponseString = listDidsResponse.getEntity(String.class);
-                            if(logger.isDebugEnabled())
-                                logger.debug("response " + listDidsResponseString);
+                            if (listDidsResponse.getClientResponseStatus() == Status.OK) {
+                                String listDidsResponseString = listDidsResponse.getEntity(String.class);
+                                if(logger.isDebugEnabled())
+                                    logger.debug("listDidsResponse " + listDidsResponseString);
 
-                            JsonObject jsonListDidsResponse = parser.parse(listDidsResponseString).getAsJsonObject();
-                            JsonObject dids = jsonListDidsResponse.get("dids").getAsJsonArray().get(0).getAsJsonObject();
-                            String didId = dids.get("didId").getAsString();
-                            String e164 = dids.get("e164").getAsString();
-                            phoneNumberObject.setFriendlyName(didId);
-                            phoneNumberObject.setPhoneNumber(e164);
-                            updateNumber(phoneNumberObject, phoneNumberParameters);
+                                JsonObject jsonListDidsResponse = parser.parse(listDidsResponseString).getAsJsonObject();
+                                JsonObject dids = jsonListDidsResponse.get("dids").getAsJsonArray().get(0).getAsJsonObject();
+                                String didId = dids.get("didId").getAsString();
+                                String e164 = dids.get("e164").getAsString();
+                                phoneNumberObject.setFriendlyName(didId);
+                                phoneNumberObject.setPhoneNumber(e164);
+                                updateNumber(phoneNumberObject, phoneNumberParameters);
+                            } else {
+                                return false;
+                            }
                         } else {
+                            // Handle not enough credit on the account
                             return false;
                         }
                     } else {
