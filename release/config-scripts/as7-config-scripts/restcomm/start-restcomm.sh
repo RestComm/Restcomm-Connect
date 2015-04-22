@@ -100,11 +100,12 @@ LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
 source $BASEDIR/restcomm.conf
+source $BASEDIR/proxy.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
 #NET_INTERFACE=''
-STATIC_ADDRESS=''
+#STATIC_ADDRESS=''
 BIND_ADDRESS=''
 
 while getopts "s:r:i:" optname
@@ -156,6 +157,10 @@ BIND_ADDRESS="$PRIVATE_IP"
 
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	STATIC_ADDRESS=$BIND_ADDRESS
+fi
+
+if [[ -z "$PUBLIC_IP" ]]; then
+	PUBLIC_IP=$STATIC_ADDRESS
 fi
 
 # configure restcomm installation

@@ -25,10 +25,9 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
+
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
-import jain.protocol.ip.mgcp.message.AuditConnection;
-import jain.protocol.ip.mgcp.message.AuditConnectionResponse;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
 import jain.protocol.ip.mgcp.message.DeleteConnection;
 import jain.protocol.ip.mgcp.message.DeleteConnectionResponse;
@@ -322,18 +321,6 @@ public final class MockMediaGateway extends UntypedActor {
         sender.tell(response, self);
     }
 
-    private void auditConnection(final Object message, final ActorRef sender) {
-        final ActorRef self = self();
-        final AuditConnection aucx = (AuditConnection) message;
-        System.out.println(aucx.toString());
-        final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
-        final AuditConnectionResponse response = new AuditConnectionResponse(self, code);
-        final int transaction = aucx.getTransactionHandle();
-        response.setTransactionHandle(transaction);
-        System.out.println(response.toString());
-        sender.tell(response, self);
-    }
-
     private void deleteConnection(final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final DeleteConnection dlcx = (DeleteConnection) message;
@@ -379,8 +366,6 @@ public final class MockMediaGateway extends UntypedActor {
             deleteConnection(message, sender);
         } else if (NotificationRequest.class.equals(klass)) {
             notificationResponse(message, sender);
-        } else if (AuditConnection.class.equals(klass)) {
-            auditConnection(message, sender);
         }
     }
 

@@ -12,7 +12,8 @@ var rcMod = angular.module('rcApp', [
 //  'loadingOnAJAX',
   'ui.bootstrap.modal.dialog',
   'angularFileUpload',
-  'ngPasswordStrength'
+  'ngPasswordStrength',
+  'nvd3'
 ]);
 
 rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
