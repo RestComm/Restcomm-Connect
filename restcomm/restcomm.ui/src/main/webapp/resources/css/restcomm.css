@@ -153,6 +153,10 @@ ul#rightMenu > li i {
     margin-right: 5px;
 }
 
+.dashboard-container.dashboard-chart {
+    height: 350px;
+}
+
 .dashboard-container > h1 {
     margin: 45px;
 }

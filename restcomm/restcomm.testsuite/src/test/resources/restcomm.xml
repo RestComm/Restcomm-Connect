@@ -23,10 +23,12 @@
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
+		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings
+		</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors</error-dictionary-uri>
+		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors
+		</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -36,12 +38,14 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- If set to true Restcomm will use the Local Address (or external address if available) 
-		     in the host part of the From header for calls to the outbound proxy. 
-		     Default is False, which means that Restcomm will use outbound proxy for the host part of From header -->
+		<!-- If set to true Restcomm will use the Local Address (or external address 
+			if available) in the host part of the From header for calls to the outbound 
+			proxy. Default is False, which means that Restcomm will use outbound proxy 
+			for the host part of From header -->
 		<use-local-address>false</use-local-address>
 
-		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
+		<!-- If set to true Restcomm will authenticate users and incoming messages 
+			from those users -->
 		<authenticate>true</authenticate>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
@@ -65,6 +69,13 @@
 			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
 			<fallback-outbound-proxy-uri>127.0.0.1:5090
 			</fallback-outbound-proxy-uri>
+
+			<!-- When set to true, Restcomm will use the username of the outbound proxy when -->
+			<!-- creating the From header, as the userpart of the sip uri. Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
+			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
+			<!-- When set to true, Restcomm will use the original user for the display name of the From header -->
+			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
+			<user-at-displayed-name>true</user-at-displayed-name>
 
 			<!-- Allow fallback to backup proxy -->
 			<allow-fallback>true</allow-fallback>
@@ -116,19 +127,20 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
-	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+	<phone-number-provisioning
+		class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<callback-urls>
-			<voice url="localhost:5080" method="SIP"/>
-			<sms url="localhost:5080" method="SIP"/>
-			<fax url="localhost:5080" method="SIP"/>
-			<ussd url="localhost:5080" method="SIP"/>
+			<voice url="localhost:5080" method="SIP" />
+			<sms url="localhost:5080" method="SIP" />
+			<fax url="localhost:5080" method="SIP" />
+			<ussd url="localhost:5080" method="SIP" />
 		</callback-urls>
 		<voip-innovations>
 			<login></login>
 			<password></password>
 			<endpoint></endpoint>
 			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
-		</voip-innovations>	
+		</voip-innovations>
 	</phone-number-provisioning>
 
 	<smtp>
@@ -144,6 +156,17 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
+
+	<amazon-s3>
+		<enabled>false</enabled>
+		<bucket-name>restcomm-recordings</bucket-name>
+		<folder></folder>
+		<access-key></access-key>
+		<security-key></security-key>
+		<reduced-redundancy>false</reduced-redundancy>
+		<days-to-retain-public-url>180</days-to-retain-public-url>
+		<remove-original-file>true</remove-original-file>
+	</amazon-s3>
 
 	<!-- The media server manager is responsible for managing the media servers 
 		in use by RestComm. The default way to control media servers is using the 

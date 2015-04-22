@@ -97,6 +97,7 @@ import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.telephony.Play;
 import org.mobicents.servlet.restcomm.telephony.Record;
+import org.mobicents.servlet.restcomm.telephony.RecordingStarted;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
@@ -232,6 +233,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Tag verb;
     Tag gatherVerb;
     Boolean processingGather = false;
+    Boolean dtmfReceived = false;
+    String finishOnKey;
+    int numberOfDigits = Short.MAX_VALUE;
+    StringBuffer collectedDigits;
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
@@ -1305,6 +1310,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         verb = gatherVerb;
                     final StartGathering start = StartGathering.instance();
                     source.tell(start, source);
+                    processingGather = false;
                 }
             }
         }
@@ -1319,9 +1325,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Parse finish on key.
-            String finishOnKey = finishOnKey(verb);
+            finishOnKey = finishOnKey(verb);
             // Parse the number of digits.
-            int numberOfDigits = Short.MAX_VALUE;
             Attribute attribute = verb.attribute("numDigits");
             if (attribute != null) {
                 final String value = attribute.value();
@@ -1356,10 +1361,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             // Some clean up.
             gatherChildren = null;
             gatherPrompts = null;
+            dtmfReceived = false;
+            collectedDigits = new StringBuffer("");
         }
     }
 
     final class FinishGathering extends AbstractGatherAction {
+//        StringBuffer collectedDigits = new StringBuffer("");
         public FinishGathering(final ActorRef source) {
             super(source);
         }
@@ -1368,11 +1376,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
-            final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
-            // Parses "action".
             Attribute attribute = verb.attribute("action");
-            String digits = response.get();
-            final String finishOnKey = finishOnKey(verb);
+            String digits = collectedDigits.toString();
+            collectedDigits = new StringBuffer();
+            logger.info("Digits collected: "+digits);
             if (digits.equals(finishOnKey)) {
                 digits = "";
             }
@@ -1536,6 +1543,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 record = new Record(recordingUri, timeout, maxLength, finishOnKey);
             }
             callMediaGroup.tell(record, source);
+            call.tell(new RecordingStarted(), source);
         }
     }
 
@@ -1569,6 +1577,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if(duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
+            } else {
+                logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }
             final Recording.Builder builder = Recording.builder();
             builder.setSid(recordingSid);
@@ -1676,16 +1686,23 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             method = "POST";
                         }
                     }
-                    // Redirect to the action url.
-                    String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
-                    if (!httpRecordingUri.endsWith("/")) {
-                        httpRecordingUri += "/";
-                    }
-                    httpRecordingUri += recordingSid.toString() + ".wav";
-                    URI publicRecordingUri = URI.create(httpRecordingUri);
                     final List<NameValuePair> parameters = parameters();
-                    parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
-                    parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
+                    boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
+                    if (amazonS3Enabled) {
+                        //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toURL().toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getUri().toURL().toString()));
+                    } else {
+                        // Redirect to the action url.
+                        String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
+                        if (!httpRecordingUri.endsWith("/")) {
+                            httpRecordingUri += "/";
+                        }
+                        httpRecordingUri += recordingSid.toString() + ".wav";
+                        URI publicRecordingUri = URI.create(httpRecordingUri);
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
+                    }
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
