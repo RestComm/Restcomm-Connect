@@ -122,12 +122,16 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
      */
     @Test
     public void testSearchESPhoneNumbers700Pattern() {
-        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/ES\\?pattern=.*700.*"))
+        stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
                 .willReturn(aResponse()
                     .withStatus(200)
-                    .withHeader("Content-Type", "text/json")
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.VoiceURIJSonResponse)));
+        stubFor(get(urlEqualTo("/test/inventory/didgroup?countryCodeA3=ESP&pageNumber=0&pageSize=50"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
                     .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResponseES700)));
-        // Get Account using admin email address and user email address
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
@@ -145,7 +149,7 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
         
         System.out.println(jsonResponse);
         
-        assertTrue(jsonResponse.size() == 1);
+        assertTrue(jsonResponse.size() == 48);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResultES700));
     }
@@ -155,11 +159,11 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
      */
     @Test
     public void testSearchUSPhoneNumbersRangeIndexAndSize() {
-        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?index=2&size=5"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "text/json")
-                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
+//        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?index=2&size=5"))
+//                .willReturn(aResponse()
+//                    .withStatus(200)
+//                    .withHeader("Content-Type", "text/json")
+//                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));

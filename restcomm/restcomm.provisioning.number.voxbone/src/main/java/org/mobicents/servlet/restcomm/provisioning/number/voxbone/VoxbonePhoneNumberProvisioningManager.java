@@ -195,7 +195,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         webResource = webResource.queryParam(COUNTRY_CODE_PARAM,iso3Country);
 //        Pattern filterPattern = listFilters.getFilterPattern();
 //        if(filterPattern != null) {
-//            queryUri = queryUri + "?pattern=" + filterPattern.toString();
+//            webResource = webResource.queryParam("cityNamePattern" , filterPattern.toString());
 //        }
         if(listFilters.getAreaCode() != null) {
             webResource = webResource.queryParam("areaCode", listFilters.getAreaCode());
@@ -203,15 +203,12 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         if(listFilters.getInRateCenter() != null) {
             webResource = webResource.queryParam("rateCenter", listFilters.getInRateCenter());
         }
-//        if(listFilters.getSmsEnabled() != null || listFilters.getVoiceEnabled() != null) {
-//            if(listFilters.getSmsEnabled() != null && listFilters.getVoiceEnabled() != null) {
-//                queryUri = queryUri + "features=" + listFilters.getSmsEnabled() + "," + listFilters.getVoiceEnabled();
-//            } else if(listFilters.getSmsEnabled() != null) {
-//                queryUri = queryUri + "features=" + listFilters.getSmsEnabled();
-//            } else {
-//                queryUri = queryUri + "features=" + listFilters.getVoiceEnabled();
-//            }
-//        }
+        if(listFilters.getSmsEnabled() != null) {
+            webResource = webResource.queryParam("featureIds", "6");
+        }
+        if(listFilters.getFaxEnabled() != null) {
+            webResource = webResource.queryParam("featureIds", "25");
+        }
         if(listFilters.getRangeIndex() != -1) {
             webResource = webResource.queryParam(PAGE_NUMBER, "" + listFilters.getRangeIndex());
         } else {

@@ -128,8 +128,9 @@
 		<voxbone>
 			<password></password>
 			<username>telestax</username>
-			<uri>http://127.0.0.1:8090/test</uri>
+			<!--uri>http://127.0.0.1:8090/test</uri-->
 			<!--uri>https://sandbox.voxbone.com/ws-voxbone/services/rest</uri-->
+			<uri>http://127.0.0.1:8090/test</uri>
 		</voxbone>	
 	</phone-number-provisioning>
 
