@@ -35,7 +35,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	function getAppByUrl(apps, appUrl) {
 		for (var i=0; i < apps.length; i++) {
 			var app = apps[i];
-			var matches = RegExp(encodeURIComponent(app.projectName) + "/controller") .exec(appUrl);
+			var pattern = app.projectName + "/controller";
+			var decodedUrl = decodeURIComponent(appUrl);
+			var matches = RegExp(pattern) .exec(decodedUrl);
 			if (matches != null) {
 				return app;
 			}
