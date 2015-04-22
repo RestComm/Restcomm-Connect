@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.List;
@@ -24,6 +25,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.commons.codec.EncoderException;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -340,14 +342,16 @@ public class ProjectRestService extends RestService {
     @GET
     @RvdAuth
     @Path("{name}/archive")
-    public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
+    public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist, UnsupportedEncodingException, EncoderException {
         logger.debug("downloading raw archive for project " + projectName);
         assertProjectAvailable(projectName);
 
         InputStream archiveStream;
         try {
             archiveStream = projectService.archiveProject(projectName);
-            return Response.ok(archiveStream, "application/zip").header("Content-Disposition", "attachment; filename = " + projectName + ".zip").build();
+            String dispositionHeader = "attachment; filename*=UTF-8''" + RvdUtils.myUrlEncode(projectName + ".zip");
+            return Response.ok(archiveStream, "application/zip").header("Content-Disposition", dispositionHeader ).build();
+
         } catch (StorageException e) {
             logger.error(e,e);
             return null;

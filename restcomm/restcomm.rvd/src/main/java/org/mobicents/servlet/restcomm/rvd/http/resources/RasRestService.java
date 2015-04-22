@@ -51,6 +51,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 import com.google.gson.Gson;
@@ -196,7 +197,7 @@ public class RasRestService extends RestService {
             if (FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
                 //Validator validator = new RappConfigValidator();
                 InputStream zipStream = FsPackagingStorage.getRappBinary(projectName, workspaceStorage);
-                return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename = rapp.zip").build();
+                return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename*=UTF-8''" + RvdUtils.myUrlEncode(projectName + ".ras.zip")).build();
             } else {
                 return null;
                 //return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new PackagingDoesNotExist());
