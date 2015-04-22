@@ -19,30 +19,31 @@
  */
 package org.mobicents.servlet.restcomm.sms;
 
+import java.io.IOException;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+
+import org.apache.commons.configuration.Configuration;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
-import java.io.IOException;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-
-import org.apache.commons.configuration.Configuration;
-
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public final class SmsServiceProxy extends SipServlet {
+public final class SmsServiceProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
 
     private ActorSystem system;
@@ -62,18 +63,11 @@ public final class SmsServiceProxy extends SipServlet {
         service.tell(response, null);
     }
 
-    @Override
-    public void init(final ServletConfig config) throws ServletException {
-        final ServletContext context = config.getServletContext();
-        final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-//        configuration = configuration.subset("sms-aggregator");
-        configuration.setProperty(ServletConfig.class.getName(), config);
-        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
-        service = service(configuration, factory, storage);
-        context.setAttribute(SmsService.class.getName(), service);
-    }
+//    @Override
+//    public void init(final ServletConfig config) throws ServletException {
+//        Configuration configuration = (Configuration) config.getServletContext().getAttribute(Configuration.class.getName());
+//        configuration.setProperty(ServletConfig.class.getName(), config);
+//    }
 
     private ActorRef service(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
@@ -84,5 +78,19 @@ public final class SmsServiceProxy extends SipServlet {
                 return new SmsService(system, configuration, factory, storage);
             }
         }));
+    }
+
+    @Override
+    public void servletInitialized(SipServletContextEvent event) {
+        if (event.getSipServlet().getClass().equals(SmsServiceProxy.class)) {
+            final ServletContext context = event.getServletContext();
+            final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+            Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+            //        configuration = configuration.subset("sms-aggregator");
+            final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+            system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            service = service(configuration, factory, storage);
+            context.setAttribute(SmsService.class.getName(), service);
+        }
     }
 }
