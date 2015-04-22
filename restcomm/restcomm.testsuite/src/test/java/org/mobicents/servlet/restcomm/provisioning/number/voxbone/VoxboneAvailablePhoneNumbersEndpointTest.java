@@ -24,6 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
@@ -42,7 +43,6 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.provisioning.number.vi.AvailablePhoneNumbersEndpointTestUtils;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
@@ -82,13 +82,16 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
      */
     @Test
     public void testSearchUSLocalPhoneNumbersWith501AreaCode() {
-//        stubFor(post(urlEqualTo("/test"))
-//                .withRequestBody(containing("getDIDs"))
-//                .withRequestBody(containing("501"))
-//                .willReturn(aResponse()
-//                    .withStatus(200)
-//                    .withHeader("Content-Type", "text/xml")
-//                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
+        stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.VoiceURIJSonResponse)));
+        stubFor(get(urlEqualTo("/test/inventory/didgroup?countryCodeA3=USA&areaCode=501&pageNumber=0&pageSize=50"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -97,7 +100,7 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
         WebResource webResource = jerseyClient.resource(provisioningURL);
 
         ClientResponse clientResponse = webResource.
-//                queryParam("areaCode","501").
+                queryParam("areaCode","501").
                 accept("application/json")
                 .get(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 200);
@@ -109,9 +112,9 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
         
         System.out.println(jsonResponse);
         
-        assertTrue(jsonResponse.size() == 33);
+        assertTrue(jsonResponse.size() == 15);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
-//        assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(VoxboneAvailablePhoneNumbersEndpointTestUtils.firstJSonResult501AreaCode));
+        assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(VoxboneAvailablePhoneNumbersEndpointTestUtils.firstJSonResult501AreaCode));
     }
     
     /*

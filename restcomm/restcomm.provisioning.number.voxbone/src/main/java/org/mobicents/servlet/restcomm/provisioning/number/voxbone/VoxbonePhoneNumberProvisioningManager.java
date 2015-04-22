@@ -112,6 +112,9 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         if (clientResponse.getClientResponseStatus() == Status.OK) {
             JsonObject voxVoiceURI = jsonVoiceURIResponse.get("voiceUri").getAsJsonObject();
             voiceUriId = voxVoiceURI.get("voiceUriId").getAsString();
+        } else if (clientResponse.getClientResponseStatus() == Status.UNAUTHORIZED) {
+            JsonObject error = jsonVoiceURIResponse.get("errors").getAsJsonArray().get(0).getAsJsonObject();
+            throw new IllegalArgumentException(error.get("apiErrorMessage").getAsString());
         } else {
             webResource = jerseyClient.resource(voiceURI);
             clientResponse = webResource.queryParam(PAGE_NUMBER,"0").queryParam(PAGE_SIZE,"300").accept(CONTENT_TYPE).type(CONTENT_TYPE).get(ClientResponse.class);
