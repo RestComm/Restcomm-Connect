@@ -107,8 +107,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         JsonParser parser = new JsonParser();
         JsonObject jsonVoiceURIResponse = parser.parse(voiceURIResponse).getAsJsonObject();
 
-        if(logger.isDebugEnabled())
-            logger.debug(jsonVoiceURIResponse.toString());
         if (clientResponse.getClientResponseStatus() == Status.OK) {
             JsonObject voxVoiceURI = jsonVoiceURIResponse.get("voiceUri").getAsJsonObject();
             voiceUriId = voxVoiceURI.get("voiceUriId").getAsString();
@@ -124,8 +122,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
                 logger.debug("response " + listVoiceURIResponse );
 
             JsonObject jsonListVoiceURIResponse = parser.parse(listVoiceURIResponse).getAsJsonObject();
-            if(logger.isDebugEnabled())
-                logger.debug(jsonListVoiceURIResponse.toString());
             // TODO go through the list of voiceURI id and check which one is matching
             JsonObject voxVoiceURI = jsonListVoiceURIResponse.get("voiceUris").getAsJsonArray().get(0).getAsJsonObject();
             voiceUriId = voxVoiceURI.get("voiceUriId").getAsString();
@@ -233,9 +229,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 //        if(logger.isDebugEnabled()) {
 //            logger.debug("Number of numbers found : "+count);
 //        }
-        if(logger.isDebugEnabled())
-            logger.debug(jsonResponse.toString());
-
         JsonArray voxboneNumbers = jsonResponse.getAsJsonArray("didGroups");
         final List<PhoneNumber> numbers = toAvailablePhoneNumbers(voxboneNumbers, listFilters);
         return numbers;
@@ -261,10 +254,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 
         JsonParser parser = new JsonParser();
         JsonObject jsonCreateCartResponse = parser.parse(createCartResponse).getAsJsonObject();
-
-        if(logger.isDebugEnabled())
-            logger.debug(jsonCreateCartResponse.toString());
-
         JsonObject voxCart = jsonCreateCartResponse.get("cart").getAsJsonObject();
         String cartIdentifier = voxCart.get("cartIdentifier").getAsString();
 
@@ -283,9 +272,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 
                 JsonObject jsonAddToCartResponse = parser.parse(addToCartResponseString).getAsJsonObject();
 
-                if(logger.isDebugEnabled())
-                    logger.debug(jsonAddToCartResponse.toString());
-
                 if(jsonAddToCartResponse.get("status").getAsString().equalsIgnoreCase("SUCCESS")) {
                     Client checkoutCartJerseyClient = Client.create();
                     checkoutCartJerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
@@ -299,10 +285,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
                             logger.debug("response " + checkoutCartResponseString);
 
                         JsonObject jsonCheckoutCartResponse = parser.parse(checkoutCartResponseString).getAsJsonObject();
-
-                        if(logger.isDebugEnabled())
-                            logger.debug(jsonCheckoutCartResponse.toString());
-
                         String orderReference = jsonCheckoutCartResponse.get("productCheckoutList").getAsJsonArray().get(0).getAsJsonObject().get("orderReference").getAsString();
                         Client listDidsJerseyClient = Client.create();
                         listDidsJerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
@@ -322,10 +304,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
                                 logger.debug("response " + listDidsResponseString);
 
                             JsonObject jsonListDidsResponse = parser.parse(listDidsResponseString).getAsJsonObject();
-
-                            if(logger.isDebugEnabled())
-                                logger.debug(jsonListDidsResponse.toString());
-
                             JsonObject dids = jsonListDidsResponse.get("dids").getAsJsonArray().get(0).getAsJsonObject();
                             String didId = dids.get("didId").getAsString();
                             String e164 = dids.get("e164").getAsString();
@@ -368,11 +346,9 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         if(logger.isDebugEnabled())
             logger.debug("response " + voiceURIResponse);
 
-        JsonParser parser = new JsonParser();
-        JsonObject jsonCreateCartResponse = parser.parse(voiceURIResponse).getAsJsonObject();
+//        JsonParser parser = new JsonParser();
+//        JsonObject jsonCreateCartResponse = parser.parse(voiceURIResponse).getAsJsonObject();
 
-        if(logger.isDebugEnabled())
-            logger.debug(jsonCreateCartResponse.toString());
         if (clientResponse.getClientResponseStatus() == Status.OK) {
             return true;
         } else {
@@ -395,11 +371,8 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         if(logger.isDebugEnabled())
             logger.debug("response " + response);
 
-        JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-
-        if(logger.isDebugEnabled())
-            logger.debug(jsonResponse.toString());
+//        JsonParser parser = new JsonParser();
+//        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
         if (clientResponse.getClientResponseStatus() == Status.OK) {
             return true;
@@ -425,10 +398,6 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-
-        if(logger.isDebugEnabled())
-            logger.debug(jsonResponse.toString());
-
         JsonArray voxCountries = jsonResponse.get("countries").getAsJsonArray();
         List<String> countries = new ArrayList<String>();
         for (int i = 0; i < voxCountries.size(); i++) {
