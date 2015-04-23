@@ -49,6 +49,8 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
     private ActorSystem system;
     private ActorRef service;
 
+    private ServletContext context;
+
     public SmsServiceProxy() {
         super();
     }
@@ -75,7 +77,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmsService(system, configuration, factory, storage);
+                return new SmsService(system, configuration, factory, storage, context);
             }
         }));
     }
@@ -83,7 +85,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(SmsServiceProxy.class)) {
-            final ServletContext context = event.getServletContext();
+            context = event.getServletContext();
             final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
             Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
             //        configuration = configuration.subset("sms-aggregator");
