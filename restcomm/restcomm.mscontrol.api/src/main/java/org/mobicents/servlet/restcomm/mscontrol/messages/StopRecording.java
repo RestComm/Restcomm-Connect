@@ -27,13 +27,13 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * Use this to notify a Call object that needs to Record
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class StopRecordingCall {
+public class StopRecording {
 
     private Sid accountId;
     private Configuration runtimeSetting;
     private DaoManager daoManager;
 
-    public StopRecordingCall(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager) {
+    public StopRecording(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager) {
         this.accountId = accountId;
         this.runtimeSetting = runtimeSettings;
         this.daoManager = daoManager;

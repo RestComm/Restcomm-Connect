@@ -30,7 +30,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-public class StartRecordingCall {
+public class StartRecording {
 
     public enum RecordingType {
         DO_NOT_RECORD("do-not-record"), RECORD_FROM_ANSWER("record-from-answer"), RECORD_FROM_RINGING("record-from-ringing");
@@ -64,9 +64,15 @@ public class StartRecordingCall {
     private Sid recordingSid;
     private URI recordingUri;
 
-    public StartRecordingCall(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager,
+    public StartRecording(final Sid accountId, final Configuration runtimeSettings, final DaoManager daoManager,
             final Sid recordingSid, final URI recordingUri) {
+        this(accountId, null, runtimeSettings, daoManager, recordingSid, recordingUri);
+    }
+
+    public StartRecording(final Sid accountId, final Sid callId, final Configuration runtimeSettings,
+            final DaoManager daoManager, final Sid recordingSid, final URI recordingUri) {
         this.accountId = accountId;
+        this.callId = callId;
         this.runtimeSetting = runtimeSettings;
         this.daoManager = daoManager;
         this.recordingSid = recordingSid;

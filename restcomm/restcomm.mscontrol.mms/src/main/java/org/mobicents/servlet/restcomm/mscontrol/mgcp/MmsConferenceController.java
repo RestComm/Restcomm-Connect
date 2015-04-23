@@ -26,6 +26,7 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -54,9 +55,12 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerRe
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.EndpointInfo;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryEndpoint;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -107,6 +111,8 @@ public final class MmsConferenceController extends MediaServerController {
 
     // Runtime media operations
     private Boolean playing;
+    private Boolean recording;
+    private DateTime recordStarted;
 
     public MmsConferenceController(ActorRef mediaGateway) {
         super();
@@ -156,6 +162,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         // Runtime media operations
         this.playing = Boolean.FALSE;
+        this.recording = Boolean.FALSE;
     }
 
     private boolean is(State state) {
@@ -208,6 +215,10 @@ public final class MmsConferenceController extends MediaServerController {
             onQueryEndpoint((QueryEndpoint) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecording((StartRecording) message, self, sender);
+        } else if (StopRecording.class.equals(klass)) {
+            onStopRecording((StopRecording) message, self, sender);
         }
     }
 
@@ -321,6 +332,28 @@ public final class MmsConferenceController extends MediaServerController {
         if (is(active) && !playing) {
             this.playing = Boolean.TRUE;
             this.mediaGroup.tell(message, sender);
+        }
+    }
+
+    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && !recording) {
+            String finishOnKey = "1234567890*#";
+            int maxLength = 3600;
+            int timeout = 5;
+
+            this.recording = Boolean.TRUE;
+            this.recordStarted = DateTime.now();
+
+            // Tell media group to start recording
+            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey);
+            this.mediaGroup.tell(record, null);
+        }
+    }
+
+    private void onStopRecording(StopRecording message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && recording) {
+            this.recording = Boolean.FALSE;
+            mediaGroup.tell(new Stop(), null);
         }
     }
 
