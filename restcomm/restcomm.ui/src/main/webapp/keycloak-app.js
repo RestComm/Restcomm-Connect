@@ -20,6 +20,14 @@ angular.element(document).ready(function ($http) {
         angular.module('rcApp').factory('Auth', function() {
             return auth;
         });
+        
+        console.log("profile");
+        keycloakAuth.loadUserProfile();
+        //console.log(profile);
+        //console.log("username: " + keycloakAuth.username);
+        //console.log(keycloakAuth.token);
+        //console.log("Will now bootstrap rcApp module");
+        
         angular.bootstrap(document, ["rcApp"]);
     }).error(function (a, b) {
             window.location.reload();

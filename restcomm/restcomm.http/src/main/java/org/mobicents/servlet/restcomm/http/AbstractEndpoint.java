@@ -21,12 +21,15 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.net.URI;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
+import org.keycloak.KeycloakSecurityContext;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -45,6 +48,9 @@ public abstract class AbstractEndpoint {
     private String defaultApiVersion;
     protected Configuration configuration;
     protected String baseRecordingsPath;
+
+    @Context
+    HttpServletRequest request;
 
     public AbstractEndpoint() {
         super();
@@ -117,5 +123,14 @@ public abstract class AbstractEndpoint {
         } else {
             throw new AuthorizationException();
         }
+    }
+
+    // uses keycloak token
+    protected String getLoggedUsername() {
+        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+        if (session.getToken() != null) {
+            return session.getToken().getPreferredUsername();
+        }
+        return null;
     }
 }

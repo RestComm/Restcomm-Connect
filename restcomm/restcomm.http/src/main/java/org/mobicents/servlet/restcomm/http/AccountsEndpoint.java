@@ -41,11 +41,13 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
+import org.keycloak.KeycloakSecurityContext;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -61,6 +63,9 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public abstract class AccountsEndpoint extends AbstractEndpoint {
+    // otsakir - remove this
+    private Logger logger = Logger.getLogger(AccountsEndpoint.class);
+
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -141,6 +146,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             }
         }
 
+        // otsakir - remove shiro security check
+        /*
         try {
             final Subject subject = SecurityUtils.getSubject();
             if (subject.hasRole("Administrator")
@@ -149,6 +156,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
+        */
 
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -186,15 +194,24 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         return ok().build();
     }
 
+	// Return (sub-)accounts for logged user. Proper sub-account implementation is still an issue to implement - https://github.com/Mobicents/RestComm/issues/227
     protected Response getAccounts(final MediaType responseType) {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid sid = new Sid((String) subject.getPrincipal());
+        logger.info("in getAccounts()");
+        String username = getLoggedUsername();
+        logger.info("logged username: " + username);
+        final Sid sid = Sid.generate(Sid.Type.ACCOUNT, username);
+        logger.info("account sid: " + sid);
+        //final Subject subject = SecurityUtils.getSubject();
+        //final Sid sid = new Sid((String) subject.getPrincipal());
+
+		// TODO check permissions using roles from keycloak here
+        /*
         try {
             Account account = dao.getAccount(sid);
             secure(account, "RestComm:Read:Accounts");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
-        }
+        }*/
         final Account account = dao.getAccount(sid);
         if (account == null) {
             return status(NOT_FOUND).build();

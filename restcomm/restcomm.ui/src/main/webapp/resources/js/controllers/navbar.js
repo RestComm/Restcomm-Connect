@@ -21,11 +21,14 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
   $scope.logout = function() {
     AuthService.logout();
-    $http.get('/restcomm/2012-04-24/Logout')/*.
+    //$http.get('/restcomm/2012-04-24/Logout')
+    /*.
      success(function() {console.log('Logged out from API.');}).
      error(function() {console.log('Failed to logout from API.');})*/;
   };
 
+  // otsakir - disable it for now. maybe it's not needed
+  /*
   if(AuthService.isLoggedIn()) {
     var accountsList = RCommAccounts.query(function() {
       $scope.accountsList = accountsList;
@@ -36,6 +39,7 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
       }
     });
   }
+  */
 
   // add account -------------------------------------------------------------
 
