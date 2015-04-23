@@ -81,10 +81,10 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -387,10 +387,10 @@ public final class Call extends UntypedActor {
             onReject((Reject) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        } else if (StartRecordingCall.class.equals(klass)) {
-            onStartRecordingCall((StartRecordingCall) message, self, sender);
-        } else if (StopRecordingCall.class.equals(klass)) {
-            onStopRecordingCall((StopRecordingCall) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecordingCall((StartRecording) message, self, sender);
+        } else if (StopRecording.class.equals(klass)) {
+            onStopRecordingCall((StopRecording) message, self, sender);
         } else if (Cancel.class.equals(klass)) {
             onCancel((Cancel) message, self, sender);
         } else if (message instanceof ReceiveTimeout) {
@@ -1279,7 +1279,7 @@ public final class Call extends UntypedActor {
                     // VoiceInterpreter will take care to prepare the Recording object
                 } else if (conference != null) {
                     // Outbound call sent BYE. !Important conference is the initial call here.
-                    conference.tell(new StopRecordingCall(accountId, runtimeSettings, daoManager), null);
+                    conference.tell(new StopRecording(accountId, runtimeSettings, daoManager), null);
                 }
             }
 
@@ -1516,7 +1516,7 @@ public final class Call extends UntypedActor {
             if (is(joining)) {
                 // MSController completed join operation
                 // Inform the conference and tell observers call is in progress
-                if(conferencing) {
+                if (conferencing) {
                     conference.tell(message.get(), self);
                 } else {
                     outboundCall.tell(message.get(), self);
@@ -1571,13 +1571,14 @@ public final class Call extends UntypedActor {
                 sendBye();
             }
 
+            this.msController.tell(message, sender);
             this.conference = null;
             this.conferenceController = null;
             this.fsm.transition(message, destroyingMediaGroup);
         }
     }
 
-    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+    private void onStartRecordingCall(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
             if (runtimeSettings == null) {
                 this.runtimeSettings = message.getRuntimeSetting();
@@ -1598,7 +1599,7 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+    private void onStopRecordingCall(StopRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress) && this.recording) {
             // Forward message for Media Session Controller to handle
             this.msController.tell(message, sender);

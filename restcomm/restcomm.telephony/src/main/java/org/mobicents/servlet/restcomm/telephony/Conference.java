@@ -45,7 +45,9 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerRe
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -182,6 +184,10 @@ public final class Conference extends UntypedActor {
             onJoinComplete((JoinComplete) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecording((StartRecording) message, self, sender);
+        } else if (StopRecording.class.equals(klass)) {
+            onStopRecording((StopRecording) message, self, sender);
         }
     }
 
@@ -296,13 +302,6 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // Tell every call to leave the conference room.
-            for (final ActorRef call : calls) {
-                final Leave leave = new Leave();
-                call.tell(leave, source);
-            }
-            calls.clear();
-
             // Notify the observers.
             final ConferenceStateChanged event = new ConferenceStateChanged(name, this.finalState);
             for (final ActorRef observer : observers) {
@@ -367,6 +366,13 @@ public final class Conference extends UntypedActor {
         if (is(creatingMediaSession)) {
             this.fsm.transition(message, stopped);
         } else if (is(waiting) || is(running)) {
+            // Tell every call to leave the conference room.
+            for (final ActorRef call : calls) {
+                final Leave leave = new Leave();
+                call.tell(leave, self);
+            }
+            calls.clear();
+
             this.fsm.transition(message, destroyingMediaGroup);
         }
     }
@@ -407,6 +413,20 @@ public final class Conference extends UntypedActor {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
+        if (isRunning()) {
+            // Forward message to media server controller
+            this.mscontroller.tell(message, sender);
+        }
+    }
+
+    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) {
+        if (isRunning()) {
+            // Forward message to media server controller
+            this.mscontroller.tell(message, sender);
+        }
+    }
+
+    private void onStopRecording(StopRecording message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);

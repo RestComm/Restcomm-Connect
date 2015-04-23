@@ -80,7 +80,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -1160,6 +1160,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private final class StartDialing extends AbstractDialAction {
+
         public StartDialing(final ActorRef source) {
             super(source);
         }
@@ -1423,8 +1424,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private void recordCall() {
-        logger.info("Start recording of the call");
+    private void record(ActorRef target) {
         Configuration runtimeSettings = configuration.subset("runtime-settings");
         recordingSid = Sid.generate(Sid.Type.RECORDING);
         String path = runtimeSettings.getString("recordings-path");
@@ -1440,7 +1440,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.recordingUri = URI.create(path);
         this.publicRecordingUri = URI.create(httpRecordingUri);
         recordingCall = true;
-        call.tell(new StartRecordingCall(accountId, runtimeSettings, storage, recordingSid, recordingUri), null);
+        StartRecording message = new StartRecording(accountId, callInfo.sid(), runtimeSettings, storage, recordingSid,
+                recordingUri);
+        target.tell(message, null);
+    }
+
+    private void recordCall() {
+        logger.info("Start recording of the call");
+        record(call);
+    }
+
+    private void recordConference() {
+        logger.info("Start recording of the conference");
+        record(conference);
     }
 
     @SuppressWarnings("unchecked")
@@ -1698,9 +1710,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final ConferenceCenterResponse response = (ConferenceCenterResponse) message;
             conference = response.get();
-            final GetConferenceInfo request = new GetConferenceInfo();
             conference.tell(new Observe(source), source);
-            conference.tell(request, source);
+            conference.tell(new GetConferenceInfo(), source);
         }
     }
 
@@ -1818,7 +1829,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 // Only play background music if conference is not doing that already
                 // If conference state is RUNNING_MODERATOR_ABSENT and participants > 0 then BG music is playing already
-                boolean playBackground = conferenceInfo.participants().size() == 0;
+                logger.info("Play background music? " + conferenceInfo.participants().size());
+                boolean playBackground = conferenceInfo.participants().size() == 1;
                 if (playBackground) {
                     // Parse wait url.
                     URI waitUrl = new URL(
@@ -1868,7 +1880,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
+                // Tell the conference the moderator is now present
+                // Causes background music to stop playing and all participants will be unmuted
                 conference.tell(new ConferenceModeratorPresent(), source);
+
+                // Check if moderator wants to record the conference
+                Attribute record = verb.attribute("record");
+                if (record != null && "true".equalsIgnoreCase(record.value())) {
+                    // XXX get record limit etc from dial verb
+                    recordConference();
+                }
             }
 
             // Set timer.

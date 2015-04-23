@@ -81,10 +81,10 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.EndpointInfo;
@@ -373,10 +373,10 @@ public class MmsCallController extends MediaServerController {
             onMute((Mute) message, self, sender);
         } else if (Unmute.class.equals(klass)) {
             onUnmute((Unmute) message, self, sender);
-        } else if (StartRecordingCall.class.equals(klass)) {
-            onStartRecordingCall((StartRecordingCall) message, self, sender);
-        } else if (StopRecordingCall.class.equals(klass)) {
-            onStopRecordingCall((StopRecordingCall) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecordingCall((StartRecording) message, self, sender);
+        } else if (StopRecording.class.equals(klass)) {
+            onStopRecordingCall((StopRecording) message, self, sender);
         } else if (Stop.class.equals(klass)) {
             onStop((Stop) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
@@ -516,7 +516,7 @@ public class MmsCallController extends MediaServerController {
         fsm.transition(message, unmuting);
     }
 
-    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+    private void onStartRecordingCall(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (runtimeSettings == null) {
             this.runtimeSettings = message.getRuntimeSetting();
         }
@@ -536,7 +536,7 @@ public class MmsCallController extends MediaServerController {
         startRecordingCall();
     }
 
-    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) throws Exception {
+    private void onStopRecordingCall(StopRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (this.recording) {
             if (runtimeSettings == null) {
                 this.runtimeSettings = message.getRuntimeSetting();

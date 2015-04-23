@@ -76,6 +76,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
@@ -88,10 +89,10 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
 import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecordingCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -455,10 +456,10 @@ public class XmsCallController extends MediaServerController {
             onMute((Mute) message, self, sender);
         } else if (Unmute.class.equals(klass)) {
             onUnmute((Unmute) message, self, sender);
-        } else if (StartRecordingCall.class.equals(klass)) {
-            onStartRecordingCall((StartRecordingCall) message, self, sender);
-        } else if (StopRecordingCall.class.equals(klass)) {
-            onStopRecordingCall((StopRecordingCall) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecordingCall((StartRecording) message, self, sender);
+        } else if (StopRecording.class.equals(klass)) {
+            onStopRecordingCall((StopRecording) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         } else if (Collect.class.equals(klass)) {
@@ -475,6 +476,8 @@ public class XmsCallController extends MediaServerController {
             onQueryNetworkConnection((QueryNetworkConnection) message, self, sender);
         } else if (Stop.class.equals(klass)) {
             onStop((Stop) message, self, sender);
+        } else if (Leave.class.equals(klass)) {
+            onLeave((Leave) message, self, sender);
         }
     }
 
@@ -611,7 +614,7 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
-    private void onStartRecordingCall(StartRecordingCall message, ActorRef self, ActorRef sender) {
+    private void onStartRecordingCall(StartRecording message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             if (runtimeSettings == null) {
                 this.runtimeSettings = message.getRuntimeSetting();
@@ -639,7 +642,7 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
-    private void onStopRecordingCall(StopRecordingCall message, ActorRef self, ActorRef sender) {
+    private void onStopRecordingCall(StopRecording message, ActorRef self, ActorRef sender) {
         if (is(active) && recording) {
             if (runtimeSettings == null) {
                 this.runtimeSettings = message.getRuntimeSetting();
@@ -927,6 +930,18 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) {
+        if (is(active) && this.conferencing) {
+            try {
+                networkConnection.unjoin(mediaMixer);
+                mediaMixer = null;
+                conferencing = Boolean.FALSE;
+            } catch (MsControlException e) {
+                call.tell(new MediaServerControllerError(e), self);
+            }
+        }
+    }
+
     /*
      * ACTIONS
      */
@@ -997,11 +1012,6 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
-            if (conferencing) {
-                networkConnection.unjoin(mediaMixer);
-                mediaMixer = null;
-            }
-
             if (mediaSession != null) {
                 mediaSession.release();
                 mediaSession = null;
