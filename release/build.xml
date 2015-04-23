@@ -335,42 +335,42 @@
 		<fixcrlf srcdir="${release.as7.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
 
-		<zip destfile="${base.dir}/mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}.zip" filesonly="false">
-				<zipfileset dir="${release.as7.dir}/bin" filemode="755" prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin" >
+		<zip destfile="${base.dir}/Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}.zip" filesonly="false">
+				<zipfileset dir="${release.as7.dir}/bin" filemode="755" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin" >
 				        <include name="*.sh" />
 					<include name="**/*.sh"/>
 				</zipfileset>
-				<zipfileset dir="${release.as7.dir}/bin" prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin" >
+				<zipfileset dir="${release.as7.dir}/bin" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin" >
 		        		<exclude name="*.sh" />
 		        		<exclude name="**/*.sh" />
 			       </zipfileset>
 				<zipfileset dir="${release.as7.dir}/mobicents-media/mobicents-media-server/bin" filemode="755"
-					prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
+					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 		        <include name="*.sh" />
 		    </zipfileset>
 				<zipfileset dir="${release.as7.dir}/mobicents-media/mobicents-media-server/bin"
-					prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
+					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 		        <exclude name="*.sh" />
 		    </zipfileset>
-		    <zipfileset dir="${release.as7.dir}" prefix="mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}"
+		    <zipfileset dir="${release.as7.dir}" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}"
 		    	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
 		</zip>
-		<zip destfile="${base.dir}/mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
-			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
+		<zip destfile="${base.dir}/Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
+			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
 				<include name="*.sh" />
 			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/bin" prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
+			<zipfileset dir="${release.tomcat.dir}/bin" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
 				<exclude name="*.sh" />
 			</zipfileset>
 			<zipfileset dir="${release.tomcat.dir}/mobicents-media/mobicents-media-server/bin" filemode="755"
-						prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
+						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 				<include name="*.sh" />
 			</zipfileset>
 			<zipfileset dir="${release.tomcat.dir}/mobicents-media/mobicents-media-server/bin"
-						prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
+						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mobicents-media/mobicents-media-server/bin" >
 				<exclude name="*.sh" />
 			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}" prefix="mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}"
+			<zipfileset dir="${release.tomcat.dir}" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}"
 				excludes="**/bin/**"/>
 		</zip>
 	</target>
