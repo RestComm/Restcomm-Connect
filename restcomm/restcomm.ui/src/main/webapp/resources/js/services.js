@@ -21,6 +21,25 @@ rcServices.factory('SessionService', function() {
   }
 });
 
+rcServices.service('AuthService', function(Auth) {
+	console.log("creating AuthService");
+	
+	var serviceInstance = {};
+		
+	serviceInstance.isLoggedIn = function() {
+		return Auth.loggedIn;
+      //return SessionService.get('authenticated');
+    }
+    /*
+    getLoggedUser: function() {
+      return SessionService.get('logged_user');
+    },*/
+    
+    return serviceInstance;
+		
+});
+
+/*
 rcServices.service('AuthService', function($http, $location, SessionService, md5) {
   var cacheSession = function(account, first) {
     var prefix = first ? '_' : '';
@@ -71,19 +90,6 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
           }
         }).
         error(function(data) {
-          /*
-           if($scope.closeAlertTimer) {
-           clearTimeout($scope.closeAlertTimer);
-           }
-           $scope.alerts[0] = {type: 'error', msg: "Login failed! Please confirm your credentials."};
-           $scope.closeAlertTimer = setTimeout(function() {
-           // we need to wrap it in apply so that AngularJS knows about the change and updates components
-           $scope.$apply(function() {
-           $scope.closeAlertTimer = null;
-           $scope.alerts.splice(0, 1);
-           });
-           }, 3000);
-           */
           alert("Login failed! Please confirm your credentials.");
         }
       );
@@ -126,6 +132,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     }
   }
 });
+*/
 
 rcServices.factory('Notifications', function($rootScope, $timeout, $log) {
   // time (in ms) the notifications are shown
@@ -248,18 +255,18 @@ uiModalDialog.run(["$templateCache", function (e) {
 
 
 rcServices.factory('RCommAccounts', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid.:format', {
+  return $resource('/restcomm/keycloak/Accounts/:accountSid.:format', {
       accountSid: '@accountSid',
       format:'json'
     },
     {
       view: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts.:format/:accountSid'
+        url: '/restcomm/keycloak/Accounts.:format/:accountSid'
       },
       register: {
         method:'POST',
-        url: '/restcomm/2012-04-24/Accounts.:format',
+        url: '/restcomm/keycloak/Accounts.:format',
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
