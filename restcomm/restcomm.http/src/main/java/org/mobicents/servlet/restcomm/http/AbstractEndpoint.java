@@ -51,6 +51,8 @@ public abstract class AbstractEndpoint {
 
     @Context
     HttpServletRequest request;
+    protected static RestcommRoles restcommRoles;
+
 
     public AbstractEndpoint() {
         super();
