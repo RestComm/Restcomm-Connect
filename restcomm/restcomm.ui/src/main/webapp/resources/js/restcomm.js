@@ -81,6 +81,8 @@ rcMod.directive('equals', function() {
   }
 });
 
+/*
+// otsakir - disable old authentication mechanism
 rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
   $rootScope.$on("$routeChangeStart", function(event, next, current) {
     $anchorScroll(); // scroll to top
@@ -89,6 +91,7 @@ rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
     }
   })
 });
+*/
 
 // AJAX LOADER
 /* FIXME: Disabled since it causes $http and $resource not to call error callbacks
@@ -111,7 +114,7 @@ angular
   });
 */
 
-
+/*
 var interceptor = ['$rootScope', '$q', '$location', function (scope, $q, $location) {
 
   function success(response) {
@@ -136,6 +139,7 @@ var interceptor = ['$rootScope', '$q', '$location', function (scope, $q, $locati
   }
 
 }];
+*/
 
 
 // MD5

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html ng-app="rcApp">
+<!-- <html ng-app="rcApp"> -->
+<html>
     <head>
         <title>RestComm</title>
 
@@ -104,6 +105,7 @@
         <script type="text/javascript" src="lib/ng-password-strength/js/ng-password-strength.js"></script>
         <script type="text/javascript" src="lib/http-auth-interceptor/http-auth-interceptor.js"></script>
 
+		<script src="http://192.168.1.10:8080/auth/js/keycloak.js"></script>
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
         <script type="text/javascript" src="resources/js/controllers.js"></script>
         <script type="text/javascript" src="resources/js/controllers/global.js"></script>
@@ -128,7 +130,8 @@
         <script type="text/javascript" src="resources/js/restcommApps/appManager.js"></script>
         <script type="text/javascript" src="resources/js/restcommApps/appConfig.js"></script>
         <script type="text/javascript" src="resources/js/restcommApps/services.js"></script>
-        
+
+        <script type="text/javascript" src="keycloak-app.js"></script>
     </head>
     <body>
         <div id="wrap">
