@@ -15,6 +15,7 @@ import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.http.RestcommRoles;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
@@ -127,6 +128,14 @@ public final class Bootstrapper extends SipServlet {
         context.setAttribute(DaoManager.class.getName(), storage);
         ShiroResources.getInstance().set(DaoManager.class, storage);
         ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
+
+        // otsakir
+        logger.info("Creating RestcommRoles");
+        RestcommRoles restcommRoles = new RestcommRoles();
+        context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
+        ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
+        logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
+
         // Create the media gateway.
         ActorRef gateway = null;
         try {
