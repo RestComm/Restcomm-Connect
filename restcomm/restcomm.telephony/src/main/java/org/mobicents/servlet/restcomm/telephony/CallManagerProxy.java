@@ -66,8 +66,10 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
 
     @Override
     public void destroy() {
-        system.shutdown();
-        system.awaitTermination();
+        if (system != null) {
+            system.shutdown();
+            system.awaitTermination();
+        }
     }
 
     @Override

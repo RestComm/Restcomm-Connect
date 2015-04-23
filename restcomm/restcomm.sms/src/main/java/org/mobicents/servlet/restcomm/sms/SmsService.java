@@ -79,13 +79,14 @@ public final class SmsService extends UntypedActor {
     private final ServletConfig servletConfig;
     private final SipFactory sipFactory;
     private final DaoManager storage;
+    private final ServletContext servletContext;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo = true;
 
     public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
-            final DaoManager storage) {
+            final DaoManager storage, final ServletContext servletContext) {
         super();
         this.system = system;
         this.configuration = configuration;
@@ -94,6 +95,7 @@ public final class SmsService extends UntypedActor {
         this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
         this.sipFactory = factory;
         this.storage = storage;
+        this.servletContext = servletContext;
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
     }
@@ -326,9 +328,8 @@ public final class SmsService extends UntypedActor {
 
     @SuppressWarnings("unchecked")
     private SipURI outboundInterface() {
-        final ServletContext context = servletConfig.getServletContext();
         SipURI result = null;
-        final List<SipURI> uris = (List<SipURI>) context.getAttribute(SipServlet.OUTBOUND_INTERFACES);
+        final List<SipURI> uris = (List<SipURI>) servletContext.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
             final String transport = uri.getTransportParam();
             if ("udp".equalsIgnoreCase(transport)) {

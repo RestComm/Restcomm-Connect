@@ -57,7 +57,8 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
 
     @Override
     public void destroy() {
-        system.stop(manager);
+        if (system != null)
+            system.stop(manager);
     }
 
     @Override
