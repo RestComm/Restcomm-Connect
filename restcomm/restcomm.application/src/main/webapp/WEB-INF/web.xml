@@ -38,7 +38,31 @@
   <servlet-mapping>
     <servlet-name>Jersey</servlet-name>
     <url-pattern>/2012-04-24/*</url-pattern>
+    <url-pattern>/keycloak/*</url-pattern>
   </servlet-mapping>
+  
+  <security-constraint>
+	<web-resource-collection>
+		<web-resource-name>REST Endpoints</web-resource-name>
+		<url-pattern>/keycloak/*</url-pattern>
+	</web-resource-collection>
+		<auth-constraint>
+			<role-name>user</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<login-config>
+		<auth-method>KEYCLOAK</auth-method>
+		<realm-name>demo</realm-name>
+	</login-config>
+
+	<security-role>
+		<role-name>admin</role-name>
+	</security-role>
+	
+	<security-role>
+		<role-name>user</role-name>
+	</security-role>  
   
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
