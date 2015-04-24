@@ -5,9 +5,8 @@
 			Adjust this application to your local environment.  
 		</p>
 		<div ng-show='shouldShowHowToConfigure()' class="how-to-configure" >
-			<p>
-				{{rappConfig.howTo}}
-			</p>
+			<div ng-bind-html="rappConfig.howTo">
+			</div>
 			<div class="spacer10"></div>
 		</div>
 		<form name="optionsForm" novalidate>

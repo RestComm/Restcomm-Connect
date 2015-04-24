@@ -13,7 +13,8 @@ var rcMod = angular.module('rcApp', [
   'ui.bootstrap.modal.dialog',
   'angularFileUpload',
   'ngPasswordStrength',
-  'nvd3'
+  'nvd3',
+  'ngSanitize'
 ]);
 
 rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
