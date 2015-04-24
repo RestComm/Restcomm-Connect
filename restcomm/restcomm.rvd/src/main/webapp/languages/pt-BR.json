@@ -205,6 +205,8 @@
 	"formPackingLabel": "empacotamento",
 	"formKeepEditingTitle": "continue editando no Editor Visual",
 	"formSaveTitle": "salvar a configuração do pacote atual",
+	"formSaveCompleteRequiredHint": "TRANSLATE: required fields are missing!",
+	"formSaveReguiredNotification": "TRANSLATE: Please complete all required fields (*) before saving.",
 	"formDownloadTitle": "baixar pacote",
 	"formDownloadNewTitle": "salvar pacote antes para permitir baixar",
 	"formPackageAppLabel1": "Empacote sua aplicação para submeter à",
