@@ -63,6 +63,7 @@ public final class IncomingPhoneNumber {
     private Boolean smsCapable;
     private Boolean mmsCapable;
     private Boolean faxCapable;
+    private Boolean pureSip;
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
             final String friendlyName, final Sid accountSid, final String phoneNumber, final String apiVersion,
@@ -73,7 +74,7 @@ public final class IncomingPhoneNumber {
             final String ussdFallbackMethod, final Sid ussdApplicationSid) {
         this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, apiVersion, hasVoiceCallerIdLookup,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
-                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, null, null, null, null);
+                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, null, null, null, null, null);
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
@@ -83,7 +84,7 @@ public final class IncomingPhoneNumber {
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
             final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
             final String ussdFallbackMethod, final Sid ussdApplicationSid, final Boolean voiceCapable,
-            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable) {
+            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -115,6 +116,7 @@ public final class IncomingPhoneNumber {
         this.smsCapable = smsCapable;
         this.mmsCapable = mmsCapable;
         this.faxCapable = faxCapable;
+        this.pureSip = pureSip;
     }
 
     /**
@@ -537,6 +539,14 @@ public final class IncomingPhoneNumber {
         this.faxCapable = faxCapable;
     }
 
+    public Boolean isPureSip() {
+        return pureSip;
+    }
+
+    public void setPureSip(Boolean pureSip) {
+        this.pureSip = pureSip;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -574,6 +584,7 @@ public final class IncomingPhoneNumber {
         private Boolean smsCapable;
         private Boolean mmsCapable;
         private Boolean faxCapable;
+        private Boolean pureSip;
 
         private Builder() {
             super();
@@ -584,7 +595,7 @@ public final class IncomingPhoneNumber {
             return new IncomingPhoneNumber(sid, now, now, friendlyName, accountSid, phoneNumber, apiVersion,
                     hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                     statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                    smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                    smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip);
         }
 
         public void setSid(final Sid sid) {
@@ -697,6 +708,14 @@ public final class IncomingPhoneNumber {
 
         public void setFaxCapable(Boolean faxCapable) {
             this.faxCapable = faxCapable;
+        }
+
+        public void setPureSip(Boolean pureSip) {
+            this.pureSip = pureSip;
+        }
+
+        public static Builder builder() {
+            return new Builder();
         }
     }
 }

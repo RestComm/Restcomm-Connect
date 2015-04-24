@@ -38,14 +38,12 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- If set to true Restcomm will use the Local Address (or external address 
-			if available) in the host part of the From header for calls to the outbound 
-			proxy. Default is False, which means that Restcomm will use outbound proxy 
-			for the host part of From header -->
+		<!-- If set to true Restcomm will use the Local Address (or external address if available) 
+		     in the host part of the From header for calls to the outbound proxy. 
+		     Default is False, which means that Restcomm will use outbound proxy for the host part of From header -->
 		<use-local-address>false</use-local-address>
 
-		<!-- If set to true Restcomm will authenticate users and incoming messages 
-			from those users -->
+		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
 		<authenticate>true</authenticate>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
