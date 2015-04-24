@@ -224,7 +224,7 @@
 	"formDescribeAppLabel": "Describe your application. A small text of 40-60 words is optimal.",
 	"formConfigurarionLabel": "Configuration",	
 	"formHowToLabel": "How to",
-	"formHowToHelp": "Type a small text describing general configuration guidelines",
+	"formHowToHelp": "Type a small text describing general configuration guidelines. HTML markup is also supported.",
 	"formConfigurationProvisioningUrlLabel": "Provisioning URL",
 	"formConfigurationProvisioningUrlHelp1": "URL for application provisioning. Incoming number and parameters hooks are supported. Read more",
 	"formConfigurationProvisioningUrlHelp2": "here",
