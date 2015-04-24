@@ -207,6 +207,8 @@
 	"formPackingLabel": "packaging",
 	"formKeepEditingTitle": "keep editing in Designer",
 	"formSaveTitle": "save current package configuration",
+	"formSaveCompleteRequiredHint": "required fields are missing!",
+	"formSaveReguiredNotification": "Please complete all required fields (*) before saving.",
 	"formDownloadTitle": "download package",
 	"formDownloadNewTitle": "save package first to enable downloading",
 	"formPackageAppLabel1": "Package your application to submit it to the",

@@ -1,4 +1,4 @@
-rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications, rvdSettings) {
+rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications, rvdSettings, $translate) {
 
 	$scope.addConfigurationOption = function(type) {
 		$scope.rapp.config.addOption(type);
@@ -10,6 +10,18 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 	
 	$scope.optionExists = function (name) {
 		return $scope.rapp.config.optionExists(name);
+	}
+	
+	$scope.saveRappClicked = function (projectName,rapp, submitPermitted) {
+		if (submitPermitted)
+			$scope.saveRapp(projectName,rapp);
+		else {
+			$translate('formSaveReguiredNotification')
+			.then(function (translatedValue) {
+				notifications.put({message:translatedValue, type:"warning"});
+			});
+			
+		}
 	}
 	
 	$scope.saveRapp = function (projectName,rapp) {

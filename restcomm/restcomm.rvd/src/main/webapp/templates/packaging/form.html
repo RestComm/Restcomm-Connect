@@ -5,7 +5,7 @@
 				<i class="fa fa-archive pull-right"></i>  
 				<small  class="pull-right packaging-menu"> 
 					 <a class="rvd-clickable" href='#/designer/{{projectName}}'><i class="fa fa-pencil" title="{{'formKeepEditingTitle' | translate}}"></i></a>&nbsp;
-					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='submitPermitted && saveRapp(projectName,rapp)'><i class="fa fa-save" title="{{'formSaveTitle' | translate}}"></i></a>&nbsp;  
+					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='saveRappClicked(projectName,rapp,submitPermitted)'><i class="fa fa-save" title="{{(submitPermitted ? 'formSaveTitle' : 'formSaveCompleteRequiredHint') | translate}}"></i></a>&nbsp;  
 					 <a ng-show="!isNewRapp" class="rvd-clickable" ng-disabled="true" ng-click='preparePackage(projectName)'><i class="fa fa-download" title="{{'formDownloadTitle' | translate}}"></i></a> 
 					 <i ng-show="isNewRapp" class="fa fa-download" title="{{'formDownloadNewTitle' | translate}}"></i>
 				</small>
@@ -24,7 +24,7 @@
 					<div class="row">
 						<div class="col-md-4">
 							<div class="form-group">
-								<label><strong>{{'formAppNameLabel' | translate}}</strong></label>
+								<label><strong>{{'formAppNameLabel' | translate}} *</strong></label>
 								<input ng-model='rapp.info.name' class='form-control' name="name" required>
 								<div class="validation-error" ng-show="appinfoForm.name.$invalid && showErrors">{{'formGeneralInfoRequiredLabel' | translate}}</div>
 								<span class="help-block">{{'formOfficialNameLabel' | translate}}</span>
@@ -37,7 +37,7 @@
 							</div>
 						</div>
 						<div class="col-md-8">
-							<label><strong>{{'formSummaryLabel' | translate}}</strong></label>
+							<label><strong>{{'formSummaryLabel' | translate}} *</strong></label>
 							<textarea ng-model='rapp.info.description' class='form-control' required></textarea>
 							<span class="help-block">{{'formDescribeAppLabel' | translate}}</span>
 						</div>
