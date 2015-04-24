@@ -84,7 +84,8 @@ CREATE TABLE "restcomm_incoming_phone_numbers" (
 "voice_capable" BOOLEAN, 
 "sms_capable" BOOLEAN, 
 "mms_capable" BOOLEAN,
-"fax_capable" BOOLEAN
+"fax_capable" BOOLEAN,
+"pure_sip" BOOLEAN
 );
 
 CREATE TABLE "restcomm_applications" (

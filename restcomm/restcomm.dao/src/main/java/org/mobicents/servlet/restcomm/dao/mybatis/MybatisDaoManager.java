@@ -195,16 +195,18 @@ public final class MybatisDaoManager implements DaoManager {
         properties.setProperty("data", dataFiles);
         properties.setProperty("sql", sqlFiles);
         final SqlSessionFactory sessions = builder.build(reader, properties);
-        boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
-        if (amazonS3Enabled) {
-            final String accessKey = amazonS3Configuration.getString("access-key");
-            final String securityKey = amazonS3Configuration.getString("security-key");
-            final String bucketName = amazonS3Configuration.getString("bucket-name");
-            final String folder = amazonS3Configuration.getString("folder");
-            final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
-            final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
-            final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
-            s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile);
+        if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+            boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
+            if (amazonS3Enabled) {
+                final String accessKey = amazonS3Configuration.getString("access-key");
+                final String securityKey = amazonS3Configuration.getString("security-key");
+                final String bucketName = amazonS3Configuration.getString("bucket-name");
+                final String folder = amazonS3Configuration.getString("folder");
+                final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
+                final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
+                final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
+                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile);
+            }
         }
         start(sessions);
     }
