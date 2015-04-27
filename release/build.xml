@@ -135,18 +135,18 @@
 	<delete dir="${checkout.mobicents-media.dir}" failonerror="false" />
 	<delete dir="${release.as7.dir}/mobicents-media-server" failonerror="false" />
 	<!--unzip src="${mobicents-media.distro.zip.path}" dest="${release.dir}/mobicents-media"/-->
-	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.tomcat.dir}/mobicents-media"/>
-	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.as7.dir}/mobicents-media"/>
-	<move todir="${release.tomcat.dir}/mobicents-media/mobicents-media-server">
-		<fileset dir="${release.tomcat.dir}/mobicents-media/mms-server" />
+	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.tomcat.dir}/mediaserver"/>
+	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.as7.dir}/mediaserver"/>
+	<move todir="${release.tomcat.dir}/mediaserver/server">
+		<fileset dir="${release.tomcat.dir}/mediaserver/mms-server" />
 	</move>
-	<move todir="${release.as7.dir}/mobicents-media/mobicents-media-server">
-		<fileset dir="${release.as7.dir}/mobicents-media/mms-server" />
+	<move todir="${release.as7.dir}/mediaserver/server">
+		<fileset dir="${release.as7.dir}/mediaserver/mms-server" />
 	</move>
 
 	<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/mobicents-media/mobicents-media-server/deploy/server-beans.xml" failonerror="true"/-->
-	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/mobicents-media/mobicents-media-server/deploy/server-beans.xml" failonerror="true"/>
-	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/mobicents-media/mobicents-media-server/deploy/server-beans.xml" failonerror="true"/>
+	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/mediaserver/server/deploy/server-beans.xml" failonerror="true"/>
+	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/server/deploy/server-beans.xml" failonerror="true"/>
 </target>
 
 <!--diameter-->
