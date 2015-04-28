@@ -2,11 +2,11 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout, $modal, SessionService, RCommLogsTranscriptions) {
+rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout, $modal, AuthService, RCommLogsTranscriptions) {
 
   $scope.Math = window.Math;
 
-  $scope.sid = SessionService.get("sid");
+  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -51,8 +51,8 @@ rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout
 
 });
 
-rcMod.controller('LogsTranscriptionsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, SessionService, RCommLogsTranscriptions, transcriptionSid) {
-  $scope.sid = SessionService.get("sid");
+rcMod.controller('LogsTranscriptionsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, AuthService, RCommLogsTranscriptions, transcriptionSid) {
+  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
   $scope.transcriptionSid = $routeParams.transcriptionSid || transcriptionSid;
 
   $scope.closeTranscriptionDetails = function () {

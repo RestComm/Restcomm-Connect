@@ -4,8 +4,8 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Outgoing ----------------------------------------------------------
 
-rcMod.controller('OutgoingCtrl', function($scope, $resource, $modal, $dialog, SessionService, RCommOutgoingCallerIDs) {
-  $scope.sid = SessionService.get("sid");
+rcMod.controller('OutgoingCtrl', function($scope, $resource, $modal, $dialog, AuthService, RCommOutgoingCallerIDs) {
+  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
 
   $scope.showRegisterOutgoingCallerIDModal = function () {
     var registerOutgoingCallerIDModal = $modal.open({
@@ -49,10 +49,10 @@ rcMod.controller('OutgoingCtrl', function($scope, $resource, $modal, $dialog, Se
   $scope.outgoingList = RCommOutgoingCallerIDs.query({accountSid:$scope.sid});
 });
 
-var OutgoingDetailsCtrl = function($scope, $routeParams, $resource, $location, $dialog, $modalInstance, SessionService, RCommOutgoingCallerIDs, Notifications) {
+var OutgoingDetailsCtrl = function($scope, $routeParams, $resource, $location, $dialog, $modalInstance, AuthService, RCommOutgoingCallerIDs, Notifications) {
 
   if($scope.outgoingSid = $routeParams.outgoingSid) {
-    $scope.sid = SessionService.get("sid");
+    $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
 
   } // or registering a new one ?
   else {
