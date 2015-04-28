@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,8 @@ import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessTokenResponse;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -57,6 +60,8 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient;
+import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient.Failure;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
@@ -123,6 +128,86 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+    }
+
+ // Creates a Restcomm account object out of a keycloak UserRepresentation
+    private Account createFromUserRepresentation(final UserRepresentation userInfo) {
+        //validate(data);
+
+        final DateTime now = DateTime.now();
+        //final String emailAddress = data.getFirst("EmailAddress");
+        final String emailAddress = userInfo.getEmail();
+
+        // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
+        final Sid sid = Sid.generate(Sid.Type.ACCOUNT, userInfo.getUsername());
+
+        // Use keycloak firstname/lastname as a friendly name if available. Otherwise fall back to keycloak username.
+        String friendlyName = userInfo.getUsername();
+        if (userInfo.getFirstName() != null ) {
+            friendlyName = userInfo.getFirstName();
+            if (userInfo.getLastName() != null)
+                friendlyName += " " + userInfo.getLastName();
+        } else {
+            if (userInfo.getLastName() != null)
+                friendlyName = userInfo.getLastName();
+        }
+
+        final Account.Type type = Account.Type.FULL;
+        Account.Status status = Account.Status.ACTIVE;
+//        if (data.containsKey("Status")) {
+//            status = Account.Status.valueOf(data.getFirst("Status"));
+//        }
+//        final String password = data.getFirst("Password");
+//        final String authToken = new Md5Hash(password).toString();
+//        final String role = data.getFirst("Role");
+
+        String rootUri = configuration.getString("root-uri");
+        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
+        final URI uri = URI.create(buffer.toString());
+        //return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, sid, type, status, "notused", "notused", uri);
+    }
+
+    protected Response importKeycloakAccount() {
+        logger.info("in importKeycloakAccount");
+        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+        if (session.getToken() != null) {
+            String loggedUsername = session.getToken().getPreferredUsername();
+            logger.info("logged username: " + loggedUsername);
+
+            Account loggedAccount = dao.getAccount(loggedUsername);
+
+            if (loggedAccount != null) {
+                logger.info("user " + loggedUsername + " already exists in Restcomm and won't be imported.");
+                return status(OK).build(); // Do nothing. Account is already in Restcomm
+            } else {
+                logger.info("user is missing from Restcomm database and should be created");
+                AccessTokenResponse tokenResponse;
+                try {
+                    tokenResponse = KeycloakClient.getToken(request);
+                } catch (IOException e1) {
+                    return status(INTERNAL_SERVER_ERROR).build();
+                }
+                UserRepresentation userInfo;
+                try {
+                    // TODO make realm and username parametric!
+                    userInfo = KeycloakClient.getUserInfo(request, tokenResponse, "demo", loggedUsername);
+                } catch (Failure e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                    return status(INTERNAL_SERVER_ERROR).build();
+                }
+                logger.info("retrieved user info : " + userInfo.toString());
+
+                Account newAccount = createFromUserRepresentation(userInfo);
+                dao.addAccount(newAccount);
+                return status(OK).build();
+
+            }
+        } else
+            return status(UNAUTHORIZED).build();
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -194,7 +279,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         return ok().build();
     }
 
-	// Return (sub-)accounts for logged user. Proper sub-account implementation is still an issue to implement - https://github.com/Mobicents/RestComm/issues/227
+    // Return (sub-)accounts for logged user. Proper sub-account implementation is still an issue to implement - https://github.com/Mobicents/RestComm/issues/227
     protected Response getAccounts(final MediaType responseType) {
         logger.info("in getAccounts()");
         String username = getLoggedUsername();
@@ -204,7 +289,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         //final Subject subject = SecurityUtils.getSubject();
         //final Sid sid = new Sid((String) subject.getPrincipal());
 
-		// TODO check permissions using roles from keycloak here
+        // TODO check permissions using roles from keycloak here
         /*
         try {
             Account account = dao.getAccount(sid);

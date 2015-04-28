@@ -49,6 +49,12 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
         return getAccount(accountSid, APPLICATION_JSON_TYPE);
     }
 
+    @Path("/import")
+    @GET
+    public Response importCurrentAccount() {
+        return importKeycloakAccount();
+    }
+
     @GET
     public Response getAccounts() {
         return getAccounts(APPLICATION_JSON_TYPE);
