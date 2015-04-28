@@ -4,9 +4,9 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Incoming : List ---------------------------------------------------
 
-rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, SessionService, RCommNumbers, Notifications) {
+rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, AuthService, RCommNumbers, Notifications) {
   $anchorScroll(); // scroll to top
-  $scope.sid = SessionService.get("sid");
+  $scope.sid = AuthService.getLoggedSid();
 
   // edit incoming number friendly name --------------------------------------
   $scope.editingFriendlyName = "";
@@ -55,13 +55,13 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, AuthService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
 
   // are we editing details...
   //if($scope.phoneSid === $routeParams.phoneSid) {
 
-    $scope.sid = SessionService.get("sid");
-    $scope.phoneSid = $routeParams.phoneSid
+    $scope.sid = AuthService.getLoggedSid();
+    $scope.phoneSid = $routeParams.phoneSid;
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
     
@@ -144,9 +144,9 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   }
 };
 
-var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dialog, $modalInstance, AuthService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
 
-  $scope.sid = SessionService.get("sid");
+  $scope.sid = AuthService.getLoggedSid();
 
   //$scope.countries = countries;
   $scope.countries = allCountries;

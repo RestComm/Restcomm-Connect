@@ -20,19 +20,28 @@
 package org.mobicents.servlet.restcomm.http;
 
 import java.net.URI;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.authz.Permission;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
+import org.apache.shiro.authz.SimpleRole;
+import org.apache.shiro.authz.UnauthorizedException;
+import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.apache.shiro.subject.Subject;
 import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -45,6 +54,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  */
 @NotThreadSafe
 public abstract class AbstractEndpoint {
+    private Logger logger = Logger.getLogger(AbstractEndpoint.class);
     private String defaultApiVersion;
     protected Configuration configuration;
     protected String baseRecordingsPath;
@@ -62,6 +72,8 @@ public abstract class AbstractEndpoint {
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
         defaultApiVersion = configuration.getString("api-version");
+        ShiroResources shiroResources = ShiroResources.getInstance();
+        restcommRoles = shiroResources.get(RestcommRoles.class);
     }
 
     protected String getApiVersion(final MultivaluedMap<String, String> data) {
@@ -127,6 +139,56 @@ public abstract class AbstractEndpoint {
         }
     }
 
+    protected void secureKeycloak(Account account, final String neededPermissionString, final AccessToken accessToken) {
+        Set<String> roleNames;
+        try {
+            roleNames = accessToken.getRealmAccess().getRoles();
+        } catch (NullPointerException e) {
+            throw new UnauthorizedException("No access token or no roles");
+        }
+
+        String message = "has the following roles: ";
+        for (String rolename: roleNames) {
+            message += rolename + ", ";
+        }
+        logger.info(message);
+
+        //String neededPermissionString = "domain:restcomm:read:accounts";
+        WildcardPermissionResolver resolver = new WildcardPermissionResolver();
+        Permission neededPermission = resolver.resolvePermission(neededPermissionString);
+        //Permission neededPermission = new DomainPermission(neededPermissionString); // Developer has: RestComm:*:Calls
+
+        // build the authorization token
+        SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo(roleNames);
+
+        // check the neededPermission against all roles of the user
+        for (String roleName: roleNames) {
+            SimpleRole simpleRole = restcommRoles.getRole(roleName);
+            if ( simpleRole == null)
+                logger.info("Cannot map keycloak role '" + roleName + "' to local restcomm configuration. Ignored." );
+            else {
+                // simpleRole, neededPermission
+                logger.info("checking role " + roleName);
+
+                Set<Permission> permissions = simpleRole.getPermissions();
+                // check the permissions one by one
+
+                for (Permission permission: permissions) {
+                    logger.info("Testing " + neededPermissionString + " against " + permission.toString() );
+                    if (permission.implies(neededPermission)) {
+                        logger.info("permission granted!");
+                        return;
+                    }
+
+                }
+
+                logger.info("role " + roleName + " does not allow " + neededPermissionString);
+            }
+        }
+        logger.info("No granting role/permission found. The request won't be permitted");
+        throw new AuthorizationException();
+    }
+
     // uses keycloak token
     protected String getLoggedUsername() {
         KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
@@ -135,4 +197,13 @@ public abstract class AbstractEndpoint {
         }
         return null;
     }
+
+    protected AccessToken getKeycloakAccessToken() {
+        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+        AccessToken accessToken = session.getToken();
+        return accessToken;
+    }
+
+
+
 }
