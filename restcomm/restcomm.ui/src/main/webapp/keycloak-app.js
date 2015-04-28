@@ -22,13 +22,37 @@ angular.element(document).ready(function ($http) {
         });
         
         console.log("profile");
-        keycloakAuth.loadUserProfile();
+        keycloakAuth.loadUserProfile().success(function () {
+			console.log("successfully retrieved profile");
+			
+			// try importing the logged user into Restcomm 
+			var initInjector = angular.injector(["ng"]);
+	        var $myhttp = initInjector.get("$http");
+
+			console.log("token: " + keycloakAuth.token);
+			
+			$myhttp({
+				method: 'GET',
+				url: '/restcomm/keycloak/Accounts.json/import',
+				headers: {
+					Authorization: 'Bearer ' + keycloakAuth.token
+				}
+			}).success(function(response) {
+	        	console.log("Succesfully triggered user import. Starting application");
+	        	angular.bootstrap(document, ["rcApp"]);
+	            //myApplication.constant("config", response.data);
+	        }).error(function(errorResponse) {
+	            // Handle error case
+	        	console.log("Error triggering user import from keycloak to restcomm");
+	        });
+		});
+        console.log(keycloakAuth.profile);
         //console.log(profile);
         //console.log("username: " + keycloakAuth.username);
         //console.log(keycloakAuth.token);
         //console.log("Will now bootstrap rcApp module");
         
-        angular.bootstrap(document, ["rcApp"]);
+        
     }).error(function (a, b) {
             window.location.reload();
         });
