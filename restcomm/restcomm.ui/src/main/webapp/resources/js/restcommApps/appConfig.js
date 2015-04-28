@@ -66,7 +66,7 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 			value = rappConfig.bootstrapUrl;
 		} else {
 			var backendRootURLOption = getOptionByName("backendRootURL", rappConfig.options);
-			if (backendRootURLOption.value)
+			if ( backendRootURLOption && backendRootURLOption.value)
 				value = backendRootURLOption.value  + "/ui/index.php";
 		}
 		return $sce.trustAsResourceUrl(value);
@@ -81,7 +81,7 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 				return true;
 		} else {
 			var backendRootURLOption = getOptionByName("backendRootURL", rappConfig.options);
-			if ( backendRootURLOption.value )
+			if ( backendRootURLOption && backendRootURLOption.value )
 				return true;
 		}
 		return false;
