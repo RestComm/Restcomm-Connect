@@ -29,7 +29,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
       resolve: {
         $modalInstance : function() { return undefined; },
         allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
-        providerCountries: function(RCommAvailableNumbers, SessionService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:SessionService.get("sid")}).$promise; }
+        providerCountries: function(RCommAvailableNumbers, AuthService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:AuthService.getLoggedSid()}).$promise; }
       }
     }).
     when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).

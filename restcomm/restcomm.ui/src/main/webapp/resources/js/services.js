@@ -21,7 +21,7 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-rcServices.service('AuthService', function(Auth) {
+rcServices.service('AuthService', function(Auth,md5) {
 	console.log("creating AuthService");
 	
 	var serviceInstance = {};
@@ -30,6 +30,17 @@ rcServices.service('AuthService', function(Auth) {
 		return Auth.loggedIn;
       //return SessionService.get('authenticated');
     }
+	serviceInstance.getLoggedSid = function() {
+		  var username = Auth.authz.profile.username;
+		  var accountSid = "AC" + md5.createHash(username);
+		  return accountSid;
+	}
+	serviceInstance.getUsername = function() {
+		return Auth.authz.profile.username;
+	}
+	serviceInstance.getProfile = function() {
+		return Auth.authz.profile;
+	}
     /*
     getLoggedUser: function() {
       return SessionService.get('logged_user');
@@ -281,18 +292,18 @@ rcServices.factory('RCommAccounts', function($resource) {
 });
 
 rcServices.factory('RCommNumbers', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers.:format', {
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/IncomingPhoneNumbers.:format', {
       accountSid: '@accountSid',
       format:'json'
     },
     {
       get: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/:phoneSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/IncomingPhoneNumbers/:phoneSid.:format'
       },
       delete: {
         method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/:phoneSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/IncomingPhoneNumbers/:phoneSid.:format'
       },
       register: {
         method:'POST',
@@ -302,7 +313,7 @@ rcServices.factory('RCommNumbers', function($resource) {
       },
       update: {
         method:'POST',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/:phoneSid.:format',
+        url: '/restcomm/keycloak/Accounts/:accountSid/IncomingPhoneNumbers/:phoneSid.:format',
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -311,18 +322,18 @@ rcServices.factory('RCommNumbers', function($resource) {
 });
 
 rcServices.factory('RCommClients', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Clients.:format', {
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/Clients.:format', {
       accountSid: '@accountSid',
       format:'json'
     },
     {
       get: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Clients/:clientSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Clients/:clientSid.:format'
       },
       delete: {
         method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Clients/:clientSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Clients/:clientSid.:format'
       },
       register: {
         method:'POST',
@@ -332,7 +343,7 @@ rcServices.factory('RCommClients', function($resource) {
       },
       update: {
         method:'POST',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Clients/:clientSid.:format',
+        url: '/restcomm/keycloak/Accounts/:accountSid/Clients/:clientSid.:format',
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -341,14 +352,14 @@ rcServices.factory('RCommClients', function($resource) {
 });
 
 rcServices.factory('RCommOutgoingCallerIDs', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/OutgoingCallerIds.:format', {
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/OutgoingCallerIds.:format', {
       accountSid: '@accountSid',
       format:'json'
     },
     {
       delete: {
         method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/OutgoingCallerIds/:phoneSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/OutgoingCallerIds/:phoneSid.:format'
       },
       register: {
         method:'POST',
@@ -360,14 +371,14 @@ rcServices.factory('RCommOutgoingCallerIDs', function($resource) {
 });
 
 rcServices.factory('RCommLogsCalls', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Calls.:format', {
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/Calls.:format', {
       accountSid: '@accountSid',
       format:'json'
     },
     {
       view: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Calls/:callSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Calls/:callSid.:format'
       },
       call: {
         method:'POST',
@@ -377,21 +388,21 @@ rcServices.factory('RCommLogsCalls', function($resource) {
       },
       search: {
         method:'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Calls/:callSid.:format',
+        url: '/restcomm/keycloak/Accounts/:accountSid/Calls/:callSid.:format',
       }
     }
   );
 });
 
 rcServices.factory('RCommLogsMessages', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/SMS/Messages.:format', {
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/SMS/Messages.:format', {
       accountSid: '@accountSid',
       format:'json'
     },
     {
       view: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/SMS/Messages/:smsMessageSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/SMS/Messages/:smsMessageSid.:format'
       },
       send: {
         method:'POST',
@@ -404,7 +415,7 @@ rcServices.factory('RCommLogsMessages', function($resource) {
 });
 
 rcServices.factory('RCommLogsRecordings', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Recordings.:format',
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/Recordings.:format',
     {
       accountSid:'@accountSid',
       format:'json'
@@ -412,18 +423,18 @@ rcServices.factory('RCommLogsRecordings', function($resource) {
     {
       view: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Recordings/:recordingSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Recordings/:recordingSid.:format'
       },
       delete: {
         method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Recordings/:recordingSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Recordings/:recordingSid.:format'
       }
     }
   );
 });
 
 rcServices.factory('RCommLogsNotifications', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Notifications.:format',
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/Notifications.:format',
     {
       accountSid: '@accountSid',
       format:'json'
@@ -431,18 +442,18 @@ rcServices.factory('RCommLogsNotifications', function($resource) {
     {
       view: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Notifications/:notificationSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Notifications/:notificationSid.:format'
       },
       delete: {
         method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Notifications/:notificationSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Notifications/:notificationSid.:format'
       }
     }
   );
 });
 
 rcServices.factory('RCommLogsTranscriptions', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions.:format',
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/Transcriptions.:format',
     {
       accountSid: '@accountSid',
       format:'json'
@@ -450,11 +461,11 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
     {
       view: {
         method: 'GET',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
       },
       delete: {
         method:'DELETE',
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/Transcriptions/:transcriptionSid.:format'
       }
     }
   );
@@ -465,7 +476,7 @@ rcServices.factory('RCommApps', function($resource) {
 });
 
 rcServices.factory('RCommAvailableNumbers', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format',
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format',
     {
       accountSid: '@accountSid',
       countryCode: '@countryCode',
@@ -486,7 +497,7 @@ rcServices.factory('RCommAvailableNumbers', function($resource) {
         method: 'GET',
         isArray: true,
         //url: '/restcomm-management/resources/json/available.:format'
-        url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/AvailableCountries.:format'
+        url: '/restcomm/keycloak/Accounts/:accountSid/IncomingPhoneNumbers/AvailableCountries.:format'
       }
     }
   );

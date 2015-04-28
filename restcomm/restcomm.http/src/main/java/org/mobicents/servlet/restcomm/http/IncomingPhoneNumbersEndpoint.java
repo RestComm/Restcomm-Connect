@@ -198,7 +198,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            //secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secureKeycloak(accountsDao.getAccount(accountSid), "domain:RestComm:Read:IncomingPhoneNumbers", getKeycloakAccessToken());
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -219,7 +220,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected Response getAvailableCountries(final String accountSid, final MediaType responseType) {
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            //secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secureKeycloak(accountsDao.getAccount(accountSid), "domain:RestComm:Read:IncomingPhoneNumbers", getKeycloakAccessToken());
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -241,7 +243,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected Response getIncomingPhoneNumbers(final String accountSid, final String phoneNumberFilter, final String friendlyNameFilter,
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            //secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secureKeycloak(accountsDao.getAccount(accountSid), "domain:RestComm:Read:IncomingPhoneNumbers", getKeycloakAccessToken());
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -261,7 +264,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+            //secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+            secureKeycloak(accountsDao.getAccount(accountSid), "domain:RestComm:Create:IncomingPhoneNumbers", getKeycloakAccessToken());
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -308,7 +312,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:IncomingPhoneNumbers");
+            //secure(accountsDao.getAccount(accountSid), "RestComm:Modify:IncomingPhoneNumbers");
+            secureKeycloak(accountsDao.getAccount(accountSid), "domain:RestComm:Modify:IncomingPhoneNumbers", getKeycloakAccessToken());
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -414,7 +419,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
+            //secure(accountsDao.getAccount(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
+            secureKeycloak(accountsDao.getAccount(accountSid), "domain:RestComm:Delete:IncomingPhoneNumbers", getKeycloakAccessToken());
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

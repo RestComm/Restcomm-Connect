@@ -136,7 +136,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
         final DateTime now = DateTime.now();
         //final String emailAddress = data.getFirst("EmailAddress");
-        final String emailAddress = userInfo.getEmail();
+        final String emailAddress = userInfo.getUsername();
 
         // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
         final Sid sid = Sid.generate(Sid.Type.ACCOUNT, userInfo.getUsername());
