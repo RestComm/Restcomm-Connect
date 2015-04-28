@@ -28,14 +28,12 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
-import org.apache.shiro.subject.Subject;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
@@ -130,21 +128,22 @@ public abstract class AbstractEndpoint {
     }
 
     protected void secure(final Account account, final String permission) throws AuthorizationException {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid accountSid = account.getSid();
-        if (account.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission)))) {
-            return;
-        } else {
-            throw new AuthorizationException();
-        }
+        secureKeycloak(account, "domain:" + permission, getKeycloakAccessToken()); // add the 'domain:' prefix too
+        //final Subject subject = SecurityUtils.getSubject();
+        //final Sid accountSid = account.getSid();
+        //if (account.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission)))) {
+        //    return;
+        //} else {
+        //    throw new AuthorizationException();
+        //}
     }
 
-    protected void secureKeycloak(Account account, final String neededPermissionString, final AccessToken accessToken) {
+    protected void secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
         Set<String> roleNames;
         try {
             roleNames = accessToken.getRealmAccess().getRoles();
         } catch (NullPointerException e) {
-            throw new UnauthorizedException("No access token or no roles");
+            throw new UnauthorizedException("No access token present or no roles in it");
         }
 
         String message = "has the following roles: ";
