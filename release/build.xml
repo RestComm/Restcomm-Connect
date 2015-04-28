@@ -133,20 +133,21 @@
 
 <target name="extract-mobicents-media" depends="get-mobicents-media">
 	<delete dir="${checkout.mobicents-media.dir}" failonerror="false" />
-	<delete dir="${release.as7.dir}/mobicents-media-server" failonerror="false" />
+	<delete dir="${release.as7.dir}/mediaserver" failonerror="false" />
+	<delete dir="${release.tomcat.dir}/mediaserver" failonerror="false" />
 	<!--unzip src="${mobicents-media.distro.zip.path}" dest="${release.dir}/mobicents-media"/-->
 	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.tomcat.dir}/mediaserver"/>
 	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.as7.dir}/mediaserver"/>
-	<move todir="${release.tomcat.dir}/mediaserver/server">
+	<move todir="${release.tomcat.dir}/mediaserver">
 		<fileset dir="${release.tomcat.dir}/mediaserver/mms-server" />
 	</move>
-	<move todir="${release.as7.dir}/mediaserver/server">
+	<move todir="${release.as7.dir}/mediaserver">
 		<fileset dir="${release.as7.dir}/mediaserver/mms-server" />
 	</move>
 
 	<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/mobicents-media/mobicents-media-server/deploy/server-beans.xml" failonerror="true"/-->
-	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/mediaserver/server/deploy/server-beans.xml" failonerror="true"/>
-	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/server/deploy/server-beans.xml" failonerror="true"/>
+	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/mediaserver/deploy/server-beans.xml" failonerror="true"/>
+	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml" failonerror="true"/>
 </target>
 
 <!--diameter-->
@@ -344,12 +345,12 @@
 		        		<exclude name="*.sh" />
 		        		<exclude name="**/*.sh" />
 			       </zipfileset>
-				<zipfileset dir="${release.as7.dir}/mediaserver/server/bin" filemode="755"
-					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/server/bin" >
+				<zipfileset dir="${release.as7.dir}/mediaserver/bin" filemode="755"
+					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/bin" >
 		        <include name="*.sh" />
 		    </zipfileset>
-				<zipfileset dir="${release.as7.dir}/mediaserver/server/bin"
-					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/server/bin" >
+				<zipfileset dir="${release.as7.dir}/mediaserver/bin"
+					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/bin" >
 		        <exclude name="*.sh" />
 		    </zipfileset>
 		    <zipfileset dir="${release.as7.dir}" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}"
@@ -362,12 +363,12 @@
 			<zipfileset dir="${release.tomcat.dir}/bin" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
 				<exclude name="*.sh" />
 			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/mediaserver/server/bin" filemode="755"
-						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mediaserver/server/bin" >
+			<zipfileset dir="${release.tomcat.dir}/mediaserver/bin" filemode="755"
+						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mediaserver/bin" >
 				<include name="*.sh" />
 			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/mediaserver/server/bin"
-						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mediaserver/server/bin" >
+			<zipfileset dir="${release.tomcat.dir}/mediaserver/bin"
+						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mediaserver/bin" >
 				<exclude name="*.sh" />
 			</zipfileset>
 			<zipfileset dir="${release.tomcat.dir}" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}"
