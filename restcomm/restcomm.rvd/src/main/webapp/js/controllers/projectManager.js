@@ -16,6 +16,10 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			$scope.projectList = data;
 			for ( var i=0; i < $scope.projectList.length; i ++)
 				$scope.projectList[i].viewMode = 'view';
+		})
+		.error(function (data, status, headers, config) {
+			if (status == 500)
+				notifications.put({type:'danger',message:"Internal server error"});
 		});
 	}
 	

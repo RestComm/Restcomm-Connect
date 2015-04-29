@@ -26,6 +26,8 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class StopInterpreter {
+    private boolean liveCallModification = false;
+
     private static final class Singleton {
         private static final StopInterpreter instance = new StopInterpreter();
     }
@@ -37,4 +39,13 @@ public final class StopInterpreter {
     public static StopInterpreter instance() {
         return Singleton.instance;
     }
+
+    public boolean isLiveCallModification() {
+        return liveCallModification;
+    }
+
+    public void setLiveCallModification(boolean liveCallModification) {
+        this.liveCallModification = liveCallModification;
+    }
+
 }

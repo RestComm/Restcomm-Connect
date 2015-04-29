@@ -223,7 +223,7 @@ var confirmNumberRegister = function(phone, isSIP, $dialog, $scope, RCommNumbers
     .open()
     .then(function(result) {
       if (result == "confirm") {
-        var params = createNumberParams(phone);
+        var params = createNumberParams(phone, isSIP);
         RCommNumbers.register({accountSid: $scope.sid}, $.param(params),
          function(phone, headers) { // success
            phone.registered = true;
@@ -261,6 +261,10 @@ var confirmNumberRegister = function(phone, isSIP, $dialog, $scope, RCommNumbers
 };
 
 var createNumberParams = function(number) {
+	createNumberParams(number, false)
+}
+
+var createNumberParams = function(number, isSIP) {
   var params = {};
 
   // Mandatory fields
@@ -285,6 +289,9 @@ var createNumberParams = function(number) {
   params["SmsFallbackUrl"] = number.sms_fallback_url || number.smsFallbackUrl;
   params["SmsFallbackMethod"] = number.sms_fallback_method || number.smsFallbackMethod;
   params["VoiceCallerIdLookup"] = number.voice_caller_id_lookup || number.voiceCallerIdLookup;
+  if(isSIP) {
+	  params["isSIP"] = "true";
+  }
 
   for (var prop in params) {
     if (params.hasOwnProperty(prop) && params[prop] === undefined) {

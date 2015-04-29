@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParamet
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberSearchFilters;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber;
 import org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ProvisionProvider;
 import org.mobicents.servlet.restcomm.provisioning.number.vi.converter.GetDIDListResponseConverter;
 import org.mobicents.servlet.restcomm.provisioning.number.vi.converter.LATAConverter;
 import org.mobicents.servlet.restcomm.provisioning.number.vi.converter.NPAConverter;
@@ -217,14 +218,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
 
                 final DefaultHttpClient client = new DefaultHttpClient();
                 if (telestaxProxyEnabled) {
-                    // This will work as a flag for LB that this request will need to be modified and proxied to VI
-                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
-                    // This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
-                    post.addHeader("RequestType", "GetAvailablePhoneNumbersByAreaCode");
-                    //This will let LB match the DID to a node based on the node host+port
-                    for (SipURI uri: containerConfiguration.getOutboundInterfaces()) {
-                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
-                    }
+                    addTelestaxProxyHeaders(post, ProvisionProvider.REQUEST_TYPE.GETDIDS.name());
                 }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -254,7 +248,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#buyNumber(java.lang.String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters)
      */
     @Override
-    public boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+    public boolean buyNumber(PhoneNumber phoneNumberObject, PhoneNumberParameters phoneNumberParameters) {
+        String phoneNumber = phoneNumberObject.getPhoneNumber();
         phoneNumber = phoneNumber.substring(2);
         // Provision the number from VoIP Innovations if they own it.
         if (isValidDid(phoneNumber)) {
@@ -278,15 +273,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                     post.setEntity(new UrlEncodedFormEntity(parameters));
                     final DefaultHttpClient client = new DefaultHttpClient();
                     if(telestaxProxyEnabled) {
-                        //This will work as a flag for LB that this request will need to be modified and proxied to VI
-                        post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
-                        //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
-                        post.addHeader("RequestType", "AssignDid");
-                        //This will let LB match the DID to a node based on the node host+port
-                        List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
-                        for (SipURI uri: uris) {
-                            post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
-                        }
+                        addTelestaxProxyHeaders(post, ProvisionProvider.REQUEST_TYPE.ASSIGNDID.name());
                     }
                     final HttpResponse response = client.execute(post);
                     if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -323,15 +310,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                 post.setEntity(new UrlEncodedFormEntity(parameters));
                 final DefaultHttpClient client = new DefaultHttpClient();
                 if(telestaxProxyEnabled) {
-                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
-                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
-                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
-                    post.addHeader("RequestType", "IsValidDid");
-                    //This will let LB match the DID to a node based on the node host+port
-                    List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
-                    for (SipURI uri: uris) {
-                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
-                    }
+                    addTelestaxProxyHeaders(post, ProvisionProvider.REQUEST_TYPE.QUERYDID.name());
                 }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -351,7 +330,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#updateNumber(java.lang.String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters)
      */
     @Override
-    public boolean updateNumber(String number, PhoneNumberParameters phoneNumberParameters) {
+    public boolean updateNumber(PhoneNumber phoneNumberObj, PhoneNumberParameters phoneNumberParameters) {
         return true;
     }
 
@@ -360,7 +339,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#cancelNumber(java.lang.String)
      */
     @Override
-    public boolean cancelNumber(String phoneNumber) {
+    public boolean cancelNumber(PhoneNumber phoneNumberObj) {
+        String phoneNumber = phoneNumberObj.getPhoneNumber();
         String numberToRemoveFromVi = phoneNumber;
         if(numberToRemoveFromVi.startsWith("+1")){
             numberToRemoveFromVi = numberToRemoveFromVi.replaceFirst("\\+1", "");
@@ -389,15 +369,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                 post.setEntity(new UrlEncodedFormEntity(parameters));
                 final DefaultHttpClient client = new DefaultHttpClient();
                 if(telestaxProxyEnabled) {
-                    //This will work as a flag for LB that this request will need to be modified and proxied to VI
-                    post.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
-                    //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
-                    post.addHeader("RequestType", "ReleaseDid");
-                    //This will let LB match the DID to a node based on the node host+port
-                    List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
-                    for (SipURI uri: uris) {
-                        post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
-                    }
+                    addTelestaxProxyHeaders(post, ProvisionProvider.REQUEST_TYPE.RELEASEDID.name());
                 }
                 final HttpResponse response = client.execute(post);
                 if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -417,5 +389,19 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
         List<String> countries = new ArrayList<String>();
         countries.add("US");
         return countries;
+    }
+
+    private void addTelestaxProxyHeaders(HttpPost post, String requestType) {
+        //This will work as a flag for LB that this request will need to be modified and proxied to VI
+        post.addHeader("TelestaxProxy", "true");
+        //Adds the Provision provider class name
+        post.addHeader("Provider", ProvisionProvider.voipinnovationsClass);
+        //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
+        post.addHeader("RequestType", requestType);
+        //This will let LB match the DID to a node based on the node host+port
+        List<SipURI> uris = containerConfiguration.getOutboundInterfaces();
+        for (SipURI uri: uris) {
+            post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
+        }
     }
 }

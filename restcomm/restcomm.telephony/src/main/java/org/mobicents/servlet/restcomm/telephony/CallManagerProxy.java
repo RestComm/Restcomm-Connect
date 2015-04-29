@@ -46,6 +46,7 @@ import akka.actor.UntypedActorFactory;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public final class CallManagerProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
@@ -65,8 +66,10 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
 
     @Override
     public void destroy() {
-        system.shutdown();
-        system.awaitTermination();
+        if (system != null) {
+            system.shutdown();
+            system.awaitTermination();
+        }
     }
 
     @Override
