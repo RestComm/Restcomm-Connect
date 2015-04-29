@@ -5,7 +5,7 @@
 				<i class="fa fa-archive pull-right"></i>  
 				<small  class="pull-right packaging-menu"> 
 					 <a class="rvd-clickable" href='#/designer/{{projectName}}'><i class="fa fa-pencil" title="{{'formKeepEditingTitle' | translate}}"></i></a>&nbsp;
-					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='submitPermitted && saveRapp(projectName,rapp)'><i class="fa fa-save" title="{{'formSaveTitle' | translate}}"></i></a>&nbsp;  
+					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='saveRappClicked(projectName,rapp,submitPermitted)'><i class="fa fa-save" title="{{(submitPermitted ? 'formSaveTitle' : 'formSaveCompleteRequiredHint') | translate}}"></i></a>&nbsp;  
 					 <a ng-show="!isNewRapp" class="rvd-clickable" ng-disabled="true" ng-click='preparePackage(projectName)'><i class="fa fa-download" title="{{'formDownloadTitle' | translate}}"></i></a> 
 					 <i ng-show="isNewRapp" class="fa fa-download" title="{{'formDownloadNewTitle' | translate}}"></i>
 				</small>
@@ -24,7 +24,7 @@
 					<div class="row">
 						<div class="col-md-4">
 							<div class="form-group">
-								<label><strong>{{'formAppNameLabel' | translate}}</strong></label>
+								<label><strong>{{'formAppNameLabel' | translate}} *</strong></label>
 								<input ng-model='rapp.info.name' class='form-control' name="name" required>
 								<div class="validation-error" ng-show="appinfoForm.name.$invalid && showErrors">{{'formGeneralInfoRequiredLabel' | translate}}</div>
 								<span class="help-block">{{'formOfficialNameLabel' | translate}}</span>
@@ -37,7 +37,7 @@
 							</div>
 						</div>
 						<div class="col-md-8">
-							<label><strong>{{'formSummaryLabel' | translate}}</strong></label>
+							<label><strong>{{'formSummaryLabel' | translate}} *</strong></label>
 							<textarea ng-model='rapp.info.description' class='form-control' required></textarea>
 							<span class="help-block">{{'formDescribeAppLabel' | translate}}</span>
 						</div>
@@ -71,11 +71,11 @@
 							<div class="row">
 								<div class="form-group col-md-3">
 									<label >{{'formNameLabel' | translate}}</label>
-									<input ng-model='configOption.name' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'formNamePlaceholder' : '' | translate}}" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formNameTooltip' | translate}}">
+									<input ng-model='configOption.name' class="form-control" ng-pattern="/^[A-Za-z]+[A-Za-z0-9_]*$/" required placeholder="{{$index==0 ? 'formNamePlaceholder' : '' | translate}}" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formNameTooltip' | translate}}">
 								</div>
 								<div class="form-group col-md-3">
 									<label>{{'formLabelLabel' | translate}}</label>
-									<input ng-model='configOption.label' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" class="form-control" required placeholder="{{$index==0 ? 'formLabelPlaceholder' : '' | translate}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formLabelTooltip' | translate}}">
+									<input ng-model='configOption.label' class="form-control" required placeholder="{{$index==0 ? 'formLabelPlaceholder' : '' | translate}}"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formLabelTooltip' | translate}}">
 								</div>	
 								<div class="form-group col-md-3">
 									<label>{{'formDefaultValueLabel' | translate}}</label>
@@ -84,7 +84,7 @@
 								<div class="form-group col-md-3">
 									<label>{{'formAppParamsRequiredLabel' | translate}}</label>
 									<div>
-										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.required'  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formAppParamsRequiredTooltip' | translate}}">
+										<input type='checkbox' ng-model='configOption.required'  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formAppParamsRequiredTooltip' | translate}}">
 									</div>
 								</div>									
 							</div>
@@ -96,7 +96,7 @@
 								<div class="form-group col-md-6">
 									<label>{{'formConfigurationInitOptionLabel' | translate}}</label>
 									<div>
-										<input type='checkbox' ng-disabled="configOption.name=='instanceToken' || configOption.name=='backendRootURL'" ng-model='configOption.isInitOption'  placeholder='true' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formConfigurationInitOptionTooltip' | translate}} ">
+										<input type='checkbox' ng-model='configOption.isInitOption'  placeholder='true' tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'formConfigurationInitOptionTooltip' | translate}} ">
 									</div>
 								</div>
 							</div>				
@@ -108,12 +108,6 @@
 		
 				<div class="rvd-spacer10">&nbsp;</div>
 				
-				<h4>{{'formConfigurationMultitenancyLabel' | translate}}</h4>
-				<p>{{'formConfigurationMultitenancyMessage1' | translate}}  <em>instanceToken</em>.
-				<ul>
-					<li><strong>instanceToken</strong> - {{'formConfigurationMultitenancyMessage1' | translate}} </li>
-				</ul>				
-				<button ng-show="!optionExists('instanceToken')" class="btn btn-primary" ng-click="addConfigurationOption('instanceToken')">{{'formConfigurationAddTokenButton1' | translate}} <em>Instance Token</em> {{'formConfigurationAddTokenButton2' | translate}}</button>
 			</div>
 				{{watchFormStatus(packagingForm.$valid)}}
 			</form>

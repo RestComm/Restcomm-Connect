@@ -96,6 +96,13 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.tts.acapela</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.tts.voicerss</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>

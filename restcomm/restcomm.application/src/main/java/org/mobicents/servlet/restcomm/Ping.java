@@ -38,6 +38,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.provisioning.number.api.ProvisionProvider;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -49,16 +50,21 @@ public class Ping {
     private Configuration configuration;
     private ServletContext context;
     private Timer timer;
+    private Timer subsequentTimer;
+    private boolean subsequentTimerIsSet = false;
+    private PingTask ping;
+    private final String provider;
 
     Ping(Configuration configuration, ServletContext context){
         this.configuration = configuration;
         this.context = context;
+        this.provider = configuration.getString("phone-number-provisioning[@class]");
     }
 
     public void sendPing(){
         boolean daemon = true;
         timer = new Timer(daemon);
-        PingTask ping = new PingTask(configuration);
+        ping = new PingTask(configuration);
         timer.schedule(ping, 0, 60000);
     }
 
@@ -73,6 +79,8 @@ public class Ping {
         public void run() {
             Configuration proxyConf = configuration.subset("runtime-settings").subset("telestax-proxy");
             Boolean proxyEnabled = proxyConf.getBoolean("enabled");
+            Configuration mediaConf = configuration.subset("media-server-manager").subset("mgcp-server");
+            String publicIpAddress = mediaConf.getString("external-address");
             if (proxyEnabled) {
                 String proxyUri = proxyConf.getString("uri");
                 String username = proxyConf.getString("login");
@@ -86,6 +94,7 @@ public class Ping {
                 buffer.append("<requesttype>").append("ping").append("</requesttype>");
                 buffer.append("<item>");
                 buffer.append("<endpointgroup>").append(endpoint).append("</endpointgroup>");
+//                buffer.append("<provider>").append(provider).append("</provider>");
                 buffer.append("</item>");
                 buffer.append("</body>");
                 buffer.append("</request>");
@@ -99,18 +108,29 @@ public class Ping {
 
                     //This will work as a flag for LB that this request will need to be modified and proxied to VI
                     post.addHeader("TelestaxProxy", String.valueOf(proxyEnabled));
+                    //Adds the Provision provider class name
+                    post.addHeader("Provider", provider);
                     //This will tell LB that this request is a getAvailablePhoneNumberByAreaCode request
-                    post.addHeader("RequestType", "Ping");
+                    post.addHeader("RequestType", ProvisionProvider.REQUEST_TYPE.PING.name());
                     //This will let LB match the DID to a node based on the node host+port
                     List<SipURI> uris = outboundInterface();
                     for (SipURI uri: uris) {
                         post.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
                     }
-
+                    if (publicIpAddress != null || !publicIpAddress.equalsIgnoreCase("")) {
+                        post.addHeader("PublicIpAddress",publicIpAddress);
+                    }
                     final HttpResponse response = client.execute(post);
                     if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                         logger.info("Ping to Telestax Proxy was successfully sent");
                         timer.cancel();
+//                        if (!subsequentTimerIsSet) {
+//                            logger.info("Will set subsequent timer");
+//                            boolean daemon = true;
+//                            subsequentTimer = new Timer(daemon);
+//                            subsequentTimer.schedule(ping, 1800000, 1800000);
+//                            subsequentTimerIsSet = true;
+//                        }
                         return;
                     } else {
                         logger.error("Ping to Telestax Proxy was sent, but there was a problem. Response status line: "+response.getStatusLine());

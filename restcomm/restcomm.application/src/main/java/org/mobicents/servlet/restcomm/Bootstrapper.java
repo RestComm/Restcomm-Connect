@@ -3,10 +3,10 @@ package org.mobicents.servlet.restcomm;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -31,7 +31,13 @@ import akka.actor.UntypedActorFactory;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-public final class Bootstrapper extends SipServlet {
+/**
+ *
+ * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ *
+ */
+
+public final class Bootstrapper extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(Bootstrapper.class);
 
@@ -82,8 +88,7 @@ public final class Bootstrapper extends SipServlet {
         return gateway;
     }
 
-    private String home(final ServletConfig config) {
-        final ServletContext context = config.getServletContext();
+    private String home(final ServletContext context) {
         final String path = context.getRealPath("/");
         if (path.endsWith("/")) {
             return path.substring(0, path.length() - 1);
@@ -92,73 +97,75 @@ public final class Bootstrapper extends SipServlet {
         }
     }
 
-    @Override
-    public void init(final ServletConfig config) throws ServletException {
-        final ServletContext context = config.getServletContext();
-        final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
-        // Initialize the configuration interpolator.
-        final ConfigurationStringLookup strings = new ConfigurationStringLookup();
-        strings.addProperty("home", home(config));
-        strings.addProperty("uri", uri(config));
-        ConfigurationInterpolator.registerGlobalLookup("restcomm", strings);
-        // Load the RestComm configuration file.
-        Configuration xml = null;
-        try {
-            xml = new XMLConfiguration(path);
-        } catch (final ConfigurationException exception) {
-            logger.error(exception);
-        }
-        xml.setProperty("runtime-settings.home-directory", home(config));
-        xml.setProperty("runtime-settings.root-uri", uri(config));
-        context.setAttribute(Configuration.class.getName(), xml);
-        // Initialize global dependencies.
-        final ClassLoader loader = getClass().getClassLoader();
-        // Create the actor system.
-        final Config settings = ConfigFactory.load();
-        system = ActorSystem.create("RestComm", settings, loader);
-        // Share the actor system with other servlets.
-        context.setAttribute(ActorSystem.class.getName(), system);
-        // Create the storage system.
-        DaoManager storage = null;
-        try {
-            storage = storage(xml, loader);
-        } catch (final ObjectInstantiationException exception) {
-            throw new ServletException(exception);
-        }
-        context.setAttribute(DaoManager.class.getName(), storage);
-        ShiroResources.getInstance().set(DaoManager.class, storage);
-        ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
-
-        // otsakir
-        logger.info("Creating RestcommRoles");
-        RestcommRoles restcommRoles = new RestcommRoles();
-        context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
-        ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
-        logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
-
-        // Create the media gateway.
-        ActorRef gateway = null;
-        try {
-            gateway = gateway(xml, loader);
-        } catch (final UnknownHostException exception) {
-            throw new ServletException(exception);
-        }
-        context.setAttribute(MediaGateway.class.getName(), gateway);
-        Version.printVersion();
-        Ping ping = new Ping(xml, context);
-        ping.sendPing();
-    }
-
 
     private DaoManager storage(final Configuration configuration, final ClassLoader loader) throws ObjectInstantiationException {
         final String classpath = configuration.getString("dao-manager[@class]");
         final DaoManager daoManager = (DaoManager) new ObjectFactory(loader).getObjectInstance(classpath);
-        daoManager.configure(configuration.subset("dao-manager"));
+        daoManager.configure(configuration);
         daoManager.start();
         return daoManager;
     }
 
-    private String uri(final ServletConfig config) {
-        return config.getServletContext().getContextPath();
+    private String uri(final ServletContext context) {
+        return context.getContextPath();
+    }
+
+    @Override
+    public void servletInitialized(SipServletContextEvent event) {
+        if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
+            final ServletContext context = event.getServletContext();
+            final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
+            // Initialize the configuration interpolator.
+            final ConfigurationStringLookup strings = new ConfigurationStringLookup();
+            strings.addProperty("home", home(context));
+            strings.addProperty("uri", uri(context));
+            ConfigurationInterpolator.registerGlobalLookup("restcomm", strings);
+            // Load the RestComm configuration file.
+            Configuration xml = null;
+            try {
+                xml = new XMLConfiguration(path);
+            } catch (final ConfigurationException exception) {
+                logger.error(exception);
+            }
+            xml.setProperty("runtime-settings.home-directory", home(context));
+            xml.setProperty("runtime-settings.root-uri", uri(context));
+            context.setAttribute(Configuration.class.getName(), xml);
+            // Initialize global dependencies.
+            final ClassLoader loader = getClass().getClassLoader();
+            // Create the actor system.
+            final Config settings = ConfigFactory.load();
+            system = ActorSystem.create("RestComm", settings, loader);
+            // Share the actor system with other servlets.
+            context.setAttribute(ActorSystem.class.getName(), system);
+            // Create the storage system.
+            DaoManager storage = null;
+            try {
+                storage = storage(xml, loader);
+            } catch (final ObjectInstantiationException exception) {
+                logger.error("ObjectInstantiationException during initialization", exception);
+            }
+            context.setAttribute(DaoManager.class.getName(), storage);
+            ShiroResources.getInstance().set(DaoManager.class, storage);
+            ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
+
+            // Create directory of shiro based restcomm roles
+            logger.info("Creating RestcommRoles");
+            RestcommRoles restcommRoles = new RestcommRoles();
+            context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
+            ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
+            logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
+
+            // Create the media gateway.
+            ActorRef gateway = null;
+            try {
+                gateway = gateway(xml, loader);
+            } catch (final UnknownHostException exception) {
+                logger.error("UnknownHostException during initialization", exception);
+            }
+            context.setAttribute(MediaGateway.class.getName(), gateway);
+            Version.printVersion();
+            Ping ping = new Ping(xml, context);
+            ping.sendPing();
+        }
     }
 }
