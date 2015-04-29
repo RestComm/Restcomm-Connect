@@ -44,7 +44,7 @@ public class MyTestEndpoint extends AbstractEndpoint {
 
     @GET
     public Response runTest() {
-        logger.info("IN runTest 666");
+        logger.info("IN runTest 667");
         ShiroResources shiroResources = ShiroResources.getInstance();
         RestcommRoles restcommRoles = shiroResources.get(RestcommRoles.class);
         String rolesString = restcommRoles.toString();
