@@ -141,25 +141,25 @@
 	<move todir="${release.tomcat.dir}/mediaserver">
 		<fileset dir="${release.tomcat.dir}/mediaserver/mms-server" />
 	</move>
-	<mkdir dir="${release.tomcat.dir}/mediaserver/clients"/>
+	<!-- <mkdir dir="${release.tomcat.dir}/mediaserver/clients"/>
 	<move todir="${release.tomcat.dir}/mediaserver/clients">
 		<fileset dir="${release.tomcat.dir}/mediaserver/clients" />
 	</move>
 	<mkdir dir="${release.tomcat.dir}/mediaserver/docs"/>
 	<move todir="${release.tomcat.dir}/mediaserver/docs">
 		<fileset dir="${release.tomcat.dir}/mediaserver/docs" />
-	</move>
+	</move> -->
 	<move todir="${release.as7.dir}/mediaserver">
 		<fileset dir="${release.as7.dir}/mediaserver/mms-server" />
 	</move>
-	<mkdir dir="${release.as7.dir}/mediaserver/clients"/>
+	<!-- <mkdir dir="${release.as7.dir}/mediaserver/clients"/>
 	<move todir="${release.as7.dir}/mediaserver/clients">
 		<fileset dir="${release.as7.dir}/mediaserver/clients" />
 	</move>
 	<mkdir dir="${release.as7.dir}/mediaserver/docs"/>
 	<move todir="${release.as7.dir}/mediaserver/docs">
 		<fileset dir="${release.as7.dir}/mediaserver/docs" />
-	</move>
+	</move> -->
 	<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/mobicents-media/mobicents-media-server/deploy/server-beans.xml" failonerror="true"/-->
 	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/mediaserver/deploy/server-beans.xml" failonerror="true"/>
 	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml" failonerror="true"/>
