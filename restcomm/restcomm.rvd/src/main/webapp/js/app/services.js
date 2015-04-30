@@ -46,91 +46,27 @@ angular.module('Rvd').service('projectModules', [function () {
 }]);
 */
 
-angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', function ($http, $browser, $q) {
-	//console.log("Creating authentication service");
-	var serviceInstance = {};
-	var authInfo = {};
-	
-	/*
-	function refresh() {
-		authInfo.rvdticket = undefined;
-		authInfo.username = undefined;
-		var matches = RegExp( "^([^:]+)\:(.*)$" ).exec( $browser.cookies().rvdticket );
-		if (matches != null) {
-			authInfo.rvdticket = matches[2];
-			authInfo.username = matches[1];
+// RVD authc/authz wrapper. Try to use this instead of keycloakAuth service directly.
+angular.module('Rvd').service('auth', ['keycloakAuth', function(keycloakAuth) {
+		var service = {};
+		service.getLoggedUsername = function() {
+			//return keycloakAuth.getUsername();
+			if (keycloakAuth.authz.profile) {
+				var profile = keycloakAuth.authz.profile;
+				return profile.username;
+			} else
+				return "Unknown";
 		}
-	}	
-	
-	function doLogin(username, password) {
-		var deferred = $q.defer();
-		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
-		.success ( function () {
-			console.log("login successful");
-			deferred.resolve();
-		})
-		.error( function (data, status) {
-			console.log("error logging in");
-			deferred.reject(data);
-		});
-		return deferred.promise;
-	}
-	serviceInstance.doLogin = doLogin;
-	
-	function doLogout() {
-		var deferred = $q.defer();
-		$http({	url:'services/auth/logout', method:'GET'})
-		.success ( function () {
-			console.log("logged out");
-			deferred.resolve();
-		})
-		.error( function (data, status) {
-			console.log("error logging out");
-			deferred.reject(data);
-		});		
-		return deferred.promise;
-	}
-	serviceInstance.doLogout = doLogout;
-	*/
-	serviceInstance.getAuthInfo = function () {
-		return authInfo;
-	}
-	
-	/*
-	
-	serviceInstance.clearTicket = function () {
-		$browser.cookies().rvdticket = undefined;
-		authInfo.rvdticket = undefined;
-		authInfo.username = undefined;
-	}
-	
-	serviceInstance.looksAuthenticated = function () {
-		refresh();
-		if ( !authInfo.rvdticket )
-			return false;
-		return true;
-	}
-	
-	
-	
-	serviceInstance.authResolver = function() {
-		var deferred = $q.defer();
-		if ( !this.looksAuthenticated() ) {
-			deferred.reject("AUTHENTICATION_ERROR");
-		} else {
-			deferred.resolve({status:"authenticated"});
+		service.isLogged = function() {
+			return keycloakAuth.loggedIn;
 		}
-		return deferred.promise;
-	}
-	*/
-	
-	serviceInstance.authResolver = function() {
-		return authInfo;
-	}
-	
-	return serviceInstance;
-	
-	
+		service.getLogoutUrl = function() {
+			return keycloakAuth.logoutUrl;
+		}
+		service.logout = function() {
+			keycloakAuth.authz.logout();
+		}
+		return service;
 }]);
 
 angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', function ($http,$q,$modal) {

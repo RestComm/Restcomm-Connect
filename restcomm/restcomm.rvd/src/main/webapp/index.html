@@ -33,14 +33,16 @@
 				</div>
 				<nav class="collabse navbar-collapse" role="navigation">
 					<ul class="nav navbar-nav navbar-right">
-						<li ng-if="authInfo.rvdticket" class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{authInfo.username}} <b class="caret"></b></a>
+						
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{auth.getLoggedUsername()}} <b class="caret"></b></a>
 							<ul id="rightMenu" class="dropdown-menu pull-right">
-								<li>
-									<a class="rvd-clickable-text" ng-click="logout()"><i class="fa fa-sign-out"></i>{{'indexUserStatusControllerLabel' | translate}}</a>
+								<li ng-show="auth.isLogged()">
+									<a class="rvd-clickable-text" ng-click="auth.logout()"><i class="fa fa-sign-out"></i>{{'indexUserStatusControllerLabel' | translate}}</a>
 								</li>
 							</ul>
 						</li>
+						
 						<li class="dropdown" ng-controller="translateController">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{{'indexSwitchLanguageTitle' | translate}}"><i class="fa fa-language"></i></a>
 							<ul class="dropdown-menu">
@@ -48,9 +50,11 @@
 								<li><a class="rvd-clickable-text" ng-click="changeLanguage('pt-BR')"><i ng-show="getCurrentLanguage()=='pt-BR'" class="fa fa-check"></i> pt-BR</a></li>
 							</ul>
 						</li>
+						<!-- 
 						<li ng-if="authInfo.rvdticket">
 							<a class="rvd-clickable-text" ng-click="showSettingsModal()" title="{{'indexSettingsTitle' | translate}}"><i class="fa fa-gear"></i></a>
 						</li>
+						 -->
 					</ul>
 				</nav>
 			</div>

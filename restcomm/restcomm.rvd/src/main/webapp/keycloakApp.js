@@ -17,9 +17,12 @@ angular.element(document).ready(function ($http) {
         auth.loggedIn = true;
         auth.authz = keycloakAuth;
         auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/demo/tokens/logout?redirect_uri=/restcomm-rvd/index.html";
-        angular.module('Rvd').factory('Auth', function() {
+        angular.module('Rvd').factory('keycloakAuth', function() {
             return auth;
         });
+        keycloakAuth.loadUserProfile().success(function () {
+			console.log("User profile retrieved")
+		});
         angular.bootstrap(document, ["Rvd"]);
     }).error(function (a, b) {
             window.location.reload();
@@ -42,14 +45,14 @@ module.controller('GlobalCtrl', function($scope, $http) {
 */
 
 
-angular.module('Rvd').factory('authInterceptor', function($q, Auth) {
+angular.module('Rvd').factory('authInterceptor', function($q, keycloakAuth) {
     return {
         request: function (config) {
             var deferred = $q.defer();
-            if (Auth.authz.token) {
-                Auth.authz.updateToken(5).success(function() {
+            if (keycloakAuth.authz.token) {
+                keycloakAuth.authz.updateToken(5).success(function() {
                     config.headers = config.headers || {};
-                    config.headers.Authorization = 'Bearer ' + Auth.authz.token;
+                    config.headers.Authorization = 'Bearer ' + keycloakAuth.authz.token;
 
                     deferred.resolve(config);
                 }).error(function() {

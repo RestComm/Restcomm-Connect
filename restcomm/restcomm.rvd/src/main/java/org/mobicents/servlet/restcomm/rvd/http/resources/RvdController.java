@@ -124,11 +124,9 @@ public class RvdController extends RestService {
 
         KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
         IDToken idToken = session.getIdToken();
-        logger.info("EMAIL: " + idToken.getEmail() );
-        logger.info("NAME: " + idToken.getName() );
-        logger.info("Username: " +  idToken.getPreferredUsername() );
-
-
+        //logger.info("EMAIL: " + idToken.getEmail() );
+        //logger.info("NAME: " + idToken.getName() );
+        //logger.info("Username: " +  idToken.getPreferredUsername() );
 
         RvdContext rvdContext = new RvdContext(request, servletContext);
         ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);

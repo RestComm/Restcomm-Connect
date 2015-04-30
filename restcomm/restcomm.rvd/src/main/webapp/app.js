@@ -5,23 +5,16 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 	
 	$routeProvider.when('/project-manager/:projectKind', {
 		templateUrl : 'templates/projectManager.html',
-		controller : 'projectManagerCtrl',
-		resolve: {
-			authInfo: function (authentication) {return authentication.authResolver();}
-		}
+		controller : 'projectManagerCtrl'
 	})
 	.when('/home', {
 		templateUrl : 'templates/home.html',
-		controller : 'homeCtrl',
-		resolve: {
-			authInfo: function (authentication) {return authentication.authResolver();}
-		}
+		controller : 'homeCtrl'
 	})
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
 		controller : 'designerCtrl',
 		resolve: {
-			authInfo: function (authentication) {return authentication.authResolver();},
 			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
 			project: function(designerService, $route) { return designerService.openProject($route.current.params.projectName); },
 			bundledWavs: function(designerService) { return designerService.getBundledWavs()}
@@ -32,7 +25,6 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		controller : 'packagingCtrl',
 		resolve: {
 			rappWrap: function(RappService) {return RappService.getRapp();},
-			authInfo: function (authentication) {return authentication.authResolver();},
 			rvdSettingsResolver: function (rvdSettings) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
 		}
 	})
@@ -41,20 +33,12 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		controller : 'packagingDownloadCtrl',
 		resolve: { 
 			binaryInfo: packagingDownloadCtrl.getBinaryInfo,
-			authInfo: function (authentication) {return authentication.authResolver();}
 		}
 	})	
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
-		controller : 'upgradeCtrl',
-		resolve: {
-			authInfo: function (authentication) {return authentication.authResolver();}
-		}
+		controller : 'upgradeCtrl'
 	})
-	//.when('/login', {
-	//	templateUrl : 'templates/login.html',
-	//	controller : 'loginCtrl'
-	//})
 	.when('/designer/:projectName/log', {
 		templateUrl : 'templates/projectLog.html',
 		controller : 'projectLogCtrl'
