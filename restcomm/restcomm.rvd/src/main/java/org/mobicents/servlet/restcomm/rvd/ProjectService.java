@@ -29,6 +29,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadProjectHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.ProjectDirectoryAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
@@ -386,6 +387,16 @@ public class ProjectService {
         String projectJson = FsProjectStorage.loadProjectString(projectName, workspaceStorage);
         RvdProject project = RvdProject.fromJson(projectName, projectJson);
         return project;
+    }
+
+    // Higher level function for loading projects.
+    public static ProjectState loadProject(String projectName, WorkspaceStorage storage) throws StorageException, ProjectDoesNotExist {
+        try {
+            ProjectState project = FsProjectStorage.loadProject(projectName, storage);
+            return project;
+        } catch (StorageEntityNotFound e) {
+            throw new ProjectDoesNotExist("Project " + projectName + " does not exist",e);
+        }
     }
 
 

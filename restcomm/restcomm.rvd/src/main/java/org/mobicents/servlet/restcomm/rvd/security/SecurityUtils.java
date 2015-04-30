@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.security;
 import javax.ws.rs.core.NewCookie;
 
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.InvalidTicketCookie;
 
 public class SecurityUtils {
@@ -37,6 +38,17 @@ public class SecurityUtils {
             return ticketParts[1];
         } else
             throw new InvalidTicketCookie("Ivalid ticket cookie: " + ticketCookie);
+    }
+
+    public static boolean userCanAccessProject(String username, ProjectState project) {
+        // by default, projects that belong to no user are accessible by all users
+        if (project.getHeader().getOwner() == null)
+            return true;
+
+        if (project.getHeader().getOwner().equals(username))
+            return true;
+        else
+            return false;
     }
 
 }

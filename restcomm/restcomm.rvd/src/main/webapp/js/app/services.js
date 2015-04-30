@@ -51,6 +51,7 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 	var serviceInstance = {};
 	var authInfo = {};
 	
+	/*
 	function refresh() {
 		authInfo.rvdticket = undefined;
 		authInfo.username = undefined;
@@ -90,10 +91,12 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 		return deferred.promise;
 	}
 	serviceInstance.doLogout = doLogout;
-	
+	*/
 	serviceInstance.getAuthInfo = function () {
 		return authInfo;
 	}
+	
+	/*
 	
 	serviceInstance.clearTicket = function () {
 		$browser.cookies().rvdticket = undefined;
@@ -118,6 +121,11 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 			deferred.resolve({status:"authenticated"});
 		}
 		return deferred.promise;
+	}
+	*/
+	
+	serviceInstance.authResolver = function() {
+		return authInfo;
 	}
 	
 	return serviceInstance;

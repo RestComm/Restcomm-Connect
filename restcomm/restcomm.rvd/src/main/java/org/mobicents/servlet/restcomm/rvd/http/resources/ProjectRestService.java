@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.security.Principal;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -36,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import org.keycloak.KeycloakSecurityContext;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
@@ -56,6 +56,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.security.SecurityUtils;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -75,9 +76,6 @@ public class ProjectRestService extends RestService {
 
     static final Logger logger = Logger.getLogger(ProjectRestService.class.getName());
 
-    //@Resource
-    //TicketRepository ticketRepository;
-
     @Context
     ServletContext servletContext;
     @Context
@@ -87,9 +85,9 @@ public class ProjectRestService extends RestService {
 
     private ProjectService projectService;
     private RvdConfiguration rvdSettings;
-    private ProjectState activeProject;
     private ModelMarshaler marshaler;
     private WorkspaceStorage workspaceStorage;
+    private String loggedUsername;
 
     RvdContext rvdContext;
 
@@ -100,46 +98,41 @@ public class ProjectRestService extends RestService {
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
         projectService = new ProjectService(rvdContext,workspaceStorage);
+        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+        if (session.getToken() != null)
+            loggedUsername = session.getToken().getPreferredUsername();
     }
 
-    /**
-     * Make sure the specified project has been loaded and is available for use. Checks logged user too.
-     * Also the loaded project is placed in the activeProject variable
-     * @param projectName
-     * @return
-     * @throws StorageException, WebApplicationException/unauthorized
-     * @throws ProjectDoesNotExist
+    /*
+     * Load a project and make sure current user has access to it
      */
-    void assertProjectAvailable(String projectName) throws StorageException, ProjectDoesNotExist {
+    ProjectState loadUserProject(String projectName) throws StorageException, ProjectDoesNotExist {
         if (! FsProjectStorage.projectExists(projectName,workspaceStorage))
             throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
         ProjectState project = FsProjectStorage.loadProject(projectName, workspaceStorage);
         if ( project.getHeader().getOwner() != null ) {
-            // needs further checking
-            if ( securityContext.getUserPrincipal() != null ) {
-                String loggedUser = securityContext.getUserPrincipal().getName();
-                if ( loggedUser.equals(project.getHeader().getOwner() ) ) {
-                    this.activeProject = project;
-                    return;
+            if ( loggedUsername != null ) {
+                if ( loggedUsername.equals(project.getHeader().getOwner() ) ) {
+                    return project;
                 }
             }
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         }
-        activeProject = project;
+        return project;
     }
 
-    @RvdAuth
+    void assertUserLogged() {
+        if (loggedUsername == null)
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listProjects(@Context HttpServletRequest request) {
-        //logger.debug("SecurityContext: " + securityContext);
-        //logger.debug("User principal: " + securityContext.getUserPrincipal());
-        //logger.debug("isSecure: " + securityContext.isSecure());
-
-        Principal loggedUser = securityContext.getUserPrincipal();
+        assertUserLogged();
         List<ProjectItem> items;
         try {
-            items = projectService.getAvailableProjectsByOwner(loggedUser.getName()); // there has to be a user in the context. Only logged users are allowed to to run project manager services
+            items = projectService.getAvailableProjectsByOwner(loggedUsername); // there has to be a user in the context. Only logged users are allowed to to run project manager services
             projectService.fillStartUrlsForProjects(items, request);
 
         } catch (BadWorkspaceDirectoryStructure e) {
@@ -157,17 +150,14 @@ public class ProjectRestService extends RestService {
         return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
     }
 
-
-
-    @RvdAuth
     @PUT
     @Path("{name}")
     public Response createProject(@PathParam("name") String name, @QueryParam("kind") String kind) {
-        Principal loggedUser = securityContext.getUserPrincipal();
-
+        // maybe check for a specific user role here
+        assertUserLogged();
         logger.info("Creating project " + name);
         try {
-            ProjectState projectState = projectService.createProject(name, kind, loggedUser.getName());
+            ProjectState projectState = projectService.createProject(name, kind, loggedUsername);
             BuildService buildService = new BuildService(workspaceStorage);
             buildService.buildProject(name, projectState);
         } catch (ProjectAlreadyExists e) {
@@ -184,24 +174,22 @@ public class ProjectRestService extends RestService {
         return Response.ok().build();
     }
 
-    /**
-     * Retrieves project header information. Returns  the project header or null if it does not exist (for old projects) as JSON - OK status.
+    /*
+     * Retrieves project header information.
      * Returns INTERNAL_SERVER_ERROR status and no response body for serious errors
-     * @param name - The project name to get information for
-     * @throws StorageException
-     * @throws ProjectDoesNotExist
      */
-    @RvdAuth
     @GET
     @Path("{name}/info")
     public Response projectInfo(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(name);
-
-        StateHeader header = activeProject.getHeader();
+        assertUserLogged();
+        ProjectState project = ProjectService.loadProject(name, workspaceStorage);
+        if (!SecurityUtils.userCanAccessProject(loggedUsername, project))
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        StateHeader header = project.getHeader();
         return Response.status(Status.OK).entity(marshaler.getGson().toJson(header)).type(MediaType.APPLICATION_JSON).build();
     }
 
-    @RvdAuth
+
     @POST
     @Path("{name}")
     public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) {
@@ -209,8 +197,7 @@ public class ProjectRestService extends RestService {
             logger.info("Saving project " + projectName);
             try {
                 ProjectState existingProject = FsProjectStorage.loadProject(projectName, workspaceStorage);
-                Principal loggedUser = securityContext.getUserPrincipal();
-                if (loggedUser.getName().equals(existingProject.getHeader().getOwner())  ||  existingProject.getHeader().getOwner() == null ) {
+                if (loggedUsername != null && (loggedUsername.equals(existingProject.getHeader().getOwner())  ||  existingProject.getHeader().getOwner() == null )) {
                     projectService.updateProject(request, projectName, existingProject);
                     return buildOkResponse();
                 } else {
@@ -282,7 +269,7 @@ public class ProjectRestService extends RestService {
     @Path("{name}/rename")
     public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName) throws StorageException, ProjectDoesNotExist {
         if ( !RvdUtils.isEmpty(projectName) && ! RvdUtils.isEmpty(projectNewName) ) {
-            assertProjectAvailable(projectName);
+            loadUserProject(projectName);
             try {
                 projectService.renameProject(projectName, projectNewName);
                 return Response.ok().build();
@@ -299,9 +286,9 @@ public class ProjectRestService extends RestService {
     @RvdAuth
     @PUT
     @Path("{name}/upgrade")
-    public Response upgradeProject(@PathParam("name") String projectName) {
-
+    public Response upgradeProject(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
         // TODO IMPORTANT!!! sanitize the project name!!
+        ProjectState activeProject = loadUserProject(projectName);
         if ( !RvdUtils.isEmpty(projectName) ) {
             try {
                 UpgradeService upgradeService = new UpgradeService(workspaceStorage);
@@ -344,7 +331,7 @@ public class ProjectRestService extends RestService {
     @Path("{name}/archive")
     public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist, UnsupportedEncodingException, EncoderException {
         logger.debug("downloading raw archive for project " + projectName);
-        assertProjectAvailable(projectName);
+        loadUserProject(projectName);
 
         InputStream archiveStream;
         try {
@@ -360,7 +347,6 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @POST
-    //@Path("{name}/archive")
     public Response importProjectArchive(@Context HttpServletRequest request) {
         logger.info("Importing project from raw archive");
 
@@ -411,23 +397,9 @@ public class ProjectRestService extends RestService {
     @GET
     @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response openProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(name);
+    public Response getProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
+        ProjectState activeProject = loadUserProject(name);
         return Response.ok().entity(marshaler.toData(activeProject)).build();
-        /*
-        try {
-            String projectState = projectService.openProject(name);
-            return Response.ok().entity(projectState).build();
-        } catch (StorageException e) {
-            logger.error("Error loading project '" + name + "'", e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (ProjectDoesNotExist e) {
-            return Response.status(Status.NOT_FOUND).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
-        } catch (IncompatibleProjectVersion e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.asJson()).type(MediaType.APPLICATION_JSON).build();
-        }
-        */
     }
 
     @RvdAuth
@@ -435,7 +407,7 @@ public class ProjectRestService extends RestService {
     @Path("{name}/wavs")
     public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
         logger.info("running /uploadwav");
-        assertProjectAvailable(projectName);
+        loadUserProject(projectName);
         try {
             if (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
                 Gson gson = new Gson();
@@ -479,7 +451,7 @@ public class ProjectRestService extends RestService {
     @DELETE
     @Path("{name}/wavs")
     public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(projectName);
+        loadUserProject(projectName);
         try {
             projectService.removeWavFromProject(projectName, wavname);
             return Response.ok().build();
@@ -495,7 +467,7 @@ public class ProjectRestService extends RestService {
     @Path("{name}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
     public Response listWavs(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(name);
+        loadUserProject(name);
         List<WavItem> items;
         try {
 
@@ -533,7 +505,7 @@ public class ProjectRestService extends RestService {
     @POST
     @Path("{name}/build")
     public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(name);
+        ProjectState activeProject = loadUserProject(name);
         BuildService buildService = new BuildService(workspaceStorage);
         try {
             buildService.buildProject(name, activeProject);

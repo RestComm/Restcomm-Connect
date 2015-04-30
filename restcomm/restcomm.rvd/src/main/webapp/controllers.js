@@ -19,6 +19,7 @@ App.controller('AppCtrl', function ($rootScope, $location) {
 	});
 });
 
+/*
 var loginCtrl = angular.module('Rvd')
 .controller('loginCtrl', ['authentication', '$scope', '$http', 'notifications', '$location', function (authentication, $scope, $http, notifications, $location) {
 //	console.log("run loginCtrl ");
@@ -30,18 +31,9 @@ var loginCtrl = angular.module('Rvd')
 		}, function () {
 			notifications.put({message:"Login failed", type:"danger"});
 		})
-		
-		/*$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
-		.success ( function () {
-			console.log("login successful");
-			
-		})
-		.error( function () {
-			console.log("error logging in");
-			notifications.put({message:"Login failed", type:"danger"});
-		});*/
 	}
 }]);
+*/
 
 
 App.controller('homeCtrl', function ($scope, authInfo) {
@@ -70,12 +62,13 @@ App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal
 	//$scope.username = authentication.getTicket(); //"Testuser@test.com";
 	
 	function logout() {
-		console.log("logging out");
+		console.log("logging out - NOT IMPLEMENTED");
+		/*
 		authentication.doLogout().then(function () {
 			$location.path("/login");
 		}, function () {
 			$location.path("/login");
-		});
+		});*/
 	}
 	$scope.logout = logout;
 	

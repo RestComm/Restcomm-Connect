@@ -33,6 +33,8 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.IDToken;
 import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
@@ -119,6 +121,15 @@ public class RvdController extends RestService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listApps(@Context HttpServletRequest request) {
+
+        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+        IDToken idToken = session.getIdToken();
+        logger.info("EMAIL: " + idToken.getEmail() );
+        logger.info("NAME: " + idToken.getName() );
+        logger.info("Username: " +  idToken.getPreferredUsername() );
+
+
+
         RvdContext rvdContext = new RvdContext(request, servletContext);
         ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);
         init(rvdContext);

@@ -51,10 +51,10 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 			authInfo: function (authentication) {return authentication.authResolver();}
 		}
 	})
-	.when('/login', {
-		templateUrl : 'templates/login.html',
-		controller : 'loginCtrl'
-	})
+	//.when('/login', {
+	//	templateUrl : 'templates/login.html',
+	//	controller : 'loginCtrl'
+	//})
 	.when('/designer/:projectName/log', {
 		templateUrl : 'templates/projectLog.html',
 		controller : 'projectLogCtrl'
