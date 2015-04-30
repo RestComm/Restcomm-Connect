@@ -10,7 +10,6 @@ import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.mobicents.servlet.restcomm.rvd.bootstrap.RvdRestApplication;
 import org.mobicents.servlet.restcomm.rvd.http.resources.ProjectRestService;
 
 //@RunWith(Arquillian.class)
@@ -37,7 +36,7 @@ public class RvdManagerTest {
        archive.addAsLibraries( Maven.resolver().resolve("log4j:log4j:1.2.16").withTransitivity().asFile() );
 
        archive.setWebXML(new File("src/main/webapp/WEB-INF/web.xml"));
-       archive.addClass(RvdRestApplication.class);
+       //archive.addClass(RvdRestApplication.class);
        archive.addClass(ProjectRestService.class);
        archive.addPackage("org.mobicents.servlet.restcomm.rvd");
        archive.addPackage("org.mobicents.servlet.restcomm.rvd.exceptions");

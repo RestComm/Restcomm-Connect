@@ -3,11 +3,12 @@ package org.mobicents.servlet.restcomm.rvd.http;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
-//@Provider - needed only if package scanning is enabled
+@Provider
 public class StorageExceptionMapper implements ExceptionMapper<StorageException> {
     static final Logger logger = Logger.getLogger(StorageExceptionMapper.class.getName());
 
