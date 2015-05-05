@@ -193,7 +193,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 UserRepresentation userInfo;
                 try {
                     // TODO make realm and username parametric!
-                    userInfo = KeycloakClient.getUserInfo(request, tokenResponse, "demo", loggedUsername);
+                    userInfo = KeycloakClient.getUserInfo(request, tokenResponse, loggedUsername);
                 } catch (Failure e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();

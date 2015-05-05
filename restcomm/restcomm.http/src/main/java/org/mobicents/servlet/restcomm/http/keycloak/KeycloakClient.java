@@ -30,6 +30,12 @@ import org.keycloak.util.UriUtils;
 
 public class KeycloakClient {
 
+    // Some static configuration options. We should move them to a configuration file at some point.
+    static final String REALM = "restcomm"; // the name of the keycloak realm to use for administrative tasks
+    static final String ADMIN_USERNAME = "admin";
+    static final String ADMIN_PASSWORD = "password";
+    static final String ADMINISTRATION_APPLICATION = "admin-client"; // the name of the oauth application that carries out administrative tasks
+
     static class TypedList extends ArrayList<RoleRepresentation> {
     }
 
@@ -85,11 +91,11 @@ public class KeycloakClient {
 */
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(getBaseUrl(request) + "/auth")
-                    .path(ServiceUrlConstants.TOKEN_SERVICE_DIRECT_GRANT_PATH).build("demo"));
+                    .path(ServiceUrlConstants.TOKEN_SERVICE_DIRECT_GRANT_PATH).build(REALM));
             List <NameValuePair> formparams = new ArrayList <NameValuePair>();
-            formparams.add(new BasicNameValuePair("username", "admin"));
-            formparams.add(new BasicNameValuePair("password", "password"));
-            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, "admin-client"));
+            formparams.add(new BasicNameValuePair("username", ADMIN_USERNAME));
+            formparams.add(new BasicNameValuePair("password", ADMIN_PASSWORD));
+            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, ADMINISTRATION_APPLICATION));
             UrlEncodedFormEntity form = new UrlEncodedFormEntity(formparams, "UTF-8");
             post.setEntity(form);
 
@@ -119,10 +125,10 @@ public class KeycloakClient {
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(getBaseUrl(request) + "/auth")
                     .path(ServiceUrlConstants.TOKEN_SERVICE_LOGOUT_PATH)
-                    .build("demo"));
+                    .build(REALM));
             List<NameValuePair> formparams = new ArrayList<NameValuePair>();
             formparams.add(new BasicNameValuePair(OAuth2Constants.REFRESH_TOKEN, res.getRefreshToken()));
-            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, "admin-client"));
+            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, ADMINISTRATION_APPLICATION));
             UrlEncodedFormEntity form = new UrlEncodedFormEntity(formparams, "UTF-8");
             post.setEntity(form);
             HttpResponse response = client.execute(post);
@@ -146,7 +152,7 @@ public class KeycloakClient {
         HttpClient client = new HttpClientBuilder()
                 .disableTrustManager().build();
         try {
-            HttpGet get = new HttpGet(getBaseUrl(request) + "/auth/admin/realms/demo/roles");
+            HttpGet get = new HttpGet(getBaseUrl(request) + "/auth/admin/realms/"+REALM+"/roles");
             get.addHeader("Authorization", "Bearer " + res.getToken());
             try {
                 HttpResponse response = client.execute(get);
@@ -168,12 +174,12 @@ public class KeycloakClient {
         }
     }
 
-    public static UserRepresentation getUserInfo(HttpServletRequest request, AccessTokenResponse res, String realm, String username) throws Failure {
+    public static UserRepresentation getUserInfo(HttpServletRequest request, AccessTokenResponse res, String username) throws Failure {
 
         HttpClient client = new DefaultHttpClient(); //new HttpClientBuilder()
                 //.disableTrustManager().build();
         try {
-            HttpGet get = new HttpGet(getBaseUrl(request) + "/auth/admin/realms/" + realm + "/users/" + username);
+            HttpGet get = new HttpGet(getBaseUrl(request) + "/auth/admin/realms/" + REALM + "/users/" + username);
             get.addHeader("Authorization", "Bearer " + res.getToken());
             try {
                 HttpResponse response = client.execute(get);
@@ -196,7 +202,7 @@ public class KeycloakClient {
     }
 
 
-
+    // Keycloak service is assumed to running on the same host with restcomm
     public static String getBaseUrl(HttpServletRequest request) {
         String useHostname = request.getServletContext().getInitParameter("useHostname");
         if (useHostname != null && "true".equalsIgnoreCase(useHostname)) {
