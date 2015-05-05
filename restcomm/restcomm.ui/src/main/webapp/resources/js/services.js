@@ -504,7 +504,7 @@ rcServices.factory('RCommAvailableNumbers', function($resource) {
 });
 
 rcServices.factory('RCommStatistics', function($resource) {
-  return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Usage/Records/:statName.:format',
+  return $resource('/restcomm/keycloak/Accounts/:accountSid/Usage/Records/:statName.:format',
     {
       accountSid: '@accountSid',
       statName: '@statName',
