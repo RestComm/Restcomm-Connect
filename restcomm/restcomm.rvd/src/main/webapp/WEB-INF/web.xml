@@ -33,7 +33,7 @@
 			<url-pattern>/services/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
-			<role-name>user</role-name>
+			<role-name>RestcommUser</role-name>
 		</auth-constraint>
 	</security-constraint>
 
@@ -46,7 +46,10 @@
 		<role-name>admin</role-name>
 	</security-role>
 	<security-role>
-		<role-name>user</role-name>
+		<role-name>RestcommUser</role-name>
+	</security-role>
+	<security-role>
+		<role-name>Developer</role-name>
 	</security-role>
 
 </web-app>
