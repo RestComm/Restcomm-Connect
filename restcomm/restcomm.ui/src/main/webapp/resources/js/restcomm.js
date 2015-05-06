@@ -25,6 +25,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
     when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl'}).
     when('/numbers', {redirectTo: '/numbers/incoming'}).
     when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl'}).
+    /*when('/register', {templateUrl: 'modules/register.html', controller: 'RegisterCtrl'}). If wanted later, so user can register from the manager*/
     when('/numbers/register-incoming', {
       templateUrl: 'modules/numbers-incoming-register.html',
       controller: 'NumberRegisterCtrl',
