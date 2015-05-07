@@ -9,7 +9,12 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 	})
 	.when('/home', {
 		templateUrl : 'templates/home.html',
-		controller : 'homeCtrl'
+		controller : 'homeCtrl',
+		resolve: {
+			authStatus: function (auth) {
+				return auth.secure('Developer');
+			}
+		}
 	})
 	.when('/designer/:projectName', {
 		templateUrl : 'templates/designer.html',
@@ -17,7 +22,10 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		resolve: {
 			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
 			project: function(designerService, $route) { return designerService.openProject($route.current.params.projectName); },
-			bundledWavs: function(designerService) { return designerService.getBundledWavs()}
+			bundledWavs: function(designerService) { return designerService.getBundledWavs()},
+			authStatus: function (auth) {
+				return auth.secure('Developer');
+			}
 		}
 	})
 	.when('/packaging/:projectName', {
@@ -25,7 +33,10 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		controller : 'packagingCtrl',
 		resolve: {
 			rappWrap: function(RappService) {return RappService.getRapp();},
-			rvdSettingsResolver: function (rvdSettings) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
+			rvdSettingsResolver: function (rvdSettings) {return rvdSettings.refresh();}, // not meant to return anything back. Just trigger the fetching of the settings
+			authStatus: function (auth) {
+				return auth.secure('Developer');
+			}
 		}
 	})
 	.when('/packaging/:projectName/download', {
@@ -33,15 +44,24 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		controller : 'packagingDownloadCtrl',
 		resolve: { 
 			binaryInfo: packagingDownloadCtrl.getBinaryInfo,
+			authStatus: function (auth) {
+				return auth.secure('Developer');
+			}
 		}
 	})	
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
-		controller : 'upgradeCtrl'
+		controller : 'upgradeCtrl',
+		authStatus: function (auth) {
+			return auth.secure('Developer');
+		}
 	})
 	.when('/designer/:projectName/log', {
 		templateUrl : 'templates/projectLog.html',
-		controller : 'projectLogCtrl'
+		controller : 'projectLogCtrl',
+		authStatus: function (auth) {
+			return auth.secure('Developer');
+		}
 	})	
 	.otherwise({
 		redirectTo : '/home'
