@@ -30,7 +30,9 @@
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>RESTServices</web-resource-name>
-			<url-pattern>/services/*</url-pattern>
+			<url-pattern>/projects/*</url-pattern>
+			<url-pattern>/designer/*</url-pattern>
+			<url-pattern>/apps/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>RestcommUser</role-name>
