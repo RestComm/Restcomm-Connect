@@ -45,7 +45,6 @@ import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -93,7 +92,6 @@ public class RasRestService extends RestService {
      * @param projectName
      * @return
      */
-    @RvdAuth
     @GET
     @Path("/packaging/app")
     @Produces(MediaType.APPLICATION_JSON)
@@ -116,7 +114,6 @@ public class RasRestService extends RestService {
      * @param projectName
      * @return
      */
-    @RvdAuth
     @POST
     @Path("/packaging/app/save")
     public Response saveApp(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
@@ -150,7 +147,6 @@ public class RasRestService extends RestService {
     }
 
     @GET
-    @RvdAuth
     @Path("/packaging/app/prepare")
     @Produces(MediaType.APPLICATION_JSON)
     public Response preparePackage(@QueryParam("name") String projectName) {
@@ -177,7 +173,6 @@ public class RasRestService extends RestService {
      * @return
      */
     @GET
-    @RvdAuth
     @Path("/packaging/binary/info")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBinaryStatus(@QueryParam("name") String projectName) {
@@ -188,7 +183,6 @@ public class RasRestService extends RestService {
     }
 
     @GET
-    @RvdAuth
     @Path("/packaging/download")
     public Response downloadPackage(@QueryParam("name") String projectName) {
         logger.debug("downloading app zip for project " + projectName);

@@ -58,7 +58,6 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.security.SecurityUtils;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -150,6 +149,14 @@ public class ProjectRestService extends RestService {
         Gson gson = new Gson();
         return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
     }
+    
+    @GET
+    @Path("{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
+        ProjectState activeProject = loadUserProject(name);
+        return Response.ok().entity(marshaler.toData(activeProject)).build();
+    }    
 
     @PUT
     @Path("{name}")
@@ -175,24 +182,7 @@ public class ProjectRestService extends RestService {
 
         return Response.ok().build();
     }
-
-    /*
-     * Retrieves project header information.
-     * Returns INTERNAL_SERVER_ERROR status and no response body for serious errors
-     */
-    @GET
-    @Path("{name}/info")
-    public Response projectInfo(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
-        //secureByRole("Developer", getKeycloakAccessToken());
-        //assertUserLogged();
-        ProjectState project = ProjectService.loadProject(name, workspaceStorage);
-        if (!SecurityUtils.userCanAccessProject(loggedUsername, project))
-            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-        StateHeader header = project.getHeader();
-        return Response.status(Status.OK).entity(marshaler.getGson().toJson(header)).type(MediaType.APPLICATION_JSON).build();
-    }
-
-
+    
     @POST
     @Path("{name}")
     public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) throws UnauthorizedException {
@@ -225,53 +215,24 @@ public class ProjectRestService extends RestService {
             logger.warn("Empty project name specified for updating");
             return Response.status(Status.BAD_REQUEST).build();
         }
-    }
-
-    /**
-     * Store Call Control project information
-     * @throws UnauthorizedException
-     */
-    @RvdAuth
-    @POST
-    @Path("{name}/cc")
-    public Response storeCcInfo(@PathParam("name") String projectName, @Context HttpServletRequest request) throws UnauthorizedException {
+    }    
+    
+    @DELETE
+    @Path("{name}")
+    public Response deleteProject(@PathParam("name") String projectName) throws ProjectDoesNotExist, UnauthorizedException {
         secureByRole("Developer", getKeycloakAccessToken());
-        try {
-            String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
-            CallControlInfo ccInfo = marshaler.toModel(data, CallControlInfo.class);
-            if ( ccInfo != null )
-                FsCallControlInfoStorage.storeInfo( ccInfo, projectName, workspaceStorage);
-            else
-                FsCallControlInfoStorage.clearInfo(projectName, workspaceStorage);
+        if ( ! RvdUtils.isEmpty(projectName) ) {
+            try {
+                projectService.deleteProject(projectName);
+                return Response.ok().build();
+            } catch (StorageException e) {
+                logger.error("Error deleting project '" + projectName + "'", e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            }
+        } else
+            return Response.status(Status.BAD_REQUEST).build();
+    }    
 
-            return Response.ok().build();
-        } catch (IOException e) {
-            logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (StorageException e) {
-            logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @RvdAuth
-    @GET
-    @Path("{name}/cc")
-    public Response getCcInfo(@PathParam("name") String projectName) throws UnauthorizedException {
-        //secureByRole("Developer", getKeycloakAccessToken());
-        try {
-            CallControlInfo ccInfo = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
-            return Response.ok(marshaler.toData(ccInfo), MediaType.APPLICATION_JSON).build();
-            //return buildOkResponse(ccInfo);
-        } catch (StorageEntityNotFound e) {
-            return Response.status(Status.NOT_FOUND).build();
-        } catch (StorageException e) {
-            logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @RvdAuth
     @PUT
     @Path("{name}/rename")
     public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
@@ -291,7 +252,6 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.BAD_REQUEST).build();
     }
 
-    @RvdAuth
     @PUT
     @Path("{name}/upgrade")
     public Response upgradeProject(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
@@ -318,26 +278,68 @@ public class ProjectRestService extends RestService {
         } else
             return Response.status(Status.BAD_REQUEST).build();
     }
+    
+    /*
+     * Retrieves project header information.
+     * Returns INTERNAL_SERVER_ERROR status and no response body for serious errors
+     */
+    @GET
+    @Path("{name}/info")
+    public Response projectInfo(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
+        //secureByRole("Developer", getKeycloakAccessToken());
+        //assertUserLogged();
+        ProjectState project = ProjectService.loadProject(name, workspaceStorage);
+        if (!SecurityUtils.userCanAccessProject(loggedUsername, project))
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        StateHeader header = project.getHeader();
+        return Response.status(Status.OK).entity(marshaler.getGson().toJson(header)).type(MediaType.APPLICATION_JSON).build();
+    }
 
-    @RvdAuth
-    @DELETE
-    @Path("{name}")
-    public Response deleteProject(@PathParam("name") String projectName) throws ProjectDoesNotExist, UnauthorizedException {
+    /**
+     * Store Call Control project information
+     * @throws UnauthorizedException
+     */
+    @POST
+    @Path("{name}/cc")
+    public Response storeCcInfo(@PathParam("name") String projectName, @Context HttpServletRequest request) throws UnauthorizedException {
         secureByRole("Developer", getKeycloakAccessToken());
-        if ( ! RvdUtils.isEmpty(projectName) ) {
-            try {
-                projectService.deleteProject(projectName);
-                return Response.ok().build();
-            } catch (StorageException e) {
-                logger.error("Error deleting project '" + projectName + "'", e);
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            }
-        } else
-            return Response.status(Status.BAD_REQUEST).build();
+        try {
+            String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
+            CallControlInfo ccInfo = marshaler.toModel(data, CallControlInfo.class);
+            if ( ccInfo != null )
+                FsCallControlInfoStorage.storeInfo( ccInfo, projectName, workspaceStorage);
+            else
+                FsCallControlInfoStorage.clearInfo(projectName, workspaceStorage);
+
+            return Response.ok().build();
+        } catch (IOException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GET
-    @RvdAuth
+    @Path("{name}/cc")
+    public Response getCcInfo(@PathParam("name") String projectName) throws UnauthorizedException {
+        //secureByRole("Developer", getKeycloakAccessToken());
+        try {
+            CallControlInfo ccInfo = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
+            return Response.ok(marshaler.toData(ccInfo), MediaType.APPLICATION_JSON).build();
+            //return buildOkResponse(ccInfo);
+        } catch (StorageEntityNotFound e) {
+            return Response.status(Status.NOT_FOUND).build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
+    @GET
     @Path("{name}/archive")
     public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist, UnsupportedEncodingException, EncoderException {
         logger.debug("downloading raw archive for project " + projectName);
@@ -355,7 +357,6 @@ public class ProjectRestService extends RestService {
         }
     }
 
-    @RvdAuth
     @POST
     public Response importProjectArchive(@Context HttpServletRequest request) throws UnauthorizedException {
         secureByRole("Developer", getKeycloakAccessToken());
@@ -403,17 +404,27 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-    @RvdAuth
+    
     @GET
-    @Path("{name}")
+    @Path("{name}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
-        ProjectState activeProject = loadUserProject(name);
-        return Response.ok().entity(marshaler.toData(activeProject)).build();
+    public Response listWavs(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
+        loadUserProject(name);
+        List<WavItem> items;
+        try {
+
+            items = projectService.getWavs(name);
+            Gson gson = new Gson();
+            return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
+        } catch (BadWorkspaceDirectoryStructure e) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (StorageException e) {
+            logger.error("Error getting wav list for project '" + name + "'", e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    @RvdAuth
     @POST
     @Path("{name}/wavs")
     public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
@@ -459,7 +470,6 @@ public class ProjectRestService extends RestService {
         }
     }
 
-    @RvdAuth
     @DELETE
     @Path("{name}/wavs")
     public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
@@ -471,28 +481,6 @@ public class ProjectRestService extends RestService {
         } catch (WavItemDoesNotExist e) {
             logger.warn( "Cannot delete " + wavname + " from " + projectName + " app" );
             return Response.status(Status.NOT_FOUND).build();
-        }
-    }
-
-
-    @RvdAuth
-    @GET
-    @Path("{name}/wavs")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response listWavs(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
-        loadUserProject(name);
-        List<WavItem> items;
-        try {
-
-            items = projectService.getWavs(name);
-            Gson gson = new Gson();
-            return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
-        } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (StorageException e) {
-            logger.error("Error getting wav list for project '" + name + "'", e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -514,7 +502,6 @@ public class ProjectRestService extends RestService {
         }
     }
 
-    @RvdAuth
     @POST
     @Path("{name}/build")
     public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
@@ -529,8 +516,21 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-    @RvdAuth
+    
+    @GET
+    @Path("{name}/settings")
+    public Response getProjectSettings(@PathParam("name") String name) {
+        try {
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(name, workspaceStorage);
+            return Response.ok(marshaler.toData(projectSettings)).build();
+        } catch (StorageEntityNotFound e) {
+            return Response.status(Status.NOT_FOUND).build();
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
     @POST
     @Path("{name}/settings")
     public Response saveProjectSettings(@PathParam("name") String name) throws UnauthorizedException {
@@ -550,20 +550,5 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
-    }
-
-    @RvdAuth
-    @GET
-    @Path("{name}/settings")
-    public Response getProjectSettings(@PathParam("name") String name) {
-        try {
-            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(name, workspaceStorage);
-            return Response.ok(marshaler.toData(projectSettings)).build();
-        } catch (StorageEntityNotFound e) {
-            return Response.status(Status.NOT_FOUND).build();
-        } catch (StorageException e) {
-            logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
     }
 }

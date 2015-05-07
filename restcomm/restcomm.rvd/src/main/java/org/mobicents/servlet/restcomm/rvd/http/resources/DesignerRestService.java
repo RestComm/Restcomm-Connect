@@ -19,7 +19,6 @@ import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
@@ -52,7 +51,6 @@ public class DesignerRestService extends RestService {
      * @throws StorageException
      * @throws ProjectDoesNotExist
      */
-    @RvdAuth
     @GET
     @Path("bundledWavs")
     @Produces(MediaType.APPLICATION_JSON)

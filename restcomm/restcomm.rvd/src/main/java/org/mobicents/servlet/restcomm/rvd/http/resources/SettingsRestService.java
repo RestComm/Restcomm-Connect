@@ -23,7 +23,6 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 
 import com.google.gson.Gson;
@@ -51,7 +50,6 @@ public class SettingsRestService extends RestService {
         //workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
     }
 
-    @RvdAuth
     @POST
     public Response setSettings(@Context HttpServletRequest request) {
         try {
@@ -73,7 +71,6 @@ public class SettingsRestService extends RestService {
         }
     }
 
-    @RvdAuth
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSettings() {
