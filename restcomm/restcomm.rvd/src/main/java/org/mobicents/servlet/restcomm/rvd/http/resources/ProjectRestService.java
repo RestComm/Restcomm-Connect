@@ -38,6 +38,7 @@ import com.google.gson.JsonObject;
 import org.keycloak.KeycloakSecurityContext;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
+import org.mobicents.servlet.restcomm.rvd.RasService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -46,6 +47,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UnauthorizedException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
@@ -57,8 +59,12 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
+import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
+import org.mobicents.servlet.restcomm.rvd.model.packaging.RappBinaryInfo;
+import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.security.SecurityUtils;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
@@ -69,6 +75,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
+import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 
 @Path("projects")
@@ -88,6 +95,7 @@ public class ProjectRestService extends RestService {
     private ModelMarshaler marshaler;
     private WorkspaceStorage workspaceStorage;
     private String loggedUsername;
+    private RasService rasService;
 
     RvdContext rvdContext;
 
@@ -97,6 +105,7 @@ public class ProjectRestService extends RestService {
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
+        rasService = new RasService(rvdContext, workspaceStorage);
         projectService = new ProjectService(rvdContext,workspaceStorage);
         KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
         if (session.getToken() != null)
@@ -550,5 +559,122 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
+    }
+    
+    /**
+     * Returns application package information. If there is no packaging data
+     * for this project yet it returns 404/NOT_FOUND. If the project does not even
+     * exist it returns 500/INTERNAL_SERVER_ERROR
+     * @param projectName
+     * @return
+     */
+    @GET
+    @Path("{name}/packaging")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getAppConfig(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
+        logger.debug("retrieving app package for project " + projectName);
+
+        if (! FsPackagingStorage.hasPackaging(projectName, workspaceStorage) )
+            return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
+
+        Rapp rapp = rasService.getApp(projectName);
+        Gson gson = new Gson();
+
+        return Response.ok().entity(gson.toJson(rapp)).build();
+    }
+    
+    /**
+     * Creates or updates an app
+     * @param request
+     * @param projectName
+     * @return
+     */
+    @POST
+    @Path("{name}/packaging")
+    public Response saveApp(@Context HttpServletRequest request, @PathParam("name") String projectName) {
+        logger.info("saving restcomm app '" + projectName + "'");
+        try {
+            String rappData;
+            rappData = IOUtils.toString(request.getInputStream());
+
+            Gson gson = new Gson();
+            Rapp rapp = gson.fromJson(rappData, Rapp.class);
+            if ( !FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
+                rasService.createApp(rapp, projectName);
+            } else {
+                rasService.saveApp(rapp, projectName);
+            }
+            return buildOkResponse();
+
+        } catch (IOException e) {
+            RvdException returnedError = new RvdException("Error saving rapp",e);
+            logger.error(returnedError,returnedError);
+            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, returnedError);
+        } catch (RvdValidationException e) {
+            return buildInvalidResponse(Status.OK, RvdResponse.Status.INVALID, e.getReport());
+        } catch (StorageException e) {
+            logger.error(e,e);
+            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        } catch (ProjectDoesNotExist e) {
+            logger.warn(e,e);
+            return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.ERROR,e);
+        }
+    }
+    
+    @GET
+    @Path("{name}/packaging/build")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response preparePackage(@PathParam("name") String projectName) {
+        logger.debug("preparig app zip for project " + projectName);
+
+        try {
+            if (FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
+                RvdProject project = projectService.load(projectName);
+                project.getState().getHeader().setOwner(null); //  no owner should in the exported project
+                rasService.createZipPackage(project);
+                return buildErrorResponse(Status.OK, RvdResponse.Status.OK, null);
+            } else {
+                return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new PackagingDoesNotExist());
+            }
+        } catch (RvdException e) {
+            logger.error(e,e);
+            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+        }
+    }
+    
+    @GET
+    @Path("{name}/packaging/binary/download")
+    public Response downloadPackage(@PathParam("name") String projectName) {
+        logger.debug("downloading app zip for project " + projectName);
+
+        try {
+            if (FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
+                //Validator validator = new RappConfigValidator();
+                InputStream zipStream = FsPackagingStorage.getRappBinary(projectName, workspaceStorage);
+                return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename*=UTF-8''" + RvdUtils.myUrlEncode(projectName + ".ras.zip")).build();
+            } else {
+                return null;
+                //return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, new PackagingDoesNotExist());
+            }
+        } catch (RvdException e) {
+            logger.error(e,e);
+            //return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            return null;
+        }
+    }
+    
+    /**
+     * Returns info about a zipped package (binary) including if it is available or not
+     * @param projectName
+     * @return
+     */
+    @GET
+    @Path("{name}/packaging/binary/info")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getBinaryStatus(@QueryParam("name") String projectName) {
+        logger.debug("getting binary info for project " + projectName);
+
+        RappBinaryInfo binaryInfo = rasService.getBinaryInfo(projectName);
+        return buildOkResponse(binaryInfo);
     }
 }
