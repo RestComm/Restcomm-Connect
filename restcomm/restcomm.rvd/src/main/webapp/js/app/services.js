@@ -47,7 +47,7 @@ angular.module('Rvd').service('projectModules', [function () {
 */
 
 // RVD authc/authz wrapper. Try to use this instead of keycloakAuth service directly.
-angular.module('Rvd').service('auth', ['keycloakAuth', function(keycloakAuth) {
+angular.module('Rvd').service('auth', function(keycloakAuth,$q,notifications) {
 		var service = {};
 		service.getLoggedUsername = function() {
 			//return keycloakAuth.getUsername();
@@ -66,8 +66,38 @@ angular.module('Rvd').service('auth', ['keycloakAuth', function(keycloakAuth) {
 		service.logout = function() {
 			keycloakAuth.authz.logout();
 		}
+		
+		service.secureAny = function(roles) {
+			var deferred = $q.defer();
+			for (var i=0; i<roles.length; i++) {
+				if ( keycloakAuth.authz.hasRealmRole(roles[i]) ) {
+					deferred.resolve();
+					return deferred.promise;
+				}
+			}
+			deferred.reject();
+			notifications.put({type:"danger",message:"You are not authorized to access this resource"});
+			return deferred.promise;
+		}
+		service.secureAll = function(roles) {
+			var deferred = $q.defer();
+			for (var i=0; i<roles.length; i++) {
+				if ( ! keycloakAuth.authz.hasRealmRole(roles[i]) ) {
+					deferred.reject();
+					notifications.put({type:"danger",message:"You are not authorized to access this resource"});
+					return deferred.promise;
+				}
+			}
+			deferred.resolve();
+			return deferred.promise;
+		}
+		service.secure = function(role) {
+				return service.secureAny([role]);
+		}
+		
+		
 		return service;
-}]);
+});
 
 angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', function ($http,$q,$modal) {
 	//console.log("Creating projectSettigsService");
@@ -603,4 +633,6 @@ angular.module('Rvd').factory('stepService', [function() {
 	
 	return stepService;
 }]);
+
+
 
