@@ -152,6 +152,12 @@ public abstract class AbstractEndpoint {
         }
         logger.info(message);
 
+        // no need to check permissions for users with the RestcommAdmin role
+        if ( roleNames.contains("RestcommAdmin") ) {
+            logger.info("User is a RestcommAdmin. All type of access is allowed");
+            return;
+        }
+
         //String neededPermissionString = "domain:restcomm:read:accounts";
         WildcardPermissionResolver resolver = new WildcardPermissionResolver();
         Permission neededPermission = resolver.resolvePermission(neededPermissionString);
@@ -195,6 +201,20 @@ public abstract class AbstractEndpoint {
             return session.getToken().getPreferredUsername();
         }
         return null;
+    }
+
+    protected void secureByRole(final AccessToken accessToken, String role) {
+        Set<String> roleNames;
+        try {
+            roleNames = accessToken.getRealmAccess().getRoles();
+        } catch (NullPointerException e) {
+            throw new UnauthorizedException("No access token present or no roles in it");
+        }
+
+        if (roleNames.contains(role))
+            return;
+        else
+            throw new UnauthorizedException("Role "+role+" is missing from token");
     }
 
     protected AccessToken getKeycloakAccessToken() {
