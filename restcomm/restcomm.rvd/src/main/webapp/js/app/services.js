@@ -321,7 +321,7 @@ angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q
 	
 	service.saveSettings = function (settings) {
 		var deferred = $q.defer();
-		$http.post("designer/settings", settings, {headers: {'Content-Type': 'application/data'}}).success( function () {
+		$http.post("api/designer/settings", settings, {headers: {'Content-Type': 'application/data'}}).success( function () {
 			service.data = settings; // since this is a successfull save, update the internal settings data structure
 			updateEffectiveSettings(settings);
 			deferred.resolve();
@@ -334,7 +334,7 @@ angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q
 	/* retrieves the settings from the server and updates stores them in an internal service object */
 	service.refresh = function () {
 		var deferred = $q.defer();
-		$http.get("designer/settings")
+		$http.get("api/designer/settings")
 		.then(function (response) {
 			service.data = response.data;
 			updateEffectiveSettings(service.data);

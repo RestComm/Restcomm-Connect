@@ -197,7 +197,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: '/restcomm-rvd/apps',
+	        url: '/restcomm-rvd/api/apps',
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
