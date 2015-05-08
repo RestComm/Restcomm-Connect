@@ -78,7 +78,7 @@ import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 
-@Path("/api/projects")
+@Path("/projects")
 public class ProjectRestService extends RestService {
 
     static final Logger logger = Logger.getLogger(ProjectRestService.class.getName());

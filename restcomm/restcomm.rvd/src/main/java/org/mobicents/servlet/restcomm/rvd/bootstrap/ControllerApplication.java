@@ -9,19 +9,13 @@ import javax.ws.rs.core.Application;
 import org.mobicents.servlet.restcomm.rvd.http.ProjectDoesNotExistMapper;
 import org.mobicents.servlet.restcomm.rvd.http.StorageExceptionMapper;
 import org.mobicents.servlet.restcomm.rvd.http.UnauthorizedExceptionMapper;
-import org.mobicents.servlet.restcomm.rvd.http.resources.DesignerRestService;
-import org.mobicents.servlet.restcomm.rvd.http.resources.ProjectRestService;
-import org.mobicents.servlet.restcomm.rvd.http.resources.RasRestService;
-import org.mobicents.servlet.restcomm.rvd.http.resources.RootRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.RvdController;
 
-@ApplicationPath("/api")
-public class RvdApplication extends Application {
+@ApplicationPath("/services")
+public class ControllerApplication extends Application {
     public Set<Class<?>> getClasses() {
         Set<Class<?>> s = new HashSet<Class<?>>();
-        s.add(DesignerRestService.class);
-        s.add(ProjectRestService.class);
-        s.add(RasRestService.class);
-        s.add(RootRestService.class);
+        s.add(RvdController.class);
         s.add(ProjectDoesNotExistMapper.class);
         s.add(StorageExceptionMapper.class);
         s.add(UnauthorizedExceptionMapper.class);

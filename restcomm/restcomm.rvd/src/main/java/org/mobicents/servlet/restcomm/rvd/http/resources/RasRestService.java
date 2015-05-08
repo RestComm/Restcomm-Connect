@@ -46,7 +46,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-@Path("/api/apps")
+@Path("/apps")
 public class RasRestService extends RestService {
     static final Logger logger = Logger.getLogger(RasRestService.class.getName());
 

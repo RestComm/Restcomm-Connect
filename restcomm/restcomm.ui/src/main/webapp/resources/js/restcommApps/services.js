@@ -14,7 +14,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		//var deferred = $q.defer();
 		$http({
 			method:"GET",
-			url:"/restcomm-rvd/apps"
+			url:"/restcomm-rvd/api/apps"
 		}).success(function (data) {
 			console.log("Received apps from RVD");
 			//localApps = data.payload;
@@ -47,7 +47,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	
 	function getAppConfig(appName, mode) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/apps/' + appName + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
+		$http({url: '/restcomm-rvd/api/apps/' + appName + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				defer.resolve(data.payload);
@@ -66,7 +66,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	
 	function getApp(appName) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/apps/' + appName, method: "GET" })
+		$http({url: '/restcomm-rvd/api/apps/' + appName, method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				//console.log("succesfull retrieved app config");
@@ -84,7 +84,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	
 	function getBoostrapObject(appName) {
 		var deferred = $q.defer();
-		$http.get('/restcomm-rvd/apps/' + appName + '/parameters' )
+		$http.get('/restcomm-rvd/api/apps/' + appName + '/parameters' )
 		.success(function (data, status) {
 			deferred.resolve(data);
 		})

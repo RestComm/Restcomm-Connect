@@ -68,7 +68,8 @@ import org.w3c.dom.Document;
 
 import com.google.gson.Gson;
 
-@Path("/services/apps")
+// This goes under /services. See more in ControllerApplication.java
+@Path("/apps")
 public class RvdController extends RestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
 

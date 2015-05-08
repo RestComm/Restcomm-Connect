@@ -34,7 +34,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.JsonSyntaxException;
 
-@Path("/api/designer")
+@Path("/designer")
 public class DesignerRestService extends RestService {
     static final Logger logger = Logger.getLogger(DesignerRestService.class.getName());
 
