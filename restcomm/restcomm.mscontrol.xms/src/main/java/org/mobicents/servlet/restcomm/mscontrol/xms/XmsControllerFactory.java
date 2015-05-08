@@ -47,6 +47,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
     // Factories
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
+    private final BridgeControllerFactory bridgeControllerFactory;
 
     // Media Server Info
     private final MediaServerInfo mediaServerInfo;
@@ -58,6 +59,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
         // Factories
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
+        this.bridgeControllerFactory = new BridgeControllerFactory();
 
         // Media Server Info
         this.mediaServerInfo = mediaServerInfo;
@@ -75,6 +77,11 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
     @Override
     public ActorRef provideConferenceController() {
         return system.actorOf(new Props(this.conferenceControllerFactory));
+    }
+
+    @Override
+    public ActorRef provideBridgeController() {
+        return system.actorOf(new Props(this.bridgeControllerFactory));
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {
@@ -103,6 +110,20 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             return new XmsConferenceController(msControlFactory, mediaServerInfo);
         }
 
+    }
+
+    private final class BridgeControllerFactory implements UntypedActorFactory {
+        
+        private static final long serialVersionUID = -4095666710038438897L;
+        
+        @Override
+        public Actor create() throws Exception {
+            if (msControlFactory == null) {
+                throw new IllegalStateException("No media server control factory has been set.");
+            }
+            return new XmsBridgeController(msControlFactory, mediaServerInfo);
+        }
+        
     }
 
 }

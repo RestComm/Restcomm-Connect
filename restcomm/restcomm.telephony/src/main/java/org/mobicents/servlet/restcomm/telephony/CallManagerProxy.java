@@ -93,20 +93,20 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     }
 
     private ActorRef manager(final Configuration configuration, final ServletContext context,
-            final MediaServerControllerFactory msControllerfactory, final ActorRef conferences, final ActorRef sms,
-            final SipFactory factory, final DaoManager storage) {
+            final MediaServerControllerFactory msControllerfactory, final ActorRef conferences, final ActorRef bridges,
+            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new CallManager(configuration, context, system, msControllerfactory, conferences, sms, factory, storage);
+                return new CallManager(configuration, context, system, msControllerfactory, conferences, bridges, sms, factory, storage);
             }
         }));
     }
 
     private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef conferences,
-            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
+            final ActorRef bridges, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -124,6 +124,17 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             @Override
             public UntypedActor create() throws Exception {
                 return new ConferenceCenter(factory);
+            }
+        }));
+    }
+
+    private ActorRef bridges(final MediaServerControllerFactory factory) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new BridgeManager(factory);
             }
         }));
     }
@@ -158,9 +169,10 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             // Create the call manager.
             final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
             final ActorRef conferences = conferences(mscontrolFactory);
+            final ActorRef bridges = bridges(mscontrolFactory);
             final ActorRef sms = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
-            manager = manager(configuration, context, mscontrolFactory, conferences, sms, factory, storage);
-            ussdManager = ussdManager(configuration, context, conferences, sms, factory, storage);
+            manager = manager(configuration, context, mscontrolFactory, conferences, bridges, sms, factory, storage);
+            ussdManager = ussdManager(configuration, context, conferences, bridges, sms, factory, storage);
             context.setAttribute(CallManager.class.getName(), manager);
             context.setAttribute(UssdCallManager.class.getName(), ussdManager);
         }
