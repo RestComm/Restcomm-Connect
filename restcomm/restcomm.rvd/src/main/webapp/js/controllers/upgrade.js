@@ -20,7 +20,7 @@ App.controller('upgradeCtrl', function ($scope, $routeParams, $http, $q, $locati
 	$scope.upgradeProject = function(name) {
 		var deferred = $q.defer();
 		
-		$http({url: 'services/manager/projects/upgrade?name=' + $scope.projectName,	method: "PUT" })
+		$http({url: 'api/projects/' + $scope.projectName + '/upgrade',	method: "PUT" })
 		.success(function (data, status, headers, config) { deferred.resolve('Project upgraded'); })
 		.error(function (data, status, headers, config) { deferred.reject({type:'upgradeError', data:data}); });	
 		
@@ -29,7 +29,7 @@ App.controller('upgradeCtrl', function ($scope, $routeParams, $http, $q, $locati
 	
 	
 	// Controller bootstrap
-	$http({	url:'services/manager/projects/info?name=' + $scope.projectName,	method:'GET' })
+	$http({	url:'api/projects/' + $scope.projectName + '/info',	method:'GET' })
 	.success(function (data, status, headers, config) {
 		if ( data && data.version == "1.0" ) {
 			$scope.upgradeStatus = "alreadyUpgraded";

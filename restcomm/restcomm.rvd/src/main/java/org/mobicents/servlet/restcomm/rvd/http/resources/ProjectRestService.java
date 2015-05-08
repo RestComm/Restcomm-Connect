@@ -78,7 +78,7 @@ import org.mobicents.servlet.restcomm.rvd.upgrade.exceptions.UpgradeException;
 import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationException;
 
 
-@Path("projects")
+@Path("/api/projects")
 public class ProjectRestService extends RestService {
 
     static final Logger logger = Logger.getLogger(ProjectRestService.class.getName());
@@ -158,14 +158,14 @@ public class ProjectRestService extends RestService {
         Gson gson = new Gson();
         return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
     }
-    
+
     @GET
     @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
         ProjectState activeProject = loadUserProject(name);
         return Response.ok().entity(marshaler.toData(activeProject)).build();
-    }    
+    }
 
     @PUT
     @Path("{name}")
@@ -191,7 +191,7 @@ public class ProjectRestService extends RestService {
 
         return Response.ok().build();
     }
-    
+
     @POST
     @Path("{name}")
     public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) throws UnauthorizedException {
@@ -224,8 +224,8 @@ public class ProjectRestService extends RestService {
             logger.warn("Empty project name specified for updating");
             return Response.status(Status.BAD_REQUEST).build();
         }
-    }    
-    
+    }
+
     @DELETE
     @Path("{name}")
     public Response deleteProject(@PathParam("name") String projectName) throws ProjectDoesNotExist, UnauthorizedException {
@@ -240,7 +240,7 @@ public class ProjectRestService extends RestService {
             }
         } else
             return Response.status(Status.BAD_REQUEST).build();
-    }    
+    }
 
     @PUT
     @Path("{name}/rename")
@@ -287,7 +287,7 @@ public class ProjectRestService extends RestService {
         } else
             return Response.status(Status.BAD_REQUEST).build();
     }
-    
+
     /*
      * Retrieves project header information.
      * Returns INTERNAL_SERVER_ERROR status and no response body for serious errors
@@ -413,7 +413,7 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     @GET
     @Path("{name}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
@@ -525,7 +525,7 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     @GET
     @Path("{name}/settings")
     public Response getProjectSettings(@PathParam("name") String name) {
@@ -539,7 +539,7 @@ public class ProjectRestService extends RestService {
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     @POST
     @Path("{name}/settings")
     public Response saveProjectSettings(@PathParam("name") String name) throws UnauthorizedException {
@@ -560,7 +560,7 @@ public class ProjectRestService extends RestService {
         }
 
     }
-    
+
     /**
      * Returns application package information. If there is no packaging data
      * for this project yet it returns 404/NOT_FOUND. If the project does not even
@@ -582,7 +582,7 @@ public class ProjectRestService extends RestService {
 
         return Response.ok().entity(gson.toJson(rapp)).build();
     }
-    
+
     /**
      * Creates or updates an app
      * @param request
@@ -620,7 +620,7 @@ public class ProjectRestService extends RestService {
             return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.ERROR,e);
         }
     }
-    
+
     @GET
     @Path("{name}/packaging/build")
     @Produces(MediaType.APPLICATION_JSON)
@@ -641,7 +641,7 @@ public class ProjectRestService extends RestService {
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
         }
     }
-    
+
     @GET
     @Path("{name}/packaging/binary/download")
     public Response downloadPackage(@PathParam("name") String projectName) {
@@ -662,7 +662,7 @@ public class ProjectRestService extends RestService {
             return null;
         }
     }
-    
+
     /**
      * Returns info about a zipped package (binary) including if it is available or not
      * @param projectName

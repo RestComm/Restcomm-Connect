@@ -14,7 +14,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		//var deferred = $q.defer();
 		$http({
 			method:"GET",
-			url:"/restcomm-rvd/services/ras/apps"
+			url:"/restcomm-rvd/apps"
 		}).success(function (data) {
 			console.log("Received apps from RVD");
 			//localApps = data.payload;

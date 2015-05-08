@@ -108,7 +108,7 @@ App.controller('translateController', function($translate, $scope) {
 
 angular.module('Rvd').controller('wavManagerController', function ($rootScope, $scope, $http, $upload) {
 	$scope.deleteWav = function (wavItem) {
-		$http({url: 'services/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
+		$http({url: 'api/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
 		.success(function (data, status, headers, config) {
 			console.log("Deleted " + wavItem.filename);
 			throwRemoveWavEvent(wavItem.filename);
@@ -124,7 +124,7 @@ angular.module('Rvd').controller('wavManagerController', function ($rootScope, $
 		    for (var i = 0; i < $files.length; i++) {
 		      var file = $files[i];
 		      $scope.upload = $upload.upload({
-		        url: 'services/projects/' + $scope.projectName + '/wavs',
+		        url: 'api/projects/' + $scope.projectName + '/wavs',
 		        file: file,
 		      }).success(function(data, status, headers, config) {
 		        // file is uploaded successfully
