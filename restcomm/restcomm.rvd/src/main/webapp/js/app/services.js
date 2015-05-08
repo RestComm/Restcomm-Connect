@@ -104,7 +104,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 	var service = {};
 	service.retrieve = function (name) {
 		var deferred = $q.defer();
-		$http({method:'GET', url:'services/projects/'+name+'/settings'})
+		$http({method:'GET', url:'api/projects/'+name+'/settings'})
 		.success(function (data,status) {deferred.resolve(data)})
 		.error(function (data,status) {
 			if (status == 404)
@@ -117,7 +117,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 	
 	service.save = function (name, projectSettings) {
 		var deferred = $q.defer();
-		$http({method:'POST',url:'services/projects/'+name+'/settings',data:projectSettings})
+		$http({method:'POST',url:'api/projects/'+name+'/settings',data:projectSettings})
 		.success(function (data,status) {deferred.resolve()})
 		.error(function (data,status) {deferred.reject('ERROR_SAVING_PROJECT_SETTINGS')});
 		return deferred.promise;
@@ -148,7 +148,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 			  resolve: {
 				projectSettings: function () {
 					var deferred = $q.defer()
-					$http.get("services/projects/"+projectName+"/settings")
+					$http.get("api/projects/"+projectName+"/settings")
 					.then(function (response) {
 						deferred.resolve(response.data);
 					}, function (response) {
@@ -178,7 +178,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 	var service = {};
 	service.retrieve = function (name) {
 		var deferred = $q.defer();
-		$http({method:'GET', url:'services/projects/'+name+'/cc'})
+		$http({method:'GET', url:'api/projects/'+name+'/cc'})
 		.success(function (data,status) {deferred.resolve(data)})
 		.error(function (data,status) {
 			if (status == 404)
@@ -191,7 +191,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 	
 	service.save = function (name, ccInfo) {
 		var deferred = $q.defer();
-		$http({method:'POST',url:'services/projects/'+name+'/cc',data:ccInfo})
+		$http({method:'POST',url:'api/projects/'+name+'/cc',data:ccInfo})
 		.success(function (data,status) {deferred.resolve()})
 		.error(function (data,status) {deferred.reject('ERROR_SAVING_PROJECT_CC')});
 		return deferred.promise;
@@ -252,7 +252,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 			  resolve: {
 				ccInfo: function () {
 					var deferred = $q.defer()
-					$http.get("services/projects/"+projectName+"/cc")
+					$http.get("api/projects/"+projectName+"/cc")
 					.then(function (response) {
 						deferred.resolve(response.data);
 					}, function (response) {
@@ -281,7 +281,7 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	var service = {};
 	service.retrieve = function () {
 		var deferred = $q.defer();
-		$http({method:'GET', url:'services/apps/'+$routeParams.projectName+'/log'})
+		$http({method:'GET', url:'api/apps/'+$routeParams.projectName+'/log'})
 		.success(function (data,status) {
 			console.log('retrieved log data');
 			deferred.resolve(data);
@@ -293,7 +293,7 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	}
 	service.reset = function () {
 		var deferred = $q.defer();
-		$http({method:'DELETE', url:'services/apps/'+$routeParams.projectName+'/log'})
+		$http({method:'DELETE', url:'api/apps/'+$routeParams.projectName+'/log'})
 		.success(function (data,status) {
 			console.log('reset log data');
 			notifications.put({type:'success',message:$routeParams.projectName+' log reset'});

@@ -25,7 +25,7 @@
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{'designerExportLink' | translate}} <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a href='#/packaging/{{projectName}}'><i class='fa fa-shopping-cart'></i>&nbsp;&nbsp;&nbsp;{{'designerApplicationStoreLink' | translate}}</a></li>
-							<li><a href="/restcomm-rvd/services/projects/{{projectName}}/archive"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;{{'designerZipFileLink' | translate}}</a></li>
+							<li><a href="/restcomm-rvd/api/projects/{{projectName}}/archive"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;{{'designerZipFileLink' | translate}}</a></li>
 						</ul>
 					</li>
 					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; {{'designerSaveLink' | translate}}</a></li>

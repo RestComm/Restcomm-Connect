@@ -34,7 +34,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 import com.google.gson.JsonSyntaxException;
 
-@Path("designer")
+@Path("/api/designer")
 public class DesignerRestService extends RestService {
     static final Logger logger = Logger.getLogger(DesignerRestService.class.getName());
 
@@ -59,7 +59,7 @@ public class DesignerRestService extends RestService {
         settings = RvdConfiguration.getInstance(servletContext);
         marshaler = new ModelMarshaler();
     }
-    
+
     @POST
     @Path("settings")
     public Response setSettings(@Context HttpServletRequest request) {

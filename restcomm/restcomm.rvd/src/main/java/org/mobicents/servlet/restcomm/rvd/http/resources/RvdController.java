@@ -68,7 +68,7 @@ import org.w3c.dom.Document;
 
 import com.google.gson.Gson;
 
-@Path("apps")
+@Path("/services/apps")
 public class RvdController extends RestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
 

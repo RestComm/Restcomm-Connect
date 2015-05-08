@@ -9,7 +9,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 
 	
 	$scope.refreshProjectList = function() {
-		$http({url: 'services/projects',
+		$http({url: 'api/projects',
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -24,7 +24,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.createNewProject = function(name, kind) {
-		$http({url: 'services/projects/' + name + "/?kind=" + kind,
+		$http({url: 'api/projects/' + name + "/?kind=" + kind,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
@@ -51,7 +51,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName })
+		$http({ method: "PUT", url: 'api/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName })
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -67,7 +67,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.deleteProject = function(projectItem) {
-		$http({ method: "DELETE", url: 'services/projects/' + projectItem.name })
+		$http({ method: "DELETE", url: 'api/projects/' + projectItem.name })
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
@@ -80,7 +80,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: 'services/projects',
+	        url: 'api/projects',
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));

@@ -472,7 +472,7 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 });
 
 rcServices.factory('RCommApps', function($resource) {
-	  return $resource('/restcomm-rvd/services/apps');
+	  return $resource('/restcomm-rvd/projects');
 });
 
 rcServices.factory('RCommAvailableNumbers', function($resource) {
