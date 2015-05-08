@@ -30,13 +30,16 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
+import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.telephony.BridgeStateChanged.BridgeState;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -54,17 +57,14 @@ public class Bridge extends UntypedActor {
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
-    private final State openingMediaSession;
-    private final State creatingMediaGroup;
+    private final State initializingMediaResources;
     private final State ready;
     private final State joining;
     private final State halfBridged;
     private final State bridged;
-    private final State destroyingMediaGroup;
-    private final State closingMediaSession;
+    private final State stopping;
     private final State failed;
     private final State complete;
-    private Boolean fail;
 
     // Media Server Controller
     private final ActorRef mscontroller;
@@ -85,46 +85,50 @@ public class Bridge extends UntypedActor {
 
         // States for the FSM
         this.uninitialized = new State("uninitialized", null, null);
-        this.openingMediaSession = new State("opening media session", new OpeningMediaSession(source), null);
-        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
+        this.initializingMediaResources = new State("initializing media resources", new InitializingMediaResources(source),
+                null);
         this.ready = new State("ready", new Ready(source), null);
         this.joining = new State("joining", new Joining(source), null);
         this.halfBridged = new State("half bridged", new HalfBridged(source), null);
         this.bridged = new State("bridged", new Bridged(source), null);
-        this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(source), null);
-        this.closingMediaSession = new State("closing media session", new ClosingMediaSession(source), null);
+        this.stopping = new State("stopping", new Stopping(source), null);
         this.failed = new State("failed", new Failed(source), null);
         this.complete = new State("complete", new Complete(source), null);
 
         // State transitions
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, openingMediaSession));
-        transitions.add(new Transition(openingMediaSession, failed));
-        transitions.add(new Transition(openingMediaSession, creatingMediaGroup));
-        transitions.add(new Transition(creatingMediaGroup, closingMediaSession));
-        transitions.add(new Transition(creatingMediaGroup, ready));
+        transitions.add(new Transition(uninitialized, initializingMediaResources));
+        transitions.add(new Transition(initializingMediaResources, failed));
+        transitions.add(new Transition(initializingMediaResources, ready));
         transitions.add(new Transition(ready, joining));
-        transitions.add(new Transition(ready, destroyingMediaGroup));
+        transitions.add(new Transition(ready, stopping));
         transitions.add(new Transition(joining, halfBridged));
         transitions.add(new Transition(joining, bridged));
-        transitions.add(new Transition(joining, destroyingMediaGroup));
-        transitions.add(new Transition(halfBridged, destroyingMediaGroup));
+        transitions.add(new Transition(joining, stopping));
+        transitions.add(new Transition(halfBridged, stopping));
         transitions.add(new Transition(halfBridged, joining));
-        transitions.add(new Transition(bridged, destroyingMediaGroup));
-        transitions.add(new Transition(destroyingMediaGroup, closingMediaSession));
-        transitions.add(new Transition(closingMediaSession, failed));
-        transitions.add(new Transition(closingMediaSession, complete));
+        transitions.add(new Transition(bridged, stopping));
+        transitions.add(new Transition(stopping, failed));
+        transitions.add(new Transition(stopping, complete));
 
         // Finite State Machine
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
-        this.fail = Boolean.FALSE;
 
         // Observer pattern
         this.observers = new ArrayList<ActorRef>(3);
     }
 
-    private boolean is(State state) {
+    private boolean is(final State state) {
         return this.fsm.state().equals(state);
+    }
+
+    private void broadcast(final Object message) {
+        if (!this.observers.isEmpty()) {
+            final ActorRef self = self();
+            for (ActorRef observer : observers) {
+                observer.tell(message, self);
+            }
+        }
     }
 
     /*
@@ -148,8 +152,10 @@ public class Bridge extends UntypedActor {
             onJoinComplete((JoinComplete) message, self, sender);
         } else if (MediaServerControllerResponse.class.equals(klass)) {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
-        } else if (MediaServerControllerError.class.equals(klass)) {
-            onMediaServerControllerError((MediaServerControllerError) message, self, sender);
+        } else if (MediaServerControllerStateChanged.class.equals(klass)) {
+            onMediaServerControllerStateChanged((MediaServerControllerStateChanged) message, self, sender);
+        } else if (MediaGroupResponse.class.equals(klass)) {
+            onMediaGroupResponse((MediaGroupResponse<?>) message, self, sender);
         } else if (StopBridge.class.equals(klass)) {
             onStopBridge((StopBridge) message, self, sender);
         }
@@ -157,66 +163,69 @@ public class Bridge extends UntypedActor {
 
     private void onStartBridge(StartBridge message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
-            this.fsm.transition(message, openingMediaSession);
+            this.fsm.transition(message, initializingMediaResources);
         }
     }
 
-    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
-        if (is(ready)) {
-            this.inboundCall = message.call();
-            this.mscontroller.tell(message, self);
-        } else if (is(halfBridged)) {
-            this.outboundCall = message.call();
-            this.mscontroller.tell(message, self);
+    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(ready) || is(halfBridged)) {
+            fsm.transition(message, joining);
         }
     }
 
-    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
         if (is(joining)) {
-
+            if (this.outboundCall == null) {
+                this.fsm.transition(message, halfBridged);
+            } else {
+                this.fsm.transition(message, bridged);
+            }
         }
     }
 
     private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender) {
         Object obj = message.get();
         Class<?> klass = obj.getClass();
-
-        if (MediaSessionInfo.class.equals(klass)) {
-            if (is(openingMediaSession)) {
-
-            }
-        } else if (MediaGroupCreated.class.equals(klass)) {
-            if (is(creatingMediaGroup)) {
-
-            }
-        } else if (MediaGroupDestroyed.class.equals(klass)) {
-            if (is(destroyingMediaGroup)) {
-
-            }
-        } else if (MediaSessionClosed.class.equals(klass)) {
-            if (is(closingMediaSession)) {
-
-            }
-        }
+        // XXX Implement when necessary
     }
 
-    private void onMediaServerControllerError(MediaServerControllerError message, ActorRef self, ActorRef sender) {
-        if (is(openingMediaSession)) {
-
-        } else if (is(creatingMediaGroup)) {
-
+    private void onMediaServerControllerStateChanged(MediaServerControllerStateChanged message, ActorRef self, ActorRef sender)
+            throws Exception {
+        MediaServerControllerState state = message.getState();
+        switch (state) {
+            case ACTIVE:
+                if (is(initializingMediaResources)) {
+                    this.fsm.transition(message, ready);
+                }
+                break;
+            case INACTIVE:
+                if (is(stopping)) {
+                    this.fsm.transition(message, complete);
+                }
+                break;
+            case FAILED:
+                if (is(initializingMediaResources)) {
+                    this.fsm.transition(message, failed);
+                }
+                break;
+            default:
+                // ignore unknown state
+                break;
         }
     }
+    
+    private void onMediaGroupResponse(MediaGroupResponse<?> message, ActorRef self, ActorRef sender) {
+        if(message.succeeded()) {
+            // XXX do something
+        } else {
+            // XXX do something
+        }
+        
+    }
 
-    private void onStopBridge(StopBridge message, ActorRef self, ActorRef sender) {
-        if (is(ready)) {
-
-        } else if (is(joining)) {
-
-        } else if (is(halfBridged)) {
-
-        } else if (is(bridged)) {
-
+    private void onStopBridge(StopBridge message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(ready) || is(joining) || is(halfBridged) || is(bridged)) {
+            this.fsm.transition(message, stopping);
         }
     }
 
@@ -233,30 +242,21 @@ public class Bridge extends UntypedActor {
         }
     }
 
-    private class OpeningMediaSession extends AbstractAction {
+    private class InitializingMediaResources extends AbstractAction {
 
-        public OpeningMediaSession(ActorRef source) {
+        public InitializingMediaResources(ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
+            // Start observing state changes in the MSController
+            final Observe observe = new Observe(super.source);
+            mscontroller.tell(observe, super.source);
 
-        }
-
-    }
-
-    private class CreatingMediaGroup extends AbstractAction {
-
-        public CreatingMediaGroup(ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
-
+            // Initialize the MS Controller
+            final CreateMediaSession createMediaSession = new CreateMediaSession();
+            mscontroller.tell(createMediaSession, super.source);
         }
 
     }
@@ -269,8 +269,8 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
-
+            final BridgeStateChanged notification = new BridgeStateChanged(BridgeStateChanged.BridgeState.READY);
+            broadcast(notification);
         }
 
     }
@@ -283,8 +283,19 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
+            Class<?> klass = message.getClass();
 
+            if (AddParticipant.class.equals(klass)) {
+                AddParticipant addParticipant = (AddParticipant) message;
+                if (inboundCall == null) {
+                    // Half Bridged
+                    inboundCall = addParticipant.call();
+                } else {
+                    // Fully Bridged
+                    outboundCall = addParticipant.call();
+                }
+                mscontroller.tell(addParticipant, super.source);
+            }
         }
 
     }
@@ -297,8 +308,8 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
-
+            final BridgeStateChanged notification = new BridgeStateChanged(BridgeStateChanged.BridgeState.HALF_BRIDGED);
+            broadcast(notification);
         }
 
     }
@@ -311,36 +322,33 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
-
+            final BridgeStateChanged notification = new BridgeStateChanged(BridgeStateChanged.BridgeState.BRIDGED);
+            broadcast(notification);
         }
 
     }
 
-    private class DestroyingMediaGroup extends AbstractAction {
+    private class Stopping extends AbstractAction {
 
-        public DestroyingMediaGroup(ActorRef source) {
+        public Stopping(ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
+            // Ask participants (if any) to leave the bridge
+            remove(inboundCall);
+            remove(outboundCall);
 
+            // Ask the MS Controller to stop
+            // This will stop any current media operations and clean media resources
+            mscontroller.tell(new Stop(), super.source);
         }
 
-    }
-
-    private class ClosingMediaSession extends AbstractAction {
-
-        public ClosingMediaSession(ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
-
+        private void remove(ActorRef call) {
+            if (call != null) {
+                call.tell(new Leave(), super.source);
+            }
         }
 
     }
@@ -353,8 +361,8 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
-
+            final BridgeStateChanged notification = new BridgeStateChanged(BridgeState.INACTIVE);
+            broadcast(notification);
         }
 
     }
@@ -367,8 +375,8 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // TODO Auto-generated method stub
-
+            final BridgeStateChanged notification = new BridgeStateChanged(BridgeState.FAILED);
+            broadcast(notification);
         }
 
     }
