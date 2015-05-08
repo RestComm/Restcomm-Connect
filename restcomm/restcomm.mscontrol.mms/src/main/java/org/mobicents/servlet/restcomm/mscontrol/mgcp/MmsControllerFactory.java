@@ -81,4 +81,10 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
         }
 
     }
+
+    @Override
+    public ActorRef provideBridgeController() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

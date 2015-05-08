@@ -143,8 +143,8 @@ public final class CallManager extends UntypedActor {
     private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
-            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef sms,
-            final SipFactory factory, final DaoManager storage) {
+            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
+            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;

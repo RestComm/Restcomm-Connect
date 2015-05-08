@@ -19,35 +19,19 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mscontrol;
+package org.mobicents.servlet.restcomm.telephony;
 
-import akka.actor.ActorRef;
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public interface MediaServerControllerFactory {
+@Immutable
+public final class CreateBridge {
 
-    /**
-     * Provides a new Media Server Controller for a Call.
-     *
-     * @return The media server controller
-     */
-    ActorRef provideCallController();
-
-    /**
-     * Provides a new Media Server Controller for a Conference.
-     *
-     * @return The media server controller
-     */
-    ActorRef provideConferenceController();
-
-    /**
-     * Provides a new Media Server Controller for a Bridge.
-     *
-     * @return The media server controller
-     */
-    ActorRef provideBridgeController();
+    public CreateBridge() {
+        super();
+    }
 
 }
