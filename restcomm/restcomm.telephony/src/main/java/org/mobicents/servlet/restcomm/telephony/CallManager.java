@@ -113,6 +113,7 @@ public final class CallManager extends UntypedActor {
     private final ServletContext context;
     private final MediaServerControllerFactory msControllerFactory;
     private final ActorRef conferences;
+    private final ActorRef bridges;
     private final ActorRef sms;
     private final SipFactory sipFactory;
     private final DaoManager storage;
@@ -151,6 +152,7 @@ public final class CallManager extends UntypedActor {
         this.context = context;
         this.msControllerFactory = msControllerFactory;
         this.conferences = conferences;
+        this.bridges = bridges;
         this.sms = sms;
         this.sipFactory = factory;
         this.storage = storage;
@@ -449,6 +451,7 @@ public final class CallManager extends UntypedActor {
                 builder.setStorage(storage);
                 builder.setCallManager(self);
                 builder.setConferenceManager(conferences);
+                builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
                 builder.setAccount(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
@@ -504,6 +507,7 @@ public final class CallManager extends UntypedActor {
             builder.setStorage(storage);
             builder.setCallManager(self);
             builder.setConferenceManager(conferences);
+            builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
             builder.setAccount(client.getAccountSid());
             builder.setVersion(client.getApiVersion());
@@ -645,6 +649,7 @@ public final class CallManager extends UntypedActor {
         builder.setStorage(storage);
         builder.setCallManager(self);
         builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
         builder.setVersion(request.version());
@@ -678,6 +683,7 @@ public final class CallManager extends UntypedActor {
         builder.setStorage(storage);
         builder.setCallManager(self);
         builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
         builder.setVersion(request.version());

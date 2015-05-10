@@ -89,6 +89,7 @@ import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.AddParticipant;
 import org.mobicents.servlet.restcomm.telephony.Answer;
+import org.mobicents.servlet.restcomm.telephony.BridgeManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
@@ -99,6 +100,7 @@ import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 import org.mobicents.servlet.restcomm.telephony.ConferenceModeratorPresent;
 import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
 import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
+import org.mobicents.servlet.restcomm.telephony.CreateBridge;
 import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.CreateConference;
 import org.mobicents.servlet.restcomm.telephony.DestroyCall;
@@ -178,10 +180,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean liveCallModification = false;
     private boolean recordingCall = true;
 
+    // Call bridging
+    private final ActorRef bridgeManager;
+    private ActorRef bridge;
+
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef sms, final DaoManager storage) {
+            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -347,6 +353,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.configuration = configuration;
         this.callManager = callManager;
         this.conferenceManager = conferenceManager;
+        this.bridgeManager = bridgeManager;
         this.asrService = asr(configuration.subset("speech-recognizer"));
         this.faxService = fax(configuration.subset("fax-service"));
         this.smsService = sms;
@@ -368,6 +375,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         uri = uri + accountId.toString();
         this.cache = cache(path, uri);
         this.downloader = downloader();
+    }
+
+    private boolean is(State state) {
+        return this.fsm.state().equals(state);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -424,10 +435,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
         sender = sender();
+        ActorRef self = self();
+
         if (logger.isInfoEnabled()) {
             logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString());
             logger.info(" ********** VoiceInterpreter's " + self().path() + " Processing Message: " + klass.getName());
         }
+
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
         } else if (AsrResponse.class.equals(klass)) {
@@ -735,6 +749,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (joiningCalls.equals(state)) {
                 fsm.transition(message, finishDialing);
             }
+        } else if (BridgeManagerResponse.class.equals(klass)) {
+            onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
+        }
+    }
+
+    private void onBridgeManagerResponse(BridgeManagerResponse message, ActorRef self, ActorRef sender2) {
+        if (is(processingDialChildren)) {
+            this.bridge = message.get();
         }
     }
 
@@ -1210,13 +1232,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
                 } else {
-                    // Handle forking.
-                    dialBranches = new ArrayList<ActorRef>();
-                    dialChildren = new ArrayList<Tag>(verb.children());
-                    dialChildrenWithAttributes = new HashMap<ActorRef, Tag>();
-                    isForking = true;
-                    final StartForking start = StartForking.instance();
-                    source.tell(start, source);
+                    // // Handle forking.
+                    // dialBranches = new ArrayList<ActorRef>();
+                    // dialChildren = new ArrayList<Tag>(verb.children());
+                    // dialChildrenWithAttributes = new HashMap<ActorRef, Tag>();
+                    // isForking = true;
+                    // final StartForking start = StartForking.instance();
+                    // source.tell(start, source);
+
+                    // Handle Call Bridging
+                    final CreateBridge createBridge = new CreateBridge();
+                    bridgeManager.tell(createBridge, super.source);
                 }
             } else {
                 // Ask the parser for the next action to take.
