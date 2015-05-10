@@ -78,7 +78,8 @@ public class BridgeManager extends UntypedActor {
         bridge.tell(new Observe(self), self);
 
         // Send bridge to remote actor
-        sender.tell(createBridge(), self);
+        final BridgeManagerResponse response = new BridgeManagerResponse(bridge);
+        sender.tell(response, self);
     }
 
     private void onBridgeStateChanged(BridgeStateChanged message, ActorRef self, ActorRef sender) {
