@@ -80,7 +80,8 @@ public final class SmsService extends UntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ServletContext servletContext;
-
+    //used to display logger.info if no app to process SMS
+    private boolean isSmsHostedLocally = false ;
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo = true;
@@ -100,7 +101,7 @@ public final class SmsService extends UntypedActor {
         // TODO this.useTo = runtime.getBoolean("use-to");
     }
 
-    private void message(final Object message) throws IOException {
+ private void message(final Object message) throws IOException {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
 
@@ -121,9 +122,9 @@ public final class SmsService extends UntypedActor {
                 return;
             }
         }
-
         // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
         // registered
+        
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         // Try to see if the request is destined for an application we are hosting.
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
@@ -132,7 +133,8 @@ public final class SmsService extends UntypedActor {
             final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
             messageAccepted.send();
             return;
-        } else {
+          }
+        else {
             // try to see if the request is destined to another registered client
             if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
                 // have little control over
@@ -284,7 +286,7 @@ public final class SmsService extends UntypedActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
+    public void onReceive(final Object message) throws  Exception {
         final UntypedActorContext context = getContext();
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
@@ -301,8 +303,13 @@ public final class SmsService extends UntypedActor {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
             if ("MESSAGE".equalsIgnoreCase(method)) {
+            try {
                 message(message);
+            }catch (Exception e ){
+            logger.info("There is no locally hosted Restcomm app to process this SMS : " + e  );
             }
+                }
+
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
             final SipServletRequest request = response.getRequest();
