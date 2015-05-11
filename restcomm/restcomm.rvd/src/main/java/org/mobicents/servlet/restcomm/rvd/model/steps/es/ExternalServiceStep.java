@@ -12,8 +12,12 @@ import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -191,7 +195,7 @@ public class ExternalServiceStep extends Step {
                 }
 
                 // for GET requests add  url parameters
-                if ( getMethod() == null || "GET".equals(getMethod()) )
+                if ( getMethod() == null || "GET".equals(getMethod()) || "DELETE".equals(getMethod()) )
                     for ( UrlParam urlParam : getUrlParams() )
                         uri_builder.addParameter(urlParam.getName(), interpreter.populateVariables(urlParam.getValue()) );
 
@@ -213,8 +217,15 @@ public class ExternalServiceStep extends Step {
             if ( interpreter.getRvdContext().getProjectSettings().getLogging() )
                 interpreter.getProjectLogger().log("Requesting from url: " + url).tag("app",interpreter.getAppName()).tag("ES").tag("REQUEST").done();
 
-            if ( "POST".equals(getMethod()) ) {
-                HttpPost post = new HttpPost(url);
+            if ( "POST".equals(getMethod()) || "PUT".equals(getMethod()) ) {
+
+                // Setup request object
+                HttpEntityEnclosingRequestBase request;
+                if ( "POST".equals(getMethod()) )
+                    request = new HttpPost(url);
+                else
+                    request = new HttpPut(url);
+
                 String body = interpreter.populateVariables(requestBody);
 
                 if ( RvdUtils.isEmpty(getContentType()) || getContentType().equals(CONTENT_TYPE_WWWFORM) ) {
@@ -223,37 +234,42 @@ public class ExternalServiceStep extends Step {
                         List <NameValuePair> values = new ArrayList <NameValuePair>();
                         for ( UrlParam urlParam : getUrlParams() )
                             values.add(new BasicNameValuePair(urlParam.getName(), interpreter.populateVariables(urlParam.getValue()) ));
-                        post.setEntity(new UrlEncodedFormEntity(values));
+                        request.setEntity(new UrlEncodedFormEntity(values));
                     } else {
-                        post.addHeader("Content-Type","application/x-www-form-urlencoded");
+                        request.addHeader("Content-Type","application/x-www-form-urlencoded");
                         StringEntity stringBody = new StringEntity(body,"UTF-8");
-                        post.setEntity(stringBody);
+                        request.setEntity(stringBody);
                     }
                 } else
                 if ( getContentType().equals(CONTENT_TYPE_JSON) ) {
                     // send the request as JSON
-                    post.addHeader("Content-Type","application/json");
+                    request.addHeader("Content-Type","application/json");
                     StringEntity stringBody = new StringEntity(body,"UTF-8");
-                    post.setEntity(stringBody);
+                    request.setEntity(stringBody);
                 } else {
                     // unknown content type found. Use this content type and hope for the best
                     logger.warn( "Unknown content type found when POSTing to " + url +" : " + getContentType() );
-                    post.addHeader("Content-Type", getContentType());
+                    request.addHeader("Content-Type", getContentType());
                     StringEntity stringBody = new StringEntity(body,"UTF-8");
-                    post.setEntity(stringBody);
+                    request.setEntity(stringBody);
                 }
 
                 // Add authentication headers if present
                 if ( !RvdUtils.isEmpty(getUsername()) )
-                    post.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(getUsername(), getPassword()));
+                    request.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(getUsername(), getPassword()));
 
-                response = client.execute( post );
+                response = client.execute( request );
             } else
-            if ( getMethod() == null || getMethod().equals("GET") ) {
-                HttpGet get = new HttpGet( url );
+            if ( getMethod() == null || getMethod().equals("GET") || getMethod().equals("DELETE") ) {
+                HttpRequestBase request;
+                if ( getMethod() == null || getMethod().equals("GET") )
+                    request = new HttpGet( url );
+                else
+                    request = new HttpDelete( url );
+
                 if ( !RvdUtils.isEmpty(getUsername()) )
-                    get.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(getUsername(), getPassword()));
-                response = client.execute( get );
+                    request.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(getUsername(), getPassword()));
+                response = client.execute( request );
             } else
                 throw new InterpreterException("Unknonwn HTTP method specified: " + getMethod() );
 
