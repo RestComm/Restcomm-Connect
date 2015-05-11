@@ -31,7 +31,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="validation-warning row col-md-12 form-group" ng-show="step.urlParams.length>0 && step.method=='POST' && step.contentType=='application/x-www-form-urlencoded' && !step.populatePostBodyFromParams">{{"Service parameters are not used in POST requests by default. Check 'Automatically populate from service parameters' to alter this behaviour" | translate}}</div>
+                        <div class="validation-warning row col-md-12 form-group" ng-show="step.urlParams.length>0 && (step.method=='POST' || step.method=='PUT') && step.contentType=='application/x-www-form-urlencoded' && !step.populatePostBodyFromParams">{{"externalServiceStepIgnoredParamsWarning" | translate}}</div>
 
                         <div class="form-group">
 							<button ng-click="addUrlParam(step)" type="button" class="btn btn-xs" title="{{'externalServiceStepAddParamButtonPopover' | translate}}"><span>{{'externalServiceStepAddParamButton' | translate}}</span></button>
@@ -45,11 +45,13 @@
 								<div class="input-group form-group">
 									<span ng-show="step.iface.advancedShown" class="input-group-addon">{{'externalServiceStepMethodLabel' | translate}}</span>
 									<select ng-show="step.iface.advancedShown" ng-model='step.method' class="form-control form-control-inline">
-										<option value='GET'>{{'externalServiceStepMethodGetOption' | translate}}</option>
-										<option value='POST'>{{'externalServiceStepMethodPostOption' | translate}}</option>
+										<option value='GET'>GET</option>
+										<option value='POST'>POST</option>
+										<option value='PUT'>PUT</option>
+										<option value='DELETE'>DELETE</option>
 									</select>
-									<span ng-show="step.iface.advancedShown" class="input-group-addon" title="Use this content type when POSTing">Content Type</span>
-									<select ng-disabled="step.method != 'POST'" ng-show="step.iface.advancedShown" ng-model='step.contentType' class="form-control form-control-inline">
+									<span ng-show="step.iface.advancedShown" class="input-group-addon" title="Use this content type when POSTing or PUTing">Content Type</span>
+									<select ng-disabled="step.method != 'POST' && step.method != 'PUT' " ng-show="step.iface.advancedShown" ng-model='step.contentType' class="form-control form-control-inline">
 										<option value='application/x-www-form-urlencoded' title='Send request data using application/x-www-form-urlencoded content type'>www form</option>
 										<option value='application/json' title='Send request data using application/json content type'>json</option>
 									</select>
@@ -62,9 +64,9 @@
 									<span> </span>
 								</div>
 								
-								<div ng-show="step.iface.advancedShown && step.method=='POST'">
+								<div ng-show="step.iface.advancedShown && (step.method=='POST' || step.method=='PUT')">
 									<div  class="form-group">
-										<textarea ng-disabled="step.populatePostBodyFromParams" ng-model="step.requestBody" class="form-control" placeholder="type POST content here"></textarea>
+										<textarea ng-disabled="step.populatePostBodyFromParams" ng-model="step.requestBody" class="form-control" placeholder="type POST/PUT content here"></textarea>
 									</div>
 									<div ng-show="step.contentType=='application/x-www-form-urlencoded'" class="form-group checkbox" title="Build request body by url-encoding the service parameters defined above.">
 										<small><input ng-model="step.populatePostBodyFromParams" type="checkbox">Automatically populate from service parameters</small>
