@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
@@ -476,8 +478,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final State state = fsm.state();
         sender = sender();
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Current State: " + state.toString());
-            logger.info(" ********** VoiceInterpreter's "+ self().path() +" Processing Message: " + klass.getName());
+            logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString());
+            logger.info(" ********** VoiceInterpreter's " + self().path() + " Processing Message: " + klass.getName());
         }
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
@@ -792,7 +794,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 dtmfReceived = false;
                                 return;
                             }
-                        }
+                         }
                     } else {
                         collectedDigits.append(dtmfResponse.get());
                         fsm.transition(message, finishGathering);
@@ -875,10 +877,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final String forwardedFrom = callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
+        SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
             // Adding SIP OUT Headers and SipCallId for
             // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-            SipServletResponse lastResponse = callInfo.lastResponse();
             // logger.info("lastResponse " + lastResponse);
             if (lastResponse != null) {
                 final int statusCode = lastResponse.getStatus();
@@ -891,18 +893,30 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
                     parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    Iterator<String> headerIt = lastResponse.getHeaderNames();
-                    while (headerIt.hasNext()) {
-                        String headerName = headerIt.next();
-                        if (headerName.startsWith("X-")) {
-                            parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
-                                    .getHeader(headerName)));
-                        }
-                    }
+                    processCustomHeaders(lastResponse, "DialSipHeader_", parameters);
                 }
             }
         }
+
+        if (lastResponse == null) {
+            // Restcomm VoiceInterpreter should check the INVITE for custom headers and pass them to RVD
+            // https://telestax.atlassian.net/browse/RESTCOMM-710
+            final SipServletRequest invite = callInfo.invite();
+            processCustomHeaders(invite, "SipHeader_", parameters);
+        }
+
         return parameters;
+    }
+
+    private void processCustomHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
+        Iterator<String> headerNames = sipMessage.getHeaderNames();
+        while (headerNames.hasNext()) {
+            String headerName = headerNames.next();
+            if (headerName.startsWith("X-")) {
+                logger.debug("%%%%%%%%%%% Indetified customer header: " + headerName);
+                parameters.add(new BasicNameValuePair(prefix + headerName, sipMessage.getHeader(headerName)));
+            }
+        }
     }
 
     private abstract class AbstractAction implements Action {
@@ -1047,12 +1061,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         callRecord = builder.build();
                         records.addCallDetailRecord(callRecord);
-                        //
-                        //                        if (liveCallModification) {
-                        //                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
-                        //                            fsm.transition(message, acquiringCallMediaGroup);
-                        //                            return;
-                        //                        }
+//
+//                        if (liveCallModification) {
+//                            logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+//                            fsm.transition(message, acquiringCallMediaGroup);
+//                            return;
+//                        }
                     } else {
                         if (callMediaGroup == null ) {
                             logger.info("On going call but CallMediaGroup is null, will acquire call media group. VoiceInterpreter: "+self().path());
