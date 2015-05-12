@@ -80,8 +80,6 @@ public final class SmsService extends UntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ServletContext servletContext;
-    //used to display logger.info if no app to process SMS
-    private boolean isSmsHostedLocally = false ;
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo = true;
@@ -124,7 +122,6 @@ public final class SmsService extends UntypedActor {
         }
         // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
         // registered
-        
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         // Try to see if the request is destined for an application we are hosting.
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
@@ -134,9 +131,9 @@ public final class SmsService extends UntypedActor {
             messageAccepted.send();
             return;
           }
-        else {
+       if(client != null) {
             // try to see if the request is destined to another registered client
-            if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
+            //if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
                 // have little control over
                 Client toClient = clients.getClient(toUser);
                 if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
@@ -147,9 +144,9 @@ public final class SmsService extends UntypedActor {
                         logger.info("P2P, Message from: "+client.getLogin()+" redirected to registered client: "+toClient.getLogin());
                         return;
                     }
-                } else {
-                    //Since toUser is null, try to route the message outside using the SMS Aggregator
-                    logger.info("Routing outside message from client: "+client.getLogin()+" to: "+toUser);
+                }
+                //Since toUser is null, try to route the message outside using the SMS Aggregator
+                    logger.info("Restcomm will route this SMS to an external aggregator: "+client.getLogin()+" to: "+toUser);
                       ActorRef session = session();
                       // Create an SMS detail record.
                       final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
@@ -181,8 +178,8 @@ public final class SmsService extends UntypedActor {
                       session.tell(sms, self());
                 }
             }
-        }
-    }
+
+
 
 
     /**
@@ -209,13 +206,17 @@ public final class SmsService extends UntypedActor {
         String phone = to;
         try {
         phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        logger.warning("You are attempting to send an SMS to an address that is not a correctly formated Number: " + phone);
+        }
         // Try to find an application defined for the phone number.
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
         IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
         if(number==null){
             number = numbers.getIncomingPhoneNumber(to);
+            logger.error("Restcomm cannot find the number to which the SMS must be sent");
         }
+        try {
         if (number != null) {
             URI appUri = number.getSmsUrl();
             ActorRef interpreter = null;
@@ -282,6 +283,9 @@ public final class SmsService extends UntypedActor {
             interpreter.tell(start, self);
             isFoundHostedApp = true;
         }
+        }catch (Exception e){
+           logger.error("The number " + phone + " does not have a valid Restcomm SMS App attached " + e);
+        }
         return isFoundHostedApp;
     }
 
@@ -303,13 +307,8 @@ public final class SmsService extends UntypedActor {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
             if ("MESSAGE".equalsIgnoreCase(method)) {
-            try {
                 message(message);
-            }catch (Exception e ){
-            logger.info("There is no locally hosted Restcomm app to process this SMS : " + e  );
-            }
                 }
-
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
             final SipServletRequest request = response.getRequest();
