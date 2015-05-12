@@ -902,7 +902,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Restcomm VoiceInterpreter should check the INVITE for custom headers and pass them to RVD
             // https://telestax.atlassian.net/browse/RESTCOMM-710
             final SipServletRequest invite = callInfo.invite();
-            processCustomHeaders(invite, "SipHeader_", parameters);
+            // For outbound calls created with Calls REST API, the invite at this point will be null
+            if (invite != null)
+                processCustomHeaders(invite, "SipHeader_", parameters);
+        } else {
+           processCustomHeaders(lastResponse, "SipHeader_", parameters);
         }
 
         return parameters;

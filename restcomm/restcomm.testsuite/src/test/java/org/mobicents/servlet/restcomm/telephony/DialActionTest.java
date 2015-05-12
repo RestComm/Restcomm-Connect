@@ -640,8 +640,13 @@ public class DialActionTest {
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         
         // Add custom headers to the SIP INVITE
-        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent()); 
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, null, null, receivedBody));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+//        public boolean sendIncomingCallResponse(int statusCode,
+//                String reasonPhrase, int expires, String body, String contentType,
+//                String contentSubType, ArrayList<String> additionalHeaders,
+//                ArrayList<String> replaceHeaders)
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null, null));
+//        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, null, null, receivedBody));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
