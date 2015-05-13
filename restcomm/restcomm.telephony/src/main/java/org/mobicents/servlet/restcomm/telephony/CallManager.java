@@ -313,7 +313,8 @@ public final class CallManager extends UntypedActor {
                     // then we can end further processing of this INVITE
                     return;
                 } else {
-                    logger.info("Failed to redirect to other client: " + toClient.getUri());
+                    //logger.info("Failed to redirect to other client: " + toClient.getUri());
+                    logger.error("Cannot Connect to Client: "+toClient.getFriendlyName() + " : Make sure the Client exist or is registered with Restcomm" );
                 }
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered DID (application)
@@ -322,7 +323,7 @@ public final class CallManager extends UntypedActor {
                     return;
                 }
                 //This call is not a registered DID (application). Try to proxy out this call.
-                logger.info("Destination Client is null");
+                logger.warning("A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm");
                 // https://telestax.atlassian.net/browse/RESTCOMM-335
                 final String proxyURI = activeProxy;
                 final String proxyUsername = activeProxyUsername;
@@ -330,7 +331,8 @@ public final class CallManager extends UntypedActor {
                 SipURI from = null;
                 SipURI to = null;
                 boolean callToSipUri = false;
-                if (proxyURI != null) {
+                // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
+                if (proxyURI != null && !proxyURI.isEmpty()) {
                     final Configuration runtime = configuration.subset("runtime-settings");
                     final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
                     final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean("outboudproxy-user-at-from-header", true);
@@ -370,7 +372,7 @@ public final class CallManager extends UntypedActor {
                         return;
                     }
                 } else {
-                    logger.info("Active Proxy is null. Check configuration");
+                    logger.warning("Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured");
                 }
             }
         } else {
@@ -381,6 +383,7 @@ public final class CallManager extends UntypedActor {
             }
         }
         // We didn't find anyway to handle the call.
+        logger.error("Restcomm cannot process this call because the destination Client or Number CANNOT BE FOUND");
         final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
         response.send();
     }
@@ -449,6 +452,7 @@ public final class CallManager extends UntypedActor {
         try {
             formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
         } catch (Exception e) {
+        logger.error("The destination you are trying to call is not a NUMBER or is not in a E164 format");
         }
         try {
             // Try to find an application defined for the phone number.
@@ -498,6 +502,7 @@ public final class CallManager extends UntypedActor {
                 isFoundHostedApp = true;
             }
         } catch (Exception notANumber) {
+        logger.error("The number does not have a Restcomm hosted application attached");
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
@@ -778,7 +783,8 @@ public final class CallManager extends UntypedActor {
                     final String location = registration.getLocation();
                     to = (SipURI) sipFactory.createURI(location);
                 } else {
-                    throw new NullPointerException(request.to() + " is not currently registered.");
+                    //throw new NullPointerException(request.to() + " is not currently registered.");
+                logger.error("The SIP Client is not registered or does not exist");
                 }
                 break;
             }
