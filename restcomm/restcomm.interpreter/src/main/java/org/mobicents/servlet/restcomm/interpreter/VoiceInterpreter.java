@@ -35,6 +35,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -89,7 +90,9 @@ import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.AddParticipant;
 import org.mobicents.servlet.restcomm.telephony.Answer;
+import org.mobicents.servlet.restcomm.telephony.BridgeCalls;
 import org.mobicents.servlet.restcomm.telephony.BridgeManagerResponse;
+import org.mobicents.servlet.restcomm.telephony.BridgeStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
@@ -111,6 +114,7 @@ import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
+import org.mobicents.servlet.restcomm.telephony.StartBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
@@ -141,7 +145,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private final State processingDialChildren;
     private final State acquiringOutboundCallInfo;
     private final State forking;
-    private final State joiningCalls;
+    // private final State joiningCalls;
+    private final State creatingBridge;
+    private final State initializingBridge;
+    private final State bridging;
     private final State bridged;
     private final State finishDialing;
     private final State acquiringConferenceInfo;
@@ -201,7 +208,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         processingDialChildren = new State("processing dial children", new ProcessingDialChildren(source), null);
         acquiringOutboundCallInfo = new State("acquiring outbound call info", new AcquiringOutboundCallInfo(source), null);
         forking = new State("forking", new Forking(source), null);
-        joiningCalls = new State("joining calls", new JoiningCalls(source), null);
+        // joiningCalls = new State("joining calls", new JoiningCalls(source), null);
+        this.creatingBridge = new State("creating bridge", new CreatingBridge(source), null);
+        this.initializingBridge = new State("initializing bridge", new InitializingBridge(source), null);
+        this.bridging = new State("bridging", new Bridging(source), null);
         bridged = new State("bridged", new Bridged(source), null);
         finishDialing = new State("finish dialing", new FinishDialing(source), null);
         acquiringConferenceInfo = new State("acquiring conference info", new AcquiringConferenceInfo(source), null);
@@ -288,15 +298,21 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(forking, finishDialing));
         transitions.add(new Transition(forking, hangingUp));
         transitions.add(new Transition(forking, finished));
-        transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
+        // transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
-        transitions.add(new Transition(joiningCalls, finishDialing));
-        transitions.add(new Transition(joiningCalls, bridged));
-        transitions.add(new Transition(joiningCalls, hangingUp));
-        transitions.add(new Transition(joiningCalls, finished));
+        transitions.add(new Transition(acquiringOutboundCallInfo, creatingBridge));
+        transitions.add(new Transition(creatingBridge, initializingBridge));
+        transitions.add(new Transition(creatingBridge, finishDialing));
+        transitions.add(new Transition(initializingBridge, bridging));
+        transitions.add(new Transition(initializingBridge, hangingUp));
+        transitions.add(new Transition(bridging, bridged));
+        transitions.add(new Transition(bridging, finishDialing));
+        // transitions.add(new Transition(joiningCalls, finishDialing));
+        // transitions.add(new Transition(joiningCalls, bridged));
+        // transitions.add(new Transition(joiningCalls, hangingUp));
+        // transitions.add(new Transition(joiningCalls, finished));
         transitions.add(new Transition(bridged, finishDialing));
-        transitions.add(new Transition(bridged, hangingUp));
         transitions.add(new Transition(bridged, finished));
         transitions.add(new Transition(finishDialing, ready));
         transitions.add(new Transition(finishDialing, faxing));
@@ -495,7 +511,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, initializingCall);
                 }
             } else if (acquiringOutboundCallInfo.equals(state)) {
-                fsm.transition(message, joiningCalls);
+                fsm.transition(message, bridging);
             }
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
@@ -515,12 +531,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         outboundCall = sender;
                     }
                     fsm.transition(message, acquiringOutboundCallInfo);
-                } else if (joiningCalls.equals(state)) {
+                } else if (bridging.equals(state)) {
                     fsm.transition(message, bridged);
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
-                if (joiningCalls.equals(state)) {
+                if (bridging.equals(state)) {
                     fsm.transition(message, finishDialing);
                 } else if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
                     fsm.transition(message, finishDialing);
@@ -746,17 +762,42 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, finishDialing);
             } else if (bridged.equals(state)) {
                 fsm.transition(message, finishDialing);
-            } else if (joiningCalls.equals(state)) {
+            } else if (bridging.equals(state)) {
                 fsm.transition(message, finishDialing);
             }
         } else if (BridgeManagerResponse.class.equals(klass)) {
             onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
+        } else if (BridgeStateChanged.class.equals(klass)) {
+            onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         }
     }
 
-    private void onBridgeManagerResponse(BridgeManagerResponse message, ActorRef self, ActorRef sender2) {
+    private void onBridgeManagerResponse(BridgeManagerResponse message, ActorRef self, ActorRef sender) throws Exception {
         if (is(processingDialChildren)) {
             this.bridge = message.get();
+            fsm.transition(message, initializingBridge);
+        }
+    }
+
+    private void onBridgeStateChanged(BridgeStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        switch (message.getState()) {
+            case READY:
+                if (is(initializingBridge)) {
+                    fsm.transition(message, bridging);
+                }
+                break;
+            case BRIDGED:
+                if(is(bridging)) {
+                    fsm.transition(message, bridged);
+                }
+                break;
+
+            case FAILED:
+                if(is(initializingBridge)) {
+                    fsm.transition(message, hangingUp);
+                }
+            default:
+                break;
         }
     }
 
@@ -1371,65 +1412,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 dialBranches = null;
             }
             outboundCall.tell(new GetCallInfo(), source);
-        }
-    }
-
-    private final class JoiningCalls extends AbstractDialAction {
-        public JoiningCalls(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(final Object message) throws Exception {
-            final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-            outboundCallInfo = response.get();
-            logger.info("About to join call from:" + callInfo.from() + " to: " + callInfo.to() + " with outboundCall from: "
-                    + outboundCallInfo.from() + " to: " + outboundCallInfo.to());
-            // Check for any Dial verbs with url attributes (call screening url)
-            logger.info("Checking for Dial verbs with url attributes for this outboundcall");
-            Tag child = dialChildrenWithAttributes.get(outboundCall);
-            if (child != null && child.attribute("url") != null) {
-
-                URI url = new URL(child.attribute("url").value()).toURI();
-                String method = null;
-                if (child.hasAttribute("method")) {
-                    method = child.attribute("method").value().toUpperCase();
-                } else {
-                    method = "POST";
-                }
-
-                final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(getContext().system());
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setCallManager(self());
-                builder.setSmsService(smsService);
-                builder.setAccount(accountId);
-                builder.setVersion(version);
-                builder.setUrl(url);
-                builder.setMethod(method);
-                final ActorRef interpreter = builder.build();
-                StartInterpreter start = new StartInterpreter(outboundCall);
-                Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
-
-                if (!End.class.equals(object.getClass())) {
-                    fsm.transition(message, hangingUp);
-                    return;
-                }
-
-                // Stop SubVoiceInterpreter
-                outboundCall.tell(new StopObserving(interpreter), null);
-                getContext().stop(interpreter);
-            }
-
-            // Join participants
-            final AddParticipant add = new AddParticipant(outboundCall);
-            call.tell(add, source);
-
-            // Stop the ringing
-            call.tell(new StopMediaGroup(), source);
         }
     }
 
@@ -2101,5 +2083,100 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             postCleanup();
         }
         super.postStop();
+    }
+
+    private final class CreatingBridge extends AbstractAction {
+
+        public CreatingBridge(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            final CreateBridge create = new CreateBridge();
+            bridgeManager.tell(create, super.source);
+        }
+
+    }
+
+    private final class InitializingBridge extends AbstractAction {
+
+        public InitializingBridge(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Start monitoring bridge state changes
+            final Observe observe = new Observe(super.source);
+            bridge.tell(observe, super.source);
+
+            // Initialize bridge
+            final StartBridge start = new StartBridge();
+            bridge.tell(start, super.source);
+        }
+
+    }
+
+    private final class Bridging extends AbstractAction {
+
+        public Bridging(ActorRef source) {
+            super(source);
+        }
+
+        private ActorRef buildSubVoiceInterpreter(Tag child) throws MalformedURLException, URISyntaxException {
+            URI url = new URL(child.attribute("url").value()).toURI();
+            String method;
+            if (child.hasAttribute("method")) {
+                method = child.attribute("method").value().toUpperCase();
+            } else {
+                method = "POST";
+            }
+
+            final SubVoiceInterpreterBuilder builder = new SubVoiceInterpreterBuilder(getContext().system());
+            builder.setConfiguration(configuration);
+            builder.setStorage(storage);
+            builder.setCallManager(super.source);
+            builder.setSmsService(smsService);
+            builder.setAccount(accountId);
+            builder.setVersion(version);
+            builder.setUrl(url);
+            builder.setMethod(method);
+            return builder.build();
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            logger.info("Joining call from:" + callInfo.from() + " to: " + callInfo.to() + " with outboundCall from: "
+                    + outboundCallInfo.from() + " to: " + outboundCallInfo.to());
+
+            // Check for any Dial verbs with url attributes (call screening url)
+            Tag child = dialChildrenWithAttributes.get(outboundCall);
+            if (child != null && child.attribute("url") != null) {
+                final ActorRef interpreter = buildSubVoiceInterpreter(child);
+                StartInterpreter start = new StartInterpreter(outboundCall);
+                Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
+                Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
+                Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
+
+                if (!End.class.equals(object.getClass())) {
+                    fsm.transition(message, hangingUp);
+                    return;
+                }
+
+                // Stop SubVoiceInterpreter
+                outboundCall.tell(new StopObserving(interpreter), null);
+                getContext().stop(interpreter);
+            }
+
+            // Stop ringing from inbound call
+            final StopMediaGroup stop = new StopMediaGroup();
+            call.tell(stop, super.source);
+
+            // Bridge Calls
+            final BridgeCalls bridgeCalls = new BridgeCalls(call, outboundCall);
+            bridge.tell(bridgeCalls, super.source);
+        }
+
     }
 }
