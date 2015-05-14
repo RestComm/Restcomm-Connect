@@ -789,7 +789,7 @@ public class XmsCallController extends MediaServerController {
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
-                
+
                 // alert conference call has joined successfully
                 final JoinComplete joinComplete = new JoinComplete();
                 this.call.tell(new MediaServerControllerResponse<JoinComplete>(joinComplete), self);

@@ -106,10 +106,9 @@ public class Bridge extends UntypedActor {
         transitions.add(new Transition(ready, bridging));
         transitions.add(new Transition(ready, stopping));
         transitions.add(new Transition(bridging, halfBridged));
-        transitions.add(new Transition(bridging, bridged));
         transitions.add(new Transition(bridging, stopping));
         transitions.add(new Transition(halfBridged, stopping));
-        transitions.add(new Transition(halfBridged, bridging));
+        transitions.add(new Transition(halfBridged, bridged));
         transitions.add(new Transition(bridged, stopping));
         transitions.add(new Transition(stopping, failed));
         transitions.add(new Transition(stopping, complete));
@@ -325,7 +324,7 @@ public class Bridge extends UntypedActor {
             // Notify observers that inbound call has been bridged successfully
             final BridgeStateChanged notification = new BridgeStateChanged(BridgeStateChanged.BridgeState.HALF_BRIDGED);
             broadcast(notification);
-            
+
             // Ask mscontroller to join outbound call
             final JoinCall join = new JoinCall(outboundCall, ConnectionMode.SendRecv);
             mscontroller.tell(join, super.source);
