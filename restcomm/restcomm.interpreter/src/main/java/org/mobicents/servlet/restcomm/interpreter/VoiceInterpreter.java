@@ -533,8 +533,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         outboundCall = sender;
                     }
                     fsm.transition(message, acquiringOutboundCallInfo);
-                } else if (bridging.equals(state)) {
-                    fsm.transition(message, bridged);
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
