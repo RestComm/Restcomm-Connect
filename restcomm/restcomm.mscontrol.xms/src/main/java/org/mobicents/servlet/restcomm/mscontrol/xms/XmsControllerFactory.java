@@ -113,9 +113,9 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
     }
 
     private final class BridgeControllerFactory implements UntypedActorFactory {
-        
+
         private static final long serialVersionUID = -4095666710038438897L;
-        
+
         @Override
         public Actor create() throws Exception {
             if (msControlFactory == null) {
@@ -123,7 +123,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             }
             return new XmsBridgeController(msControlFactory, mediaServerInfo);
         }
-        
+
     }
 
 }

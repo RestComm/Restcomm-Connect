@@ -30,19 +30,19 @@ import akka.actor.ActorRef;
  *
  */
 @Immutable
-public final class BridgeCalls {
+public final class JoinCalls {
 
     private final ActorRef inboundCall;
     private final ActorRef outboundCall;
     private final Boolean record;
 
-    public BridgeCalls(final ActorRef inboundCall, final ActorRef outboundCall, final boolean record) {
+    public JoinCalls(final ActorRef inboundCall, final ActorRef outboundCall, final boolean record) {
         this.inboundCall = inboundCall;
         this.outboundCall = outboundCall;
         this.record = record;
     }
 
-    public BridgeCalls(final ActorRef inboundCall, final ActorRef outboundCall) {
+    public JoinCalls(final ActorRef inboundCall, final ActorRef outboundCall) {
         this(inboundCall, outboundCall, false);
     }
 
