@@ -33,6 +33,10 @@ public final class JoinComplete {
         this.endpoint = endpoint;
     }
 
+    public JoinComplete() {
+        this(null);
+    }
+
     public Object endpoint() {
         return endpoint;
     }

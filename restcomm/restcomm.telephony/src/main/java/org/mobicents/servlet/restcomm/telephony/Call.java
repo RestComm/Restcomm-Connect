@@ -69,6 +69,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
@@ -177,6 +178,7 @@ public final class Call extends UntypedActor {
     private boolean conferencing;
 
     // Call Bridging
+    private ActorRef bridge;
     private ActorRef outboundCall;
     private ActorRef outboundCallBridgeEndpoint;
 
@@ -411,6 +413,8 @@ public final class Call extends UntypedActor {
             onAddParticipant((AddParticipant) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
+        } else if (JoinBridge.class.equals(klass)) {
+            onJoinBridge((JoinBridge) message, self, sender);
         } else if (Leave.class.equals(klass)) {
             onLeave((Leave) message, self, sender);
         } else if (CreateMediaGroup.class.equals(klass)) {
@@ -1519,7 +1523,7 @@ public final class Call extends UntypedActor {
                 if (conferencing) {
                     conference.tell(message.get(), self);
                 } else {
-                    outboundCall.tell(message.get(), self);
+                    bridge.tell(message.get(), self);
                 }
                 fsm.transition(message, inProgress);
             }
@@ -1542,6 +1546,14 @@ public final class Call extends UntypedActor {
         }
     }
 
+    private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(inProgress)) {
+            this.bridge = sender;
+            this.fsm.transition(message, joining);
+        }
+    }
+
+    @Deprecated
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
             this.conferencing = ConnectionMode.Confrnce.equals(message.mode());

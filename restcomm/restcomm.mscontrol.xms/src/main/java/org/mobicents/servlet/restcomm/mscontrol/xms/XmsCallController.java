@@ -75,6 +75,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
@@ -149,7 +150,7 @@ public class XmsCallController extends MediaServerController {
     private boolean callOutbound;
 
     // Conference runtime stuff
-    private ActorRef conference;
+    private ActorRef bridge;
     private ActorRef outboundController;
     private Boolean conferencing;
     private NetworkConnection outboundConnection;
@@ -466,6 +467,8 @@ public class XmsCallController extends MediaServerController {
             onCollect((Collect) message, self, sender);
         } else if (Record.class.equals(klass)) {
             onRecord((Record) message, self, sender);
+        } else if (JoinBridge.class.equals(klass)) {
+            onJoinBridge((JoinBridge) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
@@ -780,10 +783,29 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
+    private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            try {
+                this.bridge = sender;
+                this.mediaMixer = (MediaMixer) message.getEndpoint();
+                this.networkConnection.join(Direction.DUPLEX, mediaMixer);
+                
+                // alert conference call has joined successfully
+                final JoinComplete joinComplete = new JoinComplete();
+                this.call.tell(new MediaServerControllerResponse<JoinComplete>(joinComplete), self);
+            } catch (MsControlException e) {
+                logger.error("Call bridging failed: " + e.getMessage());
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
+            }
+        }
+    }
+
+    @Deprecated
     private void onJoin(Join message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             // Ask the remote media session controller for the bridge endpoint
-            this.conference = message.endpoint();
+            this.bridge = message.endpoint();
             this.outboundController = message.mscontroller();
 
             try {

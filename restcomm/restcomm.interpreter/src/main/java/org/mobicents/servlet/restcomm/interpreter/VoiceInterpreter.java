@@ -90,7 +90,7 @@ import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.AddParticipant;
 import org.mobicents.servlet.restcomm.telephony.Answer;
-import org.mobicents.servlet.restcomm.telephony.BridgeCalls;
+import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.BridgeManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.BridgeStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
@@ -511,7 +511,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, initializingCall);
                 }
             } else if (acquiringOutboundCallInfo.equals(state)) {
-                fsm.transition(message, bridging);
+                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
+                this.outboundCallInfo = response.get();
+                fsm.transition(message, creatingBridge);
             }
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
@@ -773,7 +775,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onBridgeManagerResponse(BridgeManagerResponse message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(processingDialChildren)) {
+        if (is(creatingBridge)) {
             this.bridge = message.get();
             fsm.transition(message, initializingBridge);
         }
@@ -787,13 +789,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 break;
             case BRIDGED:
-                if(is(bridging)) {
+                if (is(bridging)) {
                     fsm.transition(message, bridged);
                 }
                 break;
 
             case FAILED:
-                if(is(initializingBridge)) {
+                if (is(initializingBridge)) {
                     fsm.transition(message, hangingUp);
                 }
             default:
@@ -1273,17 +1275,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
                 } else {
-                    // // Handle forking.
-                    // dialBranches = new ArrayList<ActorRef>();
-                    // dialChildren = new ArrayList<Tag>(verb.children());
-                    // dialChildrenWithAttributes = new HashMap<ActorRef, Tag>();
-                    // isForking = true;
-                    // final StartForking start = StartForking.instance();
-                    // source.tell(start, source);
-
-                    // Handle Call Bridging
-                    final CreateBridge createBridge = new CreateBridge();
-                    bridgeManager.tell(createBridge, super.source);
+                    // Handle forking.
+                    dialBranches = new ArrayList<ActorRef>();
+                    dialChildren = new ArrayList<Tag>(verb.children());
+                    dialChildrenWithAttributes = new HashMap<ActorRef, Tag>();
+                    isForking = true;
+                    final StartForking start = StartForking.instance();
+                    source.tell(start, source);
                 }
             } else {
                 // Ask the parser for the next action to take.
@@ -2174,7 +2172,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             call.tell(stop, super.source);
 
             // Bridge Calls
-            final BridgeCalls bridgeCalls = new BridgeCalls(call, outboundCall);
+            final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
             bridge.tell(bridgeCalls, super.source);
         }
 

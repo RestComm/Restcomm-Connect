@@ -57,6 +57,9 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
@@ -280,6 +283,8 @@ public class XmsBridgeController extends MediaServerController {
             onStopObserving((StopObserving) message, self, sender);
         } else if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
+        } else if (JoinCall.class.equals(klass)) {
+            onJoinCall((JoinCall) message, self, sender);
         } else if (Stop.class.equals(klass)) {
             onStop((Stop) message, self, sender);
         } else if (Record.class.equals(klass)) {
@@ -309,6 +314,12 @@ public class XmsBridgeController extends MediaServerController {
             this.bridge = sender;
             this.fsm.transition(message, initializing);
         }
+    }
+
+    private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
+        // Tell call to join bridge by passing reference to the media mixer
+        final JoinBridge join = new JoinBridge(this.mediaMixer, message.getConnectionMode());
+        message.getCall().tell(join, sender);
     }
 
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
