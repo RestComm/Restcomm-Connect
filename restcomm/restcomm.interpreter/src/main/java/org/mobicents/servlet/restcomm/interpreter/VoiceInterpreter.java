@@ -115,6 +115,7 @@ import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartBridge;
+import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
@@ -1615,10 +1616,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             Attribute attribute = verb.attribute("action");
 
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
-                if (message instanceof ReceiveTimeout)
+                if (message instanceof ReceiveTimeout) {
                     logger.info("Received timeout, will cancel calls");
-                if (message instanceof CallStateChanged)
+                }
+                if (message instanceof CallStateChanged) {
                     logger.info("call state changed. New call state: " + ((CallStateChanged) message).state());
+                }
                 if (forking.equals(state)) {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
@@ -1654,6 +1657,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 call.tell(new Hangup(), self());
             }
 
+            // XXX Recording should be managed by the Bridge Actor
             if (recordingCall && sender == call) {
                 Configuration runtimeSettings = configuration.subset("runtime-settings");
                 // Its the initial call that sent BYE so we can create the recording object here
@@ -1683,6 +1687,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 recordingCall = false;
             }
+
+            // Stop the bridge. Cleanup will be handled by BridgeManager.
+            final StopBridge stopBridge = new StopBridge();
+            bridge.tell(stopBridge, super.source);
+            bridge = null;
 
             if (attribute != null) {
                 logger.info("Executing Dial Action url");

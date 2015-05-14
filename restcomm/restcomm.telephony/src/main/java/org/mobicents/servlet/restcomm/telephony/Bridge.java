@@ -35,7 +35,6 @@ import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
@@ -354,19 +353,12 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // Ask participants (if any) to leave the bridge
-            remove(inboundCall);
-            remove(outboundCall);
+            inboundCall = null;
+            outboundCall = null;
 
             // Ask the MS Controller to stop
             // This will stop any current media operations and clean media resources
             mscontroller.tell(new Stop(), super.source);
-        }
-
-        private void remove(ActorRef call) {
-            if (call != null) {
-                call.tell(new Leave(), super.source);
-            }
         }
 
     }
@@ -381,6 +373,7 @@ public class Bridge extends UntypedActor {
         public void execute(Object message) throws Exception {
             final BridgeStateChanged notification = new BridgeStateChanged(BridgeState.INACTIVE);
             broadcast(notification);
+            observers.clear();
         }
 
     }
@@ -395,6 +388,7 @@ public class Bridge extends UntypedActor {
         public void execute(Object message) throws Exception {
             final BridgeStateChanged notification = new BridgeStateChanged(BridgeState.FAILED);
             broadcast(notification);
+            observers.clear();
         }
 
     }
