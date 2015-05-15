@@ -261,7 +261,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.failingBusy, this.busy));
         transitions.add(new Transition(this.failingNoAnswer, this.noAnswer));
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
-        transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
+        transitions.add(new Transition(this.updatingMediaSession, this.creatingMediaGroup));
         transitions.add(new Transition(this.updatingMediaSession, this.closingMediaSession));
         transitions.add(new Transition(this.closingMediaSession, this.completed));
         transitions.add(new Transition(this.closingMediaSession, this.failed));
@@ -1502,7 +1502,7 @@ public final class Call extends UntypedActor {
                     fsm.transition(message, dialing);
                 }
             } else if (is(updatingMediaSession)) {
-                fsm.transition(message, inProgress);
+                fsm.transition(message, creatingMediaGroup);
             }
         } else if (MediaSessionClosed.class.equals(klass)) {
             if (is(closingMediaSession)) {
