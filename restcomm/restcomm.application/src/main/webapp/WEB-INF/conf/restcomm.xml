@@ -211,6 +211,9 @@
           <uri>https://api.inetwork.com/v1.0</uri>
       </bandwidth>
       <!-- <nexmo>
+		<api-key></api-key>
+		<api-secret></api-secret>
+		<uri>https://rest.nexmo.com/</uri>	
       		</nexmo> -->
 	</phone-number-provisioning>
 
