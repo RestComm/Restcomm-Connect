@@ -21,8 +21,6 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,16 +31,11 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.mgcp.CloseConnection;
-import org.mobicents.servlet.restcomm.mgcp.ConnectionStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
 import org.mobicents.servlet.restcomm.mgcp.DestroyConnection;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
-import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
@@ -79,10 +72,6 @@ public class MmsBridgeController extends MediaServerController {
     private final State active;
     private final State acquiringMediaSession;
     private final State acquiringEndpoint;
-    private final State acquiringConnection;
-    private final State initializingConnection;
-    private final State openingConnection;
-    private final State closingConnection;
     private final State creatingMediaGroup;
     private final State destroyingMediaGroup;
     private final State inactive;
@@ -114,10 +103,6 @@ public class MmsBridgeController extends MediaServerController {
         this.active = new State("active", new Active(self), null);
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(self), null);
         this.acquiringEndpoint = new State("acquiring endpoint", new AcquiringEndpoint(self), null);
-        this.acquiringConnection = new State("acquiring connection", new AcquiringConnection(self), null);
-        this.initializingConnection = new State("initializing connection", new InitializingConnection(self), null);
-        this.openingConnection = new State("opening connection", new OpeningConnection(self), null);
-        this.closingConnection = new State("closing connection", new ClosingConnection(self), null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(self), null);
         this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(self), null);
         this.inactive = new State("inactive", new Inactive(self), null);
@@ -130,20 +115,11 @@ public class MmsBridgeController extends MediaServerController {
         transitions.add(new Transition(acquiringMediaSession, inactive));
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
         transitions.add(new Transition(acquiringEndpoint, inactive));
-        transitions.add(new Transition(creatingMediaGroup, acquiringConnection));
+        transitions.add(new Transition(creatingMediaGroup, active));
         transitions.add(new Transition(creatingMediaGroup, destroyingMediaGroup));
         transitions.add(new Transition(creatingMediaGroup, failed));
-        transitions.add(new Transition(acquiringConnection, initializingConnection));
-        transitions.add(new Transition(acquiringConnection, destroyingMediaGroup));
-        transitions.add(new Transition(initializingConnection, openingConnection));
-        transitions.add(new Transition(initializingConnection, destroyingMediaGroup));
-        transitions.add(new Transition(openingConnection, active));
-        transitions.add(new Transition(openingConnection, closingConnection));
-        transitions.add(new Transition(openingConnection, destroyingMediaGroup));
-        transitions.add(new Transition(active, closingConnection));
-        transitions.add(new Transition(closingConnection, destroyingMediaGroup));
+        transitions.add(new Transition(active, destroyingMediaGroup));
         transitions.add(new Transition(destroyingMediaGroup, inactive));
-        transitions.add(new Transition(destroyingMediaGroup, failed));
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         this.fail = Boolean.FALSE;
 
@@ -200,8 +176,6 @@ public class MmsBridgeController extends MediaServerController {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (MediaGroupStateChanged.class.equals(klass)) {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
-        } else if (ConnectionStateChanged.class.equals(klass)) {
-            onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
         }
     }
 
@@ -238,10 +212,8 @@ public class MmsBridgeController extends MediaServerController {
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
         if (is(acquiringMediaSession) || is(acquiringEndpoint)) {
             this.fsm.transition(message, inactive);
-        } else if (is(creatingMediaGroup) || is(acquiringConnection) || is(initializingConnection)) {
+        } else if (is(creatingMediaGroup) || is(active)) {
             this.fsm.transition(message, destroyingMediaGroup);
-        } else if (is(openingConnection) || is(active)) {
-            this.fsm.transition(message, closingConnection);
         }
     }
 
@@ -253,9 +225,6 @@ public class MmsBridgeController extends MediaServerController {
         } else if (is(acquiringEndpoint)) {
             this.endpoint = (ActorRef) message.get();
             this.fsm.transition(message, creatingMediaGroup);
-        } else if (is(acquiringConnection)) {
-            this.connection = (ActorRef) message.get();
-            this.fsm.transition(message, initializingConnection);
         }
     }
 
@@ -263,7 +232,7 @@ public class MmsBridgeController extends MediaServerController {
         switch (message.state()) {
             case ACTIVE:
                 if (is(creatingMediaGroup)) {
-                    fsm.transition(message, acquiringConnection);
+                    fsm.transition(message, active);
                 }
                 break;
 
@@ -279,36 +248,6 @@ public class MmsBridgeController extends MediaServerController {
                     }
                 }
                 break;
-
-            default:
-                break;
-        }
-
-    }
-
-    private void onConnectionStateChanged(ConnectionStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-        switch (message.state()) {
-            case CLOSED:
-                if (is(initializingConnection)) {
-                    this.fsm.transition(message, openingConnection);
-                } else if (is(openingConnection)) {
-                    this.fail = Boolean.FALSE;
-                    this.fsm.transition(message, destroyingMediaGroup);
-                } else if (is(closingConnection)) {
-                    this.fsm.transition(message, inactive);
-                }
-                break;
-
-            case HALF_OPEN:
-                if (is(openingConnection)) {
-                    this.fail = Boolean.TRUE;
-                    this.fsm.transition(message, closingConnection);
-                }
-
-            case OPEN:
-                if (is(openingConnection)) {
-                    this.fsm.transition(message, active);
-                }
 
             default:
                 break;
@@ -379,42 +318,6 @@ public class MmsBridgeController extends MediaServerController {
 
     }
 
-    private final class AcquiringConnection extends AbstractAction {
-
-        public AcquiringConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new CreateConnection(mediaSession), super.source);
-        }
-    }
-
-    private final class InitializingConnection extends AbstractAction {
-
-        public InitializingConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            connection.tell(new Observe(super.source), super.source);
-            connection.tell(new InitializeConnection(endpoint), super.source);
-        }
-    }
-
-    private final class OpeningConnection extends AbstractAction {
-        public OpeningConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            connection.tell(new OpenConnection(ConnectionMode.SendRecv), super.source);
-        }
-    }
-
     private final class Active extends AbstractAction {
 
         public Active(final ActorRef source) {
@@ -424,18 +327,6 @@ public class MmsBridgeController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE));
-        }
-    }
-
-    private final class ClosingConnection extends AbstractAction {
-
-        public ClosingConnection(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            connection.tell(new CloseConnection(), super.source);
         }
     }
 
