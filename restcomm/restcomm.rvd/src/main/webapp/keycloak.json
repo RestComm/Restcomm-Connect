@@ -1,7 +1,7 @@
 {
   "realm": "restcomm",
   "realm-public-key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB",
-  "auth-server-url": "http://192.168.1.29:8080/auth",
+  "auth-server-url": "http://login.restcomm.com:8081/auth",
   "ssl-required": "external",
   "resource": "restcomm-rvd-ui",
   "public-client": true

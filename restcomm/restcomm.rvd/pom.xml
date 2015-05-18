@@ -153,12 +153,12 @@
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-core</artifactId>
-			<version>1.1.0.Final</version>
+			<version>1.2.0.CR1</version>
 		</dependency>
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-adapter-core</artifactId>
-            <version>1.1.0.Final</version>
+            <version>1.2.0.CR1</version>
             <scope>provided</scope>
         </dependency>		
 		<!-- /Testing libraries -->
