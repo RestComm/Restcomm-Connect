@@ -139,7 +139,7 @@ public class XmsBridgeController extends MediaServerController {
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
 
         // Observers
-        this.observers = new ArrayList<ActorRef>();
+        this.observers = new ArrayList<ActorRef>(1);
     }
 
     private boolean is(State state) {
@@ -446,6 +446,12 @@ public class XmsBridgeController extends MediaServerController {
 
             // Broadcast state changed
             broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.INACTIVE));
+
+            // Clear observers
+            observers.clear();
+
+            // Terminate actor
+            getContext().stop(super.source);
         }
     }
 
@@ -457,8 +463,17 @@ public class XmsBridgeController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
+            // Clean resources
             cleanMediaResources();
+
+            // Broadcast state changed
             broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.FAILED));
+
+            // Clear observers
+            observers.clear();
+
+            // Terminate actor
+            getContext().stop(super.source);
         }
 
     }

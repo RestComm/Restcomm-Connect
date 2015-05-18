@@ -68,6 +68,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
@@ -146,7 +147,7 @@ public class MmsCallController extends MediaServerController {
 
     // CallMediaGroup
     private ActorRef mediaGroup;
-    private ActorRef conference;
+    private ActorRef bridge;
     private ActorRef conferenceController;
     private ActorRef outboundCallBridgeEndpoint;
 
@@ -154,7 +155,7 @@ public class MmsCallController extends MediaServerController {
     private final ActorRef mediaGateway;
     private MediaGatewayInfo gatewayInfo;
     private MediaSession session;
-    private ActorRef bridge;
+    private ActorRef bridgeEndpoint;
     private ActorRef remoteConn;
     private ActorRef internalLink;
     private ActorRef internalLinkEndpoint;
@@ -281,7 +282,7 @@ public class MmsCallController extends MediaServerController {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new MgcpMediaGroup(mediaGateway, session, bridge);
+                return new MgcpMediaGroup(mediaGateway, session, bridgeEndpoint);
             }
         }));
     }
@@ -383,6 +384,8 @@ public class MmsCallController extends MediaServerController {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (Join.class.equals(klass)) {
             onJoin((Join) message, self, sender);
+        } else if (JoinBridge.class.equals(klass)) {
+            onJoinBridge((JoinBridge) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
         } else if (MediaServerControllerResponse.class.equals(klass)) {
@@ -405,7 +408,7 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onQueryEndpoint(QueryEndpoint message, ActorRef self, ActorRef sender) {
-        final EndpointInfo endpointInfo = new EndpointInfo(bridge, ConnectionMode.SendRecv);
+        final EndpointInfo endpointInfo = new EndpointInfo(bridgeEndpoint, ConnectionMode.SendRecv);
         sender.tell(new MediaServerControllerResponse<EndpointInfo>(endpointInfo), self);
     }
 
@@ -564,9 +567,20 @@ public class MmsCallController extends MediaServerController {
         }
     }
 
+    private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) throws Exception {
+        // Get bridge endpoint data
+        this.bridge = sender;
+        this.internalLinkEndpoint = (ActorRef) message.getEndpoint();
+        this.internalLinkMode = message.getConnectionMode();
+
+        // Start join operation
+        this.fsm.transition(message, acquiringInternalLink);
+    }
+
+    @Deprecated
     private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
         // Ask the remote media session controller for the bridge endpoint
-        this.conference = message.endpoint();
+        this.bridge = message.endpoint();
         this.conferenceController = message.mscontroller();
         this.conferenceController.tell(new QueryEndpoint(), self);
     }
@@ -577,6 +591,7 @@ public class MmsCallController extends MediaServerController {
         this.mediaGroup.tell(join, self);
     }
 
+    @Deprecated
     private void onMediaSessionControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
             throws Exception {
         Object obj = message.get();
@@ -698,7 +713,7 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-            bridge = response.get();
+            bridgeEndpoint = response.get();
             mediaGateway.tell(new CreateConnection(session), source);
         }
     }
@@ -715,7 +730,7 @@ public class MmsCallController extends MediaServerController {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             remoteConn = response.get();
             remoteConn.tell(new Observe(source), source);
-            remoteConn.tell(new InitializeConnection(bridge), source);
+            remoteConn.tell(new InitializeConnection(bridgeEndpoint), source);
         }
     }
 
@@ -765,7 +780,7 @@ public class MmsCallController extends MediaServerController {
                 // // Will ask the Ivr Endpoint to get connect to that Bridge endpoint also
                 // conference.tell(new JoinComplete(bridge), source);
                 // }
-                call.tell(new MediaServerControllerResponse<JoinComplete>(new JoinComplete(bridge)), super.source);
+                call.tell(new MediaServerControllerResponse<JoinComplete>(new JoinComplete(bridgeEndpoint)), super.source);
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
                 ConnectionStateChanged connState = (ConnectionStateChanged) message;
                 localSdp = connState.descriptor().toString();
@@ -821,10 +836,10 @@ public class MmsCallController extends MediaServerController {
                 logger.info("Initializing Internal Link for the Outbound call");
             }
 
-            if (bridge != null) {
+            if (bridgeEndpoint != null) {
                 logger.info("##################### $$ Bridge for Call " + self().path() + " is terminated: "
-                        + bridge.isTerminated());
-                if (bridge.isTerminated()) {
+                        + bridgeEndpoint.isTerminated());
+                if (bridgeEndpoint.isTerminated()) {
                     // fsm.transition(message, acquiringMediaGatewayInfo);
                     // return;
                     logger.info("##################### $$ Call :" + self().path() + " bridge is terminated.");
@@ -846,7 +861,7 @@ public class MmsCallController extends MediaServerController {
             // }
             internalLink = response.get();
             internalLink.tell(new Observe(source), source);
-            internalLink.tell(new InitializeLink(bridge, internalLinkEndpoint), source);
+            internalLink.tell(new InitializeLink(bridgeEndpoint, internalLinkEndpoint), source);
         }
 
     }
@@ -999,14 +1014,14 @@ public class MmsCallController extends MediaServerController {
                 internalLink = null;
             }
 
-            if (bridge != null) {
-                logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridge.path());
-                mediaGateway.tell(new DestroyEndpoint(bridge), source);
-                context().stop(bridge);
-                bridge = null;
+            if (bridgeEndpoint != null) {
+                logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridgeEndpoint.path());
+                mediaGateway.tell(new DestroyEndpoint(bridgeEndpoint), source);
+                context().stop(bridgeEndpoint);
+                bridgeEndpoint = null;
             }
 
-            conference = null;
+            bridge = null;
             conferenceController = null;
             outboundCallBridgeEndpoint = null;
 

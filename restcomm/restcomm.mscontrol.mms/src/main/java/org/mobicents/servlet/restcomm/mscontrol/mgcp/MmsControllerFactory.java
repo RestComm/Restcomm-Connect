@@ -41,6 +41,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
     private final ActorRef mediaGateway;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
+    private final BridgeControllerFactory bridgeControllerFactory;
 
     public MmsControllerFactory(ActorSystem system, ActorRef mediaGateway) {
         super();
@@ -48,6 +49,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
         this.mediaGateway = mediaGateway;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
+        this.bridgeControllerFactory = new BridgeControllerFactory();
     }
 
     @Override
@@ -58,6 +60,11 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
     @Override
     public ActorRef provideConferenceController() {
         return system.actorOf(new Props(this.conferenceControllerFactory));
+    }
+
+    @Override
+    public ActorRef provideBridgeController() {
+        return system.actorOf(new Props(this.bridgeControllerFactory));
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {
@@ -82,9 +89,15 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
     }
 
-    @Override
-    public ActorRef provideBridgeController() {
-        // TODO Auto-generated method stub
-        return null;
+    private final class BridgeControllerFactory implements UntypedActorFactory {
+
+        private static final long serialVersionUID = 8999152285760508857L;
+
+        @Override
+        public Actor create() throws Exception {
+            return new MmsBridgeController(mediaGateway);
+        }
+
     }
+
 }
