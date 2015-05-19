@@ -412,6 +412,9 @@ public class MmsBridgeController extends MediaServerController {
             if (recording) {
                 mediaGroup.tell(new Stop(), super.source);
                 saveRecording();
+                recording = Boolean.FALSE;
+                recordStarted = null;
+                recordingRequest = null;
             }
             mediaGroup.tell(new StopMediaGroup(), super.source);
         }
