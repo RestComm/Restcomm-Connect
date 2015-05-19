@@ -21,6 +21,8 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.xms;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
@@ -45,8 +47,14 @@ import javax.media.mscontrol.mixer.MediaMixer;
 import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.entities.Recording;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
@@ -60,13 +68,15 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -105,6 +115,7 @@ public class XmsBridgeController extends MediaServerController {
     // Media Operations
     private Boolean recording;
     private DateTime recordingStarted;
+    private StartRecording recordingRequest;
 
     // Observers
     private final List<ActorRef> observers;
@@ -211,6 +222,7 @@ public class XmsBridgeController extends MediaServerController {
                     if (RecorderEvent.STOPPED.equals(event.getQualifier())) {
                         digits = endOnKey;
                     }
+                    saveRecording();
                     response = new MediaGroupResponse<String>(digits);
                 } else {
                     String reason = event.getErrorText();
@@ -218,9 +230,53 @@ public class XmsBridgeController extends MediaServerController {
                     logger.error("Recording event failed: " + reason);
                     response = new MediaGroupResponse<String>(error, reason);
                 }
+
                 recording = Boolean.FALSE;
+                recordingStarted = null;
+                recordingRequest = null;
+
                 super.remote.tell(response, self());
             }
+        }
+
+        private void saveRecording() {
+            final Sid accountId = recordingRequest.getAccountId();
+            final Sid callId = recordingRequest.getCallId();
+            final DaoManager daoManager = recordingRequest.getDaoManager();
+            final Sid recordingSid = recordingRequest.getRecordingSid();
+            final URI recordingUri = recordingRequest.getRecordingUri();
+            final Configuration runtimeSettings = recordingRequest.getRuntimeSetting();
+            Double duration;
+
+            try {
+                duration = WavUtils.getAudioDuration(recordingUri);
+            } catch (UnsupportedAudioFileException | IOException e) {
+                logger.error("Could not measure recording duration: " + e.getMessage(), e);
+                duration = 0.0;
+            }
+
+            if (duration.equals(0.0)) {
+                logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                final DateTime end = DateTime.now();
+                duration = new Double((end.getMillis() - recordingStarted.getMillis()) / 1000);
+            } else {
+                logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+            }
+
+            final Recording.Builder builder = Recording.builder();
+            builder.setSid(recordingSid);
+            builder.setAccountSid(accountId);
+            builder.setCallSid(callId);
+            builder.setDuration(duration);
+            builder.setApiVersion(runtimeSettings.getString("api-version"));
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                    .append(accountId.toString());
+            buffer.append("/Recordings/").append(recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+            final Recording recording = builder.build();
+            RecordingsDao recordsDao = daoManager.getRecordingsDao();
+            recordsDao.addRecording(recording);
         }
 
     }
@@ -286,8 +342,8 @@ public class XmsBridgeController extends MediaServerController {
             onJoinCall((JoinCall) message, self, sender);
         } else if (Stop.class.equals(klass)) {
             onStop((Stop) message, self, sender);
-        } else if (Record.class.equals(klass)) {
-            onRecord((Record) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecording((StartRecording) message, self, sender);
         }
     }
 
@@ -327,36 +383,25 @@ public class XmsBridgeController extends MediaServerController {
         }
     }
 
-    private void onRecord(Record message, ActorRef self, ActorRef sender) throws Exception {
+    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active)) {
             try {
                 logger.info("Start recording bridged call");
 
                 Parameters params = this.mediaGroup.createParameters();
 
-                // Add prompts
-                if (message.hasPrompts()) {
-                    List<URI> prompts = message.prompts();
-                    // TODO JSR-309 connector still does not support multiple prompts
-                    // params.put(Recorder.PROMPT, prompts.toArray(new URI[prompts.size()]));
-                    params.put(Recorder.PROMPT, prompts.get(0));
-                }
-
                 // Finish on key
+                String endOnKey = "1234567890*#";
                 RTC[] rtcs;
-                if (message.hasEndInputKey()) {
-                    params.put(SignalDetector.PATTERN[0], message.endInputKey());
-                    params.put(SignalDetector.INTER_SIG_TIMEOUT, new Integer(10000));
-                    rtcs = new RTC[] { MediaGroup.SIGDET_STOPPLAY };
-                } else {
-                    rtcs = RTC.NO_RTC;
-                }
+                params.put(SignalDetector.PATTERN[0], endOnKey);
+                params.put(SignalDetector.INTER_SIG_TIMEOUT, new Integer(10000));
+                rtcs = new RTC[] { MediaGroup.SIGDET_STOPPLAY };
 
                 // Recording length
-                params.put(Recorder.MAX_DURATION, message.length() * 1000);
+                params.put(Recorder.MAX_DURATION, 3600 * 1000);
 
                 // Recording timeout
-                int timeout = message.timeout();
+                int timeout = 5;
                 params.put(SpeechDetectorConstants.INITIAL_TIMEOUT, timeout);
                 params.put(SpeechDetectorConstants.FINAL_TIMEOUT, timeout);
 
@@ -365,15 +410,17 @@ public class XmsBridgeController extends MediaServerController {
                 // TODO set as definitive media group parameter - handled by RestComm
                 params.put(Recorder.START_BEEP, Boolean.FALSE);
 
-                this.recorderListener.setEndOnKey(message.endInputKey());
+                this.recorderListener.setEndOnKey(endOnKey);
                 this.recorderListener.setRemote(sender);
-                this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
+                this.mediaGroup.getRecorder().record(message.getRecordingUri(), rtcs, params);
+
                 this.recording = Boolean.TRUE;
                 this.recordingStarted = DateTime.now();
+                this.recordingRequest = message;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());
-                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                broadcast(response);
+                final MediaServerControllerError error = new MediaServerControllerError(e);
+                bridge.tell(error, self);
             }
         }
     }
