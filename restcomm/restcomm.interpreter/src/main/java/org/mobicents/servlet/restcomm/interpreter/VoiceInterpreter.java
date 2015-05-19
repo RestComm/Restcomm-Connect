@@ -32,7 +32,6 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -61,10 +60,8 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
-import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
 import org.mobicents.servlet.restcomm.fsm.Action;
@@ -90,7 +87,6 @@ import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.AddParticipant;
 import org.mobicents.servlet.restcomm.telephony.Answer;
-import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.BridgeManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.BridgeStateChanged;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
@@ -112,6 +108,7 @@ import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
+import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartBridge;
@@ -119,7 +116,6 @@ import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
-import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -1424,7 +1420,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
 
             if (dialRecordAttribute != null && "true".equalsIgnoreCase(dialRecordAttribute.value())) {
-                recordCall();
+                logger.info("Start recording of the bridge");
+                record(bridge);
             }
         }
     }
@@ -1525,9 +1522,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
             }
-        }
-        // Handle the rest of the cases
-        else {
+        } else {
+            // Handle the rest of the cases
             if (outboundCallInfo != null) {
                 final String dialCallSid = this.outboundCallInfo.sid().toString();
                 final CallStateChanged.State dialCallStatus = this.outboundCallInfo.state();
@@ -1657,34 +1653,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 call.tell(new Hangup(), self());
             }
 
-            // XXX Recording should be managed by the Bridge Actor
             if (recordingCall && sender == call) {
-                Configuration runtimeSettings = configuration.subset("runtime-settings");
-                // Its the initial call that sent BYE so we can create the recording object here
-                if (recordingUri != null) {
-                    Double duration = WavUtils.getAudioDuration(recordingUri);
-                    if (duration.equals(0.0)) {
-                        logger.info("At finishDialing. File doesn't exist since duration is 0");
-                        final DateTime end = DateTime.now();
-                        duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
-                    } else {
-                        logger.info("At finishDialing. File already exists, length: " + (new File(recordingUri).length()));
-                    }
-                    final Recording.Builder builder = Recording.builder();
-                    builder.setSid(recordingSid);
-                    builder.setAccountSid(accountId);
-                    builder.setCallSid(callInfo.sid());
-                    builder.setDuration(duration);
-                    builder.setApiVersion(runtimeSettings.getString("api-version"));
-                    StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                            .append(accountId.toString());
-                    buffer.append("/Recordings/").append(recordingSid.toString());
-                    builder.setUri(URI.create(buffer.toString()));
-                    final Recording recording = builder.build();
-                    RecordingsDao recordsDao = storage.getRecordingsDao();
-                    recordsDao.addRecording(recording);
-                }
                 recordingCall = false;
             }
 

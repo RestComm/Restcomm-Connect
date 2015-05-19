@@ -35,10 +35,9 @@ import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -155,14 +154,12 @@ public class Bridge extends UntypedActor {
             onJoinCalls((JoinCalls) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
-        } else if (MediaServerControllerResponse.class.equals(klass)) {
-            onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (MediaServerControllerStateChanged.class.equals(klass)) {
             onMediaServerControllerStateChanged((MediaServerControllerStateChanged) message, self, sender);
-        } else if (MediaGroupResponse.class.equals(klass)) {
-            onMediaGroupResponse((MediaGroupResponse<?>) message, self, sender);
         } else if (StopBridge.class.equals(klass)) {
             onStopBridge((StopBridge) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecording((StartRecording) message, self, sender);
         }
     }
 
@@ -205,12 +202,6 @@ public class Bridge extends UntypedActor {
         }
     }
 
-    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender) {
-        Object obj = message.get();
-        Class<?> klass = obj.getClass();
-        // XXX Implement when necessary
-    }
-
     private void onMediaServerControllerStateChanged(MediaServerControllerStateChanged message, ActorRef self, ActorRef sender)
             throws Exception {
         MediaServerControllerState state = message.getState();
@@ -236,18 +227,16 @@ public class Bridge extends UntypedActor {
         }
     }
 
-    private void onMediaGroupResponse(MediaGroupResponse<?> message, ActorRef self, ActorRef sender) {
-        if (message.succeeded()) {
-            // XXX do something
-        } else {
-            // XXX do something
-        }
-
-    }
-
     private void onStopBridge(StopBridge message, ActorRef self, ActorRef sender) throws Exception {
         if (is(ready) || is(bridging) || is(halfBridged) || is(bridged)) {
             this.fsm.transition(message, stopping);
+        }
+    }
+
+    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(bridged)) {
+            // Forward message to MS Controller
+            this.mscontroller.tell(message, sender);
         }
     }
 

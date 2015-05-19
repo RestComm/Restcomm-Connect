@@ -21,12 +21,22 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.sound.sampled.UnsupportedAudioFileException;
+
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.entities.Recording;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -43,12 +53,15 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -88,9 +101,10 @@ public class MmsBridgeController extends MediaServerController {
     private ActorRef bridge;
     private ActorRef mediaGroup;
 
-    // Runtime media operations
+    // Call Recording
     private Boolean recording;
     private DateTime recordStarted;
+    private StartRecording recordingRequest;
 
     // Observers
     private final List<ActorRef> observers;
@@ -148,6 +162,45 @@ public class MmsBridgeController extends MediaServerController {
         }
     }
 
+    private void saveRecording() {
+        final Sid accountId = recordingRequest.getAccountId();
+        final Sid callId = recordingRequest.getCallId();
+        final DaoManager daoManager = recordingRequest.getDaoManager();
+        final Sid recordingSid = recordingRequest.getRecordingSid();
+        final URI recordingUri = recordingRequest.getRecordingUri();
+        final Configuration runtimeSettings = recordingRequest.getRuntimeSetting();
+        Double duration;
+
+        try {
+            duration = WavUtils.getAudioDuration(recordingUri);
+        } catch (UnsupportedAudioFileException | IOException e) {
+            logger.error("Could not measure recording duration: " + e.getMessage(), e);
+            duration = 0.0;
+        }
+
+        if (duration.equals(0.0)) {
+            logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+            final DateTime end = DateTime.now();
+            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
+        } else {
+            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+        }
+
+        final Recording.Builder builder = Recording.builder();
+        builder.setSid(recordingSid);
+        builder.setAccountSid(accountId);
+        builder.setCallSid(callId);
+        builder.setDuration(duration);
+        builder.setApiVersion(runtimeSettings.getString("api-version"));
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
+        buffer.append("/Recordings/").append(recordingSid.toString());
+        builder.setUri(URI.create(buffer.toString()));
+        final Recording recording = builder.build();
+        RecordingsDao recordsDao = daoManager.getRecordingsDao();
+        recordsDao.addRecording(recording);
+    }
+
     /*
      * Events
      */
@@ -176,6 +229,8 @@ public class MmsBridgeController extends MediaServerController {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (MediaGroupStateChanged.class.equals(klass)) {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecording((StartRecording) message, self, sender);
         }
     }
 
@@ -252,7 +307,23 @@ public class MmsBridgeController extends MediaServerController {
             default:
                 break;
         }
+    }
 
+    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) {
+        if (is(active) && !recording) {
+            logger.info("Start recording bridged call");
+            String finishOnKey = "1234567890*#";
+            int maxLength = 3600;
+            int timeout = 5;
+
+            this.recording = Boolean.TRUE;
+            this.recordStarted = DateTime.now();
+            this.recordingRequest = message;
+
+            // Tell media group to start recording
+            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey);
+            this.mediaGroup.tell(record, self);
+        }
     }
 
     /*
@@ -338,6 +409,10 @@ public class MmsBridgeController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
+            if (recording) {
+                mediaGroup.tell(new Stop(), super.source);
+                saveRecording();
+            }
             mediaGroup.tell(new StopMediaGroup(), super.source);
         }
     }
