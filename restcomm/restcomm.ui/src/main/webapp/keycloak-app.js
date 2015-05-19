@@ -16,7 +16,7 @@ angular.element(document).ready(function ($http) {
     keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
         auth.loggedIn = true;
         auth.authz = keycloakAuth;
-        auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=http://192.168.1.29:8080/restcomm-management/index.html";
+        auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/restcomm-management/index.html";
         angular.module('rcApp').factory('Auth', function() {
             return auth;
         });
