@@ -145,8 +145,8 @@ public class LiveCallModificationTest {
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, "completed", null);
 
-        assertTrue(georgeCall.disconnect());
-        assertTrue(georgeCall.waitForAck(5000));
+        assertTrue(georgeCall.waitForDisconnect(5000));
+        assertTrue(georgeCall.respondToDisconnect());
 
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());

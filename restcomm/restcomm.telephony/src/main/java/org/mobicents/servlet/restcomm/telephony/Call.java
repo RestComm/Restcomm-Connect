@@ -317,6 +317,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(unmuting, inProgress));
         transitions.add(new Transition(unmuting, closingRemoteConnection));
         transitions.add(new Transition(closingRemoteConnection, closingInternalLink));
+//        transitions.add(new Transition(closingRemoteConnection, closingRemoteConnection));
         transitions.add(new Transition(closingRemoteConnection, completed));
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -1006,6 +1007,7 @@ public final class Call extends UntypedActor {
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());
                     builder.setCallerName(name);
+                    builder.setStartTime(new DateTime());
                     String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
                     builder.setFrom(fromString);
                     // builder.setForwardedFrom(callInfo.forwardedFrom());
