@@ -158,6 +158,9 @@ public abstract class AbstractEndpoint {
             return;
         }
 
+        // check if the logged user has access to the account that is operated upon
+        secureByAccount(accessToken, account);
+
         //String neededPermissionString = "domain:restcomm:read:accounts";
         WildcardPermissionResolver resolver = new WildcardPermissionResolver();
         Permission neededPermission = resolver.resolvePermission(neededPermissionString);
@@ -203,6 +206,16 @@ public abstract class AbstractEndpoint {
         return null;
     }
 
+    /* make sure the token bearer can access data that belong to this account. In its simplest form this means that the username in the token
+     * is the same as the account username. When the organization concepts are implemented and hierarchical accounts are created a smarter
+     * approach that will allow parant users access the resources of their children should be employed.
+     */
+    protected void secureByAccount(final AccessToken accessToken, final Account account) {
+        if ( ! accessToken.getPreferredUsername().equals(account.getEmailAddress()) )
+            throw new UnauthorizedException("User cannot access resources for the specified account.");
+    }
+
+    // does the accessToken contain the role
     protected void secureByRole(final AccessToken accessToken, String role) {
         Set<String> roleNames;
         try {
