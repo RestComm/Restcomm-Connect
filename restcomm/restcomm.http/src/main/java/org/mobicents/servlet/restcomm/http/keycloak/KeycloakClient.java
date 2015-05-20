@@ -35,6 +35,7 @@ public class KeycloakClient {
     static final String ADMIN_USERNAME = "admin";
     static final String ADMIN_PASSWORD = "password";
     static final String ADMINISTRATION_APPLICATION = "admin-client"; // the name of the oauth application that carries out administrative tasks
+    static final String KEYCKLOAD_URL_ORIGIN = "http://login.restcomm.com:8081";
 
     static class TypedList extends ArrayList<RoleRepresentation> {
     }
@@ -91,10 +92,11 @@ public class KeycloakClient {
 */
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(getBaseUrl(request) + "/auth")
-                    .path(ServiceUrlConstants.TOKEN_SERVICE_DIRECT_GRANT_PATH).build(REALM));
+                    .path(ServiceUrlConstants.TOKEN_PATH).build(REALM));
             List <NameValuePair> formparams = new ArrayList <NameValuePair>();
             formparams.add(new BasicNameValuePair("username", ADMIN_USERNAME));
             formparams.add(new BasicNameValuePair("password", ADMIN_PASSWORD));
+            formparams.add(new BasicNameValuePair(OAuth2Constants.GRANT_TYPE, "password"));
             formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, ADMINISTRATION_APPLICATION));
             UrlEncodedFormEntity form = new UrlEncodedFormEntity(formparams, "UTF-8");
             post.setEntity(form);
@@ -202,8 +204,11 @@ public class KeycloakClient {
     }
 
 
-    // Keycloak service is assumed to running on the same host with restcomm
+    // Returns the URL origin where keycloak lies. First tries from a configuration value that is explicitly defined. It falls back to geting the value from the request assuming that keycloak runs side by side with restcomm.
     public static String getBaseUrl(HttpServletRequest request) {
+        if ( KEYCKLOAD_URL_ORIGIN != null && !KEYCKLOAD_URL_ORIGIN.equals("") )
+            return KEYCKLOAD_URL_ORIGIN;
+
         String useHostname = request.getServletContext().getInitParameter("useHostname");
         if (useHostname != null && "true".equalsIgnoreCase(useHostname)) {
             return "http://" + HostUtils.getHostName() + ":8080";
