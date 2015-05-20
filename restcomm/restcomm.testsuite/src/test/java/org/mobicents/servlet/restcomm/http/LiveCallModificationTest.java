@@ -168,7 +168,7 @@ public class LiveCallModificationTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry-lcm.xml";
 
         JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
