@@ -10,16 +10,15 @@ var rcMod = angular.module('rcApp');
         $scope.user.wantNewsletter=true;
 
         $scope.register = function() {
-         $scope.dataLoading = true;
+        $scope.dataLoading = true;
         UserService.Create($scope.user).then(function (response) {
                 if (response.success) {
-                    Notifications.Success('Registration successful');
-                    $location.path('/login');
+                    Notifications.success('Registration successful');
+                    $location.path('/dashboard');
                 } else {
-                    //Notifications.error(response.message) //TODO: When Service is ready.
-                    Notifications.info('Registration system is under construction!');
+                    Notifications.error(response.message)
                     $scope.dataLoading = false;
-                    $location.path('/dashboard'); //TODO:Need to finish the service for the registration.
+                    $location.path('/dashboard');
                 }
             });
     }

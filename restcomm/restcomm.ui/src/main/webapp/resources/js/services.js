@@ -544,9 +544,13 @@ rcServices.factory('UserService', function($http){
         }
 
         function Create(user) {
-            return $http.post('/api/users', user).then(handleSuccess, handleError('Error registering new user'));
-        }
-
+         return $http.get("http://cors.io/?u=https://script.google.com/macros/s/AKfycbylNnJkYf3hTI_w0TwlVZu4I0FHJBOkcaGB83J6PD_9CODLMciY/exec?DATA="
+                                                        + user.firstName +
+                                                        "," + user.lastName +
+                                                        "," + user.companyname +
+                                                        "," + user.email +
+                                                        "," + user.wantNewsletter).then(handleSuccess, handleError('Error registering new user'));
+      }
         function Update(user) {
             return $http.put('/api/users/' + user.id, user).then(handleSuccess, handleError('Error updating user'));
         }
@@ -556,9 +560,8 @@ rcServices.factory('UserService', function($http){
         }
 
         // private functions
-
-        function handleSuccess(data) {
-            return data;
+        function handleSuccess(response) {
+            return( response.data );
         }
 
         function handleError(error) {
