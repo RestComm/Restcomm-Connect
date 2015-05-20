@@ -45,6 +45,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
@@ -211,49 +212,42 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
-
-        Sid sid = null;
-        Account account = null;
-        if (Sid.pattern.matcher(accountSid).matches()) {
-            try {
-                sid = new Sid(accountSid);
-                account = dao.getAccount(sid);
-            } catch (Exception e) {
-                return status(NOT_FOUND).build();
-            }
-
-        } else {
-            try {
-                account = dao.getAccount(accountSid);
-                sid = account.getSid();
-            } catch (Exception e) {
-                return status(NOT_FOUND).build();
-            }
-        }
-
-        // otsakir - remove shiro security check
-        /*
         try {
-            final Subject subject = SecurityUtils.getSubject();
-            if (subject.hasRole("Administrator")
-                    || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {}
-            else {return status(UNAUTHORIZED).build();}
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
-        */
+            Sid sid = null;
+            Account account = null;
+            if (Sid.pattern.matcher(accountSid).matches()) {
+                try {
+                    sid = new Sid(accountSid);
+                    account = dao.getAccount(sid);
+                } catch (Exception e) {
+                    return status(NOT_FOUND).build();
+                }
 
-        if (account == null) {
-            return status(NOT_FOUND).build();
-        } else {
-            if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(account);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(account), APPLICATION_JSON).build();
             } else {
-                return null;
+                try {
+                    account = dao.getAccount(accountSid);
+                    sid = account.getSid();
+                } catch (Exception e) {
+                    return status(NOT_FOUND).build();
+                }
             }
+
+            if (account == null) {
+                return status(NOT_FOUND).build();
+            } else {
+                // make sure the logged user can access this account
+                secureByAccount(getKeycloakAccessToken(), account);
+                if (APPLICATION_XML_TYPE == responseType) {
+                    final RestCommResponse response = new RestCommResponse(account);
+                    return ok(xstream.toXML(response), APPLICATION_XML).build();
+                } else if (APPLICATION_JSON_TYPE == responseType) {
+                    return ok(gson.toJson(account), APPLICATION_JSON).build();
+                } else {
+                    return null;
+                }
+            }
+        } catch (UnauthorizedException e) {
+            return status(UNAUTHORIZED).build();
         }
     }
 

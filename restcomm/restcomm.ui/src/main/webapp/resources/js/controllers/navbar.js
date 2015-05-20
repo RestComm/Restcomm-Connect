@@ -70,18 +70,27 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5, Auth) {
   $scope.sid = SessionService.get('sid');
 
-  var accountBackup;
+	console.log("IN ProfileCtrl");
+	var accountBackup = {};
+	$scope.currentAccount = RCommAccounts.view({format:'json', accountSid:'otsakir'}, function (account) {
+		angular.copy(account, accountBackup);
+		console.log("received account");
+		console.log(accountBackup);
+	});
 
-  $scope.$watch('account', function() {
-    if (!angular.equals($scope.account, accountBackup)) {
+  $scope.$watch('currentAccount', function() {
+    if (!angular.equals($scope.currentAccount, accountBackup)) {
       $scope.accountChanged = true;
+      console.log("account has changed");
       // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
     }
   }, true);
-
+  
+  
+/*
   $scope.newPassword = $scope.newPassword2 = '';
 
   $scope.$watchCollection('[newPassword, newPassword2]', function() {
@@ -153,7 +162,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   };
 
   $scope.getAccounts();
-
+*/
 });
 
 // Register Account Modal
