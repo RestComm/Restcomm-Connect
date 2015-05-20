@@ -41,10 +41,10 @@ rcServices.service('AuthService', function(Auth,md5) {
 	serviceInstance.getProfile = function() {
 		return Auth.authz.profile;
 	}
-    /*
-    getLoggedUser: function() {
-      return SessionService.get('logged_user');
-    },*/
+	serviceInstance.logout = function() {
+		Auth.authz.logout();
+	}
+
     
     return serviceInstance;
 		
