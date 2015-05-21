@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.joda.time.DateTime;
@@ -41,11 +42,12 @@ public final class CallInfo {
     private final String fromName;
     private final String from;
     private final String to;
+    private final SipServletRequest invite;
     private final SipServletResponse lastResponse;
 
     public CallInfo(final Sid sid, final State state, final CreateCall.Type type, final String direction,
             final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
-            final SipServletResponse lastResponse) {
+            final SipServletRequest invite, final SipServletResponse lastResponse) {
         super();
         this.sid = sid;
         this.state = state;
@@ -55,6 +57,7 @@ public final class CallInfo {
         this.fromName = fromName;
         this.from = from;
         this.to = to;
+        this.invite = invite;
         this.lastResponse = lastResponse;
         this.type = type;
     }
@@ -93,6 +96,10 @@ public final class CallInfo {
 
     public String to() {
         return to;
+    }
+
+    public SipServletRequest invite() {
+        return invite;
     }
 
     public SipServletResponse lastResponse() {

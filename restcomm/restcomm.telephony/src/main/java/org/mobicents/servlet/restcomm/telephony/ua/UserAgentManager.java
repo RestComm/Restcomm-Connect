@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.SipApplicationSession;
@@ -67,15 +66,15 @@ import akka.event.LoggingAdapter;
  */
 public final class UserAgentManager extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    private final ServletConfig servletConfig;
     private boolean authenticateUsers = true;
     private final SipFactory factory;
     private final DaoManager storage;
+    private final ServletContext servletContext;
 
-    public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
+    public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage, final ServletContext servletContext) {
         super();
 //        this.configuration = configuration;
-        this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
+        this.servletContext = servletContext;
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
@@ -218,10 +217,9 @@ public final class UserAgentManager extends UntypedActor {
     }
 
     private SipURI outboundInterface(String toTransport) {
-        final ServletContext context = servletConfig.getServletContext();
         SipURI result = null;
         @SuppressWarnings("unchecked")
-        final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
+        final List<SipURI> uris = (List<SipURI>) servletContext.getAttribute(OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
             final String transport = uri.getTransportParam();
             if (toTransport != null && toTransport.equalsIgnoreCase(transport)) {
