@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.sms;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Currency;
 import java.util.List;
 
@@ -35,15 +36,18 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
@@ -80,6 +84,9 @@ public final class SmsService extends UntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ServletContext servletContext;
+    static final int ERROR_NOTIFICATION = 0;
+    static final int WARNING_NOTIFICATION = 1;
+
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo = true;
@@ -207,14 +214,18 @@ public final class SmsService extends UntypedActor {
         try {
         phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164);
         } catch (Exception e) {
-        logger.warning("You are attempting to send an SMS to an address that is not a correctly formated Number: " + phone);
+      //  logger.warning("You are attempting to send an SMS to an address that is not a correctly formated Number: " + phone);
+        String errMsg = "You are attempting to send an SMS to an address that is not a correctly formated Number: " + phone;
+        sendNotification(errMsg, 12001, "warning" );
         }
         // Try to find an application defined for the phone number.
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
         IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
         if(number==null){
             number = numbers.getIncomingPhoneNumber(to);
-            logger.error("Restcomm cannot find the number to which the SMS must be sent");
+            //logger.error("Restcomm cannot find the number to which the SMS must be sent");
+            String errMsg = "Restcomm cannot find the Number to which the SMS must be sent : " + to ;
+            sendNotification(errMsg, 12002, "error" );
         }
         try {
         if (number != null) {
@@ -284,7 +295,9 @@ public final class SmsService extends UntypedActor {
             isFoundHostedApp = true;
         }
         }catch (Exception e){
-           logger.error("The number " + phone + " does not have a valid Restcomm SMS App attached " + e);
+          // logger.error("The number " + phone + " does not have a valid Restcomm SMS App attached " + e);
+           String errMsg = "There is no valid Restcomm SMS Request URL configured for this Number/Client : "  + phone  ;
+           sendNotification(errMsg, 12003, "error" );
         }
         return isFoundHostedApp;
     }
@@ -356,4 +369,81 @@ public final class SmsService extends UntypedActor {
             }
         }));
     }
+
+
+    // used for sending warning and error logs to notification engine and to the console
+    private void sendNotification(String errMessage, int errCode, String errType ){
+        NotificationsDao notifications = storage.getNotificationsDao();
+        Notification notification;
+
+    if (errType == "warning"){
+            logger.warning(errMessage); //send message to console
+            notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+            notifications.addNotification(notification);
+        }else if(errType == "error"){
+            logger.error(errMessage); //send message to console
+            notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+            notifications.addNotification(notification);
+        } else if(errType == "info"){
+            logger.info(errMessage); //send message to console
+        }
+
+    }
+
+
+    private Notification notification(final int log, final int error, final String message) {
+        String version = configuration.subset("runtime-settings").getString("api-version");
+        Sid accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf") ; //null;
+        Sid callSid =   new Sid("CA00000000000000000000000000000000") ;
+        /**
+       if (createSmsRequest != null ) {
+            accountId = createCallRequest.accountId() ;
+        } else if (switchProxyRequest != null) {
+            accountId = switchProxyRequest.getSid();
+        }**/
+
+        final Notification.Builder builder = Notification.builder();
+        final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+        builder.setSid(sid);
+       // builder.setAccountSid(accountId);
+        builder.setAccountSid(accountId);
+        builder.setCallSid(callSid);
+        builder.setApiVersion(version);
+        builder.setLog(log);
+        builder.setErrorCode(error);
+        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(base);
+        if (!base.endsWith("/")) {
+            buffer.append("/");
+        }
+        buffer.append(error).append(".html");
+        final URI info = URI.create(buffer.toString());
+        builder.setMoreInfo(info);
+        builder.setMessageText(message);
+        final DateTime now = DateTime.now();
+        builder.setMessageDate(now);
+        try {
+            builder.setRequestUrl(new URI(""));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+/**
+        if (response != null) {
+            builder.setRequestUrl(request.getUri());
+            builder.setRequestMethod(request.getMethod());
+            builder.setRequestVariables(request.getParametersAsString());
+        }**/
+
+        builder.setRequestMethod("");
+        builder.setRequestVariables("");
+        buffer = new StringBuilder();
+        buffer.append("/").append(version).append("/Accounts/");
+        buffer.append(accountId.toString()).append("/Notifications/");
+        buffer.append(sid.toString());
+        final URI uri = URI.create(buffer.toString());
+        builder.setUri(uri);
+        return builder.build();
+    }
+
 }
