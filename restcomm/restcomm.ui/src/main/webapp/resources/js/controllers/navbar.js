@@ -75,14 +75,14 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 
 	console.log("IN ProfileCtrl");
 	var accountBackup = {};
-	$scope.currentAccount = RCommAccounts.view({format:'json', accountSid:'otsakir'}, function (account) {
+	$scope.account = RCommAccounts.view({format:'json', accountSid:'otsakir'}, function (account) {
 		angular.copy(account, accountBackup);
 		console.log("received account");
 		console.log(accountBackup);
 	});
 
-  $scope.$watch('currentAccount', function() {
-    if (!angular.equals($scope.currentAccount, accountBackup)) {
+  $scope.$watch('account', function() {
+    if (!angular.equals($scope.account, accountBackup)) {
       $scope.accountChanged = true;
       console.log("account has changed");
       // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
@@ -115,25 +115,28 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     $scope.accountChanged = false;
   };
 
+*/
+  
   $scope.updateProfile = function() {
     var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status};
 
-    if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
-      params['Auth_Token'] = md5.createHash($scope.newPassword);
-    }
+  //  if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
+  //    params['Auth_Token'] = md5.createHash($scope.newPassword);
+  //  }
 
     RCommAccounts.update({accountSid:$scope.account.sid}, $.param(params), function() { // success
-      if($scope.account.sid = SessionService.get('sid')) {
-        SessionService.set('logged_user', $scope.account.friendly_name);
-      }
-      $scope.showAlert('success', 'Profile Updated Successfully.');
-      $scope.getAccounts();
+      //if($scope.account.sid = SessionService.get('sid')) {
+      //  SessionService.set('logged_user', $scope.account.friendly_name);
+      //}
+      //$scope.showAlert('success', 'Profile Updated Successfully.');
+      //$scope.getAccounts();
     }, function() { // error
       // TODO: Show alert
       $scope.showAlert('error', 'Failure Updating Profile. Please check data and try again.');
     });
   };
-
+  
+/*
   $scope.alert = {};
 
   $scope.showAlert = function(type, msg) {

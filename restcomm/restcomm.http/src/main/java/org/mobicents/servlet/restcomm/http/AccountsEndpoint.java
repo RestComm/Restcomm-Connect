@@ -366,17 +366,17 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             final MediaType responseType) {
         final Sid sid = new Sid(accountSid);
         Account account = dao.getAccount(sid);
+
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            // make sure the logged user can modify accounts AND that he owns (or is a parent of) this account
+            secure(account, "RestComm:Modify:Accounts");
+            // update the model
             account = update(account, data);
-            final Subject subject = SecurityUtils.getSubject();
-            if (subject.hasRole("Administrator")
-                    || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
-                dao.updateAccount(account);
-            } else {
-                return status(UNAUTHORIZED).build();
-            }
+            // and store to db
+            dao.updateAccount(account);
+
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {

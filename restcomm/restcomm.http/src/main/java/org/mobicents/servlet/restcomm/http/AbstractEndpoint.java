@@ -127,18 +127,12 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
+    // Throws an authorization exception in case the user does not have the permission OR does not own (or is a parent) the account
     protected void secure(final Account account, final String permission) throws AuthorizationException {
         secureKeycloak(account, "domain:" + permission, getKeycloakAccessToken()); // add the 'domain:' prefix too
-        //final Subject subject = SecurityUtils.getSubject();
-        //final Sid accountSid = account.getSid();
-        //if (account.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission)))) {
-        //    return;
-        //} else {
-        //    throw new AuthorizationException();
-        //}
     }
 
-    protected void secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
+    private void secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
         Set<String> roleNames;
         try {
             roleNames = accessToken.getRealmAccess().getRoles();
@@ -161,10 +155,8 @@ public abstract class AbstractEndpoint {
         // check if the logged user has access to the account that is operated upon
         secureByAccount(accessToken, account);
 
-        //String neededPermissionString = "domain:restcomm:read:accounts";
         WildcardPermissionResolver resolver = new WildcardPermissionResolver();
         Permission neededPermission = resolver.resolvePermission(neededPermissionString);
-        //Permission neededPermission = new DomainPermission(neededPermissionString); // Developer has: RestComm:*:Calls
 
         // build the authorization token
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo(roleNames);
@@ -215,7 +207,8 @@ public abstract class AbstractEndpoint {
             throw new UnauthorizedException("User cannot access resources for the specified account.");
     }
 
-    // does the accessToken contain the role
+    // does the accessToken contain the role?
+    /*
     protected void secureByRole(final AccessToken accessToken, String role) {
         Set<String> roleNames;
         try {
@@ -228,7 +221,7 @@ public abstract class AbstractEndpoint {
             return;
         else
             throw new UnauthorizedException("Role "+role+" is missing from token");
-    }
+    }*/
 
     protected AccessToken getKeycloakAccessToken() {
         KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
