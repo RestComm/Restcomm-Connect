@@ -302,16 +302,17 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             updateUri = updateURI + country + "/" + phoneNumber;
         }
         try {
-            if(phoneNumberParameters.getVoiceUrl() != null || phoneNumberParameters.getSmsUrl() != null) {
+            if((phoneNumberParameters.getVoiceUrl() != null && !phoneNumberParameters.getVoiceUrl().isEmpty()) ||
+                    (phoneNumberParameters.getSmsUrl() != null && phoneNumberParameters.getSmsUrl().isEmpty())) {
                 updateUri = updateUri + "?";
                 if(phoneNumberParameters.getSmsUrl() != null && !phoneNumberParameters.getSmsUrl().isEmpty()
                         && phoneNumberParameters.getVoiceUrl() != null && !phoneNumberParameters.getVoiceUrl().isEmpty()) {
-                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip" +
-                            "&moHttpUrl=" + phoneNumberParameters.getSmsUrl() + "&moSmppSysType=inbound";
+                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip" +
+                            "&moHttpUrl=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=inbound";
                 } else if(phoneNumberParameters.getVoiceUrl() != null && !phoneNumberParameters.getVoiceUrl().isEmpty()) {
-                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip";
+                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip";
                 } else {
-                    updateUri = updateUri + "moHttpUrl=" + URLEncoder.encode(phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=inbound";
+                    updateUri = updateUri + "moHttpUrl=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=inbound";
                 }
             }
             final HttpPost updatePost = new HttpPost(updateUri);

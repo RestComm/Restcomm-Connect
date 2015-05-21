@@ -317,6 +317,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(unmuting, inProgress));
         transitions.add(new Transition(unmuting, closingRemoteConnection));
         transitions.add(new Transition(closingRemoteConnection, closingInternalLink));
+//        transitions.add(new Transition(closingRemoteConnection, closingRemoteConnection));
         transitions.add(new Transition(closingRemoteConnection, completed));
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -348,7 +349,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -475,7 +476,14 @@ public final class Call extends UntypedActor {
         } else if (GetCallInfo.class.equals(klass)) {
             sender.tell(info(), self);
         } else if (GetOutboundCall.class.equals(klass)) {
-            sender.tell(outboundCall, self);
+            if (outboundCall != null) {
+                sender.tell(outboundCall, self);
+            } else {
+                //If previously that was a p2p call that changed to conference (for hold)
+                //and now it changes again to a new url, the outbound call is null since
+                //When we joined the call to the conference, we made outboundCall = null;
+                sender.tell(new org.mobicents.servlet.restcomm.telephony.NotFound(), sender);
+            }
         } else if (InitializeOutbound.class.equals(klass)) {
             fsm.transition(message, queued);
         } else if (ChangeCallDirection.class.equals(klass)) {
@@ -757,11 +765,21 @@ public final class Call extends UntypedActor {
                     group = null;
                 }
             } else if (AddParticipant.class.equals(klass)) {
+                //VoiceInterpreter will send AddParticipant to bridge two calls. The AddParticipant message
+                //will contain the outboundCall
                 invite(message);
             } else if (RemoveParticipant.class.equals(klass)) {
                 remove(message);
             } else if (Join.class.equals(klass)) {
-                conference = sender;
+                //Conference will send Join to a call in order to join the confernece room
+                //But also a call can send Join to an outbound call to join the original call for bridged calls.!!!
+                if (Conference.class.equals(sender.getClass())) {
+                    conference = sender;
+                    if (outboundCall != null && outboundCall != conference)
+                        outboundCall = null;
+                } else if (Call.class.equals(sender.getClass())) {
+                    initialCall = sender;
+                }
                 fsm.transition(message, acquiringInternalLink);
             } else if (Leave.class.equals(klass)) {
                 fsm.transition(message, closingInternalLink);
@@ -989,6 +1007,7 @@ public final class Call extends UntypedActor {
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());
                     builder.setCallerName(name);
+                    builder.setStartTime(new DateTime());
                     String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
                     builder.setFrom(fromString);
                     // builder.setForwardedFrom(callInfo.forwardedFrom());
@@ -1504,11 +1523,15 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            if (updatingInternalLink.equals(state) && conference != null) { // && direction != "outbound-dial") {
+            if (updatingInternalLink.equals(state) && (conference != null || initialCall != null)) { // && direction != "outbound-dial") {
                 // If this is the outbound leg for an outbound call, conference is the initial call
                 // Send the JoinComplete with the Bridge endpoint, so if we need to record, the initial call
                 // Will ask the Ivr Endpoint to get connect to that Bridge endpoint also
-                conference.tell(new JoinComplete(bridge), source);
+                if (conference != null) {
+                    conference.tell(new JoinComplete(bridge), source);
+                } else if (initialCall != null) {
+                    initialCall.tell(new JoinComplete(bridge), source);
+                }
             }
             if (openingRemoteConnection.equals(state)
                     && !(invite.getSession().getState().equals(SipSession.State.CONFIRMED) || invite.getSession().getState()
