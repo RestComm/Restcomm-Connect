@@ -3,11 +3,11 @@ package org.mobicents.servlet.restcomm.http.keycloak;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -15,10 +15,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.keycloak.OAuth2Constants;
-import org.keycloak.adapters.HttpClientBuilder;
 import org.keycloak.constants.ServiceUrlConstants;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -27,6 +28,8 @@ import org.keycloak.util.HostUtils;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.KeycloakUriBuilder;
 import org.keycloak.util.UriUtils;
+
+import com.google.gson.Gson;
 
 public class KeycloakClient {
 
@@ -38,6 +41,17 @@ public class KeycloakClient {
     static final String KEYCKLOAD_URL_ORIGIN = "http://login.restcomm.com:8081";
 
     static class TypedList extends ArrayList<RoleRepresentation> {
+    }
+
+    public static class KeycloakClientException extends Exception {
+        private Integer httpStatusCode;
+        public KeycloakClientException() {}
+        public KeycloakClientException(Integer status) {
+            this.httpStatusCode = status;
+        }
+        public Integer getHttpStatusCode() {
+            return httpStatusCode;
+        }
     }
 
     public static class Failure extends Exception {
@@ -82,14 +96,8 @@ public class KeycloakClient {
     }
 
     public static AccessTokenResponse getToken(HttpServletRequest request) throws IOException {
-
         HttpClient client = new DefaultHttpClient();
-/*
-                new HttpClientBuilder()
-                .disableTrustManager().build();
-
-
-*/
+        //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(getBaseUrl(request) + "/auth")
                     .path(ServiceUrlConstants.TOKEN_PATH).build(REALM));
@@ -119,11 +127,8 @@ public class KeycloakClient {
     }
 
     public static void logout(HttpServletRequest request, AccessTokenResponse res) throws IOException {
-
-        HttpClient client = new HttpClientBuilder()
-                .disableTrustManager().build();
-
-
+        //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+        HttpClient client = new DefaultHttpClient();
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(getBaseUrl(request) + "/auth")
                     .path(ServiceUrlConstants.TOKEN_SERVICE_LOGOUT_PATH)
@@ -149,10 +154,39 @@ public class KeycloakClient {
         }
     }
 
-    public static List<RoleRepresentation> getRealmRoles(HttpServletRequest request, AccessTokenResponse res) throws Failure {
+    public static void updateUser(String username, UserRepresentation user, HttpServletRequest request, AccessTokenResponse res) throws KeycloakClientException {
+        //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+        HttpClient client = new DefaultHttpClient();
+        try {
+            //e.g. PUT http://login.restcomm.com:8081/auth/admin/realms/restcomm/users/otsakir
+            HttpPut putRequest = new HttpPut(getBaseUrl(request) + "/auth/admin/realms/"+REALM+"/users/"+username);
+            putRequest.addHeader("Authorization", "Bearer " + res.getToken());
+            putRequest.addHeader("Content-Type","application/json");
 
-        HttpClient client = new HttpClientBuilder()
-                .disableTrustManager().build();
+            //UserRepresentation user = toUserRepresentation(userData);
+            Gson gson = new Gson();
+            String json_user = gson.toJson(user);
+            StringEntity stringBody = new StringEntity(json_user,"UTF-8");
+            putRequest.setEntity(stringBody);
+            try {
+                HttpResponse response = client.execute(putRequest);
+                if (response.getStatusLine().getStatusCode() >= 300) {
+                    throw new KeycloakClientException(response.getStatusLine().getStatusCode());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (UnsupportedEncodingException e1) {
+            throw new KeycloakClientException();
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+
+    }
+
+    public static List<RoleRepresentation> getRealmRoles(HttpServletRequest request, AccessTokenResponse res) throws Failure {
+        //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+        HttpClient client = new DefaultHttpClient();
         try {
             HttpGet get = new HttpGet(getBaseUrl(request) + "/auth/admin/realms/"+REALM+"/roles");
             get.addHeader("Authorization", "Bearer " + res.getToken());
@@ -176,7 +210,7 @@ public class KeycloakClient {
         }
     }
 
-    public static UserRepresentation getUserInfo(HttpServletRequest request, AccessTokenResponse res, String username) throws Failure {
+    public static UserRepresentation getUserInfo(HttpServletRequest request, AccessTokenResponse res, String username) throws KeycloakClientException {
 
         HttpClient client = new DefaultHttpClient(); //new HttpClientBuilder()
                 //.disableTrustManager().build();
@@ -186,7 +220,7 @@ public class KeycloakClient {
             try {
                 HttpResponse response = client.execute(get);
                 if (response.getStatusLine().getStatusCode() != 200) {
-                    throw new Failure(response.getStatusLine().getStatusCode());
+                    throw new KeycloakClientException(response.getStatusLine().getStatusCode());
                 }
                 HttpEntity entity = response.getEntity();
                 InputStream is = entity.getContent();
