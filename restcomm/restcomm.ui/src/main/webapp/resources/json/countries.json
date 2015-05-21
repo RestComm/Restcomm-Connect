@@ -1,5 +1,10 @@
 [
   {
+    "name": "United States",
+    "dial_code": "+1",
+    "code": "US"
+  },
+  {
     "name": "Afghanistan",
     "dial_code": "+93",
     "code": "AF"
@@ -1138,11 +1143,6 @@
     "name": "United Kingdom",
     "dial_code": "+44",
     "code": "GB"
-  },
-  {
-    "name": "United States",
-    "dial_code": "+1",
-    "code": "US"
   },
   {
     "name": "Uruguay",

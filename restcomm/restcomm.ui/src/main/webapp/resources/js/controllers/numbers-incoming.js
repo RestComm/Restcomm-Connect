@@ -64,7 +64,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     $scope.phoneSid = $routeParams.phoneSid
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
-    
+
   //} // or registering a new one ?
   //else {
   //  // start optional items collapsed
@@ -171,7 +171,13 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
   $scope.findNumbers = function(areaCode, countryCode) {
     $scope.searching = true;
     $scope.availableNumbers = null;
-    $scope.availableNumbers = RCommAvailableNumbers.query({accountSid: $scope.sid, countryCode: countryCode.code, areaCode: areaCode});
+    var queryParams = {accountSid: $scope.sid, countryCode: $scope.newNumber.countryCode.code};
+    if($scope.newNumber.areaCode) { queryParams['AreaCode'] = $scope.newNumber.areaCode; }
+    if($scope.newNumber.phone_number) { queryParams['Contains'] = $scope.newNumber.phone_number; }
+    angular.forEach($scope.newNumber.capabilities, function(value, key) {
+      this[value + 'Enabled'] = 'true';
+    }, queryParams);
+    $scope.availableNumbers = RCommAvailableNumbers.query(queryParams);
     $scope.availableNumbers.$promise.then(
       //success
       function(value){
@@ -282,7 +288,7 @@ var createNumberParams = function(number, isSIP) {
   params["VoiceMethod"] = number.voice_method || number.voiceMethod;
   params["VoiceFallbackUrl"] = number.voice_fallback_url || number.voiceFallbackUrl;
   params["VoiceFallbackMethod"] = number.voice_fallback_method || number.voiceFallbackMethod;
-  params["StatusCallback"] = number.status_callback_url || number.statusCallback;
+  params["StatusCallback"] = number.status_callback || number.statusCallback;
   params["StatusCallbackMethod"] = number.status_callback_method || number.statusCallbackMethod;
   params["SmsUrl"] = number.sms_url || number.smsUrl;
   params["SmsMethod"] = number.sms_method || number.smsMethod;
