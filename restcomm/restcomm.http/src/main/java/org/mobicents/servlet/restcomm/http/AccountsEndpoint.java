@@ -62,7 +62,7 @@ import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient;
-import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient.Failure;
+import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient.KeycloakClientException;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
@@ -195,7 +195,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 try {
                     // TODO make realm and username parametric!
                     userInfo = KeycloakClient.getUserInfo(request, tokenResponse, loggedUsername);
-                } catch (Failure e1) {
+                } catch (KeycloakClientException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
                     return status(INTERNAL_SERVER_ERROR).build();
@@ -362,8 +362,14 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         return result;
     }
 
-    protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+    // converts submitted form data to a keyclock UserRepresentation object
+    private static UserRepresentation toUserRepresentation(MultivaluedMap<String, String> userData) {
+        UserRepresentation user = new UserRepresentation();
+        user.setFirstName("test");
+        return user;
+    }
+
+    protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid sid = new Sid(accountSid);
         Account account = dao.getAccount(sid);
 
@@ -374,16 +380,34 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             secure(account, "RestComm:Modify:Accounts");
             // update the model
             account = update(account, data);
-            // and store to db
-            dao.updateAccount(account);
+            try {
+                // retrieve the user from keycloak server, update and store back again
+                AccessTokenResponse tokenResponse = KeycloakClient.getToken(request);
+                UserRepresentation keycloakUser = KeycloakClient.getUserInfo(request, tokenResponse, account.getEmailAddress());
+                keycloakUser.setFirstName(account.getFriendlyName());
+                keycloakUser.setEnabled( (account.getStatus() == Account.Status.ACTIVE) ) ;
+                KeycloakClient.updateUser(account.getEmailAddress(), keycloakUser, request, tokenResponse);
+                // if all goes well, persist the updated account in database
+                dao.updateAccount(account);
 
-            if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(account), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(account);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else {
-                return null;
+                if (APPLICATION_JSON_TYPE == responseType) {
+                    return ok(gson.toJson(account), APPLICATION_JSON).build();
+                } else if (APPLICATION_XML_TYPE == responseType) {
+                    final RestCommResponse response = new RestCommResponse(account);
+                    return ok(xstream.toXML(response), APPLICATION_XML).build();
+                } else {
+                    return null;
+                }
+            } catch (KeycloakClientException e) {
+                if ( e.getHttpStatusCode() != null ) {
+                    // TODO maybe return an different HTTP status code according to the value returned from the keycloak server
+                    logger.error(e,e);
+                    return status(INTERNAL_SERVER_ERROR).build();
+                } else
+                    throw new RuntimeException();
+
+            } catch (IOException e) {
+                throw new RuntimeException();
             }
         }
     }
