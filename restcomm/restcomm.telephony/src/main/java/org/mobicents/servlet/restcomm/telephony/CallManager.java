@@ -136,6 +136,28 @@ public final class CallManager extends UntypedActor {
     private String mediaExternalIp;
     private String myHostIp;
     private String proxyIp;
+    private SipURI errTo;
+
+
+    // used for sending warning and error logs to notification engine and to the console
+    private void sendNotification(String errMessage, int errCode, String errType ){
+        NotificationsDao notifications = storage.getNotificationsDao();
+        Notification notification;
+
+    if (errType == "warning"){
+            logger.warning(errMessage); //send message to console
+            notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+            notifications.addNotification(notification);
+        }else if(errType == "error"){
+            logger.error(errMessage); //send message to console
+            notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+            notifications.addNotification(notification);
+        } else if(errType == "info"){
+            logger.info(errMessage); //send message to console
+        }
+
+    }
+
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     private CreateCall createCallRequest;
@@ -159,9 +181,12 @@ public final class CallManager extends UntypedActor {
         if (outboundIntf != null) {
             myHostIp = ((SipURI) outboundIntf).getHost().toString();
         } else {
-            logger.error("outboundIntf is null");
+            String errMsg = "SipURI outboundIntf is null";
+            sendNotification(errMsg, 14001, "error" );
+
             if (context == null)
-                logger.error("context is null");
+            errMsg = "SipServlet context is null";
+            sendNotification(errMsg, 14002, "error" );
         }
         Configuration mediaConf = configuration.subset("media-server-manager");
         mediaExternalIp = mediaConf.getString("mgcp-server.external-address");
@@ -214,6 +239,8 @@ public final class CallManager extends UntypedActor {
             allowFallbackToPrimary = false;
         }
     }
+
+
 
     private ActorRef call() {
         return system.actorOf(new Props(new UntypedActorFactory() {
@@ -299,6 +326,7 @@ public final class CallManager extends UntypedActor {
         logger.info("mediaExternalIp: "+mediaExternalIp);
         logger.info("proxyIp: "+proxyIp);
 
+
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have
             // little control over
             logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "
@@ -313,8 +341,10 @@ public final class CallManager extends UntypedActor {
                     // then we can end further processing of this INVITE
                     return;
                 } else {
-                    //logger.info("Failed to redirect to other client: " + toClient.getUri());
-                    logger.error("Cannot Connect to Client: "+toClient.getFriendlyName() + " : Make sure the Client exist or is registered with Restcomm" );
+
+                   String errMsg = "Cannot Connect to Client: "+toClient.getFriendlyName() + " : Make sure the Client exist or is registered with Restcomm";
+                   sendNotification(errMsg, 11001, "warning" );
+
                 }
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered DID (application)
@@ -323,7 +353,10 @@ public final class CallManager extends UntypedActor {
                     return;
                 }
                 //This call is not a registered DID (application). Try to proxy out this call.
-                logger.warning("A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm");
+                // log to console and to notification engine
+                String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
+                sendNotification(errMsg, 11002, "warning" );
+
                 // https://telestax.atlassian.net/browse/RESTCOMM-335
                 final String proxyURI = activeProxy;
                 final String proxyUsername = activeProxyUsername;
@@ -356,6 +389,7 @@ public final class CallManager extends UntypedActor {
                                 }
                             }
                             to = sipFactory.createSipURI(((SipURI) request.getTo().getURI()).getUser(), proxyURI);
+                            errTo = to;
                         } catch (Exception exception) {
                             logger.info("Exception: " + exception);
                         }
@@ -372,7 +406,8 @@ public final class CallManager extends UntypedActor {
                         return;
                     }
                 } else {
-                    logger.warning("Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured");
+                String msg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured. ProxyUri: ";
+                sendNotification(errMsg, 11004, "warning" );
                 }
             }
         } else {
@@ -382,10 +417,14 @@ public final class CallManager extends UntypedActor {
                 return;
             }
         }
-        // We didn't find anyway to handle the call.
-        logger.error("Restcomm cannot process this call because the destination Client or Number CANNOT BE FOUND");
         final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
         response.send();
+        // We didn't find anyway to handle the call.
+        //logger.error("Restcomm cannot process this call because the destination Client or Number CANNOT BE FOUND");
+        String res = response.getTo().toString().substring(response.getTo().toString().indexOf("<") + 1, response.getTo().toString().indexOf(">"));
+        String errMsg = "Restcomm cannot process this call because the destination Client or Number CANNOT BE FOUND. To: " + res ;
+        sendNotification(errMsg, 11005, "error" );
+
     }
 
     private void info(final SipServletRequest request) throws IOException {
@@ -452,7 +491,8 @@ public final class CallManager extends UntypedActor {
         try {
             formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
         } catch (Exception e) {
-        logger.error("The destination you are trying to call is not a NUMBER or is not in a E164 format");
+        String errMsg = "The destination you are trying to call is not a NUMBER or is not in a E164 format";
+        sendNotification(errMsg, 11006, "warning" );
         }
         try {
             // Try to find an application defined for the phone number.
@@ -502,7 +542,8 @@ public final class CallManager extends UntypedActor {
                 isFoundHostedApp = true;
             }
         } catch (Exception notANumber) {
-        logger.error("The number does not have a Restcomm hosted application attached");
+        String errMsg = "The number does not have a Restcomm hosted application attached";
+        sendNotification(errMsg, 11007, "error" );
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
@@ -784,7 +825,8 @@ public final class CallManager extends UntypedActor {
                     to = (SipURI) sipFactory.createURI(location);
                 } else {
                     //throw new NullPointerException(request.to() + " is not currently registered.");
-                logger.error("The SIP Client is not registered or does not exist");
+                String errMsg = "The SIP Client is not registered or does not exist";
+                sendNotification(errMsg, 11008, "error" );
                 }
                 break;
             }
@@ -1051,16 +1093,20 @@ public final class CallManager extends UntypedActor {
 
     private Notification notification(final int log, final int error, final String message) {
         String version = configuration.subset("runtime-settings").getString("api-version");
-        Sid accountId = null;
-        if (createCallRequest != null) {
-            accountId = createCallRequest.accountId();
+        Sid accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf") ; //null;
+        Sid callSid =   new Sid("CA00000000000000000000000000000000") ;
+       if (createCallRequest != null ) {
+            accountId = createCallRequest.accountId() ;
         } else if (switchProxyRequest != null) {
             accountId = switchProxyRequest.getSid();
         }
+
         final Notification.Builder builder = Notification.builder();
         final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
         builder.setSid(sid);
+       // builder.setAccountSid(accountId);
         builder.setAccountSid(accountId);
+        builder.setCallSid(callSid);
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
@@ -1081,6 +1127,13 @@ public final class CallManager extends UntypedActor {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
+/**
+        if (response != null) {
+            builder.setRequestUrl(request.getUri());
+            builder.setRequestMethod(request.getMethod());
+            builder.setRequestVariables(request.getParametersAsString());
+        }**/
+
         builder.setRequestMethod("");
         builder.setRequestVariables("");
         buffer = new StringBuilder();
