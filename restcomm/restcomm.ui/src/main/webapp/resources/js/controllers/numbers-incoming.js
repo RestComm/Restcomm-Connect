@@ -221,8 +221,11 @@ var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notific
 };
 
 var confirmNumberRegister = function(phone, isSIP, $dialog, $scope, RCommNumbers, Notifications, $location, $http) {
-  var title = 'Register Number ' + (phone.phone_number || phone.phoneNumber);
-  var msg = 'Are you sure you want to register incoming number ' + (phone.phone_number || phone.phoneNumber) + ' (' + (phone.friendly_name || phone.friendlyName) +  ') ? ' + (isSIP ? '' : 'It will cost you ' + phone.cost + '.');
+  var newNumber = phone.phone_number || phone.phoneNumber;
+  var newFriendly = phone.friendly_name || phone.friendlyName || newNumber;
+  var newCost = phone.cost || 0;
+  var title = 'Register Number ' + newNumber;
+  var msg = 'Are you sure you want to register incoming number ' + newNumber + ' (' + newFriendly +  ') ? ' + ((isSIP || !newCost) ? '' : 'It will cost you ' + newCost + '.');
   var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Register', cssClass: 'btn-primary'}];
 
   $dialog.messageBox(title, msg, btns)
