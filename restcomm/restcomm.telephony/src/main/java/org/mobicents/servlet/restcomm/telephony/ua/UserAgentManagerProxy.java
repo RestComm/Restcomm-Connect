@@ -48,6 +48,7 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
 
     private ActorSystem system;
     private ActorRef manager;
+    private ServletContext servletContext;
 
     private Configuration configuration;
 
@@ -82,7 +83,7 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
 
             @Override
             public UntypedActor create() throws Exception {
-                return new UserAgentManager(configuration, factory, storage);
+                return new UserAgentManager(configuration, factory, storage, servletContext);
             }
         }));
     }
@@ -90,11 +91,11 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(UserAgentManagerProxy.class)) {
-            final ServletContext context = event.getServletContext();
-            configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-            final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-            final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-            system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            servletContext = event.getServletContext();
+            configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
+            final SipFactory factory = (SipFactory) servletContext.getAttribute(SIP_FACTORY);
+            final DaoManager storage = (DaoManager) servletContext.getAttribute(DaoManager.class.getName());
+            system = (ActorSystem) servletContext.getAttribute(ActorSystem.class.getName());
             manager = manager(configuration, factory, storage);
         }
     }
