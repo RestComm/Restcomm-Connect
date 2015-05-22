@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -28,6 +29,7 @@ import org.keycloak.util.HostUtils;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.KeycloakUriBuilder;
 import org.keycloak.util.UriUtils;
+import org.mobicents.servlet.restcomm.http.keycloak.entities.ResetPasswordEntity;
 
 import com.google.gson.Gson;
 
@@ -52,6 +54,10 @@ public class KeycloakClient {
         public Integer getHttpStatusCode() {
             return httpStatusCode;
         }
+    }
+
+    // throw when part of the Oauth negotiation with keycloak fails
+    public static class KeycloakClientOauthException extends KeycloakClientException {
     }
 
     public static class Failure extends Exception {
@@ -95,7 +101,7 @@ public class KeycloakClient {
 
     }
 
-    public static AccessTokenResponse getToken(HttpServletRequest request) throws IOException {
+    public static AccessTokenResponse getToken(HttpServletRequest request) throws KeycloakClientException {
         HttpClient client = new DefaultHttpClient();
         //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
         try {
@@ -114,13 +120,17 @@ public class KeycloakClient {
             HttpEntity entity = response.getEntity();
             if (status != 200) {
                 String json = getContent(entity);
-                throw new IOException("Bad status: " + status + " response: " + json);
+                //throw new IOException("Bad status: " + status + " response: " + json);
+                throw new KeycloakClientOauthException();
             }
             if (entity == null) {
-                throw new IOException("No Entity");
+                //throw new IOException("No Entity");
+                throw new KeycloakClientOauthException();
             }
             String json = getContent(entity);
             return JsonSerialization.readValue(json, AccessTokenResponse.class);
+        } catch (IOException e) {
+            throw new RuntimeException();
         } finally {
             client.getConnectionManager().shutdown();
         }
@@ -167,6 +177,67 @@ public class KeycloakClient {
             Gson gson = new Gson();
             String json_user = gson.toJson(user);
             StringEntity stringBody = new StringEntity(json_user,"UTF-8");
+            putRequest.setEntity(stringBody);
+            try {
+                HttpResponse response = client.execute(putRequest);
+                if (response.getStatusLine().getStatusCode() >= 300) {
+                    throw new KeycloakClientException(response.getStatusLine().getStatusCode());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (UnsupportedEncodingException e1) {
+            throw new KeycloakClientException();
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+
+    }
+
+    public static void createUser(String username, UserRepresentation user, HttpServletRequest request, AccessTokenResponse res) throws KeycloakClientException {
+        //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+        HttpClient client = new DefaultHttpClient();
+        try {
+            //e.g. PUT http://login.restcomm.com:8081/auth/admin/realms/restcomm/users/otsakir
+            HttpPost postRequest = new HttpPost(getBaseUrl(request) + "/auth/admin/realms/"+REALM+"/users");
+            postRequest.addHeader("Authorization", "Bearer " + res.getToken());
+            postRequest.addHeader("Content-Type","application/json");
+
+            Gson gson = new Gson();
+            String json_user = gson.toJson(user);
+            StringEntity stringBody = new StringEntity(json_user,"UTF-8");
+            postRequest.setEntity(stringBody);
+            try {
+                HttpResponse response = client.execute(postRequest);
+                if (response.getStatusLine().getStatusCode() >= 300) {
+                    throw new KeycloakClientException(response.getStatusLine().getStatusCode());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (UnsupportedEncodingException e1) {
+            throw new KeycloakClientException();
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+
+    }
+
+    public static void resetUserPassword(String username, String password, boolean temporary, HttpServletRequest request, AccessTokenResponse res) throws KeycloakClientException {
+        HttpClient client = new DefaultHttpClient();
+        try {
+            //e.g. PUT http://login.restcomm.com:8081/auth/admin/realms/restcomm/users/paparas/reset-password
+            HttpPut putRequest = new HttpPut(getBaseUrl(request) + "/auth/admin/realms/"+REALM+"/users/"+username+"/reset-password");
+            putRequest.addHeader("Authorization", "Bearer " + res.getToken());
+            putRequest.addHeader("Content-Type","application/json");
+
+            ResetPasswordEntity resetPass = new ResetPasswordEntity();
+            resetPass.setType("password");
+            resetPass.setValue(password);
+            resetPass.setTemporary(temporary);
+            Gson gson = new Gson();
+            String json = gson.toJson(resetPass);
+            StringEntity stringBody = new StringEntity(json,"UTF-8");
             putRequest.setEntity(stringBody);
             try {
                 HttpResponse response = client.execute(putRequest);
