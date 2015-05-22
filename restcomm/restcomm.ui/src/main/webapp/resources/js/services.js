@@ -271,6 +271,11 @@ rcServices.factory('RCommAccounts', function($resource) {
       format:'json'
     },
     {
+	  all: {
+		method: 'GET',
+		url: '/restcomm/keycloak/Accounts.:format',
+		isArray: true
+	  },
       view: {
         method: 'GET',
         url: '/restcomm/keycloak/Accounts.:format/:accountSid'

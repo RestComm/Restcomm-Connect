@@ -70,16 +70,25 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5, Auth) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5, Auth, AuthService) {
   $scope.sid = SessionService.get('sid');
 
 	console.log("IN ProfileCtrl");
 	var accountBackup = {};
-	$scope.account = RCommAccounts.view({format:'json', accountSid:'otsakir'}, function (account) {
+	
+	//retrieve currently logged account information
+	$scope.account = RCommAccounts.view({format:'json', accountSid:AuthService.getUsername()}, function (account) {
 		angular.copy(account, accountBackup);
 		console.log("received account");
 		console.log(accountBackup);
 	});
+	
+	
+	// retrieve all sub-accounts for currently logged user
+	$scope.accounts = RCommAccounts.all({format:'json'}, function (accounts) {
+		console.log("received sub-accounts");
+	});
+	
 
   $scope.$watch('account', function() {
     if (!angular.equals($scope.account, accountBackup)) {
@@ -125,13 +134,8 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   //  }
 
     RCommAccounts.update({accountSid:$scope.account.sid}, $.param(params), function() { // success
-      //if($scope.account.sid = SessionService.get('sid')) {
-      //  SessionService.set('logged_user', $scope.account.friendly_name);
-      //}
-      //$scope.showAlert('success', 'Profile Updated Successfully.');
-      //$scope.getAccounts();
+    	
     }, function() { // error
-      // TODO: Show alert
       $scope.showAlert('error', 'Failure Updating Profile. Please check data and try again.');
     });
   };

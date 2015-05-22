@@ -102,14 +102,17 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+    // Create an account out of data. The sid for the new account is random and the account is considered a child of parentAccountSid
+    private Account createFrom(final Sid parentAccountSid, final MultivaluedMap<String, String> data) {
         validate(data);
 
         final DateTime now = DateTime.now();
         final String emailAddress = data.getFirst("EmailAddress");
 
         // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
-        final Sid sid = Sid.generate(Sid.Type.ACCOUNT, emailAddress);
+        //final Sid sid = Sid.generate(Sid.Type.ACCOUNT, emailAddress);
+        // Decoupling email from account sid as of https://github.com/Mobicents/RestComm/issues/257
+        final Sid sid = Sid.generate(Sid.Type.ACCOUNT);
 
         String friendlyName = emailAddress;
         if (data.containsKey("FriendlyName")) {
@@ -128,7 +131,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, authToken, role, uri);
     }
 
  // Creates a Restcomm account object out of a keycloak UserRepresentation
@@ -168,7 +171,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         //return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
-        return new Account(sid, now, now, emailAddress, friendlyName, sid, type, status, "notused", "notused", uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, null, type, status, "notused", "notused", uri);
     }
 
     protected Response importKeycloakAccount() {
@@ -188,7 +191,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 AccessTokenResponse tokenResponse;
                 try {
                     tokenResponse = KeycloakClient.getToken(request);
-                } catch (IOException e1) {
+                } catch (KeycloakClientException e1) {
                     return status(INTERNAL_SERVER_ERROR).build();
                 }
                 UserRepresentation userInfo;
@@ -273,31 +276,23 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         return ok().build();
     }
 
-    // Return (sub-)accounts for logged user. Proper sub-account implementation is still an issue to implement - https://github.com/Mobicents/RestComm/issues/227
+    // Returns (sub-)accounts for logged user. Proper sub-account implementation is still an issue to implement - https://github.com/Mobicents/RestComm/issues/227
     protected Response getAccounts(final MediaType responseType) {
-        logger.info("in getAccounts()");
-        String username = getLoggedUsername();
-        logger.info("logged username: " + username);
-        final Sid sid = Sid.generate(Sid.Type.ACCOUNT, username);
-        logger.info("account sid: " + sid);
-        //final Subject subject = SecurityUtils.getSubject();
-        //final Sid sid = new Sid((String) subject.getPrincipal());
-
-        // TODO check permissions using roles from keycloak here
-        /*
+        String username = getLoggedUsername(); // i.e. emailAddress
         try {
-            Account account = dao.getAccount(sid);
-            secure(account, "RestComm:Read:Accounts");
-        } catch (final AuthorizationException exception) {
+            secureApi("RestComm:Read:Accounts", getKeycloakAccessToken());
+        } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
-        }*/
-        final Account account = dao.getAccount(sid);
+        }
+
+        // get the account for the logged user (Decouples email from account SID. We rely on the username/email. We DON'T produce the account sid from username  and use the sid to retrieve the account.
+        final Account account = dao.getAccount(username);
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
             final List<Account> accounts = new ArrayList<Account>();
-            accounts.add(account);
-            accounts.addAll(dao.getAccounts(sid));
+            accounts.add(account); // TODO maybe we need to remove this at some point. There is a different API call for retrieving the users own account
+            accounts.addAll(dao.getAccounts(account.getSid())); // remember getSid() retrieves the accounts own id while getAccountSid() retrieves the sid of the parent account
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -310,28 +305,40 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid sid = new Sid((String) subject.getPrincipal());
-        Account account = null;
+        // check API access only
+        String username = getLoggedUsername(); // i.e. emailAddress
         try {
-            account = createFrom(sid, data);
+            secureApi("RestComm:Create:Accounts", getKeycloakAccessToken());
+        } catch(final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+
+        final Account parentAccount = dao.getAccount(username);
+        if ( parentAccount == null )
+            return status(NOT_FOUND).build();
+        Account account = null; // the newly created account
+        try {
+            account = createFrom(parentAccount.getSid(), data);
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
+        // check if the account that is being created already exists
+        if ( dao.getAccount(account.getEmailAddress()) != null )
+            return status(CONFLICT).build();
 
-        // If Account already exists don't add it again
-        if (dao.getAccount(account.getSid()) == null) {
-            final Account parent = dao.getAccount(sid);
-            if (parent.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts")))) {
-                if (!subject.hasRole("Administrator") || !data.containsKey("Role")) {
-                    account = account.setRole(parent.getRole());
-                }
-                dao.addAccount(account);
-            } else {
-                return status(UNAUTHORIZED).build();
-            }
+        String childRole = getChildRole(parentAccount);
+        //account.setRole( childRole ); - no point in setting roles in restcomm accounts since they are not used
+
+        // Everything seems set. Let's try creating the user in keycloak
+        try {
+            String password = data.getFirst("Password"); // password is already encoded to auth_token in createFrom() so we need to extract it again
+            createKeycloakUser(account,password);
+        } catch (KeycloakClientException e) {
+            if ( e.getHttpStatusCode() == 409 )
+                return status(CONFLICT).build();
         }
-
+        // now, store it in Restcomm too
+        dao.addAccount(account);
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(account), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {
@@ -363,11 +370,22 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     }
 
     // converts submitted form data to a keyclock UserRepresentation object
+    /*
     private static UserRepresentation toUserRepresentation(MultivaluedMap<String, String> userData) {
         UserRepresentation user = new UserRepresentation();
         user.setFirstName("test");
         return user;
     }
+    */
+
+    /*
+    private static UserRepresentation toUserRepresentation(Account account) {
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername(account.getEmailAddress());
+        user.setFirstName(account.getFriendlyName());
+        user.setEnabled(account.getStatus() == Account.Status.ACTIVE);
+        return user;
+    } */
 
     protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid sid = new Sid(accountSid);
@@ -381,12 +399,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             // update the model
             account = update(account, data);
             try {
-                // retrieve the user from keycloak server, update and store back again
-                AccessTokenResponse tokenResponse = KeycloakClient.getToken(request);
-                UserRepresentation keycloakUser = KeycloakClient.getUserInfo(request, tokenResponse, account.getEmailAddress());
-                keycloakUser.setFirstName(account.getFriendlyName());
-                keycloakUser.setEnabled( (account.getStatus() == Account.Status.ACTIVE) ) ;
-                KeycloakClient.updateUser(account.getEmailAddress(), keycloakUser, request, tokenResponse);
+                updateKeycloakUser(account);
                 // if all goes well, persist the updated account in database
                 dao.updateAccount(account);
 
@@ -412,6 +425,28 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
     }
 
+    private void updateKeycloakUser(Account restcommAccount) throws IOException, KeycloakClientException {
+        // retrieve the user from keycloak server, update and store back again
+        AccessTokenResponse tokenResponse = KeycloakClient.getToken(request);
+        UserRepresentation keycloakUser = KeycloakClient.getUserInfo(request, tokenResponse, restcommAccount.getEmailAddress());
+        keycloakUser.setFirstName(restcommAccount.getFriendlyName());
+        keycloakUser.setEnabled( (restcommAccount.getStatus() == Account.Status.ACTIVE) ) ;
+        KeycloakClient.updateUser(restcommAccount.getEmailAddress(), keycloakUser, request, tokenResponse);
+    }
+
+    private void createKeycloakUser(Account restcommAccount, String password) throws KeycloakClientException {
+        // create and populate keycloak user object
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername(restcommAccount.getEmailAddress());
+        user.setFirstName(restcommAccount.getFriendlyName());
+        user.setEnabled(restcommAccount.getStatus() == Account.Status.ACTIVE);
+        // submit for storage
+        AccessTokenResponse tokenResponse = KeycloakClient.getToken(request);
+        KeycloakClient.createUser(restcommAccount.getEmailAddress(), user, request, tokenResponse);
+        KeycloakClient.resetUserPassword(restcommAccount.getEmailAddress(), password, false, request, tokenResponse);
+    }
+
+
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
         if (!data.containsKey("EmailAddress")) {
             throw new NullPointerException("Email address can not be null.");
@@ -419,4 +454,12 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             throw new NullPointerException("Password can not be null.");
         }
     }
+
+    // calculates the role for an account based on parent account and logged user. For now it always create a Developer
+    private String getChildRole(Account parentAccount ) {
+        // TODO add a proper implementation
+        return "Developer";
+    }
+
+
 }

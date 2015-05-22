@@ -129,10 +129,14 @@ public abstract class AbstractEndpoint {
 
     // Throws an authorization exception in case the user does not have the permission OR does not own (or is a parent) the account
     protected void secure(final Account account, final String permission) throws AuthorizationException {
-        secureKeycloak(account, "domain:" + permission, getKeycloakAccessToken()); // add the 'domain:' prefix too
+        secureKeycloak(account, permission, getKeycloakAccessToken());
     }
 
-    private void secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
+    // check if the user with the roles in accessToken can access has the following permissions (on the API)
+    protected void secureApi(String neededPermissionString, final AccessToken accessToken) {
+        // normalize the permission string
+        neededPermissionString = "domain:" + neededPermissionString;
+
         Set<String> roleNames;
         try {
             roleNames = accessToken.getRealmAccess().getRoles();
@@ -140,24 +144,13 @@ public abstract class AbstractEndpoint {
             throw new UnauthorizedException("No access token present or no roles in it");
         }
 
-        String message = "has the following roles: ";
-        for (String rolename: roleNames) {
-            message += rolename + ", ";
-        }
-        logger.info(message);
-
         // no need to check permissions for users with the RestcommAdmin role
         if ( roleNames.contains("RestcommAdmin") ) {
-            logger.info("User is a RestcommAdmin. All type of access is allowed");
             return;
         }
 
-        // check if the logged user has access to the account that is operated upon
-        secureByAccount(accessToken, account);
-
         WildcardPermissionResolver resolver = new WildcardPermissionResolver();
         Permission neededPermission = resolver.resolvePermission(neededPermissionString);
-
         // build the authorization token
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo(roleNames);
 
@@ -168,11 +161,9 @@ public abstract class AbstractEndpoint {
                 logger.info("Cannot map keycloak role '" + roleName + "' to local restcomm configuration. Ignored." );
             else {
                 // simpleRole, neededPermission
-                logger.info("checking role " + roleName);
-
+                //logger.info("checking role " + roleName);
                 Set<Permission> permissions = simpleRole.getPermissions();
                 // check the permissions one by one
-
                 for (Permission permission: permissions) {
                     logger.info("Testing " + neededPermissionString + " against " + permission.toString() );
                     if (permission.implies(neededPermission)) {
@@ -181,12 +172,17 @@ public abstract class AbstractEndpoint {
                     }
 
                 }
-
                 logger.info("role " + roleName + " does not allow " + neededPermissionString);
             }
         }
         logger.info("No granting role/permission found. The request won't be permitted");
         throw new AuthorizationException();
+    }
+
+    private void secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
+        secureApi(neededPermissionString, accessToken);
+        // check if the logged user has access to the account that is operated upon
+        secureByAccount(accessToken, account);
     }
 
     // uses keycloak token
