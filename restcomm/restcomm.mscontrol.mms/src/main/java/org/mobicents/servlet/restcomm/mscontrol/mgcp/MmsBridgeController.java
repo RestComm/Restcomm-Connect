@@ -95,7 +95,6 @@ public class MmsBridgeController extends MediaServerController {
     private final ActorRef mediaGateway;
     private MediaSession mediaSession;
     private ActorRef endpoint;
-    private ActorRef connection;
 
     // Conference runtime stuff
     private ActorRef bridge;
@@ -432,11 +431,6 @@ public class MmsBridgeController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             // Cleanup resources
-            if (connection != null) {
-                mediaGateway.tell(new DestroyConnection(connection), super.source);
-                connection = null;
-            }
-
             if (endpoint != null) {
                 mediaGateway.tell(new DestroyEndpoint(endpoint), super.source);
                 endpoint = null;
