@@ -42,7 +42,6 @@ import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.DestroyConnection;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
