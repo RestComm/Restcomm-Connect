@@ -26,13 +26,7 @@ angular.element(document).ready(function ($http) {
 			// try importing the logged user into Restcomm 
 			var initInjector = angular.injector(["ng"]);
 	        var $myhttp = initInjector.get("$http");
-
-			//console.log("token: " + keycloakAuth.token);
-			//console.log("username: " + keycloakAuth.profile.username);
 			
-			angular.bootstrap(document, ["rcApp"]);
-			
-			/*
 			$myhttp({
 				method: 'GET',
 				url: '/restcomm/keycloak/Accounts.json/' + keycloakAuth.profile.username ,
@@ -47,8 +41,6 @@ angular.element(document).ready(function ($http) {
 	            // Handle error case
 	        	console.log("Error account info for user " + keycloakAuth.profile.username);
 	        });
-	        */
-			
 			
 			/*
 			$myhttp({
@@ -66,7 +58,6 @@ angular.element(document).ready(function ($http) {
 	        	console.log("Error triggering user import from keycloak to restcomm");
 	        });
 	        * */
-	        
 		});
         console.log(keycloakAuth.profile);
         //console.log(profile);

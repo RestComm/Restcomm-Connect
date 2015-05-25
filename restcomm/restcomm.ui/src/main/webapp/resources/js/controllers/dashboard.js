@@ -2,20 +2,11 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('DashboardCtrl', function ($scope, $resource, $route, $rootScope, AuthService, RCommStatistics) {
-  $scope.sid = AuthService.getLoggedSid(); //SessionService.get("sid");
-
-  $scope.profile = AuthService.getProfile(); //Auth.authz.profile;
-  
-  // TEMPORARY... FIXME!
-  
-  var Account = $resource('/restcomm/keycloak/Accounts.:format/:accountSid',
-    { accountSid: $scope.sid, format: 'json' },
-    {
-      // charge: {method:'POST', params:{charge:true}}
-    });
-
-  $scope.accountData = Account.get();
+rcMod.controller('DashboardCtrl', function ($scope, $resource, $route, $rootScope, AuthService, Auth, RCommStatistics) {
+	var Account = Auth.restcommAccount;
+	$scope.sid = Account.sid;
+	$scope.accountData = Account; 
+	$scope.profile = AuthService.getProfile(); 
 
   var startDate = new Date(new Date().setDate(new Date().getDate()-30)).toJSON().slice(0,10);
   var endDate = new Date().toJSON().slice(0,10);
