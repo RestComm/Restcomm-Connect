@@ -52,8 +52,6 @@ import org.joda.time.DateTime;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -75,7 +73,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    protected AccountsDao dao;
+    //protected AccountsDao accountsDao;
     protected Gson gson;
     protected XStream xstream;
 
@@ -85,11 +83,11 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
-        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        //final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
-        dao = storage.getAccountsDao();
+        //accountsDao = storage.getAccountsDao();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -181,7 +179,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             String loggedUsername = session.getToken().getPreferredUsername();
             logger.info("logged username: " + loggedUsername);
 
-            Account loggedAccount = dao.getAccount(loggedUsername);
+            Account loggedAccount = accountsDao.getAccount(loggedUsername);
 
             if (loggedAccount != null) {
                 logger.info("user " + loggedUsername + " already exists in Restcomm and won't be imported.");
@@ -206,7 +204,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 logger.info("retrieved user info : " + userInfo.toString());
 
                 Account newAccount = createFromUserRepresentation(userInfo);
-                dao.addAccount(newAccount);
+                accountsDao.addAccount(newAccount);
                 return status(OK).build();
 
             }
@@ -216,19 +214,20 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         try {
+            // now load the account that is operated upon
             Sid sid = null;
             Account account = null;
             if (Sid.pattern.matcher(accountSid).matches()) {
                 try {
                     sid = new Sid(accountSid);
-                    account = dao.getAccount(sid);
+                    account = accountsDao.getAccount(sid);
                 } catch (Exception e) {
                     return status(NOT_FOUND).build();
                 }
 
             } else {
                 try {
-                    account = dao.getAccount(accountSid);
+                    account = accountsDao.getAccount(accountSid);
                     sid = account.getSid();
                 } catch (Exception e) {
                     return status(NOT_FOUND).build();
@@ -260,7 +259,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         final Sid sidToBeRemoved = new Sid(sid);
 
         try {
-            Account account = dao.getAccount(sidToBeRemoved);
+            Account account = accountsDao.getAccount(sidToBeRemoved);
             secure(account, "RestComm:Delete:Accounts");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
@@ -269,10 +268,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         if (sid.equalsIgnoreCase(accountSid.toString()))
             return status(BAD_REQUEST).build();
 
-        if (dao.getAccount(sidToBeRemoved) == null)
+        if (accountsDao.getAccount(sidToBeRemoved) == null)
             return status(NOT_FOUND).build();
 
-        dao.removeAccount(sidToBeRemoved);
+        accountsDao.removeAccount(sidToBeRemoved);
         return ok().build();
     }
 
@@ -286,13 +285,13 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
 
         // get the account for the logged user (Decouples email from account SID. We rely on the username/email. We DON'T produce the account sid from username  and use the sid to retrieve the account.
-        final Account account = dao.getAccount(username);
+        final Account account = accountsDao.getAccount(username);
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
             final List<Account> accounts = new ArrayList<Account>();
             accounts.add(account); // TODO maybe we need to remove this at some point. There is a different API call for retrieving the users own account
-            accounts.addAll(dao.getAccounts(account.getSid())); // remember getSid() retrieves the accounts own id while getAccountSid() retrieves the sid of the parent account
+            accounts.addAll(accountsDao.getAccounts(account.getSid())); // remember getSid() retrieves the accounts own id while getAccountSid() retrieves the sid of the parent account
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -313,7 +312,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
 
-        final Account parentAccount = dao.getAccount(username);
+        final Account parentAccount = accountsDao.getAccount(username);
         if ( parentAccount == null )
             return status(NOT_FOUND).build();
         Account account = null; // the newly created account
@@ -323,7 +322,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         // check if the account that is being created already exists
-        if ( dao.getAccount(account.getEmailAddress()) != null )
+        if ( accountsDao.getAccount(account.getEmailAddress()) != null )
             return status(CONFLICT).build();
 
         String childRole = getChildRole(parentAccount);
@@ -338,7 +337,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 return status(CONFLICT).build();
         }
         // now, store it in Restcomm too
-        dao.addAccount(account);
+        accountsDao.addAccount(account);
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(account), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {
@@ -389,7 +388,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
     protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid sid = new Sid(accountSid);
-        Account account = dao.getAccount(sid);
+        Account account = accountsDao.getAccount(sid);
 
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -401,7 +400,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             try {
                 updateKeycloakUser(account);
                 // if all goes well, persist the updated account in database
-                dao.updateAccount(account);
+                accountsDao.updateAccount(account);
 
                 if (APPLICATION_JSON_TYPE == responseType) {
                     return ok(gson.toJson(account), APPLICATION_JSON).build();
@@ -444,6 +443,11 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         AccessTokenResponse tokenResponse = KeycloakClient.getToken(request);
         KeycloakClient.createUser(restcommAccount.getEmailAddress(), user, request, tokenResponse);
         KeycloakClient.resetUserPassword(restcommAccount.getEmailAddress(), password, false, request, tokenResponse);
+        // Add default roles
+        List<String> roles = new ArrayList<String>();
+        roles.add("RestcommUser");
+        roles.add("Developer");
+        KeycloakClient.setUserRoles(restcommAccount.getEmailAddress(), roles, request, tokenResponse);
     }
 
 

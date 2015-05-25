@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.http;
 import java.net.URI;
 import java.util.Set;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
@@ -37,6 +38,8 @@ import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
@@ -55,8 +58,11 @@ public abstract class AbstractEndpoint {
     private Logger logger = Logger.getLogger(AbstractEndpoint.class);
     private String defaultApiVersion;
     protected Configuration configuration;
+    protected AccountsDao accountsDao;
     protected String baseRecordingsPath;
 
+    @Context
+    protected ServletContext context;
     @Context
     HttpServletRequest request;
     protected static RestcommRoles restcommRoles;
@@ -67,6 +73,8 @@ public abstract class AbstractEndpoint {
     }
 
     protected void init(final Configuration configuration) {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        accountsDao = storage.getAccountsDao();
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
         defaultApiVersion = configuration.getString("api-version");
@@ -199,8 +207,16 @@ public abstract class AbstractEndpoint {
      * approach that will allow parant users access the resources of their children should be employed.
      */
     protected void secureByAccount(final AccessToken accessToken, final Account account) {
-        if ( ! accessToken.getPreferredUsername().equals(account.getEmailAddress()) )
-            throw new UnauthorizedException("User cannot access resources for the specified account.");
+        // load logged user's account
+        Account loggedAccount = accountsDao.getAccount(accessToken.getPreferredUsername());
+        if ( loggedAccount != null && loggedAccount.getSid() != null ) {
+            // check if loggedAccount is the same as the checked account or is parent of it
+            if ( loggedAccount.getSid().equals(account.getSid()) || loggedAccount.getSid().equals(account.getAccountSid()) ) {
+                // no op
+            } else {
+                throw new UnauthorizedException("User cannot access resources for the specified account.");
+            }
+        }
     }
 
     // does the accessToken contain the role?
