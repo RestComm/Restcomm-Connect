@@ -148,7 +148,7 @@ configDidProvisionManager() {
 			sed -e "/<bandwidth>/ {
 				N; s|<username>.*</username>|<username>$1</username>|
 				N; s|<password>.*</password>|<password>$2</password>|
-				N; s|<accountId>.*</accountId>|<accountId>$3</accountId>|
+				N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
 				N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
 			}" $FILE.bak > $FILE
 			# mv $FILE.bak $FILE
@@ -354,7 +354,7 @@ echo 'Configuring RestComm...'
 configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
-configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP"
+configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$OUTBOUND_PROXY"
 configSpeechRecognizer "$ISPEECH_KEY"
