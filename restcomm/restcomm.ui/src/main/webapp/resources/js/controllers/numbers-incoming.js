@@ -4,7 +4,7 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Incoming : List ---------------------------------------------------
 
-rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, AuthService, RCommNumbers, Notifications) {
+rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, AuthService, Auth, RCommNumbers, Notifications) {
   $anchorScroll(); // scroll to top
   $scope.sid = AuthService.getLoggedSid();
 
