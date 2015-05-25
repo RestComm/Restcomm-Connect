@@ -255,7 +255,7 @@ public class KeycloakClient {
 
     }
 
-    public static List<RoleRepresentation> getRealmRoles(HttpServletRequest request, AccessTokenResponse res) throws Failure {
+    public static List<RoleRepresentation> getRealmRoles(HttpServletRequest request, AccessTokenResponse res) throws KeycloakClientException {
         //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
         HttpClient client = new DefaultHttpClient();
         try {
@@ -264,7 +264,7 @@ public class KeycloakClient {
             try {
                 HttpResponse response = client.execute(get);
                 if (response.getStatusLine().getStatusCode() != 200) {
-                    throw new Failure(response.getStatusLine().getStatusCode());
+                    new KeycloakClientException(response.getStatusLine().getStatusCode());
                 }
                 HttpEntity entity = response.getEntity();
                 InputStream is = entity.getContent();
@@ -305,6 +305,51 @@ public class KeycloakClient {
             }
         } finally {
             client.getConnectionManager().shutdown();
+        }
+    }
+
+    public static void addUserRoles(String username, List<RoleRepresentation> keycloakRoles, HttpServletRequest request, AccessTokenResponse res) throws KeycloakClientException {
+        HttpClient client = new DefaultHttpClient();
+        try {
+            //e.g. POST  login.restcomm.com:8081/auth/admin/realms/restcomm/users/account2%40gmail.com/role-mappings/realm
+            HttpPost postRequest = new HttpPost(getBaseUrl(request) + "/auth/admin/realms/"+REALM+"/users/"+username+"/role-mappings/realm");
+            postRequest.addHeader("Authorization", "Bearer " + res.getToken());
+            postRequest.addHeader("Content-Type","application/json");
+
+            Gson gson = new Gson();
+            String json = gson.toJson(keycloakRoles);
+            StringEntity stringBody = new StringEntity(json,"UTF-8");
+            postRequest.setEntity(stringBody);
+            try {
+                HttpResponse response = client.execute(postRequest);
+                if (response.getStatusLine().getStatusCode() >= 300) {
+                    throw new KeycloakClientException(response.getStatusLine().getStatusCode());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (UnsupportedEncodingException e1) {
+            throw new KeycloakClientException();
+        } finally {
+            client.getConnectionManager().shutdown();
+        }
+    }
+
+    public static void setUserRoles(String username, List<String> appliedRoles, HttpServletRequest request, AccessTokenResponse res) throws KeycloakClientException {
+        List<RoleRepresentation> availableKeycloakRoles = getRealmRoles(request, res);
+        List<RoleRepresentation> addedKeycloakRoles = new ArrayList<RoleRepresentation>();
+        for (String roleName: appliedRoles) {
+            RoleRepresentation keycloakRole = KeycloakHelpers.getRoleByName(roleName, availableKeycloakRoles);
+            //
+            if ( keycloakRole == null )  {
+                // TODO - issue a warning here
+                // logger.warn("Cannot add role " + roleName + ". It does not exist in the realm");
+            } else {
+                addedKeycloakRoles.add( keycloakRole );
+            }
+        }
+        if (addedKeycloakRoles.size() > 0) {
+            addUserRoles(username, addedKeycloakRoles, request, res);
         }
     }
 
