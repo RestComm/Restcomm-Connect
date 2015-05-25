@@ -172,7 +172,7 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
     $scope.searching = true;
     $scope.availableNumbers = null;
     var queryParams = {accountSid: $scope.sid, countryCode: $scope.newNumber.countryCode.code};
-    if($scope.newNumber.areaCode) { queryParams['AreaCode'] = $scope.newNumber.areaCode; }
+    if($scope.newNumber.area_code) { queryParams['AreaCode'] = $scope.newNumber.area_code; }
     if($scope.newNumber.phone_number) { queryParams['Contains'] = $scope.newNumber.phone_number; }
     angular.forEach($scope.newNumber.capabilities, function(value, key) {
       this[value + 'Enabled'] = 'true';
