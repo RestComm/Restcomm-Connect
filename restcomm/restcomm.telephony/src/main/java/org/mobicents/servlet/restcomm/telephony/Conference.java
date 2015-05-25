@@ -32,7 +32,7 @@ import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
@@ -341,9 +341,8 @@ public final class Conference extends UntypedActor {
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
-            final Join join = new Join(self, this.mscontroller, ConnectionMode.Confrnce);
-            final ActorRef call = message.call();
-            call.tell(join, self);
+            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce);
+            this.mscontroller.tell(joinCall, self);
         }
     }
 
