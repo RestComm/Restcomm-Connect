@@ -19,8 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -68,9 +66,9 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
@@ -409,10 +407,8 @@ public final class Call extends UntypedActor {
             onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
         } else if (MediaServerControllerError.class.equals(klass)) {
             onMediaServerControllerError((MediaServerControllerError) message, self, sender);
-        } else if (AddParticipant.class.equals(klass)) {
-            onAddParticipant((AddParticipant) message, self, sender);
-        } else if (Join.class.equals(klass)) {
-            onJoin((Join) message, self, sender);
+        } else if (JoinConference.class.equals(klass)) {
+            onJoinConference((JoinConference) message, self, sender);
         } else if (JoinBridge.class.equals(klass)) {
             onJoinBridge((JoinBridge) message, self, sender);
         } else if (Leave.class.equals(klass)) {
@@ -1516,17 +1512,6 @@ public final class Call extends UntypedActor {
             } else if (is(failingNoAnswer)) {
                 fsm.transition(message, noAnswer);
             }
-        } else if (JoinComplete.class.equals(klass)) {
-            if (is(joining)) {
-                // MSController completed join operation
-                // Inform the conference and tell observers call is in progress
-                if (conferencing) {
-                    conference.tell(message.get(), self);
-                } else {
-                    bridge.tell(message.get(), self);
-                }
-                fsm.transition(message, inProgress);
-            }
         } else if (MediaGroupCreated.class.equals(klass)) {
             if (is(creatingMediaGroup)) {
                 fsm.transition(message, inProgress);
@@ -1538,14 +1523,6 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(inProgress)) {
-            this.outboundCall = message.call();
-            final Join join = new Join(self, this.msController, ConnectionMode.SendRecv);
-            this.outboundCall.tell(join, self);
-        }
-    }
-
     private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
             this.bridge = sender;
@@ -1553,25 +1530,25 @@ public final class Call extends UntypedActor {
         }
     }
 
-    @Deprecated
-    private void onJoin(Join message, ActorRef self, ActorRef sender) throws Exception {
+    private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
-            this.conferencing = ConnectionMode.Confrnce.equals(message.mode());
-            if (this.conferencing) {
-                this.conference = sender;
-                this.conferenceController = message.mscontroller();
-            } else {
-                this.outboundCall = sender;
-                this.outboundCallBridgeEndpoint = message.mscontroller();
-            }
+            this.conferencing = true;
+            this.conference = sender;
             this.fsm.transition(message, joining);
         }
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(joining) && sender.equals(outboundCall)) {
-            // Warn controller that outbound call successfully joined
-            this.msController.tell(message, self);
+        if (is(joining)) {
+            // Forward message to the bridge
+            if (conferencing) {
+                this.conference.tell(message, self);
+            } else {
+                this.bridge.tell(message, self);
+            }
+
+            // Move to state In Progress
+            fsm.transition(message, inProgress);
         }
     }
 

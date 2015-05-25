@@ -21,8 +21,6 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.mgcp;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,8 +39,9 @@ import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -52,8 +51,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.EndpointInfo;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.messages.QueryEndpoint;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -189,8 +186,8 @@ public final class MmsConferenceController extends MediaServerController {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
-        } else if (QueryEndpoint.class.equals(klass)) {
-            onQueryEndpoint((QueryEndpoint) message, self, sender);
+        } else if (JoinCall.class.equals(klass)) {
+            onJoinCall((JoinCall) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
@@ -285,9 +282,10 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    private void onQueryEndpoint(QueryEndpoint message, ActorRef self, ActorRef sender) {
-        final EndpointInfo endpointInfo = new EndpointInfo(cnfEndpoint, ConnectionMode.Confrnce);
-        sender.tell(new MediaServerControllerResponse<EndpointInfo>(endpointInfo), self);
+    private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
+        // Tell call to join conference by passing reference to the media mixer
+        final JoinBridge join = new JoinBridge(this.cnfEndpoint, message.getConnectionMode());
+        message.getCall().tell(join, sender);
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
