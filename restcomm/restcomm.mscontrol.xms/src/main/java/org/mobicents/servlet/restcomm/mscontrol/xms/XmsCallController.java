@@ -21,8 +21,6 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.xms;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -52,8 +50,6 @@ import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 import javax.media.mscontrol.mixer.MediaMixer;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
-import javax.media.mscontrol.resource.AllocationEvent;
-import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
@@ -74,9 +70,9 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Join;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
@@ -88,7 +84,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
-import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
@@ -139,7 +134,6 @@ public class XmsCallController extends MediaServerController {
     private final PlayerListener playerListener;
     private final DtmfListener dtmfListener;
     private final RecorderListener recorderListener;
-    private final MixerAllocationListener mixerAllocationListener;
 
     // Call runtime stuff
     private ActorRef call;
@@ -151,9 +145,7 @@ public class XmsCallController extends MediaServerController {
 
     // Conference runtime stuff
     private ActorRef bridge;
-    private ActorRef outboundController;
     private Boolean conferencing;
-    private NetworkConnection outboundConnection;
 
     // Call Media Operations
     private Sid accountId;
@@ -182,7 +174,6 @@ public class XmsCallController extends MediaServerController {
         this.playerListener = new PlayerListener();
         this.dtmfListener = new DtmfListener();
         this.recorderListener = new RecorderListener();
-        this.mixerAllocationListener = new MixerAllocationListener();
 
         // Initialize the states for the FSM
         this.uninitialized = new State("uninitialized", null, null);
@@ -377,53 +368,6 @@ public class XmsCallController extends MediaServerController {
 
     }
 
-    private class MixerAllocationListener implements AllocationEventListener, Serializable {
-
-        private static final long serialVersionUID = 6579306945384115627L;
-
-        @Override
-        public void onEvent(AllocationEvent event) {
-            EventType eventType = event.getEventType();
-
-            logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Call Controller Processing Event: \"AllocationEventListener - Mixer\" (type = " + eventType
-                    + ")");
-
-            if (AllocationEvent.ALLOCATION_CONFIRMED.equals(eventType)) {
-                try {
-                    // Can join resources safely
-                    networkConnection.join(Direction.DUPLEX, mediaMixer);
-
-                    // Notify remote peer that call can be bridged
-                    // final JoinComplete response = new JoinComplete(mediaMixer);
-                    // outboundController.tell(response, self());
-
-                    // Ask the outbound controller its network connection
-                    final QueryNetworkConnection query = new QueryNetworkConnection();
-                    outboundController.tell(query, self());
-                } catch (MsControlException e) {
-                    // Notify observers that bridging failed
-                    logger.error("Call bridging failed: " + e.getMessage());
-                    final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                    notifyObservers(response, self());
-                } finally {
-                    // No need to be notified anymore
-                    mediaMixer.removeListener(this);
-                }
-            } else if (AllocationEvent.IRRECOVERABLE_FAILURE.equals(eventType)) {
-                logger.error("Can't enter conference...IRRECOVERABLE_FAILURE");
-
-                // Media Mixer was not created
-                mediaMixer.removeListener(this);
-                mediaMixer = null;
-
-                // Terminate Call
-                call.tell(new MediaServerControllerError(), self());
-            }
-        }
-
-    }
-
     /*
      * EVENTS
      */
@@ -469,14 +413,8 @@ public class XmsCallController extends MediaServerController {
             onRecord((Record) message, self, sender);
         } else if (JoinBridge.class.equals(klass)) {
             onJoinBridge((JoinBridge) message, self, sender);
-        } else if (Join.class.equals(klass)) {
-            onJoin((Join) message, self, sender);
-        } else if (JoinComplete.class.equals(klass)) {
-            onJoinComplete((JoinComplete) message, self, sender);
-        } else if (MediaServerControllerResponse.class.equals(klass)) {
-            onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
-        } else if (QueryNetworkConnection.class.equals(klass)) {
-            onQueryNetworkConnection((QueryNetworkConnection) message, self, sender);
+        } else if (JoinConference.class.equals(klass)) {
+            onJoinConference((JoinConference) message, self, sender);
         } else if (Stop.class.equals(klass)) {
             onStop((Stop) message, self, sender);
         } else if (Leave.class.equals(klass)) {
@@ -786,13 +724,13 @@ public class XmsCallController extends MediaServerController {
     private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             try {
+                // join call leg to bridge
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
 
                 // alert conference call has joined successfully
-                final JoinComplete joinComplete = new JoinComplete();
-                this.call.tell(new MediaServerControllerResponse<JoinComplete>(joinComplete), self);
+                this.call.tell(new JoinComplete(), self);
             } catch (MsControlException e) {
                 logger.error("Call bridging failed: " + e.getMessage());
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
@@ -801,101 +739,22 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
-    @Deprecated
-    private void onJoin(Join message, ActorRef self, ActorRef sender) {
+    private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) {
         if (is(active)) {
-            // Ask the remote media session controller for the bridge endpoint
-            this.bridge = message.endpoint();
-            this.outboundController = message.mscontroller();
-
             try {
-
-                if (ConnectionMode.Confrnce.equals(message.mode())) {
-                    /* CONFERENCING - conference already owns media mixer */
-                    this.conferencing = Boolean.TRUE;
-                    // Ask conference controller what is the media mixer so the call can join
-                    QueryMediaMixer query = new QueryMediaMixer();
-                    outboundController.tell(query, self);
-                } else {
-                    /* CALL BRIDGING - no media mixer has been created yet */
-
-                    // Create Mixer and join connection to it
-                    Parameters mixerParams = this.mediaSession.createParameters();
-                    // Limit number of ports for the two bridged participants and possible media group
-                    // TODO Check whether recording=true so max_ports is 2 or 3
-                    mixerParams.put(MediaMixer.MAX_PORTS, 3);
-                    this.mediaMixer = this.mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
-                    this.mediaMixer.addListener(this.mixerAllocationListener);
-
-                    // Wait for Media Mixer to initialize
-                    // Connection will join mixer on allocation event
-                    this.mediaMixer.confirm();
-                }
-            } catch (MsControlException e) {
-                logger.error("Call bridging failed: " + e.getMessage());
-                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                notifyObservers(response, self);
-            }
-        }
-    }
-
-    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
-            // Get the media mixer of the bridge
-            this.mediaMixer = (MediaMixer) message.endpoint();
-
-            try {
-                // Join media group to media mixer
-                this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
-
-                // Tell Call media group was created
-                final MediaGroupCreated mgCreated = new MediaGroupCreated();
-                call.tell(new MediaServerControllerResponse<MediaGroupCreated>(mgCreated), self);
-            } catch (MsControlException e) {
-                logger.error("Could not join media group to media mixer: " + e.getMessage(), e);
-                this.mediaGroup.release();
-                this.mediaGroup = null;
-                this.call.tell(new MediaServerControllerError(e), self);
-            }
-        }
-    }
-
-    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender) {
-        Object obj = message.get();
-
-        if (obj instanceof NetworkConnection) {
-            try {
-                // Complete bridging process
-                this.outboundConnection = (NetworkConnection) obj;
-                this.outboundConnection.join(Direction.DUPLEX, this.mediaMixer);
-
-                // Warn call that bridging process completed
-                final JoinComplete joinComplete = new JoinComplete(this.mediaMixer);
-                this.call.tell(new MediaServerControllerResponse<JoinComplete>(joinComplete), self);
-            } catch (MsControlException e) {
-                logger.error("Call bridging failed: " + e.getMessage());
-                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                notifyObservers(response, self);
-            }
-        } else if (obj instanceof MediaMixer) {
-            try {
-                // Complete joining process
-                this.mediaMixer = (MediaMixer) obj;
-                this.networkConnection.join(Direction.DUPLEX, this.mediaMixer);
+                // join call leg to bridge
+                this.bridge = sender;
+                this.mediaMixer = (MediaMixer) message.getEndpoint();
+                this.networkConnection.join(Direction.DUPLEX, mediaMixer);
 
                 // alert conference call has joined successfully
-                final JoinComplete joinComplete = new JoinComplete(this.networkConnection);
-                this.call.tell(new MediaServerControllerResponse<JoinComplete>(joinComplete), self);
+                this.call.tell(new JoinComplete(), self);
             } catch (MsControlException e) {
-                logger.error("Could not join call to conference: " + e.getMessage());
-                MediaServerControllerError error = new MediaServerControllerError(e);
-                call.tell(error, self);
+                logger.error("Call bridging failed: " + e.getMessage());
+                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
+                notifyObservers(response, self);
             }
         }
-    }
-
-    private void onQueryNetworkConnection(QueryNetworkConnection message, ActorRef self, ActorRef sender) {
-        sender.tell(new MediaServerControllerResponse<NetworkConnection>(this.networkConnection), self);
     }
 
     private void onStop(Stop message, ActorRef self, ActorRef sender) {
