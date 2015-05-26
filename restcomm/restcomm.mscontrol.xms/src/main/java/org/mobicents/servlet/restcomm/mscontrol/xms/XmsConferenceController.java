@@ -54,13 +54,13 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
-import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
@@ -279,8 +279,8 @@ public class XmsConferenceController extends MediaServerController {
             onStop((Stop) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
-        } else if (QueryMediaMixer.class.equals(klass)) {
-            onQueryMediaMixer((QueryMediaMixer) message, self, sender);
+        } else if (JoinCall.class.equals(klass)) {
+            onJoinCall((JoinCall) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         }
@@ -331,9 +331,12 @@ public class XmsConferenceController extends MediaServerController {
         }
     }
 
-    private void onQueryMediaMixer(QueryMediaMixer message, ActorRef self, ActorRef sender) {
-        MediaServerControllerResponse<MediaMixer> response = new MediaServerControllerResponse<MediaMixer>(this.mediaMixer);
-        sender.tell(response, self);
+    private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            // Tell call to join conference by passing reference of the media mixer
+            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode());
+            message.getCall().tell(join, sender);
+        }
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
