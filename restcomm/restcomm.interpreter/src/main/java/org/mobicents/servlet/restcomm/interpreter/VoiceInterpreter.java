@@ -722,6 +722,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         collectedDigits.append(dtmfResponse.get());
                         fsm.transition(message, finishGathering);
                     }
+                } else if (bridging.equals(state)) {
+                    // Finally proceed with call bridging
+                    final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
+                    bridge.tell(bridgeCalls, self);
                 }
             } else {
                 fsm.transition(message, hangingUp);
@@ -2147,9 +2151,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final StopMediaGroup stop = new StopMediaGroup();
             call.tell(stop, super.source);
 
-            // Bridge Calls
-            final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
-            bridge.tell(bridgeCalls, super.source);
+            // Wait for a Media Group Response to finally ask Bridge to join calls
+            // Check method onReceive() for MediaGroupResponse
         }
 
     }
