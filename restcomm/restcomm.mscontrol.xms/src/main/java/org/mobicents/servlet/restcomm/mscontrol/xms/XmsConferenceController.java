@@ -53,20 +53,15 @@ import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CloseConnection;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
-import org.mobicents.servlet.restcomm.mscontrol.messages.QueryMediaMixer;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -90,12 +85,10 @@ public class XmsConferenceController extends MediaServerController {
 
     // Finite states
     private final State uninitialized;
+    private final State initializing;
     private final State active;
     private final State inactive;
     private final State failed;
-
-    // Intermediate states
-    private final State openingMediaSession;
 
     // Conference runtime stuff
     private ActorRef conference;
@@ -132,19 +125,17 @@ public class XmsConferenceController extends MediaServerController {
 
         // Initialize the states for the FSM
         this.uninitialized = new State("uninitialized", null, null);
+        this.initializing = new State("initializing", new Initializing(source), null);
         this.active = new State("active", new Active(source), null);
         this.inactive = new State("inactive", new Inactive(source), null);
         this.failed = new State("failed", new Failed(source), null);
 
-        // Intermediate FSM states
-        this.openingMediaSession = new State("opening media session", new OpeningMediaSession(source), null);
-
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, openingMediaSession));
-        transitions.add(new Transition(openingMediaSession, failed));
-        transitions.add(new Transition(openingMediaSession, active));
-        transitions.add(new Transition(openingMediaSession, inactive));
+        transitions.add(new Transition(uninitialized, initializing));
+        transitions.add(new Transition(initializing, failed));
+        transitions.add(new Transition(initializing, active));
+        transitions.add(new Transition(initializing, inactive));
         transitions.add(new Transition(active, inactive));
 
         // Finite state machine
@@ -158,10 +149,31 @@ public class XmsConferenceController extends MediaServerController {
         return this.fsm.state().equals(state);
     }
 
-    private void notifyObservers(Object message, ActorRef self) {
-        for (final ActorRef observer : observers) {
-            observer.tell(message, self);
+    private void broadcast(Object message) {
+        if (!this.observers.isEmpty()) {
+            final ActorRef self = self();
+            synchronized (this.observers) {
+                for (ActorRef observer : observers) {
+                    observer.tell(message, self);
+                }
+            }
         }
+    }
+
+    private void stopMediaOperations() throws MsControlException {
+        // Stop ongoing recording
+        if (playing) {
+            mediaGroup.getPlayer().stop(true);
+            this.playing = Boolean.FALSE;
+        }
+    }
+
+    private void cleanMediaResources() {
+        // Release media resources
+        mediaSession.release();
+        mediaSession = null;
+        mediaGroup = null;
+        mediaMixer = null;
     }
 
     /*
@@ -223,6 +235,13 @@ public class XmsConferenceController extends MediaServerController {
                     // No need to be notified anymore
                     mediaMixer.removeListener(this);
 
+                    // join the media group to the mixer
+                    try {
+                        mediaGroup.join(Direction.DUPLEX, mediaMixer);
+                    } catch (MsControlException e) {
+                        fsm.transition(e, failed);
+                    }
+
                     // Conference room has been properly activated and is now ready to receive connections
                     fsm.transition(event, active);
                 } else if (AllocationEvent.IRRECOVERABLE_FAILURE.equals(eventType)) {
@@ -256,18 +275,12 @@ public class XmsConferenceController extends MediaServerController {
             onStopObserving((StopObserving) message, self, sender);
         } else if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
-        } else if (CloseMediaSession.class.equals(klass)) {
-            onCloseMediaSession((CloseMediaSession) message, self, sender);
-        } else if (CloseConnection.class.equals(klass)) {
-            onCloseConnection((CloseConnection) message, self, sender);
-        } else if (CreateMediaGroup.class.equals(klass)) {
-            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
+        } else if (Stop.class.equals(klass)) {
+            onStop((Stop) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
-        } else if (DestroyMediaGroup.class.equals(klass)) {
-            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
-        } else if (QueryMediaMixer.class.equals(klass)) {
-            onQueryMediaMixer((QueryMediaMixer) message, self, sender);
+        } else if (JoinCall.class.equals(klass)) {
+            onJoinCall((JoinCall) message, self, sender);
         } else if (Play.class.equals(klass)) {
             onPlay((Play) message, self, sender);
         }
@@ -293,50 +306,21 @@ public class XmsConferenceController extends MediaServerController {
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        this.conference = sender;
-        fsm.transition(message, openingMediaSession);
-    }
-
-    private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) || is(openingMediaSession)) {
-            fsm.transition(message, inactive);
+        if (is(uninitialized)) {
+            this.conference = sender;
+            fsm.transition(message, initializing);
         }
     }
 
-    private void onCloseConnection(CloseConnection message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
-            fsm.transition(message, inactive);
-        }
-    }
-
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
-        try {
-            // Only one media group per conference can be created
-            // Reuse if already exists
-            if (this.mediaGroup == null) {
-                // Create new media group
-                this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER);
-
-                // Prepare the Media Group resources
-                this.mediaGroup.getPlayer().addListener(this.playerListener);
-                // this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
-                // this.mediaGroup.getRecorder().addListener(this.recorderListener);
-
-                // join the media group to the mixer
-                this.mediaGroup.join(Direction.DUPLEX, this.mediaMixer);
-            }
-
-            final MediaGroupCreated mgCreated = new MediaGroupCreated();
-            sender.tell(new MediaServerControllerResponse<MediaGroupCreated>(mgCreated), self);
-        } catch (MsControlException e) {
-            sender.tell(new MediaServerControllerError(e), self);
+    private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(initializing) || is(active)) {
+            this.fsm.transition(message, inactive);
         }
     }
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             try {
-                // XXX mediaGroup.stop() not implemented on dialogic connector
                 if (this.playing) {
                     this.mediaGroup.getPlayer().stop(true);
                     this.playing = Boolean.FALSE;
@@ -347,25 +331,17 @@ public class XmsConferenceController extends MediaServerController {
         }
     }
 
-    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) && this.mediaGroup != null) {
-            this.mediaGroup.release();
-            this.mediaGroup = null;
+    private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
+        if (is(active)) {
+            // Tell call to join conference by passing reference of the media mixer
+            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode());
+            message.getCall().tell(join, sender);
         }
-
-        final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
-        sender.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
-    }
-
-    private void onQueryMediaMixer(QueryMediaMixer message, ActorRef self, ActorRef sender) {
-        MediaServerControllerResponse<MediaMixer> response = new MediaServerControllerResponse<MediaMixer>(this.mediaMixer);
-        sender.tell(response, self);
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             try {
-                logger.info("%%%%%%%%%%%%%% Playing beep [already playing? " + this.playing + "]");
                 List<URI> uris = message.uris();
                 Parameters params = this.mediaGroup.createParameters();
                 int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
@@ -377,7 +353,7 @@ public class XmsConferenceController extends MediaServerController {
                 logger.error("Play failed: " + e.getMessage());
                 this.playing = Boolean.FALSE;
                 final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                notifyObservers(response, self);
+                broadcast(response);
             }
         }
     }
@@ -385,9 +361,9 @@ public class XmsConferenceController extends MediaServerController {
     /*
      * ACTIONS
      */
-    private final class OpeningMediaSession extends AbstractAction {
+    private final class Initializing extends AbstractAction {
 
-        public OpeningMediaSession(ActorRef source) {
+        public Initializing(ActorRef source) {
             super(source);
         }
 
@@ -396,6 +372,9 @@ public class XmsConferenceController extends MediaServerController {
             try {
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
+
+                // Create the media group with recording capabilities
+                mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
 
                 // Set default conference video resolution to 720p
                 // mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
@@ -410,11 +389,10 @@ public class XmsConferenceController extends MediaServerController {
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
             } catch (MsControlException e) {
-                final MediaServerControllerError response = new MediaServerControllerError(e);
-                sender().tell(new MediaServerControllerResponse<MediaServerControllerError>(response), super.source);
+                // Move to a failed state, cleaning all resources and closing media session
+                fsm.transition(e, failed);
             }
         }
-
     }
 
     private final class Active extends AbstractAction {
@@ -425,7 +403,7 @@ public class XmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            conference.tell(new MediaServerControllerResponse<MediaSessionInfo>(new MediaSessionInfo()), super.source);
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE));
         }
     }
 
@@ -437,16 +415,21 @@ public class XmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (mediaSession != null) {
-                mediaSession.release();
-                mediaSession = null;
-                mediaMixer = null;
-                mediaGroup = null;
+            try {
+                stopMediaOperations();
+            } catch (MsControlException e) {
+                logger.error(e, "Could not stop ongoing media operations in an elegant manner");
             }
+            cleanMediaResources();
 
-            // Inform conference that media session has been properly closed
-            final MediaSessionClosed response = new MediaSessionClosed();
-            conference.tell(new MediaServerControllerResponse<MediaSessionClosed>(response), super.source);
+            // Broadcast state changed
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.INACTIVE));
+
+            // Clear observers
+            observers.clear();
+
+            // Terminate actor
+            getContext().stop(super.source);
         }
     }
 
@@ -458,9 +441,17 @@ public class XmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
-            // Inform call the media session could not be set up
-            final MediaServerControllerError error = new MediaServerControllerError();
-            conference.tell(error, super.source);
+            // Clean resources
+            cleanMediaResources();
+
+            // Broadcast state changed
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.FAILED));
+
+            // Clear observers
+            observers.clear();
+
+            // Terminate actor
+            getContext().stop(super.source);
         }
 
     }
