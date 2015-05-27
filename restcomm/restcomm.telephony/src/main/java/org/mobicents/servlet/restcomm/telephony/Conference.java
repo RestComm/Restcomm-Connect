@@ -255,8 +255,11 @@ public final class Conference extends UntypedActor {
             } else if (DestroyWaitUrlConfMediaGroup.class.equals(klass)) {
                 final DestroyWaitUrlConfMediaGroup request = (DestroyWaitUrlConfMediaGroup) message;
                 ActorRef waitUrlMediaGroup = request.getWaitUrlConfMediaGroup();
-                if(waitUrlMediaGroup != null && !waitUrlMediaGroup.isTerminated())
+                if(waitUrlMediaGroup != null && !waitUrlMediaGroup.isTerminated()) {
+                    waitUrlMediaGroup.tell(new Stop(), null);
+                    waitUrlMediaGroup.tell(new StopMediaGroup(), null);
                     context.stop(waitUrlMediaGroup);
+                }
 
                 // ConferenceVoiceInterpreter is dead now. Set it to null
                 this.confVoiceInterpreter = null;
