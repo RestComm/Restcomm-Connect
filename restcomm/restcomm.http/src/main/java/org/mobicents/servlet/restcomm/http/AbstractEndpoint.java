@@ -43,6 +43,7 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -55,11 +56,12 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  */
 @NotThreadSafe
 public abstract class AbstractEndpoint {
-    private Logger logger = Logger.getLogger(AbstractEndpoint.class);
+    protected Logger logger = Logger.getLogger(AbstractEndpoint.class);
     private String defaultApiVersion;
     protected Configuration configuration;
     protected AccountsDao accountsDao;
     protected String baseRecordingsPath;
+    protected KeycloakClient keycloakClient;
 
     @Context
     protected ServletContext context;
@@ -80,6 +82,7 @@ public abstract class AbstractEndpoint {
         defaultApiVersion = configuration.getString("api-version");
         ShiroResources shiroResources = ShiroResources.getInstance();
         restcommRoles = shiroResources.get(RestcommRoles.class);
+        keycloakClient = new KeycloakClient(request);
     }
 
     protected String getApiVersion(final MultivaluedMap<String, String> data) {

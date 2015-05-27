@@ -42,7 +42,6 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthorizedException;
@@ -50,7 +49,6 @@ import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
@@ -59,7 +57,6 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
-import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient;
 import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient.KeycloakClientException;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -67,9 +64,6 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public abstract class AccountsEndpoint extends AbstractEndpoint {
-    // otsakir - remove this
-    private Logger logger = Logger.getLogger(AccountsEndpoint.class);
-
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -186,16 +180,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 return status(OK).build(); // Do nothing. Account is already in Restcomm
             } else {
                 logger.info("user is missing from Restcomm database and should be created");
-                AccessTokenResponse tokenResponse;
-                try {
-                    tokenResponse = KeycloakClient.getToken(request);
-                } catch (KeycloakClientException e1) {
-                    return status(INTERNAL_SERVER_ERROR).build();
-                }
                 UserRepresentation userInfo;
                 try {
                     // TODO make realm and username parametric!
-                    userInfo = KeycloakClient.getUserInfo(request, tokenResponse, loggedUsername);
+                    userInfo = keycloakClient.getUserInfo(loggedUsername);
                 } catch (KeycloakClientException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
@@ -426,11 +414,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
     private void updateKeycloakUser(Account restcommAccount) throws IOException, KeycloakClientException {
         // retrieve the user from keycloak server, update and store back again
-        AccessTokenResponse tokenResponse = KeycloakClient.getToken(request);
-        UserRepresentation keycloakUser = KeycloakClient.getUserInfo(request, tokenResponse, restcommAccount.getEmailAddress());
+        UserRepresentation keycloakUser = keycloakClient.getUserInfo(restcommAccount.getEmailAddress());
         keycloakUser.setFirstName(restcommAccount.getFriendlyName());
         keycloakUser.setEnabled( (restcommAccount.getStatus() == Account.Status.ACTIVE) ) ;
-        KeycloakClient.updateUser(restcommAccount.getEmailAddress(), keycloakUser, request, tokenResponse);
+        keycloakClient.updateUser(restcommAccount.getEmailAddress(), keycloakUser);
     }
 
     private void createKeycloakUser(Account restcommAccount, String password) throws KeycloakClientException {
@@ -440,16 +427,14 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         user.setFirstName(restcommAccount.getFriendlyName());
         user.setEnabled(restcommAccount.getStatus() == Account.Status.ACTIVE);
         // submit for storage
-        AccessTokenResponse tokenResponse = KeycloakClient.getToken(request);
-        KeycloakClient.createUser(restcommAccount.getEmailAddress(), user, request, tokenResponse);
-        KeycloakClient.resetUserPassword(restcommAccount.getEmailAddress(), password, false, request, tokenResponse);
+        keycloakClient.createUser(restcommAccount.getEmailAddress(), user);
+        keycloakClient.resetUserPassword(restcommAccount.getEmailAddress(), password, false);
         // Add default roles
         List<String> roles = new ArrayList<String>();
         roles.add("RestcommUser");
         roles.add("Developer");
-        KeycloakClient.setUserRoles(restcommAccount.getEmailAddress(), roles, request, tokenResponse);
+        keycloakClient.setUserRoles(restcommAccount.getEmailAddress(), roles);
     }
-
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
         if (!data.containsKey("EmailAddress")) {
@@ -464,6 +449,5 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         // TODO add a proper implementation
         return "Developer";
     }
-
 
 }
