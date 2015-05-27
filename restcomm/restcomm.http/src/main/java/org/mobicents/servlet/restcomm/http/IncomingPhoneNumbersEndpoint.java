@@ -47,7 +47,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
@@ -83,13 +82,13 @@ import com.thoughtworks.xstream.XStream;
  * @author jean.deruelle@telestax.com
  */
 @NotThreadSafe
-public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
+public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
     PhoneNumberParameters phoneNumberParameters;
     private IncomingPhoneNumbersDao dao;
-    protected AccountsDao accountsDao;
+    // protected AccountsDao accountsDao;
     private XStream xstream;
     protected Gson gson;
 

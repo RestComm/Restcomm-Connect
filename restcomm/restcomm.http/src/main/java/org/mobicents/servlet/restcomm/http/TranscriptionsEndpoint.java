@@ -39,7 +39,6 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -54,14 +53,14 @@ import org.mobicents.servlet.restcomm.http.converter.TranscriptionListConverter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
+public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
     protected TranscriptionsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
+    //protected AccountsDao accountsDao;
 
     public TranscriptionsEndpoint() {
         super();
@@ -74,7 +73,7 @@ public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getTranscriptionsDao();
-        accountsDao = storage.getAccountsDao();
+        //accountsDao = storage.getAccountsDao();
         final TranscriptionConverter converter = new TranscriptionConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Transcription.class, converter);

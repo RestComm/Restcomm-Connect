@@ -71,7 +71,7 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class UssdPushEndpoint extends AbstractEndpoint {
+public class UssdPushEndpoint extends SecuredEndpoint {
 
     @Context
     protected ServletContext context;

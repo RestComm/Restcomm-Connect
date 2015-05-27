@@ -23,7 +23,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.entities.Gateway;
@@ -43,14 +42,14 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
 @ThreadSafe
-public class GatewaysEndpoint extends AbstractEndpoint {
+public class GatewaysEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
     protected GatewaysDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
+    //protected AccountsDao accountsDao;
     private ActorRef proxyManager;
 
     public GatewaysEndpoint() {
@@ -64,7 +63,7 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getGatewaysDao();
-        accountsDao = storage.getAccountsDao();
+        //accountsDao = storage.getAccountsDao();
         final GatewayConverter converter = new GatewayConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Gateway.class, converter);

@@ -39,7 +39,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumberList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -62,11 +61,10 @@ import com.thoughtworks.xstream.XStream;
  * @author jean.deruelle@telestax.com
  */
 @ThreadSafe
-public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
+public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
-    private DaoManager daos;
     private XStream xstream;
     protected Gson gson;
 
@@ -77,7 +75,6 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     @PostConstruct
     public void init() throws ObjectInstantiationException {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration.subset("runtime-settings"));
 
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
@@ -106,7 +103,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
 
     protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, PhoneNumberSearchFilters listFilters, String filterPattern, final MediaType responseType) {
         try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

@@ -60,7 +60,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -88,7 +87,7 @@ import scala.concurrent.duration.Duration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
+public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected ActorSystem system;
@@ -97,7 +96,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     protected SmsMessagesDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
+    //protected AccountsDao accountsDao;
 
     private boolean normalizePhoneNumbers;
 
@@ -111,7 +110,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         dao = storage.getSmsMessagesDao();
-        accountsDao = storage.getAccountsDao();
+        //accountsDao = storage.getAccountsDao();
         aggregator = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);

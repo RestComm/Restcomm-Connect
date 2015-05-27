@@ -47,7 +47,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
 import org.mobicents.servlet.restcomm.entities.OutgoingCallerId;
@@ -63,14 +62,14 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
+public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
     protected OutgoingCallerIdsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
+    //protected AccountsDao accountsDao;
 
     public OutgoingCallerIdsEndpoint() {
         super();
@@ -83,7 +82,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getOutgoingCallerIdsDao();
-        accountsDao = storage.getAccountsDao();
+        //accountsDao = storage.getAccountsDao();
         final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(OutgoingCallerId.class, converter);
