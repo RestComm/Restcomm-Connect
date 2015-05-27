@@ -422,7 +422,13 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         if (url != null && call != null) {
             try {
                 Future<Object> future = (Future<Object>) ask(call, new GetOutboundCall(), expires);
-                outboundCall = (ActorRef) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(answer.getClass())) {
+                    //This means that the call is not associated with a outbound call. Probably because its already joined to a conference room
+                    outboundCall = null;
+                } else if (answer instanceof  ActorRef){
+                    outboundCall = (ActorRef)answer;
+                }
 
                 final String version = getApiVersion(data);
                 final URI uri = (new URL(url)).toURI();

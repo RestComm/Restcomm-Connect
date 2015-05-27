@@ -120,10 +120,10 @@
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
 	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager">
 		<callback-urls>
-			<voice url="192.168.0.14:5080" method="SIP"/>
-			<sms url="192.168.0.14:5080" method="SIP"/>
-			<fax url="192.168.0.14:5080" method="SIP"/>
-			<ussd url="192.168.0.14:5080" method="SIP"/>
+			<voice url="+{E164}@192.168.0.14:5080" method="SIP"/>
+			<sms url="+{E164}@192.168.0.14:5080" method="SIP"/>
+			<fax url="+{E164}@192.168.0.14:5080" method="SIP"/>
+			<ussd url="+{E164}@192.168.0.14:5080" method="SIP"/>
 		</callback-urls>
 		<voxbone>
 			<password></password>
