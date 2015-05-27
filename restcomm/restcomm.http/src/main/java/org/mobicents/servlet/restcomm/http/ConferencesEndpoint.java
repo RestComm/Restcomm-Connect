@@ -28,7 +28,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class ConferencesEndpoint extends AbstractEndpoint {
+public abstract class ConferencesEndpoint extends SecuredEndpoint {
     @Context
     private ServletContext context;
 

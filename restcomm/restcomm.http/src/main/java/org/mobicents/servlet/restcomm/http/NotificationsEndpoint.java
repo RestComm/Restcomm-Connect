@@ -39,7 +39,6 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.Notification;
@@ -54,14 +53,14 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class NotificationsEndpoint extends AbstractEndpoint {
+public abstract class NotificationsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
     protected NotificationsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
+    //protected AccountsDao accountsDao;
 
     public NotificationsEndpoint() {
         super();
@@ -74,7 +73,7 @@ public abstract class NotificationsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getNotificationsDao();
-        accountsDao = storage.getAccountsDao();
+        //accountsDao = storage.getAccountsDao();
         final NotificationConverter converter = new NotificationConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Notification.class, converter);

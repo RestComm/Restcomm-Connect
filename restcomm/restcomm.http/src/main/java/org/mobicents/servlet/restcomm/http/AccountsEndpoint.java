@@ -63,11 +63,10 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class AccountsEndpoint extends AbstractEndpoint {
+public abstract class AccountsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    //protected AccountsDao accountsDao;
     protected Gson gson;
     protected XStream xstream;
 
@@ -77,11 +76,9 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
-        //final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
-        //accountsDao = storage.getAccountsDao();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);

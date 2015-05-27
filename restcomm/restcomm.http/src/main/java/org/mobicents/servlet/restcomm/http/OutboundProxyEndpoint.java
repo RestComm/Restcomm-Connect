@@ -41,7 +41,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -64,7 +63,7 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class OutboundProxyEndpoint extends AbstractEndpoint {
+public class OutboundProxyEndpoint extends SecuredEndpoint {
 
     @Context
     protected ServletContext context;
@@ -74,7 +73,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
     private Gson gson;
     private GsonBuilder builder;
     private XStream xstream;
-    protected AccountsDao accountsDao;
+    //protected AccountsDao accountsDao;
 
     public OutboundProxyEndpoint() {
         super();
@@ -86,7 +85,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        accountsDao = daos.getAccountsDao();
+        //accountsDao = daos.getAccountsDao();
         super.init(configuration);
         builder = new GsonBuilder();
         builder.setPrettyPrinting();
