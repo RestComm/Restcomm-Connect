@@ -90,7 +90,7 @@ label {
 
 .rvd-appurl:hover {
 	text-decoration: underline;
-} 
+}
 
 
 .say-language-dropdown {
@@ -196,7 +196,7 @@ label {
 }
 
 .rvd-project-item .delete-confirmation {
-	margin-top:5px; 
+	margin-top:5px;
 	margin-bottom:15px;
 }
 
@@ -210,7 +210,7 @@ value-extractor .btn.pull-right {
 
 .assignment .remove-button, .route-mapping .remove-button {
 	margin-top: 7px;
-	
+
 }
 
 .service-url-wrap {
@@ -253,7 +253,7 @@ li.verb {
 	background-image:url('../images/plus-small.png');
 	opacity: 0.6;
 	background-repeat:no-repeat;
-	background-position:center; 
+	background-position:center;
 	border: 1px dashed rgb(221, 221, 221);
 }
 
@@ -360,12 +360,12 @@ li.verb {
 	background-color: #f0f0f0;
 }
 
-/* 
- * 
- * BOOTSTRAP CUSTOMIZATIONS 
- * 
+/*
+ *
+ * BOOTSTRAP CUSTOMIZATIONS
+ *
  */
- 
+
 .form-control.form-control-inline {
     min-width: 0;
     width: auto;
@@ -454,7 +454,7 @@ label {
     padding: 2px 7px;
     transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
     vertical-align: middle;
-   
+
 }
 
 .glyphicon {
@@ -467,7 +467,7 @@ textarea.medium {
 	height: 150px;
 }
 
- 
+
 /* ------------------ #/designer --------------------------- */
 .rvd-designer .rvd-menu {
 	margin-bottom: 9px;
@@ -674,6 +674,8 @@ textarea.medium {
 	border-radius: 0 4px 4px;
 }
 
-
+.connection-wrap, .link-tool , .link-tools { display: none; }
+.marker-arrowhead { display: none }
+.marker-vertices { display: none }
 
 
