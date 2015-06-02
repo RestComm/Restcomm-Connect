@@ -1,7 +1,7 @@
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2013, Telestax Inc and individual contributors
- * by the @authors tag.
+ * by the @authors tag. 
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -21,37 +21,17 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.apache.http.annotation.Immutable;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
 @Immutable
-public final class MediaServerControllerStateChanged {
+public final class Left {
 
-    public enum MediaServerControllerState {
-        PENDING, ACTIVE, FAILED, INACTIVE;
-    }
-
-    private final MediaServerControllerState state;
-    private final MediaSessionInfo mediaSession;
-
-    public MediaServerControllerStateChanged(MediaServerControllerState state, MediaSessionInfo mediaSession) {
-        this.state = state;
-        this.mediaSession = mediaSession;
-    }
-
-    public MediaServerControllerStateChanged(MediaServerControllerState state) {
-        this(state, null);
-    }
-
-    public MediaServerControllerState getState() {
-        return state;
-    }
-
-    public MediaSessionInfo getMediaSession() {
-        return mediaSession;
+    public Left() {
+        super();
     }
 
 }

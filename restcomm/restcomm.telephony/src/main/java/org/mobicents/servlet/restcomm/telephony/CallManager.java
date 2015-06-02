@@ -663,21 +663,46 @@ public final class CallManager extends UntypedActor {
         interpreter.tell(new StartInterpreter(request.call()), self);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("unchecked")
     private void update(final Object message) throws Exception {
-        final UpdateCallScript request = (UpdateCallScript) message;
         final ActorRef self = self();
+        final UpdateCallScript request = (UpdateCallScript) message;
         final ActorRef call = request.call();
         final Boolean moveConnectedCallLeg = request.moveConnecteCallLeg();
-        // Get the outbound leg of this call
-        ActorRef outboundCall = request.outboundCall();
+        final ActorRef outboundCall = request.outboundCall();
 
         logger.info("About to start Live Call Modification");
         logger.info("Initial Call path: " + call.path());
-        if (outboundCall != null)
+        if (outboundCall != null) {
             logger.info("Outbound Call path: " + outboundCall.path());
+        }
 
-        // Prepare VoiceInterpreter
+        // Get list of inbound call observers
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
+        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
+                Duration.create(10, TimeUnit.SECONDS));
+        List<ActorRef> callObservers = response.get();
+
+        // Reset observers from call legs
+        logger.info("Will tell Call actors to stop observing existing Interpreters");
+        call.tell(new StopObserving(), self);
+        if (outboundCall != null) {
+            outboundCall.tell(new StopObserving(), self);
+        }
+        logger.info("Existing observers removed from Calls actors");
+
+        // Cleanup existing Interpreter
+        Iterator<ActorRef> iterator = callObservers.iterator();
+        if (iterator.hasNext()) {
+            ActorRef existingInterpreter = iterator.next();
+            logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
+            StopInterpreter stopInterpreter = new StopInterpreter(true);
+            system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter,
+                    system.dispatcher());
+        }
+
+        // Prepare VoiceInterpreter for the first call leg
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -693,28 +718,11 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
-        // Interpreter for the first call leg
         final ActorRef interpreter = builder.build();
-
-        // Get first call leg observers and remove them
-        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
-        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
-                Duration.create(10, TimeUnit.SECONDS));
-        List<ActorRef> callObservers = response.get();
-
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Will tell Call actors to stop observing existing Interpreters");
-            call.tell(new StopObserving(null), self());
-            if (outboundCall != null)
-                outboundCall.tell(new StopObserving(null), self());
-            logger.info("Existing observers removed from Calls actors");
-        }
 
         // Ask first call leg to execute with the new Interpreter
         interpreter.tell(new StartInterpreter(request.call()), self);
-        logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
+        logger.info("New Interpreter for first call leg: " + interpreter.path() + " started");
 
         // Check what to do with the second/outbound call leg of the call
         if (outboundCall != null) {
@@ -726,25 +734,12 @@ public final class CallManager extends UntypedActor {
                         new ChangeCallDirection(), system.dispatcher());
                 system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), outboundInterpreter,
                         new StartInterpreter(outboundCall), system.dispatcher());
-                // outboundCall.tell(new ChangeCallDirection(), null);
-                // outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
                 logger.info("New Intepreter for Second call leg: " + outboundInterpreter.path() + " started");
             } else {
                 logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup outboundCall");
                 outboundCall.tell(new Hangup(), null);
                 getContext().stop(outboundCall);
             }
-        }
-
-        // Cleanup existing Interpreter
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
-            StopInterpreter stopInterpreter = StopInterpreter.instance();
-            stopInterpreter.setLiveCallModification(true);
-            system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter,
-                    system.dispatcher());
-            // existingInterpreter.tell(stopInterpreter, null);
         }
     }
 

@@ -27,7 +27,9 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -71,11 +73,14 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
@@ -89,6 +94,8 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.UpdateMediaSession;
 import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.patterns.Observing;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import akka.actor.ActorRef;
@@ -168,6 +175,9 @@ public class MmsCallController extends MediaServerController {
 
     // Runtime Setting
     private Configuration runtimeSettings;
+
+    // Observer pattern
+    private final List<ActorRef> observers;
 
     public MmsCallController(final ActorRef mediaGateway) {
         super();
@@ -256,6 +266,9 @@ public class MmsCallController extends MediaServerController {
         this.remoteSdp = "";
         this.callOutbound = false;
         this.connectionMode = "inactive";
+
+        // Observers
+        this.observers = new ArrayList<ActorRef>(1);
     }
 
     /**
@@ -266,6 +279,15 @@ public class MmsCallController extends MediaServerController {
      */
     private boolean is(State state) {
         return this.fsm.state().equals(state);
+    }
+
+    private void broadcast(final Object message) {
+        if (!this.observers.isEmpty()) {
+            final ActorRef self = self();
+            for (ActorRef observer : observers) {
+                observer.tell(message, self);
+            }
+        }
     }
 
     private ActorRef createMediaGroup(final Object message) {
@@ -353,7 +375,11 @@ public class MmsCallController extends MediaServerController {
         logger.info("********** Call Controller Current State: \"" + state.toString());
         logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
 
-        if (CreateMediaSession.class.equals(klass)) {
+        if (Observe.class.equals(klass)) {
+            onObserve((Observe) message, self, sender);
+        } else if (StopObserving.class.equals(klass)) {
+            onStopObserving((StopObserving) message, self, sender);
+        } else if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
         } else if (CloseMediaSession.class.equals(klass)) {
             onCloseMediaSession((CloseMediaSession) message, self, sender);
@@ -383,6 +409,8 @@ public class MmsCallController extends MediaServerController {
             onJoinConference((JoinConference) message, self, sender);
         } else if (JoinBridge.class.equals(klass)) {
             onJoinBridge((JoinBridge) message, self, sender);
+        } else if (Leave.class.equals(klass)) {
+            onLeave((Leave) message, self, sender);
         } else if (CreateMediaGroup.class.equals(klass)) {
             onCreateMediaGroup((CreateMediaGroup) message, self, sender);
         } else if (DestroyMediaGroup.class.equals(klass)) {
@@ -395,6 +423,23 @@ public class MmsCallController extends MediaServerController {
             onPlay((Play) message, self, sender);
         } else if (Collect.class.equals(klass)) {
             onCollect((Collect) message, self, sender);
+        }
+    }
+
+    private void onObserve(Observe message, ActorRef self, ActorRef sender) {
+        final ActorRef observer = message.observer();
+        if (observer != null) {
+            synchronized (this.observers) {
+                this.observers.add(observer);
+                observer.tell(new Observing(self), self);
+            }
+        }
+    }
+
+    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) {
+        final ActorRef observer = message.observer();
+        if (observer != null) {
+            this.observers.remove(observer);
         }
     }
 
@@ -493,10 +538,6 @@ public class MmsCallController extends MediaServerController {
         }
     }
 
-    private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
-        fsm.transition(message, closingInternalLink);
-    }
-
     private void onMute(Mute message, ActorRef self, ActorRef sender) throws Exception {
         fsm.transition(message, muting);
     }
@@ -550,6 +591,12 @@ public class MmsCallController extends MediaServerController {
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.mediaGroup != null) {
             this.mediaGroup.tell(new Stop(), self);
+        }
+    }
+
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && internalLinkEndpoint != null) {
+            fsm.transition(message, closingInternalLink);
         }
     }
 
@@ -741,12 +788,13 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             if (is(updatingInternalLink)) {
                 call.tell(new JoinComplete(), super.source);
+            } else if (is(closingInternalLink)) {
+                call.tell(new Left(), super.source);
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
                 ConnectionStateChanged connState = (ConnectionStateChanged) message;
                 localSdp = connState.descriptor().toString();
-                final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
-                        new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
-                call.tell(response, self());
+                MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp);
+                broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE, mediaSessionInfo));
             }
         }
     }
@@ -761,9 +809,8 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             ConnectionStateChanged connState = (ConnectionStateChanged) message;
             localSdp = connState.descriptor().toString();
-            final MediaServerControllerResponse<MediaSessionInfo> response = new MediaServerControllerResponse<MediaSessionInfo>(
-                    new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp));
-            call.tell(response, self());
+            MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp);
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.PENDING, mediaSessionInfo));
         }
 
     }
