@@ -114,6 +114,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
             final ServletContext context = event.getServletContext();
             final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
+            final String extensionConfigurationPath = context.getRealPath("WEB-INF/conf/extensions.xml");
             // Initialize the configuration interpolator.
             final ConfigurationStringLookup strings = new ConfigurationStringLookup();
             strings.addProperty("home", home(context));
@@ -157,6 +158,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             Version.printVersion();
             Ping ping = new Ping(xml, context);
             ping.sendPing();
+            Configuration extensionConfiguration = null;
+            try {
+                extensionConfiguration = new XMLConfiguration(extensionConfigurationPath);
+            } catch (final ConfigurationException exception) {
+                logger.error(exception);
+            }
+            ExtensionScanner extensionScanner = new ExtensionScanner(extensionConfiguration);
+            extensionScanner.start();
         }
     }
 }
