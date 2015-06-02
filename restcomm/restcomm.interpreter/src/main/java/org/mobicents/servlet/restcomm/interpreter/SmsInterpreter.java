@@ -425,7 +425,7 @@ public final class SmsInterpreter extends UntypedActor {
             // Try to stop the interpreter.
             final State state = fsm.state();
             if (waitingForSmsResponses.equals(state)) {
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 self.tell(stop, self);
             }
         }
@@ -565,7 +565,7 @@ public final class SmsInterpreter extends UntypedActor {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -573,7 +573,7 @@ public final class SmsInterpreter extends UntypedActor {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -623,7 +623,7 @@ public final class SmsInterpreter extends UntypedActor {
                 } catch (final Exception exception) {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, text + " is an invalid URI.");
                     notifications.addNotification(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -678,7 +678,7 @@ public final class SmsInterpreter extends UntypedActor {
                                 + " is an invalid 'from' phone number.");
                         notifications.addNotification(notification);
                         service.tell(new DestroySmsSession(session), source);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -716,7 +716,7 @@ public final class SmsInterpreter extends UntypedActor {
                 final Notification notification = notification(ERROR_NOTIFICATION, 14103, body + " is an invalid SMS body.");
                 notifications.addNotification(notification);
                 service.tell(new DestroySmsSession(session), source);
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             } else {
@@ -735,7 +735,7 @@ public final class SmsInterpreter extends UntypedActor {
                                     + " is an invalid URI.");
                             notifications.addNotification(notification);
                             service.tell(new DestroySmsSession(session), source);
-                            final StopInterpreter stop = StopInterpreter.instance();
+                            final StopInterpreter stop = new StopInterpreter();
                             source.tell(stop, source);
                             return;
                         }
@@ -786,7 +786,7 @@ public final class SmsInterpreter extends UntypedActor {
                         final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }

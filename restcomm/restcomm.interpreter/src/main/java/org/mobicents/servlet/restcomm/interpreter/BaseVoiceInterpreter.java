@@ -755,7 +755,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final NotificationsDao notifications = storage.getNotificationsDao();
                 notifications.addNotification(notification);
                 sendMail(notification);
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             }
@@ -781,7 +781,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     from = e164(from);
                     if (from == null) {
                         from = verb.attribute("from").value();
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -796,7 +796,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     to = e164(to);
                     if (to == null) {
                         to = verb.attribute("to").value();
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -896,7 +896,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final NotificationsDao notifications = storage.getNotificationsDao();
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1100,7 +1100,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, text + " is an invalid URI.");
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -1210,7 +1210,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                         + " is an invalid URI.");
                                 notifications.addNotification(notification);
                                 sendMail(notification);
-                                final StopInterpreter stop = StopInterpreter.instance();
+                                final StopInterpreter stop = new StopInterpreter();
                                 source.tell(stop, source);
                                 return;
                             }
@@ -1394,7 +1394,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1526,7 +1526,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -1598,7 +1598,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1656,7 +1656,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1705,7 +1705,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         downloader.tell(request, null);
-                        source.tell(StopInterpreter.instance(), source);
+                        source.tell(new StopInterpreter(), source);
                     }
                     // A little clean up.
                     recordingSid = null;
@@ -1714,7 +1714,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             if (CallStateChanged.class.equals(klass)) {
-                source.tell(StopInterpreter.instance(), source);
+                source.tell(new StopInterpreter(), source);
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
@@ -1768,7 +1768,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         notifications.addNotification(notification);
                         sendMail(notification);
                         smsService.tell(new DestroySmsSession(session), source);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1788,7 +1788,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         notifications.addNotification(notification);
                         sendMail(notification);
                         smsService.tell(new DestroySmsSession(session), source);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1801,7 +1801,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 notifications.addNotification(notification);
                 sendMail(notification);
                 smsService.tell(new DestroySmsSession(session), source);
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             } else {
@@ -1821,7 +1821,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             notifications.addNotification(notification);
                             sendMail(notification);
                             smsService.tell(new DestroySmsSession(session), source);
-                            final StopInterpreter stop = StopInterpreter.instance();
+                            final StopInterpreter stop = new StopInterpreter();
                             source.tell(stop, source);
                             return;
                         }
@@ -1871,7 +1871,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
