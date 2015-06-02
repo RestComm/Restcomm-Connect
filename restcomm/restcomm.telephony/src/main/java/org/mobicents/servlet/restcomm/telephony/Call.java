@@ -70,7 +70,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
@@ -542,13 +541,12 @@ public final class Call extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void execute(Object message) throws Exception {
-            final MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
+            final MediaServerControllerStateChanged response = (MediaServerControllerStateChanged) message;
             final ActorRef self = self();
 
-            mediaSessionInfo = response.get();
+            mediaSessionInfo = response.getMediaSession();
 
             // Create a SIP invite to initiate a new session.
             final StringBuilder buffer = new StringBuilder();

@@ -693,7 +693,7 @@ public class UssdInterpreter extends UntypedActor {
                 } else if (type.contains("text/plain")) {
                     parser = parser("<UssdMessage>" + response.getContentAsString() + "</UssdMessage>");
                 } else {
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -857,7 +857,7 @@ public class UssdInterpreter extends UntypedActor {
                             + " is an invalid URI.");
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }

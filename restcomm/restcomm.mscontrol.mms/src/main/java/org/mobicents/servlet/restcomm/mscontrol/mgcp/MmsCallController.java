@@ -66,22 +66,15 @@ import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -111,36 +104,31 @@ import akka.event.LoggingAdapter;
  */
 public class MmsCallController extends MediaServerController {
 
-    // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    // FSM.
+    // Finite State Machine
     private final FiniteStateMachine fsm;
-
-    // FSM states
     private final State uninitialized;
-    private final State active;
-    private final State inactive;
-    private final State failed;
-
-    // Intermediate states
     private final State acquiringMediaGatewayInfo;
     private final State acquiringMediaSession;
     private final State acquiringBridge;
+    private final State creatingMediaGroup;
     private final State acquiringRemoteConnection;
     private final State initializingRemoteConnection;
     private final State openingRemoteConnection;
     private final State updatingRemoteConnection;
-    private final State closingRemoteConnection;
+    private final State pending;
+    private final State active;
+    private final State muting;
+    private final State unmuting;
     private final State acquiringInternalLink;
     private final State initializingInternalLink;
     private final State openingInternalLink;
     private final State updatingInternalLink;
     private final State closingInternalLink;
-    private final State creatingMediaGroup;
-    private final State muting;
-    private final State unmuting;
-    private final State pending;
+    private final State closingRemoteConnection;
+    private final State failed;
+    private final State inactive;
 
     // Call runtime stuff
     private ActorRef call;
@@ -185,37 +173,36 @@ public class MmsCallController extends MediaServerController {
 
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
-        this.active = new State("active", new Active(source), null);
-        this.inactive = new State("inactive", new Inactive(source), null);
-        this.failed = new State("failed", new Failed(source), null);
-
-        // Intermediate states
         this.acquiringMediaGatewayInfo = new State("acquiring media gateway info", new AcquiringMediaGatewayInfo(source), null);
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
         this.acquiringBridge = new State("acquiring media bridge", new AcquiringBridge(source), null);
-        this.acquiringRemoteConnection = new State("acquiring remote connection", new AcquiringRemoteConnection(source), null);
-        this.initializingRemoteConnection = new State("initializing remote connection",
-                new InitializingRemoteConnection(source), null);
-        this.openingRemoteConnection = new State("opening remote connection", new OpeningRemoteConnection(source), null);
-        this.updatingRemoteConnection = new State("updating remote connection", new UpdatingRemoteConnection(source), null);
-        this.closingRemoteConnection = new State("closing remote connection", new ClosingRemoteConnection(source), null);
-        this.acquiringInternalLink = new State("acquiring internal link", new AcquiringInternalLink(source), null);
-        this.initializingInternalLink = new State("initializing internal link", new InitializingInternalLink(source), null);
-        this.openingInternalLink = new State("opening internal link", new OpeningInternalLink(source), null);
-        this.updatingInternalLink = new State("updating internal link", new UpdatingInternalLink(source), null);
-        this.closingInternalLink = new State("closing internal link", new EnteringClosingInternalLink(source),
-                new ExitingClosingInternalLink(source));
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
+        this.acquiringRemoteConnection = new State("acquiring connection", new AcquiringRemoteConnection(source), null);
+        this.initializingRemoteConnection = new State("initializing connection", new InitializingRemoteConnection(source), null);
+        this.openingRemoteConnection = new State("opening connection", new OpeningRemoteConnection(source), null);
+        this.updatingRemoteConnection = new State("updating connection", new UpdatingRemoteConnection(source), null);
+        this.pending = new State("pending", new Pending(source), null);
+        this.active = new State("active", new Active(source), null);
         this.muting = new State("muting", new Muting(source), null);
         this.unmuting = new State("unmuting", new Unmuting(source), null);
-        this.pending = new State("pending", new Pending(source), null);
+        this.acquiringInternalLink = new State("acquiring link", new AcquiringInternalLink(source), null);
+        this.initializingInternalLink = new State("initializing link", new InitializingInternalLink(source), null);
+        this.openingInternalLink = new State("opening link", new OpeningInternalLink(source), null);
+        this.updatingInternalLink = new State("updating link", new UpdatingInternalLink(source), null);
+        this.closingInternalLink = new State("closing link", new EnterClosingInternalLink(source), new ExitClosingInternalLink(
+                source));
+        this.closingRemoteConnection = new State("closing connection", new ClosingRemoteConnection(source), null);
+        this.inactive = new State("inactive", new Inactive(source), null);
+        this.failed = new State("failed", new Failed(source), null);
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.acquiringMediaGatewayInfo));
         transitions.add(new Transition(this.acquiringMediaGatewayInfo, this.acquiringMediaSession));
         transitions.add(new Transition(this.acquiringMediaSession, this.acquiringBridge));
-        transitions.add(new Transition(this.acquiringBridge, this.acquiringRemoteConnection));
+        transitions.add(new Transition(this.acquiringBridge, this.creatingMediaGroup));
+        transitions.add(new Transition(this.creatingMediaGroup, this.acquiringRemoteConnection));
+        transitions.add(new Transition(this.creatingMediaGroup, this.failed));
         transitions.add(new Transition(this.acquiringRemoteConnection, this.initializingRemoteConnection));
         transitions.add(new Transition(this.initializingRemoteConnection, this.openingRemoteConnection));
         transitions.add(new Transition(this.openingRemoteConnection, this.active));
@@ -228,8 +215,6 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.active, this.acquiringInternalLink));
         transitions.add(new Transition(this.active, this.closingInternalLink));
         transitions.add(new Transition(this.active, this.creatingMediaGroup));
-        transitions.add(new Transition(this.creatingMediaGroup, this.active));
-        // XXX add transition from CreatingMediaGroup to a failing state
         transitions.add(new Transition(this.pending, this.active));
         transitions.add(new Transition(this.pending, this.failed));
         transitions.add(new Transition(this.pending, this.updatingRemoteConnection));
@@ -253,6 +238,7 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.updatingInternalLink, this.closingInternalLink));
         transitions.add(new Transition(this.updatingInternalLink, this.active));
         transitions.add(new Transition(this.closingInternalLink, this.closingRemoteConnection));
+        transitions.add(new Transition(this.closingInternalLink, this.active));
         transitions.add(new Transition(this.closingInternalLink, this.inactive));
 
         // Initialize the FSM.
@@ -411,10 +397,6 @@ public class MmsCallController extends MediaServerController {
             onJoinBridge((JoinBridge) message, self, sender);
         } else if (Leave.class.equals(klass)) {
             onLeave((Leave) message, self, sender);
-        } else if (CreateMediaGroup.class.equals(klass)) {
-            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
-        } else if (DestroyMediaGroup.class.equals(klass)) {
-            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         } else if (MediaGroupStateChanged.class.equals(klass)) {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         } else if (Record.class.equals(klass)) {
@@ -467,7 +449,8 @@ public class MmsCallController extends MediaServerController {
         } else if (is(acquiringMediaSession)) {
             fsm.transition(message, acquiringBridge);
         } else if (is(acquiringBridge)) {
-            fsm.transition(message, acquiringRemoteConnection);
+            this.bridgeEndpoint = (ActorRef) message.get();
+            fsm.transition(message, creatingMediaGroup);
         } else if (is(acquiringRemoteConnection)) {
             fsm.transition(message, initializingRemoteConnection);
         } else if (is(acquiringInternalLink)) {
@@ -590,12 +573,12 @@ public class MmsCallController extends MediaServerController {
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.mediaGroup != null) {
-            this.mediaGroup.tell(new Stop(), self);
+            this.mediaGroup.tell(new Stop(), sender);
         }
     }
 
     private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) && internalLinkEndpoint != null) {
+        if ((is(active) && internalLinkEndpoint != null) || is(updatingInternalLink)) {
             fsm.transition(message, closingInternalLink);
         }
     }
@@ -620,32 +603,22 @@ public class MmsCallController extends MediaServerController {
         this.fsm.transition(message, acquiringInternalLink);
     }
 
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
-            this.fsm.transition(message, creatingMediaGroup);
-        }
-    }
-
-    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
-        if (this.mediaGroup != null && !this.mediaGroup.isTerminated()) {
-            this.mediaGroup.tell(new StopMediaGroup(), self);
-            this.mediaGroup = null;
-        }
-
-        // Tell call the media group has been destroyed
-        final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
-        this.call.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
-    }
-
     private void onMediaGroupStateChanged(MediaGroupStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(creatingMediaGroup)) {
-            if (MediaGroupStateChanged.State.ACTIVE.equals(message.state())) {
-                final MediaGroupCreated mgCreated = new MediaGroupCreated();
-                this.call.tell(new MediaServerControllerResponse<MediaGroupCreated>(mgCreated), sender);
-                fsm.transition(message, active);
-            } else if (MediaGroupStateChanged.State.INACTIVE.equals(message.state())) {
-                // XXX Add transition to a failing state
-            }
+        switch (message.state()) {
+            case ACTIVE:
+                if (is(creatingMediaGroup)) {
+                    fsm.transition(message, acquiringRemoteConnection);
+                }
+                break;
+
+            case INACTIVE:
+                if (is(creatingMediaGroup)) {
+                    fsm.transition(message, failed);
+                }
+                break;
+
+            default:
+                break;
         }
     }
 
@@ -722,11 +695,8 @@ public class MmsCallController extends MediaServerController {
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-            bridgeEndpoint = response.get();
             mediaGateway.tell(new CreateConnection(session), source);
         }
     }
@@ -793,7 +763,8 @@ public class MmsCallController extends MediaServerController {
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
                 ConnectionStateChanged connState = (ConnectionStateChanged) message;
                 localSdp = connState.descriptor().toString();
-                MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp);
+                MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(),
+                        localSdp, remoteSdp);
                 broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE, mediaSessionInfo));
             }
         }
@@ -809,7 +780,8 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             ConnectionStateChanged connState = (ConnectionStateChanged) message;
             localSdp = connState.descriptor().toString();
-            MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp, remoteSdp);
+            MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp,
+                    remoteSdp);
             broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.PENDING, mediaSessionInfo));
         }
 
@@ -950,9 +922,9 @@ public class MmsCallController extends MediaServerController {
 
     }
 
-    private final class EnteringClosingInternalLink extends AbstractAction {
+    private final class EnterClosingInternalLink extends AbstractAction {
 
-        public EnteringClosingInternalLink(final ActorRef source) {
+        public EnterClosingInternalLink(final ActorRef source) {
             super(source);
         }
 
@@ -963,9 +935,9 @@ public class MmsCallController extends MediaServerController {
 
     }
 
-    private final class ExitingClosingInternalLink extends AbstractAction {
+    private final class ExitClosingInternalLink extends AbstractAction {
 
-        public ExitingClosingInternalLink(final ActorRef source) {
+        public ExitClosingInternalLink(final ActorRef source) {
             super(source);
         }
 
@@ -993,19 +965,37 @@ public class MmsCallController extends MediaServerController {
         }
     }
 
-    private final class Inactive extends AbstractAction {
+    private abstract class FinalState extends AbstractAction {
 
-        public Inactive(final ActorRef source) {
+        private final MediaServerControllerState state;
+
+        public FinalState(ActorRef source, final MediaServerControllerState state) {
             super(source);
+            this.state = state;
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
+        public void execute(Object message) throws Exception {
+            // Cleanup resources
+            cleanup();
+
+            // Notify observers the controller has stopped
+            broadcast(new MediaServerControllerStateChanged(state));
+
+            // Clean observers
+            observers.clear();
+
+            // Terminate actor
+            getContext().stop(super.source);
+        }
+
+        protected void cleanup() {
             logger.info("De-activating Call Controller");
 
             if (mediaGroup != null) {
+                mediaGroup.tell(new StopObserving(super.source), super.source);
                 mediaGroup.tell(new StopMediaGroup(), null);
-                context().stop(mediaGroup);
+                mediaGroup = null;
             }
 
             if (remoteConn != null) {
@@ -1030,24 +1020,22 @@ public class MmsCallController extends MediaServerController {
 
             bridge = null;
             outboundCallBridgeEndpoint = null;
-
-            // Inform call that media session has been properly closed
-            final MediaSessionClosed response = new MediaSessionClosed();
-            call.tell(new MediaServerControllerResponse<MediaSessionClosed>(response), super.source);
         }
 
     }
 
-    private final class Failed extends AbstractAction {
+    private final class Inactive extends FinalState {
 
-        public Failed(final ActorRef source) {
-            super(source);
+        public Inactive(final ActorRef source) {
+            super(source, MediaServerControllerState.INACTIVE);
         }
 
-        @Override
-        public void execute(final Object message) throws Exception {
-            final MediaServerControllerError error = new MediaServerControllerError();
-            call.tell(error, self());
+    }
+
+    private final class Failed extends FinalState {
+
+        public Failed(final ActorRef source) {
+            super(source, MediaServerControllerState.FAILED);
         }
 
     }

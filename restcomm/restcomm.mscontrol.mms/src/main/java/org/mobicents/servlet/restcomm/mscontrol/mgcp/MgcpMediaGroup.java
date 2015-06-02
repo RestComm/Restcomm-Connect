@@ -294,6 +294,10 @@ public class MgcpMediaGroup extends MediaGroup {
                 record(message);
             } else if (Stop.class.equals(klass)) {
                 stop();
+                // Send message to originator telling media group has been stopped
+                // Needed for call bridging scenario, where inbound call must stop
+                // ringing before attempting to perform join operation.
+                sender().tell(new MediaGroupResponse<String>("stopped"), self());
             } else if (IvrEndpointResponse.class.equals(klass)) {
                 notification(message);
             }
