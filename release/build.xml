@@ -16,7 +16,7 @@
         <property name="restcomm.docs.eap6.dir" location="${release.eap6.dir}/docs/restcomm" />
 	<!--<property name="checkout.dir" value="${base.dir}/checkout" />
 	<property name="checkout.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm" />
-	<property name="workspace.telscale-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" /-->
+	<property name="workspace.mobicents-restcomm.dir" value="${checkout.dir}/telscale-restcomm/restcomm" /-->
 	<property name="checkout.hsqldb.dir" value="${checkout.dir}/hsqldb" />
 	<!--
 	<property name="telscale.restcomm.release.version" value="7.1.6-SNAPSHOT"/>
@@ -374,14 +374,14 @@
 
 	<target name="build-telscale-restcomm">
         <echo>Building Telscale Restcomm</echo>
-	<echo>Restcomm workspace dir: "${workspace.telscale-restcomm.dir}"</echo>
-        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm.dir}">
+	<echo>Restcomm workspace dir: "${workspace.mobicents-restcomm.dir}"</echo>
+        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}">
                 <arg line="${release.build.goals}" />
         </exec>
-        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm.dir}/restcomm.docs">
+        <exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}/restcomm.docs">
                 <arg line="${release.build.goals} -Ptelscale" />
         </exec>
-	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api">
+	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api">
                 <arg line="javadoc:javadoc" />
         </exec>
 	</target>
@@ -412,17 +412,17 @@
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/\-\->
 	<!\-\- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt \-\->
         <copy todir="${release.dir}/server/default/deploy/restcomm.war" failonerror="true">
-                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
 	<!\-\- Copy Admin UI \-\->
         <copy tofile="${release.dir}/server/default/deploy/restcomm-management.war" failonerror="true"
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 
 	<!\-\- Copy RVD \-\->
         <copy todir="${release.dir}/server/default/deploy/restcomm-rvd.war" failonerror="true">
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -452,17 +452,17 @@
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/\-\->
 	<\!\-\- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt \-\->
         <copy todir="${release.dir}/server/all/deploy/restcomm.war" failonerror="true">
-                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
 	<\!\-\- Copy Admin UI \-\->
         <copy tofile="${release.dir}/server/all/deploy/restcomm-management.war" failonerror="true"
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 
 	<!\-\- Copy RVD \-\->
         <copy todir="${release.dir}/server/all/deploy/restcomm-rvd.war" failonerror="true" >
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -488,25 +488,25 @@
         	file="${checkout.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/-->
 	<!-- https://bitbucket.org/telestax/telscale-restcomm/issue/55/restcommwar-is-compressed-which-doesnt -->
 	<!-- <copy todir="${release.tomcat.dir}/webapps/restcomm" failonerror="true">
-                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>-->
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
 
 	<!-- Copy Admin UI -->
         <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 
 	<!-- Copy RVD -->
         <!--<copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset>
         </copy>-->
 	<copy tofile="${release.tomcat.dir}/webapps/restcomm-rvd.war" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
+		file="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
 
 	<!--Copy Rvd ES Demo-->
 	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo.war" failonerror="true"
@@ -536,7 +536,7 @@
                 file="${basedir}/mobicents-dar.properties"/>
 	<!--Use exploded WAR-->
 	<copy todir="${release.as7.dir}/standalone/deployments/restcomm.war" failonerror="true">
-                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -544,12 +544,12 @@
 
 	<!-- Copy Admin UI -->
         <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true"
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
 
 	<!-- Copy RVD -->
         <copy todir="${release.as7.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -585,7 +585,7 @@
 
 	<!--<copy file="${release.hsqldb.dir}//hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>-->
 	<!--<copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
+		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>-->
@@ -599,7 +599,7 @@
                 file="${basedir}/mobicents-dar.properties"/>
 	<!--Use exploded WAR-->
 	<copy todir="${release.as7.nolce.dir}/standalone/deployments/restcomm.war" failonerror="true">
-                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -607,12 +607,12 @@
 
 	<!-- Copy Admin UI -->
         <copy tofile="${release.as7.nolce.dir}/standalone/deployments/restcomm-management.war" failonerror="true"
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 	<touch file="${release.as7.nolce.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
 
 	<!-- Copy RVD -->
         <copy todir="${release.as7.nolce.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -648,7 +648,7 @@
 
 	<!--<copy file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.as7.nolce.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>-->
 	<!--<copy todir="${release.as7.dir}/standalone/deployments" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
+		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.as7.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>-->
@@ -661,7 +661,7 @@
                 file="${basedir}/mobicents-dar.properties"/>
 	<!--Use exploded WAR-->
 	<copy todir="${release.eap6.dir}/standalone/deployments/restcomm.war" failonerror="true">
-                <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm">
+                <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -669,12 +669,12 @@
 
 	<!-- Copy Admin UI -->
         <copy tofile="${release.eap6.dir}/standalone/deployments/restcomm-management.war" failonerror="true"
-        	file="${workspace.telscale-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
 	<touch file="${release.eap6.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
 
 	<!-- Copy RVD -->
         <copy todir="${release.eap6.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
-		<fileset dir="${workspace.telscale-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
                         <include name="**/*" />
                 </fileset>
         </copy>
@@ -710,7 +710,7 @@
 
 	<!--<copy file="${release.hsqldb.dir}/hsqldb-2.3.2/hsqldb/lib/hsqldb.jar" todir="${release.eap6.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>-->
         <!--<copy todir="${release.eap6.dir}/standalone/deployments" failonerror="true"
-		file="${workspace.telscale-restcomm.dir}/restcomm.application/target/restcomm.war" />
+		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war" />
         <zip destfile="${release.eap6.dir}/standalone/deployments/restcomm.war" update="true">
 		<zipfileset dir="${release.hsqldb.dir}/hsqldb/lib" includes="hsqldb.jar" prefix="WEB-INF/lib/"/>
 	</zip>-->
@@ -724,52 +724,52 @@
 		<!--docs-->
 	    <mkdir dir="${restcomm.docs.dir}"/>
 		<copy todir="${restcomm.docs.dir}" failonerror="true">
-		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
 		<mkdir dir="${restcomm.docs.dir}/phone-number-provisioning-javadocs"/>
 		<copy todir="${restcomm.docs.dir}/phone-number-provisioning-javadocs" failonerror="true">
-		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
 		<!--docs tomcat-->
 		<mkdir dir="${restcomm.docs.tomcat.dir}"/>
 		<copy todir="${restcomm.docs.tomcat.dir}" failonerror="true">
-		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
 		<mkdir dir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs"/>
 		<copy todir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs" failonerror="true">
-		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
                 <!--docs JBoss AS7-->
                 <mkdir dir="${restcomm.docs.as7.dir}"/>
                 <copy todir="${restcomm.docs.as7.dir}" failonerror="true">
-                        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+                        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
                                 <include name="**/*" />
                         </fileset>
                 </copy>
 		<mkdir dir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs"/>
 		<copy todir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs" failonerror="true">
-		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
                 <!--docs JBoss EAP6-->
                 <mkdir dir="${restcomm.docs.eap6.dir}"/>
                 <copy todir="${restcomm.docs.eap6.dir}" failonerror="true">
-                        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
+                        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-telscale/target/docbook/publish/en-US">
                                 <include name="**/*" />
                         </fileset>
                 </copy>
 		<mkdir dir="${restcomm.docs.eap6.dir}/phone-number-provisioning-javadocs"/>
 		<copy todir="${restcomm.docs.eap6.dir}/phone-number-provisioning-javadocs" failonerror="true">
-		        <fileset dir="${workspace.telscale-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
 		                <include name="**/*" />
 		        </fileset>
 		</copy>
