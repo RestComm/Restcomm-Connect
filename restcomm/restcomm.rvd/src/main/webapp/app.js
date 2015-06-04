@@ -1,4 +1,16 @@
-var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','basicDragdrop','pascalprecht.translate']);
+var App = angular.module('Rvd', [
+	'angularFileUpload',
+	'ngRoute',
+	'ngDragDrop',
+	'ui.bootstrap',
+	'ui.bootstrap.collapse',
+	'ui.bootstrap.popover',
+	'ui.sortable',
+	'basicDragdrop',
+	'pascalprecht.translate',
+	'ngSanitize'
+]);
+
 var rvdMod = App;
 
 App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $translateProvider) {

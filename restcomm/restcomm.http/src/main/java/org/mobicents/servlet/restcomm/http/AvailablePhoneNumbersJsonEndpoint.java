@@ -46,7 +46,7 @@ public class AvailablePhoneNumbersJsonEndpoint extends AvailablePhoneNumbersEndp
 
     @GET
     public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
-            @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("areaCode") String areaCode,
+            @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
             @QueryParam("MmsEnabled") String mmsEnabled, @QueryParam("VoiceEnabled") String voiceEnabled,
             @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("UssdEnabled") String ussdEnabled,
