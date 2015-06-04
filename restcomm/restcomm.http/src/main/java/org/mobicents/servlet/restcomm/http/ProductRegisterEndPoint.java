@@ -20,7 +20,7 @@
 package org.mobicents.servlet.restcomm.http;
 
 /**
- * @author lefty on 5/26/15.
+ * @author lefteris banos on 5/26/15.
  * */
 
 import javax.servlet.http.HttpServletRequest;
