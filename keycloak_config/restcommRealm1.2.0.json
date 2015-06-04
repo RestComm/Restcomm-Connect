@@ -7,7 +7,7 @@
   "ssoSessionIdleTimeout": 600,
   "ssoSessionMaxLifespan": 36000,
   "passwordCredentialGrantAllowed": true,
-  "sslRequired": "external",
+  "sslRequired": "all",
   "registrationAllowed": false,
   "social": false,
   "updateProfileOnInitialSocialLogin": false,
@@ -114,42 +114,42 @@
     {
       "name": "restcomm-rvd",
       "enabled": true,
-      "adminUrl": "http://192.168.1.39:8080/restcomm-rvd/services",
-      "baseUrl": "http://192.168.1.39:8080/restcomm-rvd/services",
+      "adminUrl": "https://192.168.1.39:8443/restcomm-rvd/services",
+      "baseUrl": "https://192.168.1.39:8443/restcomm-rvd/services",
       "bearerOnly": true
     },
     {
       "name": "restcomm-rest",
       "enabled": true,
-      "adminUrl": "http://192.168.1.39:8080/restcomm/keycloak",
-      "baseUrl": "http://192.168.1.39:8080/restcomm/keycloak",
+      "adminUrl": "https://192.168.1.39:8443/restcomm/keycloak",
+      "baseUrl": "https://192.168.1.39:8443/restcomm/keycloak",
       "secret": "password",
       "redirectUris": [
-        "http://192.168.1.39:8080/restcomm-management/*"
+        "https://192.168.1.39:8443/restcomm-management/*"
       ]
     },
     {
       "name": "restcomm-ui",
       "enabled": true,
       "publicClient": true,
-      "baseUrl": "http://192.168.1.39:8080/restcomm-management/index.html",
+      "baseUrl": "https://192.168.1.39:8443/restcomm-management/index.html",
       "redirectUris": [
-        "http://192.168.1.39:8080/restcomm-management/*"
+        "https://192.168.1.39:8443/restcomm-management/*"
       ],
       "webOrigins": [
-		"http://192.168.1.39:8080"
+		"https://192.168.1.39:8443"
 	  ] 
     },
     {
       "name": "restcomm-rvd-ui",
       "enabled": true,
       "publicClient": true,
-      "baseUrl": "http://192.168.1.39:8080/restcomm-rvd/index.html",
+      "baseUrl": "https://192.168.1.39:8443/restcomm-rvd/index.html",
       "redirectUris": [
-        "http://192.168.1.39:8080/restcomm-rvd/*"
+        "https://192.168.1.39:8443/restcomm-rvd/*"
       ],
 	  "webOrigins": [
-		"http://192.168.1.39:8080"
+		"https://192.168.1.39:8443"
 	  ]      
     }
   ],
