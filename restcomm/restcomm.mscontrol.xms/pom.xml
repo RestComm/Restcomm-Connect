@@ -64,8 +64,14 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- <dependency> -->
+		<!-- <groupId>javax.media</groupId> -->
+		<!-- <artifactId>mscontrol</artifactId> -->
+		<!-- <version>1.0</version> -->
+		<!-- </dependency> -->
+
 		<dependency>
-			<groupId>javax.media</groupId>
+			<groupId>org.mobicents.external.jsr309</groupId>
 			<artifactId>mscontrol</artifactId>
 			<version>1.0</version>
 		</dependency>
@@ -74,18 +80,24 @@
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>dlgmsc</artifactId>
 			<version>4.1.429</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/external/dlgmsc-4.1.429.jar</systemPath>
 		</dependency>
 
 		<dependency>
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>msmltypes</artifactId>
 			<version>4.1.429</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/external/msmltypes-4.1.429.jar</systemPath>
 		</dependency>
 
 		<dependency>
 			<groupId>com.vendor.dialogic</groupId>
 			<artifactId>dlgcsmiltypes</artifactId>
 			<version>4.1.429</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/external/dlgcsmiltypes-4.1.429.jar</systemPath>
 		</dependency>
 
 		<dependency>
