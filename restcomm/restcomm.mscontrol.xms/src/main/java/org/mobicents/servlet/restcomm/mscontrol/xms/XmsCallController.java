@@ -112,6 +112,7 @@ public class XmsCallController extends MediaServerController {
     private final State uninitialized;
     private final State initializing;
     private final State active;
+    private final State pending;
     private final State updatingMediaSession;
     private final State inactive;
     private final State failed;
@@ -172,6 +173,7 @@ public class XmsCallController extends MediaServerController {
         this.uninitialized = new State("uninitialized", null, null);
         this.initializing = new State("initializing", new Initializing(source), null);
         this.active = new State("active", new Active(source), null);
+        this.pending = new State("pending", new Pending(source), null);
         this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
         this.inactive = new State("inactive", new Inactive(source), null);
         this.failed = new State("failed", new Failed(source), null);
@@ -182,7 +184,11 @@ public class XmsCallController extends MediaServerController {
         transitions.add(new Transition(uninitialized, failed));
         transitions.add(new Transition(initializing, failed));
         transitions.add(new Transition(initializing, active));
+        transitions.add(new Transition(initializing, pending));
         transitions.add(new Transition(initializing, inactive));
+        transitions.add(new Transition(pending, updatingMediaSession));
+        transitions.add(new Transition(pending, inactive));
+        transitions.add(new Transition(pending, failed));
         transitions.add(new Transition(active, updatingMediaSession));
         transitions.add(new Transition(active, inactive));
         transitions.add(new Transition(active, failed));
@@ -247,14 +253,39 @@ public class XmsCallController extends MediaServerController {
                     if (is(initializing) || is(updatingMediaSession)) {
                         networkConnection.getSdpPortManager().removeListener(this);
                         if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
-                            localSdp = new String(event.getMediaServerSdp());
-                            fsm.transition(event, active);
+                            if (is(initializing)) {
+                                // Get the generated answer
+                                localSdp = new String(event.getMediaServerSdp());
+
+                                // Join the media group to the network connection
+                                // Perform this operation only once, when initializing the controller for first time.
+                                networkConnection.join(Direction.DUPLEX, mediaGroup);
+
+                                // Move to active state
+                                fsm.transition(event, active);
+                            }
                         } else if (SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
-                            localSdp = new String(event.getMediaServerSdp());
-                            fsm.transition(event, active);
+                            if (is(initializing)) {
+                                // Get the generated offer
+                                localSdp = new String(event.getMediaServerSdp());
+
+                                // Move to a pending state waiting for an answer
+                                fsm.transition(event, pending);
+                            }
                         } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
-                            fsm.transition(event, active);
+                            if (is(updatingMediaSession)) {
+                                // Join the media group to the network connection
+                                // Perform this operation only once, when initializing the controller for first time.
+                                if (mediaGroup.getJoinees().length == 0) {
+                                    networkConnection.join(Direction.DUPLEX, mediaGroup);
+                                }
+
+                                // Move to an active state
+                                fsm.transition(event, active);
+                            }
                         } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
+                            // Unable to negotiate session over SDP
+                            // Move to a failed state
                             fsm.transition(event, failed);
                         }
                     }
@@ -447,7 +478,7 @@ public class XmsCallController extends MediaServerController {
     }
 
     private void onUpdateMediaSession(UpdateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
+        if (is(pending) || is(active)) {
             this.remoteSdp = message.getSessionDescription();
             fsm.transition(message, updatingMediaSession);
         }
@@ -827,6 +858,21 @@ public class XmsCallController extends MediaServerController {
 
     }
 
+    private final class Pending extends AbstractAction {
+
+        public Pending(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Inform observers the state of the controller has changed
+            final MediaSessionInfo info = new MediaSessionInfo(true, mediaServerInfo.getAddress(), localSdp, remoteSdp);
+            call.tell(new MediaServerControllerStateChanged(MediaServerControllerState.PENDING, info), super.source);
+        }
+
+    }
+
     private final class Active extends AbstractAction {
 
         public Active(ActorRef source) {
@@ -835,17 +881,6 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
-            if (is(initializing)) {
-                try {
-                    // Join the media group to the network connection
-                    // Perform this operation only once, when initializing the controller for first time.
-                    networkConnection.join(Direction.DUPLEX, mediaGroup);
-                } catch (MsControlException e) {
-                    // Move to failed state instead if media group cannot be joined to the connection.
-                    fsm.transition(e, failed);
-                }
-            }
-
             // Inform observers the state of the controller has changed
             final MediaSessionInfo info = new MediaSessionInfo(true, mediaServerInfo.getAddress(), localSdp, remoteSdp);
             call.tell(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE, info), super.source);
