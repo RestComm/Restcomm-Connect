@@ -544,12 +544,12 @@ rcServices.factory('UserService', function($http){
         }
 
         function Create(user) {
-         return $http.get("http://cors.io/?u=https://script.google.com/macros/s/AKfycbylNnJkYf3hTI_w0TwlVZu4I0FHJBOkcaGB83J6PD_9CODLMciY/exec?DATA="
-                                                        + user.firstName +
-                                                        "," + user.lastName +
-                                                        "," + user.companyname +
-                                                        "," + user.email +
-                                                        "," + user.wantNewsletter).then(handleSuccess, handleError('Error registering new user'));
+         return $http.get("/restcomm/2012-04-24/ProductRegister?"+
+                                                                 "NewsLetter=" + user.wantNewsletter +
+                                                                 "&Name=" + user.firstName +
+                                                                 "&Surname=" + user.lastName +
+                                                                 "&Company=" + user.companyname +
+                                                                 "&email=" + user.email ).then(handleSuccess, handleError('Error registering new user'));
       }
         function Update(user) {
             return $http.put('/api/users/' + user.id, user).then(handleSuccess, handleError('Error updating user'));
