@@ -2001,8 +2001,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
-            final boolean isBridged = (bridge != null);
-            if (isBridged || is(forking) || is(acquiringOutboundCallInfo)) {
+            if ((bridge != null) || is(forking) || is(acquiringOutboundCallInfo)) {
                 // Stop the bridge
                 bridge.tell(new StopBridge(), super.source);
                 bridge = null;
@@ -2049,6 +2048,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (outboundCall != null) {
                     callManager.tell(new DestroyCall(outboundCall), source);
                 }
+            } else {
+                // Make sure the media operations of the call are stopped
+                // so we can start processing a new RestComm application
+                call.tell(new StopMediaGroup(), source);
             }
 
             // Stop the dependencies.
