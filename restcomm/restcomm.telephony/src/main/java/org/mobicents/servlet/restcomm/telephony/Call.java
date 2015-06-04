@@ -1299,8 +1299,10 @@ public final class Call extends UntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
-            // Send BYE to client
-            sendBye();
+            if (!receivedBye) {
+                // Send BYE to client if RestComm took initiative to hangup the call
+                sendBye();
+            }
 
             // Stop recording if necessary
             if (recording) {

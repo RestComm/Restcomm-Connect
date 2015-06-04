@@ -806,6 +806,9 @@ public final class CallManager extends UntypedActor {
                 }
                 break;
             }
+
+            default:
+                break;
         }
         final ActorRef call = call();
         final ActorRef self = self();

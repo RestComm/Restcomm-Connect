@@ -762,7 +762,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
             this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
-            if (CallStateChanged.State.IN_PROGRESS == callState && !liveCallModification) {
+            if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
                 fsm.transition(message, hangingUp);
             } else {
                 fsm.transition(message, finished);
@@ -1998,12 +1998,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
             }
 
+            // XXX review bridge cleanup!!
+
             // Cleanup bridge
-            final State state = fsm.state();
-            if (bridged.equals(state) || forking.equals(state)) {
+            final boolean isBridged = (bridge != null);
+            if (isBridged || is(forking) || is(acquiringOutboundCallInfo)) {
                 // Stop the bridge
-                final StopBridge stopBridge = new StopBridge();
-                bridge.tell(stopBridge, super.source);
+                bridge.tell(new StopBridge(), super.source);
                 bridge = null;
 
                 // Cleanup the outbound call if necessary.
