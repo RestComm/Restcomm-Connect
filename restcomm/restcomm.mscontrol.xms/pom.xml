@@ -81,7 +81,7 @@
 			<artifactId>dlgmsc</artifactId>
 			<version>4.1.429</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/external/dlgmsc-4.1.429.jar</systemPath>
+			<systemPath>${project.basedir}/../external/dlgmsc-4.1.429.jar</systemPath>
 		</dependency>
 
 		<dependency>
@@ -89,7 +89,7 @@
 			<artifactId>msmltypes</artifactId>
 			<version>4.1.429</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/external/msmltypes-4.1.429.jar</systemPath>
+			<systemPath>${project.basedir}/../external/msmltypes-4.1.429.jar</systemPath>
 		</dependency>
 
 		<dependency>
@@ -97,7 +97,7 @@
 			<artifactId>dlgcsmiltypes</artifactId>
 			<version>4.1.429</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/external/dlgcsmiltypes-4.1.429.jar</systemPath>
+			<systemPath>${project.basedir}/../external/dlgcsmiltypes-4.1.429.jar</systemPath>
 		</dependency>
 
 		<dependency>

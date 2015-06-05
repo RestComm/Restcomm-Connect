@@ -147,11 +147,11 @@
 			<version>${project.version}</version>
 		</dependency>
 
-        <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.provisioning.number.bandwidth</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.provisioning.number.bandwidth</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
@@ -201,23 +201,47 @@
 			<version>${project.version}</version>
 		</dependency>
 
-                <dependency>
-                        <groupId>com.telestax.servlet</groupId>
-                        <artifactId>restcomm.mscontrol.api</artifactId>
-                        <version>${project.version}</version>
-                </dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
-                <dependency>
-                        <groupId>com.telestax.servlet</groupId>
-                        <artifactId>restcomm.mscontrol.mms</artifactId>
-                        <version>${project.version}</version>
-                </dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.mms</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
-                <dependency>
-                        <groupId>com.telestax.servlet</groupId>
-                        <artifactId>restcomm.mscontrol.xms</artifactId>
-                        <version>${project.version}</version>
-                </dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.xms</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vendor.dialogic</groupId>
+			<artifactId>dlgmsc</artifactId>
+			<version>4.1.429</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/../external/dlgmsc-4.1.429.jar</systemPath>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vendor.dialogic</groupId>
+			<artifactId>msmltypes</artifactId>
+			<version>4.1.429</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/../external/msmltypes-4.1.429.jar</systemPath>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vendor.dialogic</groupId>
+			<artifactId>dlgcsmiltypes</artifactId>
+			<version>4.1.429</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/../external/dlgcsmiltypes-4.1.429.jar</systemPath>
+		</dependency>
 
 		<dependency>
 			<groupId>javax.sip</groupId>
@@ -278,7 +302,8 @@
 									<goal> copy-dependencies </goal>
 								</goals>
 								<configuration>
-									<includeArtifactIds>hsqldb</includeArtifactIds>
+									<includeScope>test</includeScope>
+									<includeArtifactIds>hsqldb dlgcsmiltypes msmltypes dlgmsc</includeArtifactIds>
 									<outputDirectory>${JBOSS_HOME}/standalone/deployments/restcomm.war/WEB-INF/lib</outputDirectory>
 								</configuration>
 							</execution>
