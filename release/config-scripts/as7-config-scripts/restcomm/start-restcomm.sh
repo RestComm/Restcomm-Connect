@@ -94,7 +94,7 @@ fi
 # set environment variables for execution
 BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 RESTCOMM_HOME=$(cd $BASEDIR/../../ && pwd)
-MMS_HOME=$RESTCOMM_HOME/telscale-media/telscale-media-server
+MMS_HOME=$RESTCOMM_HOME/mediaserver
 LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 
 echo BASEDIR: $BASEDIR
