@@ -219,8 +219,6 @@
                         <version>${project.version}</version>
                 </dependency>
 
-                <dependency>
-
 		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
