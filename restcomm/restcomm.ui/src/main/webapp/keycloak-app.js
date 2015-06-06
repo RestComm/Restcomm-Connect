@@ -29,7 +29,7 @@ angular.element(document).ready(function ($http) {
 			
 			$myhttp({
 				method: 'GET',
-				url: '/restcomm/keycloak/Accounts.json/' + keycloakAuth.profile.username ,
+				url: '/restcomm/2012-04-24/Accounts.json/' + keycloakAuth.profile.username ,
 				headers: {
 					Authorization: 'Bearer ' + keycloakAuth.token
 				}
@@ -45,7 +45,7 @@ angular.element(document).ready(function ($http) {
 			/*
 			$myhttp({
 				method: 'GET',
-				url: '/restcomm/keycloak/Accounts.json/import',
+				url: '/restcomm/2012-04-24/Accounts.json/import',
 				headers: {
 					Authorization: 'Bearer ' + keycloakAuth.token
 				}
