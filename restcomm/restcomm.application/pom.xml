@@ -220,30 +220,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.vendor.dialogic</groupId>
-			<artifactId>dlgmsc</artifactId>
-			<version>4.1.429</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../external/dlgmsc-4.1.429.jar</systemPath>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vendor.dialogic</groupId>
-			<artifactId>msmltypes</artifactId>
-			<version>4.1.429</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../external/msmltypes-4.1.429.jar</systemPath>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vendor.dialogic</groupId>
-			<artifactId>dlgcsmiltypes</artifactId>
-			<version>4.1.429</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../external/dlgcsmiltypes-4.1.429.jar</systemPath>
-		</dependency>
-
-		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>${sip-ri.version}</version>
@@ -302,8 +278,7 @@
 									<goal> copy-dependencies </goal>
 								</goals>
 								<configuration>
-									<includeScope>test</includeScope>
-									<includeArtifactIds>hsqldb dlgcsmiltypes msmltypes dlgmsc</includeArtifactIds>
+									<includeArtifactIds>hsqldb</includeArtifactIds>
 									<outputDirectory>${JBOSS_HOME}/standalone/deployments/restcomm.war/WEB-INF/lib</outputDirectory>
 								</configuration>
 							</execution>
