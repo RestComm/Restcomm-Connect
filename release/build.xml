@@ -242,9 +242,9 @@
 	<copy file="${basedir}/dlgc_JSR309.properties" toDir="${release.tomcat.dir}/conf" failonerror="true" />
 	
 	<!-- Copy Dialogic JSR 309 connector -->
-	<copy file="${basedir}/dlgmsc-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" />
+	<!--copy file="${basedir}/dlgmsc-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" />
 	<copy file="${basedir}/dlgcsmiltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" />
-	<copy file="${basedir}/msmltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" />
+	<copy file="${basedir}/msmltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" /-->
 
 	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
        		includes="**/*.sh"/>
