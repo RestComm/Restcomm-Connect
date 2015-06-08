@@ -216,8 +216,8 @@ configSmsAggregator() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	sed -e "/<sms-aggregator.*>/ {
-		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>#</outbound-prefix>|
-		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1:5060</outbound-endpoint>|
+		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>$2</outbound-prefix>|
+		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1</outbound-endpoint>|
 	}" $FILE > $FILE.bak
 
 	mv $FILE.bak $FILE
@@ -356,7 +356,7 @@ configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PR
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
-configSmsAggregator "$OUTBOUND_PROXY"
+configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
