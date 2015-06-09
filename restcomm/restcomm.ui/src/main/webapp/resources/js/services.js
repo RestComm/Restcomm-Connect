@@ -538,3 +538,60 @@ rcServices.factory('RCommJMX', function($resource) {
 rcServices.value("rappManagerConfig", {rasHost: "apps.restcomm.com", rasApiKey:"dae21e48184703e41ec0e42929800ed3", rasToken:"c7ba2a69395eb7b05a291f58bb75402f"});
 
 
+
+/*Registertation Form - Register Service Implementation */
+
+'use strict';
+
+// otsakir: The service is used for *product* registration. We could name it ProductService instead of UserService and load with related functionality when needed? Btw, there is also the RCommAccounts service that deals with account management. 
+rcServices.factory('UserService', function($http){
+        var service = {};
+
+        service.GetAll = GetAll;
+        service.GetById = GetById;
+        service.GetByUsername = GetByUsername;
+        service.Create = Create;
+        service.Update = Update;
+        service.Delete = Delete;
+
+        return service;
+
+        function GetAll() {
+            return $http.get('/api/users').then(handleSuccess, handleError('Error getting all users'));
+        }
+
+        function GetById(id) {
+            return $http.get('/api/users/' + id).then(handleSuccess, handleError('Error getting user by id'));
+        }
+
+        function GetByUsername(username) {
+            return $http.get('/api/users/' + username).then(handleSuccess, handleError('Error getting user by username'));
+        }
+
+        function Create(user) {
+         return $http.get("/restcomm/2012-04-24/ProductRegister?"+
+                                                                 "NewsLetter=" + user.wantNewsletter +
+                                                                 "&Name=" + user.firstName +
+                                                                 "&Surname=" + user.lastName +
+                                                                 "&Company=" + user.companyname +
+                                                                 "&email=" + user.email ).then(handleSuccess, handleError('Error registering new user'));
+      }
+        function Update(user) {
+            return $http.put('/api/users/' + user.id, user).then(handleSuccess, handleError('Error updating user'));
+        }
+
+        function Delete(id) {
+            return $http.delete('/api/users/' + user.id).then(handleSuccess, handleError('Error deleting user'));
+        }
+
+        // private functions
+        function handleSuccess(response) {
+            return( response.data );
+        }
+
+        function handleError(error) {
+            return function () {
+                return { success: false, message: error };
+            };
+        }
+    });
