@@ -208,6 +208,24 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.mms</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.xms</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>${sip-ri.version}</version>

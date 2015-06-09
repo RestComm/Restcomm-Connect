@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
@@ -58,7 +59,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader)
             throws ServletException {
         Configuration settings = configuration.subset("mscontrol");
-        String compatibility = settings.getString("compatibility");
+        String compatibility = settings.getString("compatibility", "mms");
 
         MediaServerControllerFactory factory;
         switch (compatibility) {
@@ -193,7 +194,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
 
         // Create the media server controller factory
-        MediaServerControllerFactory mscontrollerFactory = mediaServerControllerFactory(xml, loader);
+        MediaServerControllerFactory mscontrollerFactory = null;
+        try {
+            mscontrollerFactory = mediaServerControllerFactory(xml, loader);
+        } catch (ServletException exception) {
+            logger.error("ServletException during initialization", exception);
+        }
         context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
             Version.printVersion();

@@ -32,6 +32,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -120,6 +121,7 @@ import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
