@@ -46,10 +46,6 @@
 		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
 		<authenticate>true</authenticate>
 
-		<!-- If set to true Restcomm will authenticate users and incoming messages 
-			from those users -->
-		<authenticate>true</authenticate>
-
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
 		<normalize-numbers-for-outbound-calls>true
@@ -122,19 +118,20 @@
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
-	<phone-number-provisioning
-		class="org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager">
+	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager">
 		<callback-urls>
-			<voice url="localhost:5080" method="SIP" />
-			<sms url="localhost:5080" method="SIP" />
-			<fax url="localhost:5080" method="SIP" />
-			<ussd url="localhost:5080" method="SIP" />
+			<voice url="+{E164}@192.168.0.14:5080" method="SIP"/>
+			<sms url="+{E164}@192.168.0.14:5080" method="SIP"/>
+			<fax url="+{E164}@192.168.0.14:5080" method="SIP"/>
+			<ussd url="+{E164}@192.168.0.14:5080" method="SIP"/>
 		</callback-urls>
-		<nexmo>
-			<api-key>randomkey</api-key>
-			<api-secret>randomsecret</api-secret>
-			<uri>http://127.0.0.1:8090/nexmo</uri>
-		</nexmo>
+		<voxbone>
+			<password></password>
+			<username>telestax</username>
+			<!--uri>http://127.0.0.1:8090/test</uri-->
+			<!--uri>https://sandbox.voxbone.com/ws-voxbone/services/rest</uri-->
+			<uri>http://127.0.0.1:8090/test</uri>
+		</voxbone>	
 	</phone-number-provisioning>
 
 	<smtp>
@@ -150,17 +147,6 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
-
-	<amazon-s3>
-		<enabled>false</enabled>
-		<bucket-name>restcomm-recordings</bucket-name>
-		<folder></folder>
-		<access-key></access-key>
-		<security-key></security-key>
-		<reduced-redundancy>false</reduced-redundancy>
-		<days-to-retain-public-url>180</days-to-retain-public-url>
-		<remove-original-file>true</remove-original-file>
-	</amazon-s3>
 
 	<!-- The media server manager is responsible for managing the media servers 
 		in use by RestComm. The default way to control media servers is using the 
