@@ -2,7 +2,7 @@
   <button type="button" class="btn {{addedClasses}}">{{selectedOption}}</button>
   <button type="button" class="btn {{addedClasses}} dropdown-toggle" data-toggle="dropdown">
 	<span class="caret"></span>
-	<span class="sr-only">Toggle Dropdown</span>
+	<span class="sr-only">{{'multibuttonButton' | translate}}</span>
   </button>
   <ul class="dropdown-menu" role="menu">
 	<li ng-repeat="option in buttonOptions"><a ng-click='selectOption(option)'>{{option}}</a></li>

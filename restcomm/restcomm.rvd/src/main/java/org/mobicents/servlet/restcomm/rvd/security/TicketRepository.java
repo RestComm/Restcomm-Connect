@@ -12,8 +12,8 @@ public class TicketRepository {
 
     private ConcurrentHashMap<String,Ticket> tickets = new ConcurrentHashMap<String,Ticket>();
     private Date lastRemovalCheckTime; // time when a check was run to invalidate stale tickets
-    static final Integer STALE_REMOVAL_INTERVAL_MINUTES = 30; // every how many hours will the stale ticket removal take place?
-    static final Integer STALE_TICKET_LIFETIME_MINUTES = 30; // a ticket is considered stale if it hasn't been used for 30 minutes
+    static final Integer STALE_REMOVAL_INTERVAL_MINUTES = 120; // every how many hours will the stale ticket removal take place?
+    static final Integer STALE_TICKET_LIFETIME_MINUTES = 120; // a ticket is considered stale if it hasn't been used for 30 minutes
 
 
     private TicketRepository() {

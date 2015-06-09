@@ -1,5 +1,5 @@
 
-<div class="step play-step panel panel-rvdstep">
+<div ng-controller="playStepController" class="step play-step panel panel-rvdstep">
 	<div class="panel-heading">
 			<step-heading></step-heading>
 	</div>
@@ -8,21 +8,21 @@
 			<div class='form-group row'>
 				<!-- <div lookup-context class="col-md-12"> -->
 				<div class="col-md-12">
-					<span class="help-block">Type the URL resource of the .wav file</span>
+					<span class="help-block">{{'playStepUrlFileLabel' | translate}}</span>
 					<div class="input-group">
-						<span class='input-group-addon'>Audio resource</span>
+						<span class='input-group-addon'>{{'playStepUrlFileAudioLabel' | translate}}</span>
 						<span class="input-group-addon">
-							<span title="Select a project-embedded audio resource">local &nbsp;</span>
+							<span title="{{'playStepUrlFileInProjectTitle' | translate}}">{{'playStepUrlFileInProjectRadio' | translate}} &nbsp;</span>
 							<input ng-model='step.playType' value='local' type="radio">
 						</span>
 						<span class="input-group-addon">
-							<span title="Type a custsom URL to a remote audio resource or select one from the RVD bundle">URL &nbsp;</span>
+							<span title="{{'playStepUrlFileBundleUrlTitle' | translate}}">{{'playStepUrlFileBundleUrlRadio' | translate}} &nbsp;</span>
 							<input ng-model='step.playType' value='remote' type="radio">
 						</span>		
 						<select name='wavLocalFilename' ng-show='step.playType=="local"' ng-model='step.local.wavLocalFilename' ng-options='wavItem.filename as wavItem.filename for wavItem in project.wavList' class="form-control" required></select>
 						
 						<!--
-						<input  name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' lookup-target type='text' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
+						<input  name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' lookup-target type='text' required class='form-control' placeholder="{{'playStepUrlFileInputPlaceholder' | translate}}"/>
 						<variable-lookup variable="step.remote.wavUrl" view="input-group" ng-show='step.playType=="remote"'></variable-lookup>
 						-->
 						<input  name='wavUrl' ng-show='step.playType=="remote"' null-if-empty ng-model='step.remote.wavUrl' type='text' required class='form-control' placeholder='http://remoteserver/hello.wav'/>
@@ -37,8 +37,8 @@
 						  </ul>
 						</div>					
 					</div>
-					<div class="validation-error" ng-show="step.playType=='remote' && form.wavUrl.$invalid">Type a valid .wav resource URL</div>
-					<div class="validation-error" ng-show="step.playType=='local' && form.wavLocalFilename.$invalid">Please select a file from the list</div>
+					<div class="validation-error" ng-show="step.playType=='remote' && form.wavUrl.$invalid">{{'playStepUrlFileError1' | translate}}</div>
+					<div class="validation-error" ng-show="step.playType=='local' && form.wavLocalFilename.$invalid">{{'playStepUrlFileError2' | translate}}</div>
 				</div>	
 			</div>	
 			
@@ -48,8 +48,8 @@
 					<div collapse='!step.iface.optionsVisible'>
 						<br/>
 						<div class="input-group form-group loop">
-							<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="How many times the file audio resource will be played. Default is '1'. '0' will loop until the call is hang up.">Loop</span>
-							<input ng-model='step.loop' auto-clear type='number' class='form-control' placeholder='1' />
+							<span class='input-group-addon help-tooltip' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'playStepLoopTooltip' | translate}}">{{'playStepLoopLabel' | translate}}</span>
+							<input ng-model='step.loop' auto-clear type='number' class='form-control' placeholder="{{'playStepLoopPlaceholder' | translate}}" />
 						</div>
 					</div>
 				</div>
