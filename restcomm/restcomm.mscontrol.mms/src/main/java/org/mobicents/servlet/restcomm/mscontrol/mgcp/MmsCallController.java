@@ -549,7 +549,7 @@ public class MmsCallController extends MediaServerController {
 
     private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.mediaGroup != null) {
-            this.mediaGroup.tell(new Stop(), self);
+            this.mediaGroup.tell(new Stop(), sender);
         }
     }
 
