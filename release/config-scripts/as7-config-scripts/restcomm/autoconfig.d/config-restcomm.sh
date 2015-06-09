@@ -134,7 +134,7 @@ configDidProvisionManager() {
 			N; s|<password>.*</password>|<password>$2</password>|
 			N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
 		}" $FILE.bak > $FILE
-		# mv $FILE.bak $FILE
+		sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 		echo 'Configured Voip Innovation credentials'
 		else
 			if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
@@ -151,7 +151,7 @@ configDidProvisionManager() {
 				N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
 				N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
 			}" $FILE.bak > $FILE
-			# mv $FILE.bak $FILE
+			sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 			echo 'Configured Bandwidth credentials'
 		else
 			if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
@@ -170,6 +170,8 @@ configDidProvisionManager() {
 					N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
 				}" $FILE
 
+				sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
+
 		else
 			if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
 				echo "Voxbone PROVISION_PROVIDER"
@@ -186,6 +188,7 @@ configDidProvisionManager() {
 					N; s|<username>.*</username>|<username>$1</username>|
 					N; s|<password>.*</password>|<password>$2</password>|
 				}" $FILE
+				sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 
 		fi
 		fi

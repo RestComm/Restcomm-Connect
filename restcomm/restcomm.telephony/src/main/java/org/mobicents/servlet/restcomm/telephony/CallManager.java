@@ -859,6 +859,13 @@ public final class CallManager extends UntypedActor {
                         from = sipFactory.createSipURI(request.from(), uri);
                     }
                 }
+                if (((SipURI)from).getUser()==null || ((SipURI)from).getUser() == "") {
+                        if (uri != null) {
+                            from = sipFactory.createSipURI(request.from(), uri);
+                        } else {
+                            from = (SipURI) sipFactory.createURI(request.from());
+                        }
+                }
                 break;
             }
             case SIP: {
