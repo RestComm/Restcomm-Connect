@@ -9,6 +9,7 @@
 	<property name="restcomm.docs.dir" location="${release.dir}/docs/restcomm" />
 	<property name="restcomm.docs.tomcat.dir" location="${release.tomcat.dir}/docs/restcomm" />
         <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm" />
+	<property name="olympus.version" value="100ALPHA"/>
 
 	<!--mobicents binaries versions-->
 	<property name="sipservlets-build" value="602"/>
@@ -34,6 +35,9 @@
 	<!--<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />-->
 	<property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-2.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip" />
 	<property name="mobicents-media.distro.zip.path" value="${checkout.dir}/${mobicents-media.download.distro.file}" />
+
+	<property name="mobicents-olympus.download.url" value="https://github.com/Mobicents/olympus/releases/download/${olympus.version}/olympus.war" />
+	<property name="mobicents-olympus.path" value="${basedir}/olympus.war" />
 
 	<property name="mobicents-diameter.download.distro.file" value="mobicents-diameter-${mobicents-diameter.version}.zip" />
 	<property name="mobicents-diameter.download.url" value="https://mobicents.ci.cloudbees.com/job/Mobicents-jDiameter/${mobicents-diameter.version}/${mobicents-diameter.download.distro.file}" />
@@ -84,8 +88,8 @@
 
 <!--GET mobicents-Sip=Servlets & mobicents-Media-Server & mobicents Diameter - downloads-->
 
-<target name="get-deps" depends="get-mobicents-sipservlets-tomcat,get-mobicents-sipservlets-as7,get-mobicents-media"/> <!--,get-mobicents-diameter" -->
-<target name="extract-deps" depends="extract-mobicents-sipservlets-tomcat,extract-mobicents-sipservlets-as7,extract-mobicents-media"/> <!--,extract-mobicents-diameter" -->
+<target name="get-deps" depends="get-mobicents-sipservlets-tomcat,get-mobicents-sipservlets-as7,get-mobicents-media, get-olympus"/>
+<target name="extract-deps" depends="extract-mobicents-sipservlets-tomcat,extract-mobicents-sipservlets-as7,extract-mobicents-media"/>
 
 <!--SipServlets Tomcat-->
 <available file="${mobicents-sipservlets.tomcat.distro.zip.path}" property="got.mobicents-sipservlets-tomcat" />
@@ -131,6 +135,16 @@
 	<move file="${base.dir}/mms-server.zip" todir="${checkout.dir}"/>
 	<move file="${checkout.dir}/mms-server.zip" tofile="${checkout.dir}/${mobicents-media.download.distro.file}"/>
 </target>
+
+<!--Olympus-->
+<available file="${mobicents-olympus.path}" property="got.olympus" />
+<target name="get-olympus" unless="got.olympus">
+	<echo>Downloading mobicents Olympus version: ${olympus.version}</echo>
+	<exec failonerror="true" executable="wget">
+	    <arg value="${mobicents-olympus.download.url}" />
+	</exec>
+</target>
+
 
 <target name="extract-mobicents-media" depends="get-mobicents-media">
 	<delete dir="${checkout.mobicents-media.dir}" failonerror="false" />
@@ -208,11 +222,11 @@
 	<copy tofile="${release.tomcat.dir}/conf/mss-sip-stack.properties" failonerror="true" overwrite="true"
 		file="${basedir}/mss-sip-stack.properties"/>
 
-	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
-		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
-
-	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
-		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+		<copy todir="${release.tomcat.dir}/webapps/restcomm" failonerror="true">
+		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
+		                <include name="**/*" />
+		        </fileset>
+		</copy>
 
 	<!-- Copy Admin UI -->
         <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
@@ -237,14 +251,21 @@
 			<exclude name="as7-config-scripts/**"/>
 		</fileset>
 	</copy-->
-	
+
 	<!-- Copy Dialogic Config file -->
 	<copy file="${basedir}/dlgc_JSR309.properties" toDir="${release.tomcat.dir}/conf" failonerror="true" />
-	
+
 	<!-- Copy Dialogic JSR 309 connector -->
-	<!--copy file="${basedir}/dlgmsc-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" />
-	<copy file="${basedir}/dlgcsmiltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" />
-	<copy file="${basedir}/msmltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm.war/WEB-INF/lib" failonerror="true" /-->
+	<copy file="${basedir}/dlgmsc-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm/WEB-INF/lib" failonerror="true" />
+	<copy file="${basedir}/dlgcsmiltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm/WEB-INF/lib" failonerror="true" />
+	<copy file="${basedir}/msmltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm/WEB-INF/lib" failonerror="true" />
+
+	<touch file="${release.tomcat.dir}/bin/setenv.sh"/>
+
+	<echo file="${release.tomcat.dir}/bin/setenv.sh" append="true">
+	export APPSERVER_PLATFORM='TELESTAX'
+	export DLG_PROPERTY_FILE=$CATALINA_HOME/conf/dlgc_JSR309.properties
+	</echo>
 
 	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
        		includes="**/*.sh"/>
@@ -290,11 +311,11 @@
 	<touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy" />
 
 	<!-- Add environment variables to standalone configuration script -->
-	<concat destfile="${release.as7.dir}/bin/standalone.conf">
-	export APPSERVER_PLATFORM='TELESTAX'
-	export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties
-	</concat>
-	
+	<echo file="${release.as7.dir}/bin/standalone.conf" append="true">
+		export APPSERVER_PLATFORM='TELESTAX'
+		export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties
+	</echo>
+
 	<!-- Copy Dialogic Config file -->
 	<copy file="${basedir}/dlgc_JSR309.properties" toDir="${release.as7.dir}/standalone/configuration" failonerror="true" />
 
