@@ -188,6 +188,8 @@ public class XmsCallController extends MediaServerController {
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, openingMediaSession));
+        // XXX the following transition is a quick fix for a concurrent issue between FSM and JSR 309 async API
+        transitions.add(new Transition(uninitialized, active));
         transitions.add(new Transition(openingMediaSession, failed));
         transitions.add(new Transition(openingMediaSession, active));
         transitions.add(new Transition(openingMediaSession, inactive));
@@ -252,19 +254,17 @@ public class XmsCallController extends MediaServerController {
 
             try {
                 if (event.isSuccessful()) {
-                    if (is(openingMediaSession) || is(updatingMediaSession)) {
-                        networkConnection.getSdpPortManager().removeListener(this);
-                        if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
-                            localSdp = new String(event.getMediaServerSdp());
-                            fsm.transition(event, active);
-                        } else if (SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
-                            localSdp = new String(event.getMediaServerSdp());
-                            fsm.transition(event, active);
-                        } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
-                            fsm.transition(event, active);
-                        } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
-                            throw new MsControlException("Network stream failure");
-                        }
+                    networkConnection.getSdpPortManager().removeListener(this);
+                    if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
+                        localSdp = new String(event.getMediaServerSdp());
+                        fsm.transition(event, active);
+                    } else if (SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
+                        localSdp = new String(event.getMediaServerSdp());
+                        fsm.transition(event, active);
+                    } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
+                        fsm.transition(event, active);
+                    } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
+                        throw new MsControlException("Network stream failure");
                     }
                 } else {
                     throw new MsControlException("SDP processing failed");
