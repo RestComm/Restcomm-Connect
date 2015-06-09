@@ -65,7 +65,7 @@ public interface PhoneNumberProvisioningManager {
      * @param phoneNumberParameters parameters set on the phone number purchase so the Provider knows where to route incoming messages (be it voice or SMS, MMS, USSD)
      * @return true if the number was bought successfully, false otherwise.
      */
-    boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters);
+    boolean buyNumber(PhoneNumber phoneNumber, PhoneNumberParameters phoneNumberParameters);
 
     /**
      * Update the parameters for an already purchased phone number.
@@ -75,7 +75,7 @@ public interface PhoneNumberProvisioningManager {
      * @param phoneNumberParameters parameters set on the phone number purchase so the Provider knows where to route incoming messages (be it voice or SMS, MMS, USSD).
      * @return true if the number was updated successfully, false otherwise.
      */
-    boolean updateNumber(String number, PhoneNumberParameters phoneNumberParameters);
+    boolean updateNumber(PhoneNumber number, PhoneNumberParameters phoneNumberParameters);
 
     /**
      * Cancel an already purchased phone number.
@@ -83,7 +83,7 @@ public interface PhoneNumberProvisioningManager {
      * @param number the phonenumber to cancel -defined as msisdn Ex: 34911067000
      * @return true if the number was cancelled successfully, false otherwise.
      */
-    boolean cancelNumber(String number);
+    boolean cancelNumber(PhoneNumber number);
 
     /**
      * Returns the list of supported countries by the phone number provider
