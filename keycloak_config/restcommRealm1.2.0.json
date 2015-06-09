@@ -125,16 +125,16 @@
       "baseUrl": "https://192.168.1.39:8443/restcomm/keycloak",
       "secret": "password",
       "redirectUris": [
-        "https://192.168.1.39:8443/restcomm-management/*"
+        "https://192.168.1.39:8443/*"
       ]
     },
     {
       "name": "restcomm-ui",
       "enabled": true,
       "publicClient": true,
-      "baseUrl": "https://192.168.1.39:8443/restcomm-management/index.html",
+      "baseUrl": "https://192.168.1.39:8443/index.html",
       "redirectUris": [
-        "https://192.168.1.39:8443/restcomm-management/*"
+        "https://192.168.1.39:8443/*"
       ],
       "webOrigins": [
 		"https://192.168.1.39:8443"
