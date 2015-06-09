@@ -43,6 +43,7 @@ import akka.actor.UntypedActorFactory;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 public final class ProxyManagerProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;

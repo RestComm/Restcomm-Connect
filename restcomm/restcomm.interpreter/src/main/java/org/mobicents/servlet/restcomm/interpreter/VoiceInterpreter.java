@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
@@ -60,8 +62,10 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
+import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
 import org.mobicents.servlet.restcomm.fsm.Action;
@@ -837,10 +841,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final String forwardedFrom = callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
+        SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
             // Adding SIP OUT Headers and SipCallId for
             // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-            SipServletResponse lastResponse = callInfo.lastResponse();
             // logger.info("lastResponse " + lastResponse);
             if (lastResponse != null) {
                 final int statusCode = lastResponse.getStatus();
@@ -853,18 +857,34 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
                     parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    Iterator<String> headerIt = lastResponse.getHeaderNames();
-                    while (headerIt.hasNext()) {
-                        String headerName = headerIt.next();
-                        if (headerName.startsWith("X-")) {
-                            parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
-                                    .getHeader(headerName)));
-                        }
-                    }
+                    processCustomHeaders(lastResponse, "DialSipHeader_", parameters);
                 }
             }
         }
+
+        if (lastResponse == null) {
+            // Restcomm VoiceInterpreter should check the INVITE for custom headers and pass them to RVD
+            // https://telestax.atlassian.net/browse/RESTCOMM-710
+            final SipServletRequest invite = callInfo.invite();
+            // For outbound calls created with Calls REST API, the invite at this point will be null
+            if (invite != null)
+                processCustomHeaders(invite, "SipHeader_", parameters);
+        } else {
+           processCustomHeaders(lastResponse, "SipHeader_", parameters);
+        }
+
         return parameters;
+    }
+
+    private void processCustomHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
+        Iterator<String> headerNames = sipMessage.getHeaderNames();
+        while (headerNames.hasNext()) {
+            String headerName = headerNames.next();
+            if (headerName.startsWith("X-")) {
+                logger.debug("%%%%%%%%%%% Indetified customer header: " + headerName);
+                parameters.add(new BasicNameValuePair(prefix + headerName, sipMessage.getHeader(headerName)));
+            }
+        }
     }
 
     private abstract class AbstractAction implements Action {
@@ -1658,6 +1678,32 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (recordingCall && sender == call) {
+                Configuration runtimeSettings = configuration.subset("runtime-settings");
+                //Its the initial call that sent BYE so we can create the recording object here
+                if (recordingUri != null) {
+                    Double duration = WavUtils.getAudioDuration(recordingUri);
+                    if (duration.equals(0.0)) {
+                        logger.info("At finishDialing. File doesn't exist since duration is 0");
+                        final DateTime end = DateTime.now();
+                        duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
+                    } else {
+                        logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
+                    }
+                    final Recording.Builder builder = Recording.builder();
+                    builder.setSid(recordingSid);
+                    builder.setAccountSid(accountId);
+                    builder.setCallSid(callInfo.sid());
+                    builder.setDuration(duration);
+                    builder.setApiVersion(runtimeSettings.getString("api-version"));
+                    StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                    .append(accountId.toString());
+                    buffer.append("/Recordings/").append(recordingSid.toString());
+                    builder.setUri(URI.create(buffer.toString()));
+                    final Recording recording = builder.build();
+                    RecordingsDao recordsDao = storage.getRecordingsDao();
+                    recordsDao.addRecording(recording);
+                }
                 recordingCall = false;
             }
 

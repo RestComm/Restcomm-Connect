@@ -60,25 +60,25 @@ public class Version {
                         // Release ID: JBoss [EAP] 5.0.1 (build:
                         // SVNTag=JBPAPP_5_0_1 date=201003301050)
                         logger.info("Release ID: (" + releaseName
-                                + ") TelScale Restcomm " + releaseVersion
+                                + ") Mobicents Restcomm " + releaseVersion
                                 + " (build: Git Hash=" + releaseRevision
                                 + " date=" + releaseDate + ")");
-                        logger.info(releaseName + " TelScale Restcomm "
+                        logger.info(releaseName + " Mobicents Restcomm "
                                 + releaseVersion + " (build: Git Hash="
                                 + releaseRevision + " date=" + releaseDate
                                 + ") Started.");
                     } else {
-                        logger.warn("Unable to extract the version of TelScale Restcomm currently running");
+                        logger.warn("Unable to extract the version of Mobicents Restcomm currently running");
                     }
                     if (releaseDisclaimer != null) {
                         logger.info(releaseDisclaimer);
                     }
                 } else {
-                    logger.warn("Unable to extract the version of TelScale Restcomm currently running");
+                    logger.warn("Unable to extract the version of Mobicents Restcomm currently running");
                 }
             } catch (IOException e) {
                 logger.warn(
-                        "Unable to extract the version of TelScale Restcomm currently running",
+                        "Unable to extract the version of Mobicents Restcomm currently running",
                         e);
             }
         }
