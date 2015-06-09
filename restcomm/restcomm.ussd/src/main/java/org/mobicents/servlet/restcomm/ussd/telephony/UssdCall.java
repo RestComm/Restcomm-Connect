@@ -78,7 +78,7 @@ import akka.event.LoggingAdapter;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class UssdCall extends UntypedActor {
+public class UssdCall extends UntypedActor  {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -128,7 +128,7 @@ public class UssdCall extends UntypedActor {
     private CallDetailRecord outgoingCallRecord;
     private ActorRef ussdInterpreter;
 
-    public UssdCall(final SipFactory factory) {
+    public UssdCall(final SipFactory factory, final ActorRef gateway) {
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -199,7 +199,7 @@ public class UssdCall extends UntypedActor {
             to = (SipURI) invite.getTo().getURI();
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, invite, lastResponse);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -207,9 +207,9 @@ public class UssdCall extends UntypedActor {
         // Issue #268 - https://bitbucket.org/telestax/telscale-restcomm/issue/268
         // First get the Initial Remote Address (real address that the request came from)
         // Then check the following:
-        // 1. If contact header address is private network address
-        // 2. If there are no "Record-Route" headers (there is no proxy in the call)
-        // 3. If contact header address != real ip address
+        //    1. If contact header address is private network address
+        //    2. If there are no "Record-Route" headers (there is no proxy in the call)
+        //    3. If contact header address != real ip address
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
         String realIP = message.getInitialRemoteAddr();
@@ -221,39 +221,39 @@ public class UssdCall extends UntypedActor {
         InetAddress inetAddress = InetAddress.getByName(realIP);
 
         int remotePort = message.getRemotePort();
-        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
+        int contactPort = ((SipURI)contactAddr.getURI()).getPort();
         String remoteAddress = message.getRemoteAddr();
 
-        // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+        //Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
         final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
 
         SipURI uri = null;
 
         if (initialIpBeforeLB != null) {
-            if (initialPortBeforeLB == null)
+            if(initialPortBeforeLB == null)
                 initialPortBeforeLB = "5060";
-            logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
-                    + initialPortBeforeLB + " to the session for later use");
-            realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+            logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB+":"+initialPortBeforeLB
+                    + " to the session for later use");
+            realIP = initialIpBeforeLB+":"+initialPortBeforeLB;
             uri = factory.createSipURI(null, realIP);
         } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
                 && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
             logger.info("Contact header address " + contactAddr.toString()
-                    + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
+                    + " is a private network ip address, storing Initial Remote Address " + realIP+":"+realPort
                     + " to the session for later use");
             realIP = realIP + ":" + realPort;
             uri = factory.createSipURI(null, realIP);
         }
-        // //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
-        // //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
-        // //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
-        // else if(remotePort != contactPort) {
-        // logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
-        // + remoteAddress+":"+remotePort);
-        // realIP = remoteAddress+":"+remotePort;
-        // uri = factory.createSipURI(null, realIP);
-        // }
+//        //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
+//        //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
+//        //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
+//        else if(remotePort != contactPort) {
+//            logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
+//                    + remoteAddress+":"+remotePort);
+//            realIP = remoteAddress+":"+remotePort;
+//            uri = factory.createSipURI(null, realIP);
+//        }
         return uri;
     }
 
@@ -284,23 +284,20 @@ public class UssdCall extends UntypedActor {
                 }
             } else if ("BYE".equalsIgnoreCase(method)) {
                 fsm.transition(message, disconnecting);
-            } else if ("CANCEL".equalsIgnoreCase(method)) {
-                if (!request.getSession().getState().equals(SipSession.State.CONFIRMED)
-                        || !request.getSession().getState().equals(SipSession.State.TERMINATED))
+            } else if("CANCEL".equalsIgnoreCase(method)) {
+                if (!request.getSession().getState().equals(SipSession.State.CONFIRMED) || !request.getSession().getState().equals(SipSession.State.TERMINATED))
                     fsm.transition(message, cancelling);
             }
         } else if (message instanceof SipServletResponse) {
             final SipServletResponse response = (SipServletResponse) message;
             lastResponse = response;
-            if (response.getStatus() == SipServletResponse.SC_OK
-                    && response.getRequest().getMethod().equalsIgnoreCase("INVITE")) {
+            if(response.getStatus() == SipServletResponse.SC_OK && response.getRequest().getMethod().equalsIgnoreCase("INVITE")){
                 response.createAck().send();
-            }
-            if (response.getStatus() == SipServletResponse.SC_OK && (response.getRequest().getMethod().equalsIgnoreCase("BYE"))) {
+            } if(response.getStatus() == SipServletResponse.SC_OK && (response.getRequest().getMethod().equalsIgnoreCase("BYE"))) {
                 fsm.transition(message, completed);
             }
         } else if (UssdRestcommResponse.class.equals(klass)) {
-            // If direction is outbound, get the message and create the Invite
+            //If direction is outbound, get the message and create the Invite
             if (!direction.equalsIgnoreCase("inbound") && outgoingInvite == null) {
                 this.ussdInterpreter = sender;
                 fsm.transition(message, dialing);
@@ -342,7 +339,7 @@ public class UssdCall extends UntypedActor {
 
                 SipURI initialInetUri = getInitialIpAddressPort(invite);
 
-                if (initialInetUri != null)
+                if(initialInetUri != null)
                     invite.getSession().setAttribute("realInetUri", initialInetUri);
 
             } else if (message instanceof SipServletResponse) {
@@ -420,14 +417,14 @@ public class UssdCall extends UntypedActor {
             }
             SipServletRequest request = null;
 
-            if (ussdRequest.getIsFinalMessage()) {
-                request = session.createRequest("BYE");
+            if(ussdRequest.getIsFinalMessage()) {
+             request = session.createRequest("BYE");
             } else {
                 request = session.createRequest("INFO");
             }
             request.setContent(ussdRequest.createUssdPayload().toString().trim(), ussdContentType);
 
-            logger.info("Prepared request: \n" + request);
+            logger.info("Prepared request: \n"+request);
 
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
             if (realInetUri != null) {
@@ -436,7 +433,7 @@ public class UssdCall extends UntypedActor {
                 request.setRequestURI(realInetUri);
             }
             request.send();
-            if (ussdRequest.getIsFinalMessage())
+            if(ussdRequest.getIsFinalMessage())
                 fsm.transition(request, completed);
         }
     }
@@ -449,9 +446,9 @@ public class UssdCall extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("Cancelling the call");
-            SipServletRequest cancel = (SipServletRequest) message;
+            SipServletRequest cancel = (SipServletRequest)message;
             SipServletResponse requestTerminated = invite.createResponse(SipServletResponse.SC_REQUEST_TERMINATED);
-            // SipServletResponse requestTerminated = cancel.createResponse(SipServletResponse.SC_REQUEST_TERMINATED);
+//            SipServletResponse requestTerminated = cancel.createResponse(SipServletResponse.SC_REQUEST_TERMINATED);
             requestTerminated.send();
 
             if (invite != null) {
@@ -486,7 +483,7 @@ public class UssdCall extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("Disconnecting the call");
-            SipServletRequest bye = (SipServletRequest) message;
+            SipServletRequest bye = (SipServletRequest)message;
             SipServletResponse response = bye.createResponse(SipServletResponse.SC_OK);
             response.send();
 
@@ -642,15 +639,15 @@ public class UssdCall extends UntypedActor {
             }
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
-            application.setAttribute("UssdCall", "true");
+            application.setAttribute("UssdCall","true");
             application.setAttribute(UssdCall.class.getName(), self);
-            if (ussdInterpreter != null)
+            if(ussdInterpreter != null)
                 application.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
             outgoingInvite = factory.createRequest(application, "INVITE", from, to);
             if (!transport.equalsIgnoreCase("udp")) {
-                ((SipURI) outgoingInvite.getRequestURI()).setTransportParam(transport);
-                ((SipURI) outgoingInvite.getFrom().getURI()).setTransportParam(transport);
-                ((SipURI) outgoingInvite.getTo().getURI()).setTransportParam(transport);
+                ((SipURI)outgoingInvite.getRequestURI()).setTransportParam(transport);
+                ((SipURI)outgoingInvite.getFrom().getURI()).setTransportParam(transport);
+                ((SipURI)outgoingInvite.getTo().getURI()).setTransportParam(transport);
             }
             outgoingInvite.pushRoute(uri);
 
@@ -678,6 +675,9 @@ public class UssdCall extends UntypedActor {
         }
     }
 
+    /* (non-Javadoc)
+     * @see akka.actor.UntypedActor#postStop()
+     */
     @Override
     public void postStop() {
         super.postStop();
