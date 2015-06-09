@@ -51,6 +51,10 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
       // Success may come in many forms...
       if (status == 200) {
         $location.path('/dashboard');
+        // by lefty
+        //$location.path('/dashboard');
+        //$scope.updatePassword = false;
+        //$scope.RegisterClient = true;
       }
       else {
         alert("Failed to update password. Please try again.");
