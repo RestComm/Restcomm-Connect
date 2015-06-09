@@ -42,7 +42,7 @@ public class KeycloakClient {
     static final String ADMIN_USERNAME = "admin";
     static final String ADMIN_PASSWORD = "password";
     static final String ADMINISTRATION_APPLICATION = "admin-client"; // the name of the oauth application that carries out administrative tasks
-    static final String KEYCKLOAD_URL_ORIGIN = "https://login.restcomm.com";
+    static final String KEYCKLOAD_URL_ORIGIN = "https://identity.restcomm.com";
 
     private AccessTokenResponse cachedToken;
     private HttpServletRequest request; // Store the HTTP request for cleaner API. Remember, KeycloakClient lifecycle follows endpoint lifecycle.
