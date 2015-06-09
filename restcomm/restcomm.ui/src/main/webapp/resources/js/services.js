@@ -492,17 +492,17 @@ rcServices.factory('RCommAvailableNumbers', function($resource) {
       getCountries: {
         method: 'GET',
         isArray: true,
-        url: '/restcomm-management/resources/json/countries.:format'
+        url: '/resources/json/countries.:format'
       },
       getAreaCodes: {
         method: 'GET',
         isArray: true,
-        url: '/restcomm-management/resources/json/area-codes.:format'
+        url: '/resources/json/area-codes.:format'
       },
       getAvailableCountries: {
         method: 'GET',
         isArray: true,
-        //url: '/restcomm-management/resources/json/available.:format'
+        //url: '/resources/json/available.:format'
         url: '/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers/AvailableCountries.:format'
       }
     }

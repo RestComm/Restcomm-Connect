@@ -215,6 +215,9 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 			if ($scope.ccInfo == null)
 				$scope.ccInfo = createCcInfo();
 		}	
+		$scope.getWebTriggerUrl = function () {
+			return "http://" + $location.host() + ":" +  $location.port() + "/restcomm-rvd/services/apps/" +  encodeURIComponent(projectName) + '/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span>';
+		};
 		$scope.getRvdHost = function() {
 			return $location.host();
 		}
