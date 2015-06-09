@@ -2,7 +2,7 @@
   "realm": "restcomm",
   "realm-public-key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB",
   "bearer-only": true,
-  "auth-server-url": "https://login.restcomm.com/auth",
+  "auth-server-url": "https://identity.restcomm.com/auth",
   "ssl-required": "all",
   "allow-any-hostname":true,
   "disable-trust-manager": false,
