@@ -138,7 +138,8 @@
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
-        <module>restcomm.provisioning.number.bandwidth</module>
+        	<module>restcomm.provisioning.number.bandwidth</module>
+		<module>restcomm.provisioning.number.voxbone</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>

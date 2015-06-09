@@ -331,9 +331,14 @@ public final class Call extends UntypedActor {
         InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
         InetAddress inetAddress = InetAddress.getByName(realIP);
 
+        int remotePort = message.getRemotePort();
+        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
+        String remoteAddress = message.getRemoteAddr();
+
         // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
         final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
 
         SipURI uri = null;
 
@@ -352,6 +357,15 @@ public final class Call extends UntypedActor {
             realIP = realIP + ":" + realPort;
             uri = factory.createSipURI(null, realIP);
         }
+        // //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
+        // //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
+        // //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
+        // else if(remotePort != contactPort) {
+        // logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
+        // + remoteAddress+":"+remotePort);
+        // realIP = remoteAddress+":"+remotePort;
+        // uri = factory.createSipURI(null, realIP);
+        // }
         return uri;
     }
 

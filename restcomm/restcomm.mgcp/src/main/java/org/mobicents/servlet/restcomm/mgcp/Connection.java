@@ -431,6 +431,7 @@ public final class Connection extends UntypedActor {
             final ConnectionDescriptor descriptor = request.descriptor();
             if (descriptor != null) {
                 mdcx.setRemoteConnectionDescriptor(descriptor);
+                remoteDesc = descriptor;
             }
             gateway.tell(mdcx, source);
             // Make sure we don't wait for a response indefinitely.
