@@ -262,10 +262,10 @@
 
 	<touch file="${release.tomcat.dir}/bin/setenv.sh"/>
 
-	<concat destfile="${release.tomcat.dir}/bin/setenv.sh" append="true">
+	<echo file="${release.tomcat.dir}/bin/setenv.sh" append="true">
 	export APPSERVER_PLATFORM='TELESTAX'
 	export DLG_PROPERTY_FILE=$CATALINA_HOME/conf/dlgc_JSR309.properties
-	</concat>
+	</echo>
 
 	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
        		includes="**/*.sh"/>
@@ -311,10 +311,10 @@
 	<touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy" />
 
 	<!-- Add environment variables to standalone configuration script -->
-	<concat destfile="${release.as7.dir}/bin/standalone.conf" append="true">
-	export APPSERVER_PLATFORM='TELESTAX'
-	export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties
-	</concat>
+	<echo file="${release.as7.dir}/bin/standalone.conf" append="true">
+		export APPSERVER_PLATFORM='TELESTAX'
+		export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties
+	</echo>
 
 	<!-- Copy Dialogic Config file -->
 	<copy file="${basedir}/dlgc_JSR309.properties" toDir="${release.as7.dir}/standalone/configuration" failonerror="true" />
