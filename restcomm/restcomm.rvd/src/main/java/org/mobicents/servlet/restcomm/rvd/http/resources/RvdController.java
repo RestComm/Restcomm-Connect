@@ -44,6 +44,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.RvdErrorParsing
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.UnauthorizedCallControlAccess;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
+import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceError;
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
@@ -98,6 +99,11 @@ public class RvdController extends RestService {
             Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams, workspaceStorage);
             rcmlResponse = interpreter.interpret();
 
+        } catch (RemoteServiceError e) {
+            logger.warn(e.getMessage());
+            if ( rvdContext.getProjectSettings().getLogging() )
+                rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
+            rcmlResponse = Interpreter.rcmlOnException();
         } catch ( Exception e ) {
             logger.error(e.getMessage(), e);
             if ( rvdContext.getProjectSettings().getLogging() )
@@ -335,12 +341,11 @@ public class RvdController extends RestService {
                 URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
                 MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
                 for ( String paramName : requestParams.keySet() ) {
-                    if ( "token".equals(paramName) )
-                        continue; // skip token parameter since it is used by this service for authentication and is not intented to get passed to the RVD application
-                    // skip builtin parameters supplied by restcomm
+                    if ( "token".equals(paramName) || "from".equals(paramName) || "to".equals(paramName) )
+                        continue; // skip parameters that are used by WebTrigger it self
+                    // also, skip builtin parameters that will be supplied by restcomm when it reaches for the controller
                     if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
-                        if ( !("From".equals(paramName) || "To".equals(paramName) || "Url".equals(paramName ) ) )  // filter out params for the executeAction() itself. Pass only parameters intended for the rcml application.
-                                uriBuilder.addParameter(paramName, requestParams.getFirst(paramName));
+                        uriBuilder.addParameter(Interpreter.nameModuleRequestParam(paramName), requestParams.getFirst(paramName));
                 }
                 rcmlUrl = uriBuilder.build().toString();
             } catch (URISyntaxException e) {

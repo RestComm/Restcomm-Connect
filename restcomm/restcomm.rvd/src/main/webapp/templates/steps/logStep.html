@@ -7,9 +7,9 @@
 				<div class="col-lg-12 col-md-12">
 					<form lookup-context name="form" novalidate>
 						<div class="form-group">
-								<span class="help-block">Text &nbsp;<i class="fa fa-info-circle rvd-clickable" popover='Log a message to the application log. Prepend variables names with a dollar sign e.g. "$variablename"' popover-placement='top'></i></span>
+								<span class="help-block">{{'logStepTextLabel' | translate}} &nbsp;<i class="fa fa-info-circle rvd-clickable" popover="{{'logStepTextLabelPopover' | translate}}" popover-placement='top'></i></span>
 								<textarea ng-model='step.message' lookup-target name="message" class="form-control" required></textarea>	
-								<div ng-show="form.invalid.$invalid" class="validation-error pull-left">The message text is missing</div>
+								<div ng-show="form.invalid.$invalid" class="validation-error pull-left">{{'logStepValidationError' | translate}}</div>
 						</div>
 						<div class="form-group pull-right">
 							<variable-lookup variable="step.message" view="standalone"></variable-lookup>
