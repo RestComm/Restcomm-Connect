@@ -41,6 +41,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.arquillian.mediaserver.api.EmbeddedMediaserver;
@@ -52,6 +53,7 @@ import org.mobicents.commtesting.MgcpUnit;
  * @author Amit Bhayani
  * 
  */
+@Ignore //The mss-arquillian mms extension needs update
 @RunWith(Arquillian.class)
 public class PlayTest {
 
@@ -75,7 +77,7 @@ public class PlayTest {
     private SipPhone bobPhone;
     private String bobContact = "sip:bob@127.0.0.1:5090";
 
-    @Mediaserver(IVR = 10, CONF = 10, RELAY = 10) //, BRIDGE = 10)
+    @Mediaserver(IVR = 10, CONF = 10, RELAY = 10)//, BRIDGE = 10)
     private EmbeddedMediaserver mediaserver;
     private MgcpUnit mgcpUnit;
     private MgcpEventListener mgcpEventListener;
