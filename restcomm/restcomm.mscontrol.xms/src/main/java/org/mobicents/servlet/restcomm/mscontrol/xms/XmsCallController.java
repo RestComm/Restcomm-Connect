@@ -176,14 +176,14 @@ public class XmsCallController extends MediaServerController {
         this.recorderListener = new RecorderListener();
 
         // Initialize the states for the FSM
-        this.uninitialized = new State("uninitialized", null, null);
-        this.active = new State("active", new Active(source), null);
-        this.inactive = new State("inactive", new Inactive(source), null);
-        this.failed = new State("failed", new Failed(source), null);
+        this.uninitialized = new State("uninitialized", null);
+        this.active = new State("active", new Active(source));
+        this.inactive = new State("inactive", new Inactive(source));
+        this.failed = new State("failed", new Failed(source));
 
         // Intermediate FSM states
-        this.openingMediaSession = new State("opening media session", new OpeningMediaSession(source), null);
-        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
+        this.openingMediaSession = new State("opening media session", new OpeningMediaSession(source));
+        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source));
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
