@@ -512,7 +512,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (type.contains("text/plain")) {
                     parser = parser("<Say>" + response.getContentAsString() + "</Say>");
                 } else {
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }

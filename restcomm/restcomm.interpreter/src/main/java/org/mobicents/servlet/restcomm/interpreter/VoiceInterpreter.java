@@ -231,7 +231,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
-        transitions.add(new Transition(initializingCall, ready));
+        transitions.add(new Transition(initializingCall, downloadingRcml));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
         transitions.add(new Transition(downloadingRcml, ready));
@@ -528,7 +528,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // update db and callback statusCallback url.
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
-                    fsm.transition(message, ready);
+                    fsm.transition(message, downloadingRcml);
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
@@ -536,6 +536,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         outboundCall = sender;
                     }
                     fsm.transition(message, acquiringOutboundCallInfo);
+                } else if (conferencing.equals(state)) {
+                    // Call left the conference successfully
+                    if (!liveCallModification) {
+                        // Hang up the call
+                        final Hangup hangup = new Hangup();
+                        call.tell(hangup, self);
+                    } else {
+                        // XXX start processing new RCML and give instructions to call
+                    }
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
@@ -596,9 +605,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         } else if (ConferenceStateChanged.class.equals(klass)) {
             final ConferenceStateChanged event = (ConferenceStateChanged) message;
-            if (ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT == event.state()) {
-                conferenceState = event.state();
-                conferenceStateModeratorPresent(message);
+            switch (event.state()) {
+                case RUNNING_MODERATOR_PRESENT:
+                    conferenceState = event.state();
+                    conferenceStateModeratorPresent(message);
+                    break;
+                default:
+                    break;
             }
 
             // !!IMPORTANT!!
@@ -755,7 +768,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
             this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
-            if (CallStateChanged.State.IN_PROGRESS == callState && !liveCallModification) {
+            if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
                 fsm.transition(message, hangingUp);
             } else {
                 fsm.transition(message, finished);
@@ -818,7 +831,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             logger.info("VoiceInterpreter stopping confSubVoiceInterpreter");
 
             // Stop the conference back ground music
-            final StopInterpreter stop = StopInterpreter.instance();
+            final StopInterpreter stop = new StopInterpreter();
             confSubVoiceInterpreter.tell(stop, self());
         }
     }
@@ -1099,7 +1112,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (call != null) {
                         call.tell(new Hangup(), null);
                     }
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -1196,7 +1209,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                     + " is an invalid callerId.");
                             notifications.addNotification(notification);
                             sendMail(notification);
-                            final StopInterpreter stop = StopInterpreter.instance();
+                            final StopInterpreter stop = new StopInterpreter();
                             source.tell(stop, source);
                             return null;
                         }
@@ -1401,7 +1414,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final NotificationsDao notifications = storage.getNotificationsDao();
                 notifications.addNotification(notification);
                 sendMail(notification);
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             }
@@ -1591,7 +1604,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, action + " is an invalid URI.");
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     self().tell(stop, self());
                     return;
                 }
@@ -1802,7 +1815,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         final NotificationsDao notifications = storage.getNotificationsDao();
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1881,7 +1894,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                         + " is not a valid waitUrl value for <Conference>");
                                 notifications.addNotification(notification);
                                 sendMail(notification);
-                                final StopInterpreter stop = StopInterpreter.instance();
+                                final StopInterpreter stop = new StopInterpreter();
                                 source.tell(stop, source);
 
                                 // TODO shouldn't we return here?
@@ -1974,7 +1987,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -2033,9 +2046,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
             }
 
-            // Cleanup the outbound call if necessary.
-            final State state = fsm.state();
-            if (bridged.equals(state) || forking.equals(state)) {
+            // XXX review bridge cleanup!!
+
+            // Cleanup bridge
+            if ((bridge != null) || is(forking) || is(acquiringOutboundCallInfo)) {
+                // Stop the bridge
+                bridge.tell(new StopBridge(), super.source);
+                bridge = null;
+
+                // Cleanup the outbound call if necessary.
+                // XXX verify if this code is still necessary
                 if (outboundCall != null && !liveCallModification) {
                     outboundCall.tell(new StopObserving(source), null);
                     outboundCall.tell(new Hangup(), null);
@@ -2043,11 +2063,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             // If the call is in a conference remove it.
-            if (conference != null && !liveCallModification) {
-                final Tag child = conference(verb);
+            if (conference != null) {
                 // Parse "endConferenceOnExit"
                 boolean endOnExit = false;
+                final Tag child = conference(verb);
                 Attribute attribute = child.attribute("endConferenceOnExit");
+
                 if (attribute != null) {
                     final String value = attribute.value();
                     if (value != null && !value.isEmpty()) {
@@ -2058,10 +2079,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Stop Observing the conference
                 conference.tell(new StopObserving(self()), null);
 
-                // Stop the conference if endConferenceOnExit is true
                 if (endOnExit) {
+                    // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
                     conference.tell(stop, source);
+                } else {
+                    // Otherwise simply remove the call from it
+                    final RemoveParticipant removeParticipant = new RemoveParticipant(call);
+                    conference.tell(removeParticipant, super.source);
                 }
             }
 
@@ -2071,6 +2096,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (outboundCall != null) {
                     callManager.tell(new DestroyCall(outboundCall), source);
                 }
+            } else {
+                // Make sure the media operations of the call are stopped
+                // so we can start processing a new RestComm application
+                call.tell(new StopMediaGroup(), source);
             }
 
             // Stop the dependencies.
