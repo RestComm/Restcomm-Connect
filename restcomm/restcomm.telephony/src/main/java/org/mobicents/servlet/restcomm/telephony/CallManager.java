@@ -807,8 +807,7 @@ public final class CallManager extends UntypedActor {
         for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
             ActorRef existingInterpreter = (ActorRef) iterator.next();
             logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
-            StopInterpreter stopInterpreter = StopInterpreter.instance();
-            stopInterpreter.setLiveCallModification(true);
+            StopInterpreter stopInterpreter = new StopInterpreter(true);
             system.scheduler().scheduleOnce(Duration.create(6000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter,
                     system.dispatcher());
             // existingInterpreter.tell(stopInterpreter, null);

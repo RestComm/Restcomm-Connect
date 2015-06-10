@@ -63,19 +63,14 @@ import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -649,6 +644,7 @@ public final class Call extends UntypedActor {
 
             // Notify the observers.
             external = CallStateChanged.State.RINGING;
+            logger.info("Call :"+self().path()+" To: "+to+" in RINGING state, will notify observer. Observers size: "+observers.size());
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
@@ -1103,20 +1099,24 @@ public final class Call extends UntypedActor {
     private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
         final ActorRef observer = message.observer();
         if (observer != null) {
+            logger.info("Adding new observer: "+sender.path()+" to call: "+self.path()+" To: "+to);
             synchronized (this.observers) {
                 this.observers.add(observer);
                 observer.tell(new Observing(self), self);
             }
+            logger.info("Observers after addittion for call: "+self.path()+" To: "+to+" size= "+observers.size());
         }
     }
 
     private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
         final ActorRef observer = message.observer();
+        logger.info("About to remove Observer: "+sender.path()+"from call: "+self.path()+" To: "+to);
         if (observer != null) {
             this.observers.remove(observer);
         } else {
             this.observers.clear();
         }
+        logger.info("Observers after removal for call: "+self.path()+" To: "+to+" size= "+observers.size());
     }
 
     private void onGetCallObservers(GetCallObservers message, ActorRef self, ActorRef sender) throws Exception {
@@ -1155,6 +1155,13 @@ public final class Call extends UntypedActor {
 
     private void onDial(Dial message, ActorRef self, ActorRef sender) throws Exception {
         if (is(queued)) {
+            logger.info("Got Dial for Call: "+self().path()+" To: "+to+" sender: "+sender.path()+" observers size: "+observers.size());
+            if (!observers.contains(sender)) {
+                logger.info("For Call: "+self().path()+" sender: "+sender.path()+" is not in the observers will add it");
+                onObserve(new Observe(sender), sender, sender);
+            } else {
+                logger.info("For Call: "+self().path()+" sender: "+sender.path()+" is ALREADY in the observers. Observers size: "+observers.size());
+            }
             fsm.transition(message, initializing);
         }
     }
@@ -1240,6 +1247,7 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_RINGING:
             case SipServletResponse.SC_SESSION_PROGRESS: {
                 if (!is(ringing)) {
+                    logger.info("Got 180 Ringing for Call: "+self().path()+" To: "+to+" sender: "+sender.path()+" observers size: "+observers.size());
                     fsm.transition(message, ringing);
                 }
                 break;
