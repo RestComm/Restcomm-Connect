@@ -297,6 +297,13 @@ public class MmsBridgeController extends MediaServerController {
                     if (fail) {
                         this.fsm.transition(message, failed);
                     } else {
+                        // Save record info in the database
+                        if (recordStarted != null) {
+                            saveRecording();
+                            recordStarted = null;
+                            recordingRequest = null;
+                        }
+                        // Move to inactive state
                         this.fsm.transition(message, inactive);
                     }
                 }
@@ -407,13 +414,14 @@ public class MmsBridgeController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
+            // Stop Media Group
+            // Note: Recording will be added to DB after getting response from MG
             if (recording) {
                 mediaGroup.tell(new Stop(), super.source);
-                saveRecording();
                 recording = Boolean.FALSE;
-                recordStarted = null;
-                recordingRequest = null;
             }
+
+            // Destroy Media Group
             mediaGroup.tell(new StopMediaGroup(), super.source);
         }
     }

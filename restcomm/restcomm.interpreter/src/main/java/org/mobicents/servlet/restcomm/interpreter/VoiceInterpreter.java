@@ -32,7 +32,6 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -63,10 +62,8 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
-import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
 import org.mobicents.servlet.restcomm.fsm.Action;
@@ -121,7 +118,6 @@ import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
-import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -885,7 +881,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (invite != null)
                 processCustomHeaders(invite, "SipHeader_", parameters);
         } else {
-           processCustomHeaders(lastResponse, "SipHeader_", parameters);
+            processCustomHeaders(lastResponse, "SipHeader_", parameters);
         }
 
         return parameters;
@@ -1667,8 +1663,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                         branch.tell(new Cancel(), source);
-                        // No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we
-                        // destroy calls
+                        // No need to destroy here.
+                        // Call will get Cancel and then FSM will move to Completed where finally we destroy calls
                         // callManager.tell(new DestroyCall(branch), source);
                     }
                     call.tell(new StopMediaGroup(), null);
@@ -1693,32 +1689,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (recordingCall && sender == call) {
-                Configuration runtimeSettings = configuration.subset("runtime-settings");
-                //Its the initial call that sent BYE so we can create the recording object here
-                if (recordingUri != null) {
-                    Double duration = WavUtils.getAudioDuration(recordingUri);
-                    if (duration.equals(0.0)) {
-                        logger.info("At finishDialing. File doesn't exist since duration is 0");
-                        final DateTime end = DateTime.now();
-                        duration = new Double((end.getMillis() - callInfo.dateCreated().getMillis()) / 1000);
-                    } else {
-                        logger.info("At finishDialing. File already exists, length: "+ (new File(recordingUri).length()));
-                    }
-                    final Recording.Builder builder = Recording.builder();
-                    builder.setSid(recordingSid);
-                    builder.setAccountSid(accountId);
-                    builder.setCallSid(callInfo.sid());
-                    builder.setDuration(duration);
-                    builder.setApiVersion(runtimeSettings.getString("api-version"));
-                    StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
-                    buffer.append("/Recordings/").append(recordingSid.toString());
-                    builder.setUri(URI.create(buffer.toString()));
-                    final Recording recording = builder.build();
-                    RecordingsDao recordsDao = storage.getRecordingsDao();
-                    recordsDao.addRecording(recording);
-                }
                 recordingCall = false;
             }
 
