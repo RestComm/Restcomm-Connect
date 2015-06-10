@@ -67,20 +67,16 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
-import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.DestroyMediaGroup;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupCreated;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupDestroyed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionClosed;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaSessionInfo;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -114,13 +110,12 @@ public class XmsCallController extends MediaServerController {
 
     // FSM states
     private final State uninitialized;
+    private final State initializing;
     private final State active;
+    private final State pending;
+    private final State updatingMediaSession;
     private final State inactive;
     private final State failed;
-
-    // Intermediate FSM states
-    private final State openingMediaSession;
-    private final State updatingMediaSession;
 
     // JSR-309 runtime stuff
     private final MsControlFactory msControlFactory;
@@ -145,7 +140,6 @@ public class XmsCallController extends MediaServerController {
 
     // Conference runtime stuff
     private ActorRef bridge;
-    private Boolean conferencing;
 
     // Call Media Operations
     private Sid accountId;
@@ -176,25 +170,28 @@ public class XmsCallController extends MediaServerController {
         this.recorderListener = new RecorderListener();
 
         // Initialize the states for the FSM
-        this.uninitialized = new State("uninitialized", null);
-        this.active = new State("active", new Active(source));
-        this.inactive = new State("inactive", new Inactive(source));
-        this.failed = new State("failed", new Failed(source));
-
-        // Intermediate FSM states
-        this.openingMediaSession = new State("opening media session", new OpeningMediaSession(source));
-        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source));
+        this.uninitialized = new State("uninitialized", null, null);
+        this.initializing = new State("initializing", new Initializing(source), null);
+        this.active = new State("active", new Active(source), null);
+        this.pending = new State("pending", new Pending(source), null);
+        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
+        this.inactive = new State("inactive", new Inactive(source), null);
+        this.failed = new State("failed", new Failed(source), null);
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, openingMediaSession));
-        // XXX the following transition is a quick fix for a concurrent issue between FSM and JSR 309 async API
-        transitions.add(new Transition(uninitialized, active));
-        transitions.add(new Transition(openingMediaSession, failed));
-        transitions.add(new Transition(openingMediaSession, active));
-        transitions.add(new Transition(openingMediaSession, inactive));
+        transitions.add(new Transition(uninitialized, initializing));
+        transitions.add(new Transition(uninitialized, failed));
+        transitions.add(new Transition(initializing, failed));
+        transitions.add(new Transition(initializing, active));
+        transitions.add(new Transition(initializing, pending));
+        transitions.add(new Transition(initializing, inactive));
+        transitions.add(new Transition(pending, updatingMediaSession));
+        transitions.add(new Transition(pending, inactive));
+        transitions.add(new Transition(pending, failed));
         transitions.add(new Transition(active, updatingMediaSession));
         transitions.add(new Transition(active, inactive));
+        transitions.add(new Transition(active, failed));
         transitions.add(new Transition(updatingMediaSession, active));
         transitions.add(new Transition(updatingMediaSession, inactive));
         transitions.add(new Transition(updatingMediaSession, failed));
@@ -203,13 +200,12 @@ public class XmsCallController extends MediaServerController {
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
 
         // Observers
-        this.observers = new ArrayList<ActorRef>();
+        this.observers = new ArrayList<ActorRef>(2);
 
         // Call runtime stuff
         this.localSdp = "";
         this.remoteSdp = "";
         this.callOutbound = false;
-        this.conferencing = Boolean.FALSE;
         this.connectionMode = "inactive";
         this.recording = Boolean.FALSE;
         this.playing = Boolean.FALSE;
@@ -233,10 +229,10 @@ public class XmsCallController extends MediaServerController {
 
         private static final long serialVersionUID = 7103112381914312776L;
 
-        protected ActorRef remote;
+        protected ActorRef originator;
 
         public void setRemote(ActorRef sender) {
-            this.remote = sender;
+            this.originator = sender;
         }
 
     }
@@ -254,23 +250,50 @@ public class XmsCallController extends MediaServerController {
 
             try {
                 if (event.isSuccessful()) {
-                    networkConnection.getSdpPortManager().removeListener(this);
-                    if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
-                        localSdp = new String(event.getMediaServerSdp());
-                        fsm.transition(event, active);
-                    } else if (SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
-                        localSdp = new String(event.getMediaServerSdp());
-                        fsm.transition(event, active);
-                    } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
-                        fsm.transition(event, active);
-                    } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
-                        throw new MsControlException("Network stream failure");
+                    if (is(initializing) || is(updatingMediaSession)) {
+                        networkConnection.getSdpPortManager().removeListener(this);
+                        if (SdpPortManagerEvent.ANSWER_GENERATED.equals(eventType)) {
+                            if (is(initializing)) {
+                                // Get the generated answer
+                                localSdp = new String(event.getMediaServerSdp());
+
+                                // Join the media group to the network connection
+                                // Perform this operation only once, when initializing the controller for first time.
+                                networkConnection.join(Direction.DUPLEX, mediaGroup);
+
+                                // Move to active state
+                                fsm.transition(event, active);
+                            }
+                        } else if (SdpPortManagerEvent.OFFER_GENERATED.equals(eventType)) {
+                            if (is(initializing)) {
+                                // Get the generated offer
+                                localSdp = new String(event.getMediaServerSdp());
+
+                                // Move to a pending state waiting for an answer
+                                fsm.transition(event, pending);
+                            }
+                        } else if (SdpPortManagerEvent.ANSWER_PROCESSED.equals(eventType)) {
+                            if (is(updatingMediaSession)) {
+                                // Join the media group to the network connection
+                                // Perform this operation only once, when initializing the controller for first time.
+                                if (mediaGroup.getJoinees().length == 0) {
+                                    networkConnection.join(Direction.DUPLEX, mediaGroup);
+                                }
+
+                                // Move to an active state
+                                fsm.transition(event, active);
+                            }
+                        } else if (SdpPortManagerEvent.NETWORK_STREAM_FAILURE.equals(eventType)) {
+                            // Unable to negotiate session over SDP
+                            // Move to a failed state
+                            fsm.transition(event, failed);
+                        }
                     }
                 } else {
-                    throw new MsControlException("SDP processing failed");
+                    fsm.transition(event, failed);
                 }
             } catch (Exception e) {
-                call.tell(new MediaServerControllerError(e), self());
+                logger.error(e, "Could not set up the network connection");
             }
         }
 
@@ -297,7 +320,7 @@ public class XmsCallController extends MediaServerController {
                     response = new MediaGroupResponse<String>(error, reason);
                 }
                 playing = Boolean.FALSE;
-                super.remote.tell(response, self());
+                super.originator.tell(response, self());
             }
         }
 
@@ -324,7 +347,7 @@ public class XmsCallController extends MediaServerController {
                     response = new MediaGroupResponse<String>(error, reason);
                 }
                 collecting = Boolean.FALSE;
-                super.remote.tell(response, self());
+                super.originator.tell(response, self());
             }
         }
 
@@ -362,7 +385,7 @@ public class XmsCallController extends MediaServerController {
                     response = new MediaGroupResponse<String>(error, reason);
                 }
                 recording = Boolean.FALSE;
-                super.remote.tell(response, self());
+                super.originator.tell(response, self());
             }
         }
 
@@ -391,10 +414,6 @@ public class XmsCallController extends MediaServerController {
             onCloseMediaSession((CloseMediaSession) message, self, sender);
         } else if (UpdateMediaSession.class.equals(klass)) {
             onUpdateMediaSession((UpdateMediaSession) message, self, sender);
-        } else if (CreateMediaGroup.class.equals(klass)) {
-            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
-        } else if (DestroyMediaGroup.class.equals(klass)) {
-            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
         } else if (StopMediaGroup.class.equals(klass)) {
             onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (Mute.class.equals(klass)) {
@@ -448,62 +467,24 @@ public class XmsCallController extends MediaServerController {
             this.connectionMode = message.getConnectionMode();
             this.remoteSdp = message.getSessionDescription();
 
-            fsm.transition(message, openingMediaSession);
+            fsm.transition(message, initializing);
         }
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) || is(openingMediaSession) || is(updatingMediaSession)) {
+        if (is(active) || is(initializing) || is(updatingMediaSession)) {
             fsm.transition(message, inactive);
         }
     }
 
     private void onUpdateMediaSession(UpdateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
+        if (is(pending) || is(active)) {
             this.remoteSdp = message.getSessionDescription();
             fsm.transition(message, updatingMediaSession);
         }
     }
 
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
-        // Always reuse current media group if active
-        if (this.mediaGroup == null) {
-            // Create new media group
-            try {
-                this.mediaGroup = this.mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
-
-                // Prepare the Media Group resources
-                this.mediaGroup.getPlayer().addListener(this.playerListener);
-                this.mediaGroup.getSignalDetector().addListener(this.dtmfListener);
-                this.mediaGroup.getRecorder().addListener(this.recorderListener);
-
-                // Initialize Media Group
-                this.networkConnection.join(Direction.DUPLEX, this.mediaGroup);
-
-                // Warn call the media group has been created
-                final MediaGroupCreated mgCreated = new MediaGroupCreated();
-                sender.tell(new MediaServerControllerResponse<MediaGroupCreated>(mgCreated), self);
-            } catch (MsControlException e) {
-                // Warn call the media group could not be created
-                sender.tell(new MediaServerControllerError(e), self);
-            }
-        }
-    }
-
-    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
-        if (this.mediaGroup != null) {
-            // Destroy media group
-            this.mediaGroup.release();
-            this.mediaGroup = null;
-        }
-
-        // XXX always send this message (may be null in bridged calls)
-        // Warn call the media group has been destroyed
-        final MediaGroupDestroyed mgDestroyed = new MediaGroupDestroyed();
-        this.call.tell(new MediaServerControllerResponse<MediaGroupDestroyed>(mgDestroyed), self);
-    }
-
-    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws MsControlException {
+    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) throws Exception {
         try {
             if (this.mediaGroup != null) {
                 // XXX mediaGroup.stop() not implemented on dialogic connector
@@ -522,21 +503,15 @@ public class XmsCallController extends MediaServerController {
                     this.collecting = Boolean.FALSE;
                 }
             }
-
-            // Tell observers the media group has been stopped
-            final MediaGroupStateChanged response = new MediaGroupStateChanged(MediaGroupStateChanged.State.INACTIVE);
-            notifyObservers(response, self);
         } catch (MsControlException e) {
-            call.tell(new MediaServerControllerError(e), self);
+            fsm.transition(e, failed);
         }
     }
 
     private void onMute(Mute message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
+        if (is(active) && (this.mediaMixer != null)) {
             try {
-                if (this.mediaMixer != null) {
-                    this.networkConnection.join(Direction.RECV, this.mediaMixer);
-                }
+                this.networkConnection.join(Direction.RECV, this.mediaMixer);
             } catch (MsControlException e) {
                 logger.error("Could not mute call: " + e.getMessage(), e);
             }
@@ -544,11 +519,9 @@ public class XmsCallController extends MediaServerController {
     }
 
     private void onUnmute(Unmute message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active)) {
+        if (is(active) && (this.mediaMixer != null)) {
             try {
-                if (this.mediaMixer != null) {
-                    this.networkConnection.join(Direction.DUPLEX, this.mediaMixer);
-                }
+                this.networkConnection.join(Direction.DUPLEX, this.mediaMixer);
             } catch (MsControlException e) {
                 logger.error("Could not unmute call: " + e.getMessage(), e);
             }
@@ -721,7 +694,7 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
-    private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) {
+    private void onJoinBridge(JoinBridge message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active)) {
             try {
                 // join call leg to bridge
@@ -729,17 +702,16 @@ public class XmsCallController extends MediaServerController {
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
 
-                // alert conference call has joined successfully
+                // alert call has joined successfully
                 this.call.tell(new JoinComplete(), self);
             } catch (MsControlException e) {
                 logger.error("Call bridging failed: " + e.getMessage());
-                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                notifyObservers(response, self);
+                fsm.transition(e, failed);
             }
         }
     }
 
-    private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) {
+    private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active)) {
             try {
                 // join call leg to bridge
@@ -747,19 +719,18 @@ public class XmsCallController extends MediaServerController {
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
 
-                // alert conference call has joined successfully
+                // alert call has joined successfully
                 this.call.tell(new JoinComplete(), self);
             } catch (MsControlException e) {
                 logger.error("Call bridging failed: " + e.getMessage());
-                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                notifyObservers(response, self);
+                fsm.transition(e, failed);
             }
         }
     }
 
     private void onStop(Stop message, ActorRef self, ActorRef sender) {
         try {
-            // XXX mediaGroup.stop() not implemented on dialogic connector
+            // XXX mediaGroup.stop() not implemented on Dialogic connector
             if (this.playing) {
                 this.mediaGroup.getPlayer().stop(true);
                 this.playing = Boolean.FALSE;
@@ -811,14 +782,22 @@ public class XmsCallController extends MediaServerController {
         }
     }
 
-    private void onLeave(Leave message, ActorRef self, ActorRef sender) {
-        if (is(active) && this.conferencing) {
+    private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && (this.mediaMixer != null)) {
             try {
-                networkConnection.unjoin(mediaMixer);
-                mediaMixer = null;
-                conferencing = Boolean.FALSE;
+                // Leave conference or bridge
+                this.networkConnection.unjoin(this.mediaMixer);
+                this.mediaMixer = null;
+                this.bridge = null;
+
+                // Restore link with Media Group
+                this.networkConnection.join(Direction.DUPLEX, this.mediaGroup);
+
+                // Warn call the operation is complete
+                call.tell(new Left(), self);
             } catch (MsControlException e) {
-                call.tell(new MediaServerControllerError(e), self);
+                logger.error(e, "Call could not leave Bridge. Failing...");
+                fsm.transition(e, failed);
             }
         }
     }
@@ -826,9 +805,9 @@ public class XmsCallController extends MediaServerController {
     /*
      * ACTIONS
      */
-    private final class OpeningMediaSession extends AbstractAction {
+    private final class Initializing extends AbstractAction {
 
-        public OpeningMediaSession(ActorRef source) {
+        public Initializing(ActorRef source) {
             super(source);
         }
 
@@ -837,6 +816,14 @@ public class XmsCallController extends MediaServerController {
             try {
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
+
+                // Create media group with full capabilities
+                mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+
+                // Prepare the Media Group resources
+                mediaGroup.getPlayer().addListener(playerListener);
+                mediaGroup.getSignalDetector().addListener(dtmfListener);
+                mediaGroup.getRecorder().addListener(recorderListener);
 
                 // Create network connection
                 networkConnection = mediaSession.createNetworkConnection(NetworkConnection.BASIC);
@@ -847,7 +834,7 @@ public class XmsCallController extends MediaServerController {
                     networkConnection.getSdpPortManager().processSdpOffer(remoteSdp.getBytes());
                 }
             } catch (MsControlException e) {
-                sender().tell(new MediaServerControllerError(e), super.source);
+                fsm.transition(e, failed);
             }
         }
 
@@ -865,8 +852,23 @@ public class XmsCallController extends MediaServerController {
                 networkConnection.getSdpPortManager().addListener(sdpListener);
                 networkConnection.getSdpPortManager().processSdpAnswer(remoteSdp.getBytes());
             } catch (MsControlException e) {
-                sender().tell(new MediaServerControllerError(e), super.source);
+                fsm.transition(e, failed);
             }
+        }
+
+    }
+
+    private final class Pending extends AbstractAction {
+
+        public Pending(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Inform observers the state of the controller has changed
+            final MediaSessionInfo info = new MediaSessionInfo(true, mediaServerInfo.getAddress(), localSdp, remoteSdp);
+            call.tell(new MediaServerControllerStateChanged(MediaServerControllerState.PENDING, info), super.source);
         }
 
     }
@@ -879,50 +881,50 @@ public class XmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
+            // Inform observers the state of the controller has changed
             final MediaSessionInfo info = new MediaSessionInfo(true, mediaServerInfo.getAddress(), localSdp, remoteSdp);
-            call.tell(new MediaServerControllerResponse<MediaSessionInfo>(info), super.source);
+            call.tell(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE, info), super.source);
         }
 
     }
 
-    private final class Inactive extends AbstractAction {
+    private abstract class FinalState extends AbstractAction {
+
+        protected final MediaServerControllerState state;
+
+        public FinalState(ActorRef source, MediaServerControllerState state) {
+            super(source);
+            this.state = state;
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            cleanMediaResources();
+            notifyObservers(new MediaServerControllerStateChanged(state), super.source);
+
+        }
+
+        private void cleanMediaResources() {
+            mediaSession.release();
+            mediaSession = null;
+            mediaGroup = null;
+            mediaMixer = null;
+        }
+
+    }
+
+    private final class Inactive extends FinalState {
 
         public Inactive(ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            if (mediaSession != null) {
-                mediaSession.release();
-                mediaSession = null;
-                mediaGroup = null;
-            }
-
-            // Inform call that media session has been properly closed
-            final MediaSessionClosed response = new MediaSessionClosed();
-            call.tell(new MediaServerControllerResponse<MediaSessionClosed>(response), super.source);
+            super(source, MediaServerControllerState.INACTIVE);
         }
 
     }
 
-    private final class Failed extends AbstractAction {
+    private final class Failed extends FinalState {
 
         public Failed(ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-
-            if (message instanceof SdpPortManagerEvent) {
-                SdpPortManagerEvent event = (SdpPortManagerEvent) message;
-                logger.warning("XMS returned error: " + event.getErrorText() + ". Failing call...");
-            }
-
-            // Inform call the media session could not be set up
-            final MediaServerControllerError error = new MediaServerControllerError();
-            call.tell(error, super.source);
+            super(source, MediaServerControllerState.FAILED);
         }
 
     }
