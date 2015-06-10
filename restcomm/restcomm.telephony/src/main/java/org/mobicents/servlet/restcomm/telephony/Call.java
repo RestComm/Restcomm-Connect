@@ -118,32 +118,28 @@ public final class Call extends UntypedActor {
     private static final String OUTBOUND_API = "outbound-api";
     private static final String OUTBOUND_DIAL = "outbound-dial";
 
-    // States for the FSM
+    // Finite State Machine
+    private final FiniteStateMachine fsm;
     private final State uninitialized;
+    private final State initializing;
     private final State queued;
+    private final State failingBusy;
     private final State ringing;
     private final State busy;
     private final State notFound;
+    private final State canceling;
     private final State canceled;
+    private final State failingNoAnswer;
     private final State noAnswer;
+    private final State dialing;
+    private final State updatingMediaSession;
     private final State inProgress;
+    private final State joining;
+    private final State leaving;
+    private final State stopping;
     private final State completed;
     private final State failed;
-
-    // Intermediate states
-    private final State canceling;
-    private final State dialing;
-    private final State failingBusy;
-    private final State failingNoAnswer;
-    private final State creatingMediaSession;
-    private final State updatingMediaSession;
-    private final State closingMediaSession;
-    private final State creatingMediaGroup;
-    private final State destroyingMediaGroup;
-    private final State joining;
-
-    // FSM.
-    private final FiniteStateMachine fsm;
+    private boolean fail;
 
     // SIP runtime stuff
     private final SipFactory factory;
@@ -172,18 +168,15 @@ public final class Call extends UntypedActor {
 
     // Conferencing
     private ActorRef conference;
-    private ActorRef conferenceController;
     private boolean conferencing;
 
     // Call Bridging
     private ActorRef bridge;
     private ActorRef outboundCall;
-    private ActorRef outboundCallBridgeEndpoint;
 
     // Media Session Control runtime stuff
     private final ActorRef msController;
     private MediaSessionInfo mediaSessionInfo;
-    private boolean fail;
 
     // Media Group runtime stuff
     private CallDetailRecord outgoingCallRecord;
@@ -199,36 +192,33 @@ public final class Call extends UntypedActor {
         super();
         final ActorRef source = self();
 
-        // States for the FSM.
+        // States for the FSM
         this.uninitialized = new State("uninitialized", null, null);
+        this.initializing = new State("initializing", new Initializing(source), null);
         this.queued = new State("queued", new Queued(source), null);
         this.ringing = new State("ringing", new Ringing(source), null);
+        this.failingBusy = new State("failing busy", new FailingBusy(source), null);
         this.busy = new State("busy", new Busy(source), null);
         this.notFound = new State("not found", new NotFound(source), null);
+        this.canceling = new State("canceling", new Canceling(source), null);
         this.canceled = new State("canceled", new Canceled(source), null);
+        this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
         this.noAnswer = new State("no answer", new NoAnswer(source), null);
+        this.dialing = new State("dialing", new Dialing(source), null);
+        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
         this.inProgress = new State("in progress", new InProgress(source), null);
+        this.joining = new State("joining", new Joining(source), null);
+        this.leaving = new State("leaving", new Leaving(source), null);
+        this.stopping = new State("stopping", new Stopping(source), null);
         this.completed = new State("completed", new Completed(source), null);
         this.failed = new State("failed", new Failed(source), null);
-
-        // Intermediate states
-        this.canceling = new State("canceling", new Canceling(source), null);
-        this.dialing = new State("dialing", new Dialing(source), null);
-        this.closingMediaSession = new State("closing media session", new ClosingMediaSession(source), null);
-        this.failingBusy = new State("failing busy", new FailingBusy(source), null);
-        this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
-        this.creatingMediaSession = new State("creating media session", new CreatingMediaSession(source), null);
-        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
-        this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
-        this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(source), null);
-        this.joining = new State("joining", new Joining(source), null);
 
         // Transitions for the FSM
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.ringing));
         transitions.add(new Transition(this.uninitialized, this.queued));
         transitions.add(new Transition(this.queued, this.canceled));
-        transitions.add(new Transition(this.queued, this.creatingMediaSession));
+        transitions.add(new Transition(this.queued, this.initializing));
         transitions.add(new Transition(this.ringing, this.busy));
         transitions.add(new Transition(this.ringing, this.notFound));
         transitions.add(new Transition(this.ringing, this.canceling));
@@ -236,33 +226,35 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.ringing, this.failingNoAnswer));
         transitions.add(new Transition(this.ringing, this.failingBusy));
         transitions.add(new Transition(this.ringing, this.noAnswer));
-        transitions.add(new Transition(this.ringing, this.creatingMediaSession));
+        transitions.add(new Transition(this.ringing, this.initializing));
         transitions.add(new Transition(this.ringing, this.updatingMediaSession));
-        transitions.add(new Transition(this.ringing, this.closingMediaSession));
-        transitions.add(new Transition(this.creatingMediaSession, this.canceling));
-        transitions.add(new Transition(this.creatingMediaSession, this.dialing));
-        transitions.add(new Transition(this.creatingMediaSession, this.failed));
-        transitions.add(new Transition(this.creatingMediaSession, this.creatingMediaGroup));
-        transitions.add(new Transition(this.creatingMediaGroup, this.inProgress));
-        transitions.add(new Transition(this.creatingMediaGroup, this.closingMediaSession));
-        transitions.add(new Transition(this.destroyingMediaGroup, this.closingMediaSession));
+        transitions.add(new Transition(this.ringing, this.stopping));
+        transitions.add(new Transition(this.initializing, this.canceling));
+        transitions.add(new Transition(this.initializing, this.dialing));
+        transitions.add(new Transition(this.initializing, this.failed));
+        transitions.add(new Transition(this.initializing, this.inProgress));
+        transitions.add(new Transition(this.initializing, this.stopping));
         transitions.add(new Transition(this.dialing, this.canceling));
-        transitions.add(new Transition(this.dialing, this.closingMediaSession));
+        transitions.add(new Transition(this.dialing, this.stopping));
         transitions.add(new Transition(this.dialing, this.failingBusy));
         transitions.add(new Transition(this.dialing, this.ringing));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
-        transitions.add(new Transition(this.inProgress, this.destroyingMediaGroup));
+        transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
+        transitions.add(new Transition(this.inProgress, this.leaving));
         transitions.add(new Transition(this.joining, this.inProgress));
-        transitions.add(new Transition(this.joining, this.destroyingMediaGroup));
+        transitions.add(new Transition(this.joining, this.stopping));
+        transitions.add(new Transition(this.joining, this.failed));
+        transitions.add(new Transition(this.leaving, this.inProgress));
+        transitions.add(new Transition(this.leaving, this.stopping));
+        transitions.add(new Transition(this.leaving, this.failed));
         transitions.add(new Transition(this.canceling, this.canceled));
         transitions.add(new Transition(this.failingBusy, this.busy));
         transitions.add(new Transition(this.failingNoAnswer, this.noAnswer));
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
-        transitions.add(new Transition(this.updatingMediaSession, this.creatingMediaGroup));
-        transitions.add(new Transition(this.updatingMediaSession, this.closingMediaSession));
-        transitions.add(new Transition(this.closingMediaSession, this.completed));
-        transitions.add(new Transition(this.closingMediaSession, this.failed));
+        transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
+        transitions.add(new Transition(this.updatingMediaSession, this.failed));
+        transitions.add(new Transition(this.stopping, this.completed));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
@@ -357,15 +349,6 @@ public final class Call extends UntypedActor {
             realIP = realIP + ":" + realPort;
             uri = factory.createSipURI(null, realIP);
         }
-        // //Assuming that the contactPort (from the Contact header) is the port that is assigned to the sip client,
-        // //If RemotePort (either from Packet or from the Via header rport) is not the same as the contactPort, then we
-        // //should use the remotePort and remoteAddres for the URI to use later for client behind NAT
-        // else if(remotePort != contactPort) {
-        // logger.info("RemotePort: "+remotePort+" is different than the Contact Address port: "+contactPort+" so storing for later use the "
-        // + remoteAddress+":"+remotePort);
-        // realIP = remoteAddress+":"+remotePort;
-        // uri = factory.createSipURI(null, realIP);
-        // }
         return uri;
     }
 
@@ -417,20 +400,16 @@ public final class Call extends UntypedActor {
             onHangup((Hangup) message, self, sender);
         } else if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass)) {
             onNotFound((org.mobicents.servlet.restcomm.telephony.NotFound) message, self, sender);
-        } else if (MediaServerControllerResponse.class.equals(klass)) {
-            onMediaServerControllerResponse((MediaServerControllerResponse<?>) message, self, sender);
-        } else if (MediaServerControllerError.class.equals(klass)) {
-            onMediaServerControllerError((MediaServerControllerError) message, self, sender);
+        } else if (MediaServerControllerStateChanged.class.equals(klass)) {
+            onMediaServerControllerStateChanged((MediaServerControllerStateChanged) message, self, sender);
         } else if (JoinConference.class.equals(klass)) {
             onJoinConference((JoinConference) message, self, sender);
         } else if (JoinBridge.class.equals(klass)) {
             onJoinBridge((JoinBridge) message, self, sender);
         } else if (Leave.class.equals(klass)) {
             onLeave((Leave) message, self, sender);
-        } else if (CreateMediaGroup.class.equals(klass)) {
-            onCreateMediaGroup((CreateMediaGroup) message, self, sender);
-        } else if (DestroyMediaGroup.class.equals(klass)) {
-            onDestroyMediaGroup((DestroyMediaGroup) message, self, sender);
+        } else if (Left.class.equals(klass)) {
+            onLeft((Left) message, self, sender);
         } else if (Record.class.equals(klass)) {
             onRecord((Record) message, self, sender);
         } else if (Play.class.equals(klass)) {
@@ -572,13 +551,12 @@ public final class Call extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void execute(Object message) throws Exception {
-            final MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
+            final MediaServerControllerStateChanged response = (MediaServerControllerStateChanged) message;
             final ActorRef self = self();
 
-            mediaSessionInfo = response.get();
+            mediaSessionInfo = response.getMediaSession();
 
             // Create a SIP invite to initiate a new session.
             final StringBuilder buffer = new StringBuilder();
@@ -889,14 +867,19 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private final class CreatingMediaSession extends AbstractAction {
+    private final class Initializing extends AbstractAction {
 
-        public CreatingMediaSession(final ActorRef source) {
+        public Initializing(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
+            // Start observing state changes in the MSController
+            final Observe observe = new Observe(super.source);
+            msController.tell(observe, super.source);
+
+            // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
                 command = new CreateMediaSession("sendrecv", "", true);
@@ -960,79 +943,6 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private final class CreatingMediaGroup extends AbstractAction {
-
-        public CreatingMediaGroup(final ActorRef source) {
-            super(source);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void execute(Object message) throws Exception {
-            SipSession.State sessionState = invite.getSession().getState();
-            if (is(creatingMediaSession)
-                    && !(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
-                MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
-                mediaSessionInfo = response.get();
-                final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
-                final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
-                String answer = null;
-                if (mediaSessionInfo.usesNat()) {
-                    final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
-                    answer = SdpUtils.patch("application/sdp", sdp, externalIp);
-                } else {
-                    answer = mediaSessionInfo.getLocalSdp().toString();
-                }
-                // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-                answer = SdpUtils.endWithNewLine(answer);
-                okay.setContent(answer, "application/sdp");
-                okay.send();
-            } else if (is(creatingMediaSession) && invite.getSession().getState().equals(SipSession.State.CONFIRMED)) {
-                // We have an ongoing call and Restcomm executes new RCML app on that
-                // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
-                SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
-                MediaServerControllerResponse<MediaSessionInfo> response = (MediaServerControllerResponse<MediaSessionInfo>) message;
-                mediaSessionInfo = response.get();
-                final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
-                String answer = null;
-                if (mediaSessionInfo.usesNat()) {
-                    final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
-                    answer = SdpUtils.patch("application/sdp", sdp, externalIp);
-                } else {
-                    answer = mediaSessionInfo.getLocalSdp().toString();
-                }
-
-                // Issue #215: https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
-                answer = SdpUtils.endWithNewLine(answer);
-
-                reInvite.setContent(answer, "application/sdp");
-                reInvite.send();
-            }
-
-            if (is(creatingMediaSession) || is(updatingMediaSession)) {
-                // Make sure the SIP session doesn't end pre-maturely.
-                invite.getApplicationSession().setExpires(0);
-            }
-
-            msController.tell(new CreateMediaGroup(), super.source);
-        }
-
-    }
-
-    private final class DestroyingMediaGroup extends AbstractAction {
-
-        public DestroyingMediaGroup(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(Object message) throws Exception {
-            msController.tell(new StopMediaGroup(), super.source);
-            msController.tell(new DestroyMediaGroup(), super.source);
-        }
-
-    }
-
     private final class InProgress extends AbstractAction {
 
         public InProgress(final ActorRef source) {
@@ -1071,15 +981,33 @@ public final class Call extends UntypedActor {
 
     }
 
-    private final class ClosingMediaSession extends AbstractAction {
+    private final class Leaving extends AbstractAction {
 
-        public ClosingMediaSession(final ActorRef source) {
+        public Leaving(ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(Object message) throws Exception {
-            // Destroy current media session
+            // if (!receivedBye) {
+            // // Conference was stopped and this call was asked to leave
+            // // Send BYE to remote client
+            // sendBye();
+            // }
+            msController.tell(message, super.source);
+        }
+
+    }
+
+    private final class Stopping extends AbstractAction {
+
+        public Stopping(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Stops media operations and closes media session
             msController.tell(new CloseMediaSession(), source);
         }
     }
@@ -1129,16 +1057,6 @@ public final class Call extends UntypedActor {
     /*
      * EVENTS
      */
-    private void onCreateMediaGroup(CreateMediaGroup message, ActorRef self, ActorRef sender) {
-        this.msController.tell(message, sender);
-    }
-
-    private void onDestroyMediaGroup(DestroyMediaGroup message, ActorRef self, ActorRef sender) {
-        if (is(inProgress)) {
-            this.msController.tell(message, sender);
-        }
-    }
-
     private void onRecord(Record message, ActorRef self, ActorRef sender) {
         if (is(inProgress)) {
             // Forward to media server controller
@@ -1196,6 +1114,8 @@ public final class Call extends UntypedActor {
         final ActorRef observer = message.observer();
         if (observer != null) {
             this.observers.remove(observer);
+        } else {
+            this.observers.clear();
         }
     }
 
@@ -1218,26 +1138,24 @@ public final class Call extends UntypedActor {
     }
 
     private void onChangeCallDirection(ChangeCallDirection message, ActorRef self, ActorRef sender) {
-        // Needed for LiveCallModification API where an the outgoingCall needs to move to the new destination also.
-        // We need to change the Call Direction and also release the internal link
+        // Needed for LiveCallModification API where the outgoing call also needs to move to the new destination.
         this.direction = INBOUND;
         this.liveCallModification = true;
+        this.conferencing = false;
         this.conference = null;
+        this.bridge = null;
         this.outboundCall = null;
-
-        // XXX why not keep current media group?
-        this.msController.tell(new CreateMediaGroup(), self);
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         if (is(ringing)) {
-            fsm.transition(message, creatingMediaSession);
+            fsm.transition(message, initializing);
         }
     }
 
     private void onDial(Dial message, ActorRef self, ActorRef sender) throws Exception {
         if (is(queued)) {
-            fsm.transition(message, creatingMediaSession);
+            fsm.transition(message, initializing);
         }
     }
 
@@ -1248,7 +1166,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(creatingMediaSession) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
+        if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             fsm.transition(message, canceling);
         }
     }
@@ -1269,7 +1187,7 @@ public final class Call extends UntypedActor {
                 fsm.transition(message, ringing);
             }
         } else if ("CANCEL".equalsIgnoreCase(method)) {
-            if (is(creatingMediaSession)) {
+            if (is(initializing)) {
                 fsm.transition(message, canceling);
             } else if (is(ringing) && isInbound()) {
                 fsm.transition(message, canceled);
@@ -1298,14 +1216,12 @@ public final class Call extends UntypedActor {
             }
 
             if (conferencing) {
+                // Tell conference to remove the call from participants list
+                // before moving to a stopping state
                 conference.tell(new RemoveParticipant(self), self);
             } else {
-                // Destroy media resources as necessary
-                if (is(inProgress) || is(joining)) {
-                    fsm.transition(message, destroyingMediaGroup);
-                } else {
-                    fsm.transition(message, closingMediaSession);
-                }
+                // Clean media resources as necessary
+                fsm.transition(message, stopping);
             }
         } else if ("INFO".equalsIgnoreCase(method)) {
             processInfo(message);
@@ -1385,34 +1301,28 @@ public final class Call extends UntypedActor {
                 if (code >= 400 && code != 487) {
                     this.fail = true;
                     sendCallInfoToObservers();
-                    if (!is(canceling))
-                        fsm.transition(message, closingMediaSession);
+                    fsm.transition(message, stopping);
                 }
             }
         }
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
-        // Check what is next state to move to (if any)
-        State nextState = null;
-        if (is(updatingMediaSession) || is(ringing) || is(queued)) {
-            nextState = closingMediaSession;
-        } else if (is(inProgress)) {
-            nextState = destroyingMediaGroup;
-        }
+        if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
+            if (!receivedBye) {
+                // Send BYE to client if RestComm took initiative to hangup the call
+                sendBye();
+            }
 
-        // Take action if we need to move to next state
-        if (nextState != null) {
-            sendBye();
-
+            // Stop recording if necessary
             if (recording) {
                 recording = false;
                 logger.info("Call - Will stop recording now");
                 msController.tell(new Stop(true), self);
             }
 
-            // move to next state
-            fsm.transition(message, nextState);
+            // Move to next state to clean media resources and close session
+            fsm.transition(message, stopping);
         }
     }
 
@@ -1483,58 +1393,88 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onMediaServerControllerError(MediaServerControllerError message, ActorRef self, ActorRef sender)
+    private void onMediaServerControllerStateChanged(MediaServerControllerStateChanged message, ActorRef self, ActorRef sender)
             throws Exception {
-        State nextState = null;
-        if (is(creatingMediaSession)) {
-            nextState = failed;
-        } else if (is(updatingMediaSession) || is(creatingMediaGroup)) {
-            nextState = closingMediaSession;
-        } else if (is(joining)) {
-            nextState = destroyingMediaGroup;
-        }
-
-        if (nextState != null) {
-            this.fail = true;
-            fsm.transition(message, nextState);
-        }
-    }
-
-    private void onMediaServerControllerResponse(MediaServerControllerResponse<?> message, ActorRef self, ActorRef sender)
-            throws Exception {
-        Object obj = message.get();
-        Class<?> klass = obj.getClass();
-
-        if (MediaSessionInfo.class.equals(klass)) {
-            if (is(creatingMediaSession)) {
-                if (isInbound()) {
-                    fsm.transition(message, creatingMediaGroup);
-                } else {
+        switch (message.getState()) {
+            case PENDING:
+                if (is(initializing)) {
                     fsm.transition(message, dialing);
                 }
-            } else if (is(updatingMediaSession)) {
-                fsm.transition(message, creatingMediaGroup);
-            }
-        } else if (MediaSessionClosed.class.equals(klass)) {
-            if (is(closingMediaSession)) {
-                if (this.fail) {
-                    fsm.transition(message, failed);
-                } else {
-                    fsm.transition(message, completed);
+                break;
+
+            case ACTIVE:
+                if (is(initializing) || is(updatingMediaSession)) {
+                    SipSession.State sessionState = invite.getSession().getState();
+                    if (!(SipSession.State.CONFIRMED.equals(sessionState) || SipSession.State.TERMINATED.equals(sessionState))) {
+                        mediaSessionInfo = message.getMediaSession();
+                        final SipServletResponse okay = invite.createResponse(SipServletResponse.SC_OK);
+                        final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
+                        String answer = null;
+                        if (mediaSessionInfo.usesNat()) {
+                            final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                            answer = SdpUtils.patch("application/sdp", sdp, externalIp);
+                        } else {
+                            answer = mediaSessionInfo.getLocalSdp().toString();
+                        }
+                        // Issue #215:
+                        // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+                        answer = SdpUtils.endWithNewLine(answer);
+                        okay.setContent(answer, "application/sdp");
+                        okay.send();
+                    } else if (SipSession.State.CONFIRMED.equals(sessionState)) {
+                        // We have an ongoing call and Restcomm executes new RCML app on that
+                        // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
+                        SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
+                        mediaSessionInfo = message.getMediaSession();
+                        final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
+                        String answer = null;
+                        if (mediaSessionInfo.usesNat()) {
+                            final String externalIp = mediaSessionInfo.getExternalAddress().getHostAddress();
+                            answer = SdpUtils.patch("application/sdp", sdp, externalIp);
+                        } else {
+                            answer = mediaSessionInfo.getLocalSdp().toString();
+                        }
+
+                        // Issue #215:
+                        // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
+                        answer = SdpUtils.endWithNewLine(answer);
+
+                        reInvite.setContent(answer, "application/sdp");
+                        reInvite.send();
+                    }
+
+                    // Make sure the SIP session doesn't end pre-maturely.
+                    invite.getApplicationSession().setExpires(0);
+
+                    // Activate call
+                    fsm.transition(message, inProgress);
                 }
-            } else if (is(failingBusy)) {
-                fsm.transition(message, busy);
-            } else if (is(failingNoAnswer)) {
-                fsm.transition(message, noAnswer);
-            }
-        } else if (MediaGroupCreated.class.equals(klass)) {
-            if (is(creatingMediaGroup)) {
-                fsm.transition(message, inProgress);
-            }
-        } else if (MediaGroupDestroyed.class.equals(klass)) {
-            if (is(destroyingMediaGroup)) {
-                fsm.transition(message, closingMediaSession);
-            }
+                break;
+
+            case INACTIVE:
+                if (is(stopping)) {
+                    if (fail) {
+                        fsm.transition(message, failed);
+                    } else {
+                        fsm.transition(message, completed);
+                    }
+                } else if (is(canceling)) {
+                    fsm.transition(message, canceled);
+                } else if (is(failingBusy)) {
+                    fsm.transition(message, busy);
+                } else if (is(failingNoAnswer)) {
+                    fsm.transition(message, noAnswer);
+                }
+                break;
+
+            case FAILED:
+                if (is(initializing) || is(updatingMediaSession) || is(joining) || is(leaving)) {
+                    fsm.transition(message, failed);
+                }
+                break;
+
+            default:
+                break;
         }
     }
 
@@ -1569,16 +1509,14 @@ public final class Call extends UntypedActor {
 
     private void onLeave(Leave message, ActorRef self, ActorRef sender) throws Exception {
         if (is(inProgress)) {
-            if (!receivedBye) {
-                // Conference was stopped and this call was asked to leave
-                // Send BYE to remote client
-                sendBye();
-            }
+            fsm.transition(message, leaving);
+        }
+    }
 
-            this.msController.tell(message, sender);
-            this.conference = null;
-            this.conferenceController = null;
-            this.fsm.transition(message, destroyingMediaGroup);
+    private void onLeft(Left message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(leaving)) {
+            // After leaving let the Interpreter know the Call is ready.
+            fsm.transition(message, inProgress);
         }
     }
 

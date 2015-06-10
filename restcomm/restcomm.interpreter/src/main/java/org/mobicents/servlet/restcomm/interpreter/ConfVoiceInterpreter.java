@@ -668,7 +668,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 } else if (type.contains("text/plain")) {
                     parser = parser("<Say>" + response.getContentAsString() + "</Say>");
                 } else {
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -749,7 +749,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                         final NotificationsDao notifications = storage.getNotificationsDao();
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -938,7 +938,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, text + " is an invalid URI.");
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }

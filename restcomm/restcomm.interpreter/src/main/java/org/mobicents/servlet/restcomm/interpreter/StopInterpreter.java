@@ -26,26 +26,19 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class StopInterpreter {
-    private boolean liveCallModification = false;
 
-    private static final class Singleton {
-        private static final StopInterpreter instance = new StopInterpreter();
+    private final boolean liveCallModification;
+
+    public StopInterpreter(boolean liveCallModification) {
+        this.liveCallModification = liveCallModification;
     }
 
-    private StopInterpreter() {
-        super();
-    }
-
-    public static StopInterpreter instance() {
-        return Singleton.instance;
+    public StopInterpreter() {
+        this(false);
     }
 
     public boolean isLiveCallModification() {
         return liveCallModification;
-    }
-
-    public void setLiveCallModification(boolean liveCallModification) {
-        this.liveCallModification = liveCallModification;
     }
 
 }
