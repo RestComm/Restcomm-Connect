@@ -351,7 +351,7 @@ public class MmsCallController extends MediaServerController {
         final State state = fsm.state();
 
         logger.info("********** Call Controller Current State: \"" + state.toString());
-        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.path());
 
         if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
