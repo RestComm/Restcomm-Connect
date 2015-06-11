@@ -65,7 +65,6 @@ import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.GetCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
-import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
 
@@ -263,14 +262,14 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
-                        accountId);
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30,
+                        CreateCall.Type.SIP, accountId);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
-                        accountId);
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30,
+                        CreateCall.Type.CLIENT, accountId);
             } else {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
-                        accountId);
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30,
+                        CreateCall.Type.PSTN, accountId);
             }
             create.setCreateCDR(false);
             if (callManager == null)
@@ -301,32 +300,32 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                                     fallbackUrl, fallbackMethod, callback, callbackMethod);
                             callManager.tell(execute, null);
                             // Create a call detail record for the call.
-                            //                            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                            //                            builder.setSid(callInfo.sid());
-                            //                            builder.setDateCreated(callInfo.dateCreated());
-                            //                            builder.setAccountSid(accountId);
-                            //                            builder.setTo(to);
-                            //                            builder.setCallerName(callInfo.fromName());
-                            //                            builder.setFrom(from);
-                            //                            builder.setForwardedFrom(callInfo.forwardedFrom());
-                            //                            builder.setStatus(callInfo.state().toString());
-                            //                            final DateTime now = DateTime.now();
-                            //                            builder.setStartTime(now);
-                            //                            builder.setDirection(callInfo.direction());
-                            //                            builder.setApiVersion(version);
-                            //                            final StringBuilder buffer = new StringBuilder();
-                            //                            buffer.append("/").append(version).append("/Accounts/");
-                            //                            buffer.append(accountId.toString()).append("/Calls/");
-                            //                            buffer.append(callInfo.sid().toString());
-                            //                            final URI uri = URI.create(buffer.toString());
-                            //                            builder.setUri(uri);
+                            // final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                            // builder.setSid(callInfo.sid());
+                            // builder.setDateCreated(callInfo.dateCreated());
+                            // builder.setAccountSid(accountId);
+                            // builder.setTo(to);
+                            // builder.setCallerName(callInfo.fromName());
+                            // builder.setFrom(from);
+                            // builder.setForwardedFrom(callInfo.forwardedFrom());
+                            // builder.setStatus(callInfo.state().toString());
+                            // final DateTime now = DateTime.now();
+                            // builder.setStartTime(now);
+                            // builder.setDirection(callInfo.direction());
+                            // builder.setApiVersion(version);
+                            // final StringBuilder buffer = new StringBuilder();
+                            // buffer.append("/").append(version).append("/Accounts/");
+                            // buffer.append(accountId.toString()).append("/Calls/");
+                            // buffer.append(callInfo.sid().toString());
+                            // final URI uri = URI.create(buffer.toString());
+                            // builder.setUri(uri);
 
                             CallDetailRecord cdr = daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid());
                             //
-                            //                            builder.setCallPath(call.path().toString());
+                            // builder.setCallPath(call.path().toString());
                             //
-                            //                            final CallDetailRecord cdr = builder.build();
-                            //                            daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
+                            // final CallDetailRecord cdr = builder.build();
+                            // daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
                             if (APPLICATION_JSON_TYPE == responseType) {
                                 return ok(gson.toJson(cdr), APPLICATION_JSON).build();
                             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -337,7 +336,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                         }
                     }
                 } else {
-                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " +managerResponse.error()).build();
+                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " + managerResponse.error())
+                            .build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();
@@ -369,12 +369,11 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         String fallBackMethod = data.getFirst("FallbackMethod");
         final String statusCallBack = data.getFirst("StatusCallback");
         String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
-        //Restcomm-  Move connected call leg (if exists) to the new URL
+        // Restcomm- Move connected call leg (if exists) to the new URL
         Boolean moveConnectedCallLeg = Boolean.valueOf(data.getFirst("MoveConnectedCallLeg"));
 
         String callPath = null;
         final ActorRef call;
-        ActorRef outboundCall = null;
         final CallInfo callInfo;
 
         try {
@@ -421,15 +420,6 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         if (url != null && call != null) {
             try {
-                Future<Object> future = (Future<Object>) ask(call, new GetOutboundCall(), expires);
-                Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(answer.getClass())) {
-                    //This means that the call is not associated with a outbound call. Probably because its already joined to a conference room
-                    outboundCall = null;
-                } else if (answer instanceof  ActorRef){
-                    outboundCall = (ActorRef)answer;
-                }
-
                 final String version = getApiVersion(data);
                 final URI uri = (new URL(url)).toURI();
 
@@ -439,7 +429,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                 statusCallbackMethod = (statusCallbackMethod == null) ? "POST" : statusCallbackMethod;
 
                 final UpdateCallScript update = new UpdateCallScript(call, accountSid, version, uri, method, fallbackUri,
-                        fallBackMethod, callbackUri, statusCallbackMethod, moveConnectedCallLeg, outboundCall);
+                        fallBackMethod, callbackUri, statusCallbackMethod, moveConnectedCallLeg);
                 callManager.tell(update, null);
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
