@@ -251,7 +251,6 @@ public final class Conference extends UntypedActor {
             // This will stop any current media operations and clean media resources
             mscontroller.tell(new Stop(), super.source);
         }
-
     }
 
     private abstract class FinalizingAction extends AbstractAction {

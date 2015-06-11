@@ -1,6 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd.utils;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +42,13 @@ public class RvdUtils {
         return false;
     }
 
+    // returns True when either the value is True OR null
+    public static boolean isEmpty( Boolean value) {
+        if ( value == null || value == false )
+            return true;
+        return false;
+    }
+
     public static boolean safeEquals(String value1, String value2) {
         return value1 == null ? (value1 == value2) : (value1.equals(value2));
     }
@@ -62,5 +71,15 @@ public class RvdUtils {
         byte[] usernamePassBytes = (username + ":" + password).getBytes(Charset.forName("UTF-8"));
         String authenticationToken = Base64.encodeBase64String(usernamePassBytes);
         return authenticationToken;
+    }
+
+    public static String myUrlEncode(String value) {
+        try {
+            // TODO make sure plus characters in the original value are handled correctly
+            return URLEncoder.encode(value, "UTF-8").replace("+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            // TODO issue a warning here
+            return value;
+        }
     }
 }

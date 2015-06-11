@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.2.2-SNAPSHOT</version>
+		<version>7.3.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm.commons</artifactId>
@@ -13,7 +13,7 @@
 	<url>http://maven.apache.org</url>
 
 	<properties>
-		<mobicents.name>TelScale</mobicents.name>
+		<mobicents.name>Mobicents</mobicents.name>
 		<maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
 		<release.timestamp>${maven.build.timestamp}</release.timestamp>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

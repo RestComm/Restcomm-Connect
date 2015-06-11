@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
@@ -850,10 +852,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final String forwardedFrom = callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
+        SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
             // Adding SIP OUT Headers and SipCallId for
             // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
-            SipServletResponse lastResponse = callInfo.lastResponse();
             // logger.info("lastResponse " + lastResponse);
             if (lastResponse != null) {
                 final int statusCode = lastResponse.getStatus();
@@ -866,18 +868,34 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
                     parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    Iterator<String> headerIt = lastResponse.getHeaderNames();
-                    while (headerIt.hasNext()) {
-                        String headerName = headerIt.next();
-                        if (headerName.startsWith("X-")) {
-                            parameters.add(new BasicNameValuePair("DialSipHeader_" + headerName, lastResponse
-                                    .getHeader(headerName)));
-                        }
-                    }
+                    processCustomHeaders(lastResponse, "DialSipHeader_", parameters);
                 }
             }
         }
+
+        if (lastResponse == null) {
+            // Restcomm VoiceInterpreter should check the INVITE for custom headers and pass them to RVD
+            // https://telestax.atlassian.net/browse/RESTCOMM-710
+            final SipServletRequest invite = callInfo.invite();
+            // For outbound calls created with Calls REST API, the invite at this point will be null
+            if (invite != null)
+                processCustomHeaders(invite, "SipHeader_", parameters);
+        } else {
+            processCustomHeaders(lastResponse, "SipHeader_", parameters);
+        }
+
         return parameters;
+    }
+
+    private void processCustomHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
+        Iterator<String> headerNames = sipMessage.getHeaderNames();
+        while (headerNames.hasNext()) {
+            String headerName = headerNames.next();
+            if (headerName.startsWith("X-")) {
+                logger.debug("%%%%%%%%%%% Indetified customer header: " + headerName);
+                parameters.add(new BasicNameValuePair(prefix + headerName, sipMessage.getHeader(headerName)));
+            }
+        }
     }
 
     private abstract class AbstractAction implements Action {
@@ -1645,8 +1663,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             }
                         }
                         branch.tell(new Cancel(), source);
-                        // No need to destroy here. // Call will get Cancel and then FSM will move to Completed where finally we
-                        // destroy calls
+                        // No need to destroy here.
+                        // Call will get Cancel and then FSM will move to Completed where finally we destroy calls
                         // callManager.tell(new DestroyCall(branch), source);
                     }
                     call.tell(new StopMediaGroup(), null);

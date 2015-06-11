@@ -248,7 +248,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#buyNumber(java.lang.String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters)
      */
     @Override
-    public boolean buyNumber(String phoneNumber, PhoneNumberParameters phoneNumberParameters) {
+    public boolean buyNumber(PhoneNumber phoneNumberObject, PhoneNumberParameters phoneNumberParameters) {
+        String phoneNumber = phoneNumberObject.getPhoneNumber();
         phoneNumber = phoneNumber.substring(2);
         // Provision the number from VoIP Innovations if they own it.
         if (isValidDid(phoneNumber)) {
@@ -329,7 +330,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#updateNumber(java.lang.String, org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberParameters)
      */
     @Override
-    public boolean updateNumber(String number, PhoneNumberParameters phoneNumberParameters) {
+    public boolean updateNumber(PhoneNumber phoneNumberObj, PhoneNumberParameters phoneNumberParameters) {
         return true;
     }
 
@@ -338,7 +339,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
      * @see org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumberProvisioningManager#cancelNumber(java.lang.String)
      */
     @Override
-    public boolean cancelNumber(String phoneNumber) {
+    public boolean cancelNumber(PhoneNumber phoneNumberObj) {
+        String phoneNumber = phoneNumberObj.getPhoneNumber();
         String numberToRemoveFromVi = phoneNumber;
         if(numberToRemoveFromVi.startsWith("+1")){
             numberToRemoveFromVi = numberToRemoveFromVi.replaceFirst("\\+1", "");

@@ -244,6 +244,8 @@ public class ClientsDialTest {
         //        assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
         //        assertTrue(dimitriCall.respondToDisconnect());
 
+        Thread.sleep(3000);
+        
         //Check CDR
         JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);

@@ -134,11 +134,11 @@ public class XmsBridgeController extends MediaServerController {
         this.recording = Boolean.FALSE;
 
         // States for the FSM
-        this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initializing", new Initializing(source), null);
-        this.active = new State("active", new Active(source), null);
-        this.inactive = new State("inactive", new Inactive(source), null);
-        this.failed = new State("failed", new Failed(source), null);
+        this.uninitialized = new State("uninitialized", null);
+        this.initializing = new State("initializing", new Initializing(source));
+        this.active = new State("active", new Active(source));
+        this.inactive = new State("inactive", new Inactive(source));
+        this.failed = new State("failed", new Failed(source));
 
         // Finite state machine
         final Set<Transition> transitions = new HashSet<Transition>();

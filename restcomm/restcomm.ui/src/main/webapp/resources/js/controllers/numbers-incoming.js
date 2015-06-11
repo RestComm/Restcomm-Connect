@@ -64,7 +64,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     $scope.phoneSid = $routeParams.phoneSid
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
-    
+
   //} // or registering a new one ?
   //else {
   //  // start optional items collapsed
@@ -171,7 +171,13 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
   $scope.findNumbers = function(areaCode, countryCode) {
     $scope.searching = true;
     $scope.availableNumbers = null;
-    $scope.availableNumbers = RCommAvailableNumbers.query({accountSid: $scope.sid, countryCode: countryCode.code, areaCode: areaCode});
+    var queryParams = {accountSid: $scope.sid, countryCode: $scope.newNumber.countryCode.code};
+    if($scope.newNumber.area_code) { queryParams['AreaCode'] = $scope.newNumber.area_code; }
+    if($scope.newNumber.phone_number) { queryParams['Contains'] = $scope.newNumber.phone_number; }
+    angular.forEach($scope.newNumber.capabilities, function(value, key) {
+      this[value + 'Enabled'] = 'true';
+    }, queryParams);
+    $scope.availableNumbers = RCommAvailableNumbers.query(queryParams);
     $scope.availableNumbers.$promise.then(
       //success
       function(value){
@@ -215,15 +221,18 @@ var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notific
 };
 
 var confirmNumberRegister = function(phone, isSIP, $dialog, $scope, RCommNumbers, Notifications, $location, $http) {
-  var title = 'Register Number ' + (phone.phone_number || phone.phoneNumber);
-  var msg = 'Are you sure you want to register incoming number ' + (phone.phone_number || phone.phoneNumber) + ' (' + (phone.friendly_name || phone.friendlyName) +  ') ? ' + (isSIP ? '' : 'It will cost you ' + phone.cost + '.');
+  var newNumber = phone.phone_number || phone.phoneNumber;
+  var newFriendly = phone.friendly_name || phone.friendlyName || newNumber;
+  var newCost = phone.cost || 0;
+  var title = 'Register Number ' + newNumber;
+  var msg = 'Are you sure you want to register incoming number ' + newNumber + ' (' + newFriendly +  ') ? ' + ((isSIP || !newCost) ? '' : 'It will cost you ' + newCost + '.');
   var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Register', cssClass: 'btn-primary'}];
 
   $dialog.messageBox(title, msg, btns)
     .open()
     .then(function(result) {
       if (result == "confirm") {
-        var params = createNumberParams(phone);
+        var params = createNumberParams(phone, isSIP);
         RCommNumbers.register({accountSid: $scope.sid}, $.param(params),
          function(phone, headers) { // success
            phone.registered = true;
@@ -261,6 +270,10 @@ var confirmNumberRegister = function(phone, isSIP, $dialog, $scope, RCommNumbers
 };
 
 var createNumberParams = function(number) {
+	createNumberParams(number, false)
+}
+
+var createNumberParams = function(number, isSIP) {
   var params = {};
 
   // Mandatory fields
@@ -278,13 +291,16 @@ var createNumberParams = function(number) {
   params["VoiceMethod"] = number.voice_method || number.voiceMethod;
   params["VoiceFallbackUrl"] = number.voice_fallback_url || number.voiceFallbackUrl;
   params["VoiceFallbackMethod"] = number.voice_fallback_method || number.voiceFallbackMethod;
-  params["StatusCallback"] = number.status_callback_url || number.statusCallback;
+  params["StatusCallback"] = number.status_callback || number.statusCallback;
   params["StatusCallbackMethod"] = number.status_callback_method || number.statusCallbackMethod;
   params["SmsUrl"] = number.sms_url || number.smsUrl;
   params["SmsMethod"] = number.sms_method || number.smsMethod;
   params["SmsFallbackUrl"] = number.sms_fallback_url || number.smsFallbackUrl;
   params["SmsFallbackMethod"] = number.sms_fallback_method || number.smsFallbackMethod;
   params["VoiceCallerIdLookup"] = number.voice_caller_id_lookup || number.voiceCallerIdLookup;
+  if(isSIP) {
+	  params["isSIP"] = "true";
+  }
 
   for (var prop in params) {
     if (params.hasOwnProperty(prop) && params[prop] === undefined) {

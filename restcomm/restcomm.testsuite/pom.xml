@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>restcomm</artifactId>
 		<groupId>com.telestax.servlet</groupId>
-		<version>7.2.2-SNAPSHOT</version>
+		<version>7.3.1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -330,32 +330,6 @@
 	</build>
 
 	<repositories>
-		<repository>
-			<id>telscale-releases-repository</id>
-			<name>TelScale Releases Repository</name>
-			<url>http://telestax.artifactoryonline.com/telestax/releases</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>telscale-snapshots-repository</id>
-			<name>TelScale Snapshots Repository</name>
-			<url>http://telestax.artifactoryonline.com/telestax/snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
 		<repository>
 			<id>mobicents-public-repository-group</id>
 			<name>Mobicens Public Maven Repository Group</name>

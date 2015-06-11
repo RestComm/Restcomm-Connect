@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.2.2-SNAPSHOT</version>
+		<version>7.3.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm.application</artifactId>
@@ -147,11 +147,17 @@
 			<version>${project.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.provisioning.number.bandwidth</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.telestax.servlet</groupId>
+            <artifactId>restcomm.provisioning.number.bandwidth</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.telestax.servlet</groupId>
+            <artifactId>restcomm.provisioning.number.voxbone</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>

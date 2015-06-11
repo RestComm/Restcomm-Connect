@@ -1,54 +1,54 @@
 <div class="modal-header">
-	<h3 class="modal-title"><i class="fa fa-cog"></i> Web Trigger</h3>
+	<h3 class="modal-title"><i class="fa fa-cog"></i> {{'webTriggerModalHeaderLabel' | translate}}</h3>
 </div>
 <div class="modal-body">
-	<div class="help-block">Web trigger allows starting your application using a simple HTTP call</div>
+	<div class="help-block">{{'webTriggerModalDescriptorLabel' | translate}}</div>
 	<div class="form-group">
-			Enable Web Trigger &nbsp;<input ng-change="setWebTriggerStatus(webTriggerEnabled);" ng-model="webTriggerEnabled" type="checkbox">
+			{{'webTriggerModalCheckbox' | translate}} &nbsp;<input ng-change="setWebTriggerStatus(webTriggerEnabled);" ng-model="webTriggerEnabled" type="checkbox">
 	</div>
 
 	<div ng-if="ccInfo!=null">
 		
 		<div class="form-group">
-			<h5><strong>Web Trigger URL</strong></h5>
+			<h5><strong>{{'webTriggerModalWebTriggerUrlLabel' | translate}}</strong></h5>
 			<div>
-				<i>http://{{getRvdHost()}}:{{getRvdPort()}}/restcomm-rvd/services/apps/{{projectName}}/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span></i>
+				<i ng-bind-html="getWebTriggerUrl()"></i>
 			</div>
 			<div class="help-block">
-				<small>Note that <code>from</code> and <code>to</code> URL parameters can be omitted if <i>fallback</i> values have been defined. Also, additional parameters can be appended to the url. They will be available as <em>application scoped</em> RVD variables when the application starts</small>
+				<small>{{'webTriggerModalWebTriggerUrlHelp1' | translate}} <code>{{'webTriggerModalWebTriggerUrlHelp2' | translate}}</code> {{'webTriggerModalWebTriggerUrlHelp3' | translate}} <code>{{'webTriggerModalWebTriggerUrlHelp4' | translate}}</code> {{'webTriggerModalWebTriggerUrlHelp5' | translate}} <i>{{'webTriggerModalWebTriggerUrlHelp6' | translate}}</i> {{'webTriggerModalWebTriggerUrlHelp7' | translate}} <em>{{'webTriggerModalWebTriggerUrlHelp8' | translate}}</em> {{'webTriggerModalWebTriggerUrlHelp9' | translate}}</small>
 			</div>			
 		</div>
 		<div class="rvd-spacer20"></div>
 		
 		<div class="form-group">
-			<h5><strong>Access token</strong></h5>
+			<h5><strong>{{'webTriggerModalAccessTokenLabel' | translate}}</strong></h5>
 			<div class="help-block">
-				Protect your Web Trigger URL with an access token. If set, make sure you provide the same <code>token</code> parameter when making the HTTP call. Leave it blank to allow free access.
+				{{'webTriggerModalAccessTokenHelp1' | translate}} <code>{{'webTriggerModalAccessTokenHelp2' | translate}}</code> {{'webTriggerModalAccessTokenHelp3' | translate}}
 			</div>
 			<div class="input-group">
-				<span class="input-group-addon">Access token</span>
+				<span class="input-group-addon">{{'webTriggerModalAccessTokenInput' | translate}}</span>
 				<input ng-model="ccInfo.accessToken" auto-clear type="text" class="form-control">
 			</div>				
 		</div>
 		<div class="rvd-spacer20"></div>	
 		
 		<div class="form-group">
-			<h5><strong>Fallback parameters</strong></h5>
-			<div class="help-block">You can optionally provide fallback <code class="help-tooltip" title="Origin of the outgoing call">From</code> and <code class="help-tooltip" title="Destination to get dialed when application starts">To</code> values in case they are not supplied in the HTTP call</div>
+			<h5><strong>{{'webTriggerModalFallbackParamLabel' | translate}}</strong></h5>
+			<div class="help-block">{{'webTriggerModalFallbackParamHelp1' | translate}} <code class="help-tooltip" title="{{'webTriggerModalFallbackParamTitle1' | translate}}">{{'webTriggerModalFallbackParamHelp2' | translate}}</code> {{'webTriggerModalFallbackParamHelp3' | translate}} <code class="help-tooltip" title="{{'webTriggerModalFallbackParamTitle' | translate}}">{{'webTriggerModalFallbackParamHelp4' | translate}}</code> {{'webTriggerModalFallbackParamHelp5' | translate}}</div>
 			<div class="row">
 				<div class="input-group col-md-6">
-					<span class="input-group-addon">To</span>
+					<span class="input-group-addon">{{'webTriggerModalToInput' | translate}}</span>
 					<input ng-model="ccInfo.lanes[0].startPoint.to" type="text" class="form-control">
 				</div>
 				<div class="input-group col-md-6">
-					<span class="input-group-addon">From</span>
+					<span class="input-group-addon">{{'webTriggerModalFromInput' | translate}}</span>
 					<input ng-model="ccInfo.lanes[0].startPoint.from" type="text" class="form-control">
 				</div>
 			</div>
 			<div class="help-block ">
 				<small>
-					Note that <i>From</i> and <i>To</i> values use the Restcomm RCML dial syntax. For example:
-					<code>+1232343294</code> or <code>client:bob</code> or <code>conference:1234</code> or <code>sip:+12839283849@server.com</code>
+					{{'webTriggerModalFallbackParamHelp6' | translate}} <i>{{'webTriggerModalFallbackParamHelp7' | translate}}</i> {{'webTriggerModalFallbackParamHelp8' | translate}} <i>{{'webTriggerModalFallbackParamHelp9' | translate}}</i> {{'webTriggerModalFallbackParamHelp10' | translate}}
+					<code>{{'webTriggerModalFallbackParamHelp11' | translate}}</code> {{'webTriggerModalFallbackParamHelp12' | translate}} <code>{{'webTriggerModalFallbackParamHelp13' | translate}}</code> {{'webTriggerModalFallbackParamHelp14' | translate}} <code>{{'webTriggerModalFallbackParamHelp15' | translate}}</code> {{'webTriggerModalFallbackParamHelp16' | translate}} <code>{{'webTriggerModalFallbackParamHelp17' | translate}}</code>
 				</small>
 			</div>
 		</div>
@@ -56,6 +56,6 @@
 	</div>
 </div>
 <div class="modal-footer">
-	<button class="btn btn-primary" ng-click="save(projectName,ccInfo)">Save</button>
-	<button class="btn btn-default" ng-click="cancel()">Cancel</button>
+	<button class="btn btn-primary" ng-click="save(projectName,ccInfo)">{{'webTriggerModalSaveButton' | translate}}</button>
+	<button class="btn btn-default" ng-click="cancel()">{{'webTriggerModalCancelButton' | translate}}</button>
 </div>

@@ -134,8 +134,16 @@ fi
 JAVA_OPTS="-Dprogram.name=$PROGNAME $JAVA_OPTS"
 JAVA_OPTS="$JAVA_OPTS -Xms1024m -Xmx2048m -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
 #JAVA_OPTS="$JAVA_OPTS -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n"
+
 # Setup the java endorsed dirs
 MMS_ENDORSED_DIRS="$MMS_HOME/lib"
+if [ "x$JAVA_HOME" != "x" ]; then
+    if [ -d "$JAVA_HOME/jre/lib/ext" ]; then
+        MMS_ENDORSED_DIRS="$MMS_ENDORSED_DIRS:$JAVA_HOME/jre/lib/ext"
+    else
+        echo 'ERROR: The extension lib for Java does not exist. Please configure $JAVA_HOME/jre/lib/ext'
+        exit 1
+    fi
 
 # Setup path for native libs
 LD_LIBRARY_PATH="$MMS_HOME/native"

@@ -970,7 +970,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 conferenceMediaGroup.tell(stop, source);
                 final DestroyWaitUrlConfMediaGroup destroy = new DestroyWaitUrlConfMediaGroup(conferenceMediaGroup);
                 conference.tell(destroy, source);
-                conferenceMediaGroup = null;
+//                conferenceMediaGroup = null;
             }
 
             // TODO should the dependencies be stopped here?
