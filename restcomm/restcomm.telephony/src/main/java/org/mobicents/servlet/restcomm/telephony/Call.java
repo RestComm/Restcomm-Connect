@@ -167,7 +167,6 @@ public final class Call extends UntypedActor {
 
     // Call Bridging
     private ActorRef bridge;
-    private ActorRef outboundCall;
 
     // Media Session Control runtime stuff
     private final ActorRef msController;
@@ -365,8 +364,6 @@ public final class Call extends UntypedActor {
             onGetCallObservers((GetCallObservers) message, self, sender);
         } else if (GetCallInfo.class.equals(klass)) {
             onGetCallInfo((GetCallInfo) message, self, sender);
-        } else if (GetOutboundCall.class.equals(klass)) {
-            onGetOutboundCall((GetOutboundCall) message, self, sender);
         } else if (InitializeOutbound.class.equals(klass)) {
             onInitializeOutbound((InitializeOutbound) message, self, sender);
         } else if (ChangeCallDirection.class.equals(klass)) {
@@ -1122,10 +1119,6 @@ public final class Call extends UntypedActor {
         sender.tell(info(), self);
     }
 
-    private void onGetOutboundCall(GetOutboundCall message, ActorRef self, ActorRef sender) throws Exception {
-        sender.tell(this.outboundCall, self);
-    }
-
     private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
             fsm.transition(message, queued);
@@ -1139,7 +1132,6 @@ public final class Call extends UntypedActor {
         this.conferencing = false;
         this.conference = null;
         this.bridge = null;
-        this.outboundCall = null;
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
