@@ -82,7 +82,7 @@
 			</pattern>
 		</servlet-mapping>
 	</servlet-selection>
-
+	
 	<servlet>
 		<servlet-name>RestComm</servlet-name>
 		<display-name>RestComm</display-name>
@@ -92,7 +92,7 @@
 		</servlet-class>
 		<load-on-startup>0</load-on-startup>
 	</servlet>
-
+	
 	<servlet>
 		<servlet-name>SmsService</servlet-name>
 		<display-name>SmsService</display-name>
@@ -112,11 +112,6 @@
 		</servlet-class>
 		<load-on-startup>2</load-on-startup>
 	</servlet>
-	<listener>
-		<listener-class>
-			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
-		</listener-class>
-	</listener>
 
 	<servlet>
 		<servlet-name>UserAgentManager</servlet-name>
@@ -127,7 +122,7 @@
 		</servlet-class>
 		<load-on-startup>3</load-on-startup>
 	</servlet>
-
+	
 	<servlet>
 		<servlet-name>ProxyManager</servlet-name>
 		<display-name>ProxyManager</display-name>
@@ -137,11 +132,33 @@
 		</servlet-class>
 		<load-on-startup>4</load-on-startup>
 	</servlet>
+
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.Bootstrapper
+		</listener-class>
+	</listener>
+		<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
+		</listener-class>
+	</listener>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
+		</listener-class>
+	</listener>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
+		</listener-class>
+	</listener>
 	<listener>
 		<listener-class>
 			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
 		</listener-class>
 	</listener>
+
 	<servlet>
 		<description>XMS Keep Alive Monitor</description>
 		<display-name>KeepAliveMonitor</display-name>

@@ -1,7 +1,19 @@
-var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','basicDragdrop']);
+var App = angular.module('Rvd', [
+	'angularFileUpload',
+	'ngRoute',
+	'ngDragDrop',
+	'ui.bootstrap',
+	'ui.bootstrap.collapse',
+	'ui.bootstrap.popover',
+	'ui.sortable',
+	'basicDragdrop',
+	'pascalprecht.translate',
+	'ngSanitize'
+]);
+
 var rvdMod = App;
 
-App.config([ '$routeProvider',  function($routeProvider) {
+App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $translateProvider) {
 	
 	$routeProvider.when('/project-manager/:projectKind', {
 		templateUrl : 'templates/projectManager.html',
@@ -62,6 +74,12 @@ App.config([ '$routeProvider',  function($routeProvider) {
 	.otherwise({
 		redirectTo : '/home'
 	});
+	
+	$translateProvider.useStaticFilesLoader({
+  		prefix: '/restcomm-rvd/languages/',
+  		suffix: '.json'
+	});
+	$translateProvider.use('en-US');
 
 }]);
 

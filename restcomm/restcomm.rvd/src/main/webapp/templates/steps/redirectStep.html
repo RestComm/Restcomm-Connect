@@ -8,14 +8,14 @@
 			<div class="col-md-12">				
 				<form name="form" novalidate>
 					<div class="input-group input-group-sm">
-						<span class="input-group-addon">Continue to</span>
+						<span class="input-group-addon">{{'redirectStepContinueToLabel' | translate}}</span>
 						<input type='text' name='url' ng-model='step.url' class="form-control" required ></input>
-						<span class='input-group-addon'>method</span>
+						<span class='input-group-addon'>{{'redirectStepMethodLabel' | translate}}</span>
 						<select name="method" ng-model='step.method' ng-options='method for method in methods' class="form-control">
 							<option value=""></option>
 						</select>
 					</div>
-					<div class="validation-error" ng-show="form.url.$invalid">Url is missing</div>
+					<div class="validation-error" ng-show="form.url.$invalid">{{'redirectStepUrlMissingLabel' | translate}}</div>
 				</form>
 				
 			</div>

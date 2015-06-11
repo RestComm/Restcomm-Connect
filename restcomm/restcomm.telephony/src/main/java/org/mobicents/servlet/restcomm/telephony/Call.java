@@ -290,7 +290,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -318,9 +318,14 @@ public final class Call extends UntypedActor {
         InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
         InetAddress inetAddress = InetAddress.getByName(realIP);
 
+        int remotePort = message.getRemotePort();
+        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
+        String remoteAddress = message.getRemoteAddr();
+
         // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
         final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
 
         SipURI uri = null;
 
@@ -1230,6 +1235,7 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_RINGING:
             case SipServletResponse.SC_SESSION_PROGRESS: {
                 if (!is(ringing)) {
+                    logger.info("Got 180 Ringing for Call: "+self().path()+" To: "+to+" sender: "+sender.path()+" observers size: "+observers.size());
                     fsm.transition(message, ringing);
                 }
                 break;
@@ -1238,12 +1244,13 @@ public final class Call extends UntypedActor {
             case SipServletResponse.SC_BUSY_EVERYWHERE: {
                 sendCallInfoToObservers();
 
-                // Notify the observers.
-                external = CallStateChanged.State.BUSY;
-                final CallStateChanged event = new CallStateChanged(external);
-                for (final ActorRef observer : observers) {
-                    observer.tell(event, self);
-                }
+                //Important. If state is DIALING, then do nothing about the BUSY. If not DIALING state move to failingBusy
+//                // Notify the observers.
+//                external = CallStateChanged.State.BUSY;
+//                final CallStateChanged event = new CallStateChanged(external);
+//                for (final ActorRef observer : observers) {
+//                    observer.tell(event, self);
+//                }
 
                 // XXX shouldnt it move to failingBusy IF dialing ????
                 if (is(dialing)) {

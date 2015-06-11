@@ -66,7 +66,7 @@
 
 			<!-- When set to true, Restcomm will use the username of the outbound proxy when -->
 			<!-- creating the From header, as the userpart of the sip uri. Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
-			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
+			<outboudproxy-user-at-from-header>false</outboudproxy-user-at-from-header>
 			<!-- When set to true, Restcomm will use the original user for the display name of the From header -->
 			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<user-at-displayed-name>true</user-at-displayed-name>
@@ -133,7 +133,48 @@
             The site Id will be 1234, that is the characters after the s%22:
             You can also get the site Id by querying the Sites REST API directly.
         uri - Should always be https://api.inetwork.com/v1.0 for production traffic and numbers.
-
+    -->
+    <!--
+  <phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager">
+      <callback-urls>
+          <voice url="" method="SIP"/>
+          <sms url="" method="SIP"/>
+          <fax url="" method="SIP"/>
+          <ussd url="" method="SIP"/>
+      </callback-urls>
+      <bandwidth>
+          <username></username>
+          <password></password>
+          <accountId></accountId>
+          <siteId></siteId>
+          <uri>https://api.inetwork.com/v1.0</uri>
+      </bandwidth>
+  </phone-number-provisioning>
+    -->
+    
+    <!--Voxbone Provisioning API Configuration
+    	For Callback URLs, use {E164}@IP_ADDRESS:PORT
+        username - The username assigned to you at account setup for the Voxbone Portal (https://voxbone.com)
+        password - Password used to login to the Voxbone portal (https://voxbone.com)
+        uri - The URI of voxbone rest services. Usually not changed except if you want to test with a sandbox account
+        Should always be https://api.voxbone.com/ws-voxbone/services/rest for production traffic and numbers.
+    -->
+    <!--
+  <phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager">
+      <callback-urls>
+          <voice url="+{E164}@IP_ADDRESS:PORT" method="SIP"/>
+          <sms url="+{E164}@IP_ADDRESS:PORT" method="SIP"/>
+          <fax url="+{E164}@IP_ADDRESS:PORT" method="SIP"/>
+          <ussd url="+{E164}@IP_ADDRESS:PORT" method="SIP"/>
+      </callback-urls>
+      <voxbone>
+          <username></username>
+          <password></password>
+          <uri>https://api.voxbone.com/ws-voxbone/services/rest</uri>
+      </voxbone>
+  </phone-number-provisioning>
+    -->
+ 	<!--
 		Configuration for the VoIP Innovations provisioning API.
 		class: org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager
 		voice url: URL (host:port) and method (SIP or SIPS) to where a DID for voice should forward the calls
@@ -146,10 +187,10 @@
 	-->
 	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<callback-urls>
-			<voice url="" method=""/>
-			<sms url="" method=""/>
-			<fax url="" method=""/>
-			<ussd url="" method=""/>
+			<voice url="" method="" />
+			<sms url="" method="" />
+			<fax url="" method="" />
+			<ussd url="" method="" />
 		</callback-urls>
 		<voip-innovations>
 			<login></login>
@@ -158,14 +199,22 @@
 			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
 		</voip-innovations>
 		<bandwidth>
-          <username></username>
-          <password></password>
-          <accountId></accountId>
-          <siteId></siteId>
-          <uri>https://api.inetwork.com/v1.0</uri>
-      </bandwidth>
-      <!-- <nexmo>
-      		</nexmo> -->
+			<username></username>
+			<password></password>
+			<accountId></accountId>
+			<siteId></siteId>
+			<uri>https://api.inetwork.com/v1.0</uri>
+		</bandwidth>
+		<nexmo>
+			<api-key></api-key>
+			<api-secret></api-secret>
+			<uri>https://rest.nexmo.com/</uri>
+		</nexmo>
+		<voxbone>
+			<username></username>
+			<password></password>
+			<uri>https://api.voxbone.com/ws-voxbone/services/rest</uri>
+		</voxbone>
 	</phone-number-provisioning>
 
 	<smtp>

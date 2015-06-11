@@ -365,6 +365,12 @@ li.verb {
  * BOOTSTRAP CUSTOMIZATIONS 
  * 
  */
+ 
+.form-control.form-control-inline {
+    min-width: 0;
+    width: auto;
+    display: inline;
+}
 
 .col-centered{
     float: none;
@@ -598,6 +604,14 @@ textarea.medium {
     width: 100%;
     z-index: 2000;
     top: 51px;
+}
+
+.navbar-brand .rvd-head {
+	color: #999;
+}
+.navbar-brand .rvd-head:hover {
+	text-decoration: none;
+	color: #CCC;
 }
 
 /* ------------------ index.html - top menu ---------------- */

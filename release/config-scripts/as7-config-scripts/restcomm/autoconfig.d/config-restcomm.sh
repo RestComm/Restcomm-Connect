@@ -134,7 +134,7 @@ configDidProvisionManager() {
 			N; s|<password>.*</password>|<password>$2</password>|
 			N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
 		}" $FILE.bak > $FILE
-		# mv $FILE.bak $FILE
+		sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 		echo 'Configured Voip Innovation credentials'
 		else
 			if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
@@ -148,12 +148,51 @@ configDidProvisionManager() {
 			sed -e "/<bandwidth>/ {
 				N; s|<username>.*</username>|<username>$1</username>|
 				N; s|<password>.*</password>|<password>$2</password>|
-				N; s|<accountId>.*</accountId>|<accountId>$3</accountId>|
+				N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
 				N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
 			}" $FILE.bak > $FILE
-			# mv $FILE.bak $FILE
+			sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 			echo 'Configured Bandwidth credentials'
-			fi
+		else
+			if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
+				echo "Nexmo PROVISION_PROVIDER"
+				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
+
+				sed -i "/<callback-urls>/ {
+					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:5080\" method=\"SIP\" />|
+					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
+					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
+					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
+				}" $FILE
+
+				sed -i "/<nexmo>/ {
+					N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
+					N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
+				}" $FILE
+
+				sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
+
+		else
+			if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
+				echo "Voxbone PROVISION_PROVIDER"
+				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
+
+				sed -i "/<callback-urls>/ {
+					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
+					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
+					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
+					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
+				}" $FILE
+
+				sed -i "/<voxbone>/ {
+					N; s|<username>.*</username>|<username>$1</username>|
+					N; s|<password>.*</password>|<password>$2</password>|
+				}" $FILE
+				sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+
+		fi
+		fi
+		fi
 		fi
 
 }
@@ -180,8 +219,8 @@ configSmsAggregator() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	sed -e "/<sms-aggregator.*>/ {
-		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>#</outbound-prefix>|
-		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1:5060</outbound-endpoint>|
+		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>$2</outbound-prefix>|
+		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1</outbound-endpoint>|
 	}" $FILE > $FILE.bak
 
 	mv $FILE.bak $FILE
@@ -318,9 +357,9 @@ echo 'Configuring RestComm...'
 configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
-configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID"
+configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
-configSmsAggregator "$OUTBOUND_PROXY"
+configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"

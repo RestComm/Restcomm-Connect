@@ -94,7 +94,7 @@ fi
 # set environment variables for execution
 BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 RESTCOMM_HOME=$(cd $BASEDIR/../../ && pwd)
-MMS_HOME=$RESTCOMM_HOME/telscale-media/telscale-media-server
+MMS_HOME=$RESTCOMM_HOME/mediaserver
 LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 
 echo BASEDIR: $BASEDIR
@@ -161,6 +161,10 @@ fi
 
 if [[ -z "$PUBLIC_IP" ]]; then
 	PUBLIC_IP=$STATIC_ADDRESS
+fi
+
+if [[ -z "$SMS_OUTBOUND_PROXY" ]]; then
+	SMS_OUTBOUND_PROXY=$OUTBOUND_PROXY
 fi
 
 # configure restcomm installation

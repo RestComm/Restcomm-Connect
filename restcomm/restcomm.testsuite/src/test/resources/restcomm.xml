@@ -156,10 +156,6 @@
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
-	
-	<mscontrol>
-		<compatibility>mms</compatibility>
-	</mscontrol>
 
 	<amazon-s3>
 		<enabled>false</enabled>

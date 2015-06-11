@@ -142,10 +142,6 @@
 		<password></password>
 	</smtp>
 
-	<mscontrol>
-		<compatibility>mms</compatibility>
-	</mscontrol>
-
 	<dao-manager
 		class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
 		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml

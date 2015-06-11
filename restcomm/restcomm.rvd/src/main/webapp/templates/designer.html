@@ -3,10 +3,10 @@
 	<nav ng-show='projectError' class="navbar navbar-default" role="navigation">
 		<div ng-switch on="projectError.className" class="collapse navbar-collapse navbar-ex1-collapse">
 			<div ng-switch-when='ProjectDoesNotExist' class='navbar-text navbar-rvd-centered'>
-				Project <em>{{projectName}}</em> not  found. <a href="#">View available projects</a>
+				{{'designerProjectNotFoudLabel1' | translate}} <em>{{projectName}}</em> {{'designerProjectNotFoudLabel2' | translate}} <a href="#">{{'designerProjectNotFoudLabel3' | translate}}</a>
 			</div>
 			<div ng-switch-default class='navbar-text navbar-rvd-centered'>
-				Unknown error. <a href="#">View available projects</a>
+				{{'designerUnknownErrorLabel1' | translate}} <a href="#">{{'designerUnknownErrorLabel2' | translate}}</a>
 			</div>			
 		</div>
 	</nav>
@@ -20,23 +20,23 @@
 				</div>
 	
 				<ul class="nav navbar-nav navbar-right">
-					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">Web Trigger</a></li>
+					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">{{'designerWebTriggerLink' | translate}}</a></li>
 					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Export <b class="caret"></b></a>
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{'designerExportLink' | translate}} <b class="caret"></b></a>
 						<ul class="dropdown-menu">
-							<li><a href='#/packaging/{{projectName}}'><i class='fa fa-shopping-cart'></i>&nbsp;&nbsp;&nbsp;Application Store</a></li>
-							<li><a href="/restcomm-rvd/services/projects/{{projectName}}/archive"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;zip file</a></li>
+							<li><a href='#/packaging/{{projectName}}'><i class='fa fa-shopping-cart'></i>&nbsp;&nbsp;&nbsp;{{'designerApplicationStoreLink' | translate}}</a></li>
+							<li><a href="/restcomm-rvd/services/projects/{{projectName}}/archive"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;{{'designerZipFileLink' | translate}}</a></li>
 						</ul>
 					</li>
-					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; Save</a></li>
-					<li class='rvd-appurl' ng-show="startNodeSet(project)"><a target="_blank" href='{{getStartUrl()}}'>App URL</a></li>
-					<li><a href="#/project-manager/{{project.projectKind ? project.projectKind : 'voice'}}" title="Close {{projectName}}"><i class='fa fa-power-off'></i>&nbsp;</a></li>
+					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; {{'designerSaveLink' | translate}}</a></li>
+					<li class='rvd-appurl' ng-show="startNodeSet(project)"><a target="_blank" href='{{getStartUrl()}}'>{{'designerAppUrlLink' | translate}}</a></li>
+					<li><a href="#/project-manager/{{project.projectKind ? project.projectKind : 'voice'}}" title="{{'designerCloseTitle' | translate}} {{projectName}}"><i class='fa fa-power-off'></i>&nbsp;</a></li>
 					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Settings"><i class="fa fa-cog"></i> <b class="caret"></b></a>
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{{'designerProjectSettingsTitle' | translate}}"><i class="fa fa-cog"></i> <b class="caret"></b></a>
 						<ul class="dropdown-menu">
-							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">Project Settings</a></li>
+							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">{{'designerProjectSettingsLink' | translate}}</a></li>
 							<!--<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li> -->
-							<li><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text">Application log</a></li>
+							<li><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text">{{'designerApplicationLogLink' | translate}}</a></li>
 						</ul>
 					</li>
 				</ul>
@@ -52,67 +52,67 @@
 			<div class="col-md-2">
 	
 				<div ng-show='!project.projectKind || project.projectKind=="voice"' class='form-group'>
-					<div basic-draggable drop-target='.steps' class="verb-button button-play label label-primary rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;Play</div>
-					<div basic-draggable drop-target='.steps' drag-model='protos.stepProto.say' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;Say</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;Collect</div>					
-					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;Dial</div>					
-					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;Hang Up</div>					
-					<div basic-draggable drop-target='.steps' class="verb-button button-externalService label label-primary rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;Log</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-reject label label-primary rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;Reject</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-play label label-primary rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;{{'designerVoicePlayLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' drag-model='protos.stepProto.say' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;{{'designerVoiceSayLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;{{'designerVoiceCollectLabel' | translate}}</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;{{'designerVoiceDialLabel' | translate}}</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;{{'designerVoiceHangUpLabel' | translate}}</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-externalService label label-primary rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;{{'designerVoiceExternalServiceLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;{{'designerVoiceLogLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-reject label label-primary rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;{{'designerVoiceRejectLabel' | translate}}</div>
 					
-					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-pause label label-primary rvd-pickable"><i class='fa fa-pause'></i> &nbsp;Pause</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-record label label-primary rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;Record</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-fax label label-primary rvd-pickable"><i class='fa fa-print'></i> &nbsp;Fax</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;{{'designerVoiceRedirectLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-pause label label-primary rvd-pickable"><i class='fa fa-pause'></i> &nbsp;{{'designerVoicePauseLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;{{'designerVoiceSmsLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-record label label-primary rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;{{'designerVoiceRecordLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-fax label label-primary rvd-pickable"><i class='fa fa-print'></i> &nbsp;{{'designerVoiceFaxLabel' | translate}}</div>
 				</div>			
 				<div ng-show='project.projectKind=="ussd"' class='form-group'>
-					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;Language</div>
-					<div basic-draggable drop-target='.ussd-collect-messages,.steps' class="label label-primary verb-button button-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;USSD Message</div>
-					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;USSD Collect</div>
-					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;Log</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;{{'designerUssdLanguageLabel' | translate}}</div>
+					<div basic-draggable drop-target='.ussd-collect-messages,.steps' class="label label-primary verb-button button-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;{{'designerUssdUssdMessageLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdCollect rvd-pickable"><i class='fa fa-question'></i> &nbsp;{{'designerUssdUssdCollectLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;{{'designerUssdExternalServiceLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;{{'designerUssdLogLabel' | translate}}</div>
 				</div>
 				<div ng-show='project.projectKind=="sms"' class='form-group'>
-					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;SMS</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;Redirect</div>
-					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;External Service</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;Log</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;{{'designerSmsSmsLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;{{'designerSmsRedirectLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;{{'designerSmsExternalServiceLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;{{'designerSmsLogLabel' | translate}}</div>
 				</div>				
 			
-				<div ng-show='project.projectKind=="voice"'>
-					<h5 class='text-center'><strong>Audio resources</strong></h5>
+				<!-- wavManager -->
+				<div ng-controller="wavManagerController" ng-show='project.projectKind=="voice"'>
+					<h5 class='text-center'><strong>{{'designerAudioResourcesLabel' | translate}}</strong></h5>
 					
 					<div class='drop-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
-						<div class="drop-prompt">Drop new audio resources here</div>
+						<div class="drop-prompt">{{'designerDropAudioLabel' | translate}}</div>
 					</div>
-					<div ng-file-drop-available="dropSupported=true" ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+					<div ng-file-drop-available="dropSupported=true" ng-show="!dropSupported">{{'designerHtml5DropLabel' | translate}}</div>
 					
-					<div class='text-left more-audio-resources'>
-						<a class='rvd-clickable' ng-show='!showAudioResources' ng-click='showAudioResources = true'>More...</a>
-					</div>
-					
-					<div ng-show='showAudioResources'>									
-						<div class='row' ng-repeat='wavItem in project.wavList'>
-							<div ng-show='!wavItem.viewMode'>
-								<div class='col-md-10 ellipsis' tooltip='{{wavItem.filename}}' tooltip-popup-delay="1000" tooltip-trigger="mouseenter">{{wavItem.filename}}</div>
-								<div class='col-md-1'>
-									<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
-								</div>
-							</div>
-							<div class="col-md-12 text-center delete-confirmation " ng-show="wavItem.viewMode=='confirm-delete'">
-								<div>Delete <em>{{wavItem.filename}}</em> ?</div> 
-								<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">Cancel</a>
-							</div>						
-							
+					<div>	
+						<div class='text-left more-audio-resources'>
+							<a class='rvd-clickable' ng-show='!showAudioResources' ng-click='showAudioResources = true'>{{'designerMoreLabel' | translate}}</a>
 						</div>
-						<a class='rvd-clickable' ng-click="showAudioResources = false"><i class="fa fa-angle-double-up" ></i></a>
+						<div ng-show='showAudioResources'>
+							<div class='row' ng-repeat='wavItem in project.wavList'>
+								<div ng-show='!wavItem.viewMode'>
+									<div class='col-md-10 ellipsis' tooltip='{{wavItem.filename}}' tooltip-popup-delay="1000" tooltip-trigger="mouseenter">{{wavItem.filename}}</div>
+									<div class='col-md-1'>
+										<i  ng-click="wavItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
+									</div>
+								</div>
+								<div class="col-md-12 text-center delete-confirmation " ng-show="wavItem.viewMode=='confirm-delete'">
+									<div>{{'designerConfirmDeleteLabel1' | translate}} <em>{{wavItem.filename}}</em> {{'designerConfirmDeleteLabel2' | translate}}</div> 
+									<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">{{'designerCancelLabel' | translate}}</a>
+								</div>						
+							</div>
+							<a class='rvd-clickable' ng-click="showAudioResources = false"><i class="fa fa-angle-double-up" ></i></a>
+						</div>
 					</div>	
-
-						
 				</div>
 			</div>
+			<!-- /wavManager -->
 	
 			<!-- Workspace on the right -->
 			<div class="col-md-10">
@@ -125,12 +125,12 @@
 							<div class="col-md-9 form-group">
 								<ul class="top-menu nav nav-pills">
 									<li class="dropdown">
-										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="Select the module your application will start with">Startup module - <strong>{{nodeNamed(project.startNodeName).label}}</strong>	 <span class="caret"></span></a>
+										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="{{'designerStartupModuleLinkTitle' | translate}}">{{'designerStartupModuleLink' | translate}} <strong>{{nodeNamed(project.startNodeName).label}}</strong>	 <span class="caret"></span></a>
 										<ul class="dropdown-menu">
 											<li ng-repeat='node in getAllTargets()'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
 										</ul>
 									</li>
-									<li><a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="Create a blank module"><i class='fa fa-plus'></i>&nbsp; New Module</a></li>
+									<li><a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="{{'designerNewModuleLinkTitle' | translate}}"><i class='fa fa-plus'></i>&nbsp; {{'designerNewModuleLink' | translate}}</a></li>
 									<!--
 									<li>
 										<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
@@ -138,13 +138,13 @@
 									-->
 								</ul>
 								<div ng-show="!startNodeSet(project)" class='rvd-subheader-message'>
-									<span class="validation-error">No <em>Startup module</em> is set</span>
+									<span class="validation-error">{{'designerValidationErrorLabel1' | translate}} <em>{{'designerValidationErrorLabel2' | translate}}</em> {{'designerValidationErrorLabel3' | translate}}</span>
 								</div>
 							</div>
 							<div class="col-md-3">
 								<div class="input-group">
-									<span class="input-group-addon"><i class="fa fa-search" title="Search modules by label"></i></span>
-									<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="Type the module label to search for or simply filter the list of modules. Regex syntax supported" >
+									<span class="input-group-addon"><i class="fa fa-search" title="{{'designerInputSearchLabelTitle' | translate}}"></i></span>
+									<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
 									<div class="input-group-btn" ng-class='{open:showNodesDropdown}' >
 									  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
 										  <span class="caret"></span>
@@ -152,11 +152,12 @@
 									  <ul class="dropdown-menu pull-right" role="menu">
 										<li ng-repeat="node in getAllTargets() | filterNodesByLabel:searchToken"><a ng-mousedown="editNode(node.name)" class="rvd-clickable-text">{{node.label}}</a></li>
 										<li role="presentation" class="divider"></li>
-										<li><a ng-mousedown="editFilteredNodes(getAllTargets(),searchToken)" title="Open listed modules for editing"><span class="text-muted rvd-clickable-text">Edit listed</span></a></li>
-										<li><a ng-mousedown="hideAllButStartNode(getAllTargets(),project.startNodeName)" title="Hide all modules except startup"><span class="text-muted rvd-clickable-text">Hide all</span></a></li>
+										<li><a ng-mousedown="editFilteredNodes(getAllTargets(),searchToken)" title="{{'designerEditListedLinkTitle' | translate}}"><span class="text-muted rvd-clickable-text">{{'designerEditListedLink' | translate}}</span></a></li>
+										<li><a ng-mousedown="hideAllButStartNode(getAllTargets(),project.startNodeName)" title="{{'designerHideAllLinkTitle' | translate}}"><span class="text-muted rvd-clickable-text">{{'designerHideAllLink' | translate}}</span></a></li>
 									  </ul>
 									</div>
 								</div>
+								<div class="help-block" style="margin-top: 0px;"><small><i>{{'designerInputSearchHelp' | translate}}</i></small></div>
 							</div>
 						</div>
 						
@@ -170,9 +171,9 @@
 									ng-show='!view.editLabel'> <!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
 										<a ng-click='onEditNodeLabel(view,nodeSummary.name)' class="rvd-clickable-text">{{getNodeLabel(nodeSummary.name)}}</a>
 										&nbsp;&nbsp;&nbsp;
-										<i ng-click='removeNode(nodeSummary.name)' ng-show="isNodeActive(nodeSummary.name)" class='fa fa-trash-o rvd-clickable' title="Remove module"></i>
+										<i ng-click='removeNode(nodeSummary.name)' ng-show="isNodeActive(nodeSummary.name)" class='fa fa-trash-o rvd-clickable' title="{{'designerTabRemoveModuleTitle' | translate }}"></i>
 										&nbsp;&nbsp;
-										<i ng-click='hideNode(nodeSummary.name)' ng-show="isNodeActive(nodeSummary.name)" class='fa fa-sort-desc rvd-clickable' title="Hide module"></i>
+										<i ng-click='hideNode(nodeSummary.name)' ng-show="isNodeActive(nodeSummary.name)" class='fa fa-sort-desc rvd-clickable' title="{{'designerTabHideModuleTitle' | translate}}"></i>
 
 								</span>
 									<div ng-show='view.editLabel'>

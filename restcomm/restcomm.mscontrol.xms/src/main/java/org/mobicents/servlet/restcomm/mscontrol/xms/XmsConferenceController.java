@@ -124,11 +124,11 @@ public class XmsConferenceController extends MediaServerController {
         this.playing = Boolean.FALSE;
 
         // Initialize the states for the FSM
-        this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initializing", new Initializing(source), null);
-        this.active = new State("active", new Active(source), null);
-        this.inactive = new State("inactive", new Inactive(source), null);
-        this.failed = new State("failed", new Failed(source), null);
+        this.uninitialized = new State("uninitialized", null);
+        this.initializing = new State("initializing", new Initializing(source));
+        this.active = new State("active", new Active(source));
+        this.inactive = new State("inactive", new Inactive(source));
+        this.failed = new State("failed", new Failed(source));
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();

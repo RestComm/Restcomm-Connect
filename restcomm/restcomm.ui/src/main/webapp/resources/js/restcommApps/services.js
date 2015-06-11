@@ -35,7 +35,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	function getAppByUrl(apps, appUrl) {
 		for (var i=0; i < apps.length; i++) {
 			var app = apps[i];
-			var matches = RegExp(encodeURIComponent(app.projectName) + "/controller") .exec(appUrl);
+			var pattern = app.projectName + "/controller";
+			var decodedUrl = decodeURIComponent(appUrl);
+			var matches = RegExp(pattern) .exec(decodedUrl);
 			if (matches != null) {
 				return app;
 			}
@@ -48,11 +50,12 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		$http({url: '/restcomm-rvd/services/ras/apps/' + appName + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
-				//console.log("succesfull retrieved app config");
 				defer.resolve(data.payload);
-			} else {
+			} else
+			if (data.rvdStatus == "NOT_FOUND")
+				defer.reject("application has no RAS capabilities");
+			else
 				defer.reject("error getting app config")
-			}
 		})
 		.error(function () {
 			console.log("error getting app config"); 
@@ -114,7 +117,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 								}
 							} // the instance id should be added here as well
 						}).error(function (data, status) {
-							Notifications.warn("Number provisioning failed with status " + status + " - " + appConfig.provisioningUrl);
+							Notifications.warn("Number provisioning failed with status " + status + " - " + appConfig.provisioningUrl );
+							if ( status == 404)
+								console.log( "This maybe a CORS issue. Make sure the provisioning server supports CORS requests.");
 						}).success(function(data) {
 							if (data) {
 								if (data.status == "ok")
@@ -164,8 +169,15 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 				}
 			})
 			.error(function (data, status) {
-				console.log("error contacting provisioning url - " + url + " - " + status);
-				Notifications.warn("Error provisioning application parameters");
+				if ( status == 404) {
+					console.log( "Error contacting provisioning url - " + url + " - " + status + ". This maybe a CORS issue. Make sure the provisioning server supports CORS requests.");
+					Notifications.warn("Error provisioning application parameters. This may be a CORS issue.");
+				}
+				else {
+					console.log("Error contacting provisioning url - " + url + " - " + status);
+					Notifications.warn("Error provisioning application parameters. This may be a CORS issue.");
+				}
+				
 			});
 		}
 	}	
