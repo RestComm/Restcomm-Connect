@@ -49,6 +49,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -951,6 +952,8 @@ public final class CallManager extends UntypedActor {
             if (logger.isInfoEnabled()) {
                 logger.info(String.format("B2BUA: Got BYE request: \n %s", request));
             }
+
+            //Prepare the BYE request to the linked session
             request.getSession().setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, request);
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
@@ -980,6 +983,11 @@ public final class CallManager extends UntypedActor {
                     clonedBye.setRequestURI(fromInetUri);
                 }
             }
+            B2BUAHelper.updateCDR(request, CallStateChanged.State.COMPLETED);
+            //Prepare 200 OK for received BYE
+            SipServletResponse okay = request.createResponse(Response.OK);
+            okay.send();
+            //Send the Cloned BYE
             clonedBye.send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
