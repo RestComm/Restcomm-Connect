@@ -233,6 +233,8 @@ public class ClientsDialTest {
 
         assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        assertTrue(dimitriCall.waitForAck(3000));
+        
         Thread.sleep(3000);
         dimitriCall.listenForDisconnect();
         assertTrue(mariaCall.disconnect());
