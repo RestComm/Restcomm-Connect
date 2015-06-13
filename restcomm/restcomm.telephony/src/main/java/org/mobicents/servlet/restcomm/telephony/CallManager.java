@@ -888,6 +888,10 @@ public final class CallManager extends UntypedActor {
                 break;
             }
         }
+        if (from == null || to == null) {
+            //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
+            throw new ServletParseException("From and/or To are null, we cannot proceed to the outbound call");
+        }
         final ActorRef call = call();
         final ActorRef self = self();
         final boolean userAtDisplayedName = runtime.subset("outbound-proxy").getBoolean("user-at-displayed-name");
