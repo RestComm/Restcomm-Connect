@@ -164,6 +164,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
         if (data.containsKey("isSIP")) {
             builder.setPureSip(Boolean.parseBoolean(data.getFirst("isSIP")));
+        } else {
+            builder.setPureSip(false);
         }
         final String apiVersion = getApiVersion(data);
         builder.setApiVersion(apiVersion);
