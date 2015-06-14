@@ -178,7 +178,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ActorRef conference;
     private ConferenceInfo conferenceInfo;
     private ConferenceStateChanged.State conferenceState;
-    private boolean callMuted;
+    private boolean muteCall;
     private boolean startConferenceOnEnter = true;
     private ActorRef confSubVoiceInterpreter;
     private Attribute dialRecordAttribute;
@@ -832,7 +832,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void conferenceStateModeratorPresent(final Object message) {
-        if (!startConferenceOnEnter && !callMuted) {
+        if (!startConferenceOnEnter && !muteCall) {
             logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call");
             call.tell(new Unmute(), self());
         }
@@ -1832,11 +1832,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
-                    callMuted = Boolean.parseBoolean(value);
+                    muteCall = Boolean.parseBoolean(value);
                 }
             }
 
-            if (callMuted) {
+            if (muteCall) {
                 final Mute mute = new Mute();
                 call.tell(mute, source);
             }
@@ -1851,10 +1851,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
-                if (!callMuted) {
+                if (!muteCall) {
                     final Mute mute = new Mute();
                     logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " callMuted = "
-                            + callMuted);
+                            + muteCall);
                     call.tell(mute, source);
                 }
 

@@ -226,7 +226,7 @@ public final class Conference extends UntypedActor {
             mscontroller.tell(new StopMediaGroup(), super.source);
 
             // Notify the observers
-            broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT));
+            broadcast(new ConferenceStateChanged(name, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT));
         }
     }
 

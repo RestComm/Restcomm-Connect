@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
@@ -342,7 +343,11 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
+            // Disconnect both call legs from the bridge
+            final Leave leave = new Leave();
+            inboundCall.tell(leave, super.source);
             inboundCall = null;
+            outboundCall.tell(leave, super.source);
             outboundCall = null;
 
             // Ask the MS Controller to stop
