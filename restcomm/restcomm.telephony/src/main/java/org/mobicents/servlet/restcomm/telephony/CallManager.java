@@ -826,7 +826,17 @@ public final class CallManager extends UntypedActor {
         SipURI to = null;
         switch (request.type()) {
             case CLIENT: {
-                from = outboundInterface("udp");
+                SipURI outboundIntf = outboundInterface("udp");
+                if (request.from() != null && request.from().contains("@")) {
+                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
+                    // to use it directly
+                    from = (SipURI) sipFactory.createURI(request.from());
+                } else if (request.from() != null) {
+                    from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                } else {
+                    from = outboundIntf;
+                }
+//                from = outboundInterface("udp");
                 final RegistrationsDao registrations = storage.getRegistrationsDao();
                 final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
                 if (registration != null) {
