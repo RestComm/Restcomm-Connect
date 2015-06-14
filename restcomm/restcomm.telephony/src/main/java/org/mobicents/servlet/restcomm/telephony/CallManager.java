@@ -794,7 +794,7 @@ public final class CallManager extends UntypedActor {
 
         // Ask first call leg to execute with the new Interpreter
         final ActorRef interpreter = builder.build();
-        system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), interpreter,
+        system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), interpreter,
                 new StartInterpreter(request.call()), system.dispatcher());
         // interpreter.tell(new StartInterpreter(request.call()), self);
         logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
