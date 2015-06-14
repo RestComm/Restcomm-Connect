@@ -109,6 +109,7 @@ import org.mobicents.servlet.restcomm.telephony.DestroyConference;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
+import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.Reject;
@@ -177,7 +178,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ActorRef conference;
     private ConferenceInfo conferenceInfo;
     private ConferenceStateChanged.State conferenceState;
-    private boolean callMuted;
+    private boolean muteCall;
     private boolean startConferenceOnEnter = true;
     private ActorRef confSubVoiceInterpreter;
     private Attribute dialRecordAttribute;
@@ -785,6 +786,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
+        } else if (GetOutboundCall.class.equals(klass)) {
+            onGetOutboundCall((GetOutboundCall) message, self, sender);
         }
     }
 
@@ -817,8 +820,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    private void onGetOutboundCall(GetOutboundCall message, ActorRef self, ActorRef sender) {
+        if (outboundCall != null) {
+            sender.tell(outboundCall, self);
+        } else {
+            // If previously that was a p2p call that changed to conference (for hold)
+            // and now it changes again to a new url, the outbound call is null since
+            // When we joined the call to the conference, we made outboundCall = null;
+            sender.tell(new org.mobicents.servlet.restcomm.telephony.NotFound(), sender);
+        }
+    }
+
     private void conferenceStateModeratorPresent(final Object message) {
-        if (!startConferenceOnEnter && !callMuted) {
+        if (!startConferenceOnEnter && !muteCall) {
             logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call");
             call.tell(new Unmute(), self());
         }
@@ -1818,11 +1832,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
-                    callMuted = Boolean.parseBoolean(value);
+                    muteCall = Boolean.parseBoolean(value);
                 }
             }
 
-            if (callMuted) {
+            if (muteCall) {
                 final Mute mute = new Mute();
                 call.tell(mute, source);
             }
@@ -1837,10 +1851,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
-                if (!callMuted) {
+                if (!muteCall) {
                     final Mute mute = new Mute();
                     logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " callMuted = "
-                            + callMuted);
+                            + muteCall);
                     call.tell(mute, source);
                 }
 
@@ -2047,12 +2061,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
 
                 // Stop Observing the conference
-                conference.tell(new StopObserving(self()), null);
+                conference.tell(new StopObserving(super.source), null);
 
                 if (endOnExit) {
                     // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
-                    conference.tell(stop, source);
+                    conference.tell(stop, super.source);
                 } else {
                     // Otherwise simply remove the call from it
                     final RemoveParticipant removeParticipant = new RemoveParticipant(call);
@@ -2062,14 +2076,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (!liveCallModification) {
                 // Destroy the Call(s).
-                callManager.tell(new DestroyCall(call), source);
+                callManager.tell(new DestroyCall(call), super.source);
                 if (outboundCall != null) {
-                    callManager.tell(new DestroyCall(outboundCall), source);
+                    callManager.tell(new DestroyCall(outboundCall), super.source);
                 }
             } else {
                 // Make sure the media operations of the call are stopped
                 // so we can start processing a new RestComm application
-                call.tell(new StopMediaGroup(), source);
+                call.tell(new StopMediaGroup(), super.source);
             }
 
             // Stop the dependencies.
