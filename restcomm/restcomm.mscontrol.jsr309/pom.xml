@@ -8,8 +8,8 @@
 		<version>7.3.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>restcomm.mscontrol.xms</artifactId>
-	<name>restcomm.mscontrol.xms</name>
+	<artifactId>restcomm.mscontrol.jsr309</artifactId>
+	<name>restcomm.mscontrol.jsr309</name>
 
 	<dependencies>
 		<dependency>
@@ -64,40 +64,10 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- <dependency> -->
-		<!-- <groupId>javax.media</groupId> -->
-		<!-- <artifactId>mscontrol</artifactId> -->
-		<!-- <version>1.0</version> -->
-		<!-- </dependency> -->
-
 		<dependency>
 			<groupId>org.mobicents.external.jsr309</groupId>
 			<artifactId>mscontrol</artifactId>
 			<version>1.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vendor.dialogic</groupId>
-			<artifactId>dlgmsc</artifactId>
-			<version>4.1.429</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../external/dlgmsc-4.1.429.jar</systemPath>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vendor.dialogic</groupId>
-			<artifactId>msmltypes</artifactId>
-			<version>4.1.429</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../external/msmltypes-4.1.429.jar</systemPath>
-		</dependency>
-
-		<dependency>
-			<groupId>com.vendor.dialogic</groupId>
-			<artifactId>dlgcsmiltypes</artifactId>
-			<version>4.1.429</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../external/dlgcsmiltypes-4.1.429.jar</systemPath>
 		</dependency>
 
 		<dependency>

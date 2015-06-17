@@ -129,7 +129,7 @@
 		<module>restcomm.fax</module>
                <module>restcomm.mscontrol.api</module>
                <module>restcomm.mscontrol.mms</module>
-               <module>restcomm.mscontrol.xms</module>
+               <module>restcomm.mscontrol.jsr309</module>
 		<module>restcomm.sms.api</module>
 		<module>restcomm.telephony.api</module>
 		<module>restcomm.interpreter</module>
