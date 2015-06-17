@@ -19,7 +19,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mscontrol.xms;
+package org.mobicents.servlet.restcomm.mscontrol.jsr309;
 
 import javax.media.mscontrol.MsControlFactory;
 
@@ -36,7 +36,7 @@ import akka.actor.UntypedActorFactory;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class XmsControllerFactory implements MediaServerControllerFactory {
+public class ControllerFactory implements MediaServerControllerFactory {
 
     // Actor system
     private final ActorSystem system;
@@ -52,7 +52,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
     // Media Server Info
     private final MediaServerInfo mediaServerInfo;
 
-    public XmsControllerFactory(ActorSystem system, MediaServerInfo mediaServerInfo) {
+    public ControllerFactory(ActorSystem system, MediaServerInfo mediaServerInfo) {
         // Actor system
         this.system = system;
 
@@ -93,7 +93,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             if (msControlFactory == null) {
                 throw new IllegalStateException("No media server control factory has been set.");
             }
-            return new XmsCallController(msControlFactory, mediaServerInfo);
+            return new CallController(msControlFactory, mediaServerInfo);
         }
 
     }
@@ -107,7 +107,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             if (msControlFactory == null) {
                 throw new IllegalStateException("No media server control factory has been set.");
             }
-            return new XmsConferenceController(msControlFactory, mediaServerInfo);
+            return new ConferenceController(msControlFactory, mediaServerInfo);
         }
 
     }
@@ -121,7 +121,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             if (msControlFactory == null) {
                 throw new IllegalStateException("No media server control factory has been set.");
             }
-            return new XmsBridgeController(msControlFactory, mediaServerInfo);
+            return new BridgeController(msControlFactory, mediaServerInfo);
         }
 
     }

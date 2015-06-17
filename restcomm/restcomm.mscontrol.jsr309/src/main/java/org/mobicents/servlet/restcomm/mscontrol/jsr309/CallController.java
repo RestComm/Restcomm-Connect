@@ -19,7 +19,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mscontrol.xms;
+package org.mobicents.servlet.restcomm.mscontrol.jsr309;
 
 import java.io.File;
 import java.io.IOException;
@@ -100,7 +100,7 @@ import akka.event.LoggingAdapter;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class XmsCallController extends MediaServerController {
+public class CallController extends MediaServerController {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -157,7 +157,7 @@ public class XmsCallController extends MediaServerController {
     // Observers
     private final List<ActorRef> observers;
 
-    public XmsCallController(MsControlFactory msControlFactory, MediaServerInfo mediaServerInfo) {
+    public CallController(MsControlFactory msControlFactory, MediaServerInfo mediaServerInfo) {
         super();
         final ActorRef source = self();
 
