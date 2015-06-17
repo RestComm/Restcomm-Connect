@@ -21,6 +21,8 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.jsr309;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
@@ -37,13 +39,22 @@ import javax.media.mscontrol.MsControlFactory;
 import javax.media.mscontrol.Parameters;
 import javax.media.mscontrol.join.Joinable.Direction;
 import javax.media.mscontrol.mediagroup.MediaGroup;
-import javax.media.mscontrol.mediagroup.Player;
-import javax.media.mscontrol.mediagroup.PlayerEvent;
+import javax.media.mscontrol.mediagroup.Recorder;
+import javax.media.mscontrol.mediagroup.RecorderEvent;
+import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
+import javax.media.mscontrol.mediagroup.signals.SignalDetector;
 import javax.media.mscontrol.mixer.MediaMixer;
 import javax.media.mscontrol.resource.AllocationEvent;
 import javax.media.mscontrol.resource.AllocationEventListener;
 import javax.media.mscontrol.resource.RTC;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.entities.Recording;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
@@ -54,18 +65,18 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.exceptions.MediaServerControllerException;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
-import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerError;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
-import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Stop;
-import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -75,74 +86,71 @@ import akka.event.LoggingAdapter;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class ConferenceController extends MediaServerController {
+public class Jsr309BridgeController extends MediaServerController {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     // Finite State Machine
     private final FiniteStateMachine fsm;
-
-    // Finite states
     private final State uninitialized;
     private final State initializing;
     private final State active;
     private final State inactive;
     private final State failed;
 
-    // Conference runtime stuff
-    private ActorRef conference;
+    // Telephony actors
+    private ActorRef bridge;
 
-    // JSR-309 runtime stuff
+    // JSR-309 components
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
     private MediaGroup mediaGroup;
     private MediaMixer mediaMixer;
 
-    private final PlayerListener playerListener;
+    private final RecorderListener recorderListener;
     private final MixerAllocationListener mixerAllocationListener;
 
     // Media Operations
-    private Boolean playing;
+    private Boolean recording;
+    private DateTime recordingStarted;
+    private StartRecording recordingRequest;
 
     // Observers
     private final List<ActorRef> observers;
 
-    public ConferenceController(MsControlFactory msControlFactory, MediaServerInfo mediaServerInfo) {
+    public Jsr309BridgeController(MsControlFactory msControlFactory, MediaServerInfo mediaServerInfo) {
         super();
         final ActorRef source = self();
 
-        // JSR-309 runtime stuff
+        // JSR-309 resources
         this.msControlFactory = msControlFactory;
         this.mediaServerInfo = mediaServerInfo;
-
-        this.playerListener = new PlayerListener();
+        this.recorderListener = new RecorderListener();
         this.mixerAllocationListener = new MixerAllocationListener();
 
         // Media Operations
-        this.playing = Boolean.FALSE;
+        this.recording = Boolean.FALSE;
 
-        // Initialize the states for the FSM
+        // States for the FSM
         this.uninitialized = new State("uninitialized", null);
         this.initializing = new State("initializing", new Initializing(source));
         this.active = new State("active", new Active(source));
         this.inactive = new State("inactive", new Inactive(source));
         this.failed = new State("failed", new Failed(source));
 
-        // Transitions for the FSM.
+        // Finite state machine
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, initializing));
         transitions.add(new Transition(initializing, failed));
         transitions.add(new Transition(initializing, active));
         transitions.add(new Transition(initializing, inactive));
         transitions.add(new Transition(active, inactive));
-
-        // Finite state machine
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
 
         // Observers
-        this.observers = new ArrayList<ActorRef>();
+        this.observers = new ArrayList<ActorRef>(1);
     }
 
     private boolean is(State state) {
@@ -162,9 +170,8 @@ public class ConferenceController extends MediaServerController {
 
     private void stopMediaOperations() throws MsControlException {
         // Stop ongoing recording
-        if (playing) {
-            mediaGroup.getPlayer().stop(true);
-            this.playing = Boolean.FALSE;
+        if (recording) {
+            mediaGroup.getRecorder().stop();
         }
     }
 
@@ -191,43 +198,99 @@ public class ConferenceController extends MediaServerController {
 
     }
 
-    private final class PlayerListener extends MediaListener<PlayerEvent> {
+    private final class RecorderListener extends MediaListener<RecorderEvent> {
 
-        private static final long serialVersionUID = 391225908543565230L;
+        private static final long serialVersionUID = 2145317407008648018L;
+
+        private String endOnKey = "";
+
+        public void setEndOnKey(String endOnKey) {
+            this.endOnKey = endOnKey;
+        }
 
         @Override
-        public void onEvent(PlayerEvent event) {
+        public void onEvent(RecorderEvent event) {
             EventType eventType = event.getEventType();
 
-            logger.info("********** Conference Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Conference Controller Processing Event: \"PlayerEvent\" (type = " + eventType + ")");
+            logger.info("********** Bridge Controller Current State: \"" + fsm.state().toString() + "\"");
+            logger.info("********** Bridge Controller Processing Event: \"RecorderEvent\" (type = " + eventType + ")");
 
-            if (PlayerEvent.PLAY_COMPLETED.equals(eventType)) {
-                MediaGroupResponse<String> response;
+            if (RecorderEvent.RECORD_COMPLETED.equals(eventType)) {
+                MediaGroupResponse<String> response = null;
                 if (event.isSuccessful()) {
-                    response = new MediaGroupResponse<String>(eventType.toString());
+                    String digits = "";
+                    if (RecorderEvent.STOPPED.equals(event.getQualifier())) {
+                        digits = endOnKey;
+                    }
+                    saveRecording();
+                    response = new MediaGroupResponse<String>(digits);
                 } else {
                     String reason = event.getErrorText();
                     MediaServerControllerException error = new MediaServerControllerException(reason);
+                    logger.error("Recording event failed: " + reason);
                     response = new MediaGroupResponse<String>(error, reason);
                 }
-                playing = Boolean.FALSE;
+
+                recording = Boolean.FALSE;
+                recordingStarted = null;
+                recordingRequest = null;
+
                 super.remote.tell(response, self());
             }
+        }
+
+        private void saveRecording() {
+            final Sid accountId = recordingRequest.getAccountId();
+            final Sid callId = recordingRequest.getCallId();
+            final DaoManager daoManager = recordingRequest.getDaoManager();
+            final Sid recordingSid = recordingRequest.getRecordingSid();
+            final URI recordingUri = recordingRequest.getRecordingUri();
+            final Configuration runtimeSettings = recordingRequest.getRuntimeSetting();
+            Double duration;
+
+            try {
+                duration = WavUtils.getAudioDuration(recordingUri);
+            } catch (UnsupportedAudioFileException | IOException e) {
+                logger.error("Could not measure recording duration: " + e.getMessage(), e);
+                duration = 0.0;
+            }
+
+            if (duration.equals(0.0)) {
+                logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                final DateTime end = DateTime.now();
+                duration = new Double((end.getMillis() - recordingStarted.getMillis()) / 1000);
+            } else {
+                logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+            }
+
+            final Recording.Builder builder = Recording.builder();
+            builder.setSid(recordingSid);
+            builder.setAccountSid(accountId);
+            builder.setCallSid(callId);
+            builder.setDuration(duration);
+            builder.setApiVersion(runtimeSettings.getString("api-version"));
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                    .append(accountId.toString());
+            buffer.append("/Recordings/").append(recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+            final Recording recording = builder.build();
+            RecordingsDao recordsDao = daoManager.getRecordingsDao();
+            recordsDao.addRecording(recording);
         }
 
     }
 
     private class MixerAllocationListener implements AllocationEventListener, Serializable {
 
-        private static final long serialVersionUID = 6579306945384115627L;
+        private static final long serialVersionUID = -8450656267936666492L;
 
         @Override
         public void onEvent(AllocationEvent event) {
             EventType eventType = event.getEventType();
 
-            logger.info("********** Conference Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Conference Controller Processing Event: \"AllocationEventListener - Mixer\" (type = "
+            logger.info("********** Bridge Controller Current State: \"" + fsm.state().toString() + "\"");
+            logger.info("********** Bridge Controller Processing Event: \"AllocationEventListener - Mixer\" (type = "
                     + eventType + ")");
 
             try {
@@ -245,7 +308,7 @@ public class ConferenceController extends MediaServerController {
                     // Conference room has been properly activated and is now ready to receive connections
                     fsm.transition(event, active);
                 } else if (AllocationEvent.IRRECOVERABLE_FAILURE.equals(eventType)) {
-                    // Failed to activate media session
+                    // Failed to allocate media mixer
                     fsm.transition(event, failed);
                 }
             } catch (TransitionFailedException | TransitionNotFoundException | TransitionRollbackException e) {
@@ -256,7 +319,7 @@ public class ConferenceController extends MediaServerController {
     }
 
     /*
-     * EVENTS
+     * Events
      */
     @Override
     public void onReceive(Object message) throws Exception {
@@ -265,8 +328,8 @@ public class ConferenceController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** Conference Controller Current State: \"" + state.toString());
-        logger.info("********** Conference Controller Processing Message: \"" + klass.getName() + " sender : "
+        logger.info("********** Bridge Controller " + self().path() + " State: \"" + state.toString());
+        logger.info("********** Bridge Controller " + self().path() + " Processing: \"" + klass.getName() + " Sender: "
                 + sender.getClass());
 
         if (Observe.class.equals(klass)) {
@@ -275,18 +338,16 @@ public class ConferenceController extends MediaServerController {
             onStopObserving((StopObserving) message, self, sender);
         } else if (CreateMediaSession.class.equals(klass)) {
             onCreateMediaSession((CreateMediaSession) message, self, sender);
-        } else if (Stop.class.equals(klass)) {
-            onStop((Stop) message, self, sender);
-        } else if (StopMediaGroup.class.equals(klass)) {
-            onStopMediaGroup((StopMediaGroup) message, self, sender);
         } else if (JoinCall.class.equals(klass)) {
             onJoinCall((JoinCall) message, self, sender);
-        } else if (Play.class.equals(klass)) {
-            onPlay((Play) message, self, sender);
+        } else if (Stop.class.equals(klass)) {
+            onStop((Stop) message, self, sender);
+        } else if (StartRecording.class.equals(klass)) {
+            onStartRecording((StartRecording) message, self, sender);
         }
     }
 
-    private void onObserve(Observe message, ActorRef self, ActorRef sender) throws Exception {
+    private void onObserve(Observe message, ActorRef self, ActorRef sender) {
         final ActorRef observer = message.observer();
         if (observer != null) {
             synchronized (this.observers) {
@@ -296,20 +357,24 @@ public class ConferenceController extends MediaServerController {
         }
     }
 
-    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
+    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) {
         final ActorRef observer = message.observer();
         if (observer != null) {
             this.observers.remove(observer);
-        } else {
-            this.observers.clear();
         }
     }
 
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
-            this.conference = sender;
-            fsm.transition(message, initializing);
+            this.bridge = sender;
+            this.fsm.transition(message, initializing);
         }
+    }
+
+    private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
+        // Tell call to join bridge by passing reference to the media mixer
+        final JoinBridge join = new JoinBridge(this.mediaMixer, message.getConnectionMode());
+        message.getCall().tell(join, sender);
     }
 
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
@@ -318,48 +383,50 @@ public class ConferenceController extends MediaServerController {
         }
     }
 
-    private void onStopMediaGroup(StopMediaGroup message, ActorRef self, ActorRef sender) {
+    private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active)) {
             try {
-                if (this.playing) {
-                    this.mediaGroup.getPlayer().stop(true);
-                    this.playing = Boolean.FALSE;
-                }
-            } catch (MsControlException e) {
-                conference.tell(new MediaServerControllerError(e), self);
-            }
-        }
-    }
+                logger.info("Start recording bridged call");
 
-    private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
-            // Tell call to join conference by passing reference of the media mixer
-            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode());
-            message.getCall().tell(join, sender);
-        }
-    }
-
-    private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
-            try {
-                List<URI> uris = message.uris();
                 Parameters params = this.mediaGroup.createParameters();
-                int repeatCount = message.iterations() <= 0 ? Player.FOREVER : message.iterations() - 1;
-                params.put(Player.REPEAT_COUNT, repeatCount);
-                this.playerListener.setRemote(sender);
-                this.mediaGroup.getPlayer().play(uris.toArray(new URI[uris.size()]), RTC.NO_RTC, params);
-                this.playing = Boolean.TRUE;
+
+                // Finish on key
+                String endOnKey = "1234567890*#";
+                RTC[] rtcs;
+                params.put(SignalDetector.PATTERN[0], endOnKey);
+                params.put(SignalDetector.INTER_SIG_TIMEOUT, new Integer(10000));
+                rtcs = new RTC[] { MediaGroup.SIGDET_STOPPLAY };
+
+                // Recording length
+                params.put(Recorder.MAX_DURATION, 3600 * 1000);
+
+                // Recording timeout
+                int timeout = 5;
+                params.put(SpeechDetectorConstants.INITIAL_TIMEOUT, timeout);
+                params.put(SpeechDetectorConstants.FINAL_TIMEOUT, timeout);
+
+                // Other parameters
+                params.put(Recorder.APPEND, Boolean.FALSE);
+                // TODO set as definitive media group parameter - handled by RestComm
+                params.put(Recorder.START_BEEP, Boolean.FALSE);
+
+                this.recorderListener.setEndOnKey(endOnKey);
+                this.recorderListener.setRemote(sender);
+                this.mediaGroup.getRecorder().record(message.getRecordingUri(), rtcs, params);
+
+                this.recording = Boolean.TRUE;
+                this.recordingStarted = DateTime.now();
+                this.recordingRequest = message;
             } catch (MsControlException e) {
-                logger.error("Play failed: " + e.getMessage());
-                this.playing = Boolean.FALSE;
-                final MediaGroupResponse<String> response = new MediaGroupResponse<String>(e);
-                broadcast(response);
+                logger.error("Recording failed: " + e.getMessage());
+                final MediaServerControllerError error = new MediaServerControllerError(e);
+                bridge.tell(error, self);
             }
         }
     }
 
     /*
-     * ACTIONS
+     * Actions
      */
     private final class Initializing extends AbstractAction {
 
@@ -375,16 +442,17 @@ public class ConferenceController extends MediaServerController {
 
                 // Create the media group with recording capabilities
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+                mediaGroup.getRecorder().addListener(recorderListener);
 
                 // Set default conference video resolution to 720p
                 // mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
 
-                // Set number of ports for the available participants and possible media group
+                // Allow only two participants and one media group
                 Parameters mixerParams = mediaSession.createParameters();
-                mixerParams.put(MediaMixer.MAX_PORTS, 10);
+                mixerParams.put(MediaMixer.MAX_PORTS, 3);
 
-                // Create the conference room also
-                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                // Create the bridge
+                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
                 mediaMixer.addListener(mixerAllocationListener);
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
@@ -393,6 +461,7 @@ public class ConferenceController extends MediaServerController {
                 fsm.transition(e, failed);
             }
         }
+
     }
 
     private final class Active extends AbstractAction {
