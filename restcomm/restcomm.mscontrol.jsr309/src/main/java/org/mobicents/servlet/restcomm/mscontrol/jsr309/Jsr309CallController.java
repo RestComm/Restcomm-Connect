@@ -100,7 +100,7 @@ import akka.event.LoggingAdapter;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class CallController extends MediaServerController {
+public class Jsr309CallController extends MediaServerController {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -157,7 +157,7 @@ public class CallController extends MediaServerController {
     // Observers
     private final List<ActorRef> observers;
 
-    public CallController(MsControlFactory msControlFactory, MediaServerInfo mediaServerInfo) {
+    public Jsr309CallController(MsControlFactory msControlFactory, MediaServerInfo mediaServerInfo) {
         super();
         final ActorRef source = self();
 
