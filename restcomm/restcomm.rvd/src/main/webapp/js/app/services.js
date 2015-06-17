@@ -223,8 +223,9 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		return deferred.promise;
 	}
 	
-	function webTriggerModalCtrl ($scope, ccInfo, projectName, $modalInstance, notifications, $location) {
-		//console.log("in webTriggerModalCtrl");
+	function webTriggerModalCtrl ($scope, ccInfo, projectName, rvdSettings, $modalInstance, notifications, $location) {
+		console.log("in webTriggerModalCtrl");
+		console.log(rvdSettings);
 				
 		$scope.save = function (name, data) {
 			//console.log("saving ccInfo for " + name);
@@ -271,6 +272,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		setWebTriggerStatus($scope.webTriggerEnabled);
 			
 		$scope.projectName = projectName;
+		$scope.rvdSettings = rvdSettings;
 	}
 	
 	service.showModal = function(projectName) {
@@ -293,7 +295,10 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 					});
 					return deferred.promise;
 				},
-				projectName: function () {return projectName;}
+				projectName: function () {return projectName;},
+				rvdSettings: function (rvdSettings) {
+					return rvdSettings.refresh();
+				}
 			  }
 			});
 
