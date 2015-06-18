@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
+
+import com.google.gson.Gson;
 
 public class RestService {
     protected Response buildErrorResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, RvdException exception) {
@@ -70,4 +73,38 @@ public class RestService {
         return sb.toString();
 
     }
+
+    protected Response buildWebTriggerResponse(String title, String action, String outcome, String description, Integer status, String extension, Object restcommResponse ) {
+        if (".json".equals(extension))
+            return buildWebTriggerJsonResponse(title, action, outcome, description, status, restcommResponse);
+        else
+            return buildWebTriggerHtmlResponse(title, action, outcome, description, status);
+    }
+
+    protected Response buildWebTriggerHtmlResponse(String title, String action, String outcome, String description, Integer status ) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("<html><body>");
+        if (title != null)
+            buffer.append("<h1>").append(title).append("</h1>");
+        if (action != null) {
+            buffer.append("<h4>").append(action);
+            if (outcome != null)
+                buffer.append(" - " + outcome);
+            buffer.append("</h4>");
+        }
+        if (description != null)
+            buffer.append("<p>").append(description).append("</p>");
+        buffer.append("</body></html>");
+
+        return Response.status(status).entity(buffer.toString()).type(MediaType.TEXT_HTML).build();
+    }
+
+    protected Response buildWebTriggerJsonResponse(String title, String action, String outcome, String description, Integer status, Object restcommResponse ) {
+        if (status == 200) {
+            Gson gson = new Gson();
+            return Response.status(status).entity( gson.toJson(restcommResponse)).type(MediaType.APPLICATION_JSON).build();
+        } else
+            return Response.status(status).type(MediaType.APPLICATION_JSON).build();
+    }
+
 }

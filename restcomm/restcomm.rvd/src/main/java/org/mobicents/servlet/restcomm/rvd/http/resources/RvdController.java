@@ -278,9 +278,15 @@ public class RvdController extends RestService {
     }
     */
 
-    @GET
-    @Path("{appname}/start")
-    public Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui ) {
+    private Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui, @PathParam("extension") String extension ) {
+        if (extension == null)
+            extension = ".html";
+        String selectedMediaType;
+        if ( ".json".equals(extension) )
+            selectedMediaType = MediaType.APPLICATION_JSON;
+        else
+            selectedMediaType = MediaType.TEXT_HTML;
+
         ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
@@ -292,12 +298,12 @@ public class RvdController extends RestService {
             // If an access token is present in the project make sure it matches the one in the url
             if (info.accessToken != null ) {
                 if ( !info.accessToken.equals(accessToken) )
-                    throw new UnauthorizedCallControlAccess("Access restricted to application " + projectName + " for client " + request.getRemoteAddr());
+                    throw new UnauthorizedCallControlAccess("Web Trigger token authentication failed for '" + projectName + "'", request.getRemoteAddr());
             }
 
             // Load configuration from Restcomm
             ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
-            logger.info("using restcomm host: " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
+            logger.debug("WebTrigger restcomm client: using restcomm host " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
 
 
 
@@ -365,9 +371,10 @@ public class RvdController extends RestService {
 
             //if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(apiUsername) || RvdUtils.isEmpty(apiPassword) || RvdUtils.isEmpty(rcmlUrl) )
             if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(rcmlUrl) )
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+                return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
             if ( RvdUtils.isEmpty(from) || RvdUtils.isEmpty(to) )
-                return Response.status(Status.BAD_REQUEST).build();
+                //return Response.status(Status.BAD_REQUEST).build();
+                return buildWebTriggerResponse("Web Trigger", "Create call", "failure", "Either <i>from</i> or <i>to</i> value is missing. Make sure they are both passed as query parameters or are defined in the Web Trigger configuration.", 400, extension, null);
 
             // Find the account sid for the apiUsername
             RestcommClient client = new RestcommClient(apiHost, apiPort, apiUsername, apiPassword);
@@ -380,27 +387,50 @@ public class RvdController extends RestService {
                 .addParam("To", to)
                 .addParam("Url", rcmlUrl).done(marshaler.getGson(), CreateCallResponse.class);
 
-            return Response.ok().build();
+            return buildWebTriggerResponse("Web Trigger", "Create call", "success", "Created call with SID " + response.getSid() + " from " + from + " to " + to, 200, extension, response);
         } catch (UnauthorizedCallControlAccess e) {
-            logger.warn(e,e);
-            return Response.status(Status.UNAUTHORIZED).build();
+            logger.warn(e.getMessage(),e);
+            return buildWebTriggerResponse("Web Trigger", "Create call", "failure",  e.getMessage(), 401, extension, null);
         } catch (CallControlException e) {
             logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
         } catch (StorageEntityNotFound e) {
             logger.error(e,e);
             return Response.status(Status.NOT_FOUND).build(); // for case when the cc file does not exist
         }
         catch (StorageException e) {
             logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
         } catch (RestcommClientException e) {
+            if ( e.getStatusCode() != null ){
+                logger.error(e.getMessage(), e);
+                // if there was an HTTP error while contacting Restcomm, return it
+                if ( e.getStatusCode() != 200 ) {
+                    //return Response.status(e.getStatusCode()).build();
+                    return buildWebTriggerResponse("Web Trigger", "Create call", "failure ", e.getMessage(), e.getStatusCode(), extension, null);
+                } else
+                // otherwise ... ISR
+                    return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
+            }
+
             logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
         }
     }
 
+    @GET
+    @Path("{appname}/start{extension: (.html)?}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response executeActionHtml(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui ) {
+        return executeAction(projectName, request, toParam, fromParam, accessToken, ui, ".html");
+    }
 
+    @GET
+    @Path("{appname}/start.json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response executeActionJson(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui ) {
+        return executeAction(projectName, request, toParam, fromParam, accessToken, ui, ".json");
+    }
 
 
     @GET
