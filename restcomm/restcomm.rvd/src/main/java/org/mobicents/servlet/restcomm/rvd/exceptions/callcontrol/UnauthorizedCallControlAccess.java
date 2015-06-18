@@ -6,6 +6,8 @@ package org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol;
  */
 public class UnauthorizedCallControlAccess extends CallControlException {
 
+    private String remoteIP;
+
     public UnauthorizedCallControlAccess() {
         // TODO Auto-generated constructor stub
     }
@@ -15,9 +17,13 @@ public class UnauthorizedCallControlAccess extends CallControlException {
         // TODO Auto-generated constructor stub
     }
 
-    public UnauthorizedCallControlAccess(String message) {
+    public UnauthorizedCallControlAccess(String message, String remoteIP) {
         super(message);
-        // TODO Auto-generated constructor stub
+        this.remoteIP = remoteIP;
+    }
+
+    public String getRemoteIP() {
+        return remoteIP;
     }
 
 }
