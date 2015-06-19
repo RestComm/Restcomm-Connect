@@ -10,3 +10,4 @@ bin/
 logs
 bin
 .DS_Store
+*~
