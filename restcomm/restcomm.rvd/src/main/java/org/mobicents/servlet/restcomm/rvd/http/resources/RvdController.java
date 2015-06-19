@@ -38,7 +38,9 @@ import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlBadRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlInvalidConfigurationException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.RestcommConfigNotFound;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.RvdErrorParsingRestcommXml;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.UnauthorizedCallControlAccess;
@@ -48,12 +50,13 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceEr
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
-import org.mobicents.servlet.restcomm.rvd.restcomm.AccountInfoResponse;
-import org.mobicents.servlet.restcomm.rvd.restcomm.CreateCallResponse;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
-import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient.RestcommClientException;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -266,6 +269,8 @@ public class RvdController extends RestService {
      * @param apiPort2
      * @param projectName
      * @return
+     * @throws StorageException
+     * @throws CallControlException
      */
     /*
     private String guessApplicationDID(String apiHost, Integer apiPort, String apiUsername, String accountSid, String projectName) {
@@ -278,158 +283,162 @@ public class RvdController extends RestService {
     }
     */
 
-    private Response executeAction(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui, @PathParam("extension") String extension ) {
-        if (extension == null)
-            extension = ".html";
-        String selectedMediaType;
-        if ( ".json".equals(extension) )
-            selectedMediaType = MediaType.APPLICATION_JSON;
-        else
-            selectedMediaType = MediaType.TEXT_HTML;
+    private RestcommCreateCallResponse executeAction(String projectName, HttpServletRequest request, String toParam, String fromParam, String accessToken, UriInfo ui) throws StorageException, CallControlException {
+        rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
+        init(rvdContext);
 
-        ProjectAwareRvdContext rvdContext;
-        try {
-            rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
-            init(rvdContext);
+        // Load CC info from project
+        CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
 
-            // Load CC info from project
-            CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
+        // If an access token is present in the project make sure it matches the one in the url
+        if (info.accessToken != null ) {
+            if ( !info.accessToken.equals(accessToken) )
+                throw new UnauthorizedCallControlAccess("Web Trigger token authentication failed for '" + projectName + "'").setRemoteIP(request.getRemoteAddr());
+        }
 
-            // If an access token is present in the project make sure it matches the one in the url
-            if (info.accessToken != null ) {
-                if ( !info.accessToken.equals(accessToken) )
-                    throw new UnauthorizedCallControlAccess("Web Trigger token authentication failed for '" + projectName + "'", request.getRemoteAddr());
-            }
+        // Load configuration from Restcomm
+        ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
+        logger.debug("WebTrigger restcomm client: using restcomm host " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
 
-            // Load configuration from Restcomm
-            ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
-            logger.debug("WebTrigger restcomm client: using restcomm host " + apiServerConfig.getHost() + " and port: " + apiServerConfig.getPort());
+        // Load rvd settings
+        SettingsModel settingsModel = SettingsModel.createDefault();
+        if ( workspaceStorage.entityExists(".settings", "") )
+            settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
 
+        // Setup required values depending on existing setup
+        String apiHost = settingsModel.getApiServerHost();
+        if ( RvdUtils.isEmpty(apiHost) )
+            apiHost = apiServerConfig.getHost();
 
+        Integer apiPort = settingsModel.getApiServerRestPort();
+        if ( apiPort == null )
+            apiPort = apiServerConfig.getPort();
 
-            // Load rvd settings
-            SettingsModel settingsModel = SettingsModel.createDefault();
-            if ( workspaceStorage.entityExists(".settings", "") )
-                settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
+        String apiUsername = settingsModel.getApiServerUsername();
 
-            // Setup required values depending on existing setup
-            String apiHost = settingsModel.getApiServerHost();
-            if ( RvdUtils.isEmpty(apiHost) )
-                apiHost = apiServerConfig.getHost();
+        String apiPassword = settingsModel.getApiServerPass();
 
-            Integer apiPort = settingsModel.getApiServerRestPort();
-            if ( apiPort == null )
-                apiPort = apiServerConfig.getPort();
-
-            String apiUsername = settingsModel.getApiServerUsername();
-
-            String apiPassword = settingsModel.getApiServerPass();
-
-            String rcmlUrl = info.lanes.get(0).startPoint.rcmlUrl;
-            // try to create a valid URI from it if only the application name has been given
-            // ...
-            // use the existing application for RCML if none has been given
-            if ( RvdUtils.isEmpty(rcmlUrl) ) {
-                URIBuilder uriBuilder = new URIBuilder();
-                uriBuilder.setHost(request.getLocalAddr());
-                uriBuilder.setPort(request.getLocalPort());
-                uriBuilder.setScheme(request.getScheme());
-                uriBuilder.setPath("/restcomm-rvd/services/apps/" + projectName + "/controller");
-                try {
-                    rcmlUrl = uriBuilder.build().toString();
-                } catch (URISyntaxException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-            // Add user supplied params to rcmlUrl
+        String rcmlUrl = info.lanes.get(0).startPoint.rcmlUrl;
+        // try to create a valid URI from it if only the application name has been given
+        // ...
+        // use the existing application for RCML if none has been given
+        if ( RvdUtils.isEmpty(rcmlUrl) ) {
+            URIBuilder uriBuilder = new URIBuilder();
+            uriBuilder.setHost(request.getLocalAddr());
+            uriBuilder.setPort(request.getLocalPort());
+            uriBuilder.setScheme(request.getScheme());
+            uriBuilder.setPath("/restcomm-rvd/services/apps/" + projectName + "/controller");
             try {
-                URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
-                MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
-                for ( String paramName : requestParams.keySet() ) {
-                    if ( "token".equals(paramName) || "from".equals(paramName) || "to".equals(paramName) )
-                        continue; // skip parameters that are used by WebTrigger it self
-                    // also, skip builtin parameters that will be supplied by restcomm when it reaches for the controller
-                    if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
-                        uriBuilder.addParameter(Interpreter.nameModuleRequestParam(paramName), requestParams.getFirst(paramName));
-                }
                 rcmlUrl = uriBuilder.build().toString();
             } catch (URISyntaxException e) {
-                throw new CallControlException("Error copying user supplied parameters to rcml url", e);
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
-
-
-            String to = toParam;
-            if ( RvdUtils.isEmpty(to) )
-                to = info.lanes.get(0).startPoint.to;
-
-            String from = fromParam;
-            if ( RvdUtils.isEmpty(from) )
-                from = info.lanes.get(0).startPoint.from;
-            //if ( RvdUtils.isEmpty(from) )
-            //    from = guessApplicationDID(apiHost, apiPort, apiUsername, apiPort, projectName);
-
-            //if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(apiUsername) || RvdUtils.isEmpty(apiPassword) || RvdUtils.isEmpty(rcmlUrl) )
-            if ( RvdUtils.isEmpty(apiHost) || apiPort == null || RvdUtils.isEmpty(rcmlUrl) )
-                return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
-            if ( RvdUtils.isEmpty(from) || RvdUtils.isEmpty(to) )
-                //return Response.status(Status.BAD_REQUEST).build();
-                return buildWebTriggerResponse("Web Trigger", "Create call", "failure", "Either <i>from</i> or <i>to</i> value is missing. Make sure they are both passed as query parameters or are defined in the Web Trigger configuration.", 400, extension, null);
-
-            // Find the account sid for the apiUsername
-            RestcommClient client = new RestcommClient(apiHost, apiPort, apiUsername, apiPassword);
-            AccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + apiUsername).done(marshaler.getGson(), AccountInfoResponse.class);
-            String accountSid = accountResponse.getSid();
-
-            // Create the call
-            CreateCallResponse response = client.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
-                .addParam("From", from)
-                .addParam("To", to)
-                .addParam("Url", rcmlUrl).done(marshaler.getGson(), CreateCallResponse.class);
-
-            return buildWebTriggerResponse("Web Trigger", "Create call", "success", "Created call with SID " + response.getSid() + " from " + from + " to " + to, 200, extension, response);
-        } catch (UnauthorizedCallControlAccess e) {
-            logger.warn(e.getMessage(),e);
-            return buildWebTriggerResponse("Web Trigger", "Create call", "failure",  e.getMessage(), 401, extension, null);
-        } catch (CallControlException e) {
-            logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
-        } catch (StorageEntityNotFound e) {
-            logger.error(e,e);
-            return Response.status(Status.NOT_FOUND).build(); // for case when the cc file does not exist
         }
-        catch (StorageException e) {
-            logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
-        } catch (RestcommClientException e) {
-            if ( e.getStatusCode() != null ){
-                logger.error(e.getMessage(), e);
-                // if there was an HTTP error while contacting Restcomm, return it
-                if ( e.getStatusCode() != 200 ) {
-                    //return Response.status(e.getStatusCode()).build();
-                    return buildWebTriggerResponse("Web Trigger", "Create call", "failure ", e.getMessage(), e.getStatusCode(), extension, null);
-                } else
-                // otherwise ... ISR
-                    return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
+        // Add user supplied params to rcmlUrl
+        try {
+            URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
+            MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
+            for ( String paramName : requestParams.keySet() ) {
+                if ( "token".equals(paramName) || "from".equals(paramName) || "to".equals(paramName) )
+                    continue; // skip parameters that are used by WebTrigger it self
+                // also, skip builtin parameters that will be supplied by restcomm when it reaches for the controller
+                if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
+                    uriBuilder.addParameter(Interpreter.nameModuleRequestParam(paramName), requestParams.getFirst(paramName));
             }
-
-            logger.error(e,e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
+            rcmlUrl = uriBuilder.build().toString();
+        } catch (URISyntaxException e) {
+            throw new CallControlException("Error copying user supplied parameters to rcml url", e);
         }
+
+
+        String to = toParam;
+        if ( RvdUtils.isEmpty(to) )
+            to = info.lanes.get(0).startPoint.to;
+
+        String from = fromParam;
+        if ( RvdUtils.isEmpty(from) )
+            from = info.lanes.get(0).startPoint.from;
+        if ( RvdUtils.isEmpty(apiHost) || apiPort == null )
+            //return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
+            throw new CallControlInvalidConfigurationException("Could not determine restcomm host/port .");
+        if ( RvdUtils.isEmpty(rcmlUrl) )
+            throw new CallControlInvalidConfigurationException("Could not determine application RCML url.");
+
+        if ( RvdUtils.isEmpty(from) || RvdUtils.isEmpty(to) )
+            throw new CallControlBadRequestException("Either <i>from</i> or <i>to</i> value is missing. Make sure they are both passed as query parameters or are defined in the Web Trigger configuration.").setStatusCode(400);
+
+        // Find the account sid for the apiUsername
+        RestcommClient client = new RestcommClient(apiHost, apiPort, apiUsername, apiPassword);
+        RestcommAccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + apiUsername).done(marshaler.getGson(), RestcommAccountInfoResponse.class);
+        String accountSid = accountResponse.getSid();
+
+        // Create the call
+        RestcommCreateCallResponse response = client.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
+            .addParam("From", from)
+            .addParam("To", to)
+            .addParam("Url", rcmlUrl).done(marshaler.getGson(), RestcommCreateCallResponse.class);
+
+        logger.info("WebTrigger: joined " + to + " with " + rcmlUrl);
+        return response;
     }
 
     @GET
     @Path("{appname}/start{extension: (.html)?}")
     @Produces(MediaType.TEXT_HTML)
     public Response executeActionHtml(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui ) {
-        return executeAction(projectName, request, toParam, fromParam, accessToken, ui, ".html");
+        String selectedMediaType = MediaType.TEXT_HTML;
+
+        ProjectAwareRvdContext rvdContext;
+        try {
+            RestcommCreateCallResponse createCallResponse = executeAction(projectName, request, toParam, fromParam, accessToken, ui);
+            return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "success", "Created call with SID " + createCallResponse.getSid() + " from " + createCallResponse.getFrom() + " to " + createCallResponse.getTo(), 200);
+        } catch (UnauthorizedCallControlAccess e) {
+            logger.warn("",e);
+            return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "failure",  e.getMessage(), 401);
+        } catch (CallControlException e) {
+            logger.error("",e);
+            int httpStatus = 500;
+            if (e.getStatusCode() != null)
+                httpStatus = e.getStatusCode();
+            return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "failure", e.getMessage(), httpStatus);
+        } catch (StorageEntityNotFound e) {
+            logger.error("",e);
+            return Response.status(Status.NOT_FOUND).build(); // for case when the cc file does not exist
+        }
+        catch (StorageException e) {
+            logger.error("",e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
+        }
     }
 
     @GET
     @Path("{appname}/start.json")
     @Produces(MediaType.APPLICATION_JSON)
     public Response executeActionJson(@PathParam("appname") String projectName, @Context HttpServletRequest request, @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken, @Context UriInfo ui ) {
-        return executeAction(projectName, request, toParam, fromParam, accessToken, ui, ".json");
+        String selectedMediaType = MediaType.APPLICATION_JSON;
+
+        ProjectAwareRvdContext rvdContext;
+        try {
+            RestcommCreateCallResponse createCallResponse = executeAction(projectName, request, toParam, fromParam, accessToken, ui);
+            return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.success, 200, createCallResponse);
+        } catch (UnauthorizedCallControlAccess e) {
+            logger.warn("",e);
+            return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.failure, 401, null);
+        } catch (CallControlException e) {
+            logger.error("",e);
+            int httpStatus = 500;
+            if (e.getStatusCode() != null)
+                httpStatus = e.getStatusCode();
+            return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.failure, httpStatus, null);
+        } catch (StorageEntityNotFound e) {
+            logger.error("",e);
+            return Response.status(Status.NOT_FOUND).build(); // for case when the cc file does not exist
+        }
+        catch (StorageException e) {
+            logger.error("",e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
+        }
     }
 
 

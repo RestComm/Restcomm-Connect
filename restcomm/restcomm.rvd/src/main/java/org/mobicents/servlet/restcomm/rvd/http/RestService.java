@@ -9,6 +9,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CreateCallResponse;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 
 import com.google.gson.Gson;
@@ -74,13 +77,6 @@ public class RestService {
 
     }
 
-    protected Response buildWebTriggerResponse(String title, String action, String outcome, String description, Integer status, String extension, Object restcommResponse ) {
-        if (".json".equals(extension))
-            return buildWebTriggerJsonResponse(title, action, outcome, description, status, restcommResponse);
-        else
-            return buildWebTriggerHtmlResponse(title, action, outcome, description, status);
-    }
-
     protected Response buildWebTriggerHtmlResponse(String title, String action, String outcome, String description, Integer status ) {
         StringBuffer buffer = new StringBuffer();
         buffer.append("<html><body>");
@@ -99,12 +95,10 @@ public class RestService {
         return Response.status(status).entity(buffer.toString()).type(MediaType.TEXT_HTML).build();
     }
 
-    protected Response buildWebTriggerJsonResponse(String title, String action, String outcome, String description, Integer status, Object restcommResponse ) {
-        if (status == 200) {
-            Gson gson = new Gson();
-            return Response.status(status).entity( gson.toJson(restcommResponse)).type(MediaType.APPLICATION_JSON).build();
-        } else
-            return Response.status(status).type(MediaType.APPLICATION_JSON).build();
+    protected Response buildWebTriggerJsonResponse(CallControlAction action, CallControlStatus status, Integer httpStatus, Object restcommResponse ) {
+        CreateCallResponse response = new CreateCallResponse().setAction(action).setStatus(status).setData(restcommResponse);
+        Gson gson = new Gson();
+        return Response.status(httpStatus).entity( gson.toJson(response)).type(MediaType.APPLICATION_JSON).build();
     }
 
 }

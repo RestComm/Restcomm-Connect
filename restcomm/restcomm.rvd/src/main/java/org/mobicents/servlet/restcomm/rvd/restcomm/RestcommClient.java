@@ -16,6 +16,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
@@ -28,9 +29,7 @@ public class RestcommClient {
     private String password;
     CloseableHttpClient apacheClient;
 
-    public static class RestcommClientException extends Exception {
-
-        private Integer statusCode; // the HTTP status code returned from the request to Restcomm
+    public static class RestcommClientException extends CallControlException {
 
         public RestcommClientException(String message, Throwable cause) {
             super(message, cause);
@@ -41,21 +40,6 @@ public class RestcommClient {
             super(message);
             // TODO Auto-generated constructor stub
         }
-
-        public RestcommClientException(String message, Integer status) {
-            super(message);
-            this.statusCode = status;
-        }
-
-        public RestcommClientException(Throwable cause) {
-            super(cause);
-            // TODO Auto-generated constructor stub
-        }
-
-        public Integer getStatusCode() {
-            return statusCode;
-        }
-
 
     }
 
@@ -78,7 +62,7 @@ public class RestcommClient {
             }
             return this;
         }
-        public <T> T done(Gson gson, Class<T> resultClass) throws RestcommClientException {
+        public <T> T done(Gson gson, Class<T> resultClass) throws CallControlException {
             // Build the uri for the call made to Restcomm
             URIBuilder uriBuilder = new URIBuilder();
             uriBuilder.setHost(client.host);
@@ -100,9 +84,9 @@ public class RestcommClient {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
                         if ( statusCode != 200 ) {
                             if ( statusCode == 401 )
-                                throw new RestcommClientException("Authentication failed while using Restcomm REST api", statusCode);
+                                throw new RestcommClientException("Authentication failed while using Restcomm REST api").setStatusCode(statusCode);
                             else
-                                throw new RestcommClientException("Error invoking Restcomm REST api", statusCode);
+                                throw new RestcommClientException("Error invoking Restcomm REST api").setStatusCode(statusCode);
                         }
                         return gson.fromJson( new InputStreamReader(apiResponse.getEntity().getContent()), resultClass );
                     } finally {
@@ -123,9 +107,9 @@ public class RestcommClient {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
                         if ( statusCode != 200 ) {
                             if ( statusCode == 401 )
-                                throw new RestcommClientException("Authentication failed while using Restcomm REST api", statusCode);
+                                throw new RestcommClientException("Authentication failed while using Restcomm REST api").setStatusCode(statusCode);
                             else
-                                throw new RestcommClientException("Error invoking Restcomm REST api", statusCode);
+                                throw new RestcommClientException("Error invoking Restcomm REST api").setStatusCode(statusCode);
                         }
                         String content = IOUtils.toString(apiResponse.getEntity().getContent());
                         return gson.fromJson( content, resultClass );
@@ -136,9 +120,9 @@ public class RestcommClient {
                     throw new UnsupportedOperationException("Only GET and POST methods are supported");
 
             } catch (IOException e) {
-                throw new RestcommClientException(e);
+                throw new RestcommClientException("Error building URL from this path: " + path, e);
             } catch (URISyntaxException e) {
-                throw new RestcommClientException(e);
+                throw new RestcommClientException("Error building URL from this path: " + path, e);
             }
 
         }
