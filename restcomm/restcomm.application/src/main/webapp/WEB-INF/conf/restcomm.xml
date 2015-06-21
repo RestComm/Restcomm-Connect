@@ -236,6 +236,7 @@
 			<address>127.0.0.1</address>
 			<port>5060</port>
 			<transport>udp</transport>
+			<timeout>5</timeout>
 		</media-server>
 
 		<!-- The default way to control Mobicents Media Servers is using the MGCP 

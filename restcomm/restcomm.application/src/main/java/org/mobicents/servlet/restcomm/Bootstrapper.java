@@ -109,7 +109,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         final String name = configuration.getString("media-server[@name]");
         final String address = configuration.getString("media-server.address");
         final int port = configuration.getInt("media-server.port");
-        final int timeout = configuration.getInt("media-server.timeout");
+        final int timeout = configuration.getInt("media-server.timeout", 5);
         return new MediaServerInfo(name, InetAddress.getByName(address), port, timeout);
     }
 
@@ -122,18 +122,30 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
         // Configure the transport to be used by the connector
         final String mediaTransport = configuration.getString("media-server.transport", "udp");
+        logger.info("JSR 309 - media-server.transport: udp");
         properties.setProperty("connector.sip.transport", mediaTransport);
 
         // Configure SIP connector using RestComm binding address
         SipURI sipURI = outboundInterface(getServletContext(), mediaTransport);
         properties.setProperty("connector.sip.address", sipURI.getHost());
+        logger.info("JSR 309 - connector.sip.address: " + sipURI.getHost());
         properties.setProperty("connector.sip.port", String.valueOf(sipURI.getPort()));
+        logger.info("JSR 309 - connector.sip.port: " + String.valueOf(sipURI.getPort()));
 
         // Configure Media Server address based on restcomm configuration file
         final String mediaAddress = configuration.getString("media-server.address", "127.0.0.1");
         properties.setProperty("mediaserver.sip.address", mediaAddress);
+        logger.info("JSR 309 - mediaserver.sip.address: " + mediaAddress);
+
         final String mediaPort = configuration.getString("media-server.port", "5060");
         properties.setProperty("mediaserver.sip.port", mediaPort);
+        logger.info("JSR 309 - mediaserver.sip.port: " + mediaPort);
+        final String mediaUri = "sip:msml=@" + mediaAddress + ":" + mediaPort;
+        properties.setProperty("MEDIA_SERVER_URI", mediaUri);
+        logger.info("JSR 309 - MEDIA_SERVER_URI: " + mediaUri);
+
+        // Let RestComm control call legs
+        properties.setProperty("connector.conferenceControlLeg", "no");
 
         return properties;
     }
