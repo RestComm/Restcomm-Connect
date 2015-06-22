@@ -1,19 +1,12 @@
 var frisby = require('frisby');
+var config = require('./common.js').getConfig();
 
-var config = {
-	username: "administrator@company.com", // avoid using url encoded values here
-	password: "tri$k0l0",
-	projectName: "wavTestProject",
-}
-
-var URL = 'http://192.168.1.39:8080/';
-
-http://192.168.1.39:8080/restcomm-rvd/services/projects/test/wavs
-
+// apply customizations
+config.projectName = "test_wavsProject";
 
 frisby.create('Login RVD')
 	.post( 
-		URL + 'restcomm-rvd/services/auth/login', 
+		config.baseURL + 'restcomm-rvd/services/auth/login', 
 		{"username": config.username,"password": config.password},
 		{json:true}
 	)
@@ -28,18 +21,24 @@ frisby.create('Login RVD')
 			}
 		  }
 		});		
-		console.log("Using rvdCookie: " + rvdCookie);
+		//console.log("Using rvdCookie: " + rvdCookie);
 		
-		// Basic a project for testing upon
+		// Create a project for testing upon
 		frisby.create('Create a voice project')
-			.put( URL + 'restcomm-rvd/services/projects/' + config.projectName + '/?kind=voice')
+			.put( config.baseURL + 'restcomm-rvd/services/projects/' + config.projectName + '/?kind=voice')
 			.expectStatus(200)
 			.after(function (err,res,body) {
 				frisby.create('Retrieve project wav list')
-					.get( URL + 'restcomm-rvd/services/projects/' + config.projectName + '/wavs')
+					.get( config.baseURL + 'restcomm-rvd/services/projects/' + config.projectName + '/wavs')
 					.expectStatus(200)
 					.expectJSONTypes( String ) // this does not work!
 				.toss();
+			})
+			.after(function () {
+				frisby.create('Remove project')
+					.delete( config.baseURL + 'restcomm-rvd/services/projects/' + config.projectName )
+					.expectStatus(200)
+				.toss();								
 			})
 		.toss();		
 		
