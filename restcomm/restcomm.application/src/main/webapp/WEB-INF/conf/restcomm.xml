@@ -66,7 +66,7 @@
 
 			<!-- When set to true, Restcomm will use the username of the outbound proxy when -->
 			<!-- creating the From header, as the userpart of the sip uri. Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
-			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
+			<outboudproxy-user-at-from-header>false</outboudproxy-user-at-from-header>
 			<!-- When set to true, Restcomm will use the original user for the display name of the From header -->
 			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<user-at-displayed-name>true</user-at-displayed-name>

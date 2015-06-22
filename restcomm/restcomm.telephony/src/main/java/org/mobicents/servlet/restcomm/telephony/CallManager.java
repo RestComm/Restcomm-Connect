@@ -49,6 +49,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -825,7 +826,17 @@ public final class CallManager extends UntypedActor {
         SipURI to = null;
         switch (request.type()) {
             case CLIENT: {
-                from = outboundInterface("udp");
+                SipURI outboundIntf = outboundInterface("udp");
+                if (request.from() != null && request.from().contains("@")) {
+                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
+                    // to use it directly
+                    from = (SipURI) sipFactory.createURI(request.from());
+                } else if (request.from() != null) {
+                    from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                } else {
+                    from = outboundIntf;
+                }
+//                from = outboundInterface("udp");
                 final RegistrationsDao registrations = storage.getRegistrationsDao();
                 final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
                 if (registration != null) {
@@ -859,6 +870,13 @@ public final class CallManager extends UntypedActor {
                         from = sipFactory.createSipURI(request.from(), uri);
                     }
                 }
+                if (((SipURI)from).getUser()==null || ((SipURI)from).getUser() == "") {
+                        if (uri != null) {
+                            from = sipFactory.createSipURI(request.from(), uri);
+                        } else {
+                            from = (SipURI) sipFactory.createURI(request.from());
+                        }
+                }
                 break;
             }
             case SIP: {
@@ -878,6 +896,10 @@ public final class CallManager extends UntypedActor {
                 }
                 break;
             }
+        }
+        if (from == null || to == null) {
+            //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
+            throw new ServletParseException("From and/or To are null, we cannot proceed to the outbound call");
         }
         final ActorRef call = call();
         final ActorRef self = self();
@@ -944,6 +966,8 @@ public final class CallManager extends UntypedActor {
             if (logger.isInfoEnabled()) {
                 logger.info(String.format("B2BUA: Got BYE request: \n %s", request));
             }
+
+            //Prepare the BYE request to the linked session
             request.getSession().setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, request);
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
@@ -973,6 +997,11 @@ public final class CallManager extends UntypedActor {
                     clonedBye.setRequestURI(fromInetUri);
                 }
             }
+            B2BUAHelper.updateCDR(request, CallStateChanged.State.COMPLETED);
+            //Prepare 200 OK for received BYE
+            SipServletResponse okay = request.createResponse(Response.OK);
+            okay.send();
+            //Send the Cloned BYE
             clonedBye.send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());

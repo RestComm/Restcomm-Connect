@@ -52,7 +52,7 @@
                 <td><a href="" ng-click="showTranscriptionDetailsModal(transcription)">{{ transcription.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
                 <td><div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div></td>
                 <td><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
-                <td><div class="text-center"><a href="#/restcomm-management/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
+                <td><div class="text-center"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
                 <td><div class="text-center" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
                 <!--<td><div class="text-center"><a href="" class="clean-link"><i class="fa fa-print" tooltip="Export"></i></a></div></td>-->
             </tr>

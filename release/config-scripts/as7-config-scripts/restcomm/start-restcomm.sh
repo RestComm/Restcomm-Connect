@@ -163,6 +163,10 @@ if [[ -z "$PUBLIC_IP" ]]; then
 	PUBLIC_IP=$STATIC_ADDRESS
 fi
 
+if [[ -z "$SMS_OUTBOUND_PROXY" ]]; then
+	SMS_OUTBOUND_PROXY=$OUTBOUND_PROXY
+fi
+
 # configure restcomm installation
 source $BASEDIR/autoconfigure.sh
 

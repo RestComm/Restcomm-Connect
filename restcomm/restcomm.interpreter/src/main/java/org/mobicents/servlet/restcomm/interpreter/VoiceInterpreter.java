@@ -752,9 +752,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (initializingConferenceMediaGroup.equals(state)) {
                     fsm.transition(message, joiningConference);
-                } else if (bridged.equals(state)) {
-                    if (dialRecordAttribute != null && dialRecordAttribute.value().equalsIgnoreCase("true"))
-                        recordCall();
                 }
             } else if (MediaGroupStateChanged.State.INACTIVE == event.state()) {
                 if (!hangingUp.equals(state)) {
@@ -1584,6 +1581,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
             callMediaGroup.tell(new Stop(), source);
+            if (dialRecordAttribute != null && dialRecordAttribute.value().equalsIgnoreCase("true"))
+                recordCall();
         }
     }
 
