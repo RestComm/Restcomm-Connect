@@ -1,12 +1,16 @@
 package org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol;
 /**
- * Thrown when trying to access the CC services without proper accessToken parameter
- * @author "Tsakiridis Orestis"
+ * Thrown when trying to access the call control services without proper accessToken parameter
  *
+ * @author "Tsakiridis Orestis"
  */
 public class UnauthorizedCallControlAccess extends CallControlException {
 
-    public UnauthorizedCallControlAccess() {
+    private String remoteIP;
+
+
+    public UnauthorizedCallControlAccess(String message) {
+        super(message);
         // TODO Auto-generated constructor stub
     }
 
@@ -15,9 +19,12 @@ public class UnauthorizedCallControlAccess extends CallControlException {
         // TODO Auto-generated constructor stub
     }
 
-    public UnauthorizedCallControlAccess(String message) {
-        super(message);
-        // TODO Auto-generated constructor stub
+    public String getRemoteIP() {
+        return remoteIP;
     }
 
+    public UnauthorizedCallControlAccess setRemoteIP(String remoteIP) {
+        this.remoteIP = remoteIP;
+        return this;
+    }
 }

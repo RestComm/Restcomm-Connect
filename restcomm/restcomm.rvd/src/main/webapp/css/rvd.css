@@ -641,6 +641,14 @@ textarea.medium {
 	color: #888;
 }
 
+/* ----------------- Web Trigger modal -------------------- */
+.web-trigger .footer-warning {
+	float: left;
+	width: 72%;
+	text-align: left;
+}
+
+
 /* ------------------ directives -------------------- */
 /*.variable-lookup button {
 	border-radius: 0 4px 4px 0;
