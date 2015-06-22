@@ -356,9 +356,13 @@ public class RvdController extends RestService {
         if ( RvdUtils.isEmpty(to) )
             to = info.lanes.get(0).startPoint.to;
 
+        // set 'from' using url, web trigger conf or default value.
         String from = fromParam;
         if ( RvdUtils.isEmpty(from) )
             from = info.lanes.get(0).startPoint.from;
+        if ( RvdUtils.isEmpty(from))
+            from = projectName;
+
         if ( RvdUtils.isEmpty(apiHost) || apiPort == null )
             //return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
             throw new CallControlInvalidConfigurationException("Could not determine restcomm host/port .");
