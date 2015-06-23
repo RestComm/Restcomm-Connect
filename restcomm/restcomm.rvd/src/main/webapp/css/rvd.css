@@ -491,8 +491,6 @@ textarea.medium {
 	margin-right: auto;
 }
 
-
-/* ------------------ #/designer --------------------------- */
 .editor .panel-heading {
 	padding: 5px 10px;
 }
@@ -560,6 +558,15 @@ textarea.medium {
 .editor .top-menu .btn-primary:focus {
 	background-color: #428BCA;
 	opacity: 0.8;
+}
+
+.rvd-designer .module-filter {
+	width: 200px;
+}
+
+.rvd-designer .no-modules-warning {
+	text-align: center;
+	padding-top: 100px;
 }
 
 
