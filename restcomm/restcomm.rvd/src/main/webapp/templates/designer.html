@@ -131,19 +131,20 @@
 											<li class="rvd-clickable-text" ng-repeat='node in getAllTargets() | filterNodesByLabel:searchToken:moduleFilterEnabled | orderBy:"label"'><a ng-click="editNode(node.name)">{{node.label}}</a></li>
 										</ul>
 									</li>
-									<li>
-									<a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="{{'designerNewModuleLinkTitle' | translate}}"><i class='fa fa-plus'></i></a></li>
-									
-									<button ng-show="!moduleFilterEnabled" ng-click="toggleModuleFilter()" title="{{'designerModulesToggleFilteringTitle' | translate}}" class="btn" type="button"><i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i></button>
-									<div ng-show="moduleFilterEnabled" class="input-group module-filter">
-										<div class="input-group-btn">
-											<button type="button" class="btn btn-default" ng-click="toggleModuleFilter()" title="Toggle filtering in Modules dropdown">
-												<i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i>
-											</button>
+									<li style="margin-right: 5px">
+										<button ng-show="!moduleFilterEnabled" ng-click="toggleModuleFilter()" title="{{'designerModulesToggleFilteringTitle' | translate}}" class="btn" type="button"><i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i></button>
+										<div ng-show="moduleFilterEnabled" class="input-group module-filter">
+											<div class="input-group-btn">
+												<button type="button" class="btn btn-default" ng-click="toggleModuleFilter()" title="Toggle filtering in Modules dropdown">
+													<i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i>
+												</button>
+											</div>
+											<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
 										</div>
-										<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
-									</div>
-
+									</li>
+									<li>
+										<a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="{{'designerNewModuleLinkTitle' | translate}}"><i class='fa fa-plus'></i></a></li>
+									</li>
 									<!--
 									<li>
 										<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
