@@ -118,19 +118,32 @@
 			<div class="col-md-10">
 				<div class="editor">
 					<div class="panel-body editor">
-						<!--<ul class="nav nav-pills">
-						
-						</ul>-->
 						<div class="row">
-							<div class="col-md-9 form-group">
+							<div class="col-md-8 form-group">
 								<ul class="top-menu nav nav-pills">
+									
 									<li class="dropdown">
-										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="{{'designerStartupModuleLinkTitle' | translate}}">{{'designerStartupModuleLink' | translate}} <strong>{{nodeNamed(project.startNodeName).label}}</strong>	 <span class="caret"></span></a>
+										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="Select module to edit">{{'designerModules' | translate}} <span class="caret"></span></a>
 										<ul class="dropdown-menu">
-											<li ng-repeat='node in getAllTargets()'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+											<li class="rvd-clickable-text"><a ng-click="editAllNodes(getAllTargets(), searchToken, moduleFilterEnabled)"><span ng-hide="moduleFilterEnabled">{{'designerEditAll' | translate}}</span><span ng-show="moduleFilterEnabled">{{'designerEditFiltered' | translate}}</span></a></li>
+											<li class="rvd-clickable-text"><a ng-click="hideAllNodes(getAllTargets())"><span>{{'designerHideAllLink' | translate}}</span></a></li>
+											<li class="divider" role="presentation"></li>
+											<li class="rvd-clickable-text" ng-repeat='node in getAllTargets() | filterNodesByLabel:searchToken:moduleFilterEnabled | orderBy:"label"'><a ng-click="editNode(node.name)">{{node.label}}</a></li>
 										</ul>
 									</li>
-									<li><a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="{{'designerNewModuleLinkTitle' | translate}}"><i class='fa fa-plus'></i>&nbsp; {{'designerNewModuleLink' | translate}}</a></li>
+									<li>
+									<a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="{{'designerNewModuleLinkTitle' | translate}}"><i class='fa fa-plus'></i></a></li>
+									
+									<button ng-show="!moduleFilterEnabled" ng-click="toggleModuleFilter()" title="{{'designerModulesToggleFilteringTitle' | translate}}" class="btn" type="button"><i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i></button>
+									<div ng-show="moduleFilterEnabled" class="input-group module-filter">
+										<div class="input-group-btn">
+											<button type="button" class="btn btn-default" ng-click="toggleModuleFilter()" title="Toggle filtering in Modules dropdown">
+												<i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i>
+											</button>
+										</div>
+										<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
+									</div>
+
 									<!--
 									<li>
 										<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
@@ -141,26 +154,18 @@
 									<span class="validation-error">{{'designerValidationErrorLabel1' | translate}} <em>{{'designerValidationErrorLabel2' | translate}}</em> {{'designerValidationErrorLabel3' | translate}}</span>
 								</div>
 							</div>
-							<div class="col-md-3">
-								<div class="input-group">
-									<span class="input-group-addon"><i class="fa fa-search" title="{{'designerInputSearchLabelTitle' | translate}}"></i></span>
-									<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
-									<div class="input-group-btn" ng-class='{open:showNodesDropdown}' >
-									  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-										  <span class="caret"></span>
-									  </button>
-									  <ul class="dropdown-menu pull-right" role="menu">
-										<li ng-repeat="node in getAllTargets() | filterNodesByLabel:searchToken"><a ng-mousedown="editNode(node.name)" class="rvd-clickable-text">{{node.label}}</a></li>
-										<li role="presentation" class="divider"></li>
-										<li><a ng-mousedown="editFilteredNodes(getAllTargets(),searchToken)" title="{{'designerEditListedLinkTitle' | translate}}"><span class="text-muted rvd-clickable-text">{{'designerEditListedLink' | translate}}</span></a></li>
-										<li><a ng-mousedown="hideAllButStartNode(getAllTargets(),project.startNodeName)" title="{{'designerHideAllLinkTitle' | translate}}"><span class="text-muted rvd-clickable-text">{{'designerHideAllLink' | translate}}</span></a></li>
-									  </ul>
-									</div>
-								</div>
-								<div class="help-block" style="margin-top: 0px;"><small><i>{{'designerInputSearchHelp' | translate}}</i></small></div>
+							
+							<div class="col-md-4">
+								<ul class="top-menu nav nav-pills pull-right">
+									<li class="dropdown">
+										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="{{'designerStartupModuleLinkTitle' | translate}}">{{'designerStartupModuleLink' | translate}} <strong>{{nodeNamed(project.startNodeName).label}}</strong>	 <span class="caret"></span></a>
+										<ul class="dropdown-menu">
+											<li class="rvd-clickable-text" ng-repeat='node in getAllTargets() | orderBy:"label"'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+										</ul>
+									</li>
+								</ul>
 							</div>
 						</div>
-						
 						
 						<ul class="nav nav-tabs">
 							<!-- tabs -->
@@ -185,7 +190,10 @@
 							</span></li>
 						</ul>
 						
-
+						<div class="rvd-node" ng-show="visibleNodes.length == 0" class="row">
+							<div class="no-modules-warning text-muted">No modules are being edited. Use the <i>Modules</i> dropdown to edit an existing module or create a new one.</div>
+						</div>
+						
 						<div class="rvd-node" ng-repeat="nodeSummary in getEditedNodeNames()" ng-show="isNodeActive(nodeSummary.name)">
 							
 							<div ng-controller="nodeController">
