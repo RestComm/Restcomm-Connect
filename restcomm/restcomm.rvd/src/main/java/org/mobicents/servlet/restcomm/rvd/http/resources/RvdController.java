@@ -50,6 +50,7 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceEr
 import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
@@ -452,8 +453,13 @@ public class RvdController extends RestService {
         ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
+            init(rvdContext);
 
-            //init(new ProjectAwareRvdContext(appName, request, servletContext));
+            // make sure logging is enabled before allowing access to sensitive log information
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appName, workspaceStorage);
+            if (projectSettings == null || projectSettings.getLogging() == false)
+                return Response.status(Status.NOT_FOUND).build();
+
             InputStream logStream;
             try {
                 logStream = new FileInputStream(rvdContext.getProjectLogger().getLogFilePath());
@@ -482,6 +488,13 @@ public class RvdController extends RestService {
         ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
+            init(rvdContext);
+
+            // make sure logging is enabled before allowing access to sensitive log information
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appName, workspaceStorage);
+            if (projectSettings == null || projectSettings.getLogging() == false)
+                return Response.status(Status.NOT_FOUND).build();
+
             rvdContext.getProjectLogger().reset();
             return Response.ok().build();
         } catch (StorageException e) {
