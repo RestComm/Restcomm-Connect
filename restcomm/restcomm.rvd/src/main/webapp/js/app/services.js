@@ -125,16 +125,34 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 	
 }]);
 
-angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', function ($http,$q,$modal) {
+angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', '$resource', function ($http,$q,$modal,$resource) {
 	//console.log("Creating projectSettigsService");
 	var service = {};
+	var cachedProjectSettings = {};
+	
+	// returns project settings from cache
+	service.getProjectSettings = function () {
+		return cachedProjectSettings;
+	}
+	
+	// refreshes cachedProjectSettings asynchronously
+	service.refresh = function (name) {
+		var resource = $resource('services/projects/:projectName/settings');
+		cachedProjectSettings = resource.get({projectName:name});
+	}
+	
 	service.retrieve = function (name) {
 		var deferred = $q.defer();
 		$http({method:'GET', url:'services/projects/'+name+'/settings'})
-		.success(function (data,status) {deferred.resolve(data)})
+		.success(function (data,status) {
+			cachedProjectSettings = data;
+			deferred.resolve(cachedProjectSettings);
+		})
 		.error(function (data,status) {
-			if (status == 404)
-				deferred.resolve({logging:false});
+			if (status == 404) {
+				cachedProjectSettings = {logging:false};
+				deferred.resolve(cachedProjectSettings);
+			}
 			else
 				deferred.reject("ERROR_RETRIEVING_PROJECT_SETTINGS");
 		});
@@ -149,7 +167,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 		return deferred.promise;
 	}
 	
-	function projectSettingsModelCtrl ($scope, projectSettings, projectName, $modalInstance, notifications) {
+	function projectSettingsModelCtrl ($scope, projectSettings, projectSettingsService,  projectName, $modalInstance, notifications) {
 		//console.log("in projectSettingsModelCtrl");
 		$scope.projectSettings = projectSettings;
 		$scope.projectName = projectName;
@@ -191,7 +209,8 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 			});
 
 			modalInstance.result.then(function (projectSettings) {
-				//console.log(projectSettings);
+				service.refresh(projectName);
+				console.log(projectSettings);
 			}, function () {});	
 	}
 	
@@ -334,7 +353,7 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 			deferred.resolve();
 		})
 		.error(function (data,status) {
-			notifications.put({type:'danger',message:'Cannot reset '+$routeParams.projectName+' log'});
+			//notifications.put({type:'danger',message:'Cannot reset '+$routeParams.projectName+' log'});
 			deferred.reject();
 		});
 		return deferred.promise;		
