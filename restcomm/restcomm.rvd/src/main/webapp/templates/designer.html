@@ -35,8 +35,8 @@
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{{'designerProjectSettingsTitle' | translate}}"><i class="fa fa-cog"></i> <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">{{'designerProjectSettingsLink' | translate}}</a></li>
-							<!--<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li> -->
-							<li><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text">{{'designerApplicationLogLink' | translate}}</a></li>
+							<li ng-show="getProjectSettings().logging"><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text disabled">{{'designerApplicationLogLink' | translate}}</a></li>
+							<li ng-hide="getProjectSettings().logging" class="disabled"><a>{{'designerApplicationLogLink' | translate}}</a></li>
 						</ul>
 					</li>
 				</ul>

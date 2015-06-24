@@ -1,14 +1,11 @@
 var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, bundledWavs) {
-	
-	$scope.logger = function(s) {
-		console.log(s);
-	};
-		
-	// console.log("routeParam:");
-	// console.log( $routeParams );
-	
+
 	$scope.project = project;
 	$scope.visibleNodes = editedNodes.getEditedNodes();
+	
+	$scope.getProjectSettings = function () {
+		return projectSettingsService.getProjectSettings(); // returns a $resource that will be filled up automatically
+	}
 	$scope.getActiveNodeName = function () {
 		var activeNode = editedNodes.getActiveNode();
 		return activeNode;
@@ -200,7 +197,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.nullValue = null;
 	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
-
+	projectSettingsService.refresh($scope.projectName);
 
 	/*
 	 * When targets change, broadcast an events so that all <select syncModel/>
