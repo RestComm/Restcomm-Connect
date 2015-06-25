@@ -87,7 +87,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>3.1.610</sipservletapi.version>
+		<sipservletapi.version>3.1.612</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -105,7 +105,7 @@
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
-		<sip-ri.version>1.2.233</sip-ri.version>
+		<sip-ri.version>1.2.241</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>1.0.0.CR2</mss.arquillian.version>
 		<mss.shrinkwrap.version>1.0.0-CR1</mss.shrinkwrap.version>
