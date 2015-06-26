@@ -107,8 +107,8 @@
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
 		<sip-ri.version>1.2.241</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
-		<mss.arquillian.version>1.0.0.CR2</mss.arquillian.version>
-		<mss.shrinkwrap.version>1.0.0-CR1</mss.shrinkwrap.version>
+		<mss.arquillian.version>1.0.0.CR3</mss.arquillian.version>
+		<mss.shrinkwrap.version>1.0.0-CR2</mss.shrinkwrap.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
 		<sipunit.version>2.0.0</sipunit.version>
 		<!--tomcat.version>6.0.35</tomcat.version -->
@@ -245,7 +245,7 @@
 				<scope>provided</scope>
 			</dependency>
 
-			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
+			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
 				<version>${servlet-api.version}</version> </dependency -->
 
 			<dependency>
@@ -569,7 +569,7 @@
 			<version>${mobicents.checkstyle.version}</version>
 		</dependency>
 
-		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>
 			<version>5.1</version> </dependency -->
 	</dependencies>
 
@@ -767,7 +767,7 @@
 		</repository>
 
 		<!-- Local repository for the ATT TTS Java wrapper library -->
-		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
 			</repository> -->
 	</repositories>
 
