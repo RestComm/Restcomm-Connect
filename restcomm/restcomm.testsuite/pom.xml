@@ -200,6 +200,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.mobicents.ha.javax.sip</groupId>
+			<artifactId>mobicents-jain-sip-ha-core</artifactId>
+			<version>1.5.5</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-api</artifactId>
 			<version>1.2</version>
