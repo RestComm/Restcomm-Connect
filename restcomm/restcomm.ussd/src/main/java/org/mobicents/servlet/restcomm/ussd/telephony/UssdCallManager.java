@@ -71,8 +71,6 @@ public class UssdCallManager extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static final String EMAIL_SENDER = "restcomm@restcomm.org";
-    static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
 
     private final ActorSystem system;
     private final Configuration configuration;
@@ -281,8 +279,8 @@ public class UssdCallManager extends UntypedActor {
         final String ussdUsername = (request.username() != null) ? request.username() : ussdGatewayUsername;
         final String ussdPassword = (request.password() != null) ? request.password() : ussdGatewayPassword;
 
-        SipURI from = (SipURI)sipFactory.createSipURI(request.from(), uri);
-        SipURI to = (SipURI)sipFactory.createSipURI(request.to(), uri);
+        SipURI from = sipFactory.createSipURI(request.from(), uri);
+        SipURI to = sipFactory.createSipURI(request.to(), uri);
 
         String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
         from = outboundInterface(transport);

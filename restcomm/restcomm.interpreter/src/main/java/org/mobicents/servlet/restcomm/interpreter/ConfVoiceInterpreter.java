@@ -17,14 +17,15 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.email.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailRequest;
+import org.mobicents.servlet.restcomm.email.api.Mail;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.cache.HashGenerator;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.MailMan;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -76,8 +77,8 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 public class ConfVoiceInterpreter extends UntypedActor {
     private static final int ERROR_NOTIFICATION = 0;
     private static final int WARNING_NOTIFICATION = 1;
-    private static final String EMAIL_SENDER = "restcomm@restcomm.org";
-    private static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
+    static String EMAIL_SENDER;
+
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // States for the FSM.
@@ -106,7 +107,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
     // The downloader will fetch resources for us using HTTP.
     private final ActorRef downloader;
     // The mail man that will deliver e-mail.
-    private ActorRef mailer;
+    private ActorRef mailerNotify = null;
 
     // The storage engine.
     private final DaoManager storage;
@@ -239,7 +240,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
         this.storage = storage;
         this.synthesizer = tts(configuration.subset("speech-synthesizer"));
-        this.mailer = mailer(configuration.subset("smtp"));
+        this.mailerNotify = mailer(configuration.subset("smtp-notify"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -300,14 +301,17 @@ public class ConfVoiceInterpreter extends UntypedActor {
         parser.tell(next, self);
     }
 
-    private ActorRef mailer(final Configuration configuration) {
+    ActorRef mailer(final Configuration configuration) {
         final UntypedActorContext context = getContext();
         return context.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
-                return new MailMan(configuration);
+            public Actor create() throws Exception {
+                final CreateEmailService.Builder builder = CreateEmailService.builder();
+                builder.CreateEmailSession(configuration);
+                EMAIL_SENDER=builder.getUser();
+                return builder.build();
             }
         }));
     }
@@ -530,6 +534,8 @@ public class ConfVoiceInterpreter extends UntypedActor {
         if (emailAddress == null || emailAddress.isEmpty()) {
             return;
         }
+
+        final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
         final StringBuilder buffer = new StringBuilder();
         buffer.append("<strong>").append("Sid: ").append("</strong></br>");
         buffer.append(notification.getSid().toString()).append("</br>");
@@ -559,8 +565,8 @@ public class ConfVoiceInterpreter extends UntypedActor {
         buffer.append(notification.getResponseHeaders()).append("</br>");
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
-        final Mail email = new Mail(EMAIL_SENDER, emailAddress, EMAIL_SUBJECT, buffer.toString());
-        mailer.tell(email, self());
+        final Mail emailMsg = new Mail(EMAIL_SENDER,EMAIL_SENDER,EMAIL_SUBJECT, buffer.toString());
+        mailerNotify.tell(new EmailRequest(emailMsg), self());
     }
 
     private ActorRef tts(final Configuration configuration) {
@@ -989,7 +995,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailer);
+            context.stop(mailerNotify);
             context.stop(downloader);
             context.stop(cache);
             context.stop(synthesizer);

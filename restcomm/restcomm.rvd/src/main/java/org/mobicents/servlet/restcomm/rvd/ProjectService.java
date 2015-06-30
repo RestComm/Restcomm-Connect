@@ -297,7 +297,7 @@ public class ProjectService {
         // then save
         ProjectState state = rvdContext.getMarshaler().toModel(stateData, ProjectState.class);
         // Make sure the current RVD project version is set
-        state.getHeader().setVersion(settings.getRvdProjectVersion());
+        state.getHeader().setVersion(RvdConfiguration.getRvdProjectVersion());
         // preserve project owner
         state.getHeader().setOwner(existingProject.getHeader().getOwner());
         //projectStorage.storeProject(projectName, state, false);

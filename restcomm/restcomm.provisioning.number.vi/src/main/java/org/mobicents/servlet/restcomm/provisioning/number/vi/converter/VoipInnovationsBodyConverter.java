@@ -24,7 +24,7 @@ public final class VoipInnovationsBodyConverter extends AbstractConverter {
             reader.moveDown();
             final String child = reader.getNodeName();
             if ("search".equals(child)) {
-                content = (GetDIDListResponse) context.convertAnother(null, GetDIDListResponse.class);
+                content = context.convertAnother(null, GetDIDListResponse.class);
             }
             reader.moveUp();
         }

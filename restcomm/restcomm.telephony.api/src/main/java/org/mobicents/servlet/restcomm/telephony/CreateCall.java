@@ -29,9 +29,9 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  */
 @Immutable
 public final class CreateCall {
-    public static enum Type {
+    public enum Type {
         CLIENT, PSTN, SIP, USSD
-    };
+    }
 
     private final String from;
     private final String to;

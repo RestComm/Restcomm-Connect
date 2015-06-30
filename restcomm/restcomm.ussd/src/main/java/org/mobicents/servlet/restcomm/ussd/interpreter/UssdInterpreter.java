@@ -41,6 +41,12 @@ import java.util.regex.Pattern;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
+import akka.actor.Actor;
+import akka.actor.UntypedActor;
+import akka.actor.ActorRef;
+import akka.actor.UntypedActorContext;
+import akka.actor.Props;
+import akka.actor.UntypedActorFactory;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -50,8 +56,7 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.MailMan;
+import org.mobicents.servlet.restcomm.email.CreateEmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -82,11 +87,6 @@ import org.mobicents.servlet.restcomm.ussd.commons.UssdMessageType;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -101,8 +101,7 @@ public class UssdInterpreter extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static final String EMAIL_SENDER = "restcomm@restcomm.org";
-    static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
+    static String EMAIL_SENDER;
 
     // States for the FSM.
     // ==========================
@@ -291,8 +290,11 @@ public class UssdInterpreter extends UntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
-                return new MailMan(configuration);
+            public Actor create() throws Exception {
+                final CreateEmailService.Builder builder = CreateEmailService.builder();
+                builder.CreateEmailSession(configuration);
+                EMAIL_SENDER=builder.getUser();
+                return builder.build();
             }
         }));
     }
@@ -379,40 +381,7 @@ public class UssdInterpreter extends UntypedActor {
     }
 
     void sendMail(final Notification notification) {
-        if (emailAddress == null || emailAddress.isEmpty()) {
-            return;
-        }
-        final StringBuilder buffer = new StringBuilder();
-        buffer.append("<strong>").append("Sid: ").append("</strong></br>");
-        buffer.append(notification.getSid().toString()).append("</br>");
-        buffer.append("<strong>").append("Account Sid: ").append("</strong></br>");
-        buffer.append(notification.getAccountSid().toString()).append("</br>");
-        buffer.append("<strong>").append("Call Sid: ").append("</strong></br>");
-        buffer.append(notification.getCallSid().toString()).append("</br>");
-        buffer.append("<strong>").append("API Version: ").append("</strong></br>");
-        buffer.append(notification.getApiVersion()).append("</br>");
-        buffer.append("<strong>").append("Log: ").append("</strong></br>");
-        buffer.append(notification.getLog() == ERROR_NOTIFICATION ? "ERROR" : "WARNING").append("</br>");
-        buffer.append("<strong>").append("Error Code: ").append("</strong></br>");
-        buffer.append(notification.getErrorCode()).append("</br>");
-        buffer.append("<strong>").append("More Information: ").append("</strong></br>");
-        buffer.append(notification.getMoreInfo().toString()).append("</br>");
-        buffer.append("<strong>").append("Message Text: ").append("</strong></br>");
-        buffer.append(notification.getMessageText()).append("</br>");
-        buffer.append("<strong>").append("Message Date: ").append("</strong></br>");
-        buffer.append(notification.getMessageDate().toString()).append("</br>");
-        buffer.append("<strong>").append("Request URL: ").append("</strong></br>");
-        buffer.append(notification.getRequestUrl().toString()).append("</br>");
-        buffer.append("<strong>").append("Request Method: ").append("</strong></br>");
-        buffer.append(notification.getRequestMethod()).append("</br>");
-        buffer.append("<strong>").append("Request Variables: ").append("</strong></br>");
-        buffer.append(notification.getRequestVariables()).append("</br>");
-        buffer.append("<strong>").append("Response Headers: ").append("</strong></br>");
-        buffer.append(notification.getResponseHeaders()).append("</br>");
-        buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
-        buffer.append(notification.getResponseBody()).append("</br>");
-        final Mail email = new Mail(EMAIL_SENDER, emailAddress, EMAIL_SUBJECT, buffer.toString());
-        mailer.tell(email, self());
+        mailer.tell(notification, self());
     }
 
     void callback() {

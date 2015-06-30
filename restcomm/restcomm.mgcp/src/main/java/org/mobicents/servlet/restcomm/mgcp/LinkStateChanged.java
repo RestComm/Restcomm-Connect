@@ -26,9 +26,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class LinkStateChanged {
-    public static enum State {
+    public enum State {
         CLOSED, OPEN
-    };
+    }
 
     private final State state;
 
