@@ -275,14 +275,14 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             create.setCreateCDR(false);
             if (callManager == null)
                 callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
-            Future<Object> future = ask(callManager, create, expires);
+            Future<Object> future = (Future<Object>) ask(callManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
             if (CallManagerResponse.class.equals(klass)) {
                 final CallManagerResponse<ActorRef> managerResponse = (CallManagerResponse<ActorRef>) object;
                 if (managerResponse.succeeded()) {
                     final ActorRef call = managerResponse.get();
-                    future = ask(call, new GetCallInfo(), expires);
+                    future = (Future<Object>) ask(call, new GetCallInfo(), expires);
                     object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
                     klass = object.getClass();
                     if (CallResponse.class.equals(klass)) {
@@ -379,10 +379,10 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         try {
             callPath = cdr.getCallPath();
-            Future<Object> future = ask(callManager, new GetCall(callPath), expires);
+            Future<Object> future = (Future<Object>) ask(callManager, new GetCall(callPath), expires);
             call = (ActorRef) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 
-            future = ask(call, new GetCallInfo(), expires);
+            future = (Future<Object>) ask(call, new GetCallInfo(), expires);
             CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
                     Duration.create(10, TimeUnit.SECONDS));
             callInfo = response.get();
@@ -421,8 +421,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         if (url != null && call != null) {
             try {
-                Future<Object> future = ask(call, new GetOutboundCall(), expires);
-                Object answer = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                Future<Object> future = (Future<Object>) ask(call, new GetOutboundCall(), expires);
+                Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
                 if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(answer.getClass())) {
                     //This means that the call is not associated with a outbound call. Probably because its already joined to a conference room
                     outboundCall = null;

@@ -107,7 +107,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
-            Future<Object> future = ask(callManager, new GetProxies(), expires);
+            Future<Object> future = (Future<Object>) ask(callManager, new GetProxies(), expires);
             proxies = (Map<String, String>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
@@ -134,7 +134,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
-            Future<Object> future = ask(callManager, new SwitchProxy(new Sid(accountSid)), expires);
+            Future<Object> future = (Future<Object>) ask(callManager, new SwitchProxy(new Sid(accountSid)), expires);
             proxyAfterSwitch = (Map<String, String>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
@@ -161,7 +161,7 @@ public class OutboundProxyEndpoint extends AbstractEndpoint {
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
-            Future<Object> future = ask(callManager, new GetActiveProxy(), expires);
+            Future<Object> future = (Future<Object>) ask(callManager, new GetActiveProxy(), expires);
             activeProxy = (Map<String, String>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();

@@ -136,7 +136,7 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
         logger.info("Synthesizing announcement");
         final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, text);
         Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-        Future<Object> future = ask(synthesizer, synthesize, expires);
+        Future<Object> future = (Future<Object>) ask(synthesizer, synthesize, expires);
         Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
         if(object != null) {
             SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>)object;

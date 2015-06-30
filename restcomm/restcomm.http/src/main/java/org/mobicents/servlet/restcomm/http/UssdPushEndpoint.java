@@ -132,14 +132,14 @@ public class UssdPushEndpoint extends AbstractEndpoint {
             create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.USSD,
                     accountId);
             create.setCreateCDR(false);
-            Future<Object> future = ask(ussdCallManager, create, expires);
+            Future<Object> future = (Future<Object>) ask(ussdCallManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
             if (CallManagerResponse.class.equals(klass)) {
                 final CallManagerResponse<ActorRef> managerResponse = (CallManagerResponse<ActorRef>) object;
                 if (managerResponse.succeeded()) {
                     final ActorRef call = managerResponse.get();
-                    future = ask(call, new GetCallInfo(), expires);
+                    future = (Future<Object>) ask(call, new GetCallInfo(), expires);
                     object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
                     klass = object.getClass();
                     if (CallResponse.class.equals(klass)) {

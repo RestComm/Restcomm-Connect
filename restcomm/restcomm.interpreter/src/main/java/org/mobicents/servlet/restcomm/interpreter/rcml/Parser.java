@@ -21,8 +21,6 @@ package org.mobicents.servlet.restcomm.interpreter.rcml;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,9 +44,6 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
 public final class Parser extends UntypedActor {
     private final Tag document;
     private final Iterator<Tag> iterator;
-
-    //lefty
-    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private Tag current;
 
@@ -158,7 +153,6 @@ public final class Parser extends UntypedActor {
         final ActorRef sender = sender();
         if (GetNextVerb.class.equals(klass)) {
             final Tag verb = next();
-            logger.info("TAGS USED: "+verb.toString());
             if (verb != null) {
                 sender.tell(verb, self);
             } else {

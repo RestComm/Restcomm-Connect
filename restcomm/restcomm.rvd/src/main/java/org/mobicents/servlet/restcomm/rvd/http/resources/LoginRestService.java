@@ -40,7 +40,7 @@ public class LoginRestService extends RestService {
 
     @PostConstruct
     void init() {
-        rvdSettings = RvdConfiguration.getInstance(servletContext);
+        rvdSettings = rvdSettings.getInstance(servletContext);
     }
 
     /*

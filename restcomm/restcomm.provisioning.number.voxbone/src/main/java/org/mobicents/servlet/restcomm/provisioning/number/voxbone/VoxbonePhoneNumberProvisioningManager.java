@@ -354,7 +354,11 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonCreateCartResponse = parser.parse(voiceURIResponse).getAsJsonObject();
 
-        return clientResponse.getClientResponseStatus() == Status.OK;
+        if (clientResponse.getClientResponseStatus() == Status.OK) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override

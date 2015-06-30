@@ -28,7 +28,6 @@
 			<artifactId>mail</artifactId>
 		</dependency>
 
-
 		<dependency>
 			<groupId>com.googlecode.libphonenumber</groupId>
 			<artifactId>libphonenumber</artifactId>

@@ -18,13 +18,13 @@ public class DialNounJsonSerializer implements JsonSerializer<DialNoun> {
         Gson gson = new GsonBuilder().registerTypeAdapter(DialNoun.class, new DialNounJsonSerializer()).create();
         JsonElement resultElement = null; // TODO update this default value to something or throw an exception or something
         if (noun.getClass().equals(NumberDialNoun.class)) {
-            resultElement = gson.toJsonTree(noun);
+            resultElement = gson.toJsonTree((NumberDialNoun) noun);
         } else if (noun.getClass().equals(ClientDialNoun.class)  ) {
-            resultElement = gson.toJsonTree(noun);
+            resultElement = gson.toJsonTree((ClientDialNoun) noun);
         } else if (noun.getClass().equals(ConferenceDialNoun.class)  ) {
-            resultElement = gson.toJsonTree(noun);
+            resultElement = gson.toJsonTree((ConferenceDialNoun) noun);
         } else if (noun.getClass().equals(SipuriDialNoun.class)  ) {
-            resultElement = gson.toJsonTree(noun);
+            resultElement = gson.toJsonTree((SipuriDialNoun) noun);
         }
 
         return resultElement;

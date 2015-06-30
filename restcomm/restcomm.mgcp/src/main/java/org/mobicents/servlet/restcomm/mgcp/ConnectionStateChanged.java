@@ -28,9 +28,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class ConnectionStateChanged {
-    public enum State {
+    public static enum State {
         CLOSED, HALF_OPEN, OPEN
-    }
+    };
 
     private final ConnectionDescriptor descriptor;
     private final State state;

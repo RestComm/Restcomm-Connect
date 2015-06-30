@@ -95,7 +95,7 @@ public final class ProxyManager extends UntypedActor {
         SipURI outboundInterface = null;
         if (address != null && !address.isEmpty()) {
             if(address.contains(":")) {
-                outboundInterface = factory.createSipURI(null, address);
+                outboundInterface = (SipURI) factory.createSipURI(null, address);
             } else {
                 outboundInterface = outboundInterface(address, "udp");
             }
@@ -103,7 +103,7 @@ public final class ProxyManager extends UntypedActor {
             outboundInterface = outboundInterface();
         }
         if (outboundInterface == null)
-            outboundInterface = factory.createSipURI(null, address);
+            outboundInterface = (SipURI) factory.createSipURI(null, address);
         final String user = gateway.getUserName();
         final String host = outboundInterface.getHost();
         int port = outboundInterface.getPort();

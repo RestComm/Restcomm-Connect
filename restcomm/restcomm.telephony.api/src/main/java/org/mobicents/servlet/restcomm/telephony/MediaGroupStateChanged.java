@@ -26,9 +26,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class MediaGroupStateChanged {
-    public enum State {
+    public static enum State {
         ACTIVE, INACTIVE
-    }
+    };
 
     private final State state;
 

@@ -29,5 +29,5 @@ public enum UssdCallType {
  * PULL: User initiates the USSD call and Restcomm responds
  * PUSH: Restcomm initiates the USSD call
  */
-    PULL,PUSH
+    PULL,PUSH;
 }

@@ -116,7 +116,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     public boolean hasRegistration(final Registration registration) {
         final SqlSession session = sessions.openSession();
         try {
-            final Integer result = session.selectOne(namespace + "hasRegistration", toMap(registration));
+            final Integer result = (Integer) session.selectOne(namespace + "hasRegistration", toMap(registration));
             return result != null && result > 0;
         } finally {
             session.close();
