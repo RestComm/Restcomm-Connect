@@ -447,6 +447,9 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	// after sms
 	registerVariable("core_SmsSid");
 	registerVariable("core_SmsStatus");
+	// after email
+    registerVariable("core_EmailSid");
+    registerVariable("core_EmailStatus");
 	// after fax
 	registerVariable("core_FaxSid");
 	registerVariable("core_FaxStatus");

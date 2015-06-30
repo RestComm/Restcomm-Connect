@@ -36,7 +36,7 @@ public class StartRecordingCall {
 
         private final String text;
 
-        private RecordingType(final String text) {
+        RecordingType(final String text) {
             this.text = text;
         }
 
@@ -54,7 +54,7 @@ public class StartRecordingCall {
         public String toString() {
             return text;
         }
-    };
+    }
 
     private Sid accountId;
     private Configuration runtimeSetting;

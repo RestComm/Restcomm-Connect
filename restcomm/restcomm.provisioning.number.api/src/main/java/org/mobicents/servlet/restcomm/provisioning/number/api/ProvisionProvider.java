@@ -24,8 +24,10 @@ package org.mobicents.servlet.restcomm.provisioning.number.api;
  *
  */
 public class ProvisionProvider {
-    public static enum PROVIDER {VOIPINNOVATIONS,BANDWIDTH, UNKNOWN};
-    public static enum REQUEST_TYPE {PING, GETDIDS, ASSIGNDID, QUERYDID, RELEASEDID};
+    public enum PROVIDER {VOIPINNOVATIONS,BANDWIDTH, UNKNOWN}
+
+    public enum REQUEST_TYPE {PING, GETDIDS, ASSIGNDID, QUERYDID, RELEASEDID}
+
     public static String voipinnovationsClass = "org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager";
     public static String bandiwidthClass = "org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager";
 }

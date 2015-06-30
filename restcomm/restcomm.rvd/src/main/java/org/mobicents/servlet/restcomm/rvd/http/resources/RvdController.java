@@ -344,7 +344,7 @@ public class RvdController extends RestService {
                     if ( "token".equals(paramName) || "from".equals(paramName) || "to".equals(paramName) )
                         continue; // skip parameters that are used by WebTrigger it self
                     // also, skip builtin parameters that will be supplied by restcomm when it reaches for the controller
-                    if ( ! rvdSettings.getRestcommParameterNames().contains(paramName))
+                    if ( ! RvdConfiguration.getRestcommParameterNames().contains(paramName))
                         uriBuilder.addParameter(Interpreter.nameModuleRequestParam(paramName), requestParams.getFirst(paramName));
                 }
                 rcmlUrl = uriBuilder.build().toString();

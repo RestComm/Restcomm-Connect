@@ -218,7 +218,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         }
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         try {
-            Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(), expires);
+            Future<Object> future = ask(aggregator, new CreateSmsSession(), expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
             if (SmsServiceResponse.class.equals(klass)) {

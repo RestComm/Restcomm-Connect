@@ -50,10 +50,7 @@ public class State {
             return false;
         }
         final State state = (State) object;
-        if (!id.equals(state.getId())) {
-            return false;
-        }
-        return true;
+        return id.equals(state.getId());
     }
 
     public Action getActionOnEnter() {

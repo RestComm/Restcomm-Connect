@@ -50,8 +50,6 @@ public final class Nouns {
             return true;
         if (uri.equals(name))
             return true;
-        if (SIP.equals(name))
-            return true;
-        return false;
+        return SIP.equals(name);
     }
 }

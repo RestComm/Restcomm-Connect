@@ -135,7 +135,7 @@
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
-        	<module>restcomm.provisioning.number.bandwidth</module>
+		<module>restcomm.provisioning.number.bandwidth</module>
 		<module>restcomm.provisioning.number.voxbone</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
@@ -146,6 +146,9 @@
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>
+		<module>restcomm.email</module>
+		<module>restcomm.email.api</module>
+
 	</modules>
 
 	<dependencyManagement>
@@ -226,6 +229,11 @@
 				<version>${mobicents.mgcp.impl.version}</version>
 			</dependency>
 
+			<!--dependency>
+				<groupId>javax.mail</groupId>
+				<artifactId>javax.mail-api</artifactId>
+				<version>${javamail.version}</version>
+			</dependency-->
 			<dependency>
 				<groupId>javax.mail</groupId>
 				<artifactId>mail</artifactId>
@@ -765,7 +773,10 @@
 				<updatePolicy>never</updatePolicy>
 			</snapshots>
 		</repository>
-
+		<repository>
+			<id>central</id>
+			<url>http://repo1.maven.org/maven2/</url>
+		</repository>
 		<!-- Local repository for the ATT TTS Java wrapper library -->
 		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
 			</repository> -->
