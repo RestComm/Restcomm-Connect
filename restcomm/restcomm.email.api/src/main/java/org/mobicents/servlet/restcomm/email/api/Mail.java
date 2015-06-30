@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.email;
+package org.mobicents.servlet.restcomm.email.api;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 

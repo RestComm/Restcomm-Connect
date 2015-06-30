@@ -36,34 +36,19 @@ public class UpgradeService {
      */
     public static boolean checkBackwardCompatible(String referenceProjectVersion, String checkedProjectVesion) throws InvalidProjectVersion {
         if ( "1.3".equals(referenceProjectVersion) ) {
-            if ( "1.3".equals(checkedProjectVesion) || "1.2".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion) )
-                return true;
-            else
-                return false;
+            return "1.3".equals(checkedProjectVesion) || "1.2".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion);
         } else
         if ( "1.2".equals(referenceProjectVersion) ) {
-            if ( "1.2".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion) )
-                return true;
-            else
-                return false;
+            return "1.2".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion);
         } else
         if ( "1.1.1".equals(referenceProjectVersion) ) {
-            if ( "1.1.1".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion) )
-                return true;
-            else
-                return false;
+            return "1.1.1".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion);
         } else
         if ( "1.1".equals(referenceProjectVersion) ) {
-            if ( "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion) )
-                return true;
-            else
-                return false;
+            return "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion);
         } else
         if ( "1.0".equals(referenceProjectVersion) ) {
-            if ("1.0".equals(checkedProjectVesion))
-                return true;
-            else
-                return false;
+            return "1.0".equals(checkedProjectVesion);
         } else
             throw new InvalidProjectVersion("Invalid version identifier: " + referenceProjectVersion);
     }

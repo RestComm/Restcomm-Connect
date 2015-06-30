@@ -62,9 +62,7 @@ public class FsProjectStorage {
             File[] entries = workspaceDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
-                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(RvdConfiguration.PROTO_DIRECTORY_PREFIX))
-                        return true;
-                    return false;
+                    return anyfile.isDirectory() && !anyfile.getName().startsWith(RvdConfiguration.PROTO_DIRECTORY_PREFIX);
                 }
             });
             Arrays.sort(entries, new Comparator<File>() {
@@ -457,9 +455,7 @@ public class FsProjectStorage {
             File[] entries = wavsDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
-                    if (anyfile.isFile())
-                        return true;
-                    return false;
+                    return anyfile.isFile();
                 }
             });
             Arrays.sort(entries, new Comparator<File>() {

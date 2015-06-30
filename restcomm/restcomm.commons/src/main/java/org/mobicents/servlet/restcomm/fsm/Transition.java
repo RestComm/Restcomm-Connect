@@ -58,10 +58,7 @@ public final class Transition {
         if (!stateOnEnter.equals(transition.getStateOnEnter())) {
             return false;
         }
-        if (!stateOnExit.equals(transition.getStateOnExit())) {
-            return false;
-        }
-        return true;
+        return stateOnExit.equals(transition.getStateOnExit());
     }
 
     public Guard getGuard() {

@@ -37,16 +37,12 @@ public class RvdUtils {
       }
 
     public static boolean isEmpty( String value) {
-        if ( value == null || "".equals(value) )
-            return true;
-        return false;
+        return value == null || "".equals(value);
     }
 
     // returns True when either the value is True OR null
     public static boolean isEmpty( Boolean value) {
-        if ( value == null || value == false )
-            return true;
-        return false;
+        return value == null || value == false;
     }
 
     public static boolean safeEquals(String value1, String value2) {

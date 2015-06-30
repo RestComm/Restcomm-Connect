@@ -80,11 +80,7 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
         final SqlSession session = sessions.openSession();
         try {
             final Integer result = session.selectOne(namespace + "hasCookie", toMap(sid, cookie));
-            if (result > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return result > 0;
         } finally {
             session.close();
         }
@@ -95,11 +91,7 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
         final SqlSession session = sessions.openSession();
         try {
             final Integer result = session.selectOne(namespace + "hasExpiredCookies", sid.toString());
-            if (result > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return result > 0;
         } finally {
             session.close();
         }
