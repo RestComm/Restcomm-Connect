@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.email.EmailStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.gather.GatherStep;
@@ -34,37 +35,39 @@ public class StepJsonSerializer implements JsonSerializer<Step> {
         Gson gson = new GsonBuilder().registerTypeAdapter(Step.class, new StepJsonSerializer()).create();
         JsonElement resultElement = null; // TODO update this default value to something or throw an exception or something
         if (step.getClass().equals(SayStep.class)) {
-            resultElement = gson.toJsonTree((SayStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(PlayStep.class)  ) {
-            resultElement = gson.toJsonTree((PlayStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(GatherStep.class)) {
-            resultElement = gson.toJsonTree((GatherStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(ExternalServiceStep.class)) {
-            resultElement = gson.toJsonTree((ExternalServiceStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(LogStep.class)) {
-            resultElement = gson.toJsonTree((LogStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(DialStep.class)) {
-            resultElement = gson.toJsonTree((DialStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(HungupStep.class)) {
-            resultElement = gson.toJsonTree((HungupStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(RedirectStep.class)) {
-            resultElement = gson.toJsonTree((RedirectStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(RejectStep.class)) {
-            resultElement = gson.toJsonTree((RejectStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(PauseStep.class)) {
-            resultElement = gson.toJsonTree((PauseStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(SmsStep.class)) {
-            resultElement = gson.toJsonTree((SmsStep) step);
+            resultElement = gson.toJsonTree(step);
+        } else if (step.getClass().equals(EmailStep.class)) {
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(RecordStep.class)) {
-            resultElement = gson.toJsonTree((RecordStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(FaxStep.class)) {
-            resultElement = gson.toJsonTree((FaxStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(UssdSayStep.class)) {
-            resultElement = gson.toJsonTree((UssdSayStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(UssdCollectStep.class)) {
-            resultElement = gson.toJsonTree((UssdCollectStep) step);
+            resultElement = gson.toJsonTree(step);
         } else if (step.getClass().equals(UssdLanguageStep.class)) {
-            resultElement = gson.toJsonTree((UssdLanguageStep) step);
+            resultElement = gson.toJsonTree(step);
         }
 
         return resultElement;

@@ -1,0 +1,75 @@
+<div class="row">
+    <div class="col-md-6 col-md-offset-3 well well-large"  >
+        <legend>Product Registration</legend>
+        <form name="registerForm" class="form-horizontal" ng-submit="register()" role="form">
+
+            <div class="form-group" ng-class="{ 'has-error': registerForm.firstName.$dirty && registerForm.firstName.$error.required }">
+                <label class="col-md-4 control-label" for="firstName">First name</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span ng-show="registerForm.firstName.$dirty && registerForm.firstName.$error.required" class="input-group-addon">First name is required</span>
+                        <input type="text" name="firstName" id="firstName" class="form-control" ng-model="user.firstName" placeholder="Your First Name" required />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{ 'has-error': registerForm.lastName.$dirty && registerForm.lastName.$error.required }">
+                <label class="col-md-4 control-label" for="lastName">Last name</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span ng-show="registerForm.lastName.$dirty && registerForm.lastName.$error.required" class="input-group-addon">Last name is required</span>
+                        <input type="text" name="lastName" id="lastName" class="form-control" ng-model="user.lastName" placeholder="Your Surname Name" required />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{ 'has-error': registerForm.companyname.$dirty && registerForm.username.$error.$invalid }">
+                <label class="col-md-4 control-label" for="companyname">Company</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <input type="text" name="companyname" id="companyname" class="form-control"  placeholder="Your Company Name" ng-model="user.companyname"  />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{ 'has-error': registerForm.email.$dirty && registerForm.email.$error.required && registerForm.email.$invalid }">
+                <label class="col-md-4 control-label" for="email">E-mail</label>
+                <div class="controls">
+                    <div class="input-group col-md-6">
+                        <span ng-show="registerForm.email.$dirty && registerForm.email.$error.required " class="input-group-addon">Email is required.</span>
+                        <span ng-show="registerForm.email.$dirty && myForm.email.$error.email" class="input-group-addon">Invalid email address.</span>
+                        <input type="email" name="email" id="email" class="form-control" ng-model="user.email" placeholder="Your E-mail" required />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group" >
+                <div class="col-md-6  col-lg-offset-2">
+                    <div class="checkbox">
+                        <label>
+                            <input  type="checkbox" name="wantNewsletter" id="wantNewsletter"  ng-model="user.wantNewsletter" ><small><b>I want to receive newsletters</b></small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{ 'has-error': registerForm.agreeTerms.$dirty && registerForm.agreeTerms.$error.required }">
+                <div class="col-md-5  col-lg-offset-2">
+                    <div class=" checkbox">
+                     <input name="agreeTerms" id="agreeTerms"  type="checkbox"  ng-model="user.agreeTerms" required >
+                     <div  ng-controller="TermsCtrl" ng-include="'modules/terms.html'" ></div>
+                    </div>
+                </div>
+                    <span ng-show="registerForm.agreeTerms.$dirty && registerForm.agreeTerms.$error.required" class="col-md-5 help-block">Checkbox is required</span>
+            </div>
+            <div class="control-group">
+                <div class="controls pull-left">
+                    <a href="#/dashboard" class="btn btn-link">No thank you!</a>
+                </div>
+
+                <div class="controls pull-right">
+                    <button class="btn btn-default" type="reset">Clear</button>
+                        <button type="submit" ng-disabled="dataLoading"  class="btn btn-primary">Register</button>
+                    <img ng-if="dataLoading" src="data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</div>

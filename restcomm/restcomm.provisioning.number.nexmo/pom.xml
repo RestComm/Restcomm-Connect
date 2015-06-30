@@ -27,7 +27,7 @@
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>

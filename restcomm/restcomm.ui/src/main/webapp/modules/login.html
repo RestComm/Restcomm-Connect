@@ -2,7 +2,7 @@
     <div class="text-center"><img src="resources/img/restcomm-logo.png" />&nbsp;&nbsp;&nbsp;<img src="resources/img/restcomm-letters.png" /><hr></div>
 </div>
 <div class="row">
-    <div class="col-md-8 col-md-offset-2 well well-large" ng-class="{'shake animated': loginFailed}" ng-hide="updatePassword">
+    <div class="col-md-8 col-md-offset-2 well well-large" ng-class="{'shake animated': loginFailed}" ng-hide="updatePassword || RegisterClient ">
         <legend>Login</legend>
         <form name="loginForm" class="form-horizontal" ng-submit="login()">
             <div class="form-group">
@@ -94,4 +94,12 @@
             </div>
         </form>
     </div>
+    <div ng-controller="RegisterCtrl">
+        <div ng-include="'modules/register.html'" ng-show="RegisterClient"></div>
+    </div>
+</div>
+
+
+
+
 </div>

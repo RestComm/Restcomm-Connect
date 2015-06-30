@@ -43,6 +43,7 @@ import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlDialStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlNumberNoun;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.RcmlSipuriNoun;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.SipuriNounConverter;
+import org.mobicents.servlet.restcomm.rvd.model.steps.email.RcmlEmailStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.AccessOperation;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ValueExtractor;
@@ -167,6 +168,7 @@ public class Interpreter {
         xstream.alias("Reject", RcmlRejectStep.class);
         xstream.alias("Pause", RcmlPauseStep.class);
         xstream.alias("Sms", RcmlSmsStep.class);
+        xstream.alias("Email", RcmlEmailStep.class);
         xstream.alias("Record", RcmlRecordStep.class);
         xstream.alias("Fax", RcmlFaxStep.class);
         xstream.alias("Number", RcmlNumberNoun.class);
@@ -687,9 +689,7 @@ public class Interpreter {
     private boolean isCustomRestcommHttpHeader(String headerName) {
         if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX.toLowerCase() ) )
             return true;
-        if (headerName.toLowerCase().startsWith( RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase() ) )
-            return true;
-        return false;
+        return headerName.toLowerCase().startsWith(RvdConfiguration.RESTCOMM_HEADER_PREFIX_DIAL.toLowerCase());
     }
 
     /**

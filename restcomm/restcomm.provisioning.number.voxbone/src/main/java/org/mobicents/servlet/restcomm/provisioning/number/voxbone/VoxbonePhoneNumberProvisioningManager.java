@@ -379,11 +379,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
-        if (clientResponse.getClientResponseStatus() == Status.OK) {
-            return true;
-        } else {
-            return false;
-        }
+        return clientResponse.getClientResponseStatus() == Status.OK;
     }
 
     @Override
