@@ -581,12 +581,13 @@ public final class CallManager extends UntypedActor {
             final Sid sid = client.getVoiceApplicationSid();
             if (sid != null) {
                 final Application application = applications.getApplication(sid);
-                builder.setUrl(application.getVoiceUrl());
+                builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
                 builder.setMethod(application.getVoiceMethod());
                 builder.setFallbackUrl(application.getVoiceFallbackUrl());
                 builder.setFallbackMethod(application.getVoiceFallbackMethod());
             } else {
-                builder.setUrl(clientAppVoiceUril);
+                URI url = UriUtils.resolve(request.getLocalAddr(), 8080, clientAppVoiceUril);
+                builder.setUrl(url);
                 builder.setMethod(client.getVoiceMethod());
                 builder.setFallbackUrl(client.getVoiceFallbackUrl());
                 builder.setFallbackMethod(client.getVoiceFallbackMethod());
