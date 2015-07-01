@@ -115,6 +115,7 @@ public final class Downloader extends UntypedActor {
             try {
                 response = new DownloaderResponse(fetch(request));
             } catch (final Exception exception) {
+                logger.info("Exception while trying to download RCML, exception: "+exception);
                 response = new DownloaderResponse(exception);
             }
             if (sender != null) {
