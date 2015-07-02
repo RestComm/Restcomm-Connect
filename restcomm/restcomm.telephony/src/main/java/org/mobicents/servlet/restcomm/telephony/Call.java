@@ -317,7 +317,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(unmuting, inProgress));
         transitions.add(new Transition(unmuting, closingRemoteConnection));
         transitions.add(new Transition(closingRemoteConnection, closingInternalLink));
-//        transitions.add(new Transition(closingRemoteConnection, closingRemoteConnection));
+        //        transitions.add(new Transition(closingRemoteConnection, closingRemoteConnection));
         transitions.add(new Transition(closingRemoteConnection, completed));
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -402,8 +402,8 @@ public final class Call extends UntypedActor {
         } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
                 && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
             logger.info("Contact header address " + contactAddr.toString()
-                    + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
-                    + " to the session for later use");
+            + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
+            + " to the session for later use");
             realIP = realIP + ":" + realPort;
             uri = factory.createSipURI(null, realIP);
         }
@@ -447,7 +447,7 @@ public final class Call extends UntypedActor {
     private void stopRecordingCall() throws UnsupportedAudioFileException, IOException {
         logger.info("Stop recording call");
         if (group != null) {
-//            recording = false;
+            //            recording = false;
             //No need to stop the group here, it was stopped earlier by VoiceInterpreter
             group.tell(new Stop(), null);
             //VoiceInterpreter.finishDialing (if BYE sent by initial calls OR Call.ClosingRemoteConnection (if BYE sent by outbound call)
@@ -503,11 +503,11 @@ public final class Call extends UntypedActor {
             } else {
                 logger.info("Call :"+self().path()+" Group is null");
             }
-//            internalLink.tell(new CloseLink(), null);
-//            gateway.tell(new DestroyLink(internalLink), null);
-//            internalLink = null;
-//            internalLinkEndpoint = null;
-//            internalLinkMode = null;
+            //            internalLink.tell(new CloseLink(), null);
+            //            gateway.tell(new DestroyLink(internalLink), null);
+            //            internalLink = null;
+            //            internalLinkEndpoint = null;
+            //            internalLinkMode = null;
             //            if (bridge != null) {
             //                gateway.tell(new DestroyEndpoint(bridge), self());
             //                context().stop(bridge);
@@ -519,16 +519,16 @@ public final class Call extends UntypedActor {
                 group = null;
             }
             group = getMediaGroup(message);
-//            if (group == null || group.isTerminated()) {
-//                group = getMediaGroup(message);
-//            }
-//            if (internalLink != null && !internalLink.isTerminated()) {
-//                gateway.tell(new DestroyLink(internalLink), null);
-//                context().stop(internalLink);
-////                context().stop(internalLinkEndpoint);
-//                internalLink = null;
-//            }
-//            fsm.transition(message, acquiringBridge);
+            //            if (group == null || group.isTerminated()) {
+            //                group = getMediaGroup(message);
+            //            }
+            //            if (internalLink != null && !internalLink.isTerminated()) {
+            //                gateway.tell(new DestroyLink(internalLink), null);
+            //                context().stop(internalLink);
+            ////                context().stop(internalLinkEndpoint);
+            //                internalLink = null;
+            //            }
+            //            fsm.transition(message, acquiringBridge);
         } else if (Answer.class.equals(klass) || Dial.class.equals(klass)) {
             if (!inProgress.equals(state) ) {
                 fsm.transition(message, acquiringMediaGatewayInfo);
@@ -570,8 +570,8 @@ public final class Call extends UntypedActor {
             }
         }
         else if (RecordingStarted.class.equals(klass)) {
-          //VoiceInterpreter executed the Record verb and notified the call actor that we are in recording now
-          //so Call should wait for NTFY for Recording before complete the call
+            //VoiceInterpreter executed the Record verb and notified the call actor that we are in recording now
+            //so Call should wait for NTFY for Recording before complete the call
             recording = true;
         } else if (MediaGatewayResponse.class.equals(klass)) {
             if (acquiringMediaGatewayInfo.equals(state)) {
@@ -745,12 +745,12 @@ public final class Call extends UntypedActor {
             }
         } else if (inProgress.equals(state)) {
             if (CreateMediaGroup.class.equals(klass)) {
-//                logger.info("Before group set to null, bridge: "+bridge.path()+" isTerminated: "+bridge.isTerminated());
-//                if (group != null) {
-//                    logger.info("group was not null, will set it to null and get new one for call: "+self().path());
-//                    context.stop(group);
-//                }
-//                logger.info("After group set to null, bridge: "+bridge.path()+" isTerminated: "+bridge.isTerminated());
+                //                logger.info("Before group set to null, bridge: "+bridge.path()+" isTerminated: "+bridge.isTerminated());
+                //                if (group != null) {
+                //                    logger.info("group was not null, will set it to null and get new one for call: "+self().path());
+                //                    context.stop(group);
+                //                }
+                //                logger.info("After group set to null, bridge: "+bridge.path()+" isTerminated: "+bridge.isTerminated());
                 if (group == null || group.isTerminated()) {
                     logger.info("group is null or terminated, will get new one for call: "+self().path());
                     group = getMediaGroup(message);
@@ -805,22 +805,22 @@ public final class Call extends UntypedActor {
             }
             logger.info("2 MediaGroup for call: "+self().path()+ " will be sent to sender: "+sender.path());
             sender.tell(new CallResponse<ActorRef>(group), self);
-//            if (group != null) {
-//                context.stop(group);
-//            }
-//            //LCM Hack
-//            //            if (bridge == null) {
-//            //                final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-//            //                Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new CreateBridgeEndpoint(session), expires);
-//            //                MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-//            //                bridge = futureResponse.get();
-//            //                if (!bridge.isTerminated() && bridge != null) {
-//            //                    logger.info("Bridge for call: "+self().path()+" acquired and is not terminated. Will proceed to get MediaGroup");
-//            //                }
-//            //            }
-//            group = getMediaGroup(message);
-//            sender.tell(new CallResponse<ActorRef>(group), self);
-//            logger.info("2 MediaGroup for call: "+self().path()+ " created and sent to sender: "+sender.path());
+            //            if (group != null) {
+            //                context.stop(group);
+            //            }
+            //            //LCM Hack
+            //            //            if (bridge == null) {
+            //            //                final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+            //            //                Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new CreateBridgeEndpoint(session), expires);
+            //            //                MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+            //            //                bridge = futureResponse.get();
+            //            //                if (!bridge.isTerminated() && bridge != null) {
+            //            //                    logger.info("Bridge for call: "+self().path()+" acquired and is not terminated. Will proceed to get MediaGroup");
+            //            //                }
+            //            //            }
+            //            group = getMediaGroup(message);
+            //            sender.tell(new CallResponse<ActorRef>(group), self);
+            //            logger.info("2 MediaGroup for call: "+self().path()+ " created and sent to sender: "+sender.path());
         }
     }
 
@@ -832,7 +832,7 @@ public final class Call extends UntypedActor {
             final String content = new String(request.getRawContent());
             digits = content.split("\n")[0].replaceFirst("Signal=","").trim();
         } else {
-        digits = new String(request.getRawContent());
+            digits = new String(request.getRawContent());
         }
         if (digits != null) {
             MediaGroupResponse<String> infoResponse = new MediaGroupResponse<String>(digits);
@@ -1481,12 +1481,16 @@ public final class Call extends UntypedActor {
 
                 SipServletRequest originalInvite = response.getRequest();
                 SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                if ((SipURI) session.getAttribute("realInetUri") == null) {
+//                    session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
+                    session.setAttribute("realInetUri", realInetUri);
+                }
                 InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
 
                 if (realInetUri != null
                         && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
                     logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                            + " as a request uri of the ACK");
+                    + " as a request uri of the ACK");
                     ack.setRequestURI(realInetUri);
                 }
 
@@ -1745,6 +1749,7 @@ public final class Call extends UntypedActor {
         public void execute(Object message) throws Exception {
             final Class<?> klass = message.getClass();
             if (Hangup.class.equals(klass)) {
+                logger.info("Got Hangup");
                 final SipSession session = invite.getSession();
                 final SipServletRequest bye = session.createRequest("BYE");
 
@@ -1782,7 +1787,7 @@ public final class Call extends UntypedActor {
 
                 invite.getHeaders(RecordRouteHeader.NAME);
 
-                ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
+                ListIterator<String> recordRouteList = bye.getHeaders(RecordRouteHeader.NAME);
 
                 if (invite.getHeader("X-Sip-Balancer") != null) {
                     logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
@@ -1791,15 +1796,21 @@ public final class Call extends UntypedActor {
                     recordRouteList.next();
                     recordRouteList.remove();
                 }
-
+                logger.info("About to check if we have to change RequestURI");
                 if (recordRouteList.hasNext()) {
                     logger.info("Record Route is set, wont change the Request URI");
-                } else if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                            + " as a request uri of the BYE request");
-                    bye.setRequestURI(realInetUri);
+                } else {
+                    logger.info("Checking RURI, realInetUri: "+realInetUri+" byeRURI: "+byeRURI);
+                    logger.debug("byeRURI.isSiteLocalAddress(): "+byeRURI.isSiteLocalAddress());
+                    logger.debug("byeRURI.isAnyLocalAddress(): "+byeRURI.isAnyLocalAddress());
+                    logger.debug("byeRURI.isLoopbackAddress(): "+byeRURI.isLoopbackAddress());
+                    if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                        logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                        + " as a request uri of the BYE request");
+                        bye.setRequestURI(realInetUri);
+                    }
                 }
-
+                logger.info("Will sent out BYE to: "+bye.getRequestURI());
                 bye.send();
 
                 if (recording) {
