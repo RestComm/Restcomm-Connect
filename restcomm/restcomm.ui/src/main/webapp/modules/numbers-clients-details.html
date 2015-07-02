@@ -40,7 +40,8 @@
             <h4 class="account-detail-field-name">Voice Request URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" apps="availableApps"></rc-endpoint-url>
+            <rc-endpoint-url method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" apps="localApps"></rc-endpoint-url>
+            
         </span>
     </fieldset>
     <br>
@@ -49,7 +50,7 @@
             <h4 class="account-detail-field-name">Voice Fallback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="clientDetails.voice_fallback_method" url-var="clientDetails.voice_fallback_url" apps="availableApps"></rc-endpoint-url>
+            <rc-endpoint-url method-var="clientDetails.voice_fallback_method" url-var="clientDetails.voice_fallback_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
