@@ -276,6 +276,11 @@
 		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
 	</sms-aggregator>
 
+	<smpp class="org.mobicents.servlet.restcomm.smpp.SmppService">
+		<outbound-prefix></outbound-prefix>
+		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
+	</smpp>
+
 	<!-- The Fax Service is used to send and receive faxes on behalf of RestComm. -->
 	<fax-service class="org.mobicents.servlet.restcomm.fax.InterfaxService">
 		<user></user>

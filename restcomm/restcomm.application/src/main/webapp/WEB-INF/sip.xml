@@ -72,6 +72,16 @@
 		</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
+	
+	<servlet>
+		<servlet-name>SmppService</servlet-name>
+		<display-name>SmppService</display-name>
+		<description>SMPP Connection Service.</description>
+		<servlet-class>
+			org.mobicents.servlet.restcomm.smpp.SmppServiceProxy
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>	
 
 	<servlet>
 		<servlet-name>CallManager</servlet-name>
@@ -113,6 +123,11 @@
 			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
 		</listener-class>
 	</listener>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.smpp.SmppServiceProxy
+		</listener-class>
+	</listener>	
 	<listener>
 		<listener-class>
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
