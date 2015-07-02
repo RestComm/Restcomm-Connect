@@ -30,7 +30,8 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
     var registerSIPClientModal = $modal.open({
       controller: ClientDetailsCtrl,
       scope: $scope,
-      templateUrl: 'modules/modals/modal-register-sip-client.html'
+      templateUrl: 'modules/modals/modal-register-sip-client.html',
+      resolve: { localApps: function (rappService) { return rappService.refreshLocalApps();} }
     });
 
     registerSIPClientModal.result.then(
@@ -55,8 +56,9 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
 
 // Numbers : SIP Clients : Details (also used for Modal) -----------------------
 
-var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications) {
+var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
 
+	$scope.localApps = localApps;
   // are we editing details...
   if($scope.clientSid = $routeParams.clientSid) {
     $scope.sid = SessionService.get("sid");
