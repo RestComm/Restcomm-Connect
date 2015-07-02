@@ -93,22 +93,24 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     if (client.friendly_name) {
       params["FriendlyName"] = client.friendly_name;
     }
-    if (client.voice_url) {
+    if (client.voice_url || client.voice_url === "" ) {
       params["VoiceUrl"] = client.voice_url;
       params["VoiceMethod"] = client.voice_method;
     }
-    if (client.voice_fallback_url) {
+    if (client.voice_fallback_url || client.voice_fallback_url === "") {
       params["VoiceFallbackUrl"] = client.voice_fallback_url;
       params["VoiceFallbackMethod"] = client.voice_fallback_method;
     }
-    if (client.status_callback_url) {
+    if (client.status_callback_url || client.status_callback_url === "" ) {
       params["StatusCallback"] = client.status_callback_url;
       params["StatusCallbackMethod"] = client.status_callback_method;
     }
+    // disabled
     if (client.sms_url) {
       params["SmsUrl"] = client.sms_url;
       params["SmsMethod"] = client.sms_method;
     }
+    // disabled
     if (client.sms_fallback_url) {
       params["SmsFallbackUrl"] = client.sms_fallback_url;
       params["SmsFallbackMethod"] = client.sms_fallback_method;
