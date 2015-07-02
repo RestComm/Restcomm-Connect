@@ -243,13 +243,15 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
             result = result.setStatus(getStatus(data));
         }
         if (data.containsKey("VoiceUrl")) {
-            result = result.setVoiceUrl(getUrl("VoiceUrl", data));
+            URI uri = getUrl("VoiceUrl", data);
+            result = result.setVoiceUrl(isEmpty(uri.toString()) ? null : uri);
         }
         if (data.containsKey("VoiceMethod")) {
             result = result.setVoiceMethod(getMethod("VoiceMethod", data));
         }
         if (data.containsKey("VoiceFallbackUrl")) {
-            result = result.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+            URI uri = getUrl("VoiceFallbackUrl", data);
+            result = result.setVoiceFallbackUrl(isEmpty(uri.toString()) ? null :uri);
         }
         if (data.containsKey("VoiceFallbackMethod")) {
             result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
