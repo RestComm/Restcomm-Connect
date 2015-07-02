@@ -122,6 +122,12 @@
 			<artifactId>restcomm.sms</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.smpp</artifactId>
+			<version>${project.version}</version>
+		</dependency>		
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
