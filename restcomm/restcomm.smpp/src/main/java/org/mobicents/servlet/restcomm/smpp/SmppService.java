@@ -20,6 +20,14 @@
 
 package org.mobicents.servlet.restcomm.smpp;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
@@ -32,6 +40,15 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+import com.cloudhopper.smpp.SmppBindType;
+import com.cloudhopper.smpp.impl.DefaultSmppClient;
+import com.cloudhopper.smpp.type.Address;
+
+/**
+ *
+ * @author amit bhayani
+ *
+ */
 public final class SmppService extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -45,6 +62,15 @@ public final class SmppService extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
 
+    private ThreadPoolExecutor executor;
+    private ScheduledThreadPoolExecutor monitorExecutor;
+
+    private DefaultSmppClient clientBootstrap = null;
+
+    private SmppClientOpsThread smppClientOpsThread = null;
+
+    private ArrayList<Smpp> smppList = new ArrayList<Smpp>();
+
     public SmppService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
 
@@ -57,17 +83,122 @@ public final class SmppService extends UntypedActor {
         this.sipFactory = factory;
         this.storage = storage;
         this.servletContext = servletContext;
-        
-        logger.info("SmppService initalized. Configuration = " + configuration);
+
+        this.initializeSmppConnections();
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
         logger.info("onReceive = " + message);
     }
-    
-    private void initializeSmppConnection(){
-        Configuration smsConfiguration = this.configuration.subset("sms-aggregator");
+
+    private void initializeSmppConnections() {
+        Configuration smppConfiguration = this.configuration.subset("smpp");
+
+        List<Object> smppConnections = smppConfiguration.getList("connections.connection.name");
+
+        int smppConnecsSize = smppConnections.size();
+        if (smppConnecsSize == 0) {
+            logger.warning("No SMPP Connections defined!");
+            return;
+        }
+
+        for (int count = 0; count < smppConnecsSize; count++) {
+            String name = smppConfiguration.getString("connections.connection(" + count + ").name");
+            String systemId = smppConfiguration.getString("connections.connection(" + count + ").systemid");
+            String peerIp = smppConfiguration.getString("connections.connection(" + count + ").peerip");
+            int peerPort = smppConfiguration.getInt("connections.connection(" + count + ").peerport");
+            SmppBindType bindtype = SmppBindType.valueOf(smppConfiguration.getString("connections.connection(" + count
+                    + ").bindtype"));
+
+            if (bindtype == null) {
+                logger.warning("Bindtype for SMPP name=" + name + " is not specified. Using default TRANSCEIVER");
+            }
+
+            String password = smppConfiguration.getString("connections.connection(" + count + ").password");
+            String systemType = smppConfiguration.getString("connections.connection(" + count + ").systemtype");
+
+            byte interfaceVersion = smppConfiguration.getByte("connections.connection(" + count + ").interfaceversion");
+
+            byte ton = smppConfiguration.getByte("connections.connection(" + count + ").ton");
+            byte npi = smppConfiguration.getByte("connections.connection(" + count + ").npi");
+            String range = smppConfiguration.getString("connections.connection(" + count + ").range");
+
+            Address address = null;
+            if (ton != -1 && npi != -1 && range != null) {
+                address = new Address(ton, npi, range);
+            }
+
+            int windowSize = smppConfiguration.getInt("connections.connection(" + count + ").windowsize");
+
+            long windowWaitTimeout = smppConfiguration.getLong("connections.connection(" + count + ").windowwaittimeout");
+
+            long connectTimeout = smppConfiguration.getLong("connections.connection(" + count + ").connecttimeout");
+            long requestExpiryTimeout = smppConfiguration.getLong("connections.connection(" + count + ").requestexpirytimeout");
+            long windowMonitorInterval = smppConfiguration.getLong("connections.connection(" + count
+                    + ").windowmonitorinterval");
+            boolean logBytes = smppConfiguration.getBoolean("connections.connection(" + count + ").logbytes");
+            boolean countersEnabled = smppConfiguration.getBoolean("connections.connection(" + count + ").countersenabled");
+
+            long enquireLinkDelay = smppConfiguration.getLong("connections.connection(" + count + ").enquirelinkdelay");
+
+            Smpp smpp = new Smpp(name, systemId, peerIp, peerPort, bindtype, password, systemType, interfaceVersion, address,
+                    connectTimeout, windowSize, windowWaitTimeout, requestExpiryTimeout, windowMonitorInterval,
+                    countersEnabled, logBytes, enquireLinkDelay);
+
+            this.smppList.add(smpp);
+
+            logger.info("creating new SMPP connection " + smpp);
+        }
+
+        // for monitoring thread use, it's preferable to create your own
+        // instance of an executor and cast it to a ThreadPoolExecutor from
+        // Executors.newCachedThreadPool() this permits exposing thinks like
+        // executor.getActiveCount() via JMX possible no point renaming the
+        // threads in a factory since underlying Netty framework does not easily
+        // allow you to customize your thread names
+        this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+
+        // to enable automatic expiration of requests, a second scheduled
+        // executor is required which is what a monitor task will be executed
+        // with - this is probably a thread pool that can be shared with between
+        // all client bootstraps
+        this.monitorExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, new ThreadFactory() {
+            private AtomicInteger sequence = new AtomicInteger(0);
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
+                t.setName("SmppServer-SessionWindowMonitorPool-" + sequence.getAndIncrement());
+                return t;
+            }
+        });
+
+        // a single instance of a client bootstrap can technically be shared
+        // between any sessions that are created (a session can go to any
+        // different number of SMSCs) - each session created under a client
+        // bootstrap will use the executor and monitorExecutor set in its
+        // constructor - just be *very* careful with the "expectedSessions"
+        // value to make sure it matches the actual number of total concurrent
+        // open sessions you plan on handling - the underlying netty library
+        // used for NIO sockets essentially uses this value as the max number of
+        // threads it will ever use, despite the "max pool size", etc. set on
+        // the executor passed in here
+
+        // Setting expected session to be 25. May be this should be
+        // configurable?
+        this.clientBootstrap = new DefaultSmppClient(this.executor, 25, monitorExecutor);
+
+        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap);
+
+        (new Thread(this.smppClientOpsThread)).start();
+
+        for(Smpp smpp : this.smppList){
+            this.smppClientOpsThread.scheduleConnect(smpp);
+        }
+
+        logger.info("SMPP Service started");
+
     }
 
 }
