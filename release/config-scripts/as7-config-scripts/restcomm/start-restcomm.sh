@@ -25,9 +25,13 @@ startRestcomm() {
 		'standalone'*)
 			# start restcomm on standalone mode
 			chmod +x $RESTCOMM_HOME/bin/standalone.sh
-			screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address
 			echo 'TelScale RestComm started running on standalone mode. Screen session: restcomm.'
 			echo "Using IP Address: $BIND_ADDRESS"
+			if [[ "$RUN_DOCKER" == "true" || "$RUN_DOCKER" == "TRUE" ]]; then
+				$RESTCOMM_HOME/bin/standalone.sh -b $bind_address
+			else
+				screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address
+			fi
 			;;
 		'domain'*)
 			# start restcomm on standalone mode
@@ -172,6 +176,6 @@ fi
 source $BASEDIR/autoconfigure.sh
 
 # start restcomm in selected run mode
-startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
 startMediaServer
+startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
 exit 0
