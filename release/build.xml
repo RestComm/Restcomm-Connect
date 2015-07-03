@@ -1,159 +1,121 @@
 <?xml version="1.0"?>
-<project name="mobicents.restcomm.release" default="release" basedir=".">
-	<property environment="sys"/>
-    	<property name="release.dir" location="${ant.file.mobicents.restcomm.release}/../target" />
-	<property name="release.tomcat.dir" location="${ant.file.mobicents.restcomm.release}/../target-tomcat" />
-        <property name="release.as7.dir" location="${ant.file.mobicents.restcomm.release}/../target-as7" />
-        <property name="base.dir" location="${ant.file.mobicents.restcomm.release}/.." />
-	<property name="docs.dir" location="${release.dir}/docs" />
-	<property name="restcomm.docs.dir" location="${release.dir}/docs/restcomm" />
-	<property name="restcomm.docs.tomcat.dir" location="${release.tomcat.dir}/docs/restcomm" />
-        <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm" />
+<project basedir="." default="release" name="mobicents.restcomm.release">
+  <property environment="sys"/>
+  <property location="${ant.file.mobicents.restcomm.release}/../target" name="release.dir"/>
+  <property location="${ant.file.mobicents.restcomm.release}/../target-tomcat" name="release.tomcat.dir"/>
+  <property location="${ant.file.mobicents.restcomm.release}/../target-as7" name="release.as7.dir"/>
+  <property location="${ant.file.mobicents.restcomm.release}/.." name="base.dir"/>
+  <property location="${release.dir}/docs" name="docs.dir"/>
+  <property location="${release.dir}/docs/restcomm" name="restcomm.docs.dir"/>
+  <property location="${release.tomcat.dir}/docs/restcomm" name="restcomm.docs.tomcat.dir"/>
+  <property location="${release.as7.dir}/docs/restcomm" name="restcomm.docs.as7.dir"/>
 
-	<!--mobicents binaries versions-->
-	<property name="sipservlets-build" value="612"/>
-        <property name="mobicents-sipservlets-as7.version" value="3.1.${sipservlets-build}" />
-	<!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-	<property name="mobicents-media.version" value="3.0.2.Final" />
-	<!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
+<!--mobicents binaries versions-->
+  <property name="sipservlets-build" value="612"/>
+  <property name="mobicents-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
+<!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
+  <property name="mobicents-media.version" value="3.0.2.Final"/>
+<!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
+<!-- mobicents SIP Servlets 7.x on JBoss AS7-->
+  <property name="mobicents-sipservlets.as7.distro.version" value="${mobicents-sipservlets-as7.version}-jboss-as-7.2.0.Final"/>
+  <property name="mobicents-sipservlets.as7.download.distro.file" value="mss-${mobicents-sipservlets.as7.distro.version}.zip"/>
+  <property name="mobicents-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.as7.download.distro.file}"/>
+  <property name="mobicents-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.as7.download.distro.file}"/>
 
-	<!-- mobicents SIP Servlets 7.x on Tomcat 7 -->
-        <property name="mobicents-sipservlets.tomcat.distro.version" value="${mobicents-sipservlets-as7.version}-apache-tomcat-7.0.50" />
-        <property name="mobicents-sipservlets.tomcat.download.distro.file" value="mss-${mobicents-sipservlets.tomcat.distro.version}.zip" />
-	<property name="mobicents-sipservlets.tomcat.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.tomcat.download.distro.file}" />
-        <property name="mobicents-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.tomcat.download.distro.file}" />
+  <property name="mobicents-media.download.distro.file" value="mobicents-media-server.zip"/>
+<!--<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />-->
+  <property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-2.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip"/>
+  <property name="mobicents-media.distro.zip.path" value="${checkout.dir}/${mobicents-media.download.distro.file}"/>
 
-	<!-- mobicents SIP Servlets 7.x on JBoss AS7-->
-        <property name="mobicents-sipservlets.as7.distro.version" value="${mobicents-sipservlets-as7.version}-jboss-as-7.2.0.Final" />
-        <property name="mobicents-sipservlets.as7.download.distro.file" value="mss-${mobicents-sipservlets.as7.distro.version}.zip" />
-        <property name="mobicents-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.as7.download.distro.file}" />
-        <property name="mobicents-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.as7.download.distro.file}" />
+  <property name="mobicents-diameter.download.distro.file" value="mobicents-diameter-${mobicents-diameter.version}.zip"/>
+  <property name="mobicents-diameter.download.url" value="https://mobicents.ci.cloudbees.com/job/Mobicents-jDiameter/${mobicents-diameter.version}/${mobicents-diameter.download.distro.file}"/>
+  <property name="mobicents-diameter.distro.zip.path" value="${checkout.dir}/${mobicents-diameter.download.distro.file}"/>
 
-	<property name="mobicents-media.download.distro.file" value="mobicents-media-server.zip" />
-	<!--<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />-->
-	<property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-2.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip" />
-	<property name="mobicents-media.distro.zip.path" value="${checkout.dir}/${mobicents-media.download.distro.file}" />
+  <property name="release.build.goals" value="clean install -Dmaven.test.skip=true"/>
+  <property name="release.build.test.goals" value="clean install -Dmaven.test.failure.ignore=true"/>
+  <property name="release.ts.deploy.goals" value="clean deploy"/>
 
-	<property name="mobicents-diameter.download.distro.file" value="mobicents-diameter-${mobicents-diameter.version}.zip" />
-	<property name="mobicents-diameter.download.url" value="https://mobicents.ci.cloudbees.com/job/Mobicents-jDiameter/${mobicents-diameter.version}/${mobicents-diameter.download.distro.file}" />
-	<property name="mobicents-diameter.distro.zip.path" value="${checkout.dir}/${mobicents-diameter.download.distro.file}" />
+  <condition else="mvn" property="mvn.executable" value="${sys.M2_HOME}\bin\mvn.bat">
+    <os family="windows"/>
+  </condition>
 
-	<property name="release.build.goals" value="clean install -Dmaven.test.skip=true"/>
-	<property name="release.build.test.goals" value="clean install -Dmaven.test.failure.ignore=true"/>
-	<property name="release.ts.deploy.goals" value="clean deploy"/>
+  <taskdef onerror="fail" resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="${ant.file.mobicents.restcomm.release}/../ant-contrib-1.0b3.jar"/>
+    </classpath>
+  </taskdef>
 
-	<condition property="mvn.executable" value="${sys.M2_HOME}\bin\mvn.bat" else="mvn">
-		<os family="windows"/>
-	</condition>
+  <target depends="clean,get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release"/>
+  <target depends="get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release-no-clean"/>
 
-	<taskdef onerror="fail" resource="net/sf/antcontrib/antlib.xml">
-		<classpath>
-			<pathelement location="${ant.file.mobicents.restcomm.release}/../ant-contrib-1.0b3.jar" />
-		</classpath>
-	</taskdef>
+  <target name="deploy">
+    <ant antfile="${ant.file.mobicents.restcomm.release}" target="release">
+      <property name="release.build.goals" value="${release.ts.deploy.goals}"/>
+    </ant>
+  </target>
 
-	<target name="release" depends="clean,get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" />
-	<target name="release-no-clean" depends="get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" />
+  <target name="deploy-no-clean">
+    <ant antfile="${ant.file.mobicents.restcomm.release}" target="release-no-clean">
+      <property name="release.build.goals" value="${release.ts.deploy.goals}"/>
+    </ant>
+  </target>
 
-    <target name="deploy">
-    	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release">
-    		<property name="release.build.goals" value="${release.ts.deploy.goals}" />
-    	</ant>
-    </target>
+  <target name="release-test">
+    <ant antfile="${ant.file.mobicents.restcomm.release}" target="release">
+      <property name="release.build.goals" value="${release.build.test.goals}"/>
+    </ant>
+  </target>
 
-    <target name="deploy-no-clean">
-    	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release-no-clean">
-    		<property name="release.build.goals" value="${release.ts.deploy.goals}" />
-    	</ant>
-    </target>
-
-    <target name="release-test">
-    	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release">
-    		<property name="release.build.goals" value="${release.build.test.goals}" />
-    	</ant>
-    </target>
-
-    <target name="release-test-no-clean">
-    	<ant antfile="${ant.file.mobicents.restcomm.release}" target="release-no-clean">
-    		<property name="release.build.goals" value="${release.build.test.goals}" />
-    	</ant>
-    </target>
-
-
+  <target name="release-test-no-clean">
+    <ant antfile="${ant.file.mobicents.restcomm.release}" target="release-no-clean">
+      <property name="release.build.goals" value="${release.build.test.goals}"/>
+    </ant>
+  </target>
 
 <!--GET mobicents-Sip=Servlets & mobicents-Media-Server & mobicents Diameter - downloads-->
 
-<target name="get-deps" depends="get-mobicents-sipservlets-tomcat,get-mobicents-sipservlets-as7,get-mobicents-media"/> <!--,get-mobicents-diameter" -->
-<target name="extract-deps" depends="extract-mobicents-sipservlets-tomcat,extract-mobicents-sipservlets-as7,extract-mobicents-media"/> <!--,extract-mobicents-diameter" -->
-
-<!--SipServlets Tomcat-->
-<available file="${mobicents-sipservlets.tomcat.distro.zip.path}" property="got.mobicents-sipservlets-tomcat" />
-<target name="get-mobicents-sipservlets-tomcat" unless="got.mobicents-sipservlets-tomcat">
-	<echo>Downloading mobicents SipServlets Tomcat version: ${mobicents-sipservlets-as7.version}</echo>
-	<exec failonerror="true" executable="wget">
-	    <arg value="${mobicents-sipservlets.tomcat.download.url}" />
-	</exec>
-	<move file="${base.dir}/${mobicents-sipservlets.tomcat.download.distro.file}" todir="${checkout.dir}"/>
-</target>
+  <target depends="get-mobicents-sipservlets-as7,get-mobicents-media" name="get-deps"/>
+<!--,get-mobicents-diameter" -->
+<target name="extract-deps" depends="extract-mobicents-sipservlets-as7,extract-mobicents-media"/> <!--,extract-mobicents-diameter" -->
 
 <!--SipServlets JBoss AS7 -->
-<available file="${mobicents-sipservlets.as7.distro.zip.path}" property="got.mobicents-sipservlets-as7" />
-<target name="get-mobicents-sipservlets-as7" unless="got.mobicents-sipservlets-as7">
-        <echo>Downloading mobicents SipServlets JBoss AS7 version: ${mobicents-sipservlets-as7.version}</echo>
-        <exec failonerror="true" executable="wget">
-	    <arg value="${mobicents-sipservlets.as7.download.url}" />
-        </exec>
-        <move file="${base.dir}/${mobicents-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
-</target>
+  <available file="${mobicents-sipservlets.as7.distro.zip.path}" property="got.mobicents-sipservlets-as7"/>
+  <target name="get-mobicents-sipservlets-as7" unless="got.mobicents-sipservlets-as7">
+    <echo>Downloading mobicents SipServlets JBoss AS7 version: ${mobicents-sipservlets-as7.version}</echo>
+    <exec executable="wget" failonerror="true">
+      <arg value="${mobicents-sipservlets.as7.download.url}"/>
+    </exec>
+    <move file="${base.dir}/${mobicents-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
+  </target>
 
-<target name="extract-mobicents-sipservlets-tomcat" depends="get-mobicents-sipservlets-tomcat">
-	<delete dir="${checkout.mobicents-sipservlets-tomcat.dir}" failonerror="false" />
-	<unzip src="${mobicents-sipservlets.tomcat.distro.zip.path}" dest="${release.tomcat.dir}">
-		<mapper type="glob" from="mss-${mobicents-sipservlets-as7.version}-apache-tomcat-7.0.50/*" to="*"/>
-	</unzip>
-</target>
-
-<target name="extract-mobicents-sipservlets-as7" depends="get-mobicents-sipservlets-as7">
-        <delete dir="${checkout.mobicents-sipservlets-as7.dir}" failonerror="false" />
-        <unzip src="${mobicents-sipservlets.as7.distro.zip.path}" dest="${release.as7.dir}">
-                <mapper type="glob" from="mss-${mobicents-sipservlets-as7.version}-jboss-as-7.2.0.Final/*" to="*"/>
-        </unzip>
-</target>
+  <target depends="get-mobicents-sipservlets-as7" name="extract-mobicents-sipservlets-as7">
+    <delete dir="${checkout.mobicents-sipservlets-as7.dir}" failonerror="false"/>
+    <unzip dest="${release.as7.dir}" src="${mobicents-sipservlets.as7.distro.zip.path}">
+      <mapper from="mss-${mobicents-sipservlets-as7.version}-jboss-as-7.2.0.Final/*" to="*" type="glob"/>
+    </unzip>
+  </target>
 
 <!--Media-->
-<available file="${mobicents-media.distro.zip.path}" property="got.mobicents-media" />
-<target name="get-mobicents-media" unless="got.mobicents-media">
-	<echo>Downloading mobicents Media version: ${mobicents-media.version}</echo>
-	<exec failonerror="true" executable="wget">
-	    <arg value="${mobicents-media.download.url}" />
-	</exec>
-	<move file="${base.dir}/mms-server.zip" todir="${checkout.dir}"/>
-	<move file="${checkout.dir}/mms-server.zip" tofile="${checkout.dir}/${mobicents-media.download.distro.file}"/>
-</target>
+  <available file="${mobicents-media.distro.zip.path}" property="got.mobicents-media"/>
+  <target name="get-mobicents-media" unless="got.mobicents-media">
+    <echo>Downloading mobicents Media version: ${mobicents-media.version}</echo>
+    <exec executable="wget" failonerror="true">
+      <arg value="${mobicents-media.download.url}"/>
+    </exec>
+    <move file="${base.dir}/mms-server.zip" todir="${checkout.dir}"/>
+    <move file="${checkout.dir}/mms-server.zip" tofile="${checkout.dir}/${mobicents-media.download.distro.file}"/>
+  </target>
 
-<target name="extract-mobicents-media" depends="get-mobicents-media">
-	<delete dir="${checkout.mobicents-media.dir}" failonerror="false" />
-	<delete dir="${release.as7.dir}/mobicents-media-server" failonerror="false" />
-	<delete dir="${release.tomcat.dir}/mobicents-media-server" failonerror="false" />
-	<!--unzip src="${mobicents-media.distro.zip.path}" dest="${release.dir}/mobicents-media"/-->
-	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.tomcat.dir}/mediaserver"/>
-	<unzip src="${mobicents-media.distro.zip.path}" dest="${release.as7.dir}/mediaserver"/>
-	<move todir="${release.tomcat.dir}/mediaserver">
-		<fileset dir="${release.tomcat.dir}/mediaserver/mms-server" />
-	</move>
-	<!-- <mkdir dir="${release.tomcat.dir}/mediaserver/clients"/>
-	<move todir="${release.tomcat.dir}/mediaserver/clients">
-		<fileset dir="${release.tomcat.dir}/mediaserver/clients" />
-	</move>
-	<mkdir dir="${release.tomcat.dir}/mediaserver/docs"/>
-	<move todir="${release.tomcat.dir}/mediaserver/docs">
-		<fileset dir="${release.tomcat.dir}/mediaserver/docs" />
-	</move> -->
-	<move todir="${release.as7.dir}/mediaserver">
-		<fileset dir="${release.as7.dir}/mediaserver/mms-server" />
-	</move>
-	<!-- <mkdir dir="${release.as7.dir}/mediaserver/clients"/>
+  <target depends="get-mobicents-media" name="extract-mobicents-media">
+    <delete dir="${checkout.mobicents-media.dir}" failonerror="false"/>
+    <delete dir="${release.as7.dir}/mobicents-media-server" failonerror="false"/>
+<!--unzip src="${mobicents-media.distro.zip.path}" dest="${release.dir}/mobicents-media"/-->
+    <unzip dest="${release.as7.dir}/mediaserver" src="${mobicents-media.distro.zip.path}"/>
+    <move todir="${release.as7.dir}/mediaserver">
+      <fileset dir="${release.as7.dir}/mediaserver/mms-server"/>
+    </move>
+<!-- <mkdir dir="${release.as7.dir}/mediaserver/clients"/>
 	<move todir="${release.as7.dir}/mediaserver/clients">
 		<fileset dir="${release.as7.dir}/mediaserver/clients" />
 	</move>
@@ -161,245 +123,154 @@
 	<move todir="${release.as7.dir}/mediaserver/docs">
 		<fileset dir="${release.as7.dir}/mediaserver/docs" />
 	</move> -->
-	<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/mobicents-media/mobicents-media-server/deploy/server-beans.xml" failonerror="true"/-->
-	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.tomcat.dir}/mediaserver/deploy/server-beans.xml" failonerror="true"/>
-	<copy file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml" failonerror="true"/>
-</target>
+<!--copy file="${basedir}/mms-server-beans.xml" tofile="${release.dir}/mobicents-media/mobicents-media-server/deploy/server-beans.xml" failonerror="true"/-->
+    <copy failonerror="true" file="${basedir}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml"/>
+  </target>
 
 <!--diameter-->
-<available file="${mobicents-diameter.distro.zip.path}" property="got.mobicents-diameter" />
-<target name="get-mobicents-diameter" unless="got.mobicents-diameter">
-	<echo>Downloading mobicents Diameter version: ${mobicents-diameter.version}</echo>
-	<exec failonerror="true" executable="wget">
-	    <arg value="${mobicents-diameter.download.url}" />
-	</exec>
-	<move file="${base.dir}/${mobicents-diameter.download.distro.file}" todir="${checkout.dir}"/>
-</target>
+  <available file="${mobicents-diameter.distro.zip.path}" property="got.mobicents-diameter"/>
+  <target name="get-mobicents-diameter" unless="got.mobicents-diameter">
+    <echo>Downloading mobicents Diameter version: ${mobicents-diameter.version}</echo>
+    <exec executable="wget" failonerror="true">
+      <arg value="${mobicents-diameter.download.url}"/>
+    </exec>
+    <move file="${base.dir}/${mobicents-diameter.download.distro.file}" todir="${checkout.dir}"/>
+  </target>
 
-<target name="extract-mobicents-diameter" depends="get-mobicents-diameter">
-	<delete dir="${checkout.mobicents-diameter.dir}" failonerror="false" />
-	<unzip src="${mobicents-diameter.distro.zip.path}" dest="${release.dir}/mobicents-diameter"/>
-</target>
+  <target depends="get-mobicents-diameter" name="extract-mobicents-diameter">
+    <delete dir="${checkout.mobicents-diameter.dir}" failonerror="false"/>
+    <unzip dest="${release.dir}/mobicents-diameter" src="${mobicents-diameter.distro.zip.path}"/>
+  </target>
 
-<target name="build-mobicents-restcomm">
-	<echo>Building mobicents Restcomm</echo>
-	<echo>Restcomm workspace dir: "${workspace.mobicents-restcomm.dir}"</echo>
-	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}">
-	        <arg line="${release.build.goals}" />
-	</exec>
-	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}/restcomm.docs">
-	        <arg line="${release.build.goals} -Pmobicents" />
-	</exec>
-	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api">
-	        <arg line="javadoc:javadoc" />
-	</exec>
-</target>
+  <target name="build-mobicents-restcomm">
+    <echo>Building mobicents Restcomm</echo>
+    <echo>Restcomm workspace dir: "${workspace.mobicents-restcomm.dir}"</echo>
+    <exec dir="${workspace.mobicents-restcomm.dir}" executable="${mvn.executable}" failonerror="true">
+      <arg line="${release.build.goals}"/>
+    </exec>
+    <exec dir="${workspace.mobicents-restcomm.dir}/restcomm.docs" executable="${mvn.executable}" failonerror="true">
+      <arg line="${release.build.goals} -Pmobicents"/>
+    </exec>
+    <exec dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api" executable="${mvn.executable}" failonerror="true">
+      <arg line="javadoc:javadoc"/>
+    </exec>
+  </target>
 
-<target name="copy-restcomm">
-	<echo>Copy restcomm </echo>
-	<!--tomcat-->
-	<copy tofile="${release.tomcat.dir}/bin/catalina.sh" failonerror="true"
-		file="${basedir}/catalina.sh"/>
-	<copy tofile="${release.tomcat.dir}/bin/setenv.sh" failonerror="true"
-		file="${basedir}/setenv.sh"/>
-	<delete file="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="false" />
-	<copy tofile="${release.tomcat.dir}/conf/dars/mobicents-dar.properties" failonerror="true"
-		file="${basedir}/mobicents-dar.properties"/>
-	<copy tofile="${release.tomcat.dir}/conf/mss-sip-stack.properties" failonerror="true" overwrite="true"
-		file="${basedir}/mss-sip-stack.properties"/>
+  <target name="copy-restcomm">
+    <echo>Copy restcomm
+    </echo>
 
-	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
-		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+<!--JBoss AS7-->
+    <delete failonerror="false" file="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties"/>
+    <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/media-jsr309-servlet.war"/>
+    <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/click2call.war"/>
+    <move file="${release.as7.dir}/standalone/deployments/websockets-sip-servlet.war" tofile="${release.as7.dir}/standalone/deployments/webrtc.war"/>
+    <copy failonerror="true" file="${basedir}/mobicents-dar.properties" tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties"/>
+    <copy failonerror="true" file="${basedir}/mss-sip-stack.properties" overwrite="true" tofile="${release.as7.dir}/standalone/configuration/mss-sip-stack.properties"/>
+<!--Use exploded WAR-->
+    <copy failonerror="true" todir="${release.as7.dir}/standalone/deployments/restcomm.war">
+      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <touch file="${release.as7.dir}/standalone/deployments/restcomm.war.dodeploy"/>
 
-	<copy tofile="${release.tomcat.dir}/webapps/restcomm.war" failonerror="true"
-		file="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm.war"/>
+<!-- Copy Admin UI -->
+    <copy failonerror="true" file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war" tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war"/>
+    <touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy"/>
 
-	<!-- Copy Admin UI -->
-        <copy tofile="${release.tomcat.dir}/webapps/restcomm-management.war" failonerror="true"
-        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
+<!-- Copy RVD -->
+    <copy failonerror="true" todir="${release.as7.dir}/standalone/deployments/restcomm-rvd.war">
+      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <touch file="${release.as7.dir}/standalone/deployments/restcomm-rvd.war.dodeploy"/>
 
-	<!-- Copy RVD -->
-        <!--<copy todir="${release.tomcat.dir}/webapps/restcomm-rvd" failonerror="true">
-		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
-                        <include name="**/*" />
-                </fileset>
-        </copy>-->
-	<copy tofile="${release.tomcat.dir}/webapps/restcomm-rvd.war" failonerror="true"
-		file="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd.war"/>
+<!--Copy Rvd ES Demo-->
+    <copy failonerror="true" file="${basedir}/RvdExternalServicesDemo.war" tofile="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war"/>
+    <touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy"/>
 
-	<!--Copy Rvd ES Demo-->
-	<copy tofile="${release.tomcat.dir}/webapps/RvdExternalServicesDemo.war" failonerror="true"
-		file="${basedir}/RvdExternalServicesDemo.war"/>
-	<!-- Copy Config scripts -->
-	<!--copy toDir="${release.tomcat.dir}/tools/config-scripts" failonerror="true">
-		<fileset dir="${basedir}/config-scripts">
-			<include name="**/*"/>
-			<exclude name="as7-config-scripts/**"/>
-		</fileset>
-	</copy-->
-
-	<chmod dir="${release.tomcat.dir}/bin" perm="ugo+rx"
-       		includes="**/*.sh"/>
-
- <!-- Replace webrtc.war with Olympus.war -->
-<delete file="${release.tomcat.dir}/webapps/websockets-sip-servlet.war" failonerror="false" />
-<copy tofile="${release.tomcat.dir}/webapps/olympus.war" failonerror="true"
-	file="${basedir}/olympus.war"/>
-
-	<!--JBoss AS7-->
-	<delete file="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="false" />
-	<delete file="${release.as7.dir}/standalone/deployments/media-jsr309-servlet.war" failonerror="false" />
-	<delete file="${release.as7.dir}/standalone/deployments/click2call.war" failonerror="false" />
-	<move file="${release.as7.dir}/standalone/deployments/websockets-sip-servlet.war" tofile="${release.as7.dir}/standalone/deployments/webrtc.war" />
-	<copy tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties" failonerror="true"
-	        file="${basedir}/mobicents-dar.properties"/>
-	<copy tofile="${release.as7.dir}/standalone/configuration/mss-sip-stack.properties" failonerror="true" overwrite="true"
-					file="${basedir}/mss-sip-stack.properties"/>
-	<!--Use exploded WAR-->
-	<copy todir="${release.as7.dir}/standalone/deployments/restcomm.war" failonerror="true">
-	        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.application/target/restcomm">
-	                <include name="**/*" />
-	        </fileset>
-	</copy>
-	<touch file="${release.as7.dir}/standalone/deployments/restcomm.war.dodeploy" />
-
-	<!-- Copy Admin UI -->
-        <copy tofile="${release.as7.dir}/standalone/deployments/restcomm-management.war" failonerror="true"
-        	file="${workspace.mobicents-restcomm.dir}/restcomm.ui/target/restcomm-management.war"/>
-	<touch file="${release.as7.dir}/standalone/deployments/restcomm-management.war.dodeploy" />
-
-	<!-- Copy RVD -->
-        <copy todir="${release.as7.dir}/standalone/deployments/restcomm-rvd.war" failonerror="true">
-		<fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.rvd/target/restcomm-rvd">
-                        <include name="**/*" />
-                </fileset>
-        </copy>
-	<touch file="${release.as7.dir}/standalone/deployments/restcomm-rvd.war.dodeploy" />
-
-	<!--Copy Rvd ES Demo-->
-	<copy tofile="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war" failonerror="true"
-		file="${basedir}/RvdExternalServicesDemo.war"/>
-	<touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy" />
-
-	<!-- Copy Config scripts -->
-	<!--copy toDir="${release.as7.dir}/tools/config-scripts" failonerror="true">
+<!-- Copy Config scripts -->
+<!--copy toDir="${release.as7.dir}/tools/config-scripts" failonerror="true">
 		<fileset dir="${basedir}/config-scripts">
 			<include name="**/*"/>
 			<exclude name="as7-config-scripts/**"/>
 		</fileset>
 	</copy>
 -->
-	<copy toDir="${release.as7.dir}/bin/restcomm" failonerror="true">
-		<fileset dir="${basedir}/config-scripts/as7-config-scripts/restcomm">
-			<include name="**/*"/>
-		</fileset>
-	</copy>
+    <copy failonerror="true" toDir="${release.as7.dir}/bin/restcomm">
+      <fileset dir="${basedir}/config-scripts/as7-config-scripts/restcomm">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
 
-	<chmod dir="${release.as7.dir}/bin" perm="ugo+rx"
-		includes="**/*.sh"/>
+    <chmod dir="${release.as7.dir}/bin" includes="**/*.sh" perm="ugo+rx"/>
 
-		<!-- Replace webrtc.war with Olympus.war -->
-		<delete file="${release.as7.dir}/standalone/deployments/webrtc.war" failonerror="false" />
-		<copy tofile="${release.as7.dir}/standalone/deployments/olympus.war" failonerror="true"
-			file="${basedir}/olympus.war"/>
-		<touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy" />
-	</target>
+<!-- Replace webrtc.war with Olympus.war -->
+    <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/webrtc.war"/>
+    <copy failonerror="true" file="${basedir}/olympus.war" tofile="${release.as7.dir}/standalone/deployments/olympus.war"/>
+    <touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy"/>
+  </target>
 
-    <target name="copy-docs">
-		<!--docs-->
-	    <mkdir dir="${restcomm.docs.dir}"/>
-		<copy todir="${restcomm.docs.dir}" failonerror="true">
-		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
-		                <include name="**/*" />
-		        </fileset>
-		</copy>
-		<mkdir dir="${restcomm.docs.dir}/phone-number-provisioning-javadocs"/>
-		<copy todir="${restcomm.docs.dir}/phone-number-provisioning-javadocs" failonerror="true">
-		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
-		                <include name="**/*" />
-		        </fileset>
-		</copy>
-		<!--docs tomcat-->
-		<mkdir dir="${restcomm.docs.tomcat.dir}"/>
-		<copy todir="${restcomm.docs.tomcat.dir}" failonerror="true">
-		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
-		                <include name="**/*" />
-		        </fileset>
-		</copy>
-		<mkdir dir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs"/>
-		<copy todir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs" failonerror="true">
-		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
-		                <include name="**/*" />
-		        </fileset>
-		</copy>
-                <!--docs JBoss AS7-->
-                <mkdir dir="${restcomm.docs.as7.dir}"/>
-                <copy todir="${restcomm.docs.as7.dir}" failonerror="true">
-                        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
-                                <include name="**/*" />
-                        </fileset>
-                </copy>
-		<mkdir dir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs"/>
-		<copy todir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs" failonerror="true">
-		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
-		                <include name="**/*" />
-		        </fileset>
-		</copy>
-    </target>
+  <target name="copy-docs">
+<!--docs-->
+    <mkdir dir="${restcomm.docs.dir}"/>
+    <copy failonerror="true" todir="${restcomm.docs.dir}">
+      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${restcomm.docs.dir}/phone-number-provisioning-javadocs"/>
+    <copy failonerror="true" todir="${restcomm.docs.dir}/phone-number-provisioning-javadocs">
+      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+<!--docs JBoss AS7-->
+    <mkdir dir="${restcomm.docs.as7.dir}"/>
+    <copy failonerror="true" todir="${restcomm.docs.as7.dir}">
+      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs"/>
+    <copy failonerror="true" todir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs">
+      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api/target/site/apidocs">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
 
+  <target depends="set-time-stamp" name="make-final-zip">
+    <fixcrlf eof="remove" eol="lf" includes="*.sh" srcdir="${release.as7.dir}/bin"/>
 
-	<target name="make-final-zip" depends="set-time-stamp">
-		<fixcrlf srcdir="${release.as7.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
-		<fixcrlf srcdir="${release.tomcat.dir}/bin" includes="*.sh" eol="lf" eof="remove" />
+    <zip destfile="${base.dir}/Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}.zip" filesonly="false">
+      <zipfileset dir="${release.as7.dir}/bin" filemode="755" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin">
+        <include name="*.sh"/>
+        <include name="**/*.sh"/>
+      </zipfileset>
+      <zipfileset dir="${release.as7.dir}/bin" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin">
+        <exclude name="*.sh"/>
+        <exclude name="**/*.sh"/>
+      </zipfileset>
+      <zipfileset dir="${release.as7.dir}/mediaserver/bin" filemode="755" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/bin">
+        <include name="*.sh"/>
+      </zipfileset>
+      <zipfileset dir="${release.as7.dir}/mediaserver/bin" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/bin">
+        <exclude name="*.sh"/>
+      </zipfileset>
+      <zipfileset dir="${release.as7.dir}" excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}"/>
+    </zip>
+  </target>
 
-		<zip destfile="${base.dir}/Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}.zip" filesonly="false">
-				<zipfileset dir="${release.as7.dir}/bin" filemode="755" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin" >
-				        <include name="*.sh" />
-					<include name="**/*.sh"/>
-				</zipfileset>
-				<zipfileset dir="${release.as7.dir}/bin" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/bin" >
-		        		<exclude name="*.sh" />
-		        		<exclude name="**/*.sh" />
-			       </zipfileset>
-				<zipfileset dir="${release.as7.dir}/mediaserver/bin" filemode="755"
-					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/bin" >
-		        <include name="*.sh" />
-		    </zipfileset>
-				<zipfileset dir="${release.as7.dir}/mediaserver/bin"
-					prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}/mediaserver/bin" >
-		        <exclude name="*.sh" />
-		    </zipfileset>
-		    <zipfileset dir="${release.as7.dir}" prefix="Mobicents-Restcomm-JBoss-AS7-${mobicents.restcomm.release.version}"
-		    	excludes="**/bin/** **/server/*/log/** **/server/*/tmp/** **/server/*/work/** **/server/tmp/**"/>
-		</zip>
-		<zip destfile="${base.dir}/Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}.zip" filesonly="false" preserve0permissions="true">
-			<zipfileset dir="${release.tomcat.dir}/bin" filemode="755" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
-				<include name="*.sh" />
-			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/bin" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/bin" >
-				<exclude name="*.sh" />
-			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/mediaserver/bin" filemode="755"
-						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mediaserver/bin" >
-				<include name="*.sh" />
-			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}/mediaserver/bin"
-						prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}/mediaserver/bin" >
-				<exclude name="*.sh" />
-			</zipfileset>
-			<zipfileset dir="${release.tomcat.dir}" prefix="Mobicents-Restcomm-Tomcat7-${mobicents.restcomm.release.version}"
-				excludes="**/bin/**"/>
-		</zip>
-	</target>
+  <target name="set-time-stamp" unless="skip.timestamp">
+    <tstamp>
+      <format pattern="yyMMddHHmm" property="time.stamp"/>
+    </tstamp>
+  </target>
 
-	<target name="set-time-stamp" unless="skip.timestamp">
-		<tstamp>
-			<format property="time.stamp" pattern="yyMMddHHmm" />
-		</tstamp>
-	</target>
-
-	<target name="clean">
-	    <delete dir="${release.tomcat.dir}"/>
-            <delete dir="${release.as7.dir}"/>
-	</target>
+  <target name="clean">
+    <delete dir="${release.as7.dir}"/>
+  </target>
 </project>
