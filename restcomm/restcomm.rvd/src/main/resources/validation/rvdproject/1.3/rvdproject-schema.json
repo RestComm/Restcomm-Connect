@@ -43,6 +43,7 @@
 									{ "$ref": "smsStep.json" },
 									{ "$ref": "recordStep.json" },
 									{ "$ref": "faxStep.json" },
+								  	{ "$ref": "emailStep.json" },
 									{ "$ref": "ussdSayStep.json" },
 									{ "$ref": "ussdCollectStep.json" },
 									{ "$ref": "ussdLanguageStep.json" }
