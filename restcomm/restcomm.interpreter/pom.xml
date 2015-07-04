@@ -68,6 +68,18 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.email.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.email</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.asr</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>

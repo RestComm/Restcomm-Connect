@@ -50,8 +50,9 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.MailMan;
+import org.mobicents.servlet.restcomm.email.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailRequest;
+import org.mobicents.servlet.restcomm.email.api.Mail;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -83,6 +84,7 @@ import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
+import akka.actor.Actor;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -101,8 +103,7 @@ public class UssdInterpreter extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static final String EMAIL_SENDER = "restcomm@restcomm.org";
-    static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
+    static String EMAIL_SENDER;
 
     // States for the FSM.
     // ==========================
@@ -147,7 +148,7 @@ public class UssdInterpreter extends UntypedActor {
     Tag verb;
     DaoManager storage = null;
     final Set<Transition> transitions = new HashSet<Transition>();
-    ActorRef mailer = null;
+    ActorRef mailerNotify = null;
     URI url;
     String method;
     URI fallbackUrl;
@@ -227,7 +228,7 @@ public class UssdInterpreter extends UntypedActor {
         this.configuration = configuration;
 
         this.storage = storage;
-        this.mailer = mailer(configuration.subset("smtp"));
+        this.mailerNotify = mailer(configuration.subset("smtp-notify"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -291,8 +292,11 @@ public class UssdInterpreter extends UntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
-                return new MailMan(configuration);
+            public Actor create() throws Exception {
+                final CreateEmailService.Builder builder = CreateEmailService.builder();
+                builder.CreateEmailSession(configuration);
+                EMAIL_SENDER=builder.getUser();
+                return builder.build();
             }
         }));
     }
@@ -382,6 +386,7 @@ public class UssdInterpreter extends UntypedActor {
         if (emailAddress == null || emailAddress.isEmpty()) {
             return;
         }
+        final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
         final StringBuilder buffer = new StringBuilder();
         buffer.append("<strong>").append("Sid: ").append("</strong></br>");
         buffer.append(notification.getSid().toString()).append("</br>");
@@ -411,8 +416,8 @@ public class UssdInterpreter extends UntypedActor {
         buffer.append(notification.getResponseHeaders()).append("</br>");
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
-        final Mail email = new Mail(EMAIL_SENDER, emailAddress, EMAIL_SUBJECT, buffer.toString());
-        mailer.tell(email, self());
+        final Mail emailMsg = new Mail(EMAIL_SENDER,emailAddress,EMAIL_SUBJECT, buffer.toString());
+        mailerNotify.tell(new EmailRequest(emailMsg), self());
     }
 
     void callback() {
@@ -980,8 +985,8 @@ public class UssdInterpreter extends UntypedActor {
             getContext().stop(downloader);
         if (parser != null)
             getContext().stop(parser);
-        if (mailer != null)
-            getContext().stop(mailer);
+        if (mailerNotify != null)
+            getContext().stop(mailerNotify);
         super.postStop();
     }
 

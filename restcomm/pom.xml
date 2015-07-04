@@ -146,6 +146,9 @@
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>
+		<module>restcomm.email</module>
+		<module>restcomm.email.api</module>
+
 	</modules>
 
 	<dependencyManagement>
