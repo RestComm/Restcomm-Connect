@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.interpreter;
 
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
@@ -46,6 +48,10 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
+import org.mobicents.servlet.restcomm.email.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailRequest;
+import org.mobicents.servlet.restcomm.email.api.EmailResponse;
+import org.mobicents.servlet.restcomm.email.api.Mail;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
@@ -74,6 +80,7 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 
 import akka.actor.ActorRef;
+import akka.actor.Actor;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
@@ -92,6 +99,7 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 public final class SmsInterpreter extends UntypedActor {
     private static final int ERROR_NOTIFICATION = 0;
     private static final int WARNING_NOTIFICATION = 1;
+    static String EMAIL_SENDER;
     // Logger
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // States for the FSM.
@@ -102,6 +110,7 @@ public final class SmsInterpreter extends UntypedActor {
     private final State ready;
     private final State redirecting;
     private final State creatingSmsSession;
+    private final State sendingEmail;
     private final State sendingSms;
     private final State waitingForSmsResponses;
     private final State finished;
@@ -112,6 +121,7 @@ public final class SmsInterpreter extends UntypedActor {
     private final Map<Sid, ActorRef> sessions;
     private Sid initialSessionSid;
     private ActorRef initialSession;
+    private final ActorRef mailerService;
     private SmsSessionRequest initialSessionRequest;
     // HTTP Stuff.
     private final ActorRef downloader;
@@ -153,35 +163,49 @@ public final class SmsInterpreter extends UntypedActor {
         creatingSmsSession = new State("creating sms session", new CreatingSmsSession(source), null);
         sendingSms = new State("sending sms", new SendingSms(source), null);
         waitingForSmsResponses = new State("waiting for sms responses", new WaitingForSmsResponses(source), null);
+        sendingEmail = new State("sending Email", new SendingEmail(source), null);
         finished = new State("finished", new Finished(source), null);
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, acquiringLastSmsRequest));
         transitions.add(new Transition(acquiringLastSmsRequest, downloadingRcml));
         transitions.add(new Transition(acquiringLastSmsRequest, finished));
+        transitions.add(new Transition(acquiringLastSmsRequest, sendingEmail));
         transitions.add(new Transition(downloadingRcml, ready));
         transitions.add(new Transition(downloadingRcml, downloadingFallbackRcml));
         transitions.add(new Transition(downloadingRcml, finished));
+        transitions.add(new Transition(downloadingRcml, sendingEmail));
         transitions.add(new Transition(downloadingFallbackRcml, ready));
         transitions.add(new Transition(downloadingFallbackRcml, finished));
+        transitions.add(new Transition(downloadingFallbackRcml, sendingEmail));
         transitions.add(new Transition(ready, redirecting));
         transitions.add(new Transition(ready, creatingSmsSession));
         transitions.add(new Transition(ready, waitingForSmsResponses));
+        transitions.add(new Transition(ready, sendingEmail));
         transitions.add(new Transition(ready, finished));
         transitions.add(new Transition(redirecting, ready));
         transitions.add(new Transition(redirecting, creatingSmsSession));
         transitions.add(new Transition(redirecting, finished));
+        transitions.add(new Transition(redirecting, sendingEmail));
         transitions.add(new Transition(redirecting, waitingForSmsResponses));
         transitions.add(new Transition(creatingSmsSession, sendingSms));
         transitions.add(new Transition(creatingSmsSession, waitingForSmsResponses));
+        transitions.add(new Transition(creatingSmsSession, sendingEmail));
         transitions.add(new Transition(creatingSmsSession, finished));
         transitions.add(new Transition(sendingSms, ready));
         transitions.add(new Transition(sendingSms, redirecting));
         transitions.add(new Transition(sendingSms, creatingSmsSession));
         transitions.add(new Transition(sendingSms, waitingForSmsResponses));
+        transitions.add(new Transition(sendingSms, sendingEmail));
         transitions.add(new Transition(sendingSms, finished));
         transitions.add(new Transition(waitingForSmsResponses, waitingForSmsResponses));
+        transitions.add(new Transition(waitingForSmsResponses, sendingEmail));
         transitions.add(new Transition(waitingForSmsResponses, finished));
+        transitions.add(new Transition(sendingEmail, ready));
+        transitions.add(new Transition(sendingEmail, redirecting));
+        transitions.add(new Transition(sendingEmail, creatingSmsSession));
+        transitions.add(new Transition(sendingEmail, waitingForSmsResponses));
+        transitions.add(new Transition(sendingEmail, finished));
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
@@ -198,6 +222,7 @@ public final class SmsInterpreter extends UntypedActor {
         this.fallbackMethod = fallbackMethod;
         this.sessions = new HashMap<Sid, ActorRef>();
         this.normalizeNumber = runtime.getBoolean("normalize-numbers-for-outbound-calls");
+        mailerService = mailer(configuration.subset("smtp-service"));
     }
 
     private ActorRef downloader() {
@@ -208,6 +233,21 @@ public final class SmsInterpreter extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 return new Downloader();
+            }
+        }));
+    }
+
+    ActorRef mailer(final Configuration configuration) {
+        final UntypedActorContext context = getContext();
+        return context.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Actor create() throws Exception {
+                final CreateEmailService.Builder builder = CreateEmailService.builder();
+                builder.CreateEmailSession(configuration);
+                EMAIL_SENDER=builder.getUser();
+                return builder.build();
             }
         }));
     }
@@ -331,6 +371,8 @@ public final class SmsInterpreter extends UntypedActor {
                 fsm.transition(message, redirecting);
             } else if (sms.equals(verb.name())) {
                 fsm.transition(message, creatingSmsSession);
+            } else if (email.equals(verb.name())) {
+                fsm.transition(message, sendingEmail);
             } else {
                 invalidVerb(verb);
             }
@@ -355,6 +397,14 @@ public final class SmsInterpreter extends UntypedActor {
             } else {
                 fsm.transition(message, finished);
             }
+        } else if (EmailResponse.class.equals(klass)) {
+            final EmailResponse response = (EmailResponse) message;
+            if (!response.succeeded()) {
+                logger.error(
+                        "There was an error while sending an email :" + response.error(),
+                        response.cause());
+            }
+            fsm.transition(message, ready);
         }
     }
 
@@ -843,6 +893,51 @@ public final class SmsInterpreter extends UntypedActor {
         public void execute(final Object message) throws Exception {
             final UntypedActorContext context = getContext();
             context.stop(source);
+        }
+    }
+
+    private final class SendingEmail extends AbstractAction {
+        public SendingEmail(final ActorRef source){
+            super(source);
+        }
+
+        @Override
+        public void execute( final Object message) throws Exception {
+            final Tag verb = (Tag)message;
+            // Parse "from".
+            String from;
+            Attribute attribute = verb.attribute("from");
+            if (attribute != null) {
+                from = attribute.value();
+            }else{
+                Exception error = new Exception("From attribute was not defined");
+                source.tell(new EmailResponse(error,error.getMessage()), source);
+                return;
+            }
+
+            // Parse "to".
+            String to;
+            attribute = verb.attribute("to");
+            if (attribute != null) {
+                to = attribute.value();
+            }else{
+                Exception error = new Exception("To attribute was not defined");
+                source.tell(new EmailResponse(error,error.getMessage()), source);
+                return;
+            }
+
+            // Parse "subject"
+            String subject;
+            attribute = verb.attribute("subject");
+            if (attribute != null) {
+                subject = attribute.value();
+            }else{
+                subject="Restcomm Email Service";
+            }
+
+            // Send the email.
+            final Mail emailMsg = new Mail(from, to, subject, verb.text());
+            mailerService.tell(new EmailRequest(emailMsg), self());
         }
     }
 }
