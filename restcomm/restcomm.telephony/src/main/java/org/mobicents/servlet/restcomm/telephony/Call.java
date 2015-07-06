@@ -913,8 +913,14 @@ public final class Call extends UntypedActor {
             // Issue 99: https://bitbucket.org/telestax/telscale-restcomm/issue/99
             if (response.getStatus() == SipServletResponse.SC_OK && isOutbound()) {
                 final SipServletRequest ack = response.createAck();
+                SipSession session = response.getSession();
+
                 final SipServletRequest originalInvite = response.getRequest();
                 final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                if ((SipURI) session.getAttribute("realInetUri") == null) {
+//                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
+                  session.setAttribute("realInetUri", realInetUri);
+              }
                 final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
 
                 if (realInetUri != null
@@ -1353,7 +1359,7 @@ public final class Call extends UntypedActor {
 
         invite.getHeaders(RecordRouteHeader.NAME);
 
-        ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
+        ListIterator<String> recordRouteList = bye.getHeaders(RecordRouteHeader.NAME);
 
         if (invite.getHeader("X-Sip-Balancer") != null) {
             logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
@@ -1362,16 +1368,20 @@ public final class Call extends UntypedActor {
             recordRouteList.next();
             recordRouteList.remove();
         }
-
         if (recordRouteList.hasNext()) {
             logger.info("Record Route is set, wont change the Request URI");
-        } else if (realInetUri != null
-                && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-            logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                    + " as a request uri of the BYE request");
-            bye.setRequestURI(realInetUri);
+        } else {
+            logger.info("Checking RURI, realInetUri: "+realInetUri+" byeRURI: "+byeRURI);
+            logger.debug("byeRURI.isSiteLocalAddress(): "+byeRURI.isSiteLocalAddress());
+            logger.debug("byeRURI.isAnyLocalAddress(): "+byeRURI.isAnyLocalAddress());
+            logger.debug("byeRURI.isLoopbackAddress(): "+byeRURI.isLoopbackAddress());
+            if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                + " as a request uri of the BYE request");
+                bye.setRequestURI(realInetUri);
+            }
         }
-
+        logger.info("Will sent out BYE to: "+bye.getRequestURI());
         bye.send();
     }
 
