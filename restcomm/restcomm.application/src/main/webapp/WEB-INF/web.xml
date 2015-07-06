@@ -42,7 +42,6 @@
   <servlet-mapping>
     <servlet-name>Jersey</servlet-name>
     <url-pattern>/2012-04-24/*</url-pattern>
-    <!--<url-pattern>/keycloak/*</url-pattern> -->
   </servlet-mapping>
   
 	<security-constraint>
