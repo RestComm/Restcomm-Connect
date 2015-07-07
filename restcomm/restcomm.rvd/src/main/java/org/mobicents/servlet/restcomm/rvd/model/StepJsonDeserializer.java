@@ -8,6 +8,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialNoun;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialNounJsonDeserializer;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.email.EmailStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.gather.GatherStep;
@@ -69,6 +70,8 @@ public class StepJsonDeserializer implements JsonDeserializer<Step> {
             step = gson.fromJson(step_object, PauseStep.class);
         else if ("sms".equals(kind))
             step = gson.fromJson(step_object, SmsStep.class);
+        else if ("email".equals(kind))
+            step = gson.fromJson(step_object, EmailStep.class);
         else if ("record".equals(kind))
             step = gson.fromJson(step_object, RecordStep.class);
         else if ("fax".equals(kind))

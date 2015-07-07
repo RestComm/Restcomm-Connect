@@ -1,0 +1,54 @@
+<div class="step email-step panel panel-rvdstep">
+    <div class="panel-heading">
+        <step-heading></step-heading>
+    </div>
+    <div class="panel-body" ng-hide='step.iface.isCollapsed'>
+        <div class='row form-group'>
+            <div lookup-context class='col-md-12'>
+                <div class="form-group">
+                    <span class="help-block">{{'emailStepEmailLabel' | translate}} &nbsp;<i class="fa fa-info-circle rvd-clickable" 				popover="{{'emailStepEmailLabelPopover' | translate}}" popover-placement='top'></i></span>
+                    <textarea ng-model='step.text' lookup-target class="form-control"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div lookup-context class='col-md-12'>
+                <div class="form-group">
+                    <span class="help-block">{{'emailSubjectEmailLabel' | translate}}</span>
+                    <input ng-model='step.subject' lookup-target auto-clear  type='text' name='subject' class="form-control"></input>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class='col-md-4'>
+                <form name="formTo" novalidate>
+                    <div lookup-context class="input-group input-group-sm">
+                        <span class="input-group-addon">{{'emailStepToLabel' | translate}}</span>
+                        <input type='email' name='to' ng-model='step.to' lookup-target auto-clear class="form-control" required></input>
+                    </div>
+                    <div ng-show="formTo.to.$invalid" class="validation-error pull-left">{{'sayEmailValidationError' | translate}}</div>
+                </form>
+            </div>
+            <div class="col-md-8">
+                <div class="input-group form-group input-group-sm">
+                    <span class="input-group-addon help-tooltip" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'smsStepContinueToTooltip' | translate}}">{{'emailStepContinueLabel' | translate}}</span>
+                    <select sync-model name='next' null-if-empty ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div class="validation-error" ng-show="form.next.$invalid">{{'smsStepChooseTargetLabel' | translate}}</div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class='col-md-4'>
+                <form name="formFrom" novalidate>
+                    <div lookup-context class="input-group form-group input-group-sm">
+                        <span class="input-group-addon">{{'emailStepFromLabel' | translate}}</span>
+                        <input ng-model='step.from' lookup-target  type='email' name='from'  class="form-control" required></input>
+                    </div>
+                    <div ng-show="formFrom.from.$invalid" class="validation-error">{{'sayEmailValidationError' | translate}}</div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
