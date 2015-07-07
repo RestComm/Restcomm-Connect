@@ -134,15 +134,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
         // Configure Media Server address based on restcomm configuration file
         final String mediaAddress = configuration.getString("media-server.address", "127.0.0.1");
-        properties.setProperty("mediaserver.sip.address", mediaAddress);
-        logger.info("JSR 309 - mediaserver.sip.address: " + mediaAddress);
+        properties.setProperty("mediaserver.sip.ipaddress", mediaAddress);
+        logger.info("JSR 309 - mediaserver.sip.ipaddress: " + mediaAddress);
 
         final String mediaPort = configuration.getString("media-server.port", "5060");
         properties.setProperty("mediaserver.sip.port", mediaPort);
         logger.info("JSR 309 - mediaserver.sip.port: " + mediaPort);
-        final String mediaUri = "sip:msml=@" + mediaAddress + ":" + mediaPort;
-        properties.setProperty("MEDIA_SERVER_URI", mediaUri);
-        logger.info("JSR 309 - MEDIA_SERVER_URI: " + mediaUri);
 
         // Let RestComm control call legs
         properties.setProperty("connector.conferenceControlLeg", "no");
