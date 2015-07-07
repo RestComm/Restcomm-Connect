@@ -210,7 +210,7 @@
 
 	"emailStepEmailLabel": "Email content",
   	"emailSubjectEmailLabel": "Email subject",
-	"enailStepEmailLabelPopover": "Type the email content as text. Prepend variables with a dollar sign like '$variablename'",
+	"enailStepEmailLabelPopover": "Type the email content as text.",
   	"sayEmailValidationError": "Please insert a valid email address",
 	"emailStepToLabel": "To",
 	"emailStepFromLabel": "From",
