@@ -16,8 +16,8 @@ import org.mobicents.servlet.restcomm.http.KeycloakResourcesEndpoint;
  * @author "Tsakiridis Orestis"
  *
  */
-@ApplicationPath("/public")
-public class PublicResources extends Application {
+@ApplicationPath("/keycloak")
+public class KeycloakResources extends Application {
 
     public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new HashSet<Class<?>>();
