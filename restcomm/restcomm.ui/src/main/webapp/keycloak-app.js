@@ -10,7 +10,7 @@ var logout = function(){
 
 
 angular.element(document).ready(function ($http) {
-    var keycloakAuth = new Keycloak('keycloak.json');
+	var keycloakAuth = new Keycloak('/restcomm/keycloak/config/restcomm-ui.json');
     auth.loggedIn = false;
 
     keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
