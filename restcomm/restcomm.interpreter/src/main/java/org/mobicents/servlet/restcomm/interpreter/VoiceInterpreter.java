@@ -701,6 +701,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, gathering);
         } else if (MediaGroupResponse.class.equals(klass)) {
             final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
+            logger.info("MediaGroupResponse, succeeded: "+response.succeeded()+"  "+response.cause());
             if (response.succeeded()) {
                 if (playingRejectionPrompt.equals(state)) {
                     fsm.transition(message, hangingUp);
