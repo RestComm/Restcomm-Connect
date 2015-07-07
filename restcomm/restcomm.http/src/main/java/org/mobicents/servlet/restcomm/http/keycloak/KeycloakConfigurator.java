@@ -34,7 +34,7 @@ public class KeycloakConfigurator {
     public String getAuthServerUrl() {
         return authServerUrl;
     }
-    
+
     // Returns the instance prefix in terms of keycloak client/app.
     // If the instance is not registered it returns "".
     public String getInstancePrefix() {
@@ -58,25 +58,25 @@ public class KeycloakConfigurator {
         return config;
     }
 
-    public BaseAdapterConfig getRestcommUIConfig() throws IOException {
+    public BaseAdapterConfig getRestcommUIConfig(String instanceId) throws IOException {
         BaseAdapterConfig config = new BaseAdapterConfig();
         config.setRealm(getRealmName());
         config.setRealmKey(getRealmKey());
         config.setAuthServerUrl(getAuthServerUrl());
         config.setSslRequired("all");
-        config.setResource("restcomm-ui");
+        config.setResource(instanceId + "-restcomm-ui");
         config.setPublicClient(true);
 
         return config;
     }
 
-    public BaseAdapterConfig getRestcommRvdUIConfig() throws IOException {
+    public BaseAdapterConfig getRestcommRvdUIConfig(String instanceId) throws IOException {
         BaseAdapterConfig config = new BaseAdapterConfig();
         config.setRealm(getRealmName());
         config.setRealmKey(getRealmKey());
         config.setAuthServerUrl(getAuthServerUrl());
         config.setSslRequired("all");
-        config.setResource("restcomm-rvd-ui");
+        config.setResource(instanceId + "-restcomm-rvd-ui");
         config.setPublicClient(true);
 
         return config;

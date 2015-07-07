@@ -95,6 +95,11 @@
 			<ussd-gateway-user></ussd-gateway-user>
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>
+		
+		<!-- Link instance to identity.restcomm.com -->
+		<identity>
+			<instance-id></instance-id>
+		</identity>
 
 		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
