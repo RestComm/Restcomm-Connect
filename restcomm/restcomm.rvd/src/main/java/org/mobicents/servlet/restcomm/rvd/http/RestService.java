@@ -8,13 +8,19 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UnauthorizedException;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
+import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CreateCallResponse;
 import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
+
+import com.google.gson.Gson;
 
 public class RestService {
 
@@ -99,5 +105,29 @@ public class RestService {
         KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
         AccessToken accessToken = session.getToken();
         return accessToken;
+    }
+
+    protected Response buildWebTriggerHtmlResponse(String title, String action, String outcome, String description, Integer status ) {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("<html><body>");
+        if (title != null)
+            buffer.append("<h1>").append(title).append("</h1>");
+        if (action != null) {
+            buffer.append("<h4>").append(action);
+            if (outcome != null)
+                buffer.append(" - " + outcome);
+            buffer.append("</h4>");
+        }
+        if (description != null)
+            buffer.append("<p>").append(description).append("</p>");
+        buffer.append("</body></html>");
+
+        return Response.status(status).entity(buffer.toString()).type(MediaType.TEXT_HTML).build();
+    }
+
+    protected Response buildWebTriggerJsonResponse(CallControlAction action, CallControlStatus status, Integer httpStatus, Object restcommResponse ) {
+        CreateCallResponse response = new CreateCallResponse().setAction(action).setStatus(status).setData(restcommResponse);
+        Gson gson = new Gson();
+        return Response.status(httpStatus).entity( gson.toJson(response)).type(MediaType.APPLICATION_JSON).build();
     }
 }

@@ -1,10 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd.restcomm;
 
-public class AccountInfoResponse {
+public class RestcommAccountInfoResponse {
     String sid;
     String friendly_name;
 
-    public AccountInfoResponse() {
+    public RestcommAccountInfoResponse() {
         // TODO Auto-generated constructor stub
     }
 

@@ -217,7 +217,8 @@ public class B2BUAHelper {
             if (fromClient != null) {
                 Address fromAddress = sipFactory.createAddress(from, fromClient.getFriendlyName());
                 Address toAddress = sipFactory.createAddress(to, to.getUser());
-                outRequest = sipFactory.createRequest(request.getApplicationSession(), request.getMethod(), fromAddress, toAddress);
+                outRequest = sipFactory.createRequest(request.getApplicationSession(), request.getMethod(), fromAddress,
+                        toAddress);
             } else {
                 outRequest = sipFactory.createRequest(request.getApplicationSession(), request.getMethod(), from, to);
             }
@@ -419,10 +420,27 @@ public class B2BUAHelper {
             }
             return;
         }
+
+        // We don't forward 200 OK Response to BYE.
+        if (response.getStatus() == 200 && response.getMethod().equalsIgnoreCase("BYE")) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("response to BYE not forwarding");
+            }
+            return;
+        }
         // forward the response
         response.getSession().setAttribute(B2BUA_LAST_RESPONSE, response);
         SipServletRequest request = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
         SipServletResponse resp = request.createResponse(response.getStatus());
+        SipURI originalURI = null;
+        Address contact = null;
+        try {
+            originalURI = (SipURI) response.getAddressHeader("Contact").getURI();
+            ((SipURI) resp.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
+            contact = resp.getAddressHeader("Contact");
+        } catch (ServletParseException e1) {}
+          catch (NullPointerException e2) {}
+        logger.info("Contact: " + contact);
         CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
 
         if (response.getContent() != null) {
@@ -481,6 +499,34 @@ public class B2BUAHelper {
             records.updateCallDetailRecord(callRecord);
         }
 
+    }
+
+    public static void updateCDR(SipServletMessage message, CallStateChanged.State state) {
+        CallDetailRecordsDao records = daoManager.getCallDetailRecordsDao();
+        SipServletRequest request = null;
+
+        // Update CallDetailRecord
+        if (message instanceof SipServletResponse) {
+            request = (SipServletRequest) getLinkedSession((SipServletResponse) message).getAttribute(B2BUA_LAST_REQUEST);
+        } else if (message instanceof SipServletRequest) {
+            request = (SipServletRequest) message;
+        }
+        CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
+
+        if (callRecord != null) {
+            logger.info("CDR found! Updating");
+            callRecord = callRecord.setStatus(state.name());
+            final DateTime now = DateTime.now();
+            callRecord = callRecord.setEndTime(now);
+            int seconds;
+            if (callRecord.getStartTime() != null) {
+                seconds = (int) (DateTime.now().getMillis() - callRecord.getStartTime().getMillis()) / 1000;
+            } else {
+                seconds = 0;
+            }
+            callRecord = callRecord.setDuration(seconds);
+            records.updateCallDetailRecord(callRecord);
+        }
     }
 
     /**

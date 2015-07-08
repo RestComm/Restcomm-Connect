@@ -22,18 +22,28 @@ App.controller('AppCtrl', function ($rootScope, $location) {
 App.controller('homeCtrl', function ($scope) {
 });
 
-angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'projectLogService', function ($scope, $routeParams, projectLogService) {
+angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'projectLogService', 'notifications', function ($scope, $routeParams, projectLogService, notifications) {
 	//console.log('in projectLogCtrl');
 	$scope.projectName = $routeParams.projectName;
 	$scope.logData = '';
 	
 	function retrieveLog() {
-		projectLogService.retrieve().then(function (logData) {$scope.logData = logData;})
+		projectLogService.retrieve().then(
+			function (logData) {$scope.logData = logData;},
+			function (result) {
+				notifications.put({message:"Application log not available.", type:"warning"});
+			}
+		)
 	}
 	$scope.retrieveLog = retrieveLog;
 	
 	function resetLog() {
-		projectLogService.reset().then(function () {$scope.logData = "";});
+		projectLogService.reset().then(
+			function () {$scope.logData = "";},
+			function () {
+				notifications.put({message:"Application log not available.", type:"warning"});
+			}
+		);
 	}
 	$scope.resetLog = resetLog;
 	
