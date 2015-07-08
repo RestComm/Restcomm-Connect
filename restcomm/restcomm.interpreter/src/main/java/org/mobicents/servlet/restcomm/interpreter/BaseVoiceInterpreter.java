@@ -40,7 +40,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.email.CreateEmailService;
 import org.mobicents.servlet.restcomm.asr.AsrInfo;
 import org.mobicents.servlet.restcomm.asr.AsrRequest;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
@@ -56,9 +55,11 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
-import org.mobicents.servlet.restcomm.email.api.EmailRequest;
-import org.mobicents.servlet.restcomm.email.api.EmailResponse;
-import org.mobicents.servlet.restcomm.email.api.Mail;
+import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailService;
+import org.mobicents.servlet.restcomm.email.EmailRequest;
+import org.mobicents.servlet.restcomm.email.EmailResponse;
+import org.mobicents.servlet.restcomm.email.Mail;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -496,7 +497,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService.Builder builder = CreateEmailService.builder();
+                final CreateEmailService builder = new EmailService();
                 builder.CreateEmailSession(configuration);
                 EMAIL_SENDER=builder.getUser();
                 return builder.build();

@@ -48,10 +48,11 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
-import org.mobicents.servlet.restcomm.email.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailRequest;
-import org.mobicents.servlet.restcomm.email.api.EmailResponse;
-import org.mobicents.servlet.restcomm.email.api.Mail;
+import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailService;
+import org.mobicents.servlet.restcomm.email.EmailRequest;
+import org.mobicents.servlet.restcomm.email.EmailResponse;
+import org.mobicents.servlet.restcomm.email.Mail;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
@@ -244,7 +245,7 @@ public final class SmsInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService.Builder builder = CreateEmailService.builder();
+                final CreateEmailService builder = new EmailService();
                 builder.CreateEmailSession(configuration);
                 EMAIL_SENDER=builder.getUser();
                 return builder.build();
@@ -941,3 +942,5 @@ public final class SmsInterpreter extends UntypedActor {
         }
     }
 }
+
+
