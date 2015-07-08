@@ -8,7 +8,10 @@
   <property location="${release.dir}/docs" name="docs.dir"/>
   <property location="${release.dir}/docs/restcomm" name="restcomm.docs.dir"/>
   <property location="${release.tomcat.dir}/docs/restcomm" name="restcomm.docs.tomcat.dir"/>
-  <property location="${release.as7.dir}/docs/restcomm" name="restcomm.docs.as7.dir"/>
+  <property location="${release.as7.dir}/
+
+
+    /restcomm" name="restcomm.docs.as7.dir"/>
 
 <!--mobicents binaries versions-->
   <property name="sipservlets-build" value="612"/>
@@ -216,10 +219,10 @@
   <target name="copy-docs">
 <!--docs-->
     <mkdir dir="${restcomm.docs.dir}"/>
-    <copy failonerror="true" todir="${restcomm.docs.dir}">
-      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
+    <copy failonerror="true" todir="${restcomm.docs.dir}" file="${basedir}/README">
+      <!-- <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
         <include name="**/*"/>
-      </fileset>
+      </fileset> -->
     </copy>
     <mkdir dir="${restcomm.docs.dir}/phone-number-provisioning-javadocs"/>
     <copy failonerror="true" todir="${restcomm.docs.dir}/phone-number-provisioning-javadocs">
@@ -229,10 +232,10 @@
     </copy>
 <!--docs JBoss AS7-->
     <mkdir dir="${restcomm.docs.as7.dir}"/>
-    <copy failonerror="true" todir="${restcomm.docs.as7.dir}">
-      <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
+    <copy failonerror="true" todir="${restcomm.docs.as7.dir}" file="${basedir}/README">
+      <!-- <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
         <include name="**/*"/>
-      </fileset>
+      </fileset> -->
     </copy>
     <mkdir dir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs"/>
     <copy failonerror="true" todir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs">
