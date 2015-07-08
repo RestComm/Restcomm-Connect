@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>restcomm</artifactId>
 		<groupId>com.telestax.servlet</groupId>
-		<version>7.3.1-SNAPSHOT</version>
+		<version>7.4.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -196,6 +196,13 @@
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-client</artifactId>
 			<version>${sipservletapi.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mobicents.ha.javax.sip</groupId>
+			<artifactId>mobicents-jain-sip-ha-core</artifactId>
+			<version>1.5.5</version>
 			<scope>test</scope>
 		</dependency>
 

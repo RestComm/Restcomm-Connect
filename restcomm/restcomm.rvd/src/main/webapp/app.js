@@ -8,7 +8,8 @@ var App = angular.module('Rvd', [
 	'ui.sortable',
 	'basicDragdrop',
 	'pascalprecht.translate',
-	'ngSanitize'
+	'ngSanitize',
+	'ngResource'
 ]);
 
 var rvdMod = App;
@@ -32,7 +33,7 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		templateUrl : 'templates/designer.html',
 		controller : 'designerCtrl',
 		resolve: {
-			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
+			//projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
 			project: function(designerService, $route) { return designerService.openProject($route.current.params.projectName); },
 			bundledWavs: function(designerService) { return designerService.getBundledWavs()},
 			authStatus: function (auth) {
@@ -64,15 +65,19 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
 		controller : 'upgradeCtrl',
-		authStatus: function (auth) {
+		resolve: {
+			authStatus: function (auth) {
 			return auth.secure('Developer');
+			}
 		}
 	})
 	.when('/designer/:projectName/log', {
 		templateUrl : 'templates/projectLog.html',
 		controller : 'projectLogCtrl',
-		authStatus: function (auth) {
-			return auth.secure('Developer');
+		resolve: {
+			authStatus: function (auth) {
+				return auth.secure('Developer');
+			}
 		}
 	})	
 	.otherwise({

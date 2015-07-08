@@ -1,14 +1,11 @@
 var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, bundledWavs) {
-	
-	$scope.logger = function(s) {
-		console.log(s);
-	};
-		
-	// console.log("routeParam:");
-	// console.log( $routeParams );
-	
+
 	$scope.project = project;
 	$scope.visibleNodes = editedNodes.getEditedNodes();
+	
+	$scope.getProjectSettings = function () {
+		return projectSettingsService.getProjectSettings(); // returns a $resource that will be filled up automatically
+	}
 	$scope.getActiveNodeName = function () {
 		var activeNode = editedNodes.getActiveNode();
 		return activeNode;
@@ -72,10 +69,19 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 				nodes[i].steps[j].iface.showWarning = false;
 		}
 	}
-	$scope.editFilteredNodes = function(nodes,token) {
-		var filteredNodes = $filter('filterNodesByLabel')(nodes,token);
+	$scope.editFilteredNodes = function(nodes,token, moduleFilterEnabled) {
+		var filteredNodes = $filter('filterNodesByLabel')(nodes,token, moduleFilterEnabled);
 		for (var i=0; i<filteredNodes.length; i++) {
 			$scope.editNode(filteredNodes[i].name);
+		}
+	}
+	$scope.editAllNodes = function (nodes, token, moduleFilterEnabled) {
+		if (moduleFilterEnabled)
+			$scope.editFilteredNodes(nodes,token, moduleFilterEnabled )
+		else {
+			for (var i=0; i<nodes.length; i++) {
+				$scope.editNode(nodes[i].name);
+			}
 		}
 	}
 	$scope.hideAllButStartNode = function(nodes,startNodeName) {
@@ -84,6 +90,17 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 				$scope.hideNode(nodes[i].name);
 			}
 		}
+	}
+	$scope.hideAllNodes = function(nodes) {
+		for (var i=0; i<nodes.length; i++) {
+			$scope.hideNode(nodes[i].name);
+		}
+	}	
+	$scope.toggleModuleFilter = function () {
+		if ( !$scope.moduleFilterEnabled )
+			$scope.moduleFilterEnabled = true;
+		else
+			$scope.moduleFilterEnabled = false;
 	}
 	$scope.nodeNamed = function (name) {
 		return nodeRegistry.getNode(name);
@@ -180,7 +197,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.nullValue = null;
 	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
-
+	projectSettingsService.refresh($scope.projectName);
 
 	/*
 	 * When targets change, broadcast an events so that all <select syncModel/>
@@ -614,8 +631,8 @@ angular.module('Rvd').controller("nodeTabController",["$scope", "nodeRegistry", 
 }]);
 
 angular.module('Rvd').filter('filterNodesByLabel', function () {
-	return function (items, token) {
-		if ( !token )
+	return function (items, token, moduleFilterEnabled) {
+		if ( !token || !moduleFilterEnabled )
 			return items;
 			
 		var filtered = [];
