@@ -597,6 +597,19 @@
 					<useProjectReferences>false</useProjectReferences>
 				</configuration>
 			</plugin>
+			<!-- When testing maven sure fire spawns a new JVM. Setting it to never fixed the issue. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<configuration>
+					<forkMode>never</forkMode>
+					<argLine>-Xms1024m -Xmx1024m -XX:MaxPermSize=2048m</argLine>
+					<systemPropertyVariables>
+						<user.name>${user.name}</user.name>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 			<!-- Checkstyle -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

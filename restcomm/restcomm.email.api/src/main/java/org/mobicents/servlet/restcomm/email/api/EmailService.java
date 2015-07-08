@@ -1,23 +1,37 @@
-package org.mobicents.servlet.restcomm.email;
+/*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
+package org.mobicents.servlet.restcomm.email.api;
 
-
-import org.apache.commons.configuration.Configuration;
 import akka.actor.Actor;
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+
 
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import java.util.Properties;
 
-
-public final class CreateEmailService {
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    @NotThreadSafe
-    public static final class Builder {
+/**
+ * @author liblefty@gmail.com (Lefteris Banos)
+ */
+public class EmailService implements CreateEmailService {
 
         private Configuration configuration;
         private Session session;
@@ -25,8 +39,11 @@ public final class CreateEmailService {
         private String port;
         private String user;
         private String password;
+        static final Logger logger = Logger.getLogger(CreateEmailService.class.getName());
 
+        @Override
         public void CreateEmailSession(final Configuration config) {
+            logger.info("***************interface EmailService**************** ");
             configuration = config;
 
             host = configuration.getString("host");
@@ -63,7 +80,8 @@ public final class CreateEmailService {
         }
 
         public Actor build() {
-            return new MailService(session); //Email Tag Service.
+            return new EmailInterpreter(session); //Email Tag Service.
         }
-    }
+
 }
+
