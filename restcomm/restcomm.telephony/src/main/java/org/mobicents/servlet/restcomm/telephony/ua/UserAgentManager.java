@@ -317,7 +317,9 @@ public final class UserAgentManager extends UntypedActor {
         // request.getSession().invalidate();
         // }
         if (request.getApplicationSession().isValid()) {
-            request.getApplicationSession().invalidate();
+            try {
+                request.getApplicationSession().invalidate();
+            } catch (IllegalStateException exception) {}
         }
     }
 

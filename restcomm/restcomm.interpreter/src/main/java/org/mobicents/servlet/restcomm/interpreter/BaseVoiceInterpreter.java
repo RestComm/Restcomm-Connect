@@ -227,6 +227,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String emailAddress;
     // application data.
     HttpRequestDescriptor request;
+    HttpRequestDescriptor requestCallback;
     HttpResponseDescriptor response;
     // The RCML parser.
     ActorRef parser;
@@ -419,8 +420,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 statusCallbackMethod = "POST";
             }
             final List<NameValuePair> parameters = parameters();
-            request = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
-            downloader.tell(request, null);
+            requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
+            downloader.tell(requestCallback, null);
         }
     }
 
