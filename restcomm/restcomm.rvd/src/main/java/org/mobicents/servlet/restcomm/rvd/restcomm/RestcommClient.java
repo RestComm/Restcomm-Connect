@@ -16,6 +16,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
@@ -28,7 +29,7 @@ public class RestcommClient {
     private String password;
     CloseableHttpClient apacheClient;
 
-    public static class RestcommClientException extends Exception {
+    public static class RestcommClientException extends CallControlException {
 
         public RestcommClientException(String message, Throwable cause) {
             super(message, cause);
@@ -37,11 +38,6 @@ public class RestcommClient {
 
         public RestcommClientException(String message) {
             super(message);
-            // TODO Auto-generated constructor stub
-        }
-
-        public RestcommClientException(Throwable cause) {
-            super(cause);
             // TODO Auto-generated constructor stub
         }
 
@@ -66,7 +62,7 @@ public class RestcommClient {
             }
             return this;
         }
-        public <T> T done(Gson gson, Class<T> resultClass) throws RestcommClientException {
+        public <T> T done(Gson gson, Class<T> resultClass) throws CallControlException {
             // Build the uri for the call made to Restcomm
             URIBuilder uriBuilder = new URIBuilder();
             uriBuilder.setHost(client.host);
@@ -85,13 +81,14 @@ public class RestcommClient {
                     get.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(client.username, client.password));
                     apiResponse = client.apacheClient.execute( get );
                     try {
-                        if ( apiResponse.getStatusLine().getStatusCode() != 200 ) {
-                            String response_string = IOUtils.toString(apiResponse.getEntity().getContent());
-                            throw new RestcommClientException("Error " + apiResponse.getStatusLine().getStatusCode() + " running REST GET request: " + apiResponse.getStatusLine().getReasonPhrase() + " - Response body: " + response_string );
+                        Integer statusCode = apiResponse.getStatusLine().getStatusCode();
+                        if ( statusCode != 200 ) {
+                            if ( statusCode == 401 )
+                                throw new RestcommClientException("Authentication failed while using Restcomm REST api").setStatusCode(statusCode);
+                            else
+                                throw new RestcommClientException("Error invoking Restcomm REST api").setStatusCode(statusCode);
                         }
-
                         return gson.fromJson( new InputStreamReader(apiResponse.getEntity().getContent()), resultClass );
-
                     } finally {
                         apiResponse.close();
                     }
@@ -107,15 +104,15 @@ public class RestcommClient {
                     post.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(client.username, client.password) );
                     apiResponse = client.apacheClient.execute(post);
                     try {
-                        if ( apiResponse.getStatusLine().getStatusCode() != 200 ) {
-                            String response_string = IOUtils.toString(apiResponse.getEntity().getContent());
-                            throw new RestcommClientException("ApiServer could not create the call: " + apiResponse.getStatusLine().getReasonPhrase() + " - Response body: " +  response_string);
+                        Integer statusCode = apiResponse.getStatusLine().getStatusCode();
+                        if ( statusCode != 200 ) {
+                            if ( statusCode == 401 )
+                                throw new RestcommClientException("Authentication failed while using Restcomm REST api").setStatusCode(statusCode);
+                            else
+                                throw new RestcommClientException("Error invoking Restcomm REST api").setStatusCode(statusCode);
                         }
                         String content = IOUtils.toString(apiResponse.getEntity().getContent());
-
-                        //return gson.fromJson( new InputStreamReader(apiResponse.getEntity().getContent()), resultClass );
                         return gson.fromJson( content, resultClass );
-
                     } finally {
                         apiResponse.close();
                     }
@@ -123,9 +120,9 @@ public class RestcommClient {
                     throw new UnsupportedOperationException("Only GET and POST methods are supported");
 
             } catch (IOException e) {
-                throw new RestcommClientException(e);
+                throw new RestcommClientException("Error building URL from this path: " + path, e);
             } catch (URISyntaxException e) {
-                throw new RestcommClientException(e);
+                throw new RestcommClientException("Error building URL from this path: " + path, e);
             }
 
         }

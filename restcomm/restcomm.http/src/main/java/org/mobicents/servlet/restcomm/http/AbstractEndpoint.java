@@ -121,4 +121,13 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
+
+    // A general purpose method to test incoming parameters for meaningful data
+    protected boolean isEmpty(Object value) {
+        if (value == null)
+            return true;
+        if ( value.equals("") )
+            return true;
+        return false;
+    }
 }
