@@ -351,10 +351,10 @@
     <target name="copy-docs">
 		<!--docs-->
 	    <mkdir dir="${restcomm.docs.dir}"/>
-		<copy todir="${restcomm.docs.dir}" failonerror="true">
-		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
+		<copy todir="${restcomm.docs.dir}" failonerror="true" file="${basedir}/README">
+		        <!-- <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
 		                <include name="**/*" />
-		        </fileset>
+		        </fileset> -->
 		</copy>
 		<mkdir dir="${restcomm.docs.dir}/phone-number-provisioning-javadocs"/>
 		<copy todir="${restcomm.docs.dir}/phone-number-provisioning-javadocs" failonerror="true">
@@ -364,10 +364,10 @@
 		</copy>
 		<!--docs tomcat-->
 		<mkdir dir="${restcomm.docs.tomcat.dir}"/>
-		<copy todir="${restcomm.docs.tomcat.dir}" failonerror="true">
-		        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
+		<copy todir="${restcomm.docs.tomcat.dir}" failonerror="true" file="${basedir}/README">
+		        <!-- <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
 		                <include name="**/*" />
-		        </fileset>
+		        </fileset> -->
 		</copy>
 		<mkdir dir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs"/>
 		<copy todir="${restcomm.docs.tomcat.dir}/phone-number-provisioning-javadocs" failonerror="true">
@@ -377,10 +377,10 @@
 		</copy>
                 <!--docs JBoss AS7-->
                 <mkdir dir="${restcomm.docs.as7.dir}"/>
-                <copy todir="${restcomm.docs.as7.dir}" failonerror="true">
-                        <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
+                <copy todir="${restcomm.docs.as7.dir}" failonerror="true" file="${basedir}/README">
+                        <!-- <fileset dir="${workspace.mobicents-restcomm.dir}/restcomm.docs/jdocbook-mobicents/target/docbook/publish/en-US">
                                 <include name="**/*" />
-                        </fileset>
+                        </fileset> -->
                 </copy>
 		<mkdir dir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs"/>
 		<copy todir="${restcomm.docs.as7.dir}/phone-number-provisioning-javadocs" failonerror="true">
