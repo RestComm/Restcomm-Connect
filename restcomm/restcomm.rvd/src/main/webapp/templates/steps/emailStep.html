@@ -13,22 +13,36 @@
         </div>
         <div class="form-group row">
             <div lookup-context class='col-md-12'>
-                <div class="form-group">
-                    <span class="help-block">{{'emailSubjectEmailLabel' | translate}}</span>
-                    <input ng-model='step.subject' lookup-target auto-clear  type='text' name='subject' class="form-control"></input>
-                </div>
+                <form name="formSubject" novalidate>
+                    <div>
+                        <span class="help-block">{{'emailSubjectEmailLabel' | translate}}</span>
+                        <input ng-model='step.subject' lookup-target auto-clear  type='text' name='subject' class="form-control" required ></input>
+                    </div>
+                    <div ng-show="formSubject.subject.$invalid" class="validation-error pull-left">{{'sayEmailSubjectValidationError' | translate}}</div>
+                </form>
             </div>
         </div>
         <div class="form-group row">
-            <div class='col-md-4'>
+            <div class='col-md-6'>
                 <form name="formTo" novalidate>
                     <div lookup-context class="input-group input-group-sm">
                         <span class="input-group-addon">{{'emailStepToLabel' | translate}}</span>
-                        <input type='email' name='to' ng-model='step.to' lookup-target auto-clear class="form-control" required></input>
+                        <input type='text' name='to' ng-model='step.to' lookup-target auto-clear class="form-control" required></input>
                     </div>
                     <div ng-show="formTo.to.$invalid" class="validation-error pull-left">{{'sayEmailValidationError' | translate}}</div>
                 </form>
             </div>
+            <div class='col-md-6'>
+                <form name="formFrom" novalidate>
+                    <div lookup-context class="input-group input-group-sm">
+                        <span class="input-group-addon">{{'emailStepFromLabel' | translate}}</span>
+                        <input type='text' name='from'  ng-model='step.from' lookup-target auto-clear class="form-control" required></input>
+                    </div>
+                    <div ng-show="formFrom.from.$invalid" class="validation-error">{{'sayEmailValidationError' | translate}}</div>
+                </form>
+            </div>
+        </div>
+        <!--div class="form-group row">
             <div class="col-md-8">
                 <div class="input-group form-group input-group-sm">
                     <span class="input-group-addon help-tooltip" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'smsStepContinueToTooltip' | translate}}">{{'emailStepContinueLabel' | translate}}</span>
@@ -36,19 +50,8 @@
                         <option value=""></option>
                     </select>
                 </div>
-                <div class="validation-error" ng-show="form.next.$invalid">{{'smsStepChooseTargetLabel' | translate}}</div>
+                <div class="validation-error" ng-show="form.next.$invalid">{{'emailStepChooseTargetLabel' | translate}}</div>
             </div>
-        </div>
-        <div class="form-group row">
-            <div class='col-md-4'>
-                <form name="formFrom" novalidate>
-                    <div lookup-context class="input-group form-group input-group-sm">
-                        <span class="input-group-addon">{{'emailStepFromLabel' | translate}}</span>
-                        <input ng-model='step.from' lookup-target  type='email' name='from'  class="form-control" required></input>
-                    </div>
-                    <div ng-show="formFrom.from.$invalid" class="validation-error">{{'sayEmailValidationError' | translate}}</div>
-                </form>
-            </div>
-        </div>
+        </div-->
     </div>
 </div>

@@ -211,6 +211,7 @@
 	"emailStepEmailLabel": "Email content",
   	"emailSubjectEmailLabel": "Email subject",
 	"enailStepEmailLabelPopover": "Type the email content as text.",
+  	"sayEmailSubjectValidationError": "Please insert a subject for the email",
   	"sayEmailValidationError": "Please insert a valid email address",
 	"emailStepToLabel": "To",
 	"emailStepFromLabel": "From",
