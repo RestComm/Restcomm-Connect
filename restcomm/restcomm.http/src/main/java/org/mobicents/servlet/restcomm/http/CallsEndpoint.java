@@ -33,6 +33,7 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -182,16 +183,27 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 
-        CallDetailRecordFilter filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
-                parentCallSid, null, null);
+        CallDetailRecordFilter filterForTotal;
+        try {
+            filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
+                    parentCallSid, null, null);
+        } catch (ParseException e) {
+            return status(BAD_REQUEST).build();
+        }
+
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
 
-        CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
-                parentCallSid, limit, offset);
+        CallDetailRecordFilter filter;
+        try {
+            filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
+                    parentCallSid, limit, offset);
+        } catch ( ParseException e) {
+            return status(BAD_REQUEST).build();
+        }
 
         final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
 
