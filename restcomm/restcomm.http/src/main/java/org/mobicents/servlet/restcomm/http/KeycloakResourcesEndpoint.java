@@ -10,13 +10,16 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.commons.configuration.Configuration;
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
-import org.mobicents.servlet.restcomm.http.keycloak.KeycloakConfigurator;
+import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator;
+import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator.CloudIdentityNotSet;
+import org.apache.commons.configuration.Configuration;
 
 @Path("/config")
 public class KeycloakResourcesEndpoint extends AbstractEndpoint {
+
+    private KeycloakConfigurator keycloakConfigurator;
 
     public KeycloakResourcesEndpoint() {
         super();
@@ -24,22 +27,21 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
-        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-        Configuration runtime_configuration = configuration.subset("runtime-settings");
-        super.init(runtime_configuration);
+        Object obj = context.getAttribute(Configuration.class.getName());
+        Configuration config = (Configuration) context.getAttribute(Configuration.class.getName());
+        keycloakConfigurator = new KeycloakConfigurator( config, context );
     }
 
     @GET
     @Path("/restcomm-ui.json")
     @Produces("application/json")
     public Response getRestcommUIConfig() throws IOException {
-        String instanceId = getConfigInstanceId();
-        // If we are not hooked up to a keycloak application online return NOT_FOUND
-        if (instanceId == null || instanceId.trim().isEmpty())
+        BaseAdapterConfig config;
+        try {
+            config = keycloakConfigurator.getRestcommUIConfig();
+        } catch (CloudIdentityNotSet e) {
             return Response.status(Status.NOT_FOUND).build();
-
-        KeycloakConfigurator configurator = new KeycloakConfigurator();
-        BaseAdapterConfig config = configurator.getRestcommUIConfig(instanceId);
+        }
         return Response.ok(JsonSerialization.writeValueAsPrettyString(config), MediaType.APPLICATION_JSON).build();
     }
 
@@ -47,21 +49,13 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     @Path("/restcomm-rvd-ui.json")
     @Produces("application/json")
     public Response getRestcommRvdUIConfig() throws IOException {
-        String instanceId = getConfigInstanceId();
-        // If we are not hooked up to an keycloak application online return NOT_FOUND
-        if (instanceId == null || instanceId.trim().isEmpty())
+        BaseAdapterConfig config;
+        try {
+            config = keycloakConfigurator.getRestcommRvdUIConfig();
+        } catch (CloudIdentityNotSet e) {
             return Response.status(Status.NOT_FOUND).build();
-
-        KeycloakConfigurator configurator = new KeycloakConfigurator();
-        BaseAdapterConfig config = configurator.getRestcommRvdUIConfig(instanceId);
+        }
         return Response.ok(JsonSerialization.writeValueAsPrettyString(config), MediaType.APPLICATION_JSON).build();
-    }
-
-    private String getConfigInstanceId() {
-        Configuration identityConf = configuration.subset("runtime-settings").subset("identity");
-        String instanceId = identityConf.getString("instance-id");
-
-        return instanceId;
     }
 
 }
