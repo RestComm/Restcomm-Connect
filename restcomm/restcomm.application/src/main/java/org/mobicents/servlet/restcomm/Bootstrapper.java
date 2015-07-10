@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -16,6 +17,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
+import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
@@ -154,6 +156,22 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
             ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
             logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
+
+            // Utility class for generating keycloak adapter configuration
+            logger.info("Creating keycloak configurator");
+            String instanceId = xml.getString("runtime-settings.idenity.instance-id", null);
+            KeycloakConfigurator keycloakConfig = new KeycloakConfigurator(xml, context);
+            context.setAttribute(KeycloakConfigurator.class.getName(), keycloakConfig);
+            logger.info("Updating keycloak adapters configuration");
+            try {
+                // save updated adapter config so that keycloak adapter starts correctly
+                keycloakConfig.persistAdaptersConfig();
+            } catch (IOException e) {
+                logger.error("Error updating keycloak adapter configuration during initialization", e);
+            }
+            if ( ! keycloakConfig.isHookedUpToKeycloak() )
+                logger.warn("Restcomm instance is not hooked up to keycloak");
+
 
             // Create the media gateway.
             ActorRef gateway = null;
