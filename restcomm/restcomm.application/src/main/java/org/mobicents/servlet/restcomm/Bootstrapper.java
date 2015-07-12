@@ -160,7 +160,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Utility class for generating keycloak adapter configuration
             logger.info("Creating keycloak configurator");
             String instanceId = xml.getString("runtime-settings.idenity.instance-id", null);
-            KeycloakConfigurator keycloakConfig = new KeycloakConfigurator(xml, context);
+            KeycloakConfigurator keycloakConfig = KeycloakConfigurator.create(xml, context);
             context.setAttribute(KeycloakConfigurator.class.getName(), keycloakConfig);
             logger.info("Updating keycloak adapters configuration");
             try {

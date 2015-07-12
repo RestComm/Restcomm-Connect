@@ -9,6 +9,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
+import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
 
@@ -22,6 +23,8 @@ public class KeycloakConfigurator {
 
     public static class CloudIdentityNotSet extends Exception {}
 
+    private static KeycloakConfigurator singleInstance;
+
     // Fixed values for known properties that will help testing.They will be overriden in the long run.
     private final String realmKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB";
     private final String realmName = "restcomm";
@@ -30,12 +33,23 @@ public class KeycloakConfigurator {
     private final String restcommClientSecret;
     private final String contextPath;
 
-    /*public KeycloakConfigurator(String instanceId) {
-        this.instanceId = instanceId;
-        // TODO Auto-generated constructor stub
-    }*/
+    public static KeycloakConfigurator create(Configuration restcommConfiguration, ServletContext context) {
+        // TODO - throw an exception if the instance has already been created??
+        if (singleInstance != null)
+            throw new IllegalStateException("Singleton KeycloakConfigurator instance has already been created.");
 
-    public KeycloakConfigurator(Configuration restcommConfiguration, ServletContext context) {
+        singleInstance = new KeycloakConfigurator(restcommConfiguration, context);
+        return singleInstance;
+    }
+
+    public static KeycloakConfigurator getInstance() {
+        if ( singleInstance == null )
+            throw new IllegalStateException("KeycloakConfigurator singleton has not been created yet. Make sure restcomm bootstrapper has run.");
+
+        return singleInstance;
+    }
+
+    private KeycloakConfigurator(Configuration restcommConfiguration, ServletContext context) {
         this.instanceId = restcommConfiguration.getString("runtime-settings.identity.instance-id");
         this.restcommClientSecret = restcommConfiguration.getString("runtime-settings.identity.restcomm-client-secret");
         this.contextPath = context.getRealPath("/");
@@ -66,10 +80,10 @@ public class KeycloakConfigurator {
     }
 
     // Returns null if no instanceId is set
-    public BaseAdapterConfig getRestcommConfig() throws IOException, CloudIdentityNotSet {
+    public AdapterConfig getRestcommConfig() throws CloudIdentityNotSet {
         if ( StringUtils.isEmpty(instanceId))
             throw new CloudIdentityNotSet();
-        BaseAdapterConfig config = new BaseAdapterConfig();
+        AdapterConfig config = new AdapterConfig();
         config.setRealm(getRealmName());
         config.setRealmKey(getRealmKey());
         config.setAuthServerUrl(getAuthServerUrl());
@@ -86,7 +100,7 @@ public class KeycloakConfigurator {
     }
 
     // Returns null if no instanceId is set
-    public BaseAdapterConfig getRestcommUIConfig() throws IOException, CloudIdentityNotSet {
+    public BaseAdapterConfig getRestcommUIConfig() throws CloudIdentityNotSet {
         if ( StringUtils.isEmpty(instanceId))
             throw new CloudIdentityNotSet();
         BaseAdapterConfig config = new BaseAdapterConfig();
@@ -101,7 +115,7 @@ public class KeycloakConfigurator {
     }
 
     // Returns null if no instanceId is set
-    public BaseAdapterConfig getRestcommRvdUIConfig() throws IOException, CloudIdentityNotSet {
+    public BaseAdapterConfig getRestcommRvdUIConfig() throws CloudIdentityNotSet {
         if ( StringUtils.isEmpty(instanceId))
             throw new CloudIdentityNotSet();
         BaseAdapterConfig config = new BaseAdapterConfig();

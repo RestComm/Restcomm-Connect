@@ -14,7 +14,6 @@ import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
 import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator;
 import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator.CloudIdentityNotSet;
-import org.apache.commons.configuration.Configuration;
 
 @Path("/config")
 public class KeycloakResourcesEndpoint extends AbstractEndpoint {
@@ -27,9 +26,7 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
-        Object obj = context.getAttribute(Configuration.class.getName());
-        Configuration config = (Configuration) context.getAttribute(Configuration.class.getName());
-        keycloakConfigurator = new KeycloakConfigurator( config, context );
+        keycloakConfigurator = (KeycloakConfigurator) context.getAttribute(KeycloakConfigurator.class.getName());
     }
 
     @GET
