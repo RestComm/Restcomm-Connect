@@ -71,8 +71,6 @@ public class UssdCallManager extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static final String EMAIL_SENDER = "restcomm@restcomm.org";
-    static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
 
     private final ActorSystem system;
     private final Configuration configuration;

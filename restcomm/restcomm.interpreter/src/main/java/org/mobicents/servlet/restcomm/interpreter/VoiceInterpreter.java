@@ -31,6 +31,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -62,6 +63,7 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -241,6 +243,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(downloadingFallbackRcml, finished));
         transitions.add(new Transition(ready, initializingCall));
         transitions.add(new Transition(ready, faxing));
+        transitions.add(new Transition(ready, sendingEmail));
         transitions.add(new Transition(ready, pausing));
         transitions.add(new Transition(ready, checkingCache));
         transitions.add(new Transition(ready, caching));
@@ -258,6 +261,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(rejecting, finished));
         transitions.add(new Transition(faxing, ready));
         transitions.add(new Transition(faxing, finished));
+        transitions.add(new Transition(sendingEmail, ready));
+        transitions.add(new Transition(sendingEmail, finished));
         transitions.add(new Transition(caching, finished));
         transitions.add(new Transition(playing, ready));
         transitions.add(new Transition(playing, finished));
@@ -279,6 +284,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(startDialing, processingDialChildren));
         transitions.add(new Transition(startDialing, acquiringConferenceInfo));
         transitions.add(new Transition(startDialing, faxing));
+        transitions.add(new Transition(startDialing, sendingEmail));
         transitions.add(new Transition(startDialing, pausing));
         transitions.add(new Transition(startDialing, checkingCache));
         transitions.add(new Transition(startDialing, caching));
@@ -316,6 +322,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(bridged, finished));
         transitions.add(new Transition(finishDialing, ready));
         transitions.add(new Transition(finishDialing, faxing));
+        transitions.add(new Transition(finishDialing, sendingEmail));
         transitions.add(new Transition(finishDialing, pausing));
         transitions.add(new Transition(finishDialing, checkingCache));
         transitions.add(new Transition(finishDialing, caching));
@@ -339,6 +346,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(conferencing, finished));
         transitions.add(new Transition(finishConferencing, ready));
         transitions.add(new Transition(finishConferencing, faxing));
+        transitions.add(new Transition(finishConferencing, sendingEmail));
         transitions.add(new Transition(finishConferencing, pausing));
         transitions.add(new Transition(finishConferencing, checkingCache));
         transitions.add(new Transition(finishConferencing, caching));
@@ -376,7 +384,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.smsSessions = new HashMap<Sid, ActorRef>();
         this.storage = storage;
         this.synthesizer = tts(configuration.subset("speech-synthesizer"));
-        this.mailer = mailer(configuration.subset("smtp"));
+        mailerNotify = mailer(configuration.subset("smtp-notify"));
+        mailerService = mailer(configuration.subset("smtp-service"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -644,6 +653,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, playing);
                     } else if (fax.equals(verb.name())) {
                         fsm.transition(message, faxing);
+                    } else if (email.equals(verb.name())) {
+                    fsm.transition(message, sendingEmail);
                     }
                 } else if (processingGatherChildren.equals(state)) {
                     fsm.transition(message, processingGatherChildren);
@@ -692,6 +703,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, creatingRecording);
             } else if (sms.equals(verb.name())) {
                 fsm.transition(message, creatingSmsSession);
+            } else if (email.equals(verb.name())) {
+                fsm.transition(message, sendingEmail);
             } else {
                 invalidVerb(verb);
             }
@@ -764,6 +777,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             smsResponse(message);
         } else if (FaxResponse.class.equals(klass)) {
             fsm.transition(message, ready);
+        } else if (EmailResponse.class.equals(klass)) {
+            final EmailResponse response = (EmailResponse) message;
+            if (!response.succeeded()) {
+                logger.error(
+                    "There was an error while sending an email :" + response.error(),
+                        response.cause());
+            }
+                fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
             this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
             if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
@@ -2090,7 +2111,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailer);
+            context.stop(mailerNotify);
+            context.stop(mailerService);
             context.stop(downloader);
             context.stop(asrService);
             context.stop(faxService);
