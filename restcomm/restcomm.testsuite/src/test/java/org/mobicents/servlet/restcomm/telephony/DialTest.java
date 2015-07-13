@@ -1,7 +1,6 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -9,7 +8,6 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import gov.nist.javax.sip.message.MessageExt;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -45,7 +43,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
-import org.mobicents.servlet.restcomm.provisioning.number.vi.AvailablePhoneNumbersEndpointTestUtils;
 //import org.mobicents.servlet.restcomm.telephony.Version;
 import org.mobicents.servlet.restcomm.telephony.security.DigestServerAuthenticationMethod;
 
