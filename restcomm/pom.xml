@@ -598,6 +598,7 @@
 				</configuration>
 			</plugin>
 			<!-- When testing maven sure fire spawns a new JVM. Setting it to never fixed the issue. -->
+			<!--
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -610,6 +611,7 @@
 					</systemPropertyVariables>
 				</configuration>
 			</plugin>
+			-->
 			<!-- Checkstyle -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
