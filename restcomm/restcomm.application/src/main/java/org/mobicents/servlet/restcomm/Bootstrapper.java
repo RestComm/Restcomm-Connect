@@ -31,6 +31,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
+import com.telestax.servlet.MonitoringService;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -155,7 +156,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             @Override
             public UntypedActor create() throws Exception {
-//                final String classpath = settings.getString("mgcp-server[@class]");
+                //                final String classpath = settings.getString("mgcp-server[@class]");
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(MonitoringService.class.getName());
             }
         }));
@@ -221,14 +222,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ExtensionScanner extensionScanner = new ExtensionScanner(extensionConfiguration);
             extensionScanner.start();
 
-        // Create the media server controller factory
-        MediaServerControllerFactory mscontrollerFactory = null;
-        try {
-            mscontrollerFactory = mediaServerControllerFactory(xml, loader);
-        } catch (ServletException exception) {
-            logger.error("ServletException during initialization", exception);
-        }
-        context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
+            // Create the media server controller factory
+            MediaServerControllerFactory mscontrollerFactory = null;
+            try {
+                mscontrollerFactory = mediaServerControllerFactory(xml, loader);
+            } catch (ServletException exception) {
+                logger.error("ServletException during initialization", exception);
+            }
+            context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
             //Last, print Version and send PING if needed
             Version.printVersion();
