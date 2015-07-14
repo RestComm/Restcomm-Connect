@@ -27,6 +27,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
+import com.telestax.servlet.MonitoringService;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -105,6 +106,20 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return daoManager;
     }
 
+    private ActorRef monitoringService(final Configuration configuration, final ClassLoader loader) {
+        final ActorRef monitoring = system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+//                final String classpath = settings.getString("mgcp-server[@class]");
+                return (UntypedActor) new ObjectFactory(loader).getObjectInstance(MonitoringService.class.getName());
+            }
+        }));
+        return monitoring;
+
+    }
+
     private String uri(final ServletContext context) {
         return context.getContextPath();
     }
@@ -155,9 +170,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.error("UnknownHostException during initialization", exception);
             }
             context.setAttribute(MediaGateway.class.getName(), gateway);
-            Version.printVersion();
-            Ping ping = new Ping(xml, context);
-            ping.sendPing();
+
+            //Initialize Monitoring Service
+            ActorRef monitoring = monitoringService(xml, loader);
+            context.setAttribute(MonitoringService.class.getName(), monitoring);
+
+            //Initialize Extensions
             Configuration extensionConfiguration = null;
             try {
                 extensionConfiguration = new XMLConfiguration(extensionConfigurationPath);
@@ -166,6 +184,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             ExtensionScanner extensionScanner = new ExtensionScanner(extensionConfiguration);
             extensionScanner.start();
+
+            //Last, print Version and send PING if needed
+            Version.printVersion();
+            Ping ping = new Ping(xml, context);
+            ping.sendPing();
         }
     }
 }

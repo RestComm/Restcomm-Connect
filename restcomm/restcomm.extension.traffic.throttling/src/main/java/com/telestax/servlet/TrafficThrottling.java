@@ -35,7 +35,7 @@ import org.mobicents.servlet.sip.message.MobicentsSipApplicationSessionFacade;
 public class TrafficThrottling implements RestcommExtensionGeneric {
 
     private static final Logger logger = Logger.getLogger(TrafficThrottling.class);
-    
+
     @Override
     public void init() {
     }
