@@ -41,6 +41,7 @@
 									{ "$ref": "pauseStep.json" },
 									{ "$ref": "redirectStep.json" },
 									{ "$ref": "smsStep.json" },
+								    { "$ref": "emailStep.json" },
 									{ "$ref": "recordStep.json" },
 									{ "$ref": "faxStep.json" },
 									{ "$ref": "ussdSayStep.json" },

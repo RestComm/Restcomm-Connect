@@ -118,4 +118,13 @@ public abstract class AbstractEndpoint {
             throw new AuthorizationException();
         }
     }
+
+    // A general purpose method to test incoming parameters for meaningful data
+    protected boolean isEmpty(Object value) {
+        if (value == null)
+            return true;
+        if ( value.equals("") )
+            return true;
+        return false;
+    }
 }

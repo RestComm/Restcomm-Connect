@@ -351,6 +351,7 @@ public class CreateCallsTest {
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-number-entry.xml");
         archive.addAsWebResource("dial-client-entry.xml");
+        archive.addAsWebResource("hello-play.xml");
         logger.info("Packaged Test App");
         return archive;
     }

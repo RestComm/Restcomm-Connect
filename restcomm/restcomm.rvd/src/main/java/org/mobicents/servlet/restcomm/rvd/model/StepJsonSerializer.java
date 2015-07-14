@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 import org.mobicents.servlet.restcomm.rvd.model.client.Step;
 import org.mobicents.servlet.restcomm.rvd.model.steps.dial.DialStep;
+import org.mobicents.servlet.restcomm.rvd.model.steps.email.EmailStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.es.ExternalServiceStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.fax.FaxStep;
 import org.mobicents.servlet.restcomm.rvd.model.steps.gather.GatherStep;
@@ -55,6 +56,8 @@ public class StepJsonSerializer implements JsonSerializer<Step> {
             resultElement = gson.toJsonTree((PauseStep) step);
         } else if (step.getClass().equals(SmsStep.class)) {
             resultElement = gson.toJsonTree((SmsStep) step);
+        } else if (step.getClass().equals(EmailStep.class)) {
+            resultElement = gson.toJsonTree((EmailStep) step);
         } else if (step.getClass().equals(RecordStep.class)) {
             resultElement = gson.toJsonTree((RecordStep) step);
         } else if (step.getClass().equals(FaxStep.class)) {

@@ -238,7 +238,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         this.smsSessions = new HashMap<Sid, ActorRef>();
         this.storage = storage;
         this.synthesizer = tts(configuration.subset("speech-synthesizer"));
-        this.mailer = mailer(configuration.subset("smtp"));
+        this.mailerNotify = mailer(configuration.subset("smtp-notify"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -771,7 +771,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             callManager.tell(new DestroyCall(call), source);
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailer);
+            context.stop(mailerNotify);
             context.stop(downloader);
             context.stop(asrService);
             context.stop(faxService);

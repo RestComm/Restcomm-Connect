@@ -66,7 +66,8 @@
 
 			<!-- When set to true, Restcomm will use the username of the outbound proxy when -->
 			<!-- creating the From header, as the userpart of the sip uri. Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
-			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
+			<!--  Must be TRUE for Nexmo integration -->
+			<outboudproxy-user-at-from-header>false</outboudproxy-user-at-from-header>
 			<!-- When set to true, Restcomm will use the original user for the display name of the From header -->
 			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<user-at-displayed-name>true</user-at-displayed-name>
@@ -217,11 +218,17 @@
 		</voxbone>
 	</phone-number-provisioning>
 
-	<smtp>
+	<smtp-notify>
 		<host></host>
 		<user></user>
 		<password></password>
-	</smtp>
+	</smtp-notify>
+
+	<smtp-service>
+		<host> </host>
+		<user></user>
+		<password></password>
+	</smtp-service>
 
 	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
 		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml
