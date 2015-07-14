@@ -148,7 +148,8 @@
 		<module>restcomm.routing</module>
 		<module>restcomm.email</module>
 		<module>restcomm.email.api</module>
-
+		<module>restcomm.extension.api</module>
+		<module>restcomm.extension.traffic.throttling</module>
 	</modules>
 
 	<dependencyManagement>
