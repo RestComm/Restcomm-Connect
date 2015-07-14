@@ -2,8 +2,11 @@ package org.mobicents.servlet.restcomm.telephony;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -124,6 +127,7 @@ public class DialTest {
     private String dialSipDialTagScreening = "sip:+12223334461@127.0.0.1:5080";
     private String dialDIDGreaterThan15Digits = "sip:+12345678912345678912@127.0.0.1:5080";
     private String dialClientWithRecordWithStatusCallback = "sip:7777@127.0.0.1:5080";
+    private String dialForCustomHeaders = "sip:7778@127.0.0.1:5080";
     
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -1361,6 +1365,53 @@ public class DialTest {
             exception.printStackTrace();
         }
     }
+    
+  private String sayRcml = "<Response><Say>Hello</Say></Response>";
+  //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
+  @Test
+  public synchronized void testDialWithCustomHeaders() throws InterruptedException, ParseException {
+      deployer.deploy("DialTest");
+      //Received request: GET /rcml?CallSid=CA154c8c93d7eb439989a6ea42915b6c1b&AccountSid=ACae6e420f425248d6a26948c17a9e2acf&From=bob&To=%2B17778&
+      //CallStatus=ringing&ApiVersion=2012-04-24&Direction=inbound&CallerName&ForwardedFrom&SipHeader_X-MyCustom-Header1=Value1&SipHeader_X-MyCustom-Header2=Value2 HTTP/1.1
+      stubFor(get(urlPathEqualTo("/rcml"))
+              .withQueryParam("SipHeader_X-MyCustom-Header1", containing("Value1"))
+              .withQueryParam("SipHeader_X-MyCustom-Header2", containing("Value2"))
+              .willReturn(aResponse()
+                  .withStatus(200)
+                  .withHeader("Content-Type", "text/xml")
+                  .withBody(sayRcml)));
+
+      ArrayList<String> additionalHeaders = new ArrayList<String>();
+      additionalHeaders.add(bobPhone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header1", "Value1").toString());
+      additionalHeaders.add(bobPhone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header2", "Value2").toString());
+      
+      // Initiate a call using Bob
+      final SipCall bobCall = bobPhone.createSipCall();
+
+      bobCall.initiateOutgoingCall(bobContact, dialForCustomHeaders, null, body, "application", "sdp", additionalHeaders, null);
+      assertLastOperationSuccess(bobCall);
+
+      assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+      final int response = bobCall.getLastReceivedResponse().getStatusCode();
+      assertTrue(response == Response.TRYING || response == Response.RINGING);
+      if (response == Response.TRYING) {
+          assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+          assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+      }
+
+      assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+      assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+      bobCall.sendInviteOkAck();
+      assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+      bobCall.listenForDisconnect();
+      
+      Thread.sleep(1000);
+      
+      assertTrue(bobCall.waitForDisconnect(5 * 1000));
+      assertTrue(bobCall.respondToDisconnect());
+  }
     
     @Test
     // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
