@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm</artifactId>
-	<version>7.3.1-SNAPSHOT</version>
+	<version>7.4.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>RestComm</name>
 	<description>A unified communications platform for web developers.</description>
@@ -86,7 +87,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>3.1.602</sipservletapi.version>
+		<sipservletapi.version>3.1.612</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -104,10 +105,10 @@
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
 		<!-- <sip-ri.version>1.2.167</sip-ri.version> -->
-		<sip-ri.version>1.2.228</sip-ri.version>
+		<sip-ri.version>1.2.241</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
-		<mss.arquillian.version>1.0.0-CR1</mss.arquillian.version>
-		<mss.shrinkwrap.version>1.0.0-CR1</mss.shrinkwrap.version>
+		<mss.arquillian.version>1.0.0.CR3</mss.arquillian.version>
+		<mss.shrinkwrap.version>1.0.0.CR2</mss.shrinkwrap.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
 		<sipunit.version>2.0.0</sipunit.version>
 		<!--tomcat.version>6.0.35</tomcat.version -->
@@ -134,7 +135,7 @@
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
-        	<module>restcomm.provisioning.number.bandwidth</module>
+		<module>restcomm.provisioning.number.bandwidth</module>
 		<module>restcomm.provisioning.number.voxbone</module>
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
@@ -145,9 +146,10 @@
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>
-    <module>restcomm.extension.api</module>
-    <module>restcomm.extension.traffic.throttling</module>
-  </modules>
+		<module>restcomm.email</module>
+		<module>restcomm.email.api</module>
+
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -246,7 +248,7 @@
 				<scope>provided</scope>
 			</dependency>
 
-			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
+			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
 				<version>${servlet-api.version}</version> </dependency -->
 
 			<dependency>
@@ -570,7 +572,7 @@
 			<version>${mobicents.checkstyle.version}</version>
 		</dependency>
 
-		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>
 			<version>5.1</version> </dependency -->
 	</dependencies>
 
@@ -581,7 +583,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g/>
+						<g />
 					</compilerArguments>
 					<source>1.7</source>
 					<target>1.7</target>
@@ -592,9 +594,24 @@
 				<artifactId>maven-eclipse-plugin</artifactId>
 				<version>2.8</version>
 				<configuration>
-					<useProjectReferences>true</useProjectReferences>
+					<useProjectReferences>false</useProjectReferences>
 				</configuration>
 			</plugin>
+			<!-- When testing maven sure fire spawns a new JVM. Setting it to never fixed the issue. -->
+			<!--
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<configuration>
+					<forkMode>never</forkMode>
+					<argLine>-Xms1024m -Xmx1024m -XX:MaxPermSize=2048m</argLine>
+					<systemPropertyVariables>
+						<user.name>${user.name}</user.name>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+			-->
 			<!-- Checkstyle -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -604,7 +621,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile/>
+					<useFile />
 				</configuration>
 				<dependencies>
 					<dependency>
@@ -768,7 +785,7 @@
 		</repository>
 
 		<!-- Local repository for the ATT TTS Java wrapper library -->
-		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
 			</repository> -->
 	</repositories>
 

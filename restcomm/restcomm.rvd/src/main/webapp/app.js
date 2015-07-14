@@ -1,4 +1,17 @@
-var App = angular.module('Rvd', ['angularFileUpload','ngRoute','ngDragDrop','ui.bootstrap','ui.bootstrap.collapse','ui.bootstrap.popover','ui.sortable','basicDragdrop','pascalprecht.translate']);
+var App = angular.module('Rvd', [
+	'angularFileUpload',
+	'ngRoute',
+	'ngDragDrop',
+	'ui.bootstrap',
+	'ui.bootstrap.collapse',
+	'ui.bootstrap.popover',
+	'ui.sortable',
+	'basicDragdrop',
+	'pascalprecht.translate',
+	'ngSanitize',
+	'ngResource'
+]);
+
 var rvdMod = App;
 
 App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $translateProvider) {
@@ -22,7 +35,7 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		controller : 'designerCtrl',
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
-			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
+			//projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
 			project: function(designerService, $route) { return designerService.openProject($route.current.params.projectName); },
 			bundledWavs: function(designerService) { return designerService.getBundledWavs()}
 		}

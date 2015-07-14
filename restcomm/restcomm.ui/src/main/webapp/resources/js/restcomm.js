@@ -36,7 +36,7 @@ rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $l
     }).
     when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).
     when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl'}).
-    when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;} }}).
+    when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, localApps: function (rappService) { return rappService.refreshLocalApps();} }}).
     when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl'}).
     when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl'}).
     when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl'}).

@@ -164,6 +164,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
         if (data.containsKey("isSIP")) {
             builder.setPureSip(Boolean.parseBoolean(data.getFirst("isSIP")));
+        } else {
+            builder.setPureSip(false);
         }
         final String apiVersion = getApiVersion(data);
         builder.setApiVersion(apiVersion);
@@ -364,19 +366,23 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setFriendlyName(data.getFirst("FriendlyName"));
         }
         if (data.containsKey("VoiceUrl")) {
-            incomingPhoneNumber.setVoiceUrl(getUrl("VoiceUrl", data));
+            // for all values that qualify as 'empty' populate property with null
+            URI uri = getUrl("VoiceUrl", data);
+            incomingPhoneNumber.setVoiceUrl(isEmpty(uri.toString()) ? null : uri);
         }
         if (data.containsKey("VoiceMethod")) {
             incomingPhoneNumber.setVoiceMethod(getMethod("VoiceMethod", data));
         }
         if (data.containsKey("VoiceFallbackUrl")) {
-            incomingPhoneNumber.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+            URI uri = getUrl("VoiceFallbackUrl", data);
+            incomingPhoneNumber.setVoiceFallbackUrl( isEmpty(uri.toString()) ? null : uri );
         }
         if (data.containsKey("VoiceFallbackMethod")) {
-            incomingPhoneNumber.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+            incomingPhoneNumber.setVoiceFallbackMethod( getMethod("VoiceFallbackMethod", data) );
         }
         if (data.containsKey("StatusCallback")) {
-            incomingPhoneNumber.setStatusCallback(getUrl("StatusCallback", data));
+            URI uri = getUrl("StatusCallback", data);
+            incomingPhoneNumber.setStatusCallback( isEmpty(uri.toString()) ? null : uri );
         }
         if (data.containsKey("StatusCallbackMethod")) {
             incomingPhoneNumber.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
@@ -388,13 +394,15 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
         if (data.containsKey("SmsUrl")) {
-            incomingPhoneNumber.setSmsUrl(getUrl("SmsUrl", data));
+            URI uri = getUrl("SmsUrl", data);
+            incomingPhoneNumber.setSmsUrl( isEmpty(uri.toString()) ? null : uri);
         }
         if (data.containsKey("SmsMethod")) {
             incomingPhoneNumber.setSmsMethod(getMethod("SmsMethod", data));
         }
         if (data.containsKey("SmsFallbackUrl")) {
-            incomingPhoneNumber.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
+            URI uri = getUrl("SmsFallbackUrl", data);
+            incomingPhoneNumber.setSmsFallbackUrl( isEmpty(uri.toString()) ? null : uri );
         }
         if (data.containsKey("SmsFallbackMethod")) {
             incomingPhoneNumber.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));

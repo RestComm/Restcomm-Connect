@@ -8,6 +8,9 @@
 			<param name="ConversionPattern" value="%p %t %l - %m%n" />
 		</layout>
 	</appender>
+	<logger name="org.mobicents.servlet.sip.annotations">
+		<level value="INFO" />
+	</logger>
 	<root>
 		<priority value="INFO" />
 		<appender-ref ref="console" />
