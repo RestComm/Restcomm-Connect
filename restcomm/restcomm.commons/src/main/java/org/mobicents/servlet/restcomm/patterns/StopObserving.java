@@ -28,7 +28,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class StopObserving extends AbstractObserverMessage {
+
     public StopObserving(final ActorRef observer) {
         super(observer);
+    }
+
+    public StopObserving() {
+        this(null);
     }
 }

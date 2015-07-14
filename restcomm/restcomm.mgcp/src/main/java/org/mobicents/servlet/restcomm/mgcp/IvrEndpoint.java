@@ -19,8 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
-import akka.actor.ActorRef;
-
+import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
 import jain.protocol.ip.mgcp.JainIPMgcpException;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.NotificationRequestResponse;
@@ -33,7 +32,6 @@ import jain.protocol.ip.mgcp.message.parms.RequestIdentifier;
 import jain.protocol.ip.mgcp.message.parms.RequestedAction;
 import jain.protocol.ip.mgcp.message.parms.RequestedEvent;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
-import static jain.protocol.ip.mgcp.message.parms.ReturnCode.*;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
 
@@ -47,6 +45,8 @@ import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+
+import akka.actor.ActorRef;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

@@ -30,7 +30,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -70,6 +69,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
@@ -111,8 +111,9 @@ public final class CallManager extends UntypedActor {
     private final ActorSystem system;
     private final Configuration configuration;
     private final ServletContext context;
+    private final MediaServerControllerFactory msControllerFactory;
     private final ActorRef conferences;
-    private final ActorRef gateway;
+    private final ActorRef bridges;
     private final ActorRef sms;
     private final SipFactory sipFactory;
     private final DaoManager storage;
@@ -166,14 +167,15 @@ public final class CallManager extends UntypedActor {
     private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
-            final ActorRef gateway, final ActorRef conferences, final ActorRef sms, final SipFactory factory,
-            final DaoManager storage) {
+            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
+            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
         this.context = context;
-        this.gateway = gateway;
+        this.msControllerFactory = msControllerFactory;
         this.conferences = conferences;
+        this.bridges = bridges;
         this.sms = sms;
         this.sipFactory = factory;
         this.storage = storage;
@@ -248,7 +250,7 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, gateway);
+                return new Call(sipFactory, msControllerFactory.provideCallController());
             }
         }));
     }
@@ -264,17 +266,12 @@ public final class CallManager extends UntypedActor {
     }
 
     private void destroy(final Object message) throws Exception {
-        // final DestroyCall destroy = (DestroyCall) message;
-        // ActorRef call = destroy.call();
-        // Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-        // Future<Object> future = (Future<Object>) ask(call, new Hangup(), expires);
-        // Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
-
         final UntypedActorContext context = getContext();
         final DestroyCall request = (DestroyCall) message;
         ActorRef call = request.call();
-        if (call != null)
+        if (call != null) {
             context.stop(request.call());
+        }
     }
 
     private void invite(final Object message) throws IOException, NumberParseException, ServletParseException {
@@ -424,7 +421,8 @@ public final class CallManager extends UntypedActor {
         final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
         response.send();
         // We didn't find anyway to handle the call.
-        String errMsg = "Restcomm cannot process this call because the destination number "+toUser+"cannot be found or there is application attached to that";
+        String errMsg = "Restcomm cannot process this call because the destination number " + toUser
+                + "cannot be found or there is application attached to that";
         sendNotification(errMsg, 11005, "error", true);
 
     }
@@ -512,6 +510,7 @@ public final class CallManager extends UntypedActor {
                 builder.setStorage(storage);
                 builder.setCallManager(self);
                 builder.setConferenceManager(conferences);
+                builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
                 builder.setAccount(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
@@ -574,6 +573,7 @@ public final class CallManager extends UntypedActor {
             builder.setStorage(storage);
             builder.setCallManager(self);
             builder.setConferenceManager(conferences);
+            builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
             builder.setAccount(client.getAccountSid());
             builder.setVersion(client.getApiVersion());
@@ -718,6 +718,7 @@ public final class CallManager extends UntypedActor {
         builder.setStorage(storage);
         builder.setCallManager(self);
         builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
         builder.setVersion(request.version());
@@ -731,26 +732,58 @@ public final class CallManager extends UntypedActor {
         interpreter.tell(new StartInterpreter(request.call()), self);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("unchecked")
     private void update(final Object message) throws Exception {
         final UpdateCallScript request = (UpdateCallScript) message;
         final ActorRef self = self();
         final ActorRef call = request.call();
         final Boolean moveConnectedCallLeg = request.moveConnecteCallLeg();
+
+        // Get first call leg observers
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
+        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
+                Duration.create(10, TimeUnit.SECONDS));
+        List<ActorRef> callObservers = response.get();
+
+        // Get the Voice Interpreter currently handling the call
+        // XXX Unsafe way of retrieving the intended actor!!!
+        ActorRef existingInterpreter = callObservers.iterator().next();
+
         // Get the outbound leg of this call
-        ActorRef outboundCall = request.outboundCall();
+        future = (Future<Object>) ask(existingInterpreter, new GetOutboundCall(), expires);
+        Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+
+        ActorRef outboundCall = null;
+        if (answer instanceof ActorRef) {
+            outboundCall = (ActorRef) answer;
+        }
 
         logger.info("About to start Live Call Modification");
         logger.info("Initial Call path: " + call.path());
-        if (outboundCall != null)
+        if (outboundCall != null) {
             logger.info("Outbound Call path: " + outboundCall.path());
+        }
 
-        // Prepare VoiceInterpreter
+        // Cleanup all observers from both call legs
+        logger.info("Will tell Call actors to stop observing existing Interpreters");
+        call.tell(new StopObserving(), self());
+        if (outboundCall != null) {
+            outboundCall.tell(new StopObserving(), self());
+        }
+        logger.info("Existing observers removed from Calls actors");
+
+        // Cleanup existing Interpreter
+        logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
+        existingInterpreter.tell(new StopInterpreter(true), null);
+
+        // Build a new VoiceInterpreter
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
         builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
         builder.setVersion(request.version());
@@ -760,27 +793,12 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
-        // Interpreter for the first call leg
-        final ActorRef interpreter = builder.build();
-
-        // Get first call leg observers and remove them
-        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
-        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
-                Duration.create(10, TimeUnit.SECONDS));
-        List<ActorRef> callObservers = response.get();
-
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Will tell Call actors to stop observing existing Interpreters");
-            call.tell(new StopObserving(null), self());
-            if (outboundCall != null)
-                outboundCall.tell(new StopObserving(null), self());
-            logger.info("Existing observers removed from Calls actors");
-        }
 
         // Ask first call leg to execute with the new Interpreter
-        interpreter.tell(new StartInterpreter(request.call()), self);
+        final ActorRef interpreter = builder.build();
+        system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), interpreter,
+                new StartInterpreter(request.call()), system.dispatcher());
+        // interpreter.tell(new StartInterpreter(request.call()), self);
         logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
 
         // Check what to do with the second/outbound call leg of the call
@@ -789,30 +807,14 @@ public final class CallManager extends UntypedActor {
                 final ActorRef outboundInterpreter = builder.build();
                 logger.info("About to redirect outbound Call :" + outboundCall.path()
                         + " with 200ms delay to outbound interpreter: " + outboundInterpreter.path());
-                outboundCall.tell(new ChangeCallDirection(), null);
-                // system.scheduler().scheduleOnce(Duration.create(1000, TimeUnit.MILLISECONDS), outboundCall, new
-                // ChangeCallDirection(), system.dispatcher());
                 system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), outboundInterpreter,
                         new StartInterpreter(outboundCall), system.dispatcher());
-                // outboundCall.tell(new ChangeCallDirection(), null);
-                // outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
                 logger.info("New Intepreter for Second call leg: " + outboundInterpreter.path() + " started");
             } else {
                 logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup outboundCall");
                 outboundCall.tell(new Hangup(), null);
                 getContext().stop(outboundCall);
             }
-        }
-
-        // Cleanup existing Interpreter
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
-            StopInterpreter stopInterpreter = StopInterpreter.instance();
-            stopInterpreter.setLiveCallModification(true);
-            system.scheduler().scheduleOnce(Duration.create(6000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter,
-                    system.dispatcher());
-            // existingInterpreter.tell(stopInterpreter, null);
         }
     }
 
@@ -872,12 +874,12 @@ public final class CallManager extends UntypedActor {
                         from = sipFactory.createSipURI(request.from(), uri);
                     }
                 }
-                if (((SipURI)from).getUser()==null || ((SipURI)from).getUser() == "") {
-                        if (uri != null) {
-                            from = sipFactory.createSipURI(request.from(), uri);
-                        } else {
-                            from = (SipURI) sipFactory.createURI(request.from());
-                        }
+                if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
+                    if (uri != null) {
+                        from = sipFactory.createSipURI(request.from(), uri);
+                    } else {
+                        from = (SipURI) sipFactory.createURI(request.from());
+                    }
                 }
                 break;
             }
@@ -1137,7 +1139,7 @@ public final class CallManager extends UntypedActor {
     private Notification notification(final int log, final int error, final String message) {
         String version = configuration.subset("runtime-settings").getString("api-version");
         Sid accountId = null;
-//        Sid callSid = new Sid("CA00000000000000000000000000000000");
+        // Sid callSid = new Sid("CA00000000000000000000000000000000");
         if (createCallRequest != null) {
             accountId = createCallRequest.accountId();
         } else if (switchProxyRequest != null) {
@@ -1150,7 +1152,7 @@ public final class CallManager extends UntypedActor {
         final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
         builder.setSid(sid);
         builder.setAccountSid(accountId);
-//        builder.setCallSid(callSid);
+        // builder.setCallSid(callSid);
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
