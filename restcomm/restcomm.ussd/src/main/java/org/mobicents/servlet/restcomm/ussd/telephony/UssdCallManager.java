@@ -75,7 +75,6 @@ public class UssdCallManager extends UntypedActor {
     private final ActorSystem system;
     private final Configuration configuration;
     private final ServletContext context;
-    private final ActorRef gateway;
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private CreateCall createCallRequest;
@@ -99,13 +98,12 @@ public class UssdCallManager extends UntypedActor {
      * @param factory
      * @param storage
      */
-    public UssdCallManager(Configuration configuration, ServletContext context, ActorSystem system, ActorRef gateway,
+    public UssdCallManager(Configuration configuration, ServletContext context, ActorSystem system,
             ActorRef conferences, ActorRef sms, SipFactory factory, DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
         this.context = context;
-        this.gateway = gateway;
         this.sipFactory = factory;
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
@@ -121,7 +119,7 @@ public class UssdCallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new UssdCall(sipFactory, gateway);
+                return new UssdCall(sipFactory);
             }
         }));
     }

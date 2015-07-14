@@ -248,19 +248,31 @@
 		<remove-original-file>true</remove-original-file>
 	</amazon-s3>
 
-	<!-- The media server manager is responsible for managing the media servers
-		in use by RestComm. The default way to control media servers is using the
-		MGCP stack. The MGCP stack MUST have a name and the following parameters:
-		<stack-address> - The local IP address for the MGCP stack. <stack-port> -
-		The local port for the MGCP stack. <remote-address> - The IP address for
-		the media server. <remote-port> - The port for the media server. <external-address>
-		- Sometimes there is interest to use a different address in the SDP than
-		the IP address the media server is reporting. This parameter if set tells
-		RestComm to patch the Connection attribute in the SDP on behalf of the media
-		server to the specified IP address. Note: RestComm will only do NAT resolution
-		when necessary so if your server already has a routable IP address setting
-		this parameter will have no effect. <max-response-time> - In milliseconds
-		the maximum amount of time to wait for a response from the media server before
+	<!-- Defines how RestComm communicates with the Media Server Control layer. 
+		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents 
+		Media Server using MGCP driver) -->
+	<mscontrol>
+		<compatibility>mms</compatibility>
+		<media-server name="Dialogic XMS">
+			<address>127.0.0.1</address>
+			<port>5060</port>
+			<timeout>500</timeout>
+		</media-server>
+	</mscontrol>
+
+	<!-- The media server manager is responsible for managing the media servers 
+		in use by RestComm. The default way to control media servers is using the 
+		MGCP stack. The MGCP stack MUST have a name and the following parameters: 
+		<stack-address> - The local IP address for the MGCP stack. <stack-port> - 
+		The local port for the MGCP stack. <remote-address> - The IP address for 
+		the media server. <remote-port> - The port for the media server. <external-address> 
+		- Sometimes there is interest to use a different address in the SDP than 
+		the IP address the media server is reporting. This parameter if set tells 
+		RestComm to patch the Connection attribute in the SDP on behalf of the media 
+		server to the specified IP address. Note: RestComm will only do NAT resolution 
+		when necessary so if your server already has a routable IP address setting 
+		this parameter will have no effect. <max-response-time> - In milliseconds 
+		the maximum amount of time to wait for a response from the media server before 
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
 		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MediaGateway"

@@ -51,6 +51,36 @@
 				</or>
 			</pattern>
 		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>DlgcMsMonitorServlet</servlet-name>
+			<pattern>
+				<and>
+					<equal>
+						<var>request.method</var>
+						<value>INVITE</value>
+					</equal>
+					<equal>
+						<var>request.to.uri.user</var>
+						<value></value>
+					</equal>
+				</and>
+			</pattern>
+		</servlet-mapping>
+		<servlet-mapping>
+			<servlet-name>DlgcSipServlet</servlet-name>
+			<pattern>
+				<and>
+					<equal>
+						<var>request.method</var>
+						<value>INVITE</value>
+					</equal>
+					<equal>
+						<var>request.to.uri.user</var>
+						<value></value>
+					</equal>
+				</and>
+			</pattern>
+		</servlet-mapping>
 	</servlet-selection>
 
 	<servlet>
@@ -126,6 +156,40 @@
 	<listener>
 		<listener-class>
 			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
+		</listener-class>
+	</listener>
+
+	<servlet>
+		<description>XMS Keep Alive Monitor</description>
+		<display-name>KeepAliveMonitor</display-name>
+		<servlet-name>DlgcMsMonitorServlet</servlet-name>
+		<servlet-class>com.vendor.dialogic.javax.media.mscontrol.sip.DlgcMsMonitorServlet
+		</servlet-class>
+		<load-on-startup>7</load-on-startup>
+	</servlet>
+	<listener>
+		<listener-class>
+			com.vendor.dialogic.javax.media.mscontrol.sip.DlgcMsMonitorServlet
+		</listener-class>
+	</listener>
+
+	<servlet>
+		<description>Component receiving SIP request and response from XMS
+		</description>
+		<display-name>DlgcSipServlet</display-name>
+		<servlet-name>DlgcSipServlet</servlet-name>
+		<servlet-class>com.vendor.dialogic.javax.media.mscontrol.sip.DlgcSipServlet
+		</servlet-class>
+		<load-on-startup>8</load-on-startup>
+	</servlet>
+	<listener>
+		<listener-class>
+			com.vendor.dialogic.javax.media.mscontrol.sip.DlgcSipServlet
+		</listener-class>
+	</listener>
+	<listener>
+		<listener-class>
+			org.mobicents.servlet.restcomm.mscontrol.xms.servlet.listener.XmsServletListener
 		</listener-class>
 	</listener>
 </sip-app>

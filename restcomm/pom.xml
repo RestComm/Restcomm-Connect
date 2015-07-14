@@ -126,6 +126,9 @@
 		<module>restcomm.tts.acapela</module>
 		<module>restcomm.mgcp</module>
 		<module>restcomm.fax</module>
+               <module>restcomm.mscontrol.api</module>
+               <module>restcomm.mscontrol.mms</module>
+               <module>restcomm.mscontrol.xms</module>
 		<module>restcomm.sms.api</module>
 		<module>restcomm.telephony.api</module>
 		<module>restcomm.interpreter</module>
