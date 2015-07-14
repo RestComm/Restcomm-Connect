@@ -7,12 +7,10 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.3.1-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.telestax.servlet</groupId>
 	<artifactId>restcomm.extension.api</artifactId>
-	<version>7.3.1-SNAPSHOT</version>
 	<name>restcomm.extension.api</name>
 
 	<properties>
