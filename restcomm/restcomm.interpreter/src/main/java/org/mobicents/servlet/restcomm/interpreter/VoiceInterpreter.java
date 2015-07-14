@@ -231,6 +231,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, finished));
         transitions.add(new Transition(acquiringCallInfo, acquiringCallMediaGroup));
         transitions.add(new Transition(initializingCall, acquiringCallMediaGroup));
+        transitions.add(new Transition(initializingCall, finishDialing));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
         transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
@@ -1758,8 +1759,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-
-            Attribute attribute = verb.attribute("action");
+            Attribute attribute = null;
+           if(verb !=null) {
+                 attribute = verb.attribute("action");
+            }
 
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
                 if (message instanceof ReceiveTimeout)
@@ -1844,7 +1847,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
-            parser.tell(next, source);
+            if(parser !=null) {
+                parser.tell(next, source);
+            }
+
             dialChildren = null;
             outboundCall = null;
         }
