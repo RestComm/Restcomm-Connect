@@ -59,6 +59,7 @@ public final class SmppService extends UntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ServletContext servletContext;
+
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
 
@@ -86,6 +87,7 @@ public final class SmppService extends UntypedActor {
 
         this.initializeSmppConnections();
     }
+
 
     @Override
     public void onReceive(Object message) throws Exception {
@@ -200,5 +202,7 @@ public final class SmppService extends UntypedActor {
         logger.info("SMPP Service started");
 
     }
+
+
 
 }

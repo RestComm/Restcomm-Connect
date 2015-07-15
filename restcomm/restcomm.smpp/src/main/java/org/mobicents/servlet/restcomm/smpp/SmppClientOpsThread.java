@@ -21,18 +21,27 @@
 
 package org.mobicents.servlet.restcomm.smpp;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipServletRequest;
+
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
+import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.PduAsyncResponse;
 import com.cloudhopper.smpp.SmppSession;
 import com.cloudhopper.smpp.SmppSessionConfiguration;
 import com.cloudhopper.smpp.SmppSessionHandler;
 import com.cloudhopper.smpp.impl.DefaultSmppClient;
 import com.cloudhopper.smpp.impl.DefaultSmppSession;
+import com.cloudhopper.smpp.pdu.DeliverSm;
 import com.cloudhopper.smpp.pdu.EnquireLink;
 import com.cloudhopper.smpp.pdu.EnquireLinkResp;
 import com.cloudhopper.smpp.pdu.PduRequest;
@@ -45,9 +54,12 @@ import com.cloudhopper.smpp.type.UnrecoverablePduException;
  * @author amit bhayani
  *
  */
-public class SmppClientOpsThread implements Runnable {
+public class SmppClientOpsThread implements Runnable{
 
-    private static final Logger logger = Logger.getLogger(SmppClientOpsThread.class);
+
+
+    private static final Logger logger = Logger
+            .getLogger(SmppClientOpsThread.class);
 
     private static final long SCHEDULE_CONNECT_DELAY = 1000 * 30; // 30 sec
 
@@ -55,9 +67,13 @@ public class SmppClientOpsThread implements Runnable {
 
     private Object waitObject = new Object();
 
-    private final DefaultSmppClient clientBootstrap;
+    private final DefaultSmppClient clientBootstrap ;
+
+
 
     protected volatile boolean started = true;
+
+
 
     /**
      *
@@ -66,8 +82,10 @@ public class SmppClientOpsThread implements Runnable {
         this.clientBootstrap = clientBootstrap;
     }
 
+
     /**
-     * @param started the started to set
+     * @param started
+     *            the started to set
      */
     protected void setStarted(boolean started) {
         this.started = started;
@@ -79,8 +97,9 @@ public class SmppClientOpsThread implements Runnable {
 
     protected void scheduleConnect(Smpp esme) {
         synchronized (this.pendingChanges) {
-            this.pendingChanges.add(new ChangeRequest(esme, ChangeRequest.CONNECT, System.currentTimeMillis()
-                    + SCHEDULE_CONNECT_DELAY));
+            this.pendingChanges.add(new ChangeRequest(esme,
+                    ChangeRequest.CONNECT, System.currentTimeMillis()
+                            + SCHEDULE_CONNECT_DELAY));
         }
 
         synchronized (this.waitObject) {
@@ -91,8 +110,9 @@ public class SmppClientOpsThread implements Runnable {
 
     protected void scheduleEnquireLink(Smpp esme) {
         synchronized (this.pendingChanges) {
-            this.pendingChanges.add(new ChangeRequest(esme, ChangeRequest.ENQUIRE_LINK, System.currentTimeMillis()
-                    + esme.getEnquireLinkDelay()));
+            this.pendingChanges.add(new ChangeRequest(esme,
+                    ChangeRequest.ENQUIRE_LINK, System.currentTimeMillis()
+                            + esme.getEnquireLinkDelay()));
         }
 
         synchronized (this.waitObject) {
@@ -114,30 +134,32 @@ public class SmppClientOpsThread implements Runnable {
                     while (changes.hasNext()) {
                         ChangeRequest change = changes.next();
                         switch (change.getType()) {
-                            case ChangeRequest.CONNECT:
-                                if (!change.getSmpp().isStarted()) {
+                        case ChangeRequest.CONNECT:
+                            if (!change.getSmpp().isStarted()) {
+                                pendingChanges.remove(change);
+                                // changes.remove();
+                            } else {
+                                if (change.getExecutionTime() <= System
+                                        .currentTimeMillis()) {
                                     pendingChanges.remove(change);
-                                    //changes.remove();
-                                } else {
-                                    if (change.getExecutionTime() <= System.currentTimeMillis()) {
-                                        pendingChanges.remove(change);
-                                        //changes.remove();
-                                        initiateConnection(change.getSmpp());
-                                    }
+                                    // changes.remove();
+                                    initiateConnection(change.getSmpp());
                                 }
-                                break;
-                            case ChangeRequest.ENQUIRE_LINK:
-                                if (!change.getSmpp().isStarted()) {
+                            }
+                            break;
+                        case ChangeRequest.ENQUIRE_LINK:
+                            if (!change.getSmpp().isStarted()) {
+                                pendingChanges.remove(change);
+                                // changes.remove();
+                            } else {
+                                if (change.getExecutionTime() <= System
+                                        .currentTimeMillis()) {
                                     pendingChanges.remove(change);
-                                    //changes.remove();
-                                } else {
-                                    if (change.getExecutionTime() <= System.currentTimeMillis()) {
-                                        pendingChanges.remove(change);
-                                        //changes.remove();
-                                        enquireLink(change.getSmpp());
-                                    }
+                                    // changes.remove();
+                                    enquireLink(change.getSmpp());
                                 }
-                                break;
+                            }
+                            break;
                         }
                     }
                 }
@@ -147,7 +169,8 @@ public class SmppClientOpsThread implements Runnable {
                 }
 
             } catch (InterruptedException e) {
-                logger.error("Error while looping SmppClientOpsThread thread", e);
+                logger.error("Error while looping SmppClientOpsThread thread",
+                        e);
             }
         }// while
 
@@ -165,7 +188,8 @@ public class SmppClientOpsThread implements Runnable {
 
         if (smppSession != null && smppSession.isBound()) {
             try {
-                EnquireLinkResp enquireLinkResp1 = smppSession.enquireLink(new EnquireLink(), 10000);
+                EnquireLinkResp enquireLinkResp1 = smppSession.enquireLink(
+                        new EnquireLink(), 10000);
 
                 // all ok lets scehdule another ENQUIRE_LINK
                 this.scheduleEnquireLink(esme);
@@ -173,19 +197,21 @@ public class SmppClientOpsThread implements Runnable {
 
             } catch (RecoverablePduException e) {
                 logger.warn(
-                        String.format("RecoverablePduException while sending the ENQURE_LINK for ESME SystemId=%s",
+                        String.format(
+                                "RecoverablePduException while sending the ENQURE_LINK for ESME SystemId=%s",
                                 esme.getSystemId()), e);
 
                 // Recoverabel exception is ok
                 // all ok lets schedule another ENQUIRE_LINK
-                this.scheduleEnquireLink(esme);
+                this.scheduleEnquireLink(esme) ;
                 return;
 
             } catch (Exception e) {
 
                 logger.error(
-                        String.format("Exception while trying to send ENQUIRE_LINK for ESME SystemId=%s", esme.getSystemId()),
-                        e);
+                        String.format(
+                                "Exception while trying to send ENQUIRE_LINK for ESME SystemId=%s",
+                                esme.getSystemId()), e);
                 // For all other exceptions lets close session and re-try
                 // connect
                 smppSession.close();
@@ -194,8 +220,10 @@ public class SmppClientOpsThread implements Runnable {
 
         } else {
             // This should never happen
-            logger.warn(String.format("Sending ENQURE_LINK fialed for ESME SystemId=%s as SmppSession is =%s !",
-                    esme.getSystemId(), (smppSession == null ? null : smppSession.getStateName())));
+            logger.warn(String
+                    .format("Sending ENQURE_LINK fialed for ESME SystemId=%s as SmppSession is =%s !",
+                            esme.getSystemId(), (smppSession == null ? null
+                                    : smppSession.getStateName())));
 
             if (smppSession != null) {
                 smppSession.close();
@@ -211,7 +239,8 @@ public class SmppClientOpsThread implements Runnable {
         }
 
         SmppSession smppSession = esme.getSmppSession();
-        if ((smppSession != null && smppSession.isBound()) || (smppSession != null && smppSession.isBinding())) {
+        if ((smppSession != null && smppSession.isBound())
+                || (smppSession != null && smppSession.isBinding())) {
             // If process has already begun lets not do it again
             return;
         }
@@ -228,7 +257,10 @@ public class SmppClientOpsThread implements Runnable {
             config0.setConnectTimeout(esme.getConnectTimeout());
             config0.setSystemId(esme.getSystemId());
             config0.setPassword(esme.getPassword());
-            config0.getLoggingOptions().setLogBytes(true);
+            //this will disable  Enquire Link heartbeat logs printed to the console
+            //this can be put into the restcomm.xml for Admin use
+            config0.getLoggingOptions().setLogBytes(false);
+            config0.getLoggingOptions().setLogPdu(false);
             // to enable monitoring (request expiration)
             config0.setRequestExpiryTimeout(esme.getRequestExpiryTimeout());
             config0.setWindowMonitorInterval(esme.getWindowMonitorInterval());
@@ -237,7 +269,8 @@ public class SmppClientOpsThread implements Runnable {
             Address address = esme.getAddress();
             config0.setAddressRange(address);
 
-            SmppSessionHandler sessionHandler = new ClientSmppSessionHandler(esme);
+            SmppSessionHandler sessionHandler = new ClientSmppSessionHandler(
+                    esme);
 
             session0 = clientBootstrap.bind(config0, sessionHandler);
 
@@ -248,7 +281,8 @@ public class SmppClientOpsThread implements Runnable {
             this.scheduleEnquireLink(esme);
         } catch (Exception e) {
             logger.error(
-                    String.format("Exception when trying to bind client SMPP connection for ESME systemId=%s",
+                    String.format(
+                            "Exception when trying to bind client SMPP connection for ESME systemId=%s",
                             esme.getSystemId()), e);
             if (session0 != null) {
                 session0.close();
@@ -257,9 +291,12 @@ public class SmppClientOpsThread implements Runnable {
         }
     }
 
-    protected class ClientSmppSessionHandler implements SmppSessionHandler {
+    //*************Inner Class******************
 
-        private final Smpp esme;
+    protected class ClientSmppSessionHandler  implements SmppSessionHandler  {
+
+        //private final Smpp esme ;
+        private  Smpp esme = null;
 
         /**
          * @param esme
@@ -283,7 +320,8 @@ public class SmppClientOpsThread implements Runnable {
 
         @Override
         public void fireChannelUnexpectedlyClosed() {
-            logger.error("ChannelUnexpectedlyClosed for Smpp " + this.esme.getName()
+            logger.error("ChannelUnexpectedlyClosed for Smpp "
+                    + this.esme.getName()
                     + " Closing Smpp session and restrting BIND process again");
             this.esme.getSmppSession().close();
 
@@ -292,45 +330,70 @@ public class SmppClientOpsThread implements Runnable {
         }
 
         @Override
-        public void fireExpectedPduResponseReceived(PduAsyncResponse pduAsyncResponse) {
-            // TODO : SMPP Response received. Does RestComm need confirmation for this?
-            logger.info("ExpectedPduResponseReceived received for Smpp " + this.esme.getName() + " PduAsyncResponse="
+        public void fireExpectedPduResponseReceived(
+                PduAsyncResponse pduAsyncResponse) {
+            // TODO : SMPP Response received. Does RestComm need confirmation
+            // for this?
+            logger.info("ExpectedPduResponseReceived received for Smpp "
+                    + this.esme.getName() + " PduAsyncResponse="
                     + pduAsyncResponse);
         }
 
         @Override
         public void firePduRequestExpired(PduRequest pduRequest) {
-            // TODO : SMPP request Expired. RestComm needs to notify Application about SMS failure
-            logger.warn("PduRequestExpired for Smpp " + this.esme.getName() + " PduRequest=" + pduRequest);
+            // TODO : SMPP request Expired. RestComm needs to notify Application
+            // about SMS failure
+            logger.warn("PduRequestExpired for Smpp " + this.esme.getName()
+                    + " PduRequest=" + pduRequest);
         }
 
         @Override
         public PduResponse firePduRequestReceived(PduRequest pduRequest) {
-            // TODO : SMPP request received. Let RestComm know so it calls coresponding App
-            logger.info("PduRequest received for Smpp " + this.esme.getName() + " PduRequest=" + pduRequest);
+            // TODO : SMPP request received. Let RestComm know so it calls
+            // coresponding App
+            logger.info("PduRequest received for Smpp " + this.esme.getName()
+                    + " PduRequest=" + pduRequest);
 
             PduResponse response = pduRequest.createResponse();
+            DeliverSm deliverSm = (DeliverSm) pduRequest;
 
-            // do any logic here
+            String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+            String destSmppAddress = deliverSm.getDestAddress().getAddress();
+            String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
+
+            //send received SMPP PDU message to restcomm
+            try {
+                sendSmppMessageToRestcomm (decodedPduMessage, destSmppAddress, sourceSmppAddress ) ;
+            } catch (IOException | ServletException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+
 
             return response;
+
         }
+
+
 
         @Override
         public void fireRecoverablePduException(RecoverablePduException e) {
-            logger.warn("RecoverablePduException received for Smpp " + this.esme.getName(), e);
+            logger.warn("RecoverablePduException received for Smpp "
+                    + this.esme.getName(), e);
         }
 
         @Override
         public void fireUnexpectedPduResponseReceived(PduResponse pduResponse) {
-            logger.warn("UnexpectedPduResponseReceived received for Smpp " + this.esme.getName() + " PduResponse="
-                    + pduResponse);
+            logger.warn("UnexpectedPduResponseReceived received for Smpp "
+                    + this.esme.getName() + " PduResponse=" + pduResponse);
         }
 
         @Override
         public void fireUnknownThrowable(Throwable e) {
             logger.error("UnknownThrowable for Smpp " + this.esme.getName()
-                    + " Closing Smpp session and restrting BIND process again", e);
+                    + " Closing Smpp session and restrting BIND process again",
+                    e);
             // TODO is this ok?
 
             this.esme.getSmppSession().close();
@@ -342,8 +405,11 @@ public class SmppClientOpsThread implements Runnable {
 
         @Override
         public void fireUnrecoverablePduException(UnrecoverablePduException e) {
-            logger.error("UnrecoverablePduException for Smpp " + this.esme.getName()
-                    + " Closing Smpp session and restrting BIND process again", e);
+            logger.error(
+                    "UnrecoverablePduException for Smpp "
+                            + this.esme.getName()
+                            + " Closing Smpp session and restrting BIND process again",
+                    e);
 
             this.esme.getSmppSession().close();
 
@@ -351,6 +417,35 @@ public class SmppClientOpsThread implements Runnable {
             scheduleConnect(this.esme);
         }
 
+
     }
+
+    public void sendSmppMessageToRestcomm (String smppMessage, String destSmppAddress, String sourceSmppAddress) throws IOException, ServletException{
+
+        SmppServiceProxy ssp = new SmppServiceProxy();
+        ServletContext context = ssp.getSmppServletContext();
+        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+
+        //get the IP address of restcomm instance from the restcomm.xml file
+        String configIp = configuration.subset("runtime-settings").getString("external-ip");
+        String restcommPort = "5080";
+        String ipAddress = "@" + configIp + ":" + restcommPort; //@IP:5080
+
+       // logger.error("IP address from restcomm.xml file" + ip);
+
+       SipApplicationSession sipAppSession = ssp.getSmppSipFactory().createApplicationSession();
+        String smppOriginalMessage = smppMessage ;
+        String method = "MESSAGE";
+        String from = "sip:" + sourceSmppAddress + ipAddress;
+        String to =  "sip:" + destSmppAddress + ipAddress;
+              javax.servlet.sip.Address factoryTo = ssp.getSmppSipFactory().createAddress(to);
+             javax.servlet.sip.Address  factoryFrom = ssp.getSmppSipFactory().createAddress(from);
+             SipServletRequest sipRequest = ssp.getSmppSipFactory().createRequest(sipAppSession, method, factoryFrom, factoryTo);
+             sipRequest.setContent(smppOriginalMessage, "text/html; charset=UTF-8");
+             //sipRequest.getSession().setHandler("SmsService");
+             sipRequest.send();
+
+    }
+
 
 }
