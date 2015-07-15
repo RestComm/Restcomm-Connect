@@ -240,6 +240,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String finishOnKey;
     int numberOfDigits = Short.MAX_VALUE;
     StringBuffer collectedDigits;
+    //Monitoring service
+    ActorRef monitoring;
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
@@ -745,6 +747,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final SpeechSynthesizerResponse<SpeechSynthesizerInfo> response = (SpeechSynthesizerResponse<SpeechSynthesizerInfo>) message;
             synthesizerInfo = response.get();
             call.tell(new Observe(source), source);
+            //Enable Monitoring Service for the call
+            if (monitoring != null)
+               call.tell(new Observe(monitoring), source);
             call.tell(new GetCallInfo(), source);
         }
     }
