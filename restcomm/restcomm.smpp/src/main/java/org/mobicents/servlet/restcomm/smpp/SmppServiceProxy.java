@@ -33,9 +33,8 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.sms.SmsService;
-import org.mobicents.servlet.restcomm.sms.SmsServiceProxy;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -50,17 +49,43 @@ import akka.actor.UntypedActorFactory;
 public class SmppServiceProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
 
+    private static final Logger logger = Logger.getLogger(SmppServiceProxy.class);
+
     private ActorSystem system;
     private ActorRef service;
+    private static ServletContext context;
+    private static ServletContext  smppServletContext;
+    private static SipFactory  smppSipFactory;
+    private String servletContextRealPath;
+    private SipFactory factory;
 
-    private ServletContext context;
+
 
     public SmppServiceProxy() {
         super();
     }
 
+    public static void setSmppServletContext(ServletContext context){
+         smppServletContext = context;
+    }
+
+    public ServletContext getSmppServletContext(){
+        return this.smppServletContext;
+    }
+
+    public static void setSmppSipFactory (SipFactory sipFactory){
+        smppSipFactory = sipFactory;
+    }
+
+    public SipFactory getSmppSipFactory(){
+        return this.smppSipFactory;
+    }
+
+
+
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
+
         service.tell(request, null);
     }
 
@@ -80,18 +105,31 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
         }));
     }
 
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
-        if (event.getSipServlet().getClass().equals(SmsServiceProxy.class)) {
-            context = event.getServletContext();
-            final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
-            Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-            // configuration = configuration.subset("sms-aggregator");
-            final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-            system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
-            service = service(configuration, factory, storage);
-            context.setAttribute(SmsService.class.getName(), service);
+
+         if (event.getSipServlet().getClass().equals(SmppServiceProxy.class)) {
+                 //used to persist the servlet context
+                 setSmppServletContext(event.getServletContext());
+
+                 context = event.getServletContext();
+                 factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+
+                 //used to persist the sipFactory
+                 setSmppSipFactory (factory);
+
+                    Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+                    // configuration = configuration.subset("sms-aggregator");
+                    final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+                    system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+                    service = service(configuration, factory, storage);
+                    context.setAttribute(SmppService.class.getName(), service);
+
         }
     }
+
+
+
 
 }
