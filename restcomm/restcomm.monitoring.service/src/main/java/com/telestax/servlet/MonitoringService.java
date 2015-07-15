@@ -46,7 +46,7 @@ public class MonitoringService extends UntypedActor{
     private final Map<String, CallStateChanged.State> callStateMap;
 
     public MonitoringService() {
-        this.callMap = new ConcurrentHashMap<String, ActorRef>(); 
+        this.callMap = new ConcurrentHashMap<String, ActorRef>();
         this.callDetailsMap = new ConcurrentHashMap<String, CallInfo>();
         this.callStateMap = new ConcurrentHashMap<String, CallStateChanged.State>();
     }
