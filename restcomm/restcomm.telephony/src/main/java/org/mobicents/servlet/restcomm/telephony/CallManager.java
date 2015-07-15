@@ -93,6 +93,7 @@ import akka.util.Timeout;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.telestax.servlet.MonitoringService;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -117,6 +118,7 @@ public final class CallManager extends UntypedActor {
     private final ActorRef sms;
     private final SipFactory sipFactory;
     private final DaoManager storage;
+    private final ActorRef monitoring;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -242,6 +244,8 @@ public final class CallManager extends UntypedActor {
         } else {
             allowFallbackToPrimary = false;
         }
+        //Monitoring Service
+        this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
     }
 
     private ActorRef call() {
@@ -533,6 +537,7 @@ public final class CallManager extends UntypedActor {
                     builder.setStatusCallback(number.getStatusCallback());
                     builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 }
+                builder.setMonitoring(monitoring);
                 final ActorRef interpreter = builder.build();
                 final ActorRef call = call();
                 final SipApplicationSession application = request.getApplicationSession();
@@ -593,6 +598,7 @@ public final class CallManager extends UntypedActor {
                 builder.setFallbackUrl(client.getVoiceFallbackUrl());
                 builder.setFallbackMethod(client.getVoiceFallbackMethod());
             }
+            builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
             final ActorRef call = call();
             final SipApplicationSession application = request.getApplicationSession();
@@ -728,6 +734,7 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
+        builder.setMonitoring(monitoring);
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);
     }

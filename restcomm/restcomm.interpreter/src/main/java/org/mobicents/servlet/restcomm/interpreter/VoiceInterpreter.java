@@ -196,7 +196,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage) {
+            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -400,6 +400,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         uri = uri + accountId.toString();
         this.cache = cache(path, uri);
         this.downloader = downloader();
+        this.monitoring = monitoring;
     }
 
     private boolean is(State state) {
