@@ -28,6 +28,11 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     private void init() {
         keycloakConfigurator = (KeycloakConfigurator) context.getAttribute(KeycloakConfigurator.class.getName());
     }
+    
+    @GET
+    public Response getMode() {
+        
+    }
 
     @GET
     @Path("/restcomm-ui.json")

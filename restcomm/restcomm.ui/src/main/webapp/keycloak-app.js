@@ -10,65 +10,60 @@ var logout = function(){
 
 
 angular.element(document).ready(function ($http) {
-	var keycloakAuth = new Keycloak('/restcomm/keycloak/config/restcomm-ui.json');
-    auth.loggedIn = false;
+	$http.get("https://192.168.1.39:8443/restcomm/keycloak/config/restcomm-ui.json")
+	.success(function (data, status) {
+		angular.module("rcApp").constant("authMode","cloud");
+		console.log("Retrieved restcomm-ui.json");
+    
+		var keycloakAuth = new Keycloak('https://192.168.1.39:8443/restcomm/keycloak/config/restcomm-ui.json');
+		auth.loggedIn = false;
 
-    keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
-        auth.loggedIn = true;
-        auth.authz = keycloakAuth;
-        auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/restcomm-management/index.html";
-        angular.module('rcApp').factory('Auth', function() {
-            return auth;
-        });
-        
-        keycloakAuth.loadUserProfile().success(function () {
+		keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
+			auth.loggedIn = true;
+			auth.authz = keycloakAuth;
+			auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/restcomm-management/index.html";
+			angular.module('rcApp').factory('Auth', function() {
+				return auth;
+			});
 			
-			// try importing the logged user into Restcomm 
-			var initInjector = angular.injector(["ng"]);
-	        var $myhttp = initInjector.get("$http");
-			
-			$myhttp({
-				method: 'GET',
-				url: '/restcomm/2012-04-24/Accounts.json/' + keycloakAuth.profile.username ,
-				headers: {
-					Authorization: 'Bearer ' + keycloakAuth.token
-				}
-			}).success(function(response) {
-	        	console.log("Retrieved account info for user " + keycloakAuth.profile.username);
-	        	auth.restcommAccount = response;
-	        	angular.bootstrap(document, ["rcApp"]);
-	        }).error(function(errorResponse) {
-	            // Handle error case
-	        	console.log("Error account info for user " + keycloakAuth.profile.username);
-	        });
-			
-			/*
-			$myhttp({
-				method: 'GET',
-				url: '/restcomm/2012-04-24/Accounts.json/import',
-				headers: {
-					Authorization: 'Bearer ' + keycloakAuth.token
-				}
-			}).success(function(response) {
-	        	console.log("Succesfully triggered user import. Starting application");
-	        	angular.bootstrap(document, ["rcApp"]);
-	            //myApplication.constant("config", response.data);
-	        }).error(function(errorResponse) {
-	            // Handle error case
-	        	console.log("Error triggering user import from keycloak to restcomm");
-	        });
-	        * */
+			keycloakAuth.loadUserProfile().success(function () {
+				// try importing the logged user into Restcomm 
+				var initInjector = angular.injector(["ng"]);
+				var $myhttp = initInjector.get("$http");
+				
+				$myhttp({
+					method: 'GET',
+					url: '/restcomm/2012-04-24/Accounts.json/' + keycloakAuth.profile.username ,
+					headers: {
+						Authorization: 'Bearer ' + keycloakAuth.token
+					}
+				}).success(function(response) {
+					console.log("Retrieved account info for user " + keycloakAuth.profile.username);
+					auth.restcommAccount = response;
+					angular.bootstrap(document, ["rcApp"]);
+				}).error(function(errorResponse) {
+					// Handle error case
+					console.log("Error account info for user " + keycloakAuth.profile.username);
+				});
+				
+			});
+			console.log(keycloakAuth.profile);      
+		}).error(function (a, b) {
+				window.location.reload();
 		});
-        console.log(keycloakAuth.profile);
-        //console.log(profile);
-        //console.log("username: " + keycloakAuth.username);
-        //console.log(keycloakAuth.token);
-        //console.log("Will now bootstrap rcApp module");
-        
-        
-    }).error(function (a, b) {
-            window.location.reload();
-        });
+		
+	})
+	.error(function (response) {
+		// 404 here means that restcomm is not hookd up to identity.restcomm.com
+		if (response.status == 404) {
+			angular.module("rcApp").constant("authMode","init");
+			angular.module('rcApp').factory('Auth', function() {
+				return auth;
+			});
+			angular.bootstrap(document, ["rcApp"]);
+		}
+		console.log("Failed retrieving restcomm-ui.json " + data.status);
+	});
 
 });
 
@@ -94,9 +89,12 @@ angular.module('rcApp').factory('authInterceptor', function($q, Auth) {
 
 
 
-angular.module('rcApp').config(function($httpProvider) {
+angular.module('rcApp').config(function($httpProvider, authMode) {
     $httpProvider.responseInterceptors.push('errorInterceptor');
-    $httpProvider.interceptors.push('authInterceptor');
+    if (authMode != 'init') {
+    	// if the instance is not bound to keycloak do not add token
+    	$httpProvider.interceptors.push('authInterceptor');
+	}
 
 });
 
