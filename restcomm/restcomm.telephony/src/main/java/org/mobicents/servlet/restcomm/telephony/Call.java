@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -87,13 +86,13 @@ import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.SdpUtils;
 
-import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
