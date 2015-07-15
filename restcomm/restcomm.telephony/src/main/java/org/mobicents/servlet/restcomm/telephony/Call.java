@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -1108,11 +1109,16 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
-        final ActorRef observer = message.observer();
+    private void onStopObserving(StopObserving stopObservingMessage, ActorRef self, ActorRef sender) throws Exception {
+        final ActorRef observer = stopObservingMessage.observer();
         if (observer != null) {
+            observer.tell(stopObservingMessage, self);
             this.observers.remove(observer);
         } else {
+            for (ActorRef observerRef : observers) {
+                observerRef.tell(stopObservingMessage, self);
+                this.observers.remove(observerRef);
+            }
             this.observers.clear();
         }
     }
@@ -1548,4 +1554,13 @@ public final class Call extends UntypedActor {
         }
     }
 
+    @Override
+    public void postStop() {
+        try {
+            onStopObserving(new StopObserving(), self(), null);
+        } catch (Exception exception) {
+            logger.info("Exception during Call postStop while trying to remove observers: "+exception);
+        }
+        super.postStop();
+    }
 }
