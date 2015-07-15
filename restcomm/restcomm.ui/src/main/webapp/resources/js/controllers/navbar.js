@@ -2,13 +2,14 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, SessionService, Notifications, RCommAccounts) {
+rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, SessionService, Notifications, RCommAccounts, authMode) {
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
     $rootScope.location = $location.path();
   });
-
+  
+  $scope.authMode = authMode;
   $scope.auth = AuthService;
   $scope.sid = SessionService.get('sid');
 

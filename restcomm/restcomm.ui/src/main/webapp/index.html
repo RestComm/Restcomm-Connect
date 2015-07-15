@@ -159,7 +159,23 @@
                             <span class="navbar-brand"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
                         </div>
                         <i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
-                        <div class="navbar-collapse collapse">
+                        
+                        <!-- If the instance has not been registered -->
+                        <div ng-if="authMode == 'init'" class="navbar-collapse collapse">
+                            <ul class="nav navbar-nav">
+                                <li><a> </a></li>
+                            </ul>
+                            <ul class="nav navbar-nav pull-right">
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> Guest <b class="caret"></b></a>
+                                    <ul id="rightMenu" class="dropdown-menu pull-right">
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div><!--/.nav-collapse -->
+                        
+                        <!-- Normal path: if the instnace is registered, normal path -->
+                        <div ng-if="authMode != 'init'" class="navbar-collapse collapse">
                             <div ng-show="auth.isLoggedIn()">
                             <ul class="nav navbar-nav">
                                 <li><a> </a></li>

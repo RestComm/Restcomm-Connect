@@ -17,42 +17,52 @@ var rcMod = angular.module('rcApp', [
   'ngSanitize'
 ]);
 
-rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
-  $routeProvider.
-    when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
-    when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
-    when('/profile/:accountSid', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
-    when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl'}).
-    when('/numbers', {redirectTo: '/numbers/incoming'}).
-    when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl'}).
-    when('/register', {templateUrl: 'modules/register.html', controller: 'RegisterCtrl'}). // If wanted later, so user can register from the manager
-    when('/numbers/register-incoming', {
-      templateUrl: 'modules/numbers-incoming-register.html',
-      controller: 'NumberRegisterCtrl',
-      resolve: {
-        $modalInstance : function() { return undefined; },
-        allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
-        providerCountries: function(RCommAvailableNumbers, AuthService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:AuthService.getLoggedSid()}).$promise; }
-      }
-    }).
-    when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).
-    when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl'}).
-    when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, localApps: function (rappService) { return rappService.refreshLocalApps();} }}).
-    when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl'}).
-    when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl'}).
-    when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl'}).
-    when('/logs', {redirectTo: '/logs/calls'}).
-    when('/logs/calls', {templateUrl: 'modules/logs-calls.html', controller: 'LogsCallsCtrl'}).
-    when('/logs/calls/:callSid', {templateUrl: 'modules/logs-calls-details.html', controller: 'LogsCallsDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, callSid: function() {} }}).
-    when('/logs/messages', {templateUrl: 'modules/logs-messages.html', controller: 'LogsMessagesCtrl'}).
-    when('/logs/recordings', {templateUrl: 'modules/logs-recordings.html', controller: 'LogsRecordingsCtrl'}).
-    when('/logs/transcriptions', {templateUrl: 'modules/logs-transcriptions.html', controller: 'LogsTranscriptionsCtrl'}).
-    when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl'}).
-    when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
-    when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
-    otherwise({redirectTo: '/dashboard'});
-
-  // $locationProvider.html5Mode(true);
+// authMode reflects whether Restcomm is hooked up to the cloud or not. It is one of 'init-cloud-standalone'
+rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($routeProvider, $locationProvider, authMode) {
+  
+  console.log("auth mode: " + authMode);
+  
+  if (authMode == 'cloud') {
+	  $routeProvider.
+		when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
+		when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
+		when('/profile/:accountSid', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
+		when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl'}).
+		when('/numbers', {redirectTo: '/numbers/incoming'}).
+		when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl'}).
+		when('/register', {templateUrl: 'modules/register.html', controller: 'RegisterCtrl'}). // If wanted later, so user can register from the manager
+		when('/numbers/register-incoming', {
+		  templateUrl: 'modules/numbers-incoming-register.html',
+		  controller: 'NumberRegisterCtrl',
+		  resolve: {
+			$modalInstance : function() { return undefined; },
+			allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
+			providerCountries: function(RCommAvailableNumbers, AuthService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:AuthService.getLoggedSid()}).$promise; }
+		  }
+		}).
+		when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).
+		when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl'}).
+		when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, localApps: function (rappService) { return rappService.refreshLocalApps();} }}).
+		when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl'}).
+		when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl'}).
+		when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl'}).
+		when('/logs', {redirectTo: '/logs/calls'}).
+		when('/logs/calls', {templateUrl: 'modules/logs-calls.html', controller: 'LogsCallsCtrl'}).
+		when('/logs/calls/:callSid', {templateUrl: 'modules/logs-calls-details.html', controller: 'LogsCallsDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, callSid: function() {} }}).
+		when('/logs/messages', {templateUrl: 'modules/logs-messages.html', controller: 'LogsMessagesCtrl'}).
+		when('/logs/recordings', {templateUrl: 'modules/logs-recordings.html', controller: 'LogsRecordingsCtrl'}).
+		when('/logs/transcriptions', {templateUrl: 'modules/logs-transcriptions.html', controller: 'LogsTranscriptionsCtrl'}).
+		when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl'}).
+		when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
+		when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
+		otherwise({redirectTo: '/dashboard'});
+	  // $locationProvider.html5Mode(true);
+	} else
+	if (authMode == 'init') {
+		$routeProvider.
+			when('/register', {templateUrl: 'modules/register.html', controller: 'RegisterCtrl'}).
+			otherwise({redirectTo: '/register'});
+	}
 }]);
 
 rcMod.directive('equals', function() {
