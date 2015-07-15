@@ -10,59 +10,59 @@ var logout = function(){
 
 
 angular.element(document).ready(function ($http) {
-	$http.get("https://192.168.1.39:8443/restcomm/keycloak/config/restcomm-ui.json")
+	$http.get("/restcomm/keycloak/config/mode")
 	.success(function (data, status) {
-		angular.module("rcApp").constant("authMode","cloud");
-		console.log("Retrieved restcomm-ui.json");
+		angular.module("rcApp").constant("authMode",data.mode);
+		if (data.mode == "cloud") {
     
-		var keycloakAuth = new Keycloak('https://192.168.1.39:8443/restcomm/keycloak/config/restcomm-ui.json');
-		auth.loggedIn = false;
+			var keycloakAuth = new Keycloak('/restcomm/keycloak/config/restcomm-ui.json');
+			auth.loggedIn = false;
 
-		keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
-			auth.loggedIn = true;
-			auth.authz = keycloakAuth;
-			auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/restcomm-management/index.html";
-			angular.module('rcApp').factory('Auth', function() {
-				return auth;
-			});
-			
-			keycloakAuth.loadUserProfile().success(function () {
-				// try importing the logged user into Restcomm 
-				var initInjector = angular.injector(["ng"]);
-				var $myhttp = initInjector.get("$http");
-				
-				$myhttp({
-					method: 'GET',
-					url: '/restcomm/2012-04-24/Accounts.json/' + keycloakAuth.profile.username ,
-					headers: {
-						Authorization: 'Bearer ' + keycloakAuth.token
-					}
-				}).success(function(response) {
-					console.log("Retrieved account info for user " + keycloakAuth.profile.username);
-					auth.restcommAccount = response;
-					angular.bootstrap(document, ["rcApp"]);
-				}).error(function(errorResponse) {
-					// Handle error case
-					console.log("Error account info for user " + keycloakAuth.profile.username);
+			keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
+				auth.loggedIn = true;
+				auth.authz = keycloakAuth;
+				auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/restcomm-management/index.html";
+				angular.module('rcApp').factory('Auth', function() {
+					return auth;
 				});
 				
+				keycloakAuth.loadUserProfile().success(function () {
+					// try importing the logged user into Restcomm 
+					var initInjector = angular.injector(["ng"]);
+					var $myhttp = initInjector.get("$http");
+					
+					$myhttp({
+						method: 'GET',
+						url: '/restcomm/2012-04-24/Accounts.json/' + keycloakAuth.profile.username ,
+						headers: {
+							Authorization: 'Bearer ' + keycloakAuth.token
+						}
+					}).success(function(response) {
+						console.log("Retrieved account info for user " + keycloakAuth.profile.username);
+						auth.restcommAccount = response;
+						angular.bootstrap(document, ["rcApp"]);
+					}).error(function(errorResponse) {
+						// Handle error case
+						console.log("Error account info for user " + keycloakAuth.profile.username);
+					});
+					
+				});
+				console.log(keycloakAuth.profile);      
+			}).error(function (a, b) {
+					window.location.reload();
 			});
-			console.log(keycloakAuth.profile);      
-		}).error(function (a, b) {
-				window.location.reload();
-		});
-		
-	})
-	.error(function (response) {
-		// 404 here means that restcomm is not hookd up to identity.restcomm.com
-		if (response.status == 404) {
+		} else {
 			angular.module("rcApp").constant("authMode","init");
 			angular.module('rcApp').factory('Auth', function() {
 				return auth;
 			});
 			angular.bootstrap(document, ["rcApp"]);
 		}
-		console.log("Failed retrieving restcomm-ui.json " + data.status);
+		
+		
+	})
+	.error(function (response) {
+		console.log("Internal server error: cannot retrieve identity mode.");
 	});
 
 });

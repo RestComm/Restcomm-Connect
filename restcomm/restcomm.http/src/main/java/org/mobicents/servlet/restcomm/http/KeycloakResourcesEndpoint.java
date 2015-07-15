@@ -38,7 +38,7 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
         IdentityModeEntity modeEntity = new IdentityModeEntity();
         modeEntity.setMode(keycloakConfigurator.getMode());
         Gson gson = new Gson();
-        return Response.ok(gson.toJson(modeEntity)).build();
+        return Response.ok(gson.toJson(modeEntity),MediaType.APPLICATION_JSON).build();
     }
 
     @GET
