@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -157,11 +156,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
             logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
 
-            // Utility class for generating keycloak adapter configuration
-            logger.info("Creating keycloak configurator");
-            String instanceId = xml.getString("runtime-settings.idenity.instance-id", null);
+            // Initialize keycloak configuration
             KeycloakConfigurator keycloakConfig = KeycloakConfigurator.create(xml, context);
             context.setAttribute(KeycloakConfigurator.class.getName(), keycloakConfig);
+            /*
             logger.info("Updating keycloak adapters configuration");
             try {
                 // save updated adapter config so that keycloak adapter starts correctly
@@ -171,7 +169,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             if ( ! keycloakConfig.isHookedUpToKeycloak() )
                 logger.warn("Restcomm instance is not hooked up to keycloak");
-
+            */
 
             // Create the media gateway.
             ActorRef gateway = null;
