@@ -116,11 +116,11 @@ public class OutboundProxyEndpointTest {
                 .resolve("com.telestax.servlet:restcomm.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
-//        archive.delete("/WEB-INF/sip.xml");
-//        archive.delete("/WEB-INF/conf/restcomm.xml");
+        archive.delete("/WEB-INF/sip.xml");
+        archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
-//        archive.addAsWebInfResource("sip.xml");
-//        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
