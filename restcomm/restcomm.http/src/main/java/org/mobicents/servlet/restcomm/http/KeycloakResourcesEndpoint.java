@@ -12,8 +12,11 @@ import javax.ws.rs.Produces;
 
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
+import org.mobicents.servlet.restcomm.http.keycloak.entities.IdentityModeEntity;
 import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator;
 import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator.CloudIdentityNotSet;
+
+import com.google.gson.Gson;
 
 @Path("/config")
 public class KeycloakResourcesEndpoint extends AbstractEndpoint {
@@ -28,10 +31,14 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     private void init() {
         keycloakConfigurator = (KeycloakConfigurator) context.getAttribute(KeycloakConfigurator.class.getName());
     }
-    
+
     @GET
+    @Path("/mode")
     public Response getMode() {
-        
+        IdentityModeEntity modeEntity = new IdentityModeEntity();
+        modeEntity.setMode(keycloakConfigurator.getMode());
+        Gson gson = new Gson();
+        return Response.ok(gson.toJson(modeEntity)).build();
     }
 
     @GET
