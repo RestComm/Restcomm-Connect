@@ -29,6 +29,7 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.telephony.GetLiveCalls;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -67,6 +68,8 @@ public class MonitoringService extends UntypedActor{
             onCallResponse((CallResponse<CallInfo>)message, self, sender);
         } if (CallStateChanged.class.equals(klass)) {
             onCallStateChanged((CallStateChanged)message, self, sender);
+        } if (GetLiveCalls.class.equals(klass)) {
+            onGetLiveCalls((GetLiveCalls)message, self, sender);
         }
     }
 
@@ -113,5 +116,14 @@ public class MonitoringService extends UntypedActor{
         String senderPath = sender.path().name();
         CallStateChanged.State callState = message.state();
         callStateMap.put(senderPath, callState);
+    }
+
+    /**
+     * @param message
+     * @param self
+     * @param sender
+     */
+    private void onGetLiveCalls(GetLiveCalls message, ActorRef self, ActorRef sender) {
+        sender.tell(callDetailsMap, self);
     }
 }
