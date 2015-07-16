@@ -20,10 +20,19 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+
+import org.apache.commons.configuration.Configuration;
+
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class SupervisorEndpoint {
+public class SupervisorEndpoint extends AbstractEndpoint{
+
+    @Context
+    protected ServletContext context;
+    protected Configuration configuration;
 
 }
