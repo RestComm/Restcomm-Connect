@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -1114,9 +1115,11 @@ public final class Call extends UntypedActor {
             observer.tell(stopObservingMessage, self);
             this.observers.remove(observer);
         } else {
-            for (ActorRef observerRef : observers) {
-                observerRef.tell(stopObservingMessage, self);
-                this.observers.remove(observerRef);
+            Iterator<ActorRef> observerIter = observers.iterator();
+            while (observerIter.hasNext()) {
+                ActorRef observerNext = observerIter.next();
+                observerNext.tell(stopObservingMessage, self);
+//                this.observers.remove(observerNext);
             }
             this.observers.clear();
         }

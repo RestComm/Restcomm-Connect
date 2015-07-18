@@ -210,7 +210,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             //Initialize Monitoring Service
             ActorRef monitoring = monitoringService(xml, loader);
-            context.setAttribute(MonitoringService.class.getName(), monitoring);
+            if (monitoring != null) {
+                context.setAttribute(MonitoringService.class.getName(), monitoring);
+                logger.info("Monitoring Service created and stored in the context");
+            } else {
+                logger.error("Monitoring Service is null");
+            }
 
             //Initialize Extensions
             Configuration extensionConfiguration = null;

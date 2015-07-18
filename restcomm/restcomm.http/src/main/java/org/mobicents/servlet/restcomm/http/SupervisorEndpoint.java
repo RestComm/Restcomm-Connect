@@ -30,7 +30,6 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -42,12 +41,12 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
-import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordConverter;
-import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordListConverter;
+import org.mobicents.servlet.restcomm.http.converter.CallinfoConverter;
+import org.mobicents.servlet.restcomm.http.converter.CallinfoListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallInfoList;
 import org.mobicents.servlet.restcomm.telephony.GetLiveCalls;
 
 import com.google.gson.Gson;
@@ -74,32 +73,31 @@ public class SupervisorEndpoint extends AbstractEndpoint{
     private Gson gson;
     private GsonBuilder builder;
     private XStream xstream;
-    private final ActorRef monitoringService;
-    private CallDetailRecordListConverter listConverter;
+    private ActorRef monitoringService;
 
     public SupervisorEndpoint() {
         super();
-        monitoringService = (ActorRef) context.getAttribute(MonitoringService.class.getName());
     }
 
     @PostConstruct
     public void init() {
+        monitoringService = (ActorRef) context.getAttribute(MonitoringService.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration);
-        CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
-        listConverter = new CallDetailRecordListConverter(configuration);
+        CallinfoConverter converter = new CallinfoConverter(configuration);
+        CallinfoListConverter listConverter = new CallinfoListConverter(configuration);
         builder = new GsonBuilder();
-        builder.registerTypeAdapter(CallDetailRecord.class, converter);
-        builder.registerTypeAdapter(CallDetailRecordList.class, listConverter);
+        builder.registerTypeAdapter(CallInfo.class, converter);
+        builder.registerTypeAdapter(CallInfoList.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
     protected Response pong(final String accountSid, final MediaType responseType) {
@@ -130,21 +128,22 @@ public class SupervisorEndpoint extends AbstractEndpoint{
             return status(UNAUTHORIZED).build();
         }
         //Get the list of live calls from Monitoring Service
-        Map liveCallMap;
+        CallInfoList liveCalls;
         try {
             final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
             GetLiveCalls getLiveCalls = new GetLiveCalls();
             Future<Object> future = (Future<Object>) ask(monitoringService, getLiveCalls, expires);
-            liveCallMap = (Map) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+            liveCalls = (CallInfoList) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
-        if (liveCallMap != null) {
+        if (liveCalls != null) {
             if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(liveCallMap);
+                final RestCommResponse response = new RestCommResponse(liveCalls);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(liveCallMap), APPLICATION_JSON).build();
+               Response response = ok(gson.toJson(liveCalls), APPLICATION_JSON).build();
+                return response;
             } else {
                 return null;
             }
