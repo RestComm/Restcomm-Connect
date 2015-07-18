@@ -18,37 +18,23 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.mobicents.servlet.restcomm.http;
+package org.mobicents.servlet.restcomm.telephony;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import java.util.List;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-@Path("/Accounts/{accountSid}/Supervisor.json")
-@ThreadSafe
-public class SupservisorJsonEndpoint extends SupervisorEndpoint{
+public class CallInfoList {
+    private final List<CallInfo> callInfoList;
 
-    public SupservisorJsonEndpoint() {
+    public CallInfoList(final List<CallInfo> callInfoList) {
         super();
+        this.callInfoList = callInfoList;
     }
 
-    @GET
-    public Response ping(@PathParam("accountSid") final String accountSid) {
-        return pong(accountSid, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{livecalls}")
-    @GET
-    public Response getLiveCalls(@PathParam("accountSid") final String accountSid) {
-        return getLiveCalls(accountSid, APPLICATION_JSON_TYPE);
+    public List<CallInfo> getCallInfoList() {
+        return callInfoList;
     }
 }

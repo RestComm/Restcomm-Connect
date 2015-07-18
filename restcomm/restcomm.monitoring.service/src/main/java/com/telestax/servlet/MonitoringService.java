@@ -20,12 +20,15 @@
  */
 package com.telestax.servlet;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallInfoList;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
@@ -116,6 +119,8 @@ public class MonitoringService extends UntypedActor{
         String senderPath = sender.path().name();
         CallStateChanged.State callState = message.state();
         callStateMap.put(senderPath, callState);
+        CallInfo callInfo = callDetailsMap.get(senderPath);
+        callInfo.setState(callState);
     }
 
     /**
@@ -124,6 +129,8 @@ public class MonitoringService extends UntypedActor{
      * @param sender
      */
     private void onGetLiveCalls(GetLiveCalls message, ActorRef self, ActorRef sender) {
-        sender.tell(callDetailsMap, self);
+        List<CallInfo> list = new ArrayList<CallInfo>(callDetailsMap.values());
+        CallInfoList callInfoList = new CallInfoList(list);
+        sender.tell(callInfoList, self);
     }
 }
