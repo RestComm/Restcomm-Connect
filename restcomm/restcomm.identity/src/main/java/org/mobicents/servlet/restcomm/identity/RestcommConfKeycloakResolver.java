@@ -1,10 +1,10 @@
-package org.mobicents.servlet.restcomm.keycloak;
+package org.mobicents.servlet.restcomm.identity;
 
 import org.keycloak.adapters.HttpFacade.Request;
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
-import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator.CloudIdentityNotSet;
+import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator.CloudIdentityNotSet;
 
 public class RestcommConfKeycloakResolver implements KeycloakConfigResolver {
 

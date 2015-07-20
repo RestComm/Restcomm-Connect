@@ -57,7 +57,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
-import org.mobicents.servlet.restcomm.http.keycloak.KeycloakClient.KeycloakClientException;
+import org.mobicents.servlet.restcomm.identity.KeycloakClient.KeycloakClientException;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**

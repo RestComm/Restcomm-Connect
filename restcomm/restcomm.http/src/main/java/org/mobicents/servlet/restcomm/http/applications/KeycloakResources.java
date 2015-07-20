@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.mobicents.servlet.restcomm.http.IdentityEndpoint;
 import org.mobicents.servlet.restcomm.http.KeycloakResourcesEndpoint;
 
 /**
@@ -16,11 +17,12 @@ import org.mobicents.servlet.restcomm.http.KeycloakResourcesEndpoint;
  * @author "Tsakiridis Orestis"
  *
  */
-@ApplicationPath("/keycloak")
+@ApplicationPath("/identity")
 public class KeycloakResources extends Application {
 
     public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new HashSet<Class<?>>();
+        resources.add(IdentityEndpoint.class);
         resources.add(KeycloakResourcesEndpoint.class);
         return resources;
     }

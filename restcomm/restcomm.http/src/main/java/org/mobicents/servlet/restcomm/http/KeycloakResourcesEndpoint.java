@@ -12,9 +12,9 @@ import javax.ws.rs.Produces;
 
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
-import org.mobicents.servlet.restcomm.http.keycloak.entities.IdentityModeEntity;
-import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator;
-import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator.CloudIdentityNotSet;
+import org.mobicents.servlet.restcomm.identity.entities.IdentityModeEntity;
+import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator;
+import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator.CloudIdentityNotSet;
 
 import com.google.gson.Gson;
 
