@@ -94,7 +94,7 @@
 		<shirocore.version>1.2.0</shirocore.version>
 		<shiroweb.version>1.2.0</shiroweb.version>
 		<jersey.version>1.13</jersey.version>
-		<httpclient.version>4.2.5</httpclient.version>
+		<httpclient.version>4.3.6</httpclient.version>
 		<gson.version>2.1</gson.version>
 		<xstream.version>1.4.2</xstream.version>
 		<mongodb.version>2.7.2</mongodb.version>
@@ -146,6 +146,7 @@
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>
+		<module>restcomm.identity</module>
 	</modules>
 
 	<dependencyManagement>
