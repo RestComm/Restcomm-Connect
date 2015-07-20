@@ -2,18 +2,16 @@ package org.mobicents.servlet.restcomm.identity;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -55,7 +53,7 @@ public class KeycloakAdminClient extends KeycloakClient {
 
     public void updateUser(String username, UserRepresentation user) throws KeycloakClientException {
         AccessTokenResponse res = getToken();
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = buildHttpClient();
         try {
             //e.g. PUT http://login.restcomm.com:8081/auth/admin/realms/restcomm/users/otsakir
             HttpPut putRequest = new HttpPut(getBaseUrl() + "/auth/admin/realms/"+realm+"/users/"+username);
@@ -75,17 +73,21 @@ public class KeycloakAdminClient extends KeycloakClient {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } catch (UnsupportedEncodingException e1) {
+        } /*catch (UnsupportedEncodingException e1) {
             throw new KeycloakClientException();
-        } finally {
-            client.getConnectionManager().shutdown();
+        } */ finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }
 
     public void createUser(String username, UserRepresentation user) throws KeycloakClientException {
         AccessTokenResponse res = getToken();
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = buildHttpClient();
         try {
             //e.g. PUT http://login.restcomm.com:8081/auth/admin/realms/restcomm/users/otsakir
             HttpPost postRequest = new HttpPost(getBaseUrl() + "/auth/admin/realms/"+realm+"/users");
@@ -104,17 +106,21 @@ public class KeycloakAdminClient extends KeycloakClient {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } catch (UnsupportedEncodingException e1) {
+        } /*catch (UnsupportedEncodingException e1) {
             throw new KeycloakClientException();
-        } finally {
-            client.getConnectionManager().shutdown();
+        } */finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }
 
     public void resetUserPassword(String username, String password, boolean temporary) throws KeycloakClientException {
         AccessTokenResponse res = getToken();
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = buildHttpClient();
         try {
             //e.g. PUT http://login.restcomm.com:8081/auth/admin/realms/restcomm/users/paparas/reset-password
             HttpPut putRequest = new HttpPut(getBaseUrl() + "/auth/admin/realms/"+realm+"/users/"+username+"/reset-password");
@@ -137,17 +143,21 @@ public class KeycloakAdminClient extends KeycloakClient {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } catch (UnsupportedEncodingException e1) {
+        } /*catch (UnsupportedEncodingException e1) {
             throw new KeycloakClientException();
-        } finally {
-            client.getConnectionManager().shutdown();
+        } */finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }
 
     public List<RoleRepresentation> getRealmRoles() throws KeycloakClientException {
         AccessTokenResponse res = getToken();
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = buildHttpClient();
         try {
             HttpGet get = new HttpGet(getBaseUrl() + "/auth/admin/realms/"+realm+"/roles");
             get.addHeader("Authorization", "Bearer " + res.getToken());
@@ -167,13 +177,17 @@ public class KeycloakAdminClient extends KeycloakClient {
                 throw new RuntimeException(e);
             }
         } finally {
-            client.getConnectionManager().shutdown();
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public UserRepresentation getUserInfo(String username) throws KeycloakClientException {
         AccessTokenResponse res = getToken();
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = buildHttpClient();
         try {
             HttpGet get = new HttpGet(getBaseUrl() + "/auth/admin/realms/" + realm + "/users/" + username);
             get.addHeader("Authorization", "Bearer " + res.getToken());
@@ -193,13 +207,17 @@ public class KeycloakAdminClient extends KeycloakClient {
                 throw new RuntimeException(e);
             }
         } finally {
-            client.getConnectionManager().shutdown();
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public void addUserRoles(String username, List<RoleRepresentation> keycloakRoles) throws KeycloakClientException {
         AccessTokenResponse res = getToken();
-        HttpClient client = new DefaultHttpClient();
+        CloseableHttpClient client = buildHttpClient();
         try {
             //e.g. POST  login.restcomm.com:8081/auth/admin/realms/restcomm/users/account2%40gmail.com/role-mappings/realm
             HttpPost postRequest = new HttpPost(getBaseUrl() + "/auth/admin/realms/"+realm+"/users/"+username+"/role-mappings/realm");
@@ -218,10 +236,14 @@ public class KeycloakAdminClient extends KeycloakClient {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } catch (UnsupportedEncodingException e1) {
+        } /*catch (UnsupportedEncodingException e1) {
             throw new KeycloakClientException();
-        } finally {
-            client.getConnectionManager().shutdown();
+        } */finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

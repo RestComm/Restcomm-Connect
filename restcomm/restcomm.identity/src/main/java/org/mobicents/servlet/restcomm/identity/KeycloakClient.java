@@ -3,6 +3,9 @@ package org.mobicents.servlet.restcomm.identity;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,10 +13,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContextBuilder;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+//import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.keycloak.OAuth2Constants;
@@ -80,13 +87,28 @@ public class KeycloakClient {
             keycloakBaseUrl = DEFAULT_KEYCLOAK_BASE_URL; // load from conf here
     }
 
+    // wrap httpclient creation cause it get's complicated when self-signed certs are to be accepted
+    protected CloseableHttpClient buildHttpClient() throws KeycloakClientException {
+        // TODO - use a proper certificate on identity.restcomm.com instead of a self-signed one
+        SSLContextBuilder builder = new SSLContextBuilder();
+        SSLConnectionSocketFactory sslsf;
+        try {
+            builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+            sslsf = new SSLConnectionSocketFactory(builder.build(),SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            throw new KeycloakClientException(e);
+        }
+        CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+        return httpclient;
+    }
+
     // Retrieves an access token from keycloak and caches it
-    protected AccessTokenResponse getToken() throws KeycloakClientException {
+    public AccessTokenResponse getToken() throws KeycloakClientException {
         // first check the token cache
         if ( cachedToken != null )
             return cachedToken;
-        // looks like we'll have to ask keycloak for a token
-        HttpClient client = new DefaultHttpClient();
+
+        CloseableHttpClient client = buildHttpClient();
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(getBaseUrl() + "/auth")
                     .path(ServiceUrlConstants.TOKEN_PATH).build(realm));
@@ -102,26 +124,31 @@ public class KeycloakClient {
             int status = response.getStatusLine().getStatusCode();
             HttpEntity entity = response.getEntity();
             if (status != 200) {
-                //String json = getContent(entity);
-                throw new KeycloakClientOauthException();
+                throw new KeycloakClientOauthException(status);
             }
             if (entity == null) {
-                throw new KeycloakClientOauthException();
+                throw new KeycloakClientOauthException(status);
             }
             String json = getContent(entity);
             // store the new token in the cache too for future uses (in the same request)
             cachedToken = JsonSerialization.readValue(json, AccessTokenResponse.class);
             return cachedToken;
         } catch (IOException e) {
-            throw new RuntimeException();
+            throw new RuntimeException(e);
         } finally {
-            client.getConnectionManager().shutdown();
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public void logout() throws KeycloakClientException {
         AccessTokenResponse res = getToken();
-        HttpClient client = new DefaultHttpClient();
+        //HttpClient client = new DefaultHttpClient();
+        //HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+        CloseableHttpClient client = buildHttpClient();
         try {
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(getBaseUrl() + "/auth")
                     .path(ServiceUrlConstants.TOKEN_SERVICE_LOGOUT_PATH)
@@ -145,7 +172,11 @@ public class KeycloakClient {
         } catch (IOException e) {
             throw new KeycloakClientException(e);
         } finally {
-            client.getConnectionManager().shutdown();
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -203,6 +234,16 @@ public class KeycloakClient {
 
     // throw when part of the Oauth negotiation with keycloak fails
     public static class KeycloakClientOauthException extends KeycloakClientException {
+
+        public KeycloakClientOauthException() {
+            super();
+            // TODO Auto-generated constructor stub
+        }
+
+        public KeycloakClientOauthException(Integer status) {
+            super(status);
+            // TODO Auto-generated constructor stub
+        }
     }
 
     public static class KeycloakUserNotFound extends Exception {
