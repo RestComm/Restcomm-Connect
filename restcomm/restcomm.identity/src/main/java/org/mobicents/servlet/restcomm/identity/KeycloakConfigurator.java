@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.keycloak;
+package org.mobicents.servlet.restcomm.identity;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

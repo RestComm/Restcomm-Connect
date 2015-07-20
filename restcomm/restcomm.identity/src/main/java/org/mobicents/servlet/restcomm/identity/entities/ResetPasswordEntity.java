@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.http.keycloak.entities;
+package org.mobicents.servlet.restcomm.identity.entities;
 
 public class ResetPasswordEntity {
 

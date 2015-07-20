@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
-import org.mobicents.servlet.restcomm.keycloak.KeycloakConfigurator;
+import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
