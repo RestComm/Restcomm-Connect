@@ -62,6 +62,9 @@ public final class SmppService extends UntypedActor {
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
+    private static String smppSourceAddressMap;
+    private static String smppDestinationAddressMap;
+    private static String smppTonNpiValue;
 
     private ThreadPoolExecutor executor;
     private ScheduledThreadPoolExecutor monitorExecutor;
@@ -85,14 +88,45 @@ public final class SmppService extends UntypedActor {
         this.storage = storage;
         this.servletContext = servletContext;
 
-        this.initializeSmppConnections();
+        Configuration config = this.configuration.subset("smpp");
+
+        logger.error("checking if to use SMPP connection set to : " +  config.getString("[@activateSmppConnection]") );
+
+
+        this.smppSourceAddressMap = config.getString("connections.connection[@sourceAddressMap]");
+        this.smppDestinationAddressMap = config.getString("connections.connection[@destinationAddressMap]");
+        this.smppTonNpiValue = config.getString("connections.connection[@tonNpiValue]");
+
+
+
+        //check if SMPP has been activated in the restcomm.xml file
+        if (config.getString("[@activateSmppConnection]").equalsIgnoreCase("true")){
+            this.initializeSmppConnections();
+        }else{
+            logger.warning("Restcomm SMPP integration has not been activated, check the restcomm.xml file");
+        }
+    }
+
+
+    public static String getSmppTonNpiValue(){
+        return smppTonNpiValue;
+    }
+
+    public static String getSmppDestinationAddressMap(){
+        return smppDestinationAddressMap;
+    }
+
+    public static String getSmppSourceAddressMap(){
+        return smppSourceAddressMap;
     }
 
 
     @Override
     public void onReceive(Object message) throws Exception {
         logger.info("onReceive = " + message);
+
     }
+
 
     private void initializeSmppConnections() {
         Configuration smppConfiguration = this.configuration.subset("smpp");
@@ -202,6 +236,8 @@ public final class SmppService extends UntypedActor {
         logger.info("SMPP Service started");
 
     }
+
+
 
 
 

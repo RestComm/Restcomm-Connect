@@ -29,10 +29,12 @@ import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.smpp.SmppSessionOutbound;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -51,7 +53,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
     private ActorSystem system;
     private ActorRef service;
-
+    private ActorRef serviceSmpp;
     private ServletContext context;
 
     public SmsServiceProxy() {
@@ -60,7 +62,14 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
-        service.tell(request, null);
+        //if to address is smpp send message to SmppSessionOutbound else process as normal
+        final SipURI uri = (SipURI) request.getRequestURI();
+        final String to = uri.getUser();
+        if (to.equals("smpp") ){
+            serviceSmpp.tell(request, null);
+        }else{
+            service.tell(request, null);
+        }
     }
 
     @Override
@@ -85,6 +94,18 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         }));
     }
 
+
+    private ActorRef sendToSMPPService(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
+            }
+        }));
+    }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(SmsServiceProxy.class)) {
@@ -95,6 +116,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             service = service(configuration, factory, storage);
+            serviceSmpp = sendToSMPPService(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
         }
     }

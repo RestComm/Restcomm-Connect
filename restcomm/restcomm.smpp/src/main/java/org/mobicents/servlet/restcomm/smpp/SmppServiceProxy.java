@@ -53,6 +53,7 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
 
     private ActorSystem system;
     private ActorRef service;
+    private ActorRef serviceSmpp;
     private static ServletContext context;
     private static ServletContext  smppServletContext;
     private static SipFactory  smppSipFactory;
@@ -85,8 +86,9 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
+        //service.tell(request, null);
+        serviceSmpp.tell(request, null);
 
-        service.tell(request, null);
     }
 
     @Override
@@ -106,6 +108,17 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
     }
 
 
+    private ActorRef sendToSMPPService(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
+            }
+        }));
+    }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
 
@@ -124,6 +137,7 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
                     final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
                     system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
                     service = service(configuration, factory, storage);
+                    serviceSmpp = sendToSMPPService(configuration, factory, storage);
                     context.setAttribute(SmppService.class.getName(), service);
 
         }
