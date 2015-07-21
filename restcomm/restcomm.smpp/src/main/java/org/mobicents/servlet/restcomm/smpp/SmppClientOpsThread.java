@@ -69,9 +69,10 @@ public class SmppClientOpsThread implements Runnable{
 
     private final DefaultSmppClient clientBootstrap ;
 
-
+    private static SmppSession smppSessionForOutbound ;
 
     protected volatile boolean started = true;
+
 
 
 
@@ -258,7 +259,7 @@ public class SmppClientOpsThread implements Runnable{
             config0.setSystemId(esme.getSystemId());
             config0.setPassword(esme.getPassword());
             //this will disable  Enquire Link heartbeat logs printed to the console
-            //this can be put into the restcomm.xml for Admin use
+            //TODO this can be put into the restcomm.xml for Admin use
             config0.getLoggingOptions().setLogBytes(false);
             config0.getLoggingOptions().setLogPdu(false);
             // to enable monitoring (request expiration)
@@ -273,6 +274,9 @@ public class SmppClientOpsThread implements Runnable{
                     esme);
 
             session0 = clientBootstrap.bind(config0, sessionHandler);
+
+            //getting session to be used to process SMS received from Restcomm
+               smppSessionForOutbound = session0;
 
             // Set in ESME
             esme.setSmppSession((DefaultSmppSession) session0);
@@ -418,6 +422,10 @@ public class SmppClientOpsThread implements Runnable{
         }
 
 
+    }
+    //smpp session to be used for sending SMS from Restcomm to smpp endpoint
+    public static SmppSession getSmppSessionForOutbound (){
+        return smppSessionForOutbound ;
     }
 
     public void sendSmppMessageToRestcomm (String smppMessage, String destSmppAddress, String sourceSmppAddress) throws IOException, ServletException{
