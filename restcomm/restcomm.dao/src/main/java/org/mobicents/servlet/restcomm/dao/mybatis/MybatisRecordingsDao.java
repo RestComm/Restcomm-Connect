@@ -92,6 +92,23 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         return getRecording(namespace + "getRecordingByCall", callSid);
     }
 
+    @Override
+    public List<Recording> getRecordingsByCall(Sid callSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRecordingsByCall", callSid.toString());
+            final List<Recording> recordings = new ArrayList<Recording>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    recordings.add(toRecording(result));
+                }
+            }
+            return recordings;
+        } finally {
+            session.close();
+        }
+    }
+
     private Recording getRecording(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
