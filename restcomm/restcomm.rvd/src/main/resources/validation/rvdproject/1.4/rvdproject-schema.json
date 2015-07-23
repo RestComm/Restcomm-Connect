@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-	"title": "RVD project 1.1",
-	"description": "Specification for RVD 7.2.0",
+	"title": "RVD project 1.4",
+	"description": "Specification for RVD 7.4",
 	"rvdproject": {
 		"type": "object",
 		"properties": {
@@ -41,6 +41,7 @@
 									{ "$ref": "pauseStep.json" },
 									{ "$ref": "redirectStep.json" },
 									{ "$ref": "smsStep.json" },
+								    { "$ref": "emailStep.json" },
 									{ "$ref": "recordStep.json" },
 									{ "$ref": "faxStep.json" },
 									{ "$ref": "ussdSayStep.json" },
