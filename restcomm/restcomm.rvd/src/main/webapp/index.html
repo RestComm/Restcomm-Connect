@@ -10,21 +10,22 @@
 	<meta name="author" content="">
 
 	<link rel="icon" type="image/png" href="images/favicon.png">
-	
+
 	<!-- <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet"> -->
-	
+
 	<link href="css/font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet">
 	<link href="css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">
 	<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
 	<link href="css/rvd.css" rel="stylesheet" media="screen">
+	<link href="css/joint.css" rel="stylesheet" media="screen">
 
 
 </head>
 
 
 
-<body> 
-	
+<body>
+
 	<div class="navbar navbar-inverse navbar-fixed-top" role="navigation" ng-controller="mainMenuCtrl">
 		<div class="container-fluid">
 				<div class="navbar-header">
@@ -53,10 +54,10 @@
 					</ul>
 				</nav>
 			</div>
-	</div>	
-	
-	
-	
+	</div>
+
+
+
 	<div class="notifications-wrapper" ng-show="notifications.data.length > 0">
 		<div ng-repeat="notification in notifications.data">
 			<div class="alert alert-{{notification.type}} rvd-notification rvd-clickable-text" style="padding: 9px; margin-bottom: 0;" ng-click="notifications.remove($index)">
@@ -67,7 +68,7 @@
 				<strong>{{notification.header}}</strong> {{notification.message}}
 			</div>
 		</div>
-	</div>	
+	</div>
 
 	<div class="container">
 
@@ -76,13 +77,13 @@
 				{{rvdError.message}}
 			</div>
 		</div>
-		<div ng-hide="rvdError" ng-view></div>			
+		<div ng-hide="rvdError" ng-view></div>
 		<hr>
-		
+
 	</div>
-	
+
 	<script src="js/lib/jquery-1.11.0.min.js"></script>
-	<script src="js/lib/jquery-ui-1.10.3.custom.js"></script>	
+	<script src="js/lib/jquery-ui-1.10.3.custom.js"></script>
 	<script src="js/lib/upload/angular-file-upload-shim.min.js"></script>
 	<script src="js/lib/angular-1.2.4.min.js"></script>
 	<script src="js/lib/angular-translate.min.js"></script>
@@ -93,16 +94,19 @@
 	<script src="js/lib/sortable.js"></script>
     <script src="js/lib/ui-bootstrap-tpls-0.10.0.js"></script>
     <script src="js/lib/basic-dragdrop.js"></script>
+    <script src="js/joint.js"></script>
+    <script src="js/joint.layout.DirectedGraph.js"></script>
     <script src="js/lib/angular-sanitize.min.js"></script>
     <script src="js/lib/angular-resource.min.js"></script>
-	
-	<script src="app.js"></script>	
-	
+
+	<script src="app.js"></script>
+
 	<script src="js/app/stepDirectives.js"></script>
+
 	<script src="js/app/directives.js"></script>
-	<script src="js/app/interceptors.js"></script>	
+	<script src="js/app/interceptors.js"></script>
 	<script src="js/app/services.js"></script>
-	<script src="js/app/steps.js"></script>	
+	<script src="js/app/steps.js"></script>
 	<script src="js/app/models.js"></script>
 	<script src="js/app/controllers/controllers.js"></script>
 	<script src="js/app/controllers/packaging.js"></script>
