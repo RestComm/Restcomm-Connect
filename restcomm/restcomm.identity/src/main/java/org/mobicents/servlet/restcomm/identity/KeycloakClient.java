@@ -3,11 +3,13 @@ package org.mobicents.servlet.restcomm.identity;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
@@ -39,6 +41,12 @@ import org.keycloak.util.KeycloakUriBuilder;
 public class KeycloakClient {
     protected Logger logger = Logger.getLogger(KeycloakClient.class);
 
+    enum Method  {
+        GET,
+        POST,
+        PUT
+    }
+
     static final String DEFAULT_KEYCLOAK_BASE_URL = "https://identity.restcomm.com";
     // Some static configuration options. We should move them to a configuration file at some point.
     String realm; // name of the keycloak realm to use
@@ -46,6 +54,7 @@ public class KeycloakClient {
     String password; // "password";
     String keycloakBaseUrl;
     String clientApplication; // Name of the keycloak client application to grant access to. for example 'restcomm-rvd-ui' etc.
+    List<NameValuePair> params = new ArrayList<NameValuePair>();
 
     private AccessTokenResponse cachedToken;
     //private HttpServletRequest request; // Store the HTTP request for cleaner API. Remember, KeycloakClient lifecycle follows endpoint lifecycle.
@@ -88,7 +97,7 @@ public class KeycloakClient {
     }
 
     // wrap httpclient creation cause it get's complicated when self-signed certs are to be accepted
-    protected CloseableHttpClient buildHttpClient() throws KeycloakClientException {
+    public CloseableHttpClient buildHttpClient() throws KeycloakClientException {
         // TODO - use a proper certificate on identity.restcomm.com instead of a self-signed one
         SSLContextBuilder builder = new SSLContextBuilder();
         SSLConnectionSocketFactory sslsf;
@@ -143,6 +152,41 @@ public class KeycloakClient {
             }
         }
     }
+
+    public void makePostRequest(String url) throws KeycloakClientException {
+        AccessTokenResponse res = getToken();
+        CloseableHttpClient client = buildHttpClient();
+        MediaType mediaType = MediaType.APPLICATION_FORM_URLENCODED_TYPE; // by default
+        try {
+            HttpPost request = new HttpPost(url);
+            request.addHeader("Authorization", "Bearer " + res.getToken());
+            if ( mediaType == MediaType.APPLICATION_JSON_TYPE )
+                request.addHeader("Content-Type",MediaType.APPLICATION_JSON);
+            if ( ! params.isEmpty() )
+                request.setEntity(new UrlEncodedFormEntity(params));
+            try {
+                HttpResponse response = client.execute(request);
+                if (response.getStatusLine().getStatusCode() >= 300) {
+                    throw new KeycloakClientException(response.getStatusLine().getStatusCode());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }  catch (UnsupportedEncodingException e1) {
+            throw new KeycloakClientException();
+        } finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void addParam(String name, String value) {
+        params.add(new BasicNameValuePair(name,value));
+    }
+
 
     public void logout() throws KeycloakClientException {
         AccessTokenResponse res = getToken();
@@ -229,6 +273,9 @@ public class KeycloakClient {
         }
         public Integer getHttpStatusCode() {
             return httpStatusCode;
+        }
+        public boolean isHttpError() {
+            return (httpStatusCode != null);
         }
     }
 
