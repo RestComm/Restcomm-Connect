@@ -569,6 +569,15 @@ textarea.medium {
 	padding-top: 100px;
 }
 
+/* Graph */
+#paper {
+	padding: 20px;
+	border: 1px solid #D3D3D3;
+	/*display: inline-block;*/
+	overflow: hidden;
+}
+
+
 
 /* ------------------ #/packaging/ view -------------------- */
 .rvd-packaging .col-md-4 .rvd-appversion {
