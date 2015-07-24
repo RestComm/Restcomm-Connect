@@ -21,9 +21,8 @@
 
 				<ul class="nav navbar-nav navbar-right">
 					<li>
-						
-						<!--<button ng-click="showGraph = !showGraph" class="btn btn-link navbar-link navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram</button>-->
-						<button ng-click="showGraph = !showGraph" class="btn btn-default navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram</button>
+						<button ng-click="showGraph = !showGraph" class="btn navbar-link navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram <i ng-show="showGraph" class="fa fa-check"></i></button>
+						<!--<button ng-click="showGraph = !showGraph" class="btn btn-default navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram</button>-->
 					</li>					
 					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">{{'designerWebTriggerLink' | translate}}</a></li>
 					<li class="dropdown">
@@ -61,16 +60,24 @@
 				</div>
 			</div>
 			-->
-			<div class="row" id="paperContainer" ng-if="showGraph">
-				<div class="col-md-12" style="margin: 5px;">
-					<div class="form-group">
-						<button ng-click="drawGraph()" class="btn">Refresh</button>
-						
+			<div class="row" ng-if="showGraph">
+				<div class="col-md-12">
+					<div class="graph" >
+							<div  style="margin: 5px; position:relative;">
+								<div class="graph-controls form-group">
+									<button ng-click="makeFullScreen('paperContainer')" class="btn" title="Make fullscreen"><i class="fa fa-arrows-alt"></i></button>
+									<button ng-click="drawGraph()" class="btn" title="Refresh"><i class="fa fa-refresh"></i></button>
+									
+								</div>
+								<!--<div class="text-center" style="overflow: scroll;" id="paper" ng-init="drawGraph()"></div>-->
+								<div id="paperContainer" >
+									<div class="text-center" id="paper" style="overflow: scroll;" ng-init="drawGraph()"></div>
+								</div>
+							</div>
+							
 					</div>
-					<!--<div class="text-center" style="overflow: scroll;" id="paper" ng-init="drawGraph()"></div>-->
-					<div class="text-center" id="paper" ng-init="drawGraph()"></div>
+					<hr>
 				</div>
-				<hr>
 			</div>
 		</div>
 
