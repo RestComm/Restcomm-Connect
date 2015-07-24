@@ -490,11 +490,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 		var paper = new joint.dia.Paper({
 			el: $('#paper'),
-			width: 750,
-			height: 500,
+			//width: 750,
+			//height: 200,
 			gridSize: 1,
 			model: graph,
-			interactive: true,
+			interactive: false,
 		});
 
 		getNexts = function (nm, module) {
@@ -622,7 +622,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			graph.resetCells(cells);
 			joint.layout.DirectedGraph.layout(graph, { setLinkVertices: true });
 			paper.fitToContent();
-			paper.scale(0.99, 0.99);
+			paper.scale(0.97, 0.97);
 			paper.setOrigin(1, 1);
 
 			var oldWidth = $('#paper').children().width();
