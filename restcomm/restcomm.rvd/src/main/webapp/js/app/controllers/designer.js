@@ -538,15 +538,18 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			});
 		};
 
+		// maps module name -> label
 		var labels = {};
 
+		// fills labels map
 		state.forEach(function(link) {
-			labels[link.name] = link.label;
+			labels[link.name] = link.name;
 		});
 
+		// fills adjancencyList
 		state.forEach(function(link) {
 			link.steps.forEach(function(step) {
-				getNexts(link.label, step);
+				getNexts(link.name, step);
 			});
 		});
 
@@ -590,7 +593,11 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			return lnk;
 		};
 
-		makeElement = function (label) {
+		makeElement = function (name) {
+			// from the module name retrieve all the module (node) details
+			var node = nodeRegistry.getNode(name);
+			var label = node.label;
+			
 			var maxLineLength = _.max(label.split('\n'), function(l) { return l.length; }).length;
 
 			// Compute width/height of the rectangle based on the number
@@ -601,7 +608,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			var height = 1.4 * ((label.split('\n').length + 1) * letterSize);
 
 			var rect = new joint.shapes.basic.Rect({
-				id: label,
+				id: name,
 				size: { width: width, height: height },
 				attrs: {
 					text: { text: label.toUpperCase(), 'font-size': letterSize, 'font-family': 'Monaco', dy: 3 },
