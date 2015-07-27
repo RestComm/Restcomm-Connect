@@ -25,6 +25,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
@@ -50,5 +51,17 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
     @GET
     public Response getLiveCalls(@PathParam("accountSid") final String accountSid) {
         return getLiveCalls(accountSid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/register")
+    @GET
+    public Response registerForUpdates(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return registerForUpdates(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/register/{sid}")
+    @GET
+    public Response registerForCallUpdates(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return registerForCallUpdates(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
 }

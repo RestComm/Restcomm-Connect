@@ -36,12 +36,14 @@ import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.CallinfoConverter;
 import org.mobicents.servlet.restcomm.http.converter.CallinfoListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -116,12 +118,69 @@ public class SupervisorEndpoint extends AbstractEndpoint{
         }
     }
 
-    /**
-     * @param accountSid
-     * @param applicationJsonType
-     * @return
-     */
-    protected Response getLiveCalls(String accountSid, MediaType responseType) {
+    protected Response getLiveCalls(final String accountSid, MediaType responseType) {
+        try {
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        //Get the list of live calls from Monitoring Service
+        CallInfoList liveCalls;
+        try {
+            final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+            GetLiveCalls getLiveCalls = new GetLiveCalls();
+            Future<Object> future = (Future<Object>) ask(monitoringService, getLiveCalls, expires);
+            liveCalls = (CallInfoList) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception exception) {
+            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        }
+        if (liveCalls != null) {
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(liveCalls);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+               Response response = ok(gson.toJson(liveCalls), APPLICATION_JSON).build();
+                return response;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    protected Response registerForUpdates(final String accountSid, final MultivaluedMap<String, String> data, MediaType responseType) {
+        try {
+            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        //Get the list of live calls from Monitoring Service
+        CallInfoList liveCalls;
+        try {
+            final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+            GetLiveCalls getLiveCalls = new GetLiveCalls();
+            Future<Object> future = (Future<Object>) ask(monitoringService, getLiveCalls, expires);
+            liveCalls = (CallInfoList) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+        } catch (Exception exception) {
+            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        }
+        if (liveCalls != null) {
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(liveCalls);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+               Response response = ok(gson.toJson(liveCalls), APPLICATION_JSON).build();
+                return response;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    protected Response registerForCallUpdates(final String accountSid, final String callSid, final MultivaluedMap<String, String> data, MediaType responseType) {
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
