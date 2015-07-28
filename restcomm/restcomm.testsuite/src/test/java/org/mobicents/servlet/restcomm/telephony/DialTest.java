@@ -6,14 +6,22 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
@@ -50,6 +58,9 @@ import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 import org.mobicents.servlet.restcomm.telephony.security.DigestServerAuthenticationMethod;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import gov.nist.javax.sip.message.MessageExt;
@@ -115,6 +126,7 @@ public class DialTest {
     
     private String dialConf = "sip:+12223334451@127.0.0.1:5080";
     private String dialFork = "sip:+12223334452@127.0.0.1:5080";
+    private String dialForkWithStatusCallback = "sip:7779@127.0.0.1:5080";
     private String dialFork_with_RCML = "sip:+12223334462@127.0.0.1:5080";
     private String dialURI = "sip:+12223334454@127.0.0.1:5080";
     private String dialClient = "sip:+12223334455@127.0.0.1:5080";
@@ -640,17 +652,20 @@ public class DialTest {
         Thread.sleep(3000);
         
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
-        JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
+        JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(recordings.get("duration").getAsString()));
-        assertNotNull(recordings.get("uri").getAsString());
+        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
     }
 
     
-//    private String rcmlToReturn = "<Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
     @Test //Test case for issue 320
     public synchronized void testDialClientAliceWithRecordAndStatusCallbackForApp() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
+        
+        stubFor(get(urlPathMatching("/StatusCallBack.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -708,10 +723,229 @@ public class DialTest {
         Thread.sleep(3000);
         
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
-        JsonObject recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
+        JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(recordings.get("duration").getAsString()));
-        assertNotNull(recordings.get("uri").getAsString());
+        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
+        
+        logger.info("About to check the Status Callback Requests");
+        Map<String, String> statusCallbacks = new HashMap<String,String>();
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
+        for (LoggedRequest loggedRequest : requests) {
+            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
+            String[] params = queryParam.split("&");
+            String callSid = params[0].split("=")[1];
+            String callStatus = params[4].split("=")[1];
+            if (statusCallbacks.containsKey(callSid)) {
+                statusCallbacks.remove(callSid);
+            }
+            statusCallbacks.put(callSid, callStatus);
+        }
+        assertTrue(statusCallbacks.size()==1);
+        Iterator<String> iter = statusCallbacks.keySet().iterator();
+        while (iter.hasNext()) {
+            String key = iter.next();
+            assertTrue(statusCallbacks.get(key).equalsIgnoreCase("completed"));
+        }
+    }
+    
+    @Test //Test case for issue 320
+    public synchronized void testDialClientAliceWithRecordAndStatusCallbackForAppForThreeCalls() throws InterruptedException, ParseException, MalformedURLException {
+        deployer.deploy("DialTest");
+        
+        stubFor(get(urlPathMatching("/StatusCallBack.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithRecordWithStatusCallback, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(7000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+        
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(60 * 1000));
+        assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
+        Request messageReceived = bobCall.getLastReceivedMessageRequest();
+        assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
+        
+        Thread.sleep(3000);
+        
+        final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
+        JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
+        assertNotNull(recordings);
+        assertTrue(recordings.size() == 1);
+        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
+        
+        /*
+         * Start the second call
+         */
+        
+        Thread.sleep(2000);
+        
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithRecordWithStatusCallback, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(7000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+        
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(60 * 1000));
+        assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
+        messageReceived = bobCall.getLastReceivedMessageRequest();
+        assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
+        
+        Thread.sleep(3000);
+        
+        recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
+        assertNotNull(recordings);
+        assertTrue(recordings.size() == 2);
+        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(1)).get("duration").getAsString()));
+        assertNotNull(((JsonObject)recordings.get(1)).get("uri").getAsString());
+        
+        /*
+         * Start the third call
+         */
+        
+        Thread.sleep(2000);
+        
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithRecordWithStatusCallback, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(7000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+        
+        Thread.sleep(3000);
+        
+        recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
+        assertNotNull(recordings);
+        assertTrue(recordings.size() == 3);
+        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(2)).get("duration").getAsString()));
+        assertNotNull(((JsonObject)recordings.get(2)).get("uri").getAsString());
+        
+        logger.info("About to check the Status Callback Requests");
+        Map<String, String> statusCallbacks = new HashMap<String,String>();
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
+        for (LoggedRequest loggedRequest : requests) {
+            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
+            String[] params = queryParam.split("&");
+            String callSid = params[0].split("=")[1];
+            String callStatus = params[4].split("=")[1];
+            if (statusCallbacks.containsKey(callSid)) {
+                statusCallbacks.remove(callSid);
+            }
+            statusCallbacks.put(callSid, callStatus);
+        }
+        assertTrue(statusCallbacks.size()==3);
+        Iterator<String> iter = statusCallbacks.keySet().iterator();
+        while (iter.hasNext()) {
+            String key = iter.next();
+            assertTrue(statusCallbacks.get(key).equalsIgnoreCase("completed"));
+        }
     }
     
     @Test
@@ -898,6 +1132,117 @@ public class DialTest {
             Thread.sleep(10 * 1000);
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
+        }
+    }
+    
+    @Test
+    public synchronized void testDialForkWithStatusCallback() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        stubFor(get(urlPathMatching("/StatusCallBack.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, dialForkWithStatusCallback, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // Start a new thread for George
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+                assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+                assertTrue(georgeCall.sendIncomingCallResponse(486, "Busy Here-George", 3600));
+                assertTrue(georgeCall.waitForAck(50 * 1000));
+            }
+        }).start();
+
+        // Start a new thread for Alice
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+                assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+                assertTrue(aliceCall.sendIncomingCallResponse(486, "Busy Here-Alice", 3600));
+                assertTrue(aliceCall.waitForAck(50 * 1000));
+            }
+        }).start();
+
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique-1", 3600));
+        String receivedBody = new String(henriqueCall.getLastReceivedRequest().getRawContent());
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(henriqueCall.waitForAck(50 * 1000));
+
+        henriqueCall.listenForDisconnect();
+
+        Thread.sleep(8000);
+
+        // hangup.
+
+        bobCall.disconnect();
+
+        assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+        
+        logger.info("About to check the Status Callback Requests");
+        Map<String, String> statusCallbacks = new HashMap<String,String>();
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
+        for (LoggedRequest loggedRequest : requests) {
+            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
+            String[] params = queryParam.split("&");
+            String callSid = params[0].split("=")[1];
+            String callStatus = params[4].split("=")[1];
+            if (statusCallbacks.containsKey(callSid)) {
+                statusCallbacks.remove(callSid);
+            }
+            statusCallbacks.put(callSid, callStatus);
+        }
+        assertTrue(statusCallbacks.size()==1);
+        Iterator<String> iter = statusCallbacks.keySet().iterator();
+        while (iter.hasNext()) {
+            String key = iter.next();
+            assertTrue(statusCallbacks.get(key).equalsIgnoreCase("completed"));
         }
     }
 
