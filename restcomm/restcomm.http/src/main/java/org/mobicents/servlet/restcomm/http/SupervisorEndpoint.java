@@ -43,7 +43,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
-import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.CallinfoConverter;
 import org.mobicents.servlet.restcomm.http.converter.CallinfoListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
