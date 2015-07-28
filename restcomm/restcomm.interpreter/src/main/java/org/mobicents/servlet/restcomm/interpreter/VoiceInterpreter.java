@@ -1710,6 +1710,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     dialChildren = null;
                     outboundCall = null;
+                    callback();
                     return;
                 } else if (bridged.equals(state)) {
                     outboundCall.tell(new Hangup(), source);
@@ -1741,6 +1742,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("Executing Dial Action url");
                     executeDialAction(message, null);
                 }
+                callback();
                 return;
             } else {
                 logger.info("Action attribute is null.");
