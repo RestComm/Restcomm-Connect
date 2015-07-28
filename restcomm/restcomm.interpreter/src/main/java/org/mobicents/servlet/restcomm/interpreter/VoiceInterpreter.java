@@ -1668,7 +1668,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         // Handle Failed Calls
         if (message instanceof CallManagerResponse && !(((CallManagerResponse<ActorRef>) message).succeeded())) {
             parameters.add(new BasicNameValuePair("DialCallSid", null));
-            parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.name()));
+            parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.toString()));
             parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
             parameters.add(new BasicNameValuePair("RecordingUrl", null));
             parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
