@@ -111,6 +111,7 @@ public final class Downloader extends UntypedActor {
         final ActorRef sender = sender();
         if (HttpRequestDescriptor.class.equals(klass)) {
             final HttpRequestDescriptor request = (HttpRequestDescriptor) message;
+            logger.debug("New HttpRequestDescriptor, method: "+request.getMethod()+" URI: "+request.getUri()+" parameters: "+request.getParametersAsString());
             DownloaderResponse response = null;
             try {
                 response = new DownloaderResponse(fetch(request));
