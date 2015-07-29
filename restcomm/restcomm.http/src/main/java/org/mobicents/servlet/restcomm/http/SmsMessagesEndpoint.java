@@ -21,10 +21,10 @@ package org.mobicents.servlet.restcomm.http;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
+import akka.japi.Creator;
 import akka.util.Timeout;
 
 import com.google.gson.Gson;
@@ -78,6 +78,7 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
 import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import scala.concurrent.Await;
@@ -288,8 +289,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     }
 
     private ActorRef observer() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
 
             @Override
             public UntypedActor create() throws Exception {

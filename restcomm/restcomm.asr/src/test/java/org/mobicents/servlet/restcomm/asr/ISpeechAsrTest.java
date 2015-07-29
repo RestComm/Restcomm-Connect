@@ -19,11 +19,8 @@
  */
 package org.mobicents.servlet.restcomm.asr;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActorFactory;
+import akka.actor.*;
+import akka.japi.Creator;
 import akka.testkit.JavaTestKit;
 
 import java.io.File;
@@ -41,6 +38,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import scala.concurrent.duration.FiniteDuration;
 
 /**
@@ -68,11 +66,9 @@ public final class ISpeechAsrTest {
     }
 
     private ActorRef asr(final Configuration configuration) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             @Override
-            public Actor create() throws Exception {
+            public UntypedActor create() throws Exception {
                 return new ISpeechAsr(configuration);
             }
         }));

@@ -36,7 +36,7 @@
   <property name="release.build.test.goals" value="clean install -Dmaven.test.failure.ignore=true"/>
   <property name="release.ts.deploy.goals" value="clean deploy"/>
 
-  <condition else="mvn" property="mvn.executable" value="${sys.M2_HOME}\bin\mvn.bat">
+  <condition else="/Users/pach/dev/apache_maven/current/bin/mvn" property="mvn.executable" value="${sys.M2_HOME}\bin\mvn.bat">
     <os family="windows"/>
   </condition>
 

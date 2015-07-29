@@ -36,6 +36,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
 
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
@@ -53,13 +54,13 @@ import org.mobicents.servlet.restcomm.telephony.InitializeOutbound;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreter;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreterBuilder;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -118,7 +119,7 @@ public class UssdCallManager extends UntypedActor {
     }
 
     private ActorRef ussdCall() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override

@@ -2275,6 +2275,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             postCleanup();
         }
-        super.postStop();
+
+        try {
+            super.postStop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }

@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import akka.japi.Creator;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 import java.util.ArrayList;
@@ -51,12 +52,12 @@ import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -150,7 +151,7 @@ public final class Conference extends UntypedActor {
     }
 
     private ActorRef getMediaGroup(final Object message) {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override

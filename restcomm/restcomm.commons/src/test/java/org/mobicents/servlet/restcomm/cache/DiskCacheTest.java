@@ -25,16 +25,14 @@ import java.io.File;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import akka.actor.*;
+import akka.japi.Creator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import scala.concurrent.duration.FiniteDuration;
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 
 /**
@@ -60,11 +58,11 @@ public final class DiskCacheTest {
     }
 
     private ActorRef cache(final String location, final String uri) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Actor create() throws Exception {
+            public DiskCache create() throws Exception {
                 return new DiskCache(location, uri);
             }
         }));

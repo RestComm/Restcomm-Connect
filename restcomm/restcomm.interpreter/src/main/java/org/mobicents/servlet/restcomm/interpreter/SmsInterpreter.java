@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
@@ -74,10 +75,9 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -85,6 +85,7 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -202,7 +203,7 @@ public final class SmsInterpreter extends UntypedActor {
 
     private ActorRef downloader() {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -384,7 +385,7 @@ public final class SmsInterpreter extends UntypedActor {
 
     private ActorRef parser(final String xml) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override

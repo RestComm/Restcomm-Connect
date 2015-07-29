@@ -37,6 +37,15 @@ import org.apache.commons.configuration.Configuration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class ISpeechAsr extends UntypedActor implements SpeechRecognizerEvent {
+
+    public static final class Creator implements akka.japi.Creator<ISpeechAsr> {
+        Configuration configuration;
+        public Creator(final Configuration configuration) { this.configuration = configuration; }
+        @Override public ISpeechAsr create() throws Exception {
+            return new ISpeechAsr(configuration);
+        }
+    }
+
     private static final Map<String, String> languages = new HashMap<String, String>();
     static {
         languages.put("en", "en-US");

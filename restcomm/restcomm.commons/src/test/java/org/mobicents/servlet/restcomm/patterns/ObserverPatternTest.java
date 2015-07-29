@@ -63,7 +63,7 @@ public class ObserverPatternTest {
             {
                 final ActorRef observer = getRef();
                 // Create an observable actor.
-                final Props properties = new Props(ObservableActor.class);
+                final Props properties = Props.create(ObservableActor.class);
                 final ActorRef observable = system.actorOf(properties);
                 // Start observing the observable actor.
                 observable.tell(new Observe(observer), observer);
@@ -86,7 +86,7 @@ public class ObserverPatternTest {
             {
                 final ActorRef observer = getRef();
                 // Create an observable actor.
-                final Props properties = new Props(ObservableActor.class);
+                final Props properties = Props.create(ObservableActor.class);
                 final ActorRef observable = system.actorOf(properties);
                 // Start observing the observable actor.
                 observable.tell(new Observe(observer), observer);

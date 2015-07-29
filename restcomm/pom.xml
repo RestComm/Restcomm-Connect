@@ -74,8 +74,8 @@
 		</snapshotRepository>
 	</distributionManagement>
 	<properties>
-		<scala-lang.version>2.10.1</scala-lang.version>
-		<akka.version>2.1.2</akka.version>
+		<scala-lang.version>2.11.7</scala-lang.version>
+		<akka.version>2.3.12</akka.version>
 		<guava.version>14.0.1</guava.version>
 		<log4j.version>1.2.16</log4j.version>
 		<slf4j.version>1.5.5</slf4j.version>
@@ -166,13 +166,13 @@
 
 			<dependency>
 				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-actor_2.10</artifactId>
+				<artifactId>akka-actor_2.11</artifactId>
 				<version>${akka.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-slf4j_2.10</artifactId>
+				<artifactId>akka-slf4j_2.11</artifactId>
 				<version>${akka.version}</version>
 			</dependency>
 
@@ -345,7 +345,7 @@
 
 			<dependency>
 				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-testkit_2.10</artifactId>
+				<artifactId>akka-testkit_2.11</artifactId>
 				<version>${akka.version}</version>
 				<scope>test</scope>
 			</dependency>
@@ -476,7 +476,7 @@
 
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-testkit_2.10</artifactId>
+			<artifactId>akka-testkit_2.11</artifactId>
 			<version>${akka.version}</version>
 			<scope>test</scope>
 		</dependency>

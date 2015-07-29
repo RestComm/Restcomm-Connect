@@ -21,11 +21,10 @@ package org.mobicents.servlet.restcomm.mgcp;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
 
+import akka.japi.Creator;
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
@@ -48,6 +47,7 @@ import java.net.InetAddress;
 
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.RevolvingCounter;
 
 /**
@@ -89,7 +89,7 @@ public final class MockMediaGateway extends UntypedActor {
         final CreateConnection request = (CreateConnection) message;
         final MediaSession session = request.session();
         final ActorRef gateway = self();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -103,7 +103,7 @@ public final class MockMediaGateway extends UntypedActor {
         final CreateBridgeEndpoint request = (CreateBridgeEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -117,7 +117,7 @@ public final class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -135,7 +135,7 @@ public final class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -149,7 +149,7 @@ public final class MockMediaGateway extends UntypedActor {
         final CreateLink request = (CreateLink) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -163,7 +163,7 @@ public final class MockMediaGateway extends UntypedActor {
         final ActorRef gateway = self();
         final CreatePacketRelayEndpoint request = (CreatePacketRelayEndpoint) message;
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override

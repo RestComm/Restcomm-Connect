@@ -51,7 +51,7 @@ public final class DownloaderTest {
     @Before
     public void before() throws Exception {
         system = ActorSystem.create();
-        downloader = system.actorOf(new Props(Downloader.class));
+        downloader = system.actorOf(Props.create(Downloader.class));
     }
 
     @After

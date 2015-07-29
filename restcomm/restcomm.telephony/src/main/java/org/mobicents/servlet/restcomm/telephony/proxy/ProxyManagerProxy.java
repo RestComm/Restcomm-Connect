@@ -31,15 +31,15 @@ import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
+import akka.actor.Actor;
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -87,11 +87,11 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
 
     private ActorRef manager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
             final String address) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new ProxyManager(servletContext, factory, storage, address);
             }
         }));

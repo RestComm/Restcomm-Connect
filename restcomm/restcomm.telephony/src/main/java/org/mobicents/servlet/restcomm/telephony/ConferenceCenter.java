@@ -24,14 +24,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import akka.japi.Creator;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -50,7 +51,7 @@ public final class ConferenceCenter extends UntypedActor {
     }
 
     private ActorRef getConference(final String name) {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override

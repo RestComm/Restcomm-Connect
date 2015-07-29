@@ -8,6 +8,8 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
 
+
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -21,14 +23,14 @@ import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 /**
  *
@@ -54,7 +56,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     private ActorRef gateway(final Configuration configuration, final ClassLoader loader) throws UnknownHostException {
         final Configuration settings = configuration.subset("media-server-manager");
-        final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
+        final ActorRef gateway = system.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override

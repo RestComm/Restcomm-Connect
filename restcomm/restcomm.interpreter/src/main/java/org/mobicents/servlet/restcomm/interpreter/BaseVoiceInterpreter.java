@@ -36,6 +36,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+
+
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -103,16 +106,15 @@ import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -362,7 +364,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef asr(final Configuration configuration) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -403,7 +405,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef fax(final Configuration configuration) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -426,7 +428,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef cache(final String path, final String uri) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -438,7 +440,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef downloader() {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -471,7 +473,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef mailer(final Configuration configuration) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -531,7 +533,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef parser(final String xml) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -621,7 +623,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         final String classpath = configuration.getString("[@class]");
 
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override

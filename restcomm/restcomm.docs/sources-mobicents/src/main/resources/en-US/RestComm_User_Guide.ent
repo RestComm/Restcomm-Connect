@@ -14,6 +14,6 @@
 <!ENTITY SSS_MSS4J_ZIP "${mss4t.release.zip}">
 <!ENTITY SSS_MSS4T_SIZE "${mss4t.release.size}">
 <!ENTITY SSS_MSS4T_ZIP "${mss4t.release.zip}">
-<!ENTITY VERSION "7.2.0-SNAPSHOT">
+<!ENTITY VERSION "7.3.1-SNAPSHOT">
 <!ENTITY YEAR "2011">
 <!ENTITY HOLDER "Telestax, Inc">

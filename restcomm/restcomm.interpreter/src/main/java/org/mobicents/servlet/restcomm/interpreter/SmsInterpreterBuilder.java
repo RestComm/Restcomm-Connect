@@ -21,15 +21,15 @@ package org.mobicents.servlet.restcomm.interpreter;
 
 import java.net.URI;
 
+import akka.actor.Actor;
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -52,11 +52,11 @@ public final class SmsInterpreterBuilder {
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new SmsInterpreter(service, configuration, storage, accountId, version, url, method, fallbackUrl,
                         fallbackMethod);
             }

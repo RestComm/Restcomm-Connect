@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -60,11 +61,9 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -72,6 +71,7 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 public class ConfVoiceInterpreter extends UntypedActor {
     private static final int ERROR_NOTIFICATION = 0;
@@ -261,7 +261,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
     private ActorRef cache(final String path, final String uri) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -273,7 +273,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
     private ActorRef downloader() {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -302,7 +302,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
     private ActorRef mailer(final Configuration configuration) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -498,7 +498,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
     private ActorRef parser(final String xml) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -567,7 +567,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
         final String classpath = configuration.getString("[@class]");
 
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -1019,6 +1019,10 @@ public class ConfVoiceInterpreter extends UntypedActor {
 //
 //        conferenceMediaGroup = null;
 
-        super.postStop();
+        try {
+            super.postStop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

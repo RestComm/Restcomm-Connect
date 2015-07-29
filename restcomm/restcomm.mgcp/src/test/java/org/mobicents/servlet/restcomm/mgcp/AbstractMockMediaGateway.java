@@ -21,17 +21,15 @@ package org.mobicents.servlet.restcomm.mgcp;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 
+import akka.japi.Creator;
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 
-import org.mobicents.servlet.restcomm.mgcp.BridgeEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.RevolvingCounter;
 
 /**
@@ -63,7 +61,7 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateConnection request = (CreateConnection) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -77,7 +75,7 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateLink request = (CreateLink) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -91,7 +89,7 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateBridgeEndpoint request = (CreateBridgeEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -105,7 +103,7 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -119,11 +117,11 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public IvrEndpoint create() throws Exception {
                 return new IvrEndpoint(gateway, session, agent, domain);
             }
         }));
@@ -133,11 +131,11 @@ public abstract class AbstractMockMediaGateway extends UntypedActor {
         final CreatePacketRelayEndpoint request = (CreatePacketRelayEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public PacketRelayEndpoint create() throws Exception {
                 return new PacketRelayEndpoint(gateway, session, agent, domain);
             }
         }));

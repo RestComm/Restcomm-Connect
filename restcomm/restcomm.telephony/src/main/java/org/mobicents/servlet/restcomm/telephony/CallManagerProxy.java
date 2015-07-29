@@ -32,6 +32,8 @@ import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
+import akka.actor.Actor;
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -40,9 +42,7 @@ import org.mobicents.servlet.restcomm.ussd.telephony.UssdCallManager;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -96,11 +96,11 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
 
     private ActorRef manager(final Configuration configuration, final ServletContext context, final ActorRef gateway,
             final ActorRef conferences, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new CallManager(configuration, context, system, gateway, conferences, sms, factory, storage);
             }
         }));
@@ -108,22 +108,22 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
 
     private ActorRef ussdManager(final Configuration configuration, final ServletContext context, final ActorRef gateway,
             final ActorRef conferences, final ActorRef sms, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new UssdCallManager(configuration, context, system, gateway, conferences, sms, factory, storage);
             }
         }));
     }
 
     private ActorRef conferences(final ActorRef gateway) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new ConferenceCenter(gateway);
             }
         }));

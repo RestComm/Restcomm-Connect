@@ -11,3 +11,8 @@ logs
 bin
 .DS_Store
 **/*~
+target-as7
+Mobicents-Restcomm-JBoss-AS7-7.3.1.zip
+Mobicents-Restcomm-JBoss-AS7-7.3.1
+dependencies
+restcomm/src

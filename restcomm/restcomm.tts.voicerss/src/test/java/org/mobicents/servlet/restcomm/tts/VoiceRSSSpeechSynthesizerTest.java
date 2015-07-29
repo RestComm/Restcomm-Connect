@@ -28,6 +28,8 @@ import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import akka.actor.Actor;
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -44,13 +46,10 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import scala.concurrent.duration.FiniteDuration;
-import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 
 /**
@@ -86,22 +85,22 @@ public final class VoiceRSSSpeechSynthesizerTest {
     private ActorRef tts(final Configuration configuration) {
         final String classpath = configuration.getString("[@class]");
 
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
-                return (UntypedActor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
+                return (Actor) Class.forName(classpath).getConstructor(Configuration.class).newInstance(configuration);
             }
         }));
     }
 
     private ActorRef cache(final String path, final String uri) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new DiskCache(path, uri, true);
             }
         }));

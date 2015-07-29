@@ -63,7 +63,7 @@
 
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
-			<artifactId>akka-testkit_2.10</artifactId>
+			<artifactId>akka-testkit_2.11</artifactId>
 		</dependency>
 	</dependencies>
 </project>

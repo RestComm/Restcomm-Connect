@@ -22,10 +22,8 @@ package org.mobicents.servlet.restcomm.fax;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActorFactory;
+import akka.japi.Creator;
 import akka.testkit.JavaTestKit;
-//import akka.testkit.JavaTestKit;
 
 import java.io.File;
 import java.net.URL;
@@ -41,6 +39,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import org.mobicents.servlet.restcomm.cache.DiskCache;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import scala.concurrent.duration.FiniteDuration;
 
 /**
@@ -68,7 +68,7 @@ public final class InterfaxServiceTest {
     }
 
     private ActorRef interfax(final Configuration configuration) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override

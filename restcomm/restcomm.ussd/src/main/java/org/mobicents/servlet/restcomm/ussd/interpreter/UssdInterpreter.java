@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -80,13 +81,13 @@ import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdInfoRequest;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdMessageType;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -287,11 +288,11 @@ public class UssdInterpreter extends UntypedActor {
 
     ActorRef mailer(final Configuration configuration) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new MailMan(configuration);
             }
         }));
@@ -299,11 +300,11 @@ public class UssdInterpreter extends UntypedActor {
 
     ActorRef downloader() {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new Downloader();
             }
         }));
@@ -311,11 +312,11 @@ public class UssdInterpreter extends UntypedActor {
 
     ActorRef parser(final String xml) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
+        return context.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new Parser(xml);
             }
         }));
@@ -982,7 +983,11 @@ public class UssdInterpreter extends UntypedActor {
             getContext().stop(parser);
         if (mailer != null)
             getContext().stop(mailer);
-        super.postStop();
+        try {
+            super.postStop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

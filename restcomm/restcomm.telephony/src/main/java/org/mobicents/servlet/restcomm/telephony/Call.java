@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import akka.japi.Creator;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
@@ -98,15 +99,15 @@ import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.IPUtils;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -332,7 +333,7 @@ public final class Call extends UntypedActor {
     }
 
     private ActorRef getMediaGroup(final Object message) {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+        return getContext().actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override

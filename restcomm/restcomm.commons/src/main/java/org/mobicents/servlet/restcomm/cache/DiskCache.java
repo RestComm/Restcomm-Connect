@@ -41,6 +41,21 @@ import akka.event.LoggingAdapter;
  */
 public final class DiskCache extends UntypedActor {
 
+    public static final class Creator implements akka.japi.Creator<DiskCache> {
+        String location;
+        String uri;
+        boolean create;
+        public Creator(String location,String uri, boolean create ) {
+          this.location = location;
+          this.uri = uri;
+          this.create = create;
+        }
+        public Creator(String location,String uri) { this(location,uri,false); }
+        @Override public DiskCache create() throws Exception {
+            return new DiskCache(location,uri,create);
+        }
+    }
+
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -169,6 +184,7 @@ public final class DiskCache extends UntypedActor {
             try {
                 response = new DiskCacheResponse(cache(message));
             } catch (final Exception exception) {
+                exception.printStackTrace();
                 logger.error("Error while chaching", exception);
                 response = new DiskCacheResponse(exception);
             }

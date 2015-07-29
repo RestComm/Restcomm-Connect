@@ -16,6 +16,17 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 public final class MailMan extends UntypedActor {
+    public static final class Creator implements akka.japi.Creator<MailMan> {
+        Configuration configuration;
+        public Creator(Configuration configuration) {
+            this.configuration = configuration;
+        }
+        @Override public MailMan create() throws Exception {
+            return new MailMan(configuration);
+        }
+    }
+
+
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Email client session.

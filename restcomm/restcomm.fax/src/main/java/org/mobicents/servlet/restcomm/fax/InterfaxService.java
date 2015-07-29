@@ -50,6 +50,18 @@ import org.apache.http.util.EntityUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class InterfaxService extends UntypedActor {
+
+    public static final class Creator implements akka.japi.Creator<InterfaxService> {
+        Configuration configuration;
+        public Creator(Configuration configuration) {
+            this.configuration = configuration;
+        }
+        @Override public InterfaxService create() throws Exception {
+            return new InterfaxService(configuration);
+        }
+    }
+
+
     private static final String url = "https://rest.interfax.net/outbound/faxes?faxNumber=";
 
     private final TrustStrategy strategy;

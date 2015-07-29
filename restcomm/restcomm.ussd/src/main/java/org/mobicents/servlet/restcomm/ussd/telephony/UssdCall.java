@@ -680,6 +680,10 @@ public class UssdCall extends UntypedActor  {
      */
     @Override
     public void postStop() {
-        super.postStop();
+        try {
+            super.postStop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

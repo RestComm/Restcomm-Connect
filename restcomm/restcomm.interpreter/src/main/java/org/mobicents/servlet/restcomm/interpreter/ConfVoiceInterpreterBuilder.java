@@ -2,6 +2,8 @@ package org.mobicents.servlet.restcomm.interpreter;
 
 import java.net.URI;
 
+import akka.actor.Actor;
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -9,9 +11,7 @@ import org.mobicents.servlet.restcomm.telephony.CallInfo;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 public class ConfVoiceInterpreterBuilder {
 
@@ -32,11 +32,11 @@ public class ConfVoiceInterpreterBuilder {
     }
 
     public ActorRef build() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new ConfVoiceInterpreter(configuration, account, version, url, method, emailAddress, conference,
                         storage, callInfo);
             }

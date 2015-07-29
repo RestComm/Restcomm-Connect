@@ -93,7 +93,7 @@ public final class ConnectionTest {
             {
                 final ActorRef observer = getRef();
                 // Create a new mock media gateway to simulate the real thing.
-                final ActorRef gateway = system.actorOf(new Props(MockMediaGateway.class));
+                final ActorRef gateway = system.actorOf(Props.create(MockMediaGateway.class));
                 // Create a media session. This is just an identifier that groups
                 // a set of end points, connections, and lists in to one call.
                 gateway.tell(new CreateMediaSession(), observer);
@@ -149,7 +149,7 @@ public final class ConnectionTest {
             {
                 final ActorRef observer = getRef();
                 // Create a new mock media gateway to simulate the real thing.
-                final ActorRef gateway = system.actorOf(new Props(MockMediaGateway.class));
+                final ActorRef gateway = system.actorOf(Props.create(MockMediaGateway.class));
                 // Create a media session. This is just an identifier that groups
                 // a set of end points, connections, and links in to one call.
                 gateway.tell(new CreateMediaSession(), observer);
@@ -200,7 +200,7 @@ public final class ConnectionTest {
             {
                 final ActorRef observer = getRef();
                 // Create a new mock media gateway to simulate the real thing.
-                final ActorRef gateway = system.actorOf(new Props(MockMediaGateway.class));
+                final ActorRef gateway = system.actorOf(Props.create(MockMediaGateway.class));
                 // Create a media session. This is just an identifier that groups
                 // a set of end points, connections, and links in to one call.
                 gateway.tell(new CreateMediaSession(), observer);

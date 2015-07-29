@@ -51,6 +51,7 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 import javax.sip.message.Response;
 
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -73,6 +74,7 @@ import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import scala.concurrent.Await;
@@ -81,11 +83,10 @@ import scala.concurrent.duration.Duration;
 import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
+import akka.actor.Actor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
@@ -243,7 +244,7 @@ public final class CallManager extends UntypedActor {
     }
 
     private ActorRef call() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -792,7 +793,7 @@ public final class CallManager extends UntypedActor {
                 // system.scheduler().scheduleOnce(Duration.create(1000, TimeUnit.MILLISECONDS), outboundCall, new
                 // ChangeCallDirection(), system.dispatcher());
                 system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), outboundInterpreter,
-                        new StartInterpreter(outboundCall), system.dispatcher());
+                        new StartInterpreter(outboundCall), system.dispatcher(), self);
                 // outboundCall.tell(new ChangeCallDirection(), null);
                 // outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
                 logger.info("New Intepreter for Second call leg: " + outboundInterpreter.path() + " started");
@@ -810,7 +811,7 @@ public final class CallManager extends UntypedActor {
             StopInterpreter stopInterpreter = StopInterpreter.instance();
             stopInterpreter.setLiveCallModification(true);
             system.scheduler().scheduleOnce(Duration.create(6000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter,
-                    system.dispatcher());
+                    system.dispatcher(), self);
             // existingInterpreter.tell(stopInterpreter, null);
         }
     }

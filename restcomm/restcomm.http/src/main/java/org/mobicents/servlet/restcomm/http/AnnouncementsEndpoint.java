@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import akka.japi.Creator;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.log4j.Logger;
@@ -37,15 +38,14 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 import akka.util.Timeout;
 
 import com.google.gson.Gson;
@@ -169,7 +169,7 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     private ActorRef tts(final Configuration configuration) {
         final String classpath = configuration.getString("[@class]");
 
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -180,7 +180,7 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     }
 
     private ActorRef cache(final String path, final String uri) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override

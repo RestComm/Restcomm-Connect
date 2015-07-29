@@ -20,11 +20,10 @@ package org.mobicents.servlet.restcomm.interpreter.rcml;
  *
  */
 
+import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import akka.japi.Creator;
 import akka.testkit.JavaTestKit;
 
 import java.io.InputStream;
@@ -36,6 +35,7 @@ import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mobicents.servlet.restcomm.util.Pre23Props;
 
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
 
@@ -60,22 +60,22 @@ public final class ParserTest {
     }
 
     private ActorRef parser(final InputStream input) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new Parser(input);
             }
         }));
     }
 
     private ActorRef parser(final String input) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
+        return system.actorOf(Pre23Props.create(new Creator<Actor>(){
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public Actor create() throws Exception {
                 return new Parser(input);
             }
         }));
