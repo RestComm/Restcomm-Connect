@@ -910,7 +910,8 @@ public class DialTest {
 
         // hangup.
         bobCall.disconnect();
-
+        bobCall.stopListeningForRequests();
+        
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         try {
@@ -918,6 +919,12 @@ public class DialTest {
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
         }
+
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(60 * 1000));
+        assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
+        messageReceived = bobCall.getLastReceivedMessageRequest();
+        assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
         
         Thread.sleep(3000);
         

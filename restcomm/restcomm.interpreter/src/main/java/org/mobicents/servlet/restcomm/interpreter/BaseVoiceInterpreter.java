@@ -1771,17 +1771,17 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, source);
+                        downloader.tell(request, null);
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         downloader.tell(request, null);
-                        source.tell(new StopInterpreter(), source);
                     }
                     // A little clean up.
                     recordingSid = null;
                     recordingUri = null;
-                    return;
+                    final StopInterpreter stop = new StopInterpreter();
+                    source.tell(stop, source);
                 }
             }
             if (CallStateChanged.class.equals(klass)) {
