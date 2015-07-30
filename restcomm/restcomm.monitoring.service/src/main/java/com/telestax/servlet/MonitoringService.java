@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
@@ -48,11 +49,13 @@ public class MonitoringService extends UntypedActor{
     private final Map<String, ActorRef> callMap;
     private final Map<String,CallInfo> callDetailsMap;
     private final Map<String, CallStateChanged.State> callStateMap;
+    private final AtomicInteger callsUpToNow;
 
     public MonitoringService() {
         this.callMap = new ConcurrentHashMap<String, ActorRef>();
         this.callDetailsMap = new ConcurrentHashMap<String, CallInfo>();
         this.callStateMap = new ConcurrentHashMap<String, CallStateChanged.State>();
+        callsUpToNow = new AtomicInteger();
         logger.info("Monitoring Service started");
     }
 
@@ -85,6 +88,7 @@ public class MonitoringService extends UntypedActor{
         String senderPath = sender.path().name();
         sender.tell(new GetCallInfo(), self);
         callMap.put(senderPath, sender);
+        callsUpToNow.incrementAndGet();
     }
 
     /**
@@ -130,7 +134,7 @@ public class MonitoringService extends UntypedActor{
      */
     private void onGetLiveCalls(GetLiveCalls message, ActorRef self, ActorRef sender) {
         List<CallInfo> list = new ArrayList<CallInfo>(callDetailsMap.values());
-        CallInfoList callInfoList = new CallInfoList(list);
+        CallInfoList callInfoList = new CallInfoList(list, callsUpToNow.get());
         sender.tell(callInfoList, self);
     }
 }

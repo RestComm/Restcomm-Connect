@@ -52,12 +52,14 @@ public class CallinfoListConverter extends AbstractConverter implements JsonSeri
     @Override
     public JsonElement serialize(CallInfoList callInfoList, Type typeOfSrc, JsonSerializationContext context) {
         int size = callInfoList.getCallInfoList().size();
+        int callsUpToNow = callInfoList.getCallsUpToNow();
         JsonObject result = new JsonObject();
         JsonArray array = new JsonArray();
         for (CallInfo callInfo: callInfoList.getCallInfoList()) {
             array.add(context.serialize(callInfo));
         }
         result.addProperty("LiveCalls", size);
+        result.addProperty("CallsUpToNow",callsUpToNow);
         if (size > 0)
             result.add("CallInfoList", array);
         return result;
@@ -67,9 +69,14 @@ public class CallinfoListConverter extends AbstractConverter implements JsonSeri
     public void marshal(Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
         final CallInfoList list = (CallInfoList) object;
         int size = list.getCallInfoList().size();
+        int callsUpToNow = list.getCallsUpToNow();
 
         writer.startNode("LiveCalls");
         writer.setValue(String.valueOf(size));
+        writer.endNode();
+
+        writer.startNode("CallsUpToNow");
+        writer.setValue(String.valueOf(callsUpToNow));
         writer.endNode();
 
         if (size > 0) {
