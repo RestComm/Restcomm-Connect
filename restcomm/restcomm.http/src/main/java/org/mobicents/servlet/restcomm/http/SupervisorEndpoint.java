@@ -30,6 +30,7 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
+import java.text.ParseException;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.http.converter.CallinfoConverter;
 import org.mobicents.servlet.restcomm.http.converter.CallinfoListConverter;
@@ -107,11 +109,19 @@ public class SupervisorEndpoint extends AbstractEndpoint{
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
+        CallDetailRecordFilter filterForTotal;
+        try {
+            filterForTotal = new CallDetailRecordFilter("", null, null, null, null,
+                    null, null, null);
+        } catch (ParseException e) {
+            return status(BAD_REQUEST).build();
+        }
+        int totalCalls = daos.getCallDetailRecordsDao().getTotalCallDetailRecords(filterForTotal);
         if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse("pong");
+            final RestCommResponse response = new RestCommResponse("TotalCalls: "+totalCalls);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson("pong"), APPLICATION_JSON).build();
+            return ok(gson.toJson("TotalCalls: "+totalCalls), APPLICATION_JSON).build();
         } else {
             return null;
         }

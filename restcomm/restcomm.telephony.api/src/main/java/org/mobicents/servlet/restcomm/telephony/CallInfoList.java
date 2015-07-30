@@ -28,13 +28,19 @@ import java.util.List;
  */
 public class CallInfoList {
     private final List<CallInfo> callInfoList;
+    private final int callsUpToNow;
 
-    public CallInfoList(final List<CallInfo> callInfoList) {
+    public CallInfoList(final List<CallInfo> callInfoList, final int callsUpToNow) {
         super();
         this.callInfoList = callInfoList;
+        this.callsUpToNow = callsUpToNow;
     }
 
     public List<CallInfo> getCallInfoList() {
         return callInfoList;
+    }
+
+    public int getCallsUpToNow() {
+        return callsUpToNow;
     }
 }
