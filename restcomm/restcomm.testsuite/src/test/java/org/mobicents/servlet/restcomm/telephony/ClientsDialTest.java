@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.text.ParseException;
+import java.util.Date;
 
 import javax.sip.Dialog;
 import javax.sip.address.SipURI;
@@ -190,6 +191,7 @@ public class ClientsDialTest {
         Thread.sleep(1000);
 
         // Maria initiates a call to Dimitri
+        long startTime = System.currentTimeMillis();
         final SipCall mariaCall = mariaPhone.createSipCall();
         mariaCall.initiateOutgoingCall(mariaContact, dimitriContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
@@ -235,13 +237,19 @@ public class ClientsDialTest {
 
         assertTrue(dimitriCall.waitForAck(3000));
         
+        //Talk time ~ 3sec
         Thread.sleep(3000);
         dimitriCall.listenForDisconnect();
         assertTrue(mariaCall.disconnect());
 
         assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
         assertTrue(dimitriCall.respondToDisconnect());
-
+        long endTime   = System.currentTimeMillis();
+        
+        long totalTime = endTime - startTime;
+        assertTrue(3 <= totalTime);
+        assertTrue(totalTime >= 4);
+        
         Thread.sleep(3000);
 
         //Check CDR
