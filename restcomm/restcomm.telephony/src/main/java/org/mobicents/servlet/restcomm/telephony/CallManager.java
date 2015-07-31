@@ -924,6 +924,9 @@ public final class CallManager extends UntypedActor {
             init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(), request.isFromApi(),
                     runtime.getString("api-version"), request.accountId(), request.type(), storage);
         }
+        if (request.parentCallSid() != null) {
+            init.setParentCallSid(request.parentCallSid());
+        }
         call.tell(init, self);
         return call;
     }

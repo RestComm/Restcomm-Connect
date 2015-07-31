@@ -467,6 +467,8 @@ public class DialTest {
 
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        //Ringing time 5 sec
+        Thread.sleep(5000);
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
@@ -485,8 +487,87 @@ public class DialTest {
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
         }
+        
+        Thread.sleep(3000);
+
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
+        assertNotNull(cdrs);
+        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
+        System.out.println("cdrsArray.size(): "+cdrsArray.size());
+        assertTrue(cdrsArray.size() == 2);
     }
 
+    @Test
+    public synchronized void testDialUriBobHangupCheckCDRs() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialURI, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        //Ringing time 5 sec
+        Thread.sleep(5000);
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        assertTrue(aliceCall.respondToDisconnect());
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+        
+        Thread.sleep(3000);
+
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
+        assertNotNull(cdrs);
+        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
+        assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsInt() == 8);
+        assertTrue(((JsonObject)cdrsArray.get(1)).get("duration").getAsInt() == 8);
+        if (((JsonObject)cdrsArray.get(0)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
+            assertTrue(((JsonObject)cdrsArray.get(0)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(1)).get("parent_call_sid").getAsString()));
+        } else {
+            assertTrue(((JsonObject)cdrsArray.get(1)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(0)).get("parent_call_sid").getAsString()));
+        }
+        assertTrue(cdrsArray.size() == 2);
+    }
+    
     @Test
     public synchronized void testDialClientAlice() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");

@@ -1381,14 +1381,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 CreateCall create = null;
                 final Tag child = dialChildren.get(0);
                 if (Nouns.client.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.CLIENT, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, null);
+                    }
                 } else if (Nouns.number.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.PSTN, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.PSTN, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.PSTN, accountId, null);
+                    }
                 } else if (Nouns.uri.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.SIP, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null);
+                    }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                     String username = null;
@@ -1399,8 +1414,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (child.attribute("password") != null) {
                         password = child.attribute("password").value();
                     }
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                            CreateCall.Type.SIP, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null);
+                    }
                 }
                 callManager.tell(create, source);
             } else {

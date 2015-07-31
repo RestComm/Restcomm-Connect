@@ -179,6 +179,7 @@ public final class Call extends UntypedActor {
     private DaoManager daoManager;
     private boolean liveCallModification;
     private boolean recording;
+    private Sid parentCallSid;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -476,6 +477,7 @@ public final class Call extends UntypedActor {
             username = request.username();
             password = request.password();
             type = request.type();
+            parentCallSid = request.getParentCallSid();
             recordsDao = request.getDaoManager().getCallDetailRecordsDao();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
@@ -512,6 +514,7 @@ public final class Call extends UntypedActor {
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());
                     builder.setCallerName(name);
+                    builder.setStartTime(new DateTime());
                     String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
                     builder.setFrom(fromString);
                     // builder.setForwardedFrom(callInfo.forwardedFrom());
@@ -529,6 +532,7 @@ public final class Call extends UntypedActor {
                     final URI uri = URI.create(buffer.toString());
                     builder.setUri(uri);
                     builder.setCallPath(self().path().toString());
+                    builder.setParentCallSid(parentCallSid);
                     outgoingCallRecord = builder.build();
                     recordsDao.addCallDetailRecord(outgoingCallRecord);
                 } else {
@@ -960,7 +964,6 @@ public final class Call extends UntypedActor {
             // Record call data
             if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
                 outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1039,7 +1042,7 @@ public final class Call extends UntypedActor {
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
                 final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
