@@ -45,6 +45,7 @@ public final class InitializeOutbound {
     private final Sid accountId;
     private final CreateCall.Type type;
     private final DaoManager daoManager;
+    private Sid parentCallSid;
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
@@ -105,5 +106,13 @@ public final class InitializeOutbound {
 
     public DaoManager getDaoManager() {
         return daoManager;
+    }
+
+    public Sid getParentCallSid() {
+        return parentCallSid;
+    }
+
+    public void setParentCallSid(Sid parentCallSid) {
+        this.parentCallSid = parentCallSid;
     }
 }

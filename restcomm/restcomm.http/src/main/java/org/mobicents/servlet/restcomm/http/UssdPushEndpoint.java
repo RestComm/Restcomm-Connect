@@ -130,7 +130,7 @@ public class UssdPushEndpoint extends AbstractEndpoint {
         CreateCall create = null;
         try {
             create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.USSD,
-                    accountId);
+                    accountId, null);
             create.setCreateCDR(false);
             Future<Object> future = (Future<Object>) ask(ussdCallManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
