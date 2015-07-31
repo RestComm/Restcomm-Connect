@@ -561,6 +561,11 @@ public class DialTest {
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
         assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsInt() == 8);
         assertTrue(((JsonObject)cdrsArray.get(1)).get("duration").getAsInt() == 8);
+        if (((JsonObject)cdrsArray.get(0)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
+            assertTrue(((JsonObject)cdrsArray.get(0)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(1)).get("parent_call_sid").getAsString()));
+        } else {
+            assertTrue(((JsonObject)cdrsArray.get(1)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(0)).get("parent_call_sid").getAsString()));
+        }
         assertTrue(cdrsArray.size() == 2);
     }
     

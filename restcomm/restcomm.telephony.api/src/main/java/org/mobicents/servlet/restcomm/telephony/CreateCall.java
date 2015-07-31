@@ -42,9 +42,10 @@ public final class CreateCall {
     private final Type type;
     private final Sid accountId;
     private boolean createCDR = true;
+    private final Sid parentCallSid;
 
     public CreateCall(final String from, final String to, final String username, final String password,
-            final boolean isFromApi, final int timeout, final Type type, final Sid accountId) {
+            final boolean isFromApi, final int timeout, final Type type, final Sid accountId, final Sid parentCallSid) {
         super();
         this.from = from;
         this.to = to;
@@ -54,6 +55,7 @@ public final class CreateCall {
         this.timeout = timeout;
         this.type = type;
         this.accountId = accountId;
+        this.parentCallSid = parentCallSid;
     }
 
     public String from() {
@@ -94,5 +96,9 @@ public final class CreateCall {
 
     public void setCreateCDR(boolean createCDR) {
         this.createCDR = createCDR;
+    }
+
+    public Sid parentCallSid() {
+        return parentCallSid;
     }
 }
