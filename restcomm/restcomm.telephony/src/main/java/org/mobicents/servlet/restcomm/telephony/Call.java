@@ -959,7 +959,6 @@ public final class Call extends UntypedActor {
             // Record call data
             if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
                 outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
