@@ -51,7 +51,7 @@
 				</or>
 			</pattern>
 		</servlet-mapping>
-		<servlet-mapping>
+<!-- 		<servlet-mapping>
 			<servlet-name>DlgcMsMonitorServlet</servlet-name>
 			<pattern>
 				<and>
@@ -80,7 +80,7 @@
 					</equal>
 				</and>
 			</pattern>
-		</servlet-mapping>
+		</servlet-mapping> -->
 	</servlet-selection>
 
 	<servlet>
@@ -159,7 +159,7 @@
 		</listener-class>
 	</listener>
 
-	<servlet>
+<!-- 	<servlet>
 		<description>XMS Keep Alive Monitor</description>
 		<display-name>KeepAliveMonitor</display-name>
 		<servlet-name>DlgcMsMonitorServlet</servlet-name>
@@ -191,5 +191,5 @@
 		<listener-class>
 			org.mobicents.servlet.restcomm.mscontrol.xms.servlet.listener.XmsServletListener
 		</listener-class>
-	</listener>
+	</listener> -->
 </sip-app>
