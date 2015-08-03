@@ -430,21 +430,25 @@ public class SmppClientOpsThread implements Runnable{
 
     public void sendSmppMessageToRestcomm (String smppMessage, String destSmppAddress, String sourceSmppAddress) throws IOException, ServletException{
 
+        SmppSession smppSession = SmppClientOpsThread.getSmppSessionForOutbound();
+
+
         SmppServiceProxy ssp = new SmppServiceProxy();
         ServletContext context = ssp.getSmppServletContext();
         Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
 
         //get the IP address of restcomm instance from the restcomm.xml file
-        String configIp = configuration.subset("runtime-settings").getString("external-ip");
+        String restcommInstanceIp = configuration.subset("runtime-settings").getString("external-ip");
         String restcommPort = "5080";
-        String ipAddress = "@" + configIp + ":" + restcommPort; //@IP:5080
+        String ipAddress = "@" + restcommInstanceIp + ":" + restcommPort; //@IP:5080
+        String smmpRemoteSourceIp = "@" + smppSession.getConfiguration().getHost() + ":" + restcommPort ; //result in sip:6666@PeerIP:5080
 
        // logger.error("IP address from restcomm.xml file" + ip);
 
        SipApplicationSession sipAppSession = ssp.getSmppSipFactory().createApplicationSession();
         String smppOriginalMessage = smppMessage ;
         String method = "MESSAGE";
-        String from = "sip:" + sourceSmppAddress + ipAddress;
+        String from = "sip:" + sourceSmppAddress + smmpRemoteSourceIp;
         String to =  "sip:" + destSmppAddress + ipAddress;
               javax.servlet.sip.Address factoryTo = ssp.getSmppSipFactory().createAddress(to);
              javax.servlet.sip.Address  factoryFrom = ssp.getSmppSipFactory().createAddress(from);

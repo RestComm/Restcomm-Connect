@@ -854,6 +854,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    @Override
     List<NameValuePair> parameters() {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
@@ -1552,7 +1553,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final ActorRef interpreter = builder.build();
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
+                Future<Object> future = ask(interpreter, start, expires);
                 Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
 
                 if (!End.class.equals(object.getClass())) {
@@ -1617,7 +1618,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             try {
                 logger.info("Trying to get outboundCall Info");
                 final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(call, new GetCallInfo(), expires);
+                Future<Object> future = ask(call, new GetCallInfo(), expires);
                 CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                         Duration.create(10, TimeUnit.SECONDS));
                 callInfo = callResponse.get();
@@ -1630,7 +1631,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             try {
                 logger.info("Trying to get outboundCall Info");
                 final Timeout expires = new Timeout(Duration.create(10, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(outboundCall, new GetCallInfo(), expires);
+                Future<Object> future = ask(outboundCall, new GetCallInfo(), expires);
                 CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                         Duration.create(10, TimeUnit.SECONDS));
                 outboundCallInfo = callResponse.get();
