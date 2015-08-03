@@ -56,6 +56,8 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.smpp.SmppClientOpsThread;
+import org.mobicents.servlet.restcomm.smpp.SmppSessionOutbound;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.util.UriUtils;
@@ -69,6 +71,7 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+import com.cloudhopper.smpp.SmppSession;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 
@@ -108,6 +111,17 @@ public final class SmsService extends UntypedActor {
         // TODO this.useTo = runtime.getBoolean("use-to");
     }
 
+    private ActorRef sendToSMPPService() {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
+            }
+        }));
+    }
+
     private void message(final Object message) throws IOException {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
@@ -118,6 +132,36 @@ public final class SmsService extends UntypedActor {
         final Client client = clients.getClient(fromUser);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
+
+
+        /// used to direct message to SMPP endpoint
+        final SipURI getUri = (SipURI) request.getRequestURI();
+        final String to = getUri.getUser();
+        if (to.equals("smpp") ){
+            logger.error("Sending message to SMPP endpoint - to: " + to );
+            ActorRef smppServiceSend =  sendToSMPPService();
+            ActorRef session = session();
+
+            //get SMPP session
+            SmppSession smppSession = SmppClientOpsThread.getSmppSessionForOutbound();
+            //make sure smpp session is bound
+
+            if (smppSession.isBound() && smppSession != null){
+                //accept sms and forward to SMPPSessionOutbound
+                logger.error("There is an Smpp Session running, message will be accepted");
+                final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
+                messageAccepted.send();
+                //send message to SmppSessionOutbound
+                smppServiceSend.tell(request, null);
+            }
+
+            //store message request in db
+            recordSmppMessageInDB (clients,  client,  request , to, session );
+            return;
+        }
+
+
+
 
         // Make sure we force clients to authenticate.
         if (client != null) {
@@ -344,6 +388,35 @@ public final class SmsService extends UntypedActor {
         final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
         session.tell(response, self);
     }
+
+private void recordSmppMessageInDB ( ClientsDao clients, Client client, SipServletRequest request, String to, ActorRef session ) throws IOException{
+    // Create an SMS detail record.
+
+    final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
+    final SmsMessage.Builder builder = SmsMessage.builder();
+    builder.setSid(sid);
+    builder.setAccountSid(client.getAccountSid());
+    builder.setApiVersion(client.getApiVersion());
+    builder.setRecipient(to);
+    builder.setSender(client.getLogin());
+    builder.setBody(new String(request.getRawContent()));
+    builder.setDirection(Direction.OUTBOUND_CALL);
+    builder.setStatus(Status.RECEIVED);
+    builder.setPrice(new BigDecimal("0.00"));
+    // TODO implement currency property to be read from Configuration
+    builder.setPriceUnit(Currency.getInstance("USD"));
+    final StringBuilder buffer = new StringBuilder();
+    buffer.append("/").append(client.getApiVersion()).append("/Accounts/");
+    buffer.append(client.getAccountSid().toString()).append("/SMS/Messages/");
+    buffer.append(sid.toString());
+    final URI uri = URI.create(buffer.toString());
+    builder.setUri(uri);
+    final SmsMessage record = builder.build();
+    final SmsMessagesDao messages = storage.getSmsMessagesDao();
+    messages.addSmsMessage(record);
+    session.tell(new SmsSessionAttribute("record", record), self());
+
+}
 
     @SuppressWarnings("unchecked")
     private SipURI outboundInterface() {

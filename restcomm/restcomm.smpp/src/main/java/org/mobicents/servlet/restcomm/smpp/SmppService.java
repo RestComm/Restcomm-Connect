@@ -92,7 +92,7 @@ public final class SmppService extends UntypedActor {
 
         logger.error("checking if to use SMPP connection set to : " +  config.getString("[@activateSmppConnection]") );
 
-
+        //get smpp address map from restcomm.xml file
         this.smppSourceAddressMap = config.getString("connections.connection[@sourceAddressMap]");
         this.smppDestinationAddressMap = config.getString("connections.connection[@destinationAddressMap]");
         this.smppTonNpiValue = config.getString("connections.connection[@tonNpiValue]");
