@@ -263,7 +263,8 @@
 	</sms-aggregator>
 
 
-    //by default activateSmppConnection is set to false 
+    <!-- by default activateSmppConnection is set to false -->
+     
     <smpp class="org.mobicents.servlet.restcomm.smpp.SmppService" activateSmppConnection ="false">
         <connections>
             <connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
