@@ -855,10 +855,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void conferenceStateModeratorPresent(final Object message) {
-        if (!startConferenceOnEnter && !muteCall) {
-            logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call");
-            call.tell(new Unmute(), self());
-        }
+        logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: "+call.path().toString());
+        call.tell(new Unmute(), self());
 
         if (confSubVoiceInterpreter != null) {
             logger.info("VoiceInterpreter stopping confSubVoiceInterpreter");
