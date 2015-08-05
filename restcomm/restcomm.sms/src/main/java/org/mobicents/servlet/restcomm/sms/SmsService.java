@@ -137,8 +137,8 @@ public final class SmsService extends UntypedActor {
         /// used to direct message to SMPP endpoint
         final SipURI getUri = (SipURI) request.getRequestURI();
         final String to = getUri.getUser();
-        if (to.equals("smpp") ){
-            logger.error("Sending message to SMPP endpoint - to: " + to );
+        if (to.toLowerCase().startsWith("smpp") ){
+            logger.info("Sending message to SMPP endpoint - to: " + to );
             ActorRef smppServiceSend =  sendToSMPPService();
             ActorRef session = session();
 
@@ -148,7 +148,7 @@ public final class SmsService extends UntypedActor {
 
             if (smppSession.isBound() && smppSession != null){
                 //accept sms and forward to SMPPSessionOutbound
-                logger.error("There is an Smpp Session running, message will be accepted");
+                logger.info("There is an Smpp Session running, message will be accepted");
                 final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
                 messageAccepted.send();
                 //send message to SmppSessionOutbound
@@ -156,7 +156,7 @@ public final class SmsService extends UntypedActor {
             }
 
             //store message request in db
-            recordSmppMessageInDB (clients,  client,  request , to, session );
+          //  recordSmppMessageInDB (clients,  client,  request , to, session );
             return;
         }
 
@@ -388,7 +388,7 @@ public final class SmsService extends UntypedActor {
         final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
         session.tell(response, self);
     }
-
+/**
 private void recordSmppMessageInDB ( ClientsDao clients, Client client, SipServletRequest request, String to, ActorRef session ) throws IOException{
     // Create an SMS detail record.
 
@@ -417,6 +417,7 @@ private void recordSmppMessageInDB ( ClientsDao clients, Client client, SipServl
     session.tell(new SmsSessionAttribute("record", record), self());
 
 }
+**/
 
     @SuppressWarnings("unchecked")
     private SipURI outboundInterface() {
