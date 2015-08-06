@@ -374,6 +374,7 @@
 
 	"projectSettingsModalSettingsLabel": "Settings",
 	"projectSettingsModalEnableAppLabel": "Enable application logging",
+	"projectSettingsModalLogRcmlLabel": "Log RCML",
 	"projectSettingsModalSaveButton": "Save",
 	"projectSettingsModalCancelButton": "Cancel",
 

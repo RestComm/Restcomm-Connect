@@ -359,6 +359,7 @@
 
 	"projectSettingsModalSettingsLabel": "Propriedades",
 	"projectSettingsModalEnableAppLabel": "Ativar log da aplicação",
+	"projectSettingsModalLogRcmlLabel": "Registrar RCML no log",
 	"projectSettingsModalSaveButton": "Salvar",
 	"projectSettingsModalCancelButton": "Cancelar",
 

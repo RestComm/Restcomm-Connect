@@ -5,7 +5,13 @@
 	<div class="row">
 		<div class="col-md-6">{{'projectSettingsModalEnableAppLabel' | translate}}</div>
 		<div class="col-md-6">
-			<input ng-model="projectSettings.logging" type="checkbox">
+			<input ng-model="projectSettings.logging" ng-change="changeLoggingSetting()" type="checkbox">
+		</div>
+	</div>
+	<div class="row" ng-if="projectSettings.logging">
+		<div class="col-md-6">{{'projectSettingsModalLogRcmlLabel' | translate}}</div>
+		<div class="col-md-6">
+			<input id="loggingRCMLInput" ng-model="projectSettings.loggingRCML" type="checkbox">
 		</div>
 	</div>
 </div>
