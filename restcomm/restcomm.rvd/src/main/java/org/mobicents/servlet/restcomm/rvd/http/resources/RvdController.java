@@ -86,7 +86,7 @@ public class RvdController extends RestService {
     private ModelMarshaler marshaler;
 
 
-    void init(RvdContext rvdContext) {
+    void init(RvdContext rvdContext) { 
         this.rvdContext = rvdContext;
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
@@ -102,6 +102,13 @@ public class RvdController extends RestService {
             String targetParam = requestParams.getFirst("target");
             Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams, workspaceStorage);
             rcmlResponse = interpreter.interpret();
+            
+            // logging rcml response, if configured 
+            // make sure logging is enabled before allowing access to sensitive log information
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appname, workspaceStorage);
+            if (projectSettings != null && projectSettings.getLogging() == true && projectSettings.getLoggingRCML() == true){
+            	interpreter.getProjectLogger().log("RCML Response: " + rcmlResponse).tag("app", appname).done();
+            }
 
         } catch (RemoteServiceError e) {
             logger.warn(e.getMessage());

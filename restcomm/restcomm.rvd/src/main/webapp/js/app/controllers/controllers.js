@@ -54,7 +54,7 @@ angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'p
 	
 	function retrieveLog() {
 		projectLogService.retrieve().then(
-			function (logData) {$scope.logData = logData;},
+			function (logData) {$scope.logData = logData.replace(/\\u003c/g,'<').replace(/\\u003e/g,'>').replace(/\\u003d/g,'=').replace(/\\n/g,'').replace(/\\"/g, '"');},
 			function (result) {
 				notifications.put({message:"Application log not available.", type:"warning"});
 			}
