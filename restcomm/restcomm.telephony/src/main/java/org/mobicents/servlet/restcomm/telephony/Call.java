@@ -161,6 +161,7 @@ public final class Call extends UntypedActor {
     private DateTime created;
     private final List<ActorRef> observers;
     private boolean receivedBye;
+    private boolean muted;
 
     // Conferencing
     private ActorRef conference;
@@ -356,7 +357,7 @@ public final class Call extends UntypedActor {
         final State state = fsm.state();
         logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString());
         logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
-                + sender.getClass());
+                + sender.path().toString());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -1092,13 +1093,15 @@ public final class Call extends UntypedActor {
         if (is(inProgress)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
+            muted = true;
         }
     }
 
     private void onUnmute(Unmute message, ActorRef self, ActorRef sender) {
-        if (is(inProgress)) {
+        if (is(inProgress) && muted) {
             // Forward to media server controller
             this.msController.tell(message, sender);
+            muted = false;
         }
     }
 
