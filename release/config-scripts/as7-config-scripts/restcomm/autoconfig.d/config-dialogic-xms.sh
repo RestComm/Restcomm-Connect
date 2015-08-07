@@ -10,7 +10,7 @@ activateXMS() {
 	restcomm_conf=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	
 	sed -e '/<mscontrol>/ {
-		N; s|<compatibility>.*</compatibility>|<compatibility>xms</compatibility>|
+		N; s|<compatibility>.*</compatibility>|<compatibility>mms</compatibility>|
 		N; s|<media-server name=".*">|<media-server name="Dialogic XMS">|
 	}' $restcomm_conf > $restcomm_conf.bak
 	mv -f $restcomm_conf.bak $restcomm_conf
