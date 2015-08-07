@@ -30,7 +30,7 @@ getSubnetMask() {
 ## Parameters : 1.Private IP
 ## 				2.Subnet Mask
 getNetwork() {
-  ipcalc -n $1 $2 | grep -i "Network" | awk '{print $2}' | awk -F/ '{print $1}';
+        ipcalc -n $1 $2 | grep -i "Network" | awk -F= '{print $2}';
 }
 
 # MAIN
