@@ -6,9 +6,9 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.ClientsDao">
   <insert id="addClient" parameterType="map">
     INSERT INTO "restcomm_clients" ("sid", "date_created", "date_updated", "account_sid", "api_version", "friendly_name", "login", "password",
-    "status", "voice_url", "voice_method", "voice_fallback_url", "voice_fallback_method", "voice_application_sid", "uri") VALUES (#{sid},
+    "status", "voice_url", "voice_method", "voice_fallback_url", "voice_fallback_method", "voice_application_sid", "uri", "date_last_usage") VALUES (#{sid},
     #{date_created}, #{date_updated}, #{account_sid}, #{api_version}, #{friendly_name}, #{login}, #{password}, #{status}, #{voice_url},
-    #{voice_method}, #{voice_fallback_url}, #{voice_fallback_method}, #{voice_application_sid}, #{uri});
+    #{voice_method}, #{voice_fallback_url}, #{voice_fallback_method}, #{voice_application_sid}, #{uri}, #{date_last_usage});
   </insert>
   
   <select id="getClient" parameterType="string" resultType="hashmap">

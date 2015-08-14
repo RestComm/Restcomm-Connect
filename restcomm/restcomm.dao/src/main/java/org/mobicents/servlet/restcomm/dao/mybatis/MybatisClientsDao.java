@@ -148,8 +148,9 @@ public final class MybatisClientsDao implements ClientsDao {
         final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
         final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
         final URI uri = readUri(map.get("uri"));
+        final DateTime dateLastUsage = readDateTime(map.get("date_last_usage"));
         return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
     }
 
     private Map<String, Object> toMap(final Client client) {
@@ -169,6 +170,7 @@ public final class MybatisClientsDao implements ClientsDao {
         map.put("voice_fallback_method", client.getVoiceFallbackMethod());
         map.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
         map.put("uri", writeUri(client.getUri()));
+        map.put("date_last_usage", writeDateTime(client.getDateLastUsage()));
         return map;
     }
 }

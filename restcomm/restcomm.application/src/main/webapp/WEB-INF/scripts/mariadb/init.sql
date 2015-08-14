@@ -151,7 +151,8 @@ voice_method VARCHAR(4),
 voice_fallback_url MEDIUMTEXT,
 voice_fallback_method VARCHAR(4),
 voice_application_sid VARCHAR(34),
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL,
+date_last_usage DATETIME
 );
 
 CREATE TABLE restcomm_registrations (
@@ -298,5 +299,5 @@ INSERT INTO restcomm_incoming_phone_numbers VALUES('PN46678e5b01d44973bf184f6527
 INSERT INTO restcomm_incoming_phone_numbers VALUES('PNb43ed9e641364277b6432547ff1109e9','2014-02-17 22:37:19.392000000','2014-02-17 22:37:19.392000000','RVD external services app, customer ID 1 or 2 ','ACae6e420f425248d6a26948c17a9e2acf','+1241','2012-04-24',FALSE,'/restcomm-rvd/services/apps/rvdESDemo/controller','POST',NULL,'POST',NULL,'POST',NULL,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNb43ed9e641364277b6432547ff1109e9',true, false, false, false, true);
 
 /* Create demo clients */
-INSERT INTO restcomm_clients VALUES('CLa2b99142e111427fbb489c3de357f60a','2013-11-04 12:52:44.144000000','2013-11-04 12:52:44.144000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','alice','alice','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a');
-INSERT INTO restcomm_clients VALUES('CL3003328d0de04ba68f38de85b732ed56','2013-11-04 16:33:39.248000000','2013-11-04 16:33:39.248000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','bob','bob','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56');
+INSERT INTO restcomm_clients VALUES('CLa2b99142e111427fbb489c3de357f60a','2013-11-04 12:52:44.144000000','2013-11-04 12:52:44.144000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','alice','alice','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a', NULL);
+INSERT INTO restcomm_clients VALUES('CL3003328d0de04ba68f38de85b732ed56','2013-11-04 16:33:39.248000000','2013-11-04 16:33:39.248000000','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24','bob','bob','1234',1,NULL,'POST',NULL,'POST',NULL,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56', NULL);

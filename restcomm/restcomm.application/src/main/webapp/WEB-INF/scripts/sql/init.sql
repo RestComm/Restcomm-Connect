@@ -147,7 +147,8 @@ CREATE TABLE "restcomm_clients" (
 "voice_fallback_url" LONGVARCHAR,
 "voice_fallback_method" VARCHAR(4),
 "voice_application_sid" VARCHAR(34),
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"date_last_usage" DATETIME
 );
 
 CREATE TABLE "restcomm_registrations" (

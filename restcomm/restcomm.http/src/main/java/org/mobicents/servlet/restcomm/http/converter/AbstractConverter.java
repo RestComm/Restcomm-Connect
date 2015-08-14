@@ -540,4 +540,22 @@ public abstract class AbstractConverter implements Converter {
             object.addProperty("fax_capable", Boolean.FALSE);
         }
     }
+    
+    protected void writeDateLastUsage(final DateTime dateLastUsage, final HierarchicalStreamWriter writer) {
+        writer.startNode("DateLastUsage");
+        if(dateLastUsage != null){
+        	writer.setValue(new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateLastUsage.toDate()));
+        } else {
+        	writer.setValue("offline");
+        }
+        writer.endNode();
+    }
+
+    protected void writeDateLastUsage(final DateTime dateLastUsage, final JsonObject object) {
+    	if(dateLastUsage != null){
+    		object.addProperty("date_last_usage", new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateLastUsage.toDate()));
+    	} else {
+    		object.addProperty("date_last_usage", "offline");
+    	}
+    }
 }
