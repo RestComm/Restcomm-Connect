@@ -30,7 +30,13 @@ getSubnetMask() {
 ## Parameters : 1.Private IP
 ## 				2.Subnet Mask
 getNetwork() {
-        ipcalc -n $1 $2 | grep -i "Network" | awk -F= '{print $2}';
+        #debian/ubuntu
+        NW=`ipcalc -n $1 $2 | grep -i "Network" | awk '{print $2}' | awk -F/ '{print $1}';`
+        if [[ -z "$NW" ]]; then
+            #rhel/centos/amazon
+            NW=`ipcalc -n $1 $2 | grep -i "Network" | awk -F= '{print $2}';`
+        fi
+        echo $NW
 }
 
 # MAIN
