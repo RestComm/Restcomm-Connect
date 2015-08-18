@@ -31,17 +31,19 @@ public class IdentityEndpoint extends AbstractEndpoint {
         keycloakClient.getToken();
         keycloakClient.addParam("name", instanceName); // what we put here??
         keycloakClient.addParam("prefix", baseUrl);
-        keycloakClient.addParam("secret", instanceSecret); // generate a random secret for the instance/restcomm-rest client if none specified in the request
+        keycloakClient.addParam("secret", instanceSecret);
         keycloakClient.makePostRequest(IDENTITY_PROXY_URL + "/api/instances"); // we assume that the identity proxy lives with the authorization server
 
         logger.info( "User '" + username + "' registed this instance as '" + instanceName + "' at authorization server " + authUrl);
         return Response.ok().build();
     }
 
+    // generate a random secret for the instance/restcomm-rest client if none specified in the request
     protected String generateInstanceSecret() {
         return UUID.randomUUID().toString();
     }
 
+    // convention: username-UUID
     protected String generateInstanceName(String username) {
         return username + "-" + UUID.randomUUID().toString().split("-")[0];
     }
