@@ -543,6 +543,30 @@ rcServices.value("rappManagerConfig", {rasHost: "apps.restcomm.com", rasApiKey:"
 
 'use strict';
 
+rcServices.factory("InstanceService", function($http) {
+	var service = {};
+	
+	service.registerInstance = function(instance) {
+		console.log("registering instance at " + instance.authUrl);
+		var params = $.param(instance);
+				
+		$http({
+			url:"/restcomm/identity/instance/register",
+			method: "POST",
+			headers:{'Content-Type': 'application/x-www-form-urlencoded'},
+			data: params
+		})
+		.success(function () {
+			console.log("succesfully registered instance");
+		})
+		.error(function () {
+			console.log("error registering instance");
+		});
+	} 
+	
+	return service
+});
+
 // otsakir: The service is used for *product* registration. We could name it ProductService instead of UserService and load with related functionality when needed? Btw, there is also the RCommAccounts service that deals with account management. 
 rcServices.factory('UserService', function($http){
         var service = {};

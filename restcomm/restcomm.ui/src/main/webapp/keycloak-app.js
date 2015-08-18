@@ -10,7 +10,7 @@ var logout = function(){
 
 
 angular.element(document).ready(function ($http) {
-	$http.get("/restcomm/keycloak/config/mode")
+	$http.get("/restcomm/identity/config/mode")
 	.success(function (data, status) {
 		angular.module("rcApp").constant("authMode",data.mode);
 		if (data.mode == "cloud") {
