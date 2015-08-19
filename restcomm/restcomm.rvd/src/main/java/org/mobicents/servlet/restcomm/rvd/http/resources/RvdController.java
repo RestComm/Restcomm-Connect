@@ -107,7 +107,7 @@ public class RvdController extends RestService {
             // make sure logging is enabled before allowing access to sensitive log information
             ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appname, workspaceStorage);
             if (projectSettings != null && projectSettings.getLogging() == true && projectSettings.getLoggingRCML() == true){
-            	interpreter.getProjectLogger().log("RCML Response: " + rcmlResponse).tag("app", appname).done();
+            	interpreter.getProjectLogger().log("RCML Response: " + rcmlResponse, false).tag("app", appname).done();
             }
 
         } catch (RemoteServiceError e) {

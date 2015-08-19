@@ -22,6 +22,7 @@ public class ProjectLogger {
     private String projectName;
     private String logFilePath;
     private ModelMarshaler marshaler;
+    private boolean useMarshaler;
 
     // Temporary variable holding log message as it is built.
 
@@ -29,16 +30,39 @@ public class ProjectLogger {
         this.projectName = projectName;
         this.logFilePath = settings.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PROJECT_LOG_FILENAME;
         this.marshaler = marshaler;
+        this.useMarshaler = true;
     }
 
     private Object payload;
     private String[] tags;
     private int tagCount = 0;
+    
+    /**
+     * Set the payload to be persisted on file. By using this method, marshaler will be implicitly
+     * applied to payload before write to file. To skip use of marshaler, use {@link #log(Object, boolean)}
+     * informing parameter <b>useMarshaler</b> as <b>false</b>.
+     * @param payload
+     * @return The current instance of {@link ProjectLogger}.
+     */
     public ProjectLogger log(Object payload) {
         tags = new String[MAX_TAGS];
         tagCount = 0;
         this.payload = payload;
         return this;
+    }
+    
+    /**
+     * Allow to log skipping marshaler before write to file. This method overloads
+     * {@link #log(Object)} that assumes <b>true</b> as default to the global variable
+     * <b>useMarshaler</b>. To skip marshaler by using this method, the value of the parameter
+     * <b>useMarshaler</b> must be informed as <b>false</b>.
+     * @param payload
+     * @param useMarshaler
+     * @return The current instance of {@link ProjectLogger}.
+     */
+    public ProjectLogger log(Object payload, boolean useMarshaler){
+    	this.useMarshaler = useMarshaler;
+    	return log(payload);
     }
 
     public ProjectLogger tag(String name, String value) {
@@ -69,7 +93,11 @@ public class ProjectLogger {
         }
         if ( buffer.length() > 0 )
             buffer.append(" ");
-        buffer.append(marshaler.toData(payload));
+        if(useMarshaler){
+        	buffer.append(marshaler.toData(payload));
+        } else {
+        	buffer.append(String.valueOf(payload));
+        }
         buffer.append(System.getProperty("line.separator"));  //add a newline
         // data is ready for writing. Make sure no newlines are there
 
