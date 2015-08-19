@@ -13,7 +13,6 @@ import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
-import org.mobicents.servlet.restcomm.identity.KeycloakAdminClient;
 
 /**
  *
@@ -21,7 +20,7 @@ import org.mobicents.servlet.restcomm.identity.KeycloakAdminClient;
  *
  */
 public abstract class SecuredEndpoint extends AbstractEndpoint {
-    protected KeycloakAdminClient keycloakClient;
+    //protected KeycloakAdminClient keycloakClient;
     protected static RestcommRoles restcommRoles;
 
     public SecuredEndpoint() {
@@ -32,7 +31,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         ShiroResources shiroResources = ShiroResources.getInstance();
         restcommRoles = shiroResources.get(RestcommRoles.class);
-        keycloakClient = new KeycloakAdminClient();
+        //keycloakClient = new KeycloakAdminClient();
     }
 
     // Throws an authorization exception in case the user does not have the permission OR does not own (or is a parent) the account

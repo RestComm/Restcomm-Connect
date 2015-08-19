@@ -20,12 +20,12 @@ import org.keycloak.util.JsonSerialization;
  * @author "Tsakiridis Orestis"
  *
  */
-public class KeycloakConfigurator {
-    protected Logger logger = Logger.getLogger(KeycloakConfigurator.class);
+public class IdentityConfigurator {
+    protected Logger logger = Logger.getLogger(IdentityConfigurator.class);
 
     public static class CloudIdentityNotSet extends Exception {}
 
-    private static KeycloakConfigurator singleInstance;
+    private static IdentityConfigurator singleInstance;
 
     public enum IdentityMode {
         init,
@@ -36,31 +36,32 @@ public class KeycloakConfigurator {
     // Fixed values for known properties that will help testing.They will be overriden in the long run.
     private final String realmKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB";
     private final String realmName = "restcomm";
-    private final String authServerUrl = "https://identity.restcomm.com/auth";
-    private final String cloudInstanceId; // instance ID on identity.restcomm.com
-    private final String restcommClientSecret;
+    //private String authServerUrl = "https://identity.restcomm.com/auth";
+    private String authServerUrlBase = "https://identity.restcomm.com";
+    private String cloudInstanceId; // instance ID on identity.restcomm.com
+    private String restcommClientSecret;
     private final String contextPath;
     private final String identityModeInConfig;
-    private final IdentityMode identityMode;
+    private IdentityMode identityMode;
 
-    public static KeycloakConfigurator create(Configuration restcommConfiguration, ServletContext context) {
+    public static IdentityConfigurator create(Configuration restcommConfiguration, ServletContext context) {
         // TODO - throw an exception if the instance has already been created??
         if (singleInstance != null) {
             throw new IllegalStateException("Singleton KeycloakConfigurator instance has already been created.");
         }
 
-        singleInstance = new KeycloakConfigurator(restcommConfiguration, context);
+        singleInstance = new IdentityConfigurator(restcommConfiguration, context);
         return singleInstance;
     }
 
-    public static KeycloakConfigurator getInstance() {
+    public static IdentityConfigurator getInstance() {
         if ( singleInstance == null )
             throw new IllegalStateException("KeycloakConfigurator singleton has not been created yet. Make sure restcomm bootstrapper has run.");
 
         return singleInstance;
     }
 
-    private KeycloakConfigurator(Configuration restcommConfiguration, ServletContext context) {
+    private IdentityConfigurator(Configuration restcommConfiguration, ServletContext context) {
         this.identityModeInConfig = restcommConfiguration.getString("runtime-settings.identity.mode");
         this.cloudInstanceId = restcommConfiguration.getString("runtime-settings.identity.instance-id");
         this.restcommClientSecret = restcommConfiguration.getString("runtime-settings.identity.restcomm-client-secret");
@@ -78,16 +79,34 @@ public class KeycloakConfigurator {
     }
 
     public String getAuthServerUrl() {
-        return authServerUrl;
+        return authServerUrlBase + "/auth";
+    }
+
+    public String getIdentityProxyUrl() {
+        return authServerUrlBase + "/instance-manager";
+    }
+
+    public void setAuthServerUrlBase(String authServerUrlBase) {
+        this.authServerUrlBase = authServerUrlBase;
     }
 
     public String getCloudInstanceId() {
         return cloudInstanceId;
     }
 
+    public void setCloudInstanceId(String identityInstanceId) {
+        this.cloudInstanceId = identityInstanceId;
+    }
+
     public String getContextPath() {
         return contextPath;
     }
+
+    public void setRestcommClientSecret(String restcommClientSecret) {
+        this.restcommClientSecret = restcommClientSecret;
+    }
+
+
 
     /**
      * Implements logic for determining identity mode based on config.
@@ -115,6 +134,10 @@ public class KeycloakConfigurator {
      */
     public IdentityMode getMode() {
         return identityMode;
+    }
+
+    public void setMode(IdentityMode mode) {
+        this.identityMode = mode;
     }
 
     public boolean isHookedUpToKeycloak() {
@@ -169,6 +192,11 @@ public class KeycloakConfigurator {
         config.setPublicClient(true);
 
         return config;
+    }
+
+    // update central configuration file restcomm.xml with current identity options.
+    public void updateRestcommXml() {
+        logger.warn("restcomm.xml has not been updated on the fly. You will need to stop, update manually and start your server. Here are the details: mode = " + getMode().toString() + ", instance-id = " + cloudInstanceId + ", restcomm-client-secret = " + restcommClientSecret + ", auth-server-url-base = " + authServerUrlBase );
     }
 
     // not used
