@@ -19,9 +19,9 @@ public class ProjectSettings {
     public Boolean getLogging() {
         return logging;
     }
-    
+
     public Boolean getLoggingRCML() {
-    	return loggingRCML;
+        return loggingRCML;
     }
 
 
