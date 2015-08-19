@@ -60,9 +60,9 @@ rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($route
 	} else
 	if (authMode == 'init') {
 		$routeProvider.
-			when('/config/unregistered', {templateUrl: 'modules/config-unregistered.html', controller: 'UnregisteredCtrl'}).
+			when('/unregistered', {templateUrl: 'modules/unregistered.html', controller: 'UnregisteredCtrl'}).
 			when('/register', {templateUrl: 'modules/register.html', controller: 'RegisterCtrl'}).
-			otherwise({redirectTo: '/register'});
+			otherwise({redirectTo: '/unregistered'});
 	}
 }]);
 

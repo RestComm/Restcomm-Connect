@@ -14,8 +14,18 @@ import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator;
 import org.mobicents.servlet.restcomm.identity.KeycloakClient.KeycloakClientException;
 import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator.IdentityMode;
 
+import com.google.gson.Gson;
+
 @Path("/instance")
 public class IdentityEndpoint extends AbstractEndpoint {
+
+    public class IdentityInstanceEntity {
+        private String instanceName;
+
+        public void setInstanceName(String instanceName) {
+            this.instanceName = instanceName;
+        }
+    }
 
     //public static String IDENTITY_PROXY_URL = "https://identity.restcomm.com/instance-manager";
     private KeycloakConfigurator keycloakConfigurator;
@@ -54,7 +64,12 @@ public class IdentityEndpoint extends AbstractEndpoint {
         keycloakConfigurator.updateRestcommXml(); // not effective until i find a way update restcomm.xml or store to database
 
         logger.info( "User '" + username + "' registed this instance as '" + instanceName + "' to authorization server " + authUrl);
-        return Response.ok().build();
+
+        IdentityInstanceEntity instanceEntity = new IdentityInstanceEntity();
+        instanceEntity.setInstanceName(instanceName);
+        Gson gson = new Gson();
+
+        return Response.ok().entity(gson.toJson(instanceEntity)).build();
     }
 
     // generate a random secret for the instance/restcomm-rest client if none specified in the request

@@ -547,7 +547,7 @@ rcServices.factory("InstanceService", function($http) {
 	var service = {};
 	
 	service.registerInstance = function(instance) {
-		console.log("registering instance at " + instance.authUrl);
+		console.log("registering instance to " + instance.authUrl);
 		var params = $.param(instance);
 				
 		$http({
@@ -556,8 +556,8 @@ rcServices.factory("InstanceService", function($http) {
 			headers:{'Content-Type': 'application/x-www-form-urlencoded'},
 			data: params
 		})
-		.success(function () {
-			console.log("succesfully registered instance");
+		.success(function (data) {
+			console.log("succesfully registered instance as " + data.instanceName);
 		})
 		.error(function () {
 			console.log("error registering instance");
