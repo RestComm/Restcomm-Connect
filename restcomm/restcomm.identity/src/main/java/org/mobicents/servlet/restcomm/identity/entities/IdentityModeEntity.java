@@ -1,6 +1,6 @@
 package org.mobicents.servlet.restcomm.identity.entities;
 
-import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator.IdentityMode;
+import org.mobicents.servlet.restcomm.identity.IdentityConfigurator.IdentityMode;
 
 public class IdentityModeEntity {
     private IdentityMode mode;

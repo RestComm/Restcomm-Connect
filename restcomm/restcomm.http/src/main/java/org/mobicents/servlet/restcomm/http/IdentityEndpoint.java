@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -9,16 +10,27 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.identity.KeycloakClient;
+import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator;
 import org.mobicents.servlet.restcomm.identity.KeycloakClient.KeycloakClientException;
+import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator.IdentityMode;
 
 @Path("/instance")
 public class IdentityEndpoint extends AbstractEndpoint {
 
-    public static String IDENTITY_PROXY_URL = "https://identity.restcomm.com/instance-manager";
+    //public static String IDENTITY_PROXY_URL = "https://identity.restcomm.com/instance-manager";
+    private KeycloakConfigurator keycloakConfigurator;
+
+
 
     public IdentityEndpoint() {
         // TODO Auto-generated constructor stub
     }
+
+    @PostConstruct
+    private void init() {
+        keycloakConfigurator = (KeycloakConfigurator) context.getAttribute(KeycloakConfigurator.class.getName());
+    }
+
 
     @POST
     @Path("/register")
@@ -32,9 +44,16 @@ public class IdentityEndpoint extends AbstractEndpoint {
         keycloakClient.addParam("name", instanceName); // what we put here??
         keycloakClient.addParam("prefix", baseUrl);
         keycloakClient.addParam("secret", instanceSecret);
-        keycloakClient.makePostRequest(IDENTITY_PROXY_URL + "/api/instances"); // we assume that the identity proxy lives with the authorization server
+        keycloakClient.makePostRequest(keycloakConfigurator.getIdentityProxyUrl() + "/api/instances"); // we assume that the identity proxy lives together with the authorization server
 
-        logger.info( "User '" + username + "' registed this instance as '" + instanceName + "' at authorization server " + authUrl);
+        // We're now registered. Update configuration. For now we will just store to RAM until a way is found to update restcomm.xml on the fly.
+        keycloakConfigurator.setAuthServerUrlBase(authUrl);
+        keycloakConfigurator.setMode(IdentityMode.cloud);
+        keycloakConfigurator.setRestcommClientSecret(instanceSecret);
+        keycloakConfigurator.setCloudInstanceId(instanceName);
+        keycloakConfigurator.updateRestcommXml(); // not effective until i find a way update restcomm.xml or store to database
+
+        logger.info( "User '" + username + "' registed this instance as '" + instanceName + "' to authorization server " + authUrl);
         return Response.ok().build();
     }
 

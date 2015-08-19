@@ -15,13 +15,13 @@ angular.element(document).ready(function ($http) {
 		angular.module("rcApp").constant("authMode",data.mode);
 		if (data.mode == "cloud") {
     
-			var keycloakAuth = new Keycloak('/restcomm/keycloak/config/restcomm-ui.json');
+			var keycloakAuth = new Keycloak('/restcomm/identity/config/restcomm-ui.json');
 			auth.loggedIn = false;
 
 			keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
 				auth.loggedIn = true;
 				auth.authz = keycloakAuth;
-				auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/restcomm-management/index.html";
+				auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/index.html";
 				angular.module('rcApp').factory('Auth', function() {
 					return auth;
 				});

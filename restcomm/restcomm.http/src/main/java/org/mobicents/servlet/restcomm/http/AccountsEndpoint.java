@@ -48,7 +48,6 @@ import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
-import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
@@ -164,7 +163,9 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response importKeycloakAccount() {
-        logger.info("in importKeycloakAccount");
+        logger.warn("importKeycloakAccount(): this method is deprecated");
+        return status(INTERNAL_SERVER_ERROR).build();
+        /*
         KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
         if (session.getToken() != null) {
             String loggedUsername = session.getToken().getPreferredUsername();
@@ -195,6 +196,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             }
         } else
             return status(UNAUTHORIZED).build();
+        */
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -411,13 +413,18 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     private void updateKeycloakUser(Account restcommAccount) throws IOException, KeycloakClientException {
         // retrieve the user from keycloak server, update and store back again
+        logger.warn("updateKeycloakUser(): this method is deprecated");
+        /*
         UserRepresentation keycloakUser = keycloakClient.getUserInfo(restcommAccount.getEmailAddress());
         keycloakUser.setFirstName(restcommAccount.getFriendlyName());
         keycloakUser.setEnabled( (restcommAccount.getStatus() == Account.Status.ACTIVE) ) ;
         keycloakClient.updateUser(restcommAccount.getEmailAddress(), keycloakUser);
+        */
     }
 
     private void createKeycloakUser(Account restcommAccount, String password) throws KeycloakClientException {
+        logger.warn("updateKeycloakUser(): this method is deprecated");
+        /*
         // create and populate keycloak user object
         UserRepresentation user = new UserRepresentation();
         user.setUsername(restcommAccount.getEmailAddress());
@@ -431,6 +438,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         roles.add("RestcommUser");
         roles.add("Developer");
         keycloakClient.setUserRoles(restcommAccount.getEmailAddress(), roles);
+        */
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
