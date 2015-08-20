@@ -13,15 +13,15 @@ import javax.ws.rs.Produces;
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
 import org.mobicents.servlet.restcomm.identity.entities.IdentityModeEntity;
-import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator;
-import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator.CloudIdentityNotSet;
+import org.mobicents.servlet.restcomm.identity.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.IdentityConfigurator.CloudIdentityNotSet;
 
 import com.google.gson.Gson;
 
 @Path("/config")
 public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
-    private KeycloakConfigurator keycloakConfigurator;
+    private IdentityConfigurator keycloakConfigurator;
 
     public KeycloakResourcesEndpoint() {
         super();
@@ -29,7 +29,7 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
-        keycloakConfigurator = (KeycloakConfigurator) context.getAttribute(KeycloakConfigurator.class.getName());
+        keycloakConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
     }
 
     @GET

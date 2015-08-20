@@ -543,10 +543,11 @@ rcServices.value("rappManagerConfig", {rasHost: "apps.restcomm.com", rasApiKey:"
 
 'use strict';
 
-rcServices.factory("InstanceService", function($http) {
+rcServices.factory("InstanceService", function($http, $q) {
 	var service = {};
 	
 	service.registerInstance = function(instance) {
+		var deferred = $q.defer();
 		console.log("registering instance to " + instance.authUrl);
 		var params = $.param(instance);
 				
@@ -558,10 +559,14 @@ rcServices.factory("InstanceService", function($http) {
 		})
 		.success(function (data) {
 			console.log("succesfully registered instance as " + data.instanceName);
+			deferred.resolve();
 		})
 		.error(function () {
 			console.log("error registering instance");
+			deferred.reject();
 		});
+		
+		return deferred.promise;
 	} 
 	
 	return service

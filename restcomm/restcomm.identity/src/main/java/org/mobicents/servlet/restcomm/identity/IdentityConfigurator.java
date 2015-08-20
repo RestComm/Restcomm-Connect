@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.keycloak.representations.adapters.config.AdapterConfig;
@@ -195,8 +196,18 @@ public class IdentityConfigurator {
     }
 
     // update central configuration file restcomm.xml with current identity options.
-    public void updateRestcommXml() {
-        logger.warn("restcomm.xml has not been updated on the fly. You will need to stop, update manually and start your server. Here are the details: mode = " + getMode().toString() + ", instance-id = " + cloudInstanceId + ", restcomm-client-secret = " + restcommClientSecret + ", auth-server-url-base = " + authServerUrlBase );
+    public void updateRestcommXml(XMLConfiguration restcommConfiguration) {
+        //logger.info("restcomm.xml has been updated with the following identity settings: mode = " + getMode().toString() + ", instance-id = " + cloudInstanceId + ", restcomm-client-secret = " + restcommClientSecret + ", auth-server-url-base = " + authServerUrlBase );
+        restcommConfiguration.setProperty("runtime-settings.identity.mode", getMode().toString() );
+        restcommConfiguration.setProperty("runtime-settings.identity.instance-id", cloudInstanceId);
+        restcommConfiguration.setProperty("runtime-settings.identity.restcomm-client-secret", restcommClientSecret );
+        restcommConfiguration.setProperty("runtime-settings.identity.auth-server-url-base", authServerUrlBase );
+        //try {
+            logger.warn("restcomm.xml has not been updated. Here are the respective identity settings: mode = " + getMode().toString() + ", instance-id = " + cloudInstanceId + ", restcomm-client-secret = " + restcommClientSecret + ", auth-server-url-base = " + authServerUrlBase );
+            //restcommConfiguration.save();
+        //} catch (ConfigurationException e) {
+        //    logger.warn("restcomm.xml couldn't be updated on the fly. You will need to stop, update manually and start your server. Here are the details: mode = " + getMode().toString() + ", instance-id = " + cloudInstanceId + ", restcomm-client-secret = " + restcommClientSecret + ", auth-server-url-base = " + authServerUrlBase );
+        //}
     }
 
     // not used
