@@ -253,6 +253,7 @@ public class SmppClientOpsThread implements Runnable{
             config0.setWindowSize(esme.getWindowSize());
             config0.setName(esme.getSystemId());
             config0.setType(esme.getSmppBindType());
+            config0.setSystemType(esme.getSystemType());
             config0.setHost(esme.getPeerIp());
             config0.setPort(esme.getPeerPort());
             config0.setConnectTimeout(esme.getConnectTimeout());
@@ -355,27 +356,40 @@ public class SmppClientOpsThread implements Runnable{
         public PduResponse firePduRequestReceived(PduRequest pduRequest) {
             // TODO : SMPP request received. Let RestComm know so it calls
             // coresponding App
-            logger.info("PduRequest received for Smpp " + this.esme.getName()
-                    + " PduRequest=" + pduRequest);
+            //logger.info("PduRequest received for Smpp " + this.esme.getName() + " PduRequest= " + pduRequest);
 
             PduResponse response = pduRequest.createResponse();
-            DeliverSm deliverSm = (DeliverSm) pduRequest;
 
-            String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
-            String destSmppAddress = deliverSm.getDestAddress().getAddress();
-            String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
+
+            //Nexmo keeps sending enquire_link in response that causes
+            //problem with normal PDU request. This tells Restcomm SMPP to do Nothing
+            //with the request
+            if( pduRequest.toString().toLowerCase().contains("enquire_link") ){
+
+
+                //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
+
+            }else{
+
+
+                DeliverSm deliverSm = (DeliverSm) pduRequest;
+                String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                String destSmppAddress = deliverSm.getDestAddress().getAddress();
+                String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
 
             //send received SMPP PDU message to restcomm
             try {
-                sendSmppMessageToRestcomm (decodedPduMessage, destSmppAddress, sourceSmppAddress ) ;
-            } catch (IOException | ServletException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                    sendSmppMessageToRestcomm (decodedPduMessage, destSmppAddress, sourceSmppAddress ) ;
+                } catch (IOException | ServletException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+
             }
 
-
-
             return response;
+
+
 
         }
 
