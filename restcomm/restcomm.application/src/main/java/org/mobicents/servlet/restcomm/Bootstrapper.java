@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
-import org.mobicents.servlet.restcomm.identity.KeycloakConfigurator;
+import org.mobicents.servlet.restcomm.identity.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
@@ -157,8 +157,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
 
             // Initialize keycloak configuration
-            KeycloakConfigurator keycloakConfig = KeycloakConfigurator.create(xml, context);
-            context.setAttribute(KeycloakConfigurator.class.getName(), keycloakConfig);
+            IdentityConfigurator keycloakConfig = IdentityConfigurator.create(xml, context);
+            context.setAttribute(IdentityConfigurator.class.getName(), keycloakConfig);
             /*
             logger.info("Updating keycloak adapters configuration");
             try {
