@@ -170,6 +170,27 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         }
         return status;
     }
+    
+    protected Response getClientPresence(final String accountSid, final String sid, final MediaType responseType){
+    	try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Client client = dao.getClientPresence(new Sid(sid));
+        if (client == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(client);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(client), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
+        }
+    }
 
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {

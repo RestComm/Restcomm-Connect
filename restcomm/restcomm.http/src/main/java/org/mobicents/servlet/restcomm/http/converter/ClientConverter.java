@@ -26,6 +26,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Client;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -59,7 +60,7 @@ public class ClientConverter extends AbstractConverter implements JsonSerializer
         writeFriendlyName(client.getFriendlyName(), writer);
         writeLogin(client.getLogin(), writer);
         writePassword(client.getPassword(), writer);
-        writeStatus(client.getStatus().toString(), writer);
+        writeStatus(client.getStatus() == null ? null : client.getStatus().toString(), writer);
         writeVoiceUrl(client.getVoiceUrl(), writer);
         writeVoiceMethod(client.getVoiceMethod(), writer);
         writeVoiceFallbackUrl(client.getVoiceFallbackUrl(), writer);
@@ -81,7 +82,7 @@ public class ClientConverter extends AbstractConverter implements JsonSerializer
         writeFriendlyName(client.getFriendlyName(), object);
         writeLogin(client.getLogin(), object);
         writePassword(client.getPassword(), object);
-        writeStatus(client.getStatus().toString(), object);
+        writeStatus(client.getStatus() == null ? null : client.getStatus().toString(), object);
         writeVoiceUrl(client.getVoiceUrl(), object);
         writeVoiceMethod(client.getVoiceMethod(), object);
         writeVoiceFallbackUrl(client.getVoiceFallbackUrl(), object);
@@ -93,22 +94,34 @@ public class ClientConverter extends AbstractConverter implements JsonSerializer
     }
 
     protected void writeLogin(final String login, final HierarchicalStreamWriter writer) {
-        writer.startNode("Login");
-        writer.setValue(login);
-        writer.endNode();
+        if(login != null){
+        	writer.startNode("Login");
+        	writer.setValue(login);
+        	writer.endNode();
+        }
     }
 
     protected void writeLogin(final String login, final JsonObject object) {
-        object.addProperty("login", login);
+    	if(login != null){
+    		object.addProperty("login", login);
+    	} else {
+    		object.add("login", JsonNull.INSTANCE);
+    	}
     }
 
     protected void writePassword(final String password, final HierarchicalStreamWriter writer) {
-        writer.startNode("Password");
-        writer.setValue(password);
-        writer.endNode();
+        if(password != null){
+        	writer.startNode("Password");
+        	writer.setValue(password);
+        	writer.endNode();
+        }
     }
 
     protected void writePassword(final String password, final JsonObject object) {
-        object.addProperty("password", password);
+    	if(password != null){
+    		object.addProperty("password", password);
+    	} else {
+    		object.add("password", JsonNull.INSTANCE);
+    	}
     }
 }

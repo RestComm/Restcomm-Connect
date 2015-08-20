@@ -100,6 +100,11 @@ public final class MybatisClientsDao implements ClientsDao {
             session.close();
         }
     }
+    
+    @Override
+    public Client getClientPresence(final Sid sid){
+    	return cleanPresenceAuxiliarAttributes(getClient(namespace + "getClientPresence", sid.toString()));
+    }
 
     @Override
     public void removeClient(final Sid sid) {
@@ -141,7 +146,7 @@ public final class MybatisClientsDao implements ClientsDao {
         final String friendlyName = readString(map.get("friendly_name"));
         final String login = readString(map.get("login"));
         final String password = readString(map.get("password"));
-        final int status = readInteger(map.get("status"));
+        final Integer status = readInteger(map.get("status"));
         final URI voiceUrl = readUri(map.get("voice_url"));
         final String voiceMethod = readString(map.get("voice_method"));
         final URI voiceFallbackUrl = readUri(map.get("voice_fallback_url"));
@@ -172,5 +177,24 @@ public final class MybatisClientsDao implements ClientsDao {
         map.put("uri", writeUri(client.getUri()));
         map.put("date_last_usage", writeDateTime(client.getDateLastUsage()));
         return map;
+    }
+    
+    /**
+     * Evaluates informed {@link Client} object to deal properly with the
+     * difference between a non existent {@link Client} and a {@link Client}
+     * with <b>null</b> presence attribute.
+     * This method was originally created to support the persistence layer,
+     * where the result from a single column/line select may be considered as <b>null</b>,
+     * when actually only the column value is <b>null</b>.
+     * For more info, see MyBatis setting <b>callSettersOnNulls</b>.
+     * @param client
+     * @return The instance of {@link Client} with the presence attribute if the client was found,
+     * and <b>null</b> if there is no such client on database.
+     */
+    private Client cleanPresenceAuxiliarAttributes(Client client){
+    	if(client != null){
+    		return new Client(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, client.getDateLastUsage());
+    	}
+    	return null;
     }
 }
