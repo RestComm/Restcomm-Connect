@@ -185,6 +185,7 @@ public final class SmppService extends UntypedActor {
             this.smppList.add(smpp);
 
             logger.info("creating new SMPP connection " + smpp);
+
         }
 
         // for monitoring thread use, it's preferable to create your own
