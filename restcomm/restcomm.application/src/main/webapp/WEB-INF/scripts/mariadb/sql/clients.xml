@@ -40,4 +40,8 @@
     voice_method=#{voice_method}, voice_fallback_url=#{voice_fallback_url}, voice_fallback_method=#{voice_fallback_method},
     voice_application_sid=#{voice_application_sid} WHERE sid=#{sid};
   </update>
+  
+  <update id="updateClientPresence" parameterType="map">
+    UPDATE "restcomm_clients" SET "date_last_usage"=#{date_last_usage} WHERE "login"=#{login};
+  </update>
 </mapper>

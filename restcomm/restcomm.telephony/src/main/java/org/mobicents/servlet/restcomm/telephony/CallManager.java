@@ -73,6 +73,7 @@ import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.telephony.util.PresenceControlHelper;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import scala.concurrent.Await;
@@ -298,8 +299,9 @@ public final class CallManager extends UntypedActor {
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     || CallControlHelper.checkAuthentication(request, storage)) {
-                // if the client has authenticated, try to redirect to the Client VoiceURL app
+                // if the client has authenticated, update presence info and try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
+            	PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
                     return;
                 } // else continue trying other ways to handle the request
@@ -471,6 +473,8 @@ public final class CallManager extends UntypedActor {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
             call.tell(request, self);
         }
+        //Update presence info
+        PresenceControlHelper.updateClientPresence(request.getFrom().getDisplayName(), storage.getClientsDao());
     }
 
     /**
@@ -1009,6 +1013,8 @@ public final class CallManager extends UntypedActor {
             if (call != null)
                 call.tell(request, self);
         }
+        //Update presence info
+        PresenceControlHelper.updateClientPresence(request.getFrom().getDisplayName(), storage.getClientsDao());
     }
 
     public void response(final Object message) throws IOException {

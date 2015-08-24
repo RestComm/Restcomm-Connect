@@ -43,4 +43,7 @@ public interface ClientsDao {
     void removeClients(Sid accountSid);
 
     void updateClient(Client client);
+    
+    void updateClientPresence(Client client);
+    
 }

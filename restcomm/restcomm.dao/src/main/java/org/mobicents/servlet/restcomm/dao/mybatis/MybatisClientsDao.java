@@ -136,6 +136,17 @@ public final class MybatisClientsDao implements ClientsDao {
             session.close();
         }
     }
+    
+    @Override
+    public void updateClientPresence(final Client client){
+    	final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateClientPresence", toMap(client));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
 
     private Client toClient(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));
@@ -193,7 +204,8 @@ public final class MybatisClientsDao implements ClientsDao {
      */
     private Client cleanPresenceAuxiliarAttributes(Client client){
     	if(client != null){
-    		return new Client(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, client.getDateLastUsage());
+    		return new Client(null, null, null, null, null, null, null, null, null, 
+    				null, null, null, null, null, null, client.getDateLastUsage());
     	}
     	return null;
     }

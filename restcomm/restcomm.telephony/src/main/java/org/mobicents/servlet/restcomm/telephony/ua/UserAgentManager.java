@@ -51,6 +51,7 @@ import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.util.PresenceControlHelper;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
 
 import scala.concurrent.duration.Duration;
@@ -311,6 +312,8 @@ public final class UserAgentManager extends UntypedActor {
             response.setHeader("Contact", contact(uri, ttl));
         }
         // Success
+        // Update presence info
+        PresenceControlHelper.updateClientPresence(request.getFrom().getDisplayName(), storage.getClientsDao());
         response.send();
         // Cleanup
         // if(request.getSession().isValid()) {

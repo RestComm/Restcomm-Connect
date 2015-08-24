@@ -58,6 +58,7 @@ import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.telephony.util.PresenceControlHelper;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
@@ -188,6 +189,8 @@ public final class SmsService extends UntypedActor {
                     null);
             session.tell(sms, self());
             }
+            //Update presence info
+            PresenceControlHelper.updateClientPresence(request.getFrom().getDisplayName(), storage.getClientsDao());
         } else {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
             response.send();
