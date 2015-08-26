@@ -1155,6 +1155,10 @@ public final class Call extends UntypedActor {
             if (to.getPort() > -1) {
                 buffer.append(":").append(to.getPort());
             }
+            String transport = to.getTransportParam();
+            if (transport != null) {
+                buffer.append(";transport=").append(to.getTransportParam());
+            }
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute(Call.class.getName(), self);
