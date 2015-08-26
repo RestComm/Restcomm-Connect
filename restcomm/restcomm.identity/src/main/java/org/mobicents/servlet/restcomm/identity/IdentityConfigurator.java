@@ -44,6 +44,7 @@ public class IdentityConfigurator {
     private final String contextPath;
     private final String identityModeInConfig;
     private IdentityMode identityMode;
+    private static final String IDENTITY_PROXY_CONTEXT_NAME = "restcomm-identity";
 
     public static IdentityConfigurator create(Configuration restcommConfiguration, ServletContext context) {
         // TODO - throw an exception if the instance has already been created??
@@ -66,9 +67,10 @@ public class IdentityConfigurator {
         this.identityModeInConfig = restcommConfiguration.getString("runtime-settings.identity.mode");
         this.cloudInstanceId = restcommConfiguration.getString("runtime-settings.identity.instance-id");
         this.restcommClientSecret = restcommConfiguration.getString("runtime-settings.identity.restcomm-client-secret");
+        this.authServerUrlBase = restcommConfiguration.getString("runtime-settings.identity.auth-server-url-base");
         this.contextPath = context.getRealPath("/");
         this.identityMode = determineMode();
-        logger.info("Restcomm now operating in '" + identityMode + "' identity mode. Instance id: " + getCloudInstanceId());
+        logger.info("Restcomm is now operating in '" + identityMode + "' identity mode" + (StringUtils.isEmpty(this.authServerUrlBase) ? "" : " using authorization server " + this.authServerUrlBase )  +". Instance id: " + getCloudInstanceId());
     }
 
     public String getRealmKey() {
@@ -84,8 +86,13 @@ public class IdentityConfigurator {
     }
 
     public String getIdentityProxyUrl() {
-        return authServerUrlBase + "/instance-manager";
+        return authServerUrlBase + "/" + IDENTITY_PROXY_CONTEXT_NAME;
     }
+
+    public static String getIdentityProxyUrl(String authServerUrlBase ) {
+        return authServerUrlBase + "/" + IDENTITY_PROXY_CONTEXT_NAME;
+    }
+
 
     public void setAuthServerUrlBase(String authServerUrlBase) {
         this.authServerUrlBase = authServerUrlBase;
@@ -157,6 +164,7 @@ public class IdentityConfigurator {
         config.setResource(cloudInstanceId + "-restcomm-rest");
         config.setEnableBasicAuth(true);
         config.setCors(true);
+        config.setUseResourceRoleMappings(true);
 
         Map<String,String> credentials = new HashMap<String,String>();
         credentials.put("secret", restcommClientSecret);
@@ -176,6 +184,7 @@ public class IdentityConfigurator {
         config.setSslRequired("all");
         config.setResource(cloudInstanceId + "-restcomm-ui");
         config.setPublicClient(true);
+        config.setUseResourceRoleMappings(true);
 
         return config;
     }

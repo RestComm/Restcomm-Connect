@@ -11,8 +11,12 @@ var rcMod = angular.module('rcApp');
         
         $scope.instance = {};
         $scope.instance.authUrl = "https://identity.restcomm.com"; // TODO - this is hardcoded! Should we replace it with something read from configuration?
-        $scope.instance.restcommBaseUrl = "https://192.168.2.3:8443";
+        $scope.instance.restcommBaseUrl = buildOrigin($location); //"https://192.168.1.39:8443";
 
+        function buildOrigin(location) {
+        	return location.protocol() + "://" + location.host() + (location.port() ? ":" + location.port() : "");
+        }
+        
         /*
         $scope.register = function() {
         $scope.dataLoading = true;
