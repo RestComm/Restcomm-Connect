@@ -5,6 +5,7 @@ import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
 import org.mobicents.servlet.restcomm.identity.IdentityConfigurator.CloudIdentityNotSet;
+import org.mobicents.servlet.restcomm.identity.IdentityConfigurator.IdentityMode;
 
 public class RestcommConfKeycloakResolver implements KeycloakConfigResolver {
 
@@ -17,8 +18,13 @@ public class RestcommConfKeycloakResolver implements KeycloakConfigResolver {
 
     @Override
     public KeycloakDeployment resolve(Request request) {
-        if ( cache == null) {
-            IdentityConfigurator configurator = IdentityConfigurator.getInstance();
+        IdentityConfigurator configurator = IdentityConfigurator.getInstance();
+        if ( configurator.getMode() == IdentityMode.init ) {
+            // no caching here if we're in init mode
+            KeycloakDeployment deployment = new KeycloakDeployment();
+            // return an empty deployment
+            return deployment;
+        } else {
             try {
                 cache = KeycloakDeploymentBuilder.build(configurator.getRestcommConfig());
             } catch (CloudIdentityNotSet e) {
