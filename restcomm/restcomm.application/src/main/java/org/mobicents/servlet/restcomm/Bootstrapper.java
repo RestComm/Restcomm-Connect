@@ -160,8 +160,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return result;
     }
 
-    private ActorRef gateway(final Configuration configuration, final ClassLoader loader) throws UnknownHostException {
-        final Configuration settings = configuration.subset("media-server");
+    private ActorRef gateway(final Configuration settings, final ClassLoader loader) throws UnknownHostException {
         final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
