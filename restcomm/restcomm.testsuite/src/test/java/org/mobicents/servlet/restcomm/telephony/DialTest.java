@@ -685,7 +685,7 @@ public class DialTest {
     }
     
     //Test for issue RESTCOMM-617
-    @Test
+    @Test @Ignore //Because of https://github.com/Mobicents/sipunit/issues/4
     public synchronized void testDialClientAliceToBigDID() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
