@@ -58,7 +58,7 @@ public class IdentityEndpoint extends AbstractEndpoint {
         keycloakClient.addParam("name", instanceName); // what we put here??
         keycloakClient.addParam("prefix", baseUrl);
         keycloakClient.addParam("secret", instanceSecret);
-        keycloakClient.makePostRequest(identityConfigurator.getIdentityProxyUrl() + "/api/instances"); // we assume that the identity proxy lives together with the authorization server
+        keycloakClient.makePostRequest(IdentityConfigurator.getIdentityProxyUrl(authUrl) + "/api/instances"); // we assume that the identity proxy lives together with the authorization server
 
         // We're now registered. Update configuration. For now we will just store to RAM until a way is found to update restcomm.xml on the fly.
         identityConfigurator.setAuthServerUrlBase(authUrl);

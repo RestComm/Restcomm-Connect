@@ -23,11 +23,12 @@
     <servlet-name>Jersey</servlet-name>
     <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
   </servlet>
-  
+    
   <context-param>
     <param-name>keycloak.config.resolver</param-name>
-    <param-value>org.mobicents.servlet.restcomm.keycloak.RestcommConfKeycloakResolver</param-value>
-  </context-param>
+    <param-value>org.mobicents.servlet.restcomm.identity.RestcommConfKeycloakResolver</param-value>
+  </context-param>  
+
   
   <context-param>
     <param-name>resteasy.scan</param-name>
@@ -47,6 +48,7 @@
   <servlet-mapping>
     <servlet-name>Jersey</servlet-name>
     <url-pattern>/2012-04-24/*</url-pattern>
+    <!--<url-pattern>/keycloak/*</url-pattern> -->
   </servlet-mapping>
   
 	<security-constraint>
