@@ -16,7 +16,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,6 +97,7 @@ public class DialTest {
     private static SipStackTool tool3;
     private static SipStackTool tool4;
     private static SipStackTool tool5;
+    private static SipStackTool tool6;
 
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
@@ -110,6 +110,10 @@ public class DialTest {
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5091";
 
+    private SipStack aliceTcpSipStack;
+    private SipPhone aliceTcpPhone;
+    private String aliceTcpContact = "sip:alice@127.0.0.1:5093;transport=tcp";
+    
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
@@ -149,6 +153,7 @@ public class DialTest {
         tool3 = new SipStackTool("CallTestDial3");
         tool4 = new SipStackTool("CallTestDial4");
         tool5 = new SipStackTool("CallTestDial5");
+        tool6 = new SipStackTool("CallTestDial6");
     }
 
     @Before
@@ -159,6 +164,9 @@ public class DialTest {
         aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
 
+        aliceTcpSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5093", "127.0.0.1:5080");
+        aliceTcpPhone = aliceTcpSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, aliceTcpContact);
+        
         henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
         henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
 
@@ -621,8 +629,63 @@ public class DialTest {
         }
     }
     
-    //Test for issue RESTCOMM-617
     @Test
+    public synchronized void testDialClientAliceTCP() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+        aliceTcpPhone.setLoopback(true);
+        
+        // Phone2 register as alice
+        SipURI uri = aliceTcpSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(aliceTcpPhone.register(uri, "alice", "1234", aliceTcpContact, 3600, 3600));
+        
+        // Prepare second phone to receive call
+        SipCall aliceCall = aliceTcpPhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClient, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        aliceCall.listenForIncomingCall();
+        assertTrue(aliceCall.waitForIncomingCall(60 * 1000));
+        System.out.println("!!!!!!!!! Exception: "+aliceCall.getException());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+    
+    //Test for issue RESTCOMM-617
+    @Test @Ignore //Because of https://github.com/Mobicents/sipunit/issues/4
     public synchronized void testDialClientAliceToBigDID() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
