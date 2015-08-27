@@ -231,6 +231,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
         transitions.add(new Transition(initializingCall, downloadingRcml));
+        transitions.add(new Transition(initializingCall, ready));
         transitions.add(new Transition(initializingCall, finishDialing));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
@@ -535,7 +536,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // update db and callback statusCallback url.
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
-                    fsm.transition(message, downloadingRcml);
+                  if (parser != null) {
+                      fsm.transition(message, ready);
+                    } else {
+                        fsm.transition(message, downloadingRcml);
+                    }
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
