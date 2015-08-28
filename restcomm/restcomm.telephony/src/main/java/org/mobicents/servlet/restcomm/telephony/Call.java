@@ -1430,7 +1430,7 @@ public final class Call extends UntypedActor {
                         answer = SdpUtils.endWithNewLine(answer);
                         okay.setContent(answer, "application/sdp");
                         okay.send();
-                    } else if (SipSession.State.CONFIRMED.equals(sessionState)) {
+                    } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
                         // We have an ongoing call and Restcomm executes new RCML app on that
                         // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
                         SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
