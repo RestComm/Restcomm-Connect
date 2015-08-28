@@ -36,7 +36,6 @@ import org.junit.After;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -44,14 +43,20 @@ import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.email.EmailRequest;
 import org.mobicents.servlet.restcomm.email.Mail;
 
+import com.icegreen.greenmail.user.UserException;
+import com.icegreen.greenmail.util.GreenMail;
+import com.icegreen.greenmail.util.ServerSetupTest;
+
+import javax.mail.internet.MimeMessage;
+
 
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
  */
-@Ignore
 public final class EmailServiceTest {
     private ActorSystem system;
     private ActorRef emailService;
+    private GreenMail mailServer;
 
     public EmailServiceTest() {
         super();
@@ -59,6 +64,9 @@ public final class EmailServiceTest {
 
     @Before
     public void before() throws Exception {
+        mailServer = new GreenMail(ServerSetupTest.SMTP);
+        mailServer.start();
+        mailServer.setUser("hascode@localhost", "hascode", "abcdef123");
         system = ActorSystem.create();
         final URL input = getClass().getResource("/emailServiceTest.xml");
         final XMLConfiguration configuration = new XMLConfiguration(input);
@@ -68,6 +76,7 @@ public final class EmailServiceTest {
     @After
     public void after() throws Exception {
         system.shutdown();
+        mailServer.stop();
     }
 
     private ActorRef emailService(final Configuration configuration) {
@@ -88,14 +97,29 @@ public final class EmailServiceTest {
         new JavaTestKit(system) {
             {
                 final ActorRef observer = getRef();
+
                 // Send the email.
-                final Mail emailMsg = new Mail("from@****.com", "to@****.com","Testing Email Service" , "This is the subject of the email service testing");
+                final Mail emailMsg = new Mail("hascode@localhost", "someone@localhost.com","Testing Email Service" , "This is the subject of the email service testing", "someone2@localhost.com, test@localhost.com, test3@localhost.com");
                 emailService.tell(new EmailRequest(emailMsg), observer);
 
                 final EmailResponse response = expectMsgClass(FiniteDuration.create(60, TimeUnit.SECONDS), EmailResponse.class);
                 assertTrue(response.succeeded());
-                System.out.println(response.get().toString());
+
+                // fetch messages from server
+                MimeMessage[] messages = mailServer.getReceivedMessages();
+                assertNotNull(messages);
+                assertEquals(4, messages.length);
+                MimeMessage m = messages[0];
+                try {
+                assertEquals(emailMsg.subject(), m.getSubject());
+                assertTrue(String.valueOf(m.getContent()).contains(emailMsg.body()));
+                assertEquals(emailMsg.from(), m.getFrom()[0].toString());
+                } catch(Exception e){
+                    assertTrue(false);
+            }
             }
         };
     }
 }
+
+
