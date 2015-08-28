@@ -233,6 +233,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, finished));
         transitions.add(new Transition(acquiringCallInfo, acquiringCallMediaGroup));
         transitions.add(new Transition(initializingCall, acquiringCallMediaGroup));
+        transitions.add(new Transition(initializingCall, finishDialing));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
         transitions.add(new Transition(acquiringCallMediaGroup, initializingCallMediaGroup));
@@ -1442,14 +1443,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 CreateCall create = null;
                 final Tag child = dialChildren.get(0);
                 if (Nouns.client.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.CLIENT, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, null);
+                    }
                 } else if (Nouns.number.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.PSTN, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.PSTN, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.PSTN, accountId, null);
+                    }
                 } else if (Nouns.uri.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.SIP, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null);
+                    }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                     String username = null;
@@ -1460,8 +1476,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (child.attribute("password") != null) {
                         password = child.attribute("password").value();
                     }
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                            CreateCall.Type.SIP, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null);
+                    }
                 }
                 callManager.tell(create, source);
             } else {
@@ -1668,7 +1689,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         // Handle Failed Calls
         if (message instanceof CallManagerResponse && !(((CallManagerResponse<ActorRef>) message).succeeded())) {
             parameters.add(new BasicNameValuePair("DialCallSid", null));
-            parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.name()));
+            parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.toString()));
             parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
             parameters.add(new BasicNameValuePair("RecordingUrl", null));
             parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
@@ -1686,13 +1707,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("DialCallSid", dialCallSid));
                 // parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
                 // .toString()));
-                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
+                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
                 parameters.add(new BasicNameValuePair("DialCallSid", null));
-                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
+                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
@@ -1784,8 +1805,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-
-            Attribute attribute = verb.attribute("action");
+            Attribute attribute = null;
+           if(verb !=null) {
+                 attribute = verb.attribute("action");
+            }
 
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
                 if (message instanceof ReceiveTimeout)
@@ -1812,6 +1835,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     dialChildren = null;
                     outboundCall = null;
+                    callback();
                     return;
                 } else if (bridged.equals(state)) {
                     outboundCall.tell(new Hangup(), source);
@@ -1863,6 +1887,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("Executing Dial Action url");
                     executeDialAction(message, null);
                 }
+                callback();
                 return;
             } else {
                 logger.info("Action attribute is null.");
@@ -1870,7 +1895,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
-            parser.tell(next, source);
+            if(parser !=null) {
+                parser.tell(next, source);
+            }
+
             dialChildren = null;
             outboundCall = null;
         }

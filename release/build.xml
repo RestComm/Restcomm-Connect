@@ -14,7 +14,7 @@
     /restcomm" name="restcomm.docs.as7.dir"/>
 
 <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="612"/>
+  <property name="sipservlets-build" value="620"/>
   <property name="mobicents-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
 <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="mobicents-media.version" value="3.0.2.Final"/>

@@ -276,13 +276,13 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         try {
             if (to.contains("@")) {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
-                        accountId);
+                        accountId, null);
             } else if (to.startsWith("client")) {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
-                        accountId);
+                        accountId, null);
             } else {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
-                        accountId);
+                        accountId, null);
             }
             create.setCreateCDR(false);
             if (callManager == null)
