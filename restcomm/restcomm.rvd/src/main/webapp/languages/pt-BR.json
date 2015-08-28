@@ -358,7 +358,7 @@
 	"sms":"sms",
 
 	"projectSettingsModalSettingsLabel": "Propriedades",
-	"projectSettingsModalEnableAppLabel": "Ativar log da aplicação",
+	"projectSettingsModalEnableAppLabel": "Log da aplicação",
 	"projectSettingsModalLogRcmlLabel": "Registrar RCML no log",
 	"projectSettingsModalSaveButton": "Salvar",
 	"projectSettingsModalCancelButton": "Cancelar",
