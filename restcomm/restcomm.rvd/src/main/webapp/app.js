@@ -68,8 +68,8 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
   		suffix: '.json'
 	});
 	$translateProvider.useCookieStorage();
-	$translateProvider.use('en-US');
-
+	$translateProvider.preferredLanguage('en-US');
+	
 }]);
 
 App.factory( 'dragService', [function () {
