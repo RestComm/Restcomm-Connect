@@ -111,7 +111,7 @@ import org.mobicents.servlet.restcomm.telephony.DestroyConference;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
-import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
+import org.mobicents.servlet.restcomm.telephony.GetRelatedCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.Reject;
@@ -814,8 +814,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
-        } else if (GetOutboundCall.class.equals(klass)) {
-            onGetOutboundCall((GetOutboundCall) message, self, sender);
+        } else if (GetRelatedCall.class.equals(klass)) {
+            onGetRelatedCall((GetRelatedCall) message, self, sender);
         }
     }
 
@@ -848,9 +848,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private void onGetOutboundCall(GetOutboundCall message, ActorRef self, ActorRef sender) {
+    private void onGetRelatedCall(GetRelatedCall message, ActorRef self, ActorRef sender) {
+        final ActorRef callActor = message.call();
         if (outboundCall != null) {
-            sender.tell(outboundCall, self);
+            if (callActor.equals(outboundCall)) {
+                sender.tell(call, self);
+            } else if (callActor.equals(call)) {
+                sender.tell(outboundCall, self);
+            }
         } else {
             // If previously that was a p2p call that changed to conference (for hold)
             // and now it changes again to a new url, the outbound call is null since
