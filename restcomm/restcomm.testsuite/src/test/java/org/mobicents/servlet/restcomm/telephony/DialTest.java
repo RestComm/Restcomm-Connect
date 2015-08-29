@@ -446,6 +446,15 @@ public class DialTest {
     @Test
     public synchronized void testDialUriBobHangup() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
+        
+        int initialCdrSize = 0;
+        
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
+        if (cdrs != null) {
+            initialCdrSize = cdrs.get("calls").getAsJsonArray().size();
+        }
+        
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -500,16 +509,24 @@ public class DialTest {
         Thread.sleep(3000);
 
         //Check CDR
-        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
+        cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
-        assertTrue(cdrsArray.size() == 2);
+        assertTrue((cdrsArray.size() - initialCdrSize )== 2);
     }
 
     @Test
     public synchronized void testDialUriBobHangupCheckCDRs() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
+        
+        int initialCdrSize = 0;
+        
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
+        if (cdrs != null) {
+            initialCdrSize = cdrs.get("calls").getAsJsonArray().size();
+        }
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -564,17 +581,17 @@ public class DialTest {
         Thread.sleep(3000);
 
         //Check CDR
-        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
+        cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
-        assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsInt() == 8);
-        assertTrue(((JsonObject)cdrsArray.get(1)).get("duration").getAsInt() == 8);
-        if (((JsonObject)cdrsArray.get(0)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
-            assertTrue(((JsonObject)cdrsArray.get(0)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(1)).get("parent_call_sid").getAsString()));
+        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-1)).get("duration").getAsInt() == 8);
+        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size())).get("duration").getAsInt() == 8);
+        if (((JsonObject)cdrsArray.get(initialCdrSize)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
+            assertTrue(((JsonObject)cdrsArray.get(initialCdrSize)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(initialCdrSize+1)).get("parent_call_sid").getAsString()));
         } else {
-            assertTrue(((JsonObject)cdrsArray.get(1)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(0)).get("parent_call_sid").getAsString()));
+            assertTrue(((JsonObject)cdrsArray.get(initialCdrSize+1)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(initialCdrSize)).get("parent_call_sid").getAsString()));
         }
-        assertTrue(cdrsArray.size() == 2);
+        assertTrue((cdrsArray.size() - initialCdrSize) == 2);
     }
     
     @Test
@@ -629,7 +646,7 @@ public class DialTest {
         }
     }
     
-    @Test
+    @Test @Ignore //Ignore because of issue: https://github.com/Mobicents/sipunit/issues/4
     public synchronized void testDialClientAliceTCP() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
         aliceTcpPhone.setLoopback(true);
@@ -685,7 +702,7 @@ public class DialTest {
     }
     
     //Test for issue RESTCOMM-617
-    @Test @Ignore //Because of https://github.com/Mobicents/sipunit/issues/4
+    @Test
     public synchronized void testDialClientAliceToBigDID() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
