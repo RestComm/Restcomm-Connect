@@ -754,29 +754,28 @@ public final class CallManager extends UntypedActor {
         List<ActorRef> callObservers = response.get();
 
         // Get the Voice Interpreter currently handling the call
-        // XXX Unsafe way of retrieving the intended actor!!!
         ActorRef existingInterpreter = callObservers.iterator().next();
 
         // Get the outbound leg of this call
-        future = (Future<Object>) ask(existingInterpreter, new GetOutboundCall(), expires);
+        future = (Future<Object>) ask(existingInterpreter, new GetRelatedCall(call), expires);
         Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
 
-        ActorRef outboundCall = null;
+        ActorRef relatedCall = null;
         if (answer instanceof ActorRef) {
-            outboundCall = (ActorRef) answer;
+            relatedCall = (ActorRef) answer;
         }
 
         logger.info("About to start Live Call Modification");
         logger.info("Initial Call path: " + call.path());
-        if (outboundCall != null) {
-            logger.info("Outbound Call path: " + outboundCall.path());
+        if (relatedCall != null) {
+            logger.info("Related Call path: " + relatedCall.path());
         }
 
         // Cleanup all observers from both call legs
         logger.info("Will tell Call actors to stop observing existing Interpreters");
         call.tell(new StopObserving(), self());
-        if (outboundCall != null) {
-            outboundCall.tell(new StopObserving(), self());
+        if (relatedCall != null) {
+            relatedCall.tell(new StopObserving(), self());
         }
         logger.info("Existing observers removed from Calls actors");
 
@@ -810,18 +809,18 @@ public final class CallManager extends UntypedActor {
         logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
 
         // Check what to do with the second/outbound call leg of the call
-        if (outboundCall != null) {
+        if (relatedCall != null) {
             if (moveConnectedCallLeg) {
-                final ActorRef outboundInterpreter = builder.build();
-                logger.info("About to redirect outbound Call :" + outboundCall.path()
-                        + " with 200ms delay to outbound interpreter: " + outboundInterpreter.path());
-                system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), outboundInterpreter,
-                        new StartInterpreter(outboundCall), system.dispatcher());
-                logger.info("New Intepreter for Second call leg: " + outboundInterpreter.path() + " started");
+                final ActorRef relatedInterpreter = builder.build();
+                logger.info("About to redirect related Call :" + relatedCall.path()
+                        + " with 200ms delay to related interpreter: " + relatedInterpreter.path());
+                system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), relatedInterpreter,
+                        new StartInterpreter(relatedCall), system.dispatcher());
+                logger.info("New Intepreter for Second call leg: " + relatedInterpreter.path() + " started");
             } else {
-                logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup outboundCall");
-                outboundCall.tell(new Hangup(), null);
-                getContext().stop(outboundCall);
+                logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup relatedCall: "+relatedCall.path());
+                relatedCall.tell(new Hangup(), null);
+//                getContext().stop(relatedCall);
             }
         }
     }
@@ -838,7 +837,15 @@ public final class CallManager extends UntypedActor {
         SipURI to = null;
         switch (request.type()) {
             case CLIENT: {
-                SipURI outboundIntf = outboundInterface("udp");
+                SipURI outboundIntf = null;
+                final RegistrationsDao registrations = storage.getRegistrationsDao();
+                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
+                if (registration != null && registration.getAddressOfRecord().contains("transport")) {
+                    String transport = registration.getAddressOfRecord().split(";")[1].replace("transport=", "");
+                    outboundIntf = outboundInterface(transport);
+                } else {
+                    outboundIntf = outboundInterface("udp");
+                }
                 if (request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
                     // to use it directly
@@ -848,9 +855,6 @@ public final class CallManager extends UntypedActor {
                 } else {
                     from = outboundIntf;
                 }
-//                from = outboundInterface("udp");
-                final RegistrationsDao registrations = storage.getRegistrationsDao();
-                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
                 if (registration != null) {
                     final String location = registration.getLocation();
                     to = (SipURI) sipFactory.createURI(location);

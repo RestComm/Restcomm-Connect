@@ -19,12 +19,20 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
+import akka.actor.ActorRef;
+
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class GetOutboundCall {
-    public GetOutboundCall() {
+public class GetRelatedCall {
+    final ActorRef call;
+    public GetRelatedCall(ActorRef call) {
         super();
+        this.call = call;
+    }
+
+    public ActorRef call() {
+        return call;
     }
 }

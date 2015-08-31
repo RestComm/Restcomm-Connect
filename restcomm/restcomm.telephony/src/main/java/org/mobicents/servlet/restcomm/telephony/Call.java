@@ -562,6 +562,10 @@ public final class Call extends UntypedActor {
             if (to.getPort() > -1) {
                 buffer.append(":").append(to.getPort());
             }
+            String transport = to.getTransportParam();
+            if (transport != null) {
+                buffer.append(";transport=").append(to.getTransportParam());
+            }
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
             application.setAttribute(Call.class.getName(), self);
@@ -1434,7 +1438,7 @@ public final class Call extends UntypedActor {
                         answer = SdpUtils.endWithNewLine(answer);
                         okay.setContent(answer, "application/sdp");
                         okay.send();
-                    } else if (SipSession.State.CONFIRMED.equals(sessionState)) {
+                    } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
                         // We have an ongoing call and Restcomm executes new RCML app on that
                         // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
                         SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
