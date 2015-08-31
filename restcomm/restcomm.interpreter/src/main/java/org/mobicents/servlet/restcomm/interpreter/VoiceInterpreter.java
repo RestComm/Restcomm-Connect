@@ -111,7 +111,7 @@ import org.mobicents.servlet.restcomm.telephony.DestroyConference;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
-import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
+import org.mobicents.servlet.restcomm.telephony.GetRelatedCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.Reject;
@@ -231,6 +231,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
         transitions.add(new Transition(initializingCall, downloadingRcml));
+        transitions.add(new Transition(initializingCall, ready));
+        transitions.add(new Transition(initializingCall, finishDialing));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
         transitions.add(new Transition(downloadingRcml, ready));
@@ -535,7 +537,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // update db and callback statusCallback url.
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
-                    fsm.transition(message, downloadingRcml);
+                  if (parser != null) {
+                      fsm.transition(message, ready);
+                    } else {
+                        fsm.transition(message, downloadingRcml);
+                    }
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
@@ -809,8 +815,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
-        } else if (GetOutboundCall.class.equals(klass)) {
-            onGetOutboundCall((GetOutboundCall) message, self, sender);
+        } else if (GetRelatedCall.class.equals(klass)) {
+            onGetRelatedCall((GetRelatedCall) message, self, sender);
         }
     }
 
@@ -843,9 +849,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private void onGetOutboundCall(GetOutboundCall message, ActorRef self, ActorRef sender) {
+    private void onGetRelatedCall(GetRelatedCall message, ActorRef self, ActorRef sender) {
+        final ActorRef callActor = message.call();
         if (outboundCall != null) {
-            sender.tell(outboundCall, self);
+            if (callActor.equals(outboundCall)) {
+                sender.tell(call, self);
+            } else if (callActor.equals(call)) {
+                sender.tell(outboundCall, self);
+            }
         } else {
             // If previously that was a p2p call that changed to conference (for hold)
             // and now it changes again to a new url, the outbound call is null since
@@ -1698,8 +1709,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-
-            Attribute attribute = verb.attribute("action");
+            Attribute attribute = null;
+           if(verb !=null) {
+                 attribute = verb.attribute("action");
+            }
 
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
                 if (message instanceof ReceiveTimeout) {
@@ -1769,7 +1782,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
-            parser.tell(next, source);
+            if(parser !=null) {
+                parser.tell(next, source);
+            }
+
             dialChildren = null;
             outboundCall = null;
         }
