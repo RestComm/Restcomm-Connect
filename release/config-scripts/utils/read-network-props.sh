@@ -17,16 +17,16 @@ getPrivateIP() {
 ## Description: Gets the public IP of the instance 
 ## Parameters : none
 getPublicIP() {
-        PIP=`wget --tries=5 --timeout=5 -qO- http://ipecho.net/plain`
-        if [[ -z "$PIP" ]]; then
-            echo "Could not determine public IP via ipecho.net, trying observebox.com"
+        PIP_IP=`wget --tries=5 --timeout=5 -qO- http://ipecho.net/plain`
+        if [[ -z "$PIP_IP" ]]; then
             PIP=`wget --tries=5 --timeout=5 -qO- http://observebox.com/ip`
         fi
         if [[ -z "$PIP" ]]; then
             echo "Failed to determine public IP"
             exit 1;
+        else
+            echo $PIP
         fi
-        echo $PIP
 }
 
 ## Description: Gets the broadcast address of the instance 
