@@ -33,6 +33,7 @@ import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.AvailablePhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
+import org.mobicents.servlet.restcomm.dao.ConfigurationDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
@@ -74,6 +75,7 @@ public final class MybatisDaoManager implements DaoManager {
     private TranscriptionsDao transcriptionsDao;
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
+    private ConfigurationDao configurationDao;
 
     public MybatisDaoManager() {
         super();
@@ -172,6 +174,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public ConfigurationDao getConfigurationDao() {
+        return configurationDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -235,5 +242,6 @@ public final class MybatisDaoManager implements DaoManager {
         usageDao = new MybatisUsageDao(sessions);
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
+        configurationDao = new MyBatisConfigurationDao(sessions);
     }
 }
