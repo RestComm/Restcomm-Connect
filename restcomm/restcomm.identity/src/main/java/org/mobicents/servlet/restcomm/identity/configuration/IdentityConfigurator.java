@@ -1,0 +1,239 @@
+package org.mobicents.servlet.restcomm.identity.configuration;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.keycloak.representations.adapters.config.AdapterConfig;
+import org.keycloak.representations.adapters.config.BaseAdapterConfig;
+
+public class IdentityConfigurator implements IdentityConfigurationSet  {
+    protected Logger logger = Logger.getLogger(IdentityConfigurator.class);
+
+    protected static final IdentityMode DEFAULT_IDENTITY_MODE = IdentityMode.init;
+    protected static final String DEFAULT_REALM_NAME = "restcomm";
+    protected static final String DEFAULT_AUTH_SERVER_URL_BASE = "https://identity.restcomm.com";
+    protected static final String DEFAULT_REALM_PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB";
+    protected static final String IDENTITY_PROXY_CONTEXT_NAME = "restcomm-identity";
+
+    protected IdentityMode identityMode;
+    protected String identityInstanceId; // instance ID on authorization server
+    protected String restcommClientSecret;
+    protected String authServerUrlBase;
+    protected String realmPublicKey;
+
+    protected String realmName;
+
+    protected static IdentityConfigurator singleInstance;
+
+
+    IdentityConfigurationSource configurationSource;
+
+    public static IdentityConfigurator create(IdentityConfigurationSource source) {
+        // TODO - throw an exception if the instance has already been created??
+        if (singleInstance != null) {
+            throw new IllegalStateException("Singleton KeycloakConfigurator instance has already been created.");
+        }
+
+        singleInstance = new IdentityConfigurator(source);
+        return singleInstance;
+    }
+
+    public static IdentityConfigurator getInstance() {
+        if ( singleInstance == null )
+            throw new IllegalStateException("KeycloakConfigurator singleton has not been created yet. Make sure restcomm bootstrapper has run.");
+
+        return singleInstance;
+    }
+
+    private IdentityConfigurator(IdentityConfigurationSource source) {
+        this.configurationSource = source;
+        this.realmName = DEFAULT_REALM_NAME;
+        this.realmPublicKey = DEFAULT_REALM_PUBLIC_KEY;
+        load();
+    }
+
+    public IdentityConfigurationSource getConfigurationSource() {
+        return configurationSource;
+    }
+
+    // Loads configuration settings from the configuration source and initializes configurator
+    public void load() {
+        this.identityMode = loadMode();
+        if (this.identityMode != IdentityMode.init) {
+            // looks like we need to load other configuration options too
+            this.identityInstanceId = loadInstanceId();
+            this.restcommClientSecret = loadRestcommClientSecret();
+            this.authServerUrlBase = loadAuthServerUrlBase();
+        }
+
+        if ( this.identityMode == IdentityMode.init) {
+            logger.info("Restcomm is now operating in 'init' mode. Only restration capabilities will be available");
+        } else
+            logger.info("Restcomm is now operating in '" + identityMode + "' identity mode" + (StringUtils.isEmpty(this.authServerUrlBase) ? "" : " using authorization server " + this.authServerUrlBase )  +". Instance id: " + identityInstanceId);
+    }
+
+    public void save() {
+        configurationSource.saveMode(identityMode.toString());
+        configurationSource.saveInstanceId(identityInstanceId);
+        configurationSource.saveRestcommClientSecret(restcommClientSecret);
+        configurationSource.saveAuthServerUrlBase(authServerUrlBase);
+        logger.debug("Persisted identity specific configuration to storage");
+    }
+
+    private IdentityMode loadMode() {
+        String mode = configurationSource.loadMode();
+        IdentityMode identityMode;
+        if (StringUtils.isEmpty(mode))
+            identityMode = DEFAULT_IDENTITY_MODE;
+        else
+            identityMode = IdentityMode.valueOf(mode); // TODO in case of conversion error throw a InvalidIdentityConfiguration exception
+        return identityMode;
+    }
+
+    private String loadInstanceId() {
+        return configurationSource.loadInstanceId();
+    }
+
+    private String loadRestcommClientSecret() {
+        return configurationSource.loadRestcommClientSecret();
+    }
+
+    private String loadAuthServerUrlBase() {
+        return configurationSource.loadAuthServerUrlBase();
+    }
+
+    public IdentityMode getMode() {
+        return identityMode;
+    }
+
+    public String getRealmPublicKey() {
+        return realmPublicKey;
+    }
+
+    public String getRealmName() {
+        return realmName;
+    }
+
+    public String getAuthServerUrl() {
+        return authServerUrlBase + "/auth";
+    }
+
+    public String getIdentityProxyUrl() {
+        return authServerUrlBase + "/" + IDENTITY_PROXY_CONTEXT_NAME;
+    }
+
+    public String getIdentityProxyUrl(String authServerUrlBase ) {
+        return authServerUrlBase + "/" + IDENTITY_PROXY_CONTEXT_NAME;
+    }
+
+    public String getRestcommClientSecret() {
+        return restcommClientSecret;
+    }
+
+    @Override
+    public String getRealmKey() {
+        return realmPublicKey;
+    }
+
+    @Override
+    public String getIdentityInstanceId() {
+        return identityInstanceId;
+    }
+
+
+    @Override
+    public void setAuthServerUrlBase(String urlBase) {
+        this.authServerUrlBase = urlBase;
+    }
+
+    @Override
+    public void setMode(IdentityMode mode) {
+        this.identityMode = mode;
+    }
+
+    @Override
+    public void setRestcommClientSecret(String secret) {
+        this.restcommClientSecret = secret;
+    }
+
+    @Override
+    public void setInstanceId(String instanceId) {
+        this.identityInstanceId = instanceId;
+    }
+
+    // Returns null if no instanceId is set
+    public AdapterConfig getRestcommConfig() throws IdentityNotSet {
+        if ( StringUtils.isEmpty(getIdentityInstanceId()))
+            throw new IdentityNotSet("Error while building keycloak adapter configuration for restcomm-rest client");
+        AdapterConfig config = new AdapterConfig();
+        config.setRealm(getRealmName());
+        config.setRealmKey(getRealmKey());
+        config.setAuthServerUrl(getAuthServerUrl());
+        config.setSslRequired("all");
+        config.setResource(getIdentityInstanceId() + "-restcomm-rest");
+        config.setEnableBasicAuth(true);
+        config.setCors(true);
+        config.setUseResourceRoleMappings(true);
+
+        Map<String,String> credentials = new HashMap<String,String>();
+        credentials.put("secret", getRestcommClientSecret());
+        config.setCredentials(credentials);
+
+        return config;
+    }
+
+    // Returns null if no instanceId is set
+    public BaseAdapterConfig getRestcommUIConfig() throws IdentityNotSet {
+        if ( StringUtils.isEmpty(getIdentityInstanceId()))
+            throw new IdentityNotSet("Error while building keycloak adapter configuration for restcomm-ui client");
+        BaseAdapterConfig config = new BaseAdapterConfig();
+        config.setRealm(getRealmName());
+        config.setRealmKey(getRealmKey());
+        config.setAuthServerUrl(getAuthServerUrl());
+        config.setSslRequired("all");
+        config.setResource(getIdentityInstanceId() + "-restcomm-ui");
+        config.setPublicClient(true);
+        config.setUseResourceRoleMappings(true);
+
+        return config;
+    }
+
+    // Returns null if no instanceId is set
+    public BaseAdapterConfig getRestcommRvdUIConfig() throws IdentityNotSet {
+        if ( StringUtils.isEmpty(getIdentityInstanceId()))
+            throw new IdentityNotSet("Error while building keycloak adapter configuration for restcomm-rvd-ui client");
+        BaseAdapterConfig config = new BaseAdapterConfig();
+        config.setRealm(getRealmName());
+        config.setRealmKey(getRealmKey());
+        config.setAuthServerUrl(getAuthServerUrl());
+        config.setSslRequired("all");
+        config.setResource(getIdentityInstanceId() + "-restcomm-rvd-ui");
+        config.setPublicClient(true);
+
+        return config;
+    }
+
+
+    // Identity-specific exceptions
+
+    /**
+     * Thrown when an instance is not bound to an authorization server but it should be.
+     *
+     * @author "Tsakiridis Orestis"
+     */
+    public static class IdentityNotSet extends Exception {
+        private static final long serialVersionUID = 239483444282400569L;
+        public IdentityNotSet() {
+            super();
+            // TODO Auto-generated constructor stub
+        }
+        public IdentityNotSet(String message) {
+            super(message);
+            // TODO Auto-generated constructor stub
+        }
+    }
+
+
+}

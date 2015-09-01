@@ -11,10 +11,10 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
-import org.mobicents.servlet.restcomm.identity.IdentityConfigurator;
-import org.mobicents.servlet.restcomm.identity.KeycloakClient;
-import org.mobicents.servlet.restcomm.identity.KeycloakClient.KeycloakClientException;
-import org.mobicents.servlet.restcomm.identity.IdentityConfigurator.IdentityMode;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakClient;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakClient.KeycloakClientException;
 
 import com.google.gson.Gson;
 
@@ -58,14 +58,14 @@ public class IdentityEndpoint extends AbstractEndpoint {
         keycloakClient.addParam("name", instanceName); // what we put here??
         keycloakClient.addParam("prefix", baseUrl);
         keycloakClient.addParam("secret", instanceSecret);
-        keycloakClient.makePostRequest(IdentityConfigurator.getIdentityProxyUrl(authUrl) + "/api/instances"); // we assume that the identity proxy lives together with the authorization server
+        keycloakClient.makePostRequest(identityConfigurator.getIdentityProxyUrl(authUrl) + "/api/instances"); // we assume that the identity proxy lives together with the authorization server
 
         // We're now registered. Update configuration. For now we will just store to RAM until a way is found to update restcomm.xml on the fly.
         identityConfigurator.setAuthServerUrlBase(authUrl);
-        identityConfigurator.setMode(IdentityMode.cloud);
+        identityConfigurator.setMode(IdentityMode.cloud); // TODO maybe turn this to 'standalone'. Is there a difference after all between 'cloud' and 'standalone'
         identityConfigurator.setRestcommClientSecret(instanceSecret);
-        identityConfigurator.setCloudInstanceId(instanceName);
-        identityConfigurator.updateRestcommXml(restcommConfiguration);
+        identityConfigurator.setInstanceId(instanceName);
+        identityConfigurator.save();
 
         logger.info( "User '" + username + "' registed this instance as '" + instanceName + "' to authorization server " + authUrl);
 
