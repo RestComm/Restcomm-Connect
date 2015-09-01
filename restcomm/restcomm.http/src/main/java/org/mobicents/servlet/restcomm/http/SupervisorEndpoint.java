@@ -46,10 +46,10 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.http.converter.CallinfoConverter;
-import org.mobicents.servlet.restcomm.http.converter.CallinfoListConverter;
+import org.mobicents.servlet.restcomm.http.converter.MonitoringServiceConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
-import org.mobicents.servlet.restcomm.telephony.CallInfoList;
+import org.mobicents.servlet.restcomm.telephony.MonitoringServiceResponse;
 import org.mobicents.servlet.restcomm.telephony.GetLiveCalls;
 
 import com.google.gson.Gson;
@@ -90,10 +90,10 @@ public class SupervisorEndpoint extends AbstractEndpoint{
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration);
         CallinfoConverter converter = new CallinfoConverter(configuration);
-        CallinfoListConverter listConverter = new CallinfoListConverter(configuration);
+        MonitoringServiceConverter listConverter = new MonitoringServiceConverter(configuration);
         builder = new GsonBuilder();
         builder.registerTypeAdapter(CallInfo.class, converter);
-        builder.registerTypeAdapter(CallInfoList.class, listConverter);
+        builder.registerTypeAdapter(MonitoringServiceResponse.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -134,21 +134,21 @@ public class SupervisorEndpoint extends AbstractEndpoint{
             return status(UNAUTHORIZED).build();
         }
         //Get the list of live calls from Monitoring Service
-        CallInfoList liveCalls;
+        MonitoringServiceResponse monitoringServiceResponse;
         try {
             final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
             GetLiveCalls getLiveCalls = new GetLiveCalls();
             Future<Object> future = (Future<Object>) ask(monitoringService, getLiveCalls, expires);
-            liveCalls = (CallInfoList) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+            monitoringServiceResponse = (MonitoringServiceResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
-        if (liveCalls != null) {
+        if (monitoringServiceResponse != null) {
             if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(liveCalls);
+                final RestCommResponse response = new RestCommResponse(monitoringServiceResponse);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
-               Response response = ok(gson.toJson(liveCalls), APPLICATION_JSON).build();
+               Response response = ok(gson.toJson(monitoringServiceResponse), APPLICATION_JSON).build();
                 return response;
             } else {
                 return null;
@@ -165,12 +165,12 @@ public class SupervisorEndpoint extends AbstractEndpoint{
             return status(UNAUTHORIZED).build();
         }
         //Get the list of live calls from Monitoring Service
-        CallInfoList liveCalls;
+        MonitoringServiceResponse liveCalls;
         try {
             final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
             GetLiveCalls getLiveCalls = new GetLiveCalls();
             Future<Object> future = (Future<Object>) ask(monitoringService, getLiveCalls, expires);
-            liveCalls = (CallInfoList) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+            liveCalls = (MonitoringServiceResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
@@ -196,12 +196,12 @@ public class SupervisorEndpoint extends AbstractEndpoint{
             return status(UNAUTHORIZED).build();
         }
         //Get the list of live calls from Monitoring Service
-        CallInfoList liveCalls;
+        MonitoringServiceResponse liveCalls;
         try {
             final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
             GetLiveCalls getLiveCalls = new GetLiveCalls();
             Future<Object> future = (Future<Object>) ask(monitoringService, getLiveCalls, expires);
-            liveCalls = (CallInfoList) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+            liveCalls = (MonitoringServiceResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
         } catch (Exception exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }

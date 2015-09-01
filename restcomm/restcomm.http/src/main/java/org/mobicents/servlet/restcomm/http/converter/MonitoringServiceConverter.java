@@ -21,10 +21,12 @@
 package org.mobicents.servlet.restcomm.http.converter;
 
 import java.lang.reflect.Type;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
-import org.mobicents.servlet.restcomm.telephony.CallInfoList;
+import org.mobicents.servlet.restcomm.telephony.MonitoringServiceResponse;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -38,51 +40,54 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class CallinfoListConverter extends AbstractConverter implements JsonSerializer<CallInfoList>{
+public class MonitoringServiceConverter extends AbstractConverter implements JsonSerializer<MonitoringServiceResponse>{
 
-    public CallinfoListConverter(Configuration configuration) {
+    public MonitoringServiceConverter(Configuration configuration) {
         super(configuration);
     }
 
     @Override
     public boolean canConvert(final Class klass) {
-        return CallInfoList.class.equals(klass);
+        return MonitoringServiceResponse.class.equals(klass);
     }
 
     @Override
-    public JsonElement serialize(CallInfoList callInfoList, Type typeOfSrc, JsonSerializationContext context) {
-        int size = callInfoList.getCallInfoList().size();
-        int callsUpToNow = callInfoList.getCallsUpToNow();
+    public JsonElement serialize(MonitoringServiceResponse monitoringServiceResponse, Type typeOfSrc, JsonSerializationContext context) {
+        Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
         JsonObject result = new JsonObject();
-        JsonArray array = new JsonArray();
-        for (CallInfo callInfo: callInfoList.getCallInfoList()) {
-            array.add(context.serialize(callInfo));
+        JsonArray callsArray = new JsonArray();
+        for (CallInfo callInfo: monitoringServiceResponse.getCallDetailsList()) {
+            callsArray.add(context.serialize(callInfo));
         }
-        result.addProperty("LiveCalls", size);
-        result.addProperty("CallsUpToNow",callsUpToNow);
-        if (size > 0)
-            result.add("CallInfoList", array);
+
+        Iterator<String> counterIterator = countersMap.keySet().iterator();
+        while (counterIterator.hasNext()) {
+            String counter = counterIterator.next();
+            result.addProperty(counter, countersMap.get(counter));
+        }
+
+        if (monitoringServiceResponse.getCallDetailsList().size() > 0)
+            result.add("LiveCallDetails", callsArray);
         return result;
     }
 
     @Override
     public void marshal(Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
-        final CallInfoList list = (CallInfoList) object;
-        int size = list.getCallInfoList().size();
-        int callsUpToNow = list.getCallsUpToNow();
-
-        writer.startNode("LiveCalls");
-        writer.setValue(String.valueOf(size));
-        writer.endNode();
-
-        writer.startNode("CallsUpToNow");
-        writer.setValue(String.valueOf(callsUpToNow));
-        writer.endNode();
+        final MonitoringServiceResponse monitoringServiceResponse = (MonitoringServiceResponse) object;
+        int size = monitoringServiceResponse.getCallDetailsList().size();
+        final Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
+        Iterator<String> counterIterator = countersMap.keySet().iterator();
+        while (counterIterator.hasNext()) {
+            String counter = counterIterator.next();
+            writer.startNode(counter);
+            writer.setValue(String.valueOf(countersMap.get(counter)));
+            writer.endNode();
+        }
 
         if (size > 0) {
-            writer.startNode("CallsInfo");
+            writer.startNode("LiveCallDetails");
 
-            for (final CallInfo callInfo : list.getCallInfoList()) {
+            for (final CallInfo callInfo : monitoringServiceResponse.getCallDetailsList()) {
                 context.convertAnother(callInfo);
             }
             writer.endNode();

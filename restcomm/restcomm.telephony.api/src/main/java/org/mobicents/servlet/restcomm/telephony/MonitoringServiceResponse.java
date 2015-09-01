@@ -21,26 +21,29 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class CallInfoList {
-    private final List<CallInfo> callInfoList;
-    private final int callsUpToNow;
+public class MonitoringServiceResponse {
+    private final List<CallInfo> callDetailsList;
+    private final Map<String, Integer> countersMap;
 
-    public CallInfoList(final List<CallInfo> callInfoList, final int callsUpToNow) {
+
+    public MonitoringServiceResponse(final List<CallInfo> callDetailsList, final Map<String, Integer> countersMap) {
         super();
-        this.callInfoList = callInfoList;
-        this.callsUpToNow = callsUpToNow;
+        this.callDetailsList = callDetailsList;
+        this.countersMap = countersMap;
     }
 
-    public List<CallInfo> getCallInfoList() {
-        return callInfoList;
+    public List<CallInfo> getCallDetailsList() {
+        return callDetailsList;
     }
 
-    public int getCallsUpToNow() {
-        return callsUpToNow;
+    public Map<String, Integer> getCountersMap() {
+        return countersMap;
     }
+
 }
