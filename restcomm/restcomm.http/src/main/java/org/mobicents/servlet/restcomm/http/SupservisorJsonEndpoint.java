@@ -42,12 +42,14 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
         super();
     }
 
+    //Simple PING/PONG message
     @GET
     public Response ping(@PathParam("accountSid") final String accountSid) {
         return pong(accountSid, APPLICATION_JSON_TYPE);
     }
 
-    @Path("/{livecalls}")
+    //Get live calls and statistics
+    @Path("/calls")
     @GET
     public Response getLiveCalls(@PathParam("accountSid") final String accountSid) {
         return getLiveCalls(accountSid, APPLICATION_JSON_TYPE);
