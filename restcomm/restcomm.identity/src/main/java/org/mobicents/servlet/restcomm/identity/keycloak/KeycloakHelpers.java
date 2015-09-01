@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.identity;
+package org.mobicents.servlet.restcomm.identity.keycloak;
 
 import java.util.List;
 

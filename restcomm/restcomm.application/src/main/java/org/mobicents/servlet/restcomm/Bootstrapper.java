@@ -16,7 +16,9 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
-import org.mobicents.servlet.restcomm.identity.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.configuration.DbIdentityConfigurationSource;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSource;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
@@ -156,20 +158,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
             logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
 
-            // Initialize keycloak configuration
-            IdentityConfigurator keycloakConfig = IdentityConfigurator.create(xml, context);
+            // Initialize identity/keycloak configuration
+            IdentityConfigurationSource identityConfSource = new DbIdentityConfigurationSource(storage.getConfigurationDao());
+            IdentityConfigurator keycloakConfig = IdentityConfigurator.create(identityConfSource);
             context.setAttribute(IdentityConfigurator.class.getName(), keycloakConfig);
-            /*
-            logger.info("Updating keycloak adapters configuration");
-            try {
-                // save updated adapter config so that keycloak adapter starts correctly
-                keycloakConfig.persistAdaptersConfig();
-            } catch (IOException e) {
-                logger.error("Error updating keycloak adapter configuration during initialization", e);
-            }
-            if ( ! keycloakConfig.isHookedUpToKeycloak() )
-                logger.warn("Restcomm instance is not hooked up to keycloak");
-            */
 
             // Create the media gateway.
             ActorRef gateway = null;

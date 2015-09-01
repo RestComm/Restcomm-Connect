@@ -1,11 +1,12 @@
-package org.mobicents.servlet.restcomm.identity;
+package org.mobicents.servlet.restcomm.identity.keycloak;
 
 import org.keycloak.adapters.HttpFacade.Request;
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
-import org.mobicents.servlet.restcomm.identity.IdentityConfigurator.CloudIdentityNotSet;
-import org.mobicents.servlet.restcomm.identity.IdentityConfigurator.IdentityMode;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator.IdentityNotSet;
 
 public class RestcommConfKeycloakResolver implements KeycloakConfigResolver {
 
@@ -27,7 +28,7 @@ public class RestcommConfKeycloakResolver implements KeycloakConfigResolver {
         } else {
             try {
                 cache = KeycloakDeploymentBuilder.build(configurator.getRestcommConfig());
-            } catch (CloudIdentityNotSet e) {
+            } catch (IdentityNotSet e) {
                 throw new IllegalStateException("No cloud identity set in restcomm.xml");
             }
         }

@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.identity;
+package org.mobicents.servlet.restcomm.identity.keycloak;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -263,6 +263,7 @@ public class KeycloakClient {
     }
 
     public static class KeycloakClientException extends Exception {
+        private static final long serialVersionUID = 6948147440980229174L;
         private Integer httpStatusCode;
         public KeycloakClientException() {}
         public KeycloakClientException(Integer status) {
@@ -281,6 +282,7 @@ public class KeycloakClient {
 
     // throw when part of the Oauth negotiation with keycloak fails
     public static class KeycloakClientOauthException extends KeycloakClientException {
+        private static final long serialVersionUID = 404056668497869353L;
 
         public KeycloakClientOauthException() {
             super();
@@ -294,6 +296,7 @@ public class KeycloakClient {
     }
 
     public static class KeycloakUserNotFound extends Exception {
+        private static final long serialVersionUID = 8082866819189229119L;
 
         public KeycloakUserNotFound(String message) {
             super(message);

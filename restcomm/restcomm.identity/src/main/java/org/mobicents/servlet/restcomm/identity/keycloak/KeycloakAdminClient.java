@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.identity;
+package org.mobicents.servlet.restcomm.identity.keycloak;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -265,5 +265,6 @@ public class KeycloakAdminClient extends KeycloakClient {
     }
 
     static class TypedList extends ArrayList<RoleRepresentation> {
+        private static final long serialVersionUID = 3686147149705033877L;
     }
 }
