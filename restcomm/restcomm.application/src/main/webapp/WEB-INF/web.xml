@@ -26,7 +26,7 @@
     
   <context-param>
     <param-name>keycloak.config.resolver</param-name>
-    <param-value>org.mobicents.servlet.restcomm.identity.RestcommConfKeycloakResolver</param-value>
+    <param-value>org.mobicents.servlet.restcomm.identity.keycloak.RestcommConfKeycloakResolver</param-value>
   </context-param>  
 
   
