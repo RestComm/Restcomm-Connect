@@ -274,7 +274,6 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
             FileWriter writer = new FileWriter(filepath);
             gson.toJson(entity, writer);
             writer.close();
-            logger.info("Updated keycloak adapter configuration for '" + adapterConfig.getResource() + "'");
 
         } catch (IOException e) {
             logger.error("Error saving keycloak adapter configuration for '" + adapterConfig.getResource() + "' to '" + filepath + "'" );

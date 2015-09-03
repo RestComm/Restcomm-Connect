@@ -3,7 +3,7 @@
 var rcMod = angular.module('rcApp');
 
 
-  rcMod.controller('RegisterCtrl', function ($scope, $rootScope,  $location, UserService, InstanceService, Notifications ) {
+  rcMod.controller('RegisterCtrl', function ($scope, $rootScope,  $location, $window, UserService, InstanceService, Notifications ) {
         // we will store our form data -user in this object
         $scope.user = {};
         $scope.dataLoading = false;
@@ -34,7 +34,12 @@ var rcMod = angular.module('rcApp');
         */
         
         $scope.register = function (instance) {
-        	InstanceService.registerInstance(instance);
+        	InstanceService.registerInstance(instance).then(
+			function () {
+				$window.location.reload();
+			}, function () {
+				Notifications.error("Instance registration failed");
+			});
         }
 
 });
