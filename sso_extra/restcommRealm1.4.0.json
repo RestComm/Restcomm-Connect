@@ -151,6 +151,12 @@
 	  "webOrigins": [
 		"https://192.168.1.39:8443"
 	  ]      
+    },
+    {
+      "name": "restcomm-identity-rest",
+      "enabled": true,
+      "publicClient": true,
+      "directGrantsOnly":true
     }
   ],
   "oauthClients": [
