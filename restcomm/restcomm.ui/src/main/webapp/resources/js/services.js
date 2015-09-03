@@ -548,7 +548,7 @@ rcServices.factory("InstanceService", function($http, $q) {
 	
 	service.registerInstance = function(instance) {
 		var deferred = $q.defer();
-		console.log("registering instance to " + instance.authUrl);
+		console.log("registering instance ...");
 		var params = $.param(instance);
 				
 		$http({
