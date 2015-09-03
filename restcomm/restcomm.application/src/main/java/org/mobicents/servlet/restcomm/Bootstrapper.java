@@ -160,7 +160,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             // Initialize identity/keycloak configuration
             IdentityConfigurationSource identityConfSource = new DbIdentityConfigurationSource(storage.getConfigurationDao());
-            IdentityConfigurator keycloakConfig = IdentityConfigurator.create(identityConfSource);
+            IdentityConfigurator keycloakConfig = IdentityConfigurator.create(identityConfSource,context);
             context.setAttribute(IdentityConfigurator.class.getName(), keycloakConfig);
 
             // Create the media gateway.

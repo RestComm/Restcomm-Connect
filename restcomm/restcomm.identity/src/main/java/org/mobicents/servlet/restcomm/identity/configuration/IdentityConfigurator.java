@@ -1,13 +1,20 @@
 package org.mobicents.servlet.restcomm.identity.configuration;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.mobicents.servlet.restcomm.configuration.ConfiguratorBase;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class IdentityConfigurator extends ConfiguratorBase implements IdentityConfigurationSet  {
     protected Logger logger = Logger.getLogger(IdentityConfigurator.class);
@@ -28,16 +35,15 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
 
     protected static IdentityConfigurator singleInstance;
 
-
     IdentityConfigurationSource configurationSource;
 
-    public static IdentityConfigurator create(IdentityConfigurationSource source) {
+    public static IdentityConfigurator create(IdentityConfigurationSource source, ServletContext servletContext) {
         // TODO - throw an exception if the instance has already been created??
         if (singleInstance != null) {
             throw new IllegalStateException("Singleton KeycloakConfigurator instance has already been created.");
         }
 
-        singleInstance = new IdentityConfigurator(source);
+        singleInstance = new IdentityConfigurator(source, servletContext);
         return singleInstance;
     }
 
@@ -48,11 +54,11 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
         return singleInstance;
     }
 
-    private IdentityConfigurator(IdentityConfigurationSource source) {
+    private IdentityConfigurator(IdentityConfigurationSource source, ServletContext servletContext) {
         this.configurationSource = source;
         this.realmName = DEFAULT_REALM_NAME;
         this.realmPublicKey = DEFAULT_REALM_PUBLIC_KEY;
-        registerUpdateListener(new RvdConfigurationUpdateListener()); // RVD needs to know when identity configuratio is updated
+        registerUpdateListener(new RvdConfigurationUpdateListener(servletContext)); // RVD needs to know when identity configuratio is updated
         load();
     }
 
@@ -216,18 +222,63 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     }
 
     // Returns null if no instanceId is set
-    public BaseAdapterConfig getRestcommRvdUIConfig() throws IdentityNotSet {
+    public AdapterConfig getRestcommRvdConfig() throws IdentityNotSet {
+        if ( StringUtils.isEmpty(getIdentityInstanceId()))
+            throw new IdentityNotSet("Error while building keycloak adapter configuration for restcomm-rvd client");
+        AdapterConfig config = new AdapterConfig();
+        config.setRealm(getRealmName());
+        config.setRealmKey(getRealmKey());
+        config.setAuthServerUrl(getAuthServerUrl());
+        config.setSslRequired("all");
+        config.setResource(getIdentityInstanceId() + "-restcomm-rvd");
+        config.setCors(true);
+        config.setUseResourceRoleMappings(true);
+
+        Map<String,String> credentials = new HashMap<String,String>();
+        credentials.put("secret", getRestcommClientSecret());
+        config.setCredentials(credentials);
+
+        return config;
+    }
+
+    // Returns null if no instanceId is set
+    public AdapterConfig getRestcommRvdUIConfig() throws IdentityNotSet {
         if ( StringUtils.isEmpty(getIdentityInstanceId()))
             throw new IdentityNotSet("Error while building keycloak adapter configuration for restcomm-rvd-ui client");
-        BaseAdapterConfig config = new BaseAdapterConfig();
+        AdapterConfig config = new AdapterConfig();
         config.setRealm(getRealmName());
         config.setRealmKey(getRealmKey());
         config.setAuthServerUrl(getAuthServerUrl());
         config.setSslRequired("all");
         config.setResource(getIdentityInstanceId() + "-restcomm-rvd-ui");
         config.setPublicClient(true);
+        config.setUseResourceRoleMappings(true);
 
         return config;
+    }
+
+    public void writeAdapterConfigToFile(AdapterConfig adapterConfig, String filepath) {
+        try {
+            AdapterConfigEntity entity = new AdapterConfigEntity();
+
+            entity.setRealm(adapterConfig.getRealm());
+            entity.setRealmPublicKey(adapterConfig.getRealmKey());
+            entity.setResource(adapterConfig.getResource());
+            entity.setAuthServerUrl(adapterConfig.getAuthServerUrl());
+            entity.setBearerOnly(adapterConfig.isBearerOnly());
+            entity.setPublicClient(adapterConfig.isPublicClient());
+            entity.setSslRequired(adapterConfig.getSslRequired());
+            entity.setUseResourceRoleMappings(adapterConfig.isUseResourceRoleMappings());
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            FileWriter writer = new FileWriter(filepath);
+            gson.toJson(entity, writer);
+            writer.close();
+            logger.info("Updated keycloak adapter configuration for '" + adapterConfig.getResource() + "'");
+
+        } catch (IOException e) {
+            logger.error("Error saving keycloak adapter configuration for '" + adapterConfig.getResource() + "' to '" + filepath + "'" );
+        }
     }
 
 
