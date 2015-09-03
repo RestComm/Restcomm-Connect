@@ -39,6 +39,7 @@ public class RvdConfigurationUpdateListener implements ConfigurationUpdateListen
         try {
             AdapterConfig adapterConfig = configurator.getRestcommRvdConfig();
             configurator.writeAdapterConfigToFile(adapterConfig, adapterConfigFilePath);
+            logger.info("Updated RVD keycloak adapter configuration.");
         } catch (IdentityNotSet e) {
             logger.error("Restcomm not registered to an authorization server. There is probably a configuration error. RVD keycloak adapter configuration won't be updated.",e);
         }
