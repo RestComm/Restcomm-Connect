@@ -7,8 +7,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
+import org.mobicents.servlet.restcomm.configuration.ConfiguratorBase;
 
-public class IdentityConfigurator implements IdentityConfigurationSet  {
+public class IdentityConfigurator extends ConfiguratorBase implements IdentityConfigurationSet  {
     protected Logger logger = Logger.getLogger(IdentityConfigurator.class);
 
     protected static final IdentityMode DEFAULT_IDENTITY_MODE = IdentityMode.init;
@@ -51,6 +52,7 @@ public class IdentityConfigurator implements IdentityConfigurationSet  {
         this.configurationSource = source;
         this.realmName = DEFAULT_REALM_NAME;
         this.realmPublicKey = DEFAULT_REALM_PUBLIC_KEY;
+        registerUpdateListener(new RvdConfigurationUpdateListener()); // RVD needs to know when identity configuratio is updated
         load();
     }
 
@@ -59,6 +61,7 @@ public class IdentityConfigurator implements IdentityConfigurationSet  {
     }
 
     // Loads configuration settings from the configuration source and initializes configurator
+    @Override
     public void load() {
         this.identityMode = loadMode();
         this.authServerUrlBase = loadAuthServerUrlBase();
@@ -70,6 +73,8 @@ public class IdentityConfigurator implements IdentityConfigurationSet  {
             this.identityInstanceId = loadInstanceId();
             this.restcommClientSecret = loadRestcommClientSecret();
         }
+        // notify all who are interected when there is new identity-specific configuration
+        notifyUpdateListeners();
 
         if ( this.identityMode == IdentityMode.init) {
             logger.info("Restcomm is now operating in 'init' mode. Only restration capabilities will be available");
@@ -77,12 +82,15 @@ public class IdentityConfigurator implements IdentityConfigurationSet  {
             logger.info("Restcomm is now operating in '" + identityMode + "' identity mode" + (StringUtils.isEmpty(this.authServerUrlBase) ? "" : " using authorization server " + this.authServerUrlBase )  +". Instance id: " + identityInstanceId);
     }
 
+    @Override
     public void save() {
         configurationSource.saveMode(identityMode.toString());
         configurationSource.saveInstanceId(identityInstanceId);
         configurationSource.saveRestcommClientSecret(restcommClientSecret);
         configurationSource.saveAuthServerUrlBase(authServerUrlBase);
         logger.debug("Persisted identity specific configuration to storage");
+        // notify people
+        notifyUpdateListeners();
     }
 
     private IdentityMode loadMode() {
