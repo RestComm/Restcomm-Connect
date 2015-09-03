@@ -61,11 +61,14 @@ public class IdentityConfigurator implements IdentityConfigurationSet  {
     // Loads configuration settings from the configuration source and initializes configurator
     public void load() {
         this.identityMode = loadMode();
+        this.authServerUrlBase = loadAuthServerUrlBase();
+        if (StringUtils.isEmpty(this.authServerUrlBase)) {
+            logger.warn("Missing authorization server configuration. Please set 'identity.auth-server-url-base' configuration setting");
+        }
         if (this.identityMode != IdentityMode.init) {
             // looks like we need to load other configuration options too
             this.identityInstanceId = loadInstanceId();
             this.restcommClientSecret = loadRestcommClientSecret();
-            this.authServerUrlBase = loadAuthServerUrlBase();
         }
 
         if ( this.identityMode == IdentityMode.init) {
@@ -118,6 +121,10 @@ public class IdentityConfigurator implements IdentityConfigurationSet  {
 
     public String getAuthServerUrl() {
         return authServerUrlBase + "/auth";
+    }
+
+    public String getAuthServerUrlBase() {
+        return authServerUrlBase;
     }
 
     public String getIdentityProxyUrl() {

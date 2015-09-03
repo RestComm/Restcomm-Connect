@@ -10,7 +10,7 @@ var rcMod = angular.module('rcApp');
         $scope.user.wantNewsletter=true;
         
         $scope.instance = {};
-        $scope.instance.authUrl = "https://identity.restcomm.com"; // TODO - this is hardcoded! Should we replace it with something read from configuration?
+        //$scope.instance.authUrl = "https://identity.restcomm.com"; // TODO - this is hardcoded! Should we replace it with something read from configuration?
         $scope.instance.restcommBaseUrl = buildOrigin($location); //"https://192.168.1.39:8443";
 
         function buildOrigin(location) {
