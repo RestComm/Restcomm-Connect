@@ -29,6 +29,7 @@ public final class Mail {
     private final String from;
     private final String to;
     private final String cc;
+    private final String bcc;
     private final String subject;
     private final String body;
 
@@ -37,15 +38,17 @@ public final class Mail {
         this.from = from;
         this.to = to;
         this.cc = "";
+        this.bcc = "";
         this.subject = subject;
         this.body = body;
     }
 
-    public Mail(final String from, final String to, final String subject, final String body,final String cc) {
+    public Mail(final String from, final String to, final String subject, final String body,final String cc,final String bcc) {
         super();
         this.from = from;
         this.to = to;
         this.cc = cc;
+        this.bcc = bcc;
         this.subject = subject;
         this.body = body;
     }
@@ -60,6 +63,10 @@ public final class Mail {
 
     public String cc() {
         return cc;
+    }
+
+    public String bcc() {
+        return bcc;
     }
 
     public String subject() {

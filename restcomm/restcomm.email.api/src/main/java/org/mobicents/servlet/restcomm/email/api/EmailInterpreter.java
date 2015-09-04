@@ -46,7 +46,8 @@ public class EmailInterpreter extends CreateEmailInterpreter {
             email.addRecipient(Message.RecipientType.TO, to);
             email.setSubject(mail.subject());
             email.setText(mail.body());
-            email.addRecipients(Message.RecipientType.CC,InternetAddress.parse(mail.cc(),false));
+            email.addRecipients(Message.RecipientType.CC, InternetAddress.parse(mail.cc(), false));
+            email.addRecipients(Message.RecipientType.BCC,InternetAddress.parse(mail.bcc(),false));
             Transport.send(email);
             return new EmailResponse(mail);
         } catch (final MessagingException exception) {
