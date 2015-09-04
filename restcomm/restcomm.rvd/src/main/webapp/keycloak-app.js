@@ -10,7 +10,13 @@ var logout = function(){
 
 
 angular.element(document).ready(function ($http) {
-    var keycloakAuth = new Keycloak('/restcomm/keycloak/config/restcomm-rvd-ui.json');
+    var keycloakAuth;
+    try {
+    	keycloakAuth = new Keycloak('/restcomm/identity/config/restcomm-rvd-ui.json');
+    } catch (e) {
+    	console.log("Cannot start RVD. Is your Restcomm instance registered and properly configured ?");
+    	return;
+    }
     auth.loggedIn = false;
 
     keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
@@ -25,8 +31,9 @@ angular.element(document).ready(function ($http) {
 		});
         angular.bootstrap(document, ["Rvd"]);
     }).error(function (a, b) {
-            window.location.reload();
-        });
+    	//window.location.reload(); 
+    	console.log("Error initializing RVD. Make sure your restcomm instance is configured correctly and registered to a valid Identity server.");
+    });
 
 });
 

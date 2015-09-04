@@ -242,10 +242,10 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     }
 
     // Returns null if no instanceId is set
-    public AdapterConfig getRestcommRvdUIConfig() throws IdentityNotSet {
+    public BaseAdapterConfig getRestcommRvdUIConfig() throws IdentityNotSet {
         if ( StringUtils.isEmpty(getIdentityInstanceId()))
             throw new IdentityNotSet("Error while building keycloak adapter configuration for restcomm-rvd-ui client");
-        AdapterConfig config = new AdapterConfig();
+        BaseAdapterConfig config = new BaseAdapterConfig();
         config.setRealm(getRealmName());
         config.setRealmKey(getRealmKey());
         config.setAuthServerUrl(getAuthServerUrl());
