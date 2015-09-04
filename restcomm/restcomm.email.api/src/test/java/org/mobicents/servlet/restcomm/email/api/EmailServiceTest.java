@@ -99,7 +99,7 @@ public final class EmailServiceTest {
                 final ActorRef observer = getRef();
 
                 // Send the email.
-                final Mail emailMsg = new Mail("hascode@localhost", "someone@localhost.com","Testing Email Service" , "This is the subject of the email service testing", "someone2@localhost.com, test@localhost.com, test3@localhost.com");
+                final Mail emailMsg = new Mail("hascode@localhost", "someone@localhost.com","Testing Email Service" ,"This is the subject of the email service testing", "someone2@localhost.com, test@localhost.com, test3@localhost.com", "someone3@localhost.com, test2@localhost.com");
                 emailService.tell(new EmailRequest(emailMsg), observer);
 
                 final EmailResponse response = expectMsgClass(FiniteDuration.create(60, TimeUnit.SECONDS), EmailResponse.class);
@@ -108,7 +108,7 @@ public final class EmailServiceTest {
                 // fetch messages from server
                 MimeMessage[] messages = mailServer.getReceivedMessages();
                 assertNotNull(messages);
-                assertEquals(4, messages.length);
+                assertEquals(6, messages.length);
                 MimeMessage m = messages[0];
                 try {
                 assertEquals(emailMsg.subject(), m.getSubject());
