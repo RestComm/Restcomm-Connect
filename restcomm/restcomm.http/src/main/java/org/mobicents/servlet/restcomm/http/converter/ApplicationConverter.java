@@ -72,6 +72,7 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeSmsFallbackMethod(application.getSmsFallbackMethod(), writer);
         writeSmsStatusCallback(application.getSmsStatusCallback(), writer);
         writeUri(application.getUri(), writer);
+        writeRcmlUrl(application.getRcmlUrl(), writer);
         writer.endNode();
     }
 
@@ -97,15 +98,16 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeSmsFallbackMethod(application.getSmsFallbackMethod(), object);
         writeSmsStatusCallback(application.getSmsStatusCallback(), object);
         writeUri(application.getUri(), object);
+        writeRcmlUrl(application.getRcmlUrl(), object);
         return object;
     }
 
     private void writeSmsStatusCallback(final URI smsStatusCallback, final HierarchicalStreamWriter writer) {
-        writer.startNode("SmsStatusCallback");
         if (smsStatusCallback != null) {
+            writer.startNode("SmsStatusCallback");
             writer.setValue(smsStatusCallback.toString());
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     private void writeSmsStatusCallback(final URI smsStatusCallback, final JsonObject object) {
@@ -114,5 +116,15 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         } else {
             object.add("sms_status_callback", JsonNull.INSTANCE);
         }
+    }
+
+    private void writeRcmlUrl(final URI rcmlUrl, final HierarchicalStreamWriter writer) {
+        writer.startNode("RcmlUrl");
+        writer.setValue(rcmlUrl.toString());
+        writer.endNode();
+    }
+
+    private void writeRcmlUrl(final URI rcmlUrl, final JsonObject object) {
+        object.addProperty("rcml_url", rcmlUrl.toString());
     }
 }

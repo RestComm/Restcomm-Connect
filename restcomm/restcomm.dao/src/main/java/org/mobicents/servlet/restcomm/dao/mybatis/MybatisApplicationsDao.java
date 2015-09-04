@@ -62,9 +62,18 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
 
     @Override
     public Application getApplication(final Sid sid) {
+        return getApplication(namespace + "getApplication", sid.toString());
+    }
+
+    @Override
+    public Application getApplication(final String friendlyName) {
+        return getApplication(namespace + "getApplicationByFriendlyName", friendlyName);
+    }
+
+    private Application getApplication(final String selector, final String parameter) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getApplication", sid.toString());
+            final Map<String, Object> result = session.selectOne(selector, parameter);
             if (result != null) {
                 return toApplication(result);
             } else {
@@ -143,9 +152,10 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         final String smsFallbackMethod = readString(map.get("sms_fallback_method"));
         final URI smsStatusCallback = readUri(map.get("sms_status_callback"));
         final URI uri = readUri(map.get("uri"));
+        final URI rcmlUrl = readUri(map.get("rcml_url"));
         return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
     }
 
     private Map<String, Object> toMap(final Application application) {
@@ -169,6 +179,7 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         map.put("sms_fallback_method", application.getSmsFallbackMethod());
         map.put("sms_status_callback", writeUri(application.getSmsStatusCallback()));
         map.put("uri", writeUri(application.getUri()));
+        map.put("rcml_url", writeUri(application.getRcmlUrl()));
         return map;
     }
 }
