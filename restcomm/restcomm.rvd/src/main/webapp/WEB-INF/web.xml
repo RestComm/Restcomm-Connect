@@ -13,6 +13,11 @@
 		<load-on-startup>2</load-on-startup>
 	</servlet>
 
+	<context-param>
+		<param-name>keycloak.config.resolver</param-name>
+		<param-value>org.mobicents.servlet.restcomm.rvd.keycloak.RvdKeycloakConfigResolver</param-value>
+	</context-param>
+
 	<!-- Disable JBoss RESTeasy JAX-RS implementation as it conflicts with Jersey -->
 	<context-param>
 		<param-name>resteasy.scan</param-name>
