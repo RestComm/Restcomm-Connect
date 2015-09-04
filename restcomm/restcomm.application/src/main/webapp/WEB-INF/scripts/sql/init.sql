@@ -107,7 +107,8 @@ CREATE TABLE "restcomm_applications" (
 "sms_fallback_url" LONGVARCHAR,
 "sms_fallback_method" VARCHAR(4),
 "sms_status_callback" LONGVARCHAR,
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"rcml_url" LONGVARCHAR NOT NULL
 );
 
 CREATE TABLE "restcomm_call_detail_records" (
