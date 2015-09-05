@@ -20,12 +20,20 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
+
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
+import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
@@ -43,7 +51,7 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     }
 
     @Override
-    public Sid getInstanceId() {
+    public InstanceId getInstanceId() {
         final SqlSession session = sessions.openSession();
         try {
             final Map<String, Object> result = session.selectOne(namespace+"getInstanceId");
@@ -58,25 +66,39 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     }
 
     @Override
-    public void addInstancecId(Sid instanceId) {
-        // TODO Auto-generated method stub
-        
+    public void addInstancecId(InstanceId instanceId) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.insert(namespace + "addInstanceId", toMap(instanceId));
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
-    public void updateInstanceId(Sid instanceId) {
-        // TODO Auto-generated method stub
-        
+    public void updateInstanceId(InstanceId instanceId) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateInstanceId", toMap(instanceId));
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
-
-    /**
-     * @param result
-     * @return
-     */
-    private Sid toInstanceId(Map<String, Object> result) {
-        // TODO Auto-generated method stub
-        return null;
+    private InstanceId toInstanceId(Map<String, Object> map) {
+        final Sid sid = readSid(map.get("instance_id"));
+        final DateTime dateCreated = readDateTime(map.get("date_created"));
+        final DateTime dateUpdated = readDateTime(map.get("date_updated"));
+        return new InstanceId(sid, dateCreated, dateUpdated);
     }
 
+   private Map<String, Object> toMap(final InstanceId instanceId) {
+       final Map<String, Object> map = new HashMap<String, Object>();
+       map.put("instance_id", writeSid(instanceId.getId()));
+       map.put("date_created", writeDateTime(instanceId.getDateCreated()));
+       map.put("date_updated", writeDateTime(instanceId.getDateUpdated()));
+       return map;
+   }
 }

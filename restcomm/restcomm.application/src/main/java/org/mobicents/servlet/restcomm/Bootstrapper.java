@@ -15,6 +15,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
@@ -156,7 +157,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             @Override
             public UntypedActor create() throws Exception {
-                //                final String classpath = settings.getString("mgcp-server[@class]");
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(MonitoringService.class.getName());
             }
         }));
@@ -238,6 +238,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             //Last, print Version and send PING if needed
             Version.printVersion();
+            GenerateInstanceId generateInstanceId = new GenerateInstanceId(context);
+            InstanceId instanceId = generateInstanceId.instanceId();
+            monitoring.tell(instanceId, null);
             Ping ping = new Ping(xml, context);
             ping.sendPing();
         }

@@ -20,6 +20,8 @@
  */
 package org.mobicents.servlet.restcomm.entities;
 
+import org.joda.time.DateTime;
+
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
@@ -27,17 +29,28 @@ package org.mobicents.servlet.restcomm.entities;
 public class InstanceId {
 
     private Sid instanceId;
+    private final DateTime dateCreated;
+    private final DateTime dateUpdated;
 
-    public InstanceId(final Sid instanceId) {
-        this.setInstanceId(instanceId);
+    public InstanceId(final Sid instanceId, final DateTime dateCreated, final DateTime dateUpdated) {
+        this.instanceId = instanceId;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
     }
 
-    public Sid getInstanceId() {
+    public Sid getId() {
         return instanceId;
     }
 
-    public void setInstanceId(Sid instanceId) {
-        this.instanceId = instanceId;
+    public DateTime getDateCreated() {
+        return dateCreated;
     }
 
+    public DateTime getDateUpdated() {
+        return dateUpdated;
+    }
+
+    public InstanceId setInstanceId(Sid instanceId) {
+        return new InstanceId(instanceId, this.dateCreated, DateTime.now());
+    }
 }
