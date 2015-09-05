@@ -20,14 +20,14 @@
  */
 package org.mobicents.servlet.restcomm.dao;
 
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.InstanceId;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
 public interface InstanceIdDao {
-    Sid getInstanceId();
-    void addInstancecId(Sid instanceId);
-    void updateInstanceId(Sid instanceId);
+    InstanceId getInstanceId();
+    void addInstancecId(InstanceId instanceId);
+    void updateInstanceId(InstanceId instanceId);
 }

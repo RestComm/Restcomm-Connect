@@ -22,7 +22,12 @@ package org.mobicents.servlet.restcomm;
 
 import javax.servlet.ServletContext;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
+import org.mobicents.servlet.restcomm.entities.InstanceId;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -30,15 +35,28 @@ import org.apache.commons.configuration.Configuration;
  */
 public class GenerateInstanceId {
 
-    private final Configuration configuration;
+    private final Logger logger = Logger.getLogger(GenerateInstanceId.class);
+
+//    private final Configuration configuration;
     private final ServletContext servletContext;
-    
-    public GenerateInstanceId(Configuration configuration, ServletContext servletContext) {
-        this.configuration = configuration;
+    private final InstanceIdDao instanceIdDao;
+
+    public GenerateInstanceId(ServletContext servletContext) {
+//        this.configuration = configuration;
         this.servletContext = servletContext;
+        instanceIdDao = ((DaoManager) servletContext.getAttribute(DaoManager.class.getName())).getInstanceIdDao();
     }
-    
-    public void instanceId() {
-        
-    }
+
+    public InstanceId instanceId() {
+        InstanceId instanceId = instanceIdDao.getInstanceId();
+        if (instanceId != null) {
+            logger.info("Restcomm Instance ID: "+instanceId.getId());
+        } else {
+            instanceId = new InstanceId(Sid.generate(Sid.Type.INSTANCE), DateTime.now(), DateTime.now());
+            instanceIdDao.addInstancecId(instanceId);
+            logger.info("Restcomm Instance ID created: "+instanceId.getId());
+        }
+        servletContext.setAttribute(InstanceId.class.getName(), instanceId);
+        return instanceId;
+     }
 }
