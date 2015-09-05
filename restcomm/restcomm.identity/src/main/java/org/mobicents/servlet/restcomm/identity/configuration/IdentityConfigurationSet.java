@@ -10,6 +10,7 @@ public interface IdentityConfigurationSet extends ConfigurationSet {
     String getIdentityProxyUrl(String authServerUrlBase );
     String getIdentityInstanceId();
     String getRestcommClientSecret();
+    Boolean getAutoImportUsers();
 
     void setAuthServerUrlBase(String urlBase);
     void setMode(IdentityMode mode);

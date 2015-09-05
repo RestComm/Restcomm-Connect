@@ -24,6 +24,7 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     protected static final String DEFAULT_AUTH_SERVER_URL_BASE = "https://identity.restcomm.com";
     protected static final String DEFAULT_REALM_PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB";
     protected static final String IDENTITY_PROXY_CONTEXT_NAME = "restcomm-identity";
+    private static final Boolean DEFAULT_AUTO_IMPORT_USERS = true; // move this option to the configuration file at some point
 
     protected IdentityMode identityMode;
     protected String identityInstanceId; // instance ID on authorization server
@@ -163,6 +164,10 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
         return identityInstanceId;
     }
 
+    @Override
+    public Boolean getAutoImportUsers() {
+        return DEFAULT_AUTO_IMPORT_USERS;
+    }
 
     @Override
     public void setAuthServerUrlBase(String urlBase) {
@@ -299,6 +304,5 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
             // TODO Auto-generated constructor stub
         }
     }
-
 
 }
