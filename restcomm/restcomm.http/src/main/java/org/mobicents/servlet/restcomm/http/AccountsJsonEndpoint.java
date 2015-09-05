@@ -43,13 +43,6 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
         super();
     }
 
-    // Make sure this comes before getAccountAsJson()
-    @Path("/import")
-    @GET
-    public Response importCurrentAccount() {
-        return importKeycloakAccount();
-    }
-
     @Path("/{accountSid}")
     @GET
     public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {

@@ -48,7 +48,7 @@ import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
-import org.keycloak.representations.idm.UserRepresentation;
+import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -56,6 +56,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakClient.KeycloakClientException;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -66,6 +67,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
+    protected  IdentityConfigurator identityConfigurator;
     protected Gson gson;
     protected XStream xstream;
 
@@ -78,6 +80,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
+        identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -122,36 +125,25 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, authToken, role, uri);
     }
 
- // Creates a Restcomm account object out of a keycloak UserRepresentation
-    private Account createFromUserRepresentation(final UserRepresentation userInfo) {
-        //validate(data);
+    /**
+     * Creates an account object from the details contained in an AccessToken. No db persistence is done here.
+     * @param token
+     * @return
+     */
+    private Account accountFromAccessToken(AccessToken token) {
 
         final DateTime now = DateTime.now();
-        //final String emailAddress = data.getFirst("EmailAddress");
-        final String emailAddress = userInfo.getUsername();
+        final String username = token.getPreferredUsername();
 
         // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
-        final Sid sid = Sid.generate(Sid.Type.ACCOUNT, userInfo.getUsername());
+        final Sid sid = Sid.generate(Sid.Type.ACCOUNT, username );
 
         // Use keycloak firstname/lastname as a friendly name if available. Otherwise fall back to keycloak username.
-        String friendlyName = userInfo.getUsername();
-        if (userInfo.getFirstName() != null ) {
-            friendlyName = userInfo.getFirstName();
-            if (userInfo.getLastName() != null)
-                friendlyName += " " + userInfo.getLastName();
-        } else {
-            if (userInfo.getLastName() != null)
-                friendlyName = userInfo.getLastName();
-        }
+        String friendlyName = token.getName(); // e.g. Orestis Tsakiridis
+        String emailAddress = token.getPreferredUsername(); // TODO what do we do here? Restcomm treats emailAddress as username
 
         final Account.Type type = Account.Type.FULL;
         Account.Status status = Account.Status.ACTIVE;
-//        if (data.containsKey("Status")) {
-//            status = Account.Status.valueOf(data.getFirst("Status"));
-//        }
-//        final String password = data.getFirst("Password");
-//        final String authToken = new Md5Hash(password).toString();
-//        final String role = data.getFirst("Role");
 
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
@@ -159,44 +151,23 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         //return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
-        return new Account(sid, now, now, emailAddress, friendlyName, null, type, status, "notused", "notused", uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, null, type, status, "notused", "KeycloakUser", uri);
     }
 
-    protected Response importKeycloakAccount() {
-        logger.warn("importKeycloakAccount(): this method is deprecated");
-        return status(INTERNAL_SERVER_ERROR).build();
-        /*
-        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
-        if (session.getToken() != null) {
-            String loggedUsername = session.getToken().getPreferredUsername();
-            logger.info("logged username: " + loggedUsername);
-
-            Account loggedAccount = accountsDao.getAccount(loggedUsername);
-
-            if (loggedAccount != null) {
-                logger.info("user " + loggedUsername + " already exists in Restcomm and won't be imported.");
-                return status(OK).build(); // Do nothing. Account is already in Restcomm
-            } else {
-                logger.info("user is missing from Restcomm database and should be created");
-                UserRepresentation userInfo;
-                try {
-                    // TODO make realm and username parametric!
-                    userInfo = keycloakClient.getUserInfo(loggedUsername);
-                } catch (KeycloakClientException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                    return status(INTERNAL_SERVER_ERROR).build();
-                }
-                logger.info("retrieved user info : " + userInfo.toString());
-
-                Account newAccount = createFromUserRepresentation(userInfo);
-                accountsDao.addAccount(newAccount);
-                return status(OK).build();
-
+    /**
+     * If the requested account does not exist and it's the user himself that makes the request create a new one based
+     * on the token information. Of course take into account the configuration too.
+     */
+    private Account handleMissingAccount( String accountSid, AccessToken token) {
+        Account account = null;
+        if ( identityConfigurator.getAutoImportUsers() ) {
+            if ( token.getPreferredUsername().equals(accountSid) ) {
+                account = accountFromAccessToken(token);
+                accountsDao.addAccount(account);
+                logger.info("Automatically imported user '" + accountSid + "' as Restcomm account '" + account.getSid() + "'" );
             }
-        } else
-            return status(UNAUTHORIZED).build();
-        */
+        }
+        return account;
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -204,6 +175,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             // now load the account that is operated upon
             Sid sid = null;
             Account account = null;
+            // Is the account identifier used a sid like "AC5699ea39a9a8c86820ea241e843c221e" ?
             if (Sid.pattern.matcher(accountSid).matches()) {
                 try {
                     sid = new Sid(accountSid);
@@ -212,9 +184,11 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
                     return status(NOT_FOUND).build();
                 }
 
-            } else {
+            } else { // If not, try to load by FriendlyName, email etc.
                 try {
                     account = accountsDao.getAccount(accountSid);
+                    if ( account == null )
+                        account = handleMissingAccount(accountSid, getKeycloakAccessToken());
                     sid = account.getSid();
                 } catch (Exception e) {
                     return status(NOT_FOUND).build();
