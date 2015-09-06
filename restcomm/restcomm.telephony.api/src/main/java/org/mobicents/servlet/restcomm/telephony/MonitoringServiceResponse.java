@@ -23,17 +23,21 @@ package org.mobicents.servlet.restcomm.telephony;
 import java.util.List;
 import java.util.Map;
 
+import org.mobicents.servlet.restcomm.entities.InstanceId;
+
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
 public class MonitoringServiceResponse {
+    private final InstanceId instanceId;
     private final List<CallInfo> callDetailsList;
     private final Map<String, Integer> countersMap;
 
 
-    public MonitoringServiceResponse(final List<CallInfo> callDetailsList, final Map<String, Integer> countersMap) {
+    public MonitoringServiceResponse(final InstanceId instanceId, final List<CallInfo> callDetailsList, final Map<String, Integer> countersMap) {
         super();
+        this.instanceId = instanceId;
         this.callDetailsList = callDetailsList;
         this.countersMap = countersMap;
     }
@@ -44,6 +48,10 @@ public class MonitoringServiceResponse {
 
     public Map<String, Integer> getCountersMap() {
         return countersMap;
+    }
+
+    public InstanceId getInstanceId() {
+        return instanceId;
     }
 
 }

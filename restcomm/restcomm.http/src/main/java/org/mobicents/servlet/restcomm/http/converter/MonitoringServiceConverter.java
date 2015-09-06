@@ -55,18 +55,27 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
     public JsonElement serialize(MonitoringServiceResponse monitoringServiceResponse, Type typeOfSrc, JsonSerializationContext context) {
         Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
         JsonObject result = new JsonObject();
+        JsonArray metrics = new JsonArray();
         JsonArray callsArray = new JsonArray();
-        for (CallInfo callInfo: monitoringServiceResponse.getCallDetailsList()) {
-            callsArray.add(context.serialize(callInfo));
-        }
 
+        //First add InstanceId and Version details
+        result.addProperty("InstanceId", monitoringServiceResponse.getInstanceId().getId().toString());
+        result.addProperty("Version", org.mobicents.servlet.restcomm.Version.getVersion());
+        result.addProperty("Revision", org.mobicents.servlet.restcomm.Version.getRevision());
+
+        JsonObject element= new JsonObject();
         Iterator<String> counterIterator = countersMap.keySet().iterator();
         while (counterIterator.hasNext()) {
             String counter = counterIterator.next();
-            result.addProperty(counter, countersMap.get(counter));
+            element.addProperty(counter, countersMap.get(counter));
         }
+        metrics.add(element);
+        result.add("Metrics", metrics);
 
         if (monitoringServiceResponse.getCallDetailsList().size() > 0)
+            for (CallInfo callInfo: monitoringServiceResponse.getCallDetailsList()) {
+                callsArray.add(context.serialize(callInfo));
+            }
             result.add("LiveCallDetails", callsArray);
         return result;
     }
@@ -77,12 +86,27 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
         int size = monitoringServiceResponse.getCallDetailsList().size();
         final Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
         Iterator<String> counterIterator = countersMap.keySet().iterator();
+
+        writer.startNode("InstanceId");
+        writer.setValue(monitoringServiceResponse.getInstanceId().getId().toString());
+        writer.endNode();
+
+        writer.startNode("Version");
+        writer.setValue(org.mobicents.servlet.restcomm.Version.getVersion());
+        writer.endNode();
+
+        writer.startNode("Revision");
+        writer.setValue(org.mobicents.servlet.restcomm.Version.getRevision());
+        writer.endNode();
+
+        writer.startNode("Metrics");
         while (counterIterator.hasNext()) {
             String counter = counterIterator.next();
             writer.startNode(counter);
             writer.setValue(String.valueOf(countersMap.get(counter)));
             writer.endNode();
         }
+        writer.endNode();
 
         if (size > 0) {
             writer.startNode("LiveCallDetails");

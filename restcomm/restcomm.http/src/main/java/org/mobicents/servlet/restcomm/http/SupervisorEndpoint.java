@@ -49,8 +49,8 @@ import org.mobicents.servlet.restcomm.http.converter.CallinfoConverter;
 import org.mobicents.servlet.restcomm.http.converter.MonitoringServiceConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
-import org.mobicents.servlet.restcomm.telephony.MonitoringServiceResponse;
 import org.mobicents.servlet.restcomm.telephony.GetLiveCalls;
+import org.mobicents.servlet.restcomm.telephony.MonitoringServiceResponse;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -127,7 +127,7 @@ public class SupervisorEndpoint extends AbstractEndpoint{
         }
     }
 
-    protected Response getLiveCalls(final String accountSid, MediaType responseType) {
+    protected Response getMetrics(final String accountSid, MediaType responseType) {
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
@@ -158,6 +158,7 @@ public class SupervisorEndpoint extends AbstractEndpoint{
         }
     }
 
+    //Register a remote location where Restcomm will send monitoring updates
     protected Response registerForUpdates(final String accountSid, final MultivaluedMap<String, String> data, MediaType responseType) {
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
@@ -189,12 +190,18 @@ public class SupervisorEndpoint extends AbstractEndpoint{
         }
     }
 
+    //Register a remote location where Restcomm will send monitoring updates for a specific Call
     protected Response registerForCallUpdates(final String accountSid, final String callSid, final MultivaluedMap<String, String> data, MediaType responseType) {
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
+
+        final String url = data.getFirst("Url");
+        final String refresh = data.getFirst("Refresh");
+        
+
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse liveCalls;
         try {

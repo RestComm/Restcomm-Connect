@@ -27,10 +27,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.MonitoringServiceResponse;
+import org.mobicents.servlet.restcomm.telephony.TextMessage;
 import org.mobicents.servlet.restcomm.telephony.UserRegistration;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
@@ -61,6 +63,12 @@ public class MonitoringService extends UntypedActor{
     private final AtomicInteger canceledCalls;
     private final AtomicInteger noAnswerCalls;
     private final AtomicInteger notFoundCalls;
+    private final AtomicInteger textInboundToApp;
+    private final AtomicInteger textInboundToClient;
+    private final AtomicInteger textInboundToProxyOut;
+    private final AtomicInteger textOutbound;
+    private final AtomicInteger textNotFound;
+    private InstanceId instanceId;
 
 
     public MonitoringService() {
@@ -77,6 +85,11 @@ public class MonitoringService extends UntypedActor{
         canceledCalls = new AtomicInteger();
         noAnswerCalls = new AtomicInteger();
         notFoundCalls = new AtomicInteger();
+        textInboundToApp = new AtomicInteger();
+        textInboundToClient = new AtomicInteger();
+        textInboundToProxyOut = new AtomicInteger();
+        textOutbound = new AtomicInteger();
+        textNotFound = new AtomicInteger();
         logger.info("Monitoring Service started");
     }
 
@@ -87,19 +100,47 @@ public class MonitoringService extends UntypedActor{
         final ActorRef sender = sender();
         logger.info("Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass());
 
-        if (Observing.class.equals(klass)) {
+        if (InstanceId.class.equals(klass)) {
+            onGotInstanceId((InstanceId) message, self, sender);
+        } else if (Observing.class.equals(klass)) {
             onStartObserve((Observing) message, self, sender);
-        } if (StopObserving.class.equals(klass)) {
+        } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
-        } if (CallResponse.class.equals(klass)) {
+        } else if (CallResponse.class.equals(klass)) {
             onCallResponse((CallResponse<CallInfo>)message, self, sender);
-        } if (CallStateChanged.class.equals(klass)) {
+        } else if (CallStateChanged.class.equals(klass)) {
             onCallStateChanged((CallStateChanged)message, self, sender);
-        } if (GetLiveCalls.class.equals(klass)) {
+        } else if (GetLiveCalls.class.equals(klass)) {
             onGetLiveCalls((GetLiveCalls)message, self, sender);
-        } if (UserRegistration.class.equals(klass)) {
+        } else if (UserRegistration.class.equals(klass)) {
             onUserRegistration((UserRegistration)message, self, sender);
+        } else if (TextMessage.class.equals(klass)) {
+            onTextMessage((TextMessage) message, self, sender);
         }
+    }
+
+    /**
+     * @param message
+     * @param self
+     * @param sender
+     */
+    private void onTextMessage(TextMessage message, ActorRef self, ActorRef sender) {
+        TextMessage.SmsState state = message.getState();
+        if (state.equals(TextMessage.SmsState.INBOUND_TO_APP)) {
+            textInboundToApp.incrementAndGet();
+        } else if (state.equals(TextMessage.SmsState.INBOUND_TO_CLIENT)) {
+            textInboundToClient.incrementAndGet();
+        } else if (state.equals(TextMessage.SmsState.INBOUND_TO_PROXY_OUT)) {
+            textInboundToProxyOut.incrementAndGet();
+        } else if (state.equals(TextMessage.SmsState.OUTBOUND)) {
+            textOutbound.incrementAndGet();
+        } else if (state.equals(TextMessage.SmsState.NOT_FOUND)) {
+            textNotFound.incrementAndGet();
+        }
+    }
+
+    private void onGotInstanceId(InstanceId instanceId, ActorRef self, ActorRef sender) {
+        this.instanceId = instanceId;
     }
 
     /**
@@ -217,8 +258,13 @@ public class MonitoringService extends UntypedActor{
         countersMap.put("FailedCalls", failedCalls.get());
         countersMap.put("NotFoundCalls", notFoundCalls.get());
         countersMap.put("CanceledCalls", canceledCalls.get());
+        countersMap.put("TextMessageInboundToApp", textInboundToApp.get());
+        countersMap.put("TextMessageInboundToClient", textInboundToClient.get());
+        countersMap.put("TextMessageInboundToProxyOut", textInboundToProxyOut.get());
+        countersMap.put("TextMessageNotFound", textNotFound.get());
+        countersMap.put("TextMessageOutbound", textOutbound.get());
 
-        MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(callDetailsList, countersMap);
+        MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap);
         sender.tell(callInfoList, self);
     }
 }

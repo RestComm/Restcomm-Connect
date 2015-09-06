@@ -56,6 +56,7 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.telephony.TextMessage;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.util.UriUtils;
@@ -71,6 +72,7 @@ import akka.event.LoggingAdapter;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.telestax.servlet.MonitoringService;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -89,6 +91,8 @@ public final class SmsService extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
 
+    private final ActorRef monitoringService;
+
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo = true;
@@ -104,6 +108,7 @@ public final class SmsService extends UntypedActor {
         this.sipFactory = factory;
         this.storage = storage;
         this.servletContext = servletContext;
+        monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
     }
@@ -136,6 +141,7 @@ public final class SmsService extends UntypedActor {
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
             // Tell the sender we received the message okay.
             logger.info("Message to :" + toUser + " matched to one of the hosted applications");
+            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
             final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
             messageAccepted.send();
             return;
@@ -152,6 +158,7 @@ public final class SmsService extends UntypedActor {
                     // then we can end further processing of this request
                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
                             + toClient.getLogin());
+                    monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
                     return;
                 }
             } else {
@@ -186,6 +193,7 @@ public final class SmsService extends UntypedActor {
             // Send the SMS.
             final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),
                     null);
+            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
             session.tell(sms, self());
             }
         } else {
@@ -194,6 +202,7 @@ public final class SmsService extends UntypedActor {
             // We didn't find anyway to handle the SMS.
             String errMsg = "Restcomm cannot process this SMS because the destination number cannot be found. To: "+toUser;
             sendNotification(errMsg, 11005, "error", true);
+            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.NOT_FOUND), self);
         }
     }
 
@@ -365,7 +374,7 @@ public final class SmsService extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 Configuration smsConfiguration = configuration.subset("sms-aggregator");
-                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage);
+                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService);
             }
         }));
     }
