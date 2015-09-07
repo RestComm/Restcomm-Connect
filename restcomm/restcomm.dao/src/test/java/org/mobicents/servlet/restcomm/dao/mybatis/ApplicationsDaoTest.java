@@ -82,6 +82,7 @@ public final class ApplicationsDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsStatusCallback(url);
         builder.setUri(url);
+        builder.setRcmlUrl(url);
         Application application = builder.build();
         final ApplicationsDao applications = manager.getApplicationsDao();
         // Create a new application in the data store.
@@ -106,6 +107,7 @@ public final class ApplicationsDaoTest {
         assertTrue(result.getSmsFallbackMethod().equals(application.getSmsFallbackMethod()));
         assertTrue(result.getSmsStatusCallback().equals(application.getSmsStatusCallback()));
         assertTrue(result.getUri().equals(application.getUri()));
+        assertTrue(result.getRcmlUrl().equals(application.getRcmlUrl()));
         // Update the application.
         url = URI.create("http://127.0.0.1:8080/restcomm/demos/world-hello.xml");
         method = "POST";
@@ -122,6 +124,7 @@ public final class ApplicationsDaoTest {
         application = application.setSmsFallbackUrl(url);
         application = application.setSmsFallbackMethod(method);
         application = application.setSmsStatusCallback(url);
+        application = application.setRcmlUrl(url);
         applications.updateApplication(application);
         // Read the updated application from the data store.
         result = applications.getApplication(sid);
@@ -143,6 +146,7 @@ public final class ApplicationsDaoTest {
         assertTrue(result.getSmsFallbackMethod().equals(application.getSmsFallbackMethod()));
         assertTrue(result.getSmsStatusCallback().equals(application.getSmsStatusCallback()));
         assertTrue(result.getUri().equals(application.getUri()));
+        assertTrue(result.getRcmlUrl().equals(application.getRcmlUrl()));
         // Delete the application.
         applications.removeApplication(sid);
         // Validate that the application was removed.
@@ -173,6 +177,7 @@ public final class ApplicationsDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsStatusCallback(url);
         builder.setUri(url);
+        builder.setRcmlUrl(url);
         Application application = builder.build();
         final ApplicationsDao applications = manager.getApplicationsDao();
         // Create a new application in the data store.
