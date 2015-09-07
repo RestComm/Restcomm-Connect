@@ -25,35 +25,81 @@ rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($route
   if (authMode == 'cloud') {
 	  $routeProvider.
 		when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
-		when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
-		when('/profile/:accountSid', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
-		when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl'}).
+		when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/profile/:accountSid', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
 		when('/numbers', {redirectTo: '/numbers/incoming'}).
-		when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl'}).
+		when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
 		when('/numbers/register-incoming', {
 		  templateUrl: 'modules/numbers-incoming-register.html',
 		  controller: 'NumberRegisterCtrl',
 		  resolve: {
 			$modalInstance : function() { return undefined; },
 			allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
-			providerCountries: function(RCommAvailableNumbers, AuthService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:AuthService.getLoggedSid()}).$promise; }
+			providerCountries: function(RCommAvailableNumbers, AuthService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:AuthService.getLoggedSid()}).$promise; },
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
 		  }
 		}).
-		when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).
-		when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl'}).
-		when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, localApps: function (rappService) { return rappService.refreshLocalApps();} }}).
-		when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl'}).
-		when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl'}).
-		when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl'}).
-		when('/logs', {redirectTo: '/logs/calls'}).
-		when('/logs/calls', {templateUrl: 'modules/logs-calls.html', controller: 'LogsCallsCtrl'}).
-		when('/logs/calls/:callSid', {templateUrl: 'modules/logs-calls-details.html', controller: 'LogsCallsDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, callSid: function() {} }}).
-		when('/logs/messages', {templateUrl: 'modules/logs-messages.html', controller: 'LogsMessagesCtrl'}).
-		when('/logs/recordings', {templateUrl: 'modules/logs-recordings.html', controller: 'LogsRecordingsCtrl'}).
-		when('/logs/transcriptions', {templateUrl: 'modules/logs-transcriptions.html', controller: 'LogsTranscriptionsCtrl'}).
-		when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl'}).
-		when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
-		when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
+		when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { 
+			$modalInstance : function() {return undefined;}, 
+			allCountries : function() {return undefined;}, 
+			providerCountries : function() {return undefined;},	
+			localApps: function (rappService) { return rappService.refreshLocalApps();},
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { 
+			$modalInstance : function() {return undefined;}, 
+			localApps: function (rappService) { return rappService.refreshLocalApps();},
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs', {redirectTo: '/logs/calls', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/calls', {templateUrl: 'modules/logs-calls.html', controller: 'LogsCallsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/calls/:callSid', {templateUrl: 'modules/logs-calls-details.html', controller: 'LogsCallsDetailsCtrl', resolve: { 
+			$modalInstance : function() {return undefined;}, callSid: function() {},
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/messages', {templateUrl: 'modules/logs-messages.html', controller: 'LogsMessagesCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/recordings', {templateUrl: 'modules/logs-recordings.html', controller: 'LogsRecordingsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/transcriptions', {templateUrl: 'modules/logs-transcriptions.html', controller: 'LogsTranscriptionsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
 		otherwise({redirectTo: '/dashboard'});
 	  // $locationProvider.html5Mode(true);
 	} else
