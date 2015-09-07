@@ -1738,6 +1738,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
                             .toString()));
                 }
+                if(callState == CallStateChanged.State.BUSY)
+                    parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
+                else
                 parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));

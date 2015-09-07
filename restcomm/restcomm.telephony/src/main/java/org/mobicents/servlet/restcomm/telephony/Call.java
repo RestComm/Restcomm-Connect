@@ -999,42 +999,6 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-
-            if (recordsDao != null) {
-                CallDetailRecord cdr = recordsDao.getCallDetailRecord(id);
-                if (cdr == null) {
-                    final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                    builder.setSid(id);
-                    builder.setDateCreated(created);
-                    builder.setAccountSid(accountId);
-                    builder.setTo(to.getUser());
-                    builder.setCallerName(name);
-                    builder.setStartTime(new DateTime());
-                    String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
-                    builder.setFrom(fromString);
-                    // builder.setForwardedFrom(callInfo.forwardedFrom());
-                    // builder.setPhoneNumberSid(phoneId);
-                    builder.setStatus(external.name());
-                    builder.setDirection("outbound-api");
-                    builder.setApiVersion(apiVersion);
-                    builder.setPrice(new BigDecimal("0.00"));
-                    // TODO implement currency property to be read from Configuration
-                    builder.setPriceUnit(Currency.getInstance("USD"));
-                    final StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(apiVersion).append("/Accounts/");
-                    buffer.append(accountId.toString()).append("/Calls/");
-                    buffer.append(id.toString());
-                    final URI uri = URI.create(buffer.toString());
-                    builder.setUri(uri);
-                    builder.setCallPath(self().path().toString());
-                    builder.setParentCallSid(parentCallSid);
-                    outgoingCallRecord = builder.build();
-                    recordsDao.addCallDetailRecord(outgoingCallRecord);
-                } else {
-                    cdr.setStatus(external.name());
-                }
-            }
-
         }
     }
 
@@ -1516,6 +1480,46 @@ public final class Call extends UntypedActor {
                 // }
                 // }
             }
+
+            //Set Call created time, only for "Talk time".
+           created = DateTime.now();
+
+            //Update CDR for Outbound Call.
+            if (recordsDao != null) {
+                CallDetailRecord cdr = recordsDao.getCallDetailRecord(id);
+                if (cdr == null) {
+                    final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                    builder.setSid(id);
+                    builder.setDateCreated(created);
+                    builder.setAccountSid(accountId);
+                    builder.setTo(to.getUser());
+                    builder.setCallerName(name);
+                    builder.setStartTime(new DateTime());
+                    String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
+                    builder.setFrom(fromString);
+                    // builder.setForwardedFrom(callInfo.forwardedFrom());
+                    // builder.setPhoneNumberSid(phoneId);
+                    builder.setStatus(external.name());
+                    builder.setDirection("outbound-api");
+                    builder.setApiVersion(apiVersion);
+                    builder.setPrice(new BigDecimal("0.00"));
+                    // TODO implement currency property to be read from Configuration
+                    builder.setPriceUnit(Currency.getInstance("USD"));
+                    final StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(apiVersion).append("/Accounts/");
+                    buffer.append(accountId.toString()).append("/Calls/");
+                    buffer.append(id.toString());
+                    final URI uri = URI.create(buffer.toString());
+                    builder.setUri(uri);
+                    builder.setCallPath(self().path().toString());
+                    builder.setParentCallSid(parentCallSid);
+                    outgoingCallRecord = builder.build();
+                    recordsDao.addCallDetailRecord(outgoingCallRecord);
+                } else {
+                    cdr.setStatus(external.name());
+                }
+            }
+
 
             final String externalIp = response.getInitialRemoteAddr();
             final byte[] sdp = response.getRawContent();
