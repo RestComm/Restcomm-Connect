@@ -13,6 +13,9 @@ import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNames;
+
 
 /**
  *
@@ -22,6 +25,7 @@ import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 public abstract class SecuredEndpoint extends AbstractEndpoint {
     //protected KeycloakAdminClient keycloakClient;
     protected static RestcommRoles restcommRoles;
+    protected IdentityConfigurator identityConfigurator;
 
     public SecuredEndpoint() {
         super();
@@ -31,6 +35,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         ShiroResources shiroResources = ShiroResources.getInstance();
         restcommRoles = shiroResources.get(RestcommRoles.class);
+        this.identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
         //keycloakClient = new KeycloakAdminClient();
     }
 
@@ -46,14 +51,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
         Set<String> roleNames;
         try {
-            roleNames = accessToken.getRealmAccess().getRoles();
+            roleNames = accessToken.getResourceAccess(identityConfigurator.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
         } catch (NullPointerException e) {
             throw new UnauthorizedException("No access token present or no roles in it");
-        }
-
-        // no need to check permissions for users with the RestcommAdmin role
-        if ( roleNames.contains("RestcommAdmin") ) {
-            return;
         }
 
         WildcardPermissionResolver resolver = new WildcardPermissionResolver();

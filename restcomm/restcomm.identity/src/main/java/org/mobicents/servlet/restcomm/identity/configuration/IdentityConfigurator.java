@@ -170,6 +170,17 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     }
 
     @Override
+    public String getClientName(IdentityResourceNames clientType) {
+        switch (clientType) {
+            case RESTCOMM_REST: return identityInstanceId + "-restcomm-rest";
+            case RESTCOMM_UI: return identityInstanceId + "-restcomm-ui";
+            case RESTCOMM_RVD_REST: return identityInstanceId + "-restcomm-rvd-rest";
+            case RESTCOMM_RVD_UI: return identityInstanceId + "-restcomm-rvd-ui";
+        }
+        throw new IllegalStateException("Invalid IdentityResourceName found: " + clientType.toString());
+    }
+
+    @Override
     public void setAuthServerUrlBase(String urlBase) {
         this.authServerUrlBase = urlBase;
     }
