@@ -141,7 +141,7 @@ public class ProjectRestService extends RestService {
         //assertUserLogged();
         List<ProjectItem> items;
         try {
-            secureByRole("RestcommUser", getKeycloakAccessToken());
+            secureByRole("Developer", getKeycloakAccessToken());
             items = projectService.getAvailableProjectsByOwner(loggedUsername); // there has to be a user in the context. Only logged users are allowed to to run project manager services
             projectService.fillStartUrlsForProjects(items, request);
         } catch (BadWorkspaceDirectoryStructure e) {
