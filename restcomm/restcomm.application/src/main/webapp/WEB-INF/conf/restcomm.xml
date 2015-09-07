@@ -70,6 +70,7 @@
 			<fallback-outbound-proxy-uri>127.0.0.1:5090
 			</fallback-outbound-proxy-uri>
 
+<<<<<<< HEAD
 			<!-- When set to true, Restcomm will use the username of the outbound 
 				proxy when -->
 			<!-- creating the From header, as the userpart of the sip uri. Example: 
@@ -79,6 +80,12 @@
 			</outboudproxy-user-at-from-header>
 			<!-- When set to true, Restcomm will use the original user for the display 
 				name of the From header -->
+=======
+			<!-- When set to true, Restcomm will use the username of the outbound proxy when -->
+			<!-- creating the From header, as the userpart of the sip uri. Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
+			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
+			<!-- When set to true, Restcomm will use the original user for the display name of the From header -->
+>>>>>>> origin/restcomm_xms
 			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<user-at-displayed-name>true</user-at-displayed-name>
 
@@ -228,6 +235,21 @@
 		<remove-original-file>true</remove-original-file>
 	</amazon-s3>
 
+<<<<<<< HEAD
+=======
+	<!-- Defines how RestComm communicates with the Media Server Control layer. 
+		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or MMS (Mobicents 
+		Media Server using MGCP driver) -->
+	<mscontrol>
+		<compatibility>mms</compatibility>
+		<media-server name="Dialogic XMS">
+			<address>127.0.0.1</address>
+			<port>5060</port>
+			<timeout>500</timeout>
+		</media-server>
+	</mscontrol>
+
+>>>>>>> origin/restcomm_xms
 	<!-- The media server manager is responsible for managing the media servers 
 		in use by RestComm. The default way to control media servers is using the 
 		MGCP stack. The MGCP stack MUST have a name and the following parameters: 

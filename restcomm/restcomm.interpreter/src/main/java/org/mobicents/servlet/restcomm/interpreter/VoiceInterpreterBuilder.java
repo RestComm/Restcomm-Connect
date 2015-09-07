@@ -41,6 +41,7 @@ public final class VoiceInterpreterBuilder {
     private DaoManager storage;
     private ActorRef calls;
     private ActorRef conferences;
+    private ActorRef bridges;
     private ActorRef sms;
     private Sid account;
     private Sid phone;
@@ -68,7 +69,7 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, sms, storage);
+                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage);
             }
         }));
     }
@@ -87,6 +88,10 @@ public final class VoiceInterpreterBuilder {
 
     public void setConferenceManager(final ActorRef conferences) {
         this.conferences = conferences;
+    }
+
+    public void setBridgeManager(final ActorRef bridges) {
+        this.bridges = bridges;
     }
 
     public void setSmsService(final ActorRef sms) {

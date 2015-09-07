@@ -30,13 +30,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class ConferenceInfo {
+
     private final List<ActorRef> participants;
     private final ConferenceStateChanged.State state;
+    private final String name;
 
-    public ConferenceInfo(final List<ActorRef> participants, final ConferenceStateChanged.State state) {
+    public ConferenceInfo(final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name) {
         super();
         this.participants = participants;
         this.state = state;
+        this.name = name;
     }
 
     public List<ActorRef> participants() {
@@ -46,4 +49,9 @@ public final class ConferenceInfo {
     public ConferenceStateChanged.State state() {
         return state;
     }
+
+    public String name() {
+        return name;
+    }
+
 }

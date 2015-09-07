@@ -128,7 +128,7 @@ public class UssdCall extends UntypedActor  {
     private CallDetailRecord outgoingCallRecord;
     private ActorRef ussdInterpreter;
 
-    public UssdCall(final SipFactory factory, final ActorRef gateway) {
+    public UssdCall(final SipFactory factory) {
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
