@@ -18,6 +18,10 @@ public class RvdKeycloakConfigResolver implements KeycloakConfigResolver {
 
     static final Logger logger = Logger.getLogger(RvdKeycloakConfigResolver.class.getName());
 
+    // Relative path of the rvd keycloak adapter configuration file based on Restcomm context root path
+    private static final String RVD_ADAPTER_FILEPATH = "/WEB-INF/conf/rvd/keycloak.json";
+
+
     private KeycloakDeployment cache;
     private KeycloakDeployment emptyDeployment = new KeycloakDeployment(); // return this in case there is no adapter file available
     long lastModified = 0; // any valid modification time will be greater than this
@@ -26,7 +30,7 @@ public class RvdKeycloakConfigResolver implements KeycloakConfigResolver {
     public KeycloakDeployment resolve(Request request) {
         RvdConfigurator configurator = RvdConfiguratorBuilder.get();
 
-        String configFilepath = configurator.getContextRootPath() + "/WEB-INF/keycloak.json";
+        String configFilepath = configurator.getRestcommContextRootPath() + RVD_ADAPTER_FILEPATH;
         File file = new File(configFilepath);
         if ( file.exists() ) {
             long thisLastModified = file.lastModified();
