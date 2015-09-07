@@ -39,18 +39,18 @@
             <dl class="dl-horizontal form-dl">
                 <dt>Voice Request URL</dt>
                 <dd>
-                    <rc-endpoint-url method-var="newClient.voice_method" url-var="newClient.voice_url" apps="availableApps"></rc-endpoint-url>
+                    <rc-endpoint-url method-var="newClient.voice_method" url-var="newClient.voice_url" apps="localApps"></rc-endpoint-url>
                 </dd>
                 <dt>Voice Fallback URL</dt>
                 <dd>
-                    <rc-endpoint-url method-var="newClient.voice_fallback_method" url-var="newClient.voice_fallback_url" apps="availableApps"></rc-endpoint-url>
+                    <rc-endpoint-url method-var="newClient.voice_fallback_method" url-var="newClient.voice_fallback_url" apps="localApps"></rc-endpoint-url>
                 </dd>
                 <dt>Status Callback URL</dt>
                 <dd>
                     <rc-endpoint-url method-var="newClient.status_callback_method" url-var="newClient.status_callback_url"></rc-endpoint-url>
                 </dd>
             </dl>
-            <h4>SMS Messaging</h4>
+            <!--h4>SMS Messaging</h4> Commented because Restcomm API, does not support SMS functionality for Users/Clients.
             <dl class="dl-horizontal form-dl">
                 <dt>SMS Request URL</dt>
                 <dd>
@@ -60,7 +60,7 @@
                 <dd>
                     <rc-endpoint-url method-var="newClient.sms_fallback_method" url-var="newClient.sms_fallback_url"></rc-endpoint-url>
                 </dd>
-            </dl>
+            </dl-->
         </div>
     </form>
 </div>

@@ -87,7 +87,7 @@ import com.thoughtworks.xstream.XStream;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @NotThreadSafe
-public abstract class CallsEndpoint extends AbstractEndpoint {
+public abstract class CallsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;

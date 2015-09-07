@@ -36,6 +36,7 @@ import org.junit.After;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -47,6 +48,7 @@ import org.mobicents.servlet.restcomm.email.Mail;
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
  */
+@Ignore
 public final class EmailServiceTest {
     private ActorSystem system;
     private ActorRef emailService;

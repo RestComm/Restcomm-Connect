@@ -42,7 +42,6 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.UsageDao;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -62,14 +61,14 @@ import com.thoughtworks.xstream.XStream;
  * @author brainslog@gmail.com (Alexandre Mendonca)
  */
 @ThreadSafe
-public abstract class UsageEndpoint extends AbstractEndpoint {
+public abstract class UsageEndpoint extends SecuredEndpoint {
   @Context
   protected ServletContext context;
   protected Configuration configuration;
   protected UsageDao dao;
   protected Gson gson;
   protected XStream xstream;
-  protected AccountsDao accountsDao;
+  //protected AccountsDao accountsDao;
 
   public UsageEndpoint() {
     super();
@@ -84,7 +83,7 @@ public abstract class UsageEndpoint extends AbstractEndpoint {
     configuration = configuration.subset("runtime-settings");
     super.init(configuration);
     dao = storage.getUsageDao();
-    accountsDao = storage.getAccountsDao();
+    //accountsDao = storage.getAccountsDao();
     final UsageConverter converter = new UsageConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Usage.class, converter);

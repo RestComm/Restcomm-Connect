@@ -22,7 +22,7 @@
 					<div class="col-md-12 text-center" ng-show="projectItem.viewMode=='view'" >
 							<a href="#/designer/{{projectItem.name}}" ng-click="openProject(projectItem.name)" style="margin-right:10px">{{projectItem.name}}</a>
 							<i ng-click="editProjectName(projectItem)" class="fa fa-pencil rvd-clickable" ></i>
-							<a href="/restcomm-rvd/services/projects/{{projectItem.name}}/archive"><i class="fa fa-download rvd-clickable" ></i></a>
+							<a href="/restcomm-rvd/api/projects/{{projectItem.name}}/archive"><i class="fa fa-download rvd-clickable" ></i></a>
 							<i ng-click="projectItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
 					</div>
 					

@@ -272,6 +272,11 @@ ttl INT NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
 
+CREATE TABLE restcomm_configuration(
+`key` VARCHAR(255) NOT NULL PRIMARY KEY,
+`value` LONGVARCHAR
+);
+
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
 Date("2012-04-24"),

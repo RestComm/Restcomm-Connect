@@ -267,3 +267,8 @@ CREATE TABLE "restcomm_gateways" (
 "ttl" INT NOT NULL,
 "uri" LONGVARCHAR NOT NULL
 );
+
+CREATE TABLE "restcomm_configuration"(
+"key" VARCHAR(255) NOT NULL PRIMARY KEY,
+"value" LONGVARCHAR
+);

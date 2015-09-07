@@ -16,6 +16,10 @@ import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.http.RestcommRoles;
+import org.mobicents.servlet.restcomm.identity.configuration.DbIdentityConfigurationSource;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSource;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
@@ -190,6 +194,19 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(DaoManager.class.getName(), storage);
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
+
+            // Create directory of shiro based restcomm roles
+            logger.info("Creating RestcommRoles");
+            RestcommRoles restcommRoles = new RestcommRoles();
+            context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
+            ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
+            logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
+
+            // Initialize identity/keycloak configuration
+            IdentityConfigurationSource identityConfSource = new DbIdentityConfigurationSource(storage.getConfigurationDao());
+            IdentityConfigurator keycloakConfig = IdentityConfigurator.create(identityConfSource,context);
+            context.setAttribute(IdentityConfigurator.class.getName(), keycloakConfig);
+
             // Create the media gateway.
 
 

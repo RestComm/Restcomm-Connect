@@ -21,6 +21,65 @@ rcServices.factory('SessionService', function() {
   }
 });
 
+rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
+	console.log("creating AuthService");
+	
+	var serviceInstance = {};
+		
+	serviceInstance.isLoggedIn = function() {
+		return Auth.loggedIn;
+      //return SessionService.get('authenticated');
+    }
+	serviceInstance.getLoggedSid = function() {
+		  //var username = Auth.authz.profile.username;
+		  //var accountSid = "AC" + md5.createHash(username);
+		  //return accountSid;
+		return Auth.restcommAccount.sid;
+	}
+	serviceInstance.getUsername = function() {
+		return Auth.authz.profile.username;
+	}
+	serviceInstance.getProfile = function() {
+		return Auth.authz.profile;
+	}
+	serviceInstance.logout = function() {
+		Auth.authz.logout();
+	}
+	
+	serviceInstance.secureAny = function(roles) {
+		var deferred = $q.defer();
+		for (var i=0; i<roles.length; i++) {
+			if ( Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId ) ) {
+				deferred.resolve();
+				return deferred.promise;
+			}
+		}
+		deferred.reject();
+		Notifications.error("You are not authorized to access this resource");
+		return deferred.promise;
+	}
+	serviceInstance.secureAll = function(roles) {
+		var deferred = $q.defer();
+		for (var i=0; i<roles.length; i++) {
+			if ( ! Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId) ) {
+				deferred.reject();
+				Notifications.error("You are not authorized to access this resource");
+				return deferred.promise;
+			}
+		}
+		deferred.resolve();
+		return deferred.promise;
+	}
+	serviceInstance.secure = function(role) {
+			return serviceInstance.secureAny([role]);
+	}
+
+    
+    return serviceInstance;
+		
+});
+
+/*
 rcServices.service('AuthService', function($http, $location, SessionService, md5) {
   var cacheSession = function(account, first) {
     var prefix = first ? '_' : '';
@@ -71,19 +130,6 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
           }
         }).
         error(function(data) {
-          /*
-           if($scope.closeAlertTimer) {
-           clearTimeout($scope.closeAlertTimer);
-           }
-           $scope.alerts[0] = {type: 'error', msg: "Login failed! Please confirm your credentials."};
-           $scope.closeAlertTimer = setTimeout(function() {
-           // we need to wrap it in apply so that AngularJS knows about the change and updates components
-           $scope.$apply(function() {
-           $scope.closeAlertTimer = null;
-           $scope.alerts.splice(0, 1);
-           });
-           }, 3000);
-           */
           alert("Login failed! Please confirm your credentials.");
         }
       );
@@ -126,6 +172,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     }
   }
 });
+*/
 
 rcServices.factory('Notifications', function($rootScope, $timeout, $log) {
   // time (in ms) the notifications are shown
@@ -253,6 +300,11 @@ rcServices.factory('RCommAccounts', function($resource) {
       format:'json'
     },
     {
+	  all: {
+		method: 'GET',
+		url: '/restcomm/2012-04-24/Accounts.:format',
+		isArray: true
+	  },
       view: {
         method: 'GET',
         url: '/restcomm/2012-04-24/Accounts.:format/:accountSid'
@@ -454,7 +506,7 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 });
 
 rcServices.factory('RCommApps', function($resource) {
-	  return $resource('/restcomm-rvd/services/apps');
+	  return $resource('/restcomm-rvd/api/projects');
 });
 
 rcServices.factory('RCommAvailableNumbers', function($resource) {
@@ -514,3 +566,89 @@ rcServices.factory('RCommJMX', function($resource) {
 rcServices.value("rappManagerConfig", {rasHost: "apps.restcomm.com", rasApiKey:"dae21e48184703e41ec0e42929800ed3", rasToken:"c7ba2a69395eb7b05a291f58bb75402f"});
 
 
+
+/*Registertation Form - Register Service Implementation */
+
+'use strict';
+
+rcServices.factory("InstanceService", function($http, $q) {
+	var service = {};
+	
+	service.registerInstance = function(instance) {
+		var deferred = $q.defer();
+		console.log("registering instance ...");
+		var params = $.param(instance);
+				
+		$http({
+			url:"/restcomm/identity/instance/register",
+			method: "POST",
+			headers:{'Content-Type': 'application/x-www-form-urlencoded'},
+			data: params
+		})
+		.success(function (data) {
+			console.log("succesfully registered instance as " + data.instanceName);
+			deferred.resolve();
+		})
+		.error(function () {
+			console.log("error registering instance");
+			deferred.reject();
+		});
+		
+		return deferred.promise;
+	} 
+	
+	return service
+});
+
+// otsakir: The service is used for *product* registration. We could name it ProductService instead of UserService and load with related functionality when needed? Btw, there is also the RCommAccounts service that deals with account management. 
+rcServices.factory('UserService', function($http){
+        var service = {};
+
+        service.GetAll = GetAll;
+        service.GetById = GetById;
+        service.GetByUsername = GetByUsername;
+        service.Create = Create;
+        service.Update = Update;
+        service.Delete = Delete;
+
+        return service;
+
+        function GetAll() {
+            return $http.get('/api/users').then(handleSuccess, handleError('Error getting all users'));
+        }
+
+        function GetById(id) {
+            return $http.get('/api/users/' + id).then(handleSuccess, handleError('Error getting user by id'));
+        }
+
+        function GetByUsername(username) {
+            return $http.get('/api/users/' + username).then(handleSuccess, handleError('Error getting user by username'));
+        }
+
+        function Create(user) {
+         return $http.get("/restcomm/2012-04-24/ProductRegister?"+
+                                                                 "NewsLetter=" + user.wantNewsletter +
+                                                                 "&Name=" + user.firstName +
+                                                                 "&Surname=" + user.lastName +
+                                                                 "&Company=" + user.companyname +
+                                                                 "&email=" + user.email ).then(handleSuccess, handleError('Error registering new user'));
+      }
+        function Update(user) {
+            return $http.put('/api/users/' + user.id, user).then(handleSuccess, handleError('Error updating user'));
+        }
+
+        function Delete(id) {
+            return $http.delete('/api/users/' + user.id).then(handleSuccess, handleError('Error deleting user'));
+        }
+
+        // private functions
+        function handleSuccess(response) {
+            return( response.data );
+        }
+
+        function handleError(error) {
+            return function () {
+                return { success: false, message: error };
+            };
+        }
+    });

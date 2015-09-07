@@ -2,17 +2,11 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('DashboardCtrl', function ($scope, $resource, $route, $rootScope, SessionService, RCommStatistics) {
-  $scope.sid = SessionService.get("sid");
-
-  // TEMPORARY... FIXME!
-  var Account = $resource('/restcomm/2012-04-24/Accounts.:format/:accountSid',
-    { accountSid: $scope.sid, format: 'json' },
-    {
-      // charge: {method:'POST', params:{charge:true}}
-    });
-
-  $scope.accountData = Account.get();
+rcMod.controller('DashboardCtrl', function ($scope, $resource, $route, $rootScope, AuthService, Auth, RCommStatistics) {
+	var Account = Auth.restcommAccount;
+	$scope.sid = Account.sid;
+	$scope.accountData = Account; 
+	$scope.profile = AuthService.getProfile(); 
 
   var startDate = new Date(new Date().setDate(new Date().getDate()-30)).toJSON().slice(0,10);
   var endDate = new Date().toJSON().slice(0,10);
