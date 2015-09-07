@@ -40,7 +40,7 @@
 			<url-pattern>/api/apps/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
-			<role-name>RestcommUser</role-name>
+			<!-- <role-name>RestcommUser</role-name> -->
 			<role-name>Developer</role-name>
 		</auth-constraint>
 	</security-constraint>
