@@ -827,7 +827,15 @@ public final class CallManager extends UntypedActor {
         SipURI to = null;
         switch (request.type()) {
             case CLIENT: {
-                SipURI outboundIntf = outboundInterface("udp");
+                SipURI outboundIntf = null;
+                final RegistrationsDao registrations = storage.getRegistrationsDao();
+                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
+                if (registration != null && registration.getAddressOfRecord().contains("transport")) {
+                    String transport = registration.getAddressOfRecord().split(";")[1].replace("transport=", "");
+                    outboundIntf = outboundInterface(transport);
+                } else {
+                    outboundIntf = outboundInterface("udp");
+                }
                 if (request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
                     // to use it directly
@@ -837,9 +845,6 @@ public final class CallManager extends UntypedActor {
                 } else {
                     from = outboundIntf;
                 }
-//                from = outboundInterface("udp");
-                final RegistrationsDao registrations = storage.getRegistrationsDao();
-                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
                 if (registration != null) {
                     final String location = registration.getLocation();
                     to = (SipURI) sipFactory.createURI(location);
@@ -912,6 +917,9 @@ public final class CallManager extends UntypedActor {
         } else {
             init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(), request.isFromApi(),
                     runtime.getString("api-version"), request.accountId(), request.type(), storage);
+        }
+        if (request.parentCallSid() != null) {
+            init.setParentCallSid(request.parentCallSid());
         }
         call.tell(init, self);
         return call;

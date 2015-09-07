@@ -87,7 +87,7 @@
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
 		<!-- <sipservletapi.version>7.0.0.GA-TelScale</sipservletapi.version> -->
-		<sipservletapi.version>3.1.612</sipservletapi.version>
+		<sipservletapi.version>3.1.620</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -95,7 +95,7 @@
 		<shiroweb.version>1.2.0</shiroweb.version>
 		<jersey.version>1.13</jersey.version>
 		<httpclient.version>4.3.6</httpclient.version>
-		<gson.version>2.1</gson.version>
+		<gson.version>2.3.1</gson.version>
 		<xstream.version>1.4.2</xstream.version>
 		<mongodb.version>2.7.2</mongodb.version>
 		<mybatis.version>3.2.2</mybatis.version>
@@ -147,6 +147,8 @@
 		<module>restcomm.ussd</module>
 		<module>restcomm.routing</module>
 		<module>restcomm.identity</module>
+		<module>restcomm.email</module>
+		<module>restcomm.email.api</module>
 	</modules>
 
 	<dependencyManagement>
@@ -595,6 +597,21 @@
 					<useProjectReferences>false</useProjectReferences>
 				</configuration>
 			</plugin>
+			<!-- When testing maven sure fire spawns a new JVM. Setting it to never fixed the issue. -->
+			<!--
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<configuration>
+					<forkMode>never</forkMode>
+					<argLine>-Xms1024m -Xmx1024m -XX:MaxPermSize=2048m</argLine>
+					<systemPropertyVariables>
+						<user.name>${user.name}</user.name>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+			-->
 			<!-- Checkstyle -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

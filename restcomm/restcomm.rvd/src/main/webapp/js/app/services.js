@@ -156,6 +156,12 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 		$scope.cancel = function () {
 			$modalInstance.close();
 		}
+
+		$scope.changeLoggingSetting = function () {
+			if($scope.projectSettings.logging == false && $scope.projectSettings.loggingRCML == true){
+				$scope.projectSettings.loggingRCML = false;
+			}
+		}
 	}
 	
 	service.showModal = function(projectName) {

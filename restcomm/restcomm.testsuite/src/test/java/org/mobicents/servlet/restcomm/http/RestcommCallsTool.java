@@ -7,6 +7,8 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -59,7 +61,7 @@ public class RestcommCallsTool {
         return accountsUrl;
     }
 
-    public JsonObject getRecordings(String deploymentUrl, String username, String authToken) {
+    public JsonArray getRecordings(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
@@ -69,12 +71,11 @@ public class RestcommCallsTool {
 
         String response = null;
         response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
-        response = response.replaceAll("\\[", "").replaceAll("]", "");
+//        response = response.replaceAll("\\[", "").replaceAll("]", "").trim();
         JsonParser parser = new JsonParser();
 
-        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
-
-        return jsonObject;
+        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+        return jsonArray;
     }
 
     public JsonObject getCalls(String deploymentUrl, String username, String authToken) {

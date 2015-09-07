@@ -1,0 +1,88 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "RVD project 1.4",
+	"description": "Specification for RVD 7.4",
+	"rvdproject": {
+		"type": "object",
+		"properties": {
+			"header": {
+				"type":"object",
+				"uniqueItems": true,
+				"properties": {
+					"startNodeName": {"type": "string"},
+					"projectKind": {"type": "string"},
+					"version": {"type": "string"},
+					"owner": {"type": "string"}
+				}
+			},
+			"nodes": {
+				"type": "array",
+				"items": {
+					"title": "RVD module",
+					"type": "object",
+					"uniqueItems": true,
+					"properties": {
+						"name": {"type": "string"},
+						"label": {"type": "string"},
+						"kind": {"type": "string"}, 
+						"steps": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"oneOf": [
+									{ "$ref": "saystep.json" },
+									{ "$ref": "playstep.json" },
+									{ "$ref": "gatherstep.json" },
+									{ "$ref": "dialstep.json" },
+									{ "$ref": "hangupstep.json" },
+									{ "$ref": "externalServiceStep.json" },
+									{ "$ref": "logStep.json" },
+									{ "$ref": "rejectStep.json" },
+									{ "$ref": "pauseStep.json" },
+									{ "$ref": "redirectStep.json" },
+									{ "$ref": "smsStep.json" },
+								    { "$ref": "emailStep.json" },
+									{ "$ref": "recordStep.json" },
+									{ "$ref": "faxStep.json" },
+									{ "$ref": "ussdSayStep.json" },
+									{ "$ref": "ussdCollectStep.json" },
+									{ "$ref": "ussdLanguageStep.json" }
+								]
+							}
+						}
+					},
+					"required": ["name","label","steps"]
+				}
+			},
+			"lastStepId": {
+				"type": "integer"
+			},
+			"activeNode": {
+				"type": "integer"
+			},		
+			"lastNodeId": {
+				"type": "integer"
+			},		
+			"startNodeName": {
+				"type": "string"
+			}
+		}
+	},
+	"nullOrString": {
+		"oneOf":[
+				{"type":"null"},
+				{"type":"string", "minLength":1}
+		]
+	},
+	"nullOrBoolean": {
+		"oneOf":[
+				{"type":"null"},
+				{"type":"boolean"}
+		]
+	},
+	"variableName": { 
+		"type":"string", 
+		"pattern":"^[A-Za-z]+[A-Za-z0-9_]*$" 
+	}
+}
+
