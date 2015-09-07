@@ -21,7 +21,7 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-rcServices.service('AuthService', function(Auth,md5) {
+rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 	console.log("creating AuthService");
 	
 	var serviceInstance = {};
@@ -44,6 +44,34 @@ rcServices.service('AuthService', function(Auth,md5) {
 	}
 	serviceInstance.logout = function() {
 		Auth.authz.logout();
+	}
+	
+	serviceInstance.secureAny = function(roles) {
+		var deferred = $q.defer();
+		for (var i=0; i<roles.length; i++) {
+			if ( Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId ) ) {
+				deferred.resolve();
+				return deferred.promise;
+			}
+		}
+		deferred.reject();
+		Notifications.error("You are not authorized to access this resource");
+		return deferred.promise;
+	}
+	serviceInstance.secureAll = function(roles) {
+		var deferred = $q.defer();
+		for (var i=0; i<roles.length; i++) {
+			if ( ! Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId) ) {
+				deferred.reject();
+				Notifications.error("You are not authorized to access this resource");
+				return deferred.promise;
+			}
+		}
+		deferred.resolve();
+		return deferred.promise;
+	}
+	serviceInstance.secure = function(role) {
+			return serviceInstance.secureAny([role]);
 	}
 
     
