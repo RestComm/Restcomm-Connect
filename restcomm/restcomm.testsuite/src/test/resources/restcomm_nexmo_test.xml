@@ -137,11 +137,17 @@
 		</nexmo>
 	</phone-number-provisioning>
 
-	<smtp>
+	<smtp-notify>
 		<host></host>
 		<user></user>
 		<password></password>
-	</smtp>
+	</smtp-notify>
+
+	<smtp-service>
+		<host> </host>
+		<user></user>
+		<password></password>
+	</smtp-service>
 
 	<dao-manager
 		class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">

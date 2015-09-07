@@ -40,6 +40,7 @@ public final class Verbs {
     public static final String reject = "Reject";
     public static final String say = "Say";
     public static final String sms = "Sms";
+    public static final String email = "Email";
     //USSD verbs
     public static final String ussdLanguage = "Language";
     public static final String ussdMessage = "UssdMessage";
@@ -83,6 +84,6 @@ public final class Verbs {
             return true;
         if (ussdCollect.equals(name))
             return true;
-        return false;
+        return email.equals(name);
     }
 }
