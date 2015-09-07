@@ -70,7 +70,7 @@ angular.module('Rvd').service('auth', function(keycloakAuth,$q,notifications) {
 		service.secureAny = function(roles) {
 			var deferred = $q.defer();
 			for (var i=0; i<roles.length; i++) {
-				if ( keycloakAuth.authz.hasRealmRole(roles[i]) ) {
+				if ( keycloakAuth.authz.hasResourceRole(roles[i], keycloakAuth.authz.clientId ) ) {
 					deferred.resolve();
 					return deferred.promise;
 				}
@@ -82,7 +82,7 @@ angular.module('Rvd').service('auth', function(keycloakAuth,$q,notifications) {
 		service.secureAll = function(roles) {
 			var deferred = $q.defer();
 			for (var i=0; i<roles.length; i++) {
-				if ( ! keycloakAuth.authz.hasRealmRole(roles[i]) ) {
+				if ( ! keycloakAuth.authz.hasResourceRole(roles[i], keycloakAuth.authz.clientId) ) {
 					deferred.reject();
 					notifications.put({type:"danger",message:"You are not authorized to access this resource"});
 					return deferred.promise;
