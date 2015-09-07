@@ -19,14 +19,15 @@
  */
 package org.mobicents.servlet.restcomm.fsm;
 
-import static com.google.common.base.Preconditions.*;
-import com.google.common.collect.ImmutableMap;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -69,6 +70,7 @@ public class FiniteStateMachine {
             }
         }
         if (accept) {
+            // Execute action before leaving previous state (post-processing)
             final Action actionOnExit = state.getActionOnExit();
             if (actionOnExit != null) {
                 try {
@@ -77,10 +79,25 @@ public class FiniteStateMachine {
                     throw new TransitionFailedException(exception, event, transition);
                 }
             }
+
+            // Execute action before entering new state (pre-processing)
             final Action actionOnEnter = target.getActionOnEnter();
             if (actionOnEnter != null) {
                 try {
                     actionOnEnter.execute(event);
+                } catch (final Exception exception) {
+                    throw new TransitionFailedException(exception, event, transition);
+                }
+            }
+
+            // Move to a new state
+            state = target;
+
+            // Execute action after entering new state (processing)
+            final Action actionOnState = target.getActionOnState();
+            if (actionOnState != null) {
+                try {
+                    actionOnState.execute(event);
                 } catch (final Exception exception) {
                     throw new TransitionFailedException(exception, event, transition);
                 }
@@ -91,7 +108,6 @@ public class FiniteStateMachine {
                     .append(" state to a(n) ").append(transition.getStateOnExit().getId()).append(" state has failed.");
             throw new TransitionRollbackException(buffer.toString(), event, transition);
         }
-        state = target;
     }
 
     private ImmutableMap<State, Map<State, Transition>> toImmutableMap(final Set<Transition> transitions) {
