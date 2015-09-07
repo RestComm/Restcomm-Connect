@@ -273,14 +273,4 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         }
         return result;
     }
-
-    protected Response deleteApplication(final String accountSid, final String sid) {
-        try {
-            secure(accountsDao.getAccount(new Sid(accountSid)), "RestComm:Delete:Applications");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
-        dao.removeApplication(new Sid(sid));
-        return ok().build();
-    }
 }
