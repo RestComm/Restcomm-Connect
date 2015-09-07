@@ -4,9 +4,9 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Incoming : List ---------------------------------------------------
 
-rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, SessionService, RCommNumbers, Notifications) {
+rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, AuthService, Auth, RCommNumbers, Notifications) {
   $anchorScroll(); // scroll to top
-  $scope.sid = SessionService.get("sid");
+  $scope.sid = AuthService.getLoggedSid();
 
   // edit incoming number friendly name --------------------------------------
   $scope.editingFriendlyName = "";
@@ -55,13 +55,13 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, AuthService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
 
   // are we editing details...
   //if($scope.phoneSid === $routeParams.phoneSid) {
 
-    $scope.sid = SessionService.get("sid");
-    $scope.phoneSid = $routeParams.phoneSid
+    $scope.sid = AuthService.getLoggedSid();
+    $scope.phoneSid = $routeParams.phoneSid;
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
 
@@ -144,9 +144,9 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   }
 };
 
-var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dialog, $modalInstance, AuthService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
 
-  $scope.sid = SessionService.get("sid");
+  $scope.sid = AuthService.getLoggedSid();
 
   //$scope.countries = countries;
   $scope.countries = allCountries;
@@ -287,15 +287,15 @@ var createNumberParams = function(number, isSIP) {
 
   // Optional fields
   params["FriendlyName"] = number.friendly_name || number.friendlyName;
-  params["VoiceUrl"] = number.voice_url || number.voiceUrl;
+  params["VoiceUrl"] = number.voice_url; // || number.voiceUrl; - return "" as "". It will help the server clear values.
   params["VoiceMethod"] = number.voice_method || number.voiceMethod;
-  params["VoiceFallbackUrl"] = number.voice_fallback_url || number.voiceFallbackUrl;
+  params["VoiceFallbackUrl"] = number.voice_fallback_url; // || number.voiceFallbackUrl;
   params["VoiceFallbackMethod"] = number.voice_fallback_method || number.voiceFallbackMethod;
-  params["StatusCallback"] = number.status_callback || number.statusCallback;
+  params["StatusCallback"] = number.status_callback; // || number.statusCallback;
   params["StatusCallbackMethod"] = number.status_callback_method || number.statusCallbackMethod;
-  params["SmsUrl"] = number.sms_url || number.smsUrl;
+  params["SmsUrl"] = number.sms_url; // || number.smsUrl;
   params["SmsMethod"] = number.sms_method || number.smsMethod;
-  params["SmsFallbackUrl"] = number.sms_fallback_url || number.smsFallbackUrl;
+  params["SmsFallbackUrl"] = number.sms_fallback_url; // || number.smsFallbackUrl;
   params["SmsFallbackMethod"] = number.sms_fallback_method || number.smsFallbackMethod;
   params["VoiceCallerIdLookup"] = number.voice_caller_id_lookup || number.voiceCallerIdLookup;
   if(isSIP) {

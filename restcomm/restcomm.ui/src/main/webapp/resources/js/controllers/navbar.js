@@ -2,13 +2,14 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, SessionService, Notifications, RCommAccounts) {
+rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, SessionService, Notifications, RCommAccounts, authMode) {
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
     $rootScope.location = $location.path();
   });
-
+  
+  $scope.authMode = authMode;
   $scope.auth = AuthService;
   $scope.sid = SessionService.get('sid');
 
@@ -21,11 +22,14 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
   $scope.logout = function() {
     AuthService.logout();
-    $http.get('/restcomm/2012-04-24/Logout')/*.
+    //$http.get('/restcomm/2012-04-24/Logout')
+    /*.
      success(function() {console.log('Logged out from API.');}).
      error(function() {console.log('Failed to logout from API.');})*/;
   };
 
+  // otsakir - disable it for now. maybe it's not needed
+  /*
   if(AuthService.isLoggedIn()) {
     var accountsList = RCommAccounts.query(function() {
       $scope.accountsList = accountsList;
@@ -36,6 +40,7 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
       }
     });
   }
+  */
 
   // add account -------------------------------------------------------------
 
@@ -66,18 +71,46 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5, Auth, AuthService) {
   $scope.sid = SessionService.get('sid');
-
-  var accountBackup;
+	console.log("IN ProfileCtrl");
+	
+	var locationAccountSid = $routeParams.accountSid;
+	console.log("locationAccountSid: " + locationAccountSid);
+	
+	var accountBackup = {};
+	
+	// it there is another account specified in the location bar, try to load this one
+	if ( $routeParams.accountSid ) {
+		$scope.account = RCommAccounts.view({format:'json', accountSid: $routeParams.accountSid}, function (account) {
+			angular.copy(account, accountBackup);
+			console.log("received account");
+			console.log(accountBackup);
+		});
+		
+	} else {  // retrieve currently logged account information
+		$scope.account = RCommAccounts.view({format:'json', accountSid:AuthService.getUsername()}, function (account) {
+			angular.copy(account, accountBackup);
+			console.log("received account");
+			console.log(accountBackup);
+		});
+	}
+	
+	
+	// retrieve all sub-accounts for currently logged user
+	$scope.accounts = RCommAccounts.all({format:'json'}, function (accounts) {});
+	
 
   $scope.$watch('account', function() {
     if (!angular.equals($scope.account, accountBackup)) {
       $scope.accountChanged = true;
+      console.log("account has changed");
       // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
     }
   }, true);
-
+  
+  
+/*
   $scope.newPassword = $scope.newPassword2 = '';
 
   $scope.$watchCollection('[newPassword, newPassword2]', function() {
@@ -102,24 +135,22 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     $scope.accountChanged = false;
   };
 
+*/
+  
   $scope.updateProfile = function() {
     var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status};
 
-    if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
-      params['Auth_Token'] = md5.createHash($scope.newPassword);
-    }
+  //  if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
+  //    params['Auth_Token'] = md5.createHash($scope.newPassword);
+  //  }
 
     RCommAccounts.update({accountSid:$scope.account.sid}, $.param(params), function() { // success
-      if($scope.account.sid = SessionService.get('sid')) {
-        SessionService.set('logged_user', $scope.account.friendly_name);
-      }
-      $scope.showAlert('success', 'Profile Updated Successfully.');
-      $scope.getAccounts();
+    	$scope.accounts = RCommAccounts.all({format:'json'}, function (accounts) {});
     }, function() { // error
-      // TODO: Show alert
       $scope.showAlert('error', 'Failure Updating Profile. Please check data and try again.');
     });
   };
+  
 
   $scope.alert = {};
 
@@ -134,7 +165,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     $scope.alert.msg = '';
     $scope.alert.show = false;
   };
-
+/*
   // Start with querying for accounts...
   $scope.getAccounts = function() {
     $scope.accounts = RCommAccounts.query(function(data){
@@ -149,7 +180,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   };
 
   $scope.getAccounts();
-
+*/
 });
 
 // Register Account Modal

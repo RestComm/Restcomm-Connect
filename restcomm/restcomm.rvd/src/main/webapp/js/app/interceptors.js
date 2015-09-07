@@ -3,7 +3,7 @@ var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('Unauthorize
         responseError: function(response) {
         	//console.log("run UnauthorizedResponseInterceptor");
         	//console.log(response);
-        	
+        	/*
         	if (response.status === 401) {
 				if ( response.data && response.data.exception ) {
 					var exceptionName = response.data.exception.className;
@@ -15,6 +15,7 @@ var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('Unauthorize
 					}
 				}
         	} else
+        	*/
         	if (response.status === 404) {
 				if ( response.data && response.data.exception ) {
 					var exceptionName = response.data.exception.className;

@@ -26,6 +26,19 @@
 			<groupId>org.apache.shiro</groupId>
 			<artifactId>shiro-web</artifactId>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-core</artifactId>
+			<version>1.4.0.Final</version>
+		</dependency>
+		
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-adapter-core</artifactId>
+            <version>1.4.0.Final</version>
+            <scope>provided</scope>
+        </dependency>		
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -222,6 +235,12 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.mscontrol.xms</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.identity</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

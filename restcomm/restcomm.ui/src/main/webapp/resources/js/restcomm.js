@@ -17,41 +17,98 @@ var rcMod = angular.module('rcApp', [
   'ngSanitize'
 ]);
 
-rcMod.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
-  $routeProvider.
-    when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
-    when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
-    when('/profile/:accountSid', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl'}).
-    when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl'}).
-    when('/numbers', {redirectTo: '/numbers/incoming'}).
-    when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl'}).
-    when('/numbers/register-incoming', {
-      templateUrl: 'modules/numbers-incoming-register.html',
-      controller: 'NumberRegisterCtrl',
-      resolve: {
-        $modalInstance : function() { return undefined; },
-        allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
-        providerCountries: function(RCommAvailableNumbers, SessionService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:SessionService.get("sid")}).$promise; }
-      }
-    }).
-    when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, allCountries : function() {return undefined;}, providerCountries : function() {return undefined;},	localApps: function (rappService) { return rappService.refreshLocalApps();}}}).
-    when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl'}).
-    when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { $modalInstance : function() {return undefined;} }}).
-    when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl'}).
-    when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl'}).
-    when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl'}).
-    when('/logs', {redirectTo: '/logs/calls'}).
-    when('/logs/calls', {templateUrl: 'modules/logs-calls.html', controller: 'LogsCallsCtrl'}).
-    when('/logs/calls/:callSid', {templateUrl: 'modules/logs-calls-details.html', controller: 'LogsCallsDetailsCtrl', resolve: { $modalInstance : function() {return undefined;}, callSid: function() {} }}).
-    when('/logs/messages', {templateUrl: 'modules/logs-messages.html', controller: 'LogsMessagesCtrl'}).
-    when('/logs/recordings', {templateUrl: 'modules/logs-recordings.html', controller: 'LogsRecordingsCtrl'}).
-    when('/logs/transcriptions', {templateUrl: 'modules/logs-transcriptions.html', controller: 'LogsTranscriptionsCtrl'}).
-    when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl'}).
-    when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl'}).
-    when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl'}).
-    otherwise({redirectTo: '/dashboard'});
-
-  // $locationProvider.html5Mode(true);
+// authMode reflects whether Restcomm is hooked up to the cloud or not. It is one of 'init-cloud-standalone'
+rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($routeProvider, $locationProvider, authMode) {
+  
+  console.log("auth mode: " + authMode);
+  
+  if (authMode == 'cloud') {
+	  $routeProvider.
+		when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
+		when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/profile/:accountSid', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers', {redirectTo: '/numbers/incoming'}).
+		when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/register-incoming', {
+		  templateUrl: 'modules/numbers-incoming-register.html',
+		  controller: 'NumberRegisterCtrl',
+		  resolve: {
+			$modalInstance : function() { return undefined; },
+			allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
+			providerCountries: function(RCommAvailableNumbers, AuthService) { return RCommAvailableNumbers.getAvailableCountries({accountSid:AuthService.getLoggedSid()}).$promise; },
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		  }
+		}).
+		when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { 
+			$modalInstance : function() {return undefined;}, 
+			allCountries : function() {return undefined;}, 
+			providerCountries : function() {return undefined;},	
+			localApps: function (rappService) { return rappService.refreshLocalApps();},
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { 
+			$modalInstance : function() {return undefined;}, 
+			localApps: function (rappService) { return rappService.refreshLocalApps();},
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs', {redirectTo: '/logs/calls', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/calls', {templateUrl: 'modules/logs-calls.html', controller: 'LogsCallsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/calls/:callSid', {templateUrl: 'modules/logs-calls-details.html', controller: 'LogsCallsDetailsCtrl', resolve: { 
+			$modalInstance : function() {return undefined;}, callSid: function() {},
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/messages', {templateUrl: 'modules/logs-messages.html', controller: 'LogsMessagesCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/recordings', {templateUrl: 'modules/logs-recordings.html', controller: 'LogsRecordingsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/transcriptions', {templateUrl: 'modules/logs-transcriptions.html', controller: 'LogsTranscriptionsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}}).
+		otherwise({redirectTo: '/dashboard'});
+	  // $locationProvider.html5Mode(true);
+	} else
+	if (authMode == 'init') {
+		$routeProvider.
+			when('/unregistered', {templateUrl: 'modules/unregistered.html', controller: 'UnregisteredCtrl'}).
+			when('/register', {templateUrl: 'modules/register.html', controller: 'RegisterCtrl'}).
+			otherwise({redirectTo: '/unregistered'});
+	}
 }]);
 
 rcMod.directive('equals', function() {
@@ -83,6 +140,8 @@ rcMod.directive('equals', function() {
   }
 });
 
+/*
+// otsakir - disable old authentication mechanism
 rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
   $rootScope.$on("$routeChangeStart", function(event, next, current) {
     $anchorScroll(); // scroll to top
@@ -91,6 +150,7 @@ rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
     }
   })
 });
+*/
 
 // AJAX LOADER
 /* FIXME: Disabled since it causes $http and $resource not to call error callbacks
@@ -113,27 +173,6 @@ angular
   });
 */
 
-rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location',function($q,$location){
-    return {
-      response: function(response){
-        if (response.status === 401) {
-          $location.path('/login').search('returnTo', $location.path());
-        }
-        return response || $q.when(response);
-      },
-      responseError: function(rejection) {
-        if (rejection.status === 401) {
-          $location.path('/login').search('returnTo', $location.path());
-        }
-        return $q.reject(rejection);
-      }
-    }
-  }])
-  .config(['$httpProvider',function($httpProvider) {
-    // http Intercpetor to check auth failures for xhr requests
-    $httpProvider.interceptors.push('authHttpResponseInterceptor');
-  }]);
 
 /*
 var interceptor = ['$rootScope', '$q', '$location', function (scope, $q, $location) {
@@ -161,6 +200,7 @@ var interceptor = ['$rootScope', '$q', '$location', function (scope, $q, $locati
 
 }];
 */
+
 
 // MD5
 angular.module('angular-md5', []).factory('md5', [function() {

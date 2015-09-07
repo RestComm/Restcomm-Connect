@@ -373,7 +373,8 @@
 	"sms":"sms",
 
 	"projectSettingsModalSettingsLabel": "Settings",
-	"projectSettingsModalEnableAppLabel": "Enable application logging",
+	"projectSettingsModalEnableAppLabel": "Application logging",
+	"projectSettingsModalLogRcmlLabel": "Log RCML",
 	"projectSettingsModalSaveButton": "Save",
 	"projectSettingsModalCancelButton": "Cancel",
 

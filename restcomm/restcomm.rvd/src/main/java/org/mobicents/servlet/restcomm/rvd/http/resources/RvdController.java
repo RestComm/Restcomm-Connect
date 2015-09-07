@@ -33,6 +33,8 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.IDToken;
 import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
@@ -70,7 +72,8 @@ import org.w3c.dom.Document;
 
 import com.google.gson.Gson;
 
-@Path("apps")
+// This goes under /services. See more in ControllerApplication.java
+@Path("/apps")
 public class RvdController extends RestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
 
@@ -103,6 +106,13 @@ public class RvdController extends RestService {
             Interpreter interpreter = new Interpreter(rvdContext, targetParam, appname, httpRequest, requestParams, workspaceStorage);
             rcmlResponse = interpreter.interpret();
 
+            // logging rcml response, if configured
+            // make sure logging is enabled before allowing access to sensitive log information
+            ProjectSettings projectSettings = rvdContext.getProjectSettings();
+            if (projectSettings.getLogging() == true && projectSettings.getLoggingRCML() == true){
+                interpreter.getProjectLogger().log( rcmlResponse, false).tag("app", appname).tag("RCML").done();
+            }
+
         } catch (RemoteServiceError e) {
             logger.warn(e.getMessage());
             if ( rvdContext.getProjectSettings().getLogging() )
@@ -123,6 +133,13 @@ public class RvdController extends RestService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listApps(@Context HttpServletRequest request) {
+
+        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+        IDToken idToken = session.getIdToken();
+        //logger.info("EMAIL: " + idToken.getEmail() );
+        //logger.info("NAME: " + idToken.getName() );
+        //logger.info("Username: " +  idToken.getPreferredUsername() );
+
         RvdContext rvdContext = new RvdContext(request, servletContext);
         ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);
         init(rvdContext);

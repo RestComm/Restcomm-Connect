@@ -1,12 +1,12 @@
 App.controller('AppCtrl', function ($rootScope, $location) {
 	$rootScope.$on("$routeChangeError", function(event, current, previous, rejection) {
         //console.log('on $routeChangeError');
-        if ( rejection == "AUTHENTICATION_ERROR" ) {
-			console.log("AUTHENTICATION_ERROR");
-			$location.path("/login");
-		} else {
+        //if ( rejection == "AUTHENTICATION_ERROR" ) {
+		//	console.log("AUTHENTICATION_ERROR");
+		//	$location.path("/login");
+		//} else {
 			$rootScope.rvdError = rejection;
-		}
+		//}
     });
     
     $rootScope.$on("resourceNotFound", function(p1, p2) {
@@ -19,32 +19,7 @@ App.controller('AppCtrl', function ($rootScope, $location) {
 	});
 });
 
-var loginCtrl = angular.module('Rvd')
-.controller('loginCtrl', ['authentication', '$scope', '$http', 'notifications', '$location', function (authentication, $scope, $http, notifications, $location) {
-//	console.log("run loginCtrl ");
-	authentication.clearTicket();
-	
-	$scope.doLogin = function (username, password) {
-		authentication.doLogin(username,password).then(function () {
-			$location.path("/home");
-		}, function () {
-			notifications.put({message:"Login failed", type:"danger"});
-		})
-		
-		/*$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
-		.success ( function () {
-			console.log("login successful");
-			
-		})
-		.error( function () {
-			console.log("error logging in");
-			notifications.put({message:"Login failed", type:"danger"});
-		});*/
-	}
-}]);
-
-
-App.controller('homeCtrl', function ($scope, authInfo) {
+App.controller('homeCtrl', function ($scope) {
 });
 
 angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'projectLogService', 'notifications', function ($scope, $routeParams, projectLogService, notifications) {
@@ -75,17 +50,13 @@ angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'p
 	retrieveLog($scope.projectName);
 }]);
 
-App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal','$q', '$http', function ($scope, authentication, $location, $modal, $q, $http) {
-	$scope.authInfo = authentication.getAuthInfo();
+App.controller('mainMenuCtrl', ['$scope', '$location', '$modal','$q', '$http', 'auth', function ($scope, $location, $modal, $q, $http, auth ) {
+	//$scope.authInfo = authentication.getAuthInfo();
 	//$scope.username = authentication.getTicket(); //"Testuser@test.com";
+	$scope.auth = auth;
 	
 	function logout() {
-		console.log("logging out");
-		authentication.doLogout().then(function () {
-			$location.path("/login");
-		}, function () {
-			$location.path("/login");
-		});
+		console.log("logging out - NOT IMPLEMENTED");
 	}
 	$scope.logout = logout;
 	
@@ -147,7 +118,7 @@ App.controller('translateController', function($translate, $scope) {
 
 angular.module('Rvd').controller('wavManagerController', function ($rootScope, $scope, $http, $upload) {
 	$scope.deleteWav = function (wavItem) {
-		$http({url: 'services/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
+		$http({url: 'api/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
 		.success(function (data, status, headers, config) {
 			console.log("Deleted " + wavItem.filename);
 			throwRemoveWavEvent(wavItem.filename);
@@ -163,7 +134,7 @@ angular.module('Rvd').controller('wavManagerController', function ($rootScope, $
 		    for (var i = 0; i < $files.length; i++) {
 		      var file = $files[i];
 		      $scope.upload = $upload.upload({
-		        url: 'services/projects/' + $scope.projectName + '/wavs',
+		        url: 'api/projects/' + $scope.projectName + '/wavs',
 		        file: file,
 		      }).success(function(data, status, headers, config) {
 		        // file is uploaded successfully

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.ConfigurationDao">  
+  
+  <insert id="createValue" parameterType="map">
+    INSERT INTO restcomm_configuration (`key`, `value`)
+    VALUES (#{key}, #{value});
+  </insert>
+  
+  <update id="updateValue" parameterType="map">
+	UPDATE restcomm_configuration SET `value`=#{value} WHERE `key`=#{key};
+  </update>
+  
+  <select id="getValue" parameterType="string" resultType="hashmap">
+	SELECT * FROM restcomm_configuration WHERE `key`=#{key};
+  </select>
+  
+  <delete id="dropValue" parameterType="string">
+	  DELETE FROM restcomm_configuration WHERE `key`=#{key};
+  </delete>	
+  
+</mapper>

@@ -2,11 +2,11 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout, $modal, SessionService, RCommLogsNotifications) {
+rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout, $modal, AuthService, RCommLogsNotifications) {
 
   $scope.Math = window.Math;
 
-  $scope.sid = SessionService.get("sid");
+  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -52,8 +52,8 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
 
 });
 
-rcMod.controller('LogsNotificationsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, SessionService, RCommLogsNotifications, notificationSid) {
-  $scope.sid = SessionService.get("sid");
+rcMod.controller('LogsNotificationsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, AuthService, RCommLogsNotifications, notificationSid) {
+  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
   $scope.notificationSid = $routeParams.notificationSid || notificationSid;
 
   $scope.closeNotificationDetails = function () {

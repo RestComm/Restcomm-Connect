@@ -21,14 +21,16 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.net.URI;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.subject.Subject;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -42,15 +44,25 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  */
 @NotThreadSafe
 public abstract class AbstractEndpoint {
+    protected Logger logger = Logger.getLogger(AbstractEndpoint.class);
     private String defaultApiVersion;
     protected Configuration configuration;
+    protected AccountsDao accountsDao;
     protected String baseRecordingsPath;
+
+    @Context
+    protected ServletContext context;
+    @Context
+    HttpServletRequest request;
+
 
     public AbstractEndpoint() {
         super();
     }
 
     protected void init(final Configuration configuration) {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        accountsDao = storage.getAccountsDao();
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
         defaultApiVersion = configuration.getString("api-version");
@@ -109,13 +121,13 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
-    protected void secure(final Account account, final String permission) throws AuthorizationException {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid accountSid = account.getSid();
-        if (account.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission)))) {
-            return;
-        } else {
-            throw new AuthorizationException();
-        }
+
+    // A general purpose method to test incoming parameters for meaningful data
+    protected boolean isEmpty(Object value) {
+        if (value == null)
+            return true;
+        if ( value.equals("") )
+            return true;
+        return false;
     }
 }
