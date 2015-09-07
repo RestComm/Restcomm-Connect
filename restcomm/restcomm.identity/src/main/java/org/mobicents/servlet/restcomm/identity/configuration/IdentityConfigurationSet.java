@@ -11,6 +11,7 @@ public interface IdentityConfigurationSet extends ConfigurationSet {
     String getIdentityInstanceId();
     String getRestcommClientSecret();
     Boolean getAutoImportUsers();
+    String getClientName(IdentityResourceNames clientType);
 
     void setAuthServerUrlBase(String urlBase);
     void setMode(IdentityMode mode);
@@ -22,4 +23,6 @@ public interface IdentityConfigurationSet extends ConfigurationSet {
         cloud,
         standalone
     }
+
+
 }
