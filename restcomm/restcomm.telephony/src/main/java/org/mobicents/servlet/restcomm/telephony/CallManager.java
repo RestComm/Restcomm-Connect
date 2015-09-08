@@ -139,6 +139,9 @@ public final class CallManager extends UntypedActor {
     private String myHostIp;
     private String proxyIp;
 
+    //Control whether Restcomm will patch SDP for B2BUA calls
+    private boolean patchSDPforB2BUASessions;
+
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
         NotificationsDao notifications = storage.getNotificationsDao();
@@ -222,26 +225,13 @@ public final class CallManager extends UntypedActor {
         useFallbackProxy = new AtomicBoolean();
         useFallbackProxy.set(false);
 
-        Boolean bool = outboundProxyConfig.getBoolean("allow-fallback");
-        if (bool != null) {
-            allowFallback = bool;
-        } else {
-            allowFallback = false;
-        }
+        allowFallback = outboundProxyConfig.getBoolean("allow-fallback", false);
 
-        final Integer value = outboundProxyConfig.getInt("max-failed-calls");
-        if (value != null) {
-            maxNumberOfFailedCalls = value.intValue();
-        } else {
-            maxNumberOfFailedCalls = 20;
-        }
+        maxNumberOfFailedCalls = outboundProxyConfig.getInt("max-failed-calls", 20);
 
-        bool = outboundProxyConfig.getBoolean("allow-fallback-to-primary");
-        if (bool != null) {
-            allowFallbackToPrimary = bool;
-        } else {
-            allowFallbackToPrimary = false;
-        }
+        allowFallbackToPrimary = outboundProxyConfig.getBoolean("allow-fallback-to-primary", false);
+
+        patchSDPforB2BUASessions = runtime.getBoolean("patch-sdp-for-b2bua-sessions", true);
     }
 
     private ActorRef call() {
@@ -330,7 +320,7 @@ public final class CallManager extends UntypedActor {
             Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
                 // the b2bua
-                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
+                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchSDPforB2BUASessions)) {
                     logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
                             + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
                     // if all goes well with proxying the invitation on to the next client
@@ -402,7 +392,7 @@ public final class CallManager extends UntypedActor {
                         callToSipUri = true;
                     }
                     if (B2BUAHelper.redirectToB2BUA(request, client, from, to, proxyUsername, proxyPassword, storage,
-                            sipFactory, callToSipUri)) {
+                            sipFactory, callToSipUri, patchSDPforB2BUASessions)) {
                         return;
                     }
                 } else {
@@ -1051,7 +1041,7 @@ public final class CallManager extends UntypedActor {
                 invite = challengeRequest;
                 challengeRequest.send();
             } else {
-                B2BUAHelper.forwardResponse(response);
+                B2BUAHelper.forwardResponse(response, patchSDPforB2BUASessions);
             }
         } else {
             if (application.isValid()) {
