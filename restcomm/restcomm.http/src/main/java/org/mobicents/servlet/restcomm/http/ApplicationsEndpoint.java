@@ -28,6 +28,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
@@ -181,6 +182,10 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (application == null) {
             application = createFrom(new Sid(accountSid), data);
             dao.addApplication(application);
+        } else if (!application.getAccountSid().toString().equals(accountSid)) {
+            return status(CONFLICT)
+                    .entity("A application with the same name was already created by another account. Please, choose a different name and try again.")
+                    .build();
         }
 
         if (APPLICATION_XML_TYPE == responseType) {
