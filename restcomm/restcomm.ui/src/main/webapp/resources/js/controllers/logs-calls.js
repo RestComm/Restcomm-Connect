@@ -78,6 +78,15 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
     });
   };
 
+//Activate click event for date buttons.
+ $scope.openDate = function(elemDate) {
+   if (elemDate === "startDate") {
+        angular.element('#startpicker').trigger('click');
+   }else{
+        angular.element('#endpicker').trigger('click');
+   }
+};
+
   // initialize with a query
   $scope.getCallsList(0);
 });
