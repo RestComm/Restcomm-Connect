@@ -110,7 +110,7 @@
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
 		<sipunit.version>2.0.1</sipunit.version>
 		<!--tomcat.version>6.0.35</tomcat.version -->
-		<tomcat7.version>7.0.50</tomcat7.version>
+		<tomcat7.version>7.0.64</tomcat7.version>
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
