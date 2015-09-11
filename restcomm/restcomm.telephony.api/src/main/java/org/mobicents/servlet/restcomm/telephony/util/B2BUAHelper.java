@@ -429,18 +429,18 @@
          }
          // forward the response
          response.getSession().setAttribute(B2BUA_LAST_RESPONSE, response);
-         SipServletRequest request = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
-         SipServletResponse resp = request.createResponse(response.getStatus());
+         SipServletRequest linkedRequest = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
+         SipServletResponse clonedResponse = linkedRequest.createResponse(response.getStatus());
          SipURI originalURI = null;
          Address contact = null;
          try {
              originalURI = (SipURI) response.getAddressHeader("Contact").getURI();
-             ((SipURI) resp.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
-             contact = resp.getAddressHeader("Contact");
+             ((SipURI) clonedResponse.getAddressHeader("Contact").getURI()).setUser(originalURI.getUser());
+             contact = clonedResponse.getAddressHeader("Contact");
          } catch (ServletParseException e1) {}
          catch (NullPointerException e2) {}
          logger.info("Contact: " + contact);
-         CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
+         CallDetailRecord callRecord = records.getCallDetailRecord((Sid) linkedRequest.getSession().getAttribute(CDR_SID));
 
          if (response.getContent() != null) {
              final byte[] sdp = response.getRawContent();
@@ -462,17 +462,17 @@
                  }
              }
              if (offer != null) {
-                 resp.setContent(offer, response.getContentType());
+                 clonedResponse.setContent(offer, response.getContentType());
              } else {
-                 resp.setContent(sdp, response.getContentType());
+                 clonedResponse.setContent(sdp, response.getContentType());
              }
          }
-         resp.send();
+         clonedResponse.send();
 
          // CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
          if (callRecord != null) {
              logger.info("CDR found! Updating");
-             if (!request.getMethod().equalsIgnoreCase("BYE")) {
+             if (!linkedRequest.getMethod().equalsIgnoreCase("BYE")) {
                  if (response.getStatus() == 100 || response.getStatus() == 180 || response.getStatus() == 183) {
                      callRecord = callRecord.setStatus(CallStateChanged.State.RINGING.name());
                  } else if (response.getStatus() == 200 || response.getStatus() == 202) {
