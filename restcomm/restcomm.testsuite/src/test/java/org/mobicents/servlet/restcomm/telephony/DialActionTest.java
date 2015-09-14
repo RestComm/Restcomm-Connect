@@ -35,6 +35,7 @@ import javax.sip.header.Header;
 import javax.sip.message.Response;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.gson.JsonArray;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -673,6 +674,129 @@ public class DialActionTest {
         String sid = data.getFirst("DialCallSid");
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
+    }
+
+    @Test
+    public void testDialCallDurationAliceAnswers() throws ParseException, InterruptedException {
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        Thread.sleep(2000); //Ringing time
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000); //Talk time
+
+        // hangup.
+        aliceCall.disconnect();
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+        try {
+            Thread.sleep(50 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+
+        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
+
+        assertNotNull(data);
+
+        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
+        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3")); //Only talk time
+
+        String sid = data.getFirst("DialCallSid");
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
+        JsonArray cdrsArray = cdr.get("calls").getAsJsonArray();
+        assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
+    }
+
+
+    @Test
+    public void testDialCallDurationAliceBusy() throws ParseException, InterruptedException {
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCall.listenForDisconnect();
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        Thread.sleep(2000);
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+
+        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
+
+        assertNotNull(data);
+
+        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("busy"));
+        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)
