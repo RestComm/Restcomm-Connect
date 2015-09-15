@@ -12,7 +12,7 @@
 	<property name="olympus.version" value="100ALPHA"/>
 
 	<!--mobicents binaries versions-->
-	<property name="sipservlets-build" value="612"/>
+	<property name="sipservlets-build" value="631"/>
         <property name="mobicents-sipservlets-as7.version" value="3.1.${sipservlets-build}" />
 	<!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
 	<property name="mobicents-media.version" value="3.0.2.Final" />
@@ -20,7 +20,7 @@
 
 
 	<!-- mobicents SIP Servlets 7.x on Tomcat 7 -->
-        <property name="mobicents-sipservlets.tomcat.distro.version" value="${mobicents-sipservlets-as7.version}-apache-tomcat-7.0.50" />
+        <property name="mobicents-sipservlets.tomcat.distro.version" value="${mobicents-sipservlets-as7.version}-apache-tomcat-7.0.64" />
         <property name="mobicents-sipservlets.tomcat.download.distro.file" value="mss-${mobicents-sipservlets.tomcat.distro.version}.zip" />
 	<property name="mobicents-sipservlets.tomcat.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.tomcat.download.distro.file}" />
         <property name="mobicents-sipservlets.tomcat.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.tomcat.download.distro.file}" />
