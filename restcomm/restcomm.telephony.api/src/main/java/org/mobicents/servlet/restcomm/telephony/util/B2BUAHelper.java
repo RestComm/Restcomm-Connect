@@ -81,7 +81,7 @@
       */
      // This is used for redirect calls to Restcomm clients from Restcomm Clients
      public static boolean redirectToB2BUA(final SipServletRequest request, final Client client, Client toClient,
-             DaoManager storage, SipFactory sipFactory, final boolean patchSDP) throws IOException {
+             DaoManager storage, SipFactory sipFactory, final boolean patchForNat) throws IOException {
          request.getSession().setAttribute("lastRequest", request);
          if (logger.isInfoEnabled()) {
              logger.info("B2BUA (p2p proxy): Got request:\n" + request.getMethod());
@@ -113,7 +113,7 @@
                  if (request.getContent() != null) {
                      final byte[] sdp = request.getRawContent();
                      String offer = null;
-                     if (request.getContentType().equalsIgnoreCase("application/sdp") && patchSDP) {
+                     if (request.getContentType().equalsIgnoreCase("application/sdp") && patchForNat) {
                          // Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
                          String externalIp = request.getInitialRemoteAddr();
                          // Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
@@ -198,7 +198,7 @@
      // This is used for redirect calls to PSTN Numbers and SIP URIs from Restcomm Clients
      public static boolean redirectToB2BUA(final SipServletRequest request, final Client fromClient, final SipURI from,
              SipURI to, String proxyUsername, String proxyPassword, DaoManager storage, SipFactory sipFactory,
-             boolean callToSipUri, final boolean patchSDP) {
+             boolean callToSipUri, final boolean patchForNat) {
          request.getSession().setAttribute("lastRequest", request);
          if (logger.isInfoEnabled()) {
              logger.info("B2BUA (p2p proxy for DID and SIP URIs) - : Got request:\n" + request.getMethod());
@@ -230,7 +230,7 @@
              if (request.getContent() != null) {
                  final byte[] sdp = request.getRawContent();
                  String offer = null;
-                 if (request.getContentType().equalsIgnoreCase("application/sdp") && patchSDP) {
+                 if (request.getContentType().equalsIgnoreCase("application/sdp") && patchForNat) {
                      // Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
                      String externalIp = request.getInitialRemoteAddr();
                      // Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
@@ -385,7 +385,7 @@
       * @param response
       * @throws IOException
       */
-     public static void forwardResponse(final SipServletResponse response, final boolean patchSDP) throws IOException {
+     public static void forwardResponse(final SipServletResponse response, final boolean patchForNat) throws IOException {
          if (logger.isInfoEnabled()) {
              logger.info(String.format("B2BUA: Got response: \n %s", response));
          }
@@ -445,7 +445,7 @@
          if (response.getContent() != null) {
              final byte[] sdp = response.getRawContent();
              String offer = null;
-             if (response.getContentType().equalsIgnoreCase("application/sdp") && patchSDP) {
+             if (response.getContentType().equalsIgnoreCase("application/sdp") && patchForNat) {
                  // Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
                  Registration registration = daoManager.getRegistrationsDao().getRegistration(callRecord.getTo());
                  String externalIp;
