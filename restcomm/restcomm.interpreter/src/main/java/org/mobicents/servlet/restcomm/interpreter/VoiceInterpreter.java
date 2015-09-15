@@ -2087,7 +2087,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
-                callback();
+                callback(true);
             }
 
             // XXX review bridge cleanup!!
