@@ -200,9 +200,8 @@ public class SupervisorEndpoint extends AbstractEndpoint{
 
         final String url = data.getFirst("Url");
         final String refresh = data.getFirst("Refresh");
-        
-
         //Get the list of live calls from Monitoring Service
+
         MonitoringServiceResponse liveCalls;
         try {
             final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
