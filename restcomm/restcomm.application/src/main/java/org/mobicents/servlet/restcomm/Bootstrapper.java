@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletContextEvent;
 import javax.servlet.sip.SipServletListener;
@@ -17,8 +18,11 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
-import org.mobicents.servlet.restcomm.mgcp.MediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
+import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
+import org.mobicents.servlet.restcomm.mscontrol.xms.XmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
 import akka.actor.ActorRef;
@@ -50,6 +54,46 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     public void destroy() {
         system.shutdown();
         system.awaitTermination();
+    }
+
+    private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader)
+            throws ServletException {
+        Configuration settings = configuration.subset("mscontrol");
+        String compatibility = settings.getString("compatibility", "mms");
+
+        MediaServerControllerFactory factory;
+        switch (compatibility) {
+            case "mms":
+                ActorRef gateway;
+                try {
+                    gateway = gateway(configuration, loader);
+                    factory = new MmsControllerFactory(this.system, gateway);
+                } catch (UnknownHostException e) {
+                    throw new ServletException(e);
+                }
+                break;
+
+            case "xms":
+                try {
+                    MediaServerInfo mediaServerInfo = mediaServerInfo(settings);
+                    factory = new XmsControllerFactory(system, mediaServerInfo);
+                } catch (UnknownHostException e) {
+                    throw new ServletException(e);
+                }
+                break;
+
+            default:
+                throw new IllegalArgumentException("MSControl unknown compatibility mode: " + compatibility);
+        }
+        return factory;
+    }
+
+    private MediaServerInfo mediaServerInfo(final Configuration configuration) throws UnknownHostException {
+        final String name = configuration.getString("media-server[@name]");
+        final String address = configuration.getString("media-server.address");
+        final int port = configuration.getInt("media-server.port");
+        final int timeout = configuration.getInt("media-server.timeout");
+        return new MediaServerInfo(name, InetAddress.getByName(address), port, timeout);
     }
 
     private ActorRef gateway(final Configuration configuration, final ClassLoader loader) throws UnknownHostException {
@@ -147,13 +191,17 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create the media gateway.
-            ActorRef gateway = null;
-            try {
-                gateway = gateway(xml, loader);
-            } catch (final UnknownHostException exception) {
-                logger.error("UnknownHostException during initialization", exception);
-            }
-            context.setAttribute(MediaGateway.class.getName(), gateway);
+
+
+        // Create the media server controller factory
+        MediaServerControllerFactory mscontrollerFactory = null;
+        try {
+            mscontrollerFactory = mediaServerControllerFactory(xml, loader);
+        } catch (ServletException exception) {
+            logger.error("ServletException during initialization", exception);
+        }
+        context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
+
             Version.printVersion();
             Ping ping = new Ping(xml, context);
             ping.sendPing();

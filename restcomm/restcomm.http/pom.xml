@@ -213,10 +213,5 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.cafesip.sipunit</groupId>
-			<artifactId>sipunit</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 </project>

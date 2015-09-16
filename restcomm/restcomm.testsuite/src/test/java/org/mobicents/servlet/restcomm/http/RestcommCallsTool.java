@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 
 import com.google.gson.JsonArray;
@@ -25,10 +26,9 @@ public class RestcommCallsTool {
 
     private static RestcommCallsTool instance;
     private static String accountsUrl;
-
-    private RestcommCallsTool() {
-
-    }
+    private static Logger logger = Logger.getLogger(RestcommCallsTool.class);
+    
+    private RestcommCallsTool() {}
 
     public static RestcommCallsTool getInstance() {
         if (instance == null)
@@ -74,7 +74,13 @@ public class RestcommCallsTool {
 //        response = response.replaceAll("\\[", "").replaceAll("]", "").trim();
         JsonParser parser = new JsonParser();
 
-        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+        JsonArray jsonArray = null;
+        try {
+            jsonArray = parser.parse(response).getAsJsonArray();
+        } catch (Exception e) {
+            logger.info("Exception during getRecordings: "+e);
+            logger.info("Response object: "+response);
+        }
         return jsonArray;
     }
 

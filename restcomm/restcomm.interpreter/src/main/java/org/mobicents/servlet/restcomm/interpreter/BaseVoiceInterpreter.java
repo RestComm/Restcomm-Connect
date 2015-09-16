@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
+import static akka.pattern.Patterns.ask;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
@@ -55,11 +56,11 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
 import org.mobicents.servlet.restcomm.email.EmailRequest;
 import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -82,6 +83,10 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Record;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
 import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
@@ -93,14 +98,8 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
-import org.mobicents.servlet.restcomm.telephony.Collect;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
-import org.mobicents.servlet.restcomm.telephony.Play;
-import org.mobicents.servlet.restcomm.telephony.Record;
-import org.mobicents.servlet.restcomm.telephony.RecordingStarted;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
@@ -109,7 +108,11 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
-import scala.concurrent.duration.Duration;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -118,11 +121,10 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -199,7 +201,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     SpeechSynthesizerInfo synthesizerInfo = null;
     // The call being handled by this interpreter.
     ActorRef call = null;
-    ActorRef callMediaGroup = null;
     // The information for this call.
     CallInfo callInfo = null;
     // The call state.
@@ -435,15 +436,35 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         }));
     }
 
-    void callback() {
+    //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
+    //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
+    void callback(boolean ask) {
         if (statusCallback != null) {
+            logger.info("About to execute statusCallback: "+statusCallback.toString());
             if (statusCallbackMethod == null) {
                 statusCallbackMethod = "POST";
             }
             final List<NameValuePair> parameters = parameters();
             requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
-            downloader.tell(requestCallback, null);
+            if (!ask) {
+                downloader.tell(requestCallback, null);
+            } else if (ask) {
+                final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
+                DownloaderResponse downloaderResponse = null;
+                try {
+                    downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                } catch (Exception e) {
+                    logger.error("Exception during callback with ask pattern");
+                }
+            }
+        } else {
+            logger.info("status callback is null");
         }
+    }
+
+    void callback() {
+        callback(false);
     }
 
     ActorRef cache(final String path, final String uri) {
@@ -567,7 +588,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     }
 
     void postCleanup() {
-        final ActorRef self = self();
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
             context.stop(self());
@@ -830,12 +850,12 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final NotificationsDao notifications = storage.getNotificationsDao();
                 notifications.addNotification(notification);
                 sendMail(notification);
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             }
             final Play play = new Play(uri, 1);
-            callMediaGroup.tell(play, source);
+            call.tell(play, source);
         }
     }
 
@@ -856,7 +876,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     from = e164(from);
                     if (from == null) {
                         from = verb.attribute("from").value();
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -871,7 +891,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     to = e164(to);
                     if (to == null) {
                         to = verb.attribute("to").value();
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -955,7 +975,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
                 final DiskCacheRequest request = new DiskCacheRequest(response.get());
                 cache.tell(request, source);
-            } else if (Tag.class.equals(klass) || MediaGroupStateChanged.class.equals(klass)) {
+            } else if (Tag.class.equals(klass)) {
                 if (Tag.class.equals(klass)) {
                     verb = (Tag) message;
                 }
@@ -971,7 +991,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final NotificationsDao notifications = storage.getNotificationsDao();
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1020,7 +1040,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 final DiskCacheResponse response = (DiskCacheResponse) message;
                 final Play play = new Play(response.get(), loop);
-                callMediaGroup.tell(play, source);
+                call.tell(play, source);
             }
         }
     }
@@ -1175,7 +1195,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, text + " is an invalid URI.");
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -1238,9 +1258,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     verb = (Tag) message;
                     gatherPrompts = new ArrayList<URI>();
                     gatherChildren = new ArrayList<Tag>(verb.children());
-                } else if (MediaGroupStateChanged.class.equals(klass)) {
-                    gatherPrompts = new ArrayList<URI>();
-                    gatherChildren = new ArrayList<Tag>(verb.children());
                 } else if (DiskCacheResponse.class.equals(klass)) {
                     if (gatherPrompts == null)
                         gatherPrompts = new ArrayList<URI>();
@@ -1288,7 +1305,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                         + " is an invalid URI.");
                                 notifications.addNotification(notification);
                                 sendMail(notification);
-                                final StopInterpreter stop = StopInterpreter.instance();
+                                final StopInterpreter stop = new StopInterpreter();
                                 source.tell(stop, source);
                                 return;
                             }
@@ -1331,9 +1348,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         }
                         String text = child.text();
                         if (text != null && !text.isEmpty()) {
-//                            final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
-//                            synthesizer.tell(synthesize, source);
-//                            break;
+                            // final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(voice, language, text);
+                            // synthesizer.tell(synthesize, source);
+                            // break;
                             String hash = hash(child);
                             DiskCacheRequest request = new DiskCacheRequest(hash);
                             cache.tell(request, source);
@@ -1428,7 +1445,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             // Start gathering.
             final Collect collect = new Collect(gatherPrompts, null, timeout, finishOnKey, numberOfDigits);
-            callMediaGroup.tell(collect, source);
+            call.tell(collect, source);
             // Some clean up.
             gatherChildren = null;
             gatherPrompts = null;
@@ -1443,7 +1460,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1473,7 +1489,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1605,7 +1621,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -1613,8 +1629,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             } else {
                 record = new Record(recordingUri, timeout, maxLength, finishOnKey);
             }
-            callMediaGroup.tell(record, source);
-            call.tell(new RecordingStarted(), source);
+
+            call.tell(record, source);
         }
     }
 
@@ -1645,7 +1661,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
             Double duration = WavUtils.getAudioDuration(recordingUri);
-            if(duration.equals(0.0)) {
+            if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
             } else {
@@ -1677,7 +1693,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1735,7 +1751,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1788,12 +1804,12 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     // A little clean up.
                     recordingSid = null;
                     recordingUri = null;
-                    final StopInterpreter stop = StopInterpreter.instance();
-                    source.tell(stop, source);
+//                    final StopInterpreter stop = new StopInterpreter();
+//                    source.tell(stop, source);
                 }
             }
             if (CallStateChanged.class.equals(klass)) {
-                source.tell(StopInterpreter.instance(), source);
+                source.tell(new StopInterpreter(), source);
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
@@ -1847,7 +1863,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         notifications.addNotification(notification);
                         sendMail(notification);
                         smsService.tell(new DestroySmsSession(session), source);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1867,7 +1883,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         notifications.addNotification(notification);
                         sendMail(notification);
                         smsService.tell(new DestroySmsSession(session), source);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -1880,7 +1896,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 notifications.addNotification(notification);
                 sendMail(notification);
                 smsService.tell(new DestroySmsSession(session), source);
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             } else {
@@ -1900,7 +1916,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             notifications.addNotification(notification);
                             sendMail(notification);
                             smsService.tell(new DestroySmsSession(session), source);
-                            final StopInterpreter stop = StopInterpreter.instance();
+                            final StopInterpreter stop = new StopInterpreter();
                             source.tell(stop, source);
                             return;
                         }
@@ -1950,7 +1966,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }

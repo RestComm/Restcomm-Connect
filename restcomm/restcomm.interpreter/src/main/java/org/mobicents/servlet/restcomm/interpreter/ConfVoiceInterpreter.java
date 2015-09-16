@@ -44,17 +44,17 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Verbs;
+import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerResponse;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StartMediaGroup;
+import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
-import org.mobicents.servlet.restcomm.telephony.ConferenceResponse;
-import org.mobicents.servlet.restcomm.telephony.CreateMediaGroup;
 import org.mobicents.servlet.restcomm.telephony.DestroyWaitUrlConfMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupResponse;
-import org.mobicents.servlet.restcomm.telephony.MediaGroupStateChanged;
-import org.mobicents.servlet.restcomm.telephony.Play;
-import org.mobicents.servlet.restcomm.telephony.StartMediaGroup;
-import org.mobicents.servlet.restcomm.telephony.StopMediaGroup;
 import org.mobicents.servlet.restcomm.tts.api.GetSpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerInfo;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerRequest;
@@ -391,7 +391,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                     fsm.transition(message, finished);
                 }
             }
-        } else if (ConferenceResponse.class.equals(klass)) {
+        } else if (MediaServerControllerResponse.class.equals(klass)) {
             if (acquiringConfMediaGroup.equals(state)) {
                 fsm.transition(message, initializingConfMediaGroup);
             }
@@ -598,7 +598,6 @@ public class ConfVoiceInterpreter extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings({ "unchecked" })
         @Override
         public void execute(final Object message) throws Exception {
             final StartInterpreter request = (StartInterpreter) message;
@@ -626,7 +625,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final ConferenceResponse<ActorRef> response = (ConferenceResponse<ActorRef>) message;
+            final MediaServerControllerResponse<ActorRef> response = (MediaServerControllerResponse<ActorRef>) message;
             conferenceMediaGroup = response.get();
             conferenceMediaGroup.tell(new Observe(source), source);
             final StartMediaGroup request = new StartMediaGroup();
@@ -665,8 +664,6 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final UntypedActorContext context = getContext();
-            final State state = fsm.state();
             if (parser == null) {
                 response = downloaderResponse.get();
 
@@ -678,7 +675,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                 } else if (type.contains("text/plain")) {
                     parser = parser("<Say>" + response.getContentAsString() + "</Say>");
                 } else {
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -696,7 +693,6 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
@@ -715,19 +711,13 @@ public class ConfVoiceInterpreter extends UntypedActor {
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
             if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
-            // else {
-            // logger.info("Can't check cache, message not verb. Moving to the next verb");
-            // // final GetNextVerb next = GetNextVerb.instance();
-            // // parser.tell(next, source);
-            // return;
-            // }
+
             String hash = hash(verb);
             DiskCacheRequest request = new DiskCacheRequest(hash);
             if (logger.isErrorEnabled()) {
@@ -766,7 +756,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                         final NotificationsDao notifications = storage.getNotificationsDao();
                         notifications.addNotification(notification);
                         sendMail(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -955,7 +945,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, text + " is an invalid URI.");
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -979,8 +969,6 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final Class<?> klass = message.getClass();
-
             logger.info("Finished called for ConfVoiceInterpreter");
 
             final StopMediaGroup stop = new StopMediaGroup();
@@ -1005,27 +993,22 @@ public class ConfVoiceInterpreter extends UntypedActor {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see akka.actor.UntypedActor#postStop()
-     */
     @Override
     public void postStop() {
-        final StopMediaGroup stop = new StopMediaGroup();
+        // final StopMediaGroup stop = new StopMediaGroup();
         // Destroy the media group(s).
-//        if (conferenceMediaGroup != null) {
-//            conferenceMediaGroup.tell(stop, source);
-//        }
-//        if (conference != null && !conference.isTerminated()) {
-//            final DestroyWaitUrlConfMediaGroup destroy = new DestroyWaitUrlConfMediaGroup(conferenceMediaGroup);
-//            conference.tell(destroy, source);
-//        }
-//
-//        if (conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated())
-//            getContext().stop(conferenceMediaGroup);
-//
-//        conferenceMediaGroup = null;
-
+        // if (conferenceMediaGroup != null) {
+        // conferenceMediaGroup.tell(stop, source);
+        // }
+        // if (conference != null && !conference.isTerminated()) {
+        // final DestroyWaitUrlConfMediaGroup destroy = new DestroyWaitUrlConfMediaGroup(conferenceMediaGroup);
+        // conference.tell(destroy, source);
+        // }
+        //
+        // if (conferenceMediaGroup != null && !conferenceMediaGroup.isTerminated())
+        // getContext().stop(conferenceMediaGroup);
+        //
+        // conferenceMediaGroup = null;
         super.postStop();
     }
 }
