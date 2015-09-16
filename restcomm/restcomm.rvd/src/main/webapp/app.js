@@ -9,7 +9,8 @@ var App = angular.module('Rvd', [
 	'basicDragdrop',
 	'pascalprecht.translate',
 	'ngSanitize',
-	'ngResource'
+	'ngResource',
+	'ngCookies'
 ]);
 
 var rvdMod = App;
@@ -80,8 +81,9 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
   		prefix: '/restcomm-rvd/languages/',
   		suffix: '.json'
 	});
-	$translateProvider.use('en-US');
-
+	$translateProvider.useCookieStorage();
+	$translateProvider.preferredLanguage('en-US');
+	
 }]);
 
 App.factory( 'dragService', [function () {
