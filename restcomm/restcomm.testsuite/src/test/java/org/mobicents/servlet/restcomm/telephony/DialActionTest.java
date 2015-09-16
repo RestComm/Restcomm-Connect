@@ -735,12 +735,14 @@ public class DialActionTest {
 
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3")); //Only talk time
+        assertTrue(data.getFirst("DialRingDuration").equalsIgnoreCase("2")); //Only ringing time
 
         String sid = data.getFirst("DialCallSid");
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
         JsonArray cdrsArray = cdr.get("calls").getAsJsonArray();
         assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
+        assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
     }
 
 
@@ -778,7 +780,7 @@ public class DialActionTest {
 
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-        Thread.sleep(2000);
+        Thread.sleep(2000); //Ringing Time
         assertTrue(aliceCall.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
@@ -796,7 +798,15 @@ public class DialActionTest {
         assertNotNull(data);
 
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("busy"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
+        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0")); //Talk time
+        assertTrue(data.getFirst("DialRingDuration").equalsIgnoreCase("2")); //Only ringing time
+
+        String sid = data.getFirst("DialCallSid");
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(cdr);
+        JsonArray cdrsArray = cdr.get("calls").getAsJsonArray();
+        assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
+        assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)

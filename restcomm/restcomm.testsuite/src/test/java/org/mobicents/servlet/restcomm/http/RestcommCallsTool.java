@@ -138,8 +138,7 @@ public class RestcommCallsTool {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.add("sid", String.valueOf(sid));
 
-        response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
-                .get(String.class);
+        response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
 
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
