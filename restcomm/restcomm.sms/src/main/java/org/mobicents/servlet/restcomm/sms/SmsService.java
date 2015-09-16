@@ -188,8 +188,7 @@ public final class SmsService extends UntypedActor {
             // Store the sms record in the sms session.
             session.tell(new SmsSessionAttribute("record", record), self());
             // Send the SMS.
-            final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),
-                    null);
+            final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, null);
             session.tell(sms, self());
             }
         } else {
@@ -347,6 +346,10 @@ public final class SmsService extends UntypedActor {
         final SipApplicationSession application = response.getApplicationSession();
         final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
         session.tell(response, self);
+        final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
+        if (origRequest != null && origRequest.getSession().isValid()) {
+            origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+        }
     }
 
     @SuppressWarnings("unchecked")
