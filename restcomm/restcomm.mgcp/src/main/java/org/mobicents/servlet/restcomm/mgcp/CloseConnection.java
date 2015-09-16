@@ -26,7 +26,9 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CloseConnection {
+
     public CloseConnection() {
         super();
     }
+
 }

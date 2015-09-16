@@ -30,7 +30,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -70,14 +69,16 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.VoiceInterpreterBuilder;
+import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+
 import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -89,10 +90,9 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -111,8 +111,9 @@ public final class CallManager extends UntypedActor {
     private final ActorSystem system;
     private final Configuration configuration;
     private final ServletContext context;
+    private final MediaServerControllerFactory msControllerFactory;
     private final ActorRef conferences;
-    private final ActorRef gateway;
+    private final ActorRef bridges;
     private final ActorRef sms;
     private final SipFactory sipFactory;
     private final DaoManager storage;
@@ -137,6 +138,9 @@ public final class CallManager extends UntypedActor {
     private String mediaExternalIp;
     private String myHostIp;
     private String proxyIp;
+
+    //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
+    private boolean patchForNatB2BUASessions;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -166,14 +170,15 @@ public final class CallManager extends UntypedActor {
     private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
-            final ActorRef gateway, final ActorRef conferences, final ActorRef sms, final SipFactory factory,
-            final DaoManager storage) {
+            final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
+            final ActorRef sms, final SipFactory factory, final DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
         this.context = context;
-        this.gateway = gateway;
+        this.msControllerFactory = msControllerFactory;
         this.conferences = conferences;
+        this.bridges = bridges;
         this.sms = sms;
         this.sipFactory = factory;
         this.storage = storage;
@@ -220,26 +225,13 @@ public final class CallManager extends UntypedActor {
         useFallbackProxy = new AtomicBoolean();
         useFallbackProxy.set(false);
 
-        Boolean bool = outboundProxyConfig.getBoolean("allow-fallback");
-        if (bool != null) {
-            allowFallback = bool;
-        } else {
-            allowFallback = false;
-        }
+        allowFallback = outboundProxyConfig.getBoolean("allow-fallback", false);
 
-        final Integer value = outboundProxyConfig.getInt("max-failed-calls");
-        if (value != null) {
-            maxNumberOfFailedCalls = value.intValue();
-        } else {
-            maxNumberOfFailedCalls = 20;
-        }
+        maxNumberOfFailedCalls = outboundProxyConfig.getInt("max-failed-calls", 20);
 
-        bool = outboundProxyConfig.getBoolean("allow-fallback-to-primary");
-        if (bool != null) {
-            allowFallbackToPrimary = bool;
-        } else {
-            allowFallbackToPrimary = false;
-        }
+        allowFallbackToPrimary = outboundProxyConfig.getBoolean("allow-fallback-to-primary", false);
+
+        patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
     }
 
     private ActorRef call() {
@@ -248,7 +240,7 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, gateway);
+                return new Call(sipFactory, msControllerFactory.provideCallController());
             }
         }));
     }
@@ -264,17 +256,12 @@ public final class CallManager extends UntypedActor {
     }
 
     private void destroy(final Object message) throws Exception {
-        // final DestroyCall destroy = (DestroyCall) message;
-        // ActorRef call = destroy.call();
-        // Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-        // Future<Object> future = (Future<Object>) ask(call, new Hangup(), expires);
-        // Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
-
         final UntypedActorContext context = getContext();
         final DestroyCall request = (DestroyCall) message;
         ActorRef call = request.call();
-        if (call != null)
+        if (call != null) {
             context.stop(request.call());
+        }
     }
 
     private void invite(final Object message) throws IOException, NumberParseException, ServletParseException {
@@ -333,7 +320,7 @@ public final class CallManager extends UntypedActor {
             Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
                 // the b2bua
-                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
+                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
                             + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
                     // if all goes well with proxying the invitation on to the next client
@@ -405,7 +392,7 @@ public final class CallManager extends UntypedActor {
                         callToSipUri = true;
                     }
                     if (B2BUAHelper.redirectToB2BUA(request, client, from, to, proxyUsername, proxyPassword, storage,
-                            sipFactory, callToSipUri)) {
+                            sipFactory, callToSipUri, patchForNatB2BUASessions)) {
                         return;
                     }
                 } else {
@@ -423,7 +410,8 @@ public final class CallManager extends UntypedActor {
         final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
         response.send();
         // We didn't find anyway to handle the call.
-        String errMsg = "Restcomm cannot process this call because the destination number "+toUser+"cannot be found or there is application attached to that";
+        String errMsg = "Restcomm cannot process this call because the destination number " + toUser
+                + "cannot be found or there is application attached to that";
         sendNotification(errMsg, 11005, "error", true);
 
     }
@@ -451,20 +439,22 @@ public final class CallManager extends UntypedActor {
                 infoRURI = InetAddress.getByName(((SipURI) clonedInfo.getRequestURI()).getHost());
             } catch (UnknownHostException e) {
             }
-            if (toInetUri != null && infoRURI == null) {
-                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the CloneBye request");
-                clonedInfo.setRequestURI(toInetUri);
-            } else if (toInetUri != null
-                    && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
-                logger.info("Using the real ip address of the sip client " + toInetUri.toString()
-                        + " as a request uri of the CloneInfo request");
-                clonedInfo.setRequestURI(toInetUri);
-            } else if (fromInetUri != null
-                    && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
-                logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
-                        + " as a request uri of the CloneInfo request");
-                clonedInfo.setRequestURI(fromInetUri);
+            if (patchForNatB2BUASessions) {
+                if (toInetUri != null && infoRURI == null) {
+                    logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                    + " as a request uri of the CloneBye request");
+                    clonedInfo.setRequestURI(toInetUri);
+                } else if (toInetUri != null
+                        && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
+                    logger.info("Using the real ip address of the sip client " + toInetUri.toString()
+                    + " as a request uri of the CloneInfo request");
+                    clonedInfo.setRequestURI(toInetUri);
+                } else if (fromInetUri != null
+                        && (infoRURI.isSiteLocalAddress() || infoRURI.isAnyLocalAddress() || infoRURI.isLoopbackAddress())) {
+                    logger.info("Using the real ip address of the sip client " + fromInetUri.toString()
+                    + " as a request uri of the CloneInfo request");
+                    clonedInfo.setRequestURI(fromInetUri);
+                }
             }
             clonedInfo.send();
         } else {
@@ -511,6 +501,7 @@ public final class CallManager extends UntypedActor {
                 builder.setStorage(storage);
                 builder.setCallManager(self);
                 builder.setConferenceManager(conferences);
+                builder.setBridgeManager(bridges);
                 builder.setSmsService(sms);
                 builder.setAccount(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
@@ -573,6 +564,7 @@ public final class CallManager extends UntypedActor {
             builder.setStorage(storage);
             builder.setCallManager(self);
             builder.setConferenceManager(conferences);
+            builder.setBridgeManager(bridges);
             builder.setSmsService(sms);
             builder.setAccount(client.getAccountSid());
             builder.setVersion(client.getApiVersion());
@@ -671,7 +663,7 @@ public final class CallManager extends UntypedActor {
         // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
         if (response != null) {
             SipServletRequest ack = response.createAck();
-            if (!ack.getHeaders("Route").hasNext()) {
+            if (!ack.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
                 InetAddress ackRURI = null;
                 try {
                     ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
@@ -694,6 +686,8 @@ public final class CallManager extends UntypedActor {
             SipApplicationSession sipApplicationSession = request.getApplicationSession();
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
+        } else {
+            logger.info("Linked Response couldn't be found");
         }
         // else {
         // SipSession sipSession = request.getSession();
@@ -717,6 +711,7 @@ public final class CallManager extends UntypedActor {
         builder.setStorage(storage);
         builder.setCallManager(self);
         builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
         builder.setVersion(request.version());
@@ -730,26 +725,57 @@ public final class CallManager extends UntypedActor {
         interpreter.tell(new StartInterpreter(request.call()), self);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("unchecked")
     private void update(final Object message) throws Exception {
         final UpdateCallScript request = (UpdateCallScript) message;
         final ActorRef self = self();
         final ActorRef call = request.call();
         final Boolean moveConnectedCallLeg = request.moveConnecteCallLeg();
+
+        // Get first call leg observers
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
+        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
+                Duration.create(10, TimeUnit.SECONDS));
+        List<ActorRef> callObservers = response.get();
+
+        // Get the Voice Interpreter currently handling the call
+        ActorRef existingInterpreter = callObservers.iterator().next();
+
         // Get the outbound leg of this call
-        ActorRef outboundCall = request.outboundCall();
+        future = (Future<Object>) ask(existingInterpreter, new GetRelatedCall(call), expires);
+        Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+
+        ActorRef relatedCall = null;
+        if (answer instanceof ActorRef) {
+            relatedCall = (ActorRef) answer;
+        }
 
         logger.info("About to start Live Call Modification");
         logger.info("Initial Call path: " + call.path());
-        if (outboundCall != null)
-            logger.info("Outbound Call path: " + outboundCall.path());
+        if (relatedCall != null) {
+            logger.info("Related Call path: " + relatedCall.path());
+        }
 
-        // Prepare VoiceInterpreter
+        // Cleanup all observers from both call legs
+        logger.info("Will tell Call actors to stop observing existing Interpreters");
+        call.tell(new StopObserving(), self());
+        if (relatedCall != null) {
+            relatedCall.tell(new StopObserving(), self());
+        }
+        logger.info("Existing observers removed from Calls actors");
+
+        // Cleanup existing Interpreter
+        logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
+        existingInterpreter.tell(new StopInterpreter(true), null);
+
+        // Build a new VoiceInterpreter
         final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
         builder.setCallManager(self);
         builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
         builder.setSmsService(sms);
         builder.setAccount(request.account());
         builder.setVersion(request.version());
@@ -759,59 +785,28 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
-        // Interpreter for the first call leg
-        final ActorRef interpreter = builder.build();
-
-        // Get first call leg observers and remove them
-        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-        Future<Object> future = (Future<Object>) ask(call, new GetCallObservers(), expires);
-        CallResponse<List<ActorRef>> response = (CallResponse<List<ActorRef>>) Await.result(future,
-                Duration.create(10, TimeUnit.SECONDS));
-        List<ActorRef> callObservers = response.get();
-
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Will tell Call actors to stop observing existing Interpreters");
-            call.tell(new StopObserving(null), self());
-            if (outboundCall != null)
-                outboundCall.tell(new StopObserving(null), self());
-            logger.info("Existing observers removed from Calls actors");
-        }
 
         // Ask first call leg to execute with the new Interpreter
-        interpreter.tell(new StartInterpreter(request.call()), self);
+        final ActorRef interpreter = builder.build();
+        system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), interpreter,
+                new StartInterpreter(request.call()), system.dispatcher());
+        // interpreter.tell(new StartInterpreter(request.call()), self);
         logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
 
         // Check what to do with the second/outbound call leg of the call
-        if (outboundCall != null) {
+        if (relatedCall != null) {
             if (moveConnectedCallLeg) {
-                final ActorRef outboundInterpreter = builder.build();
-                logger.info("About to redirect outbound Call :" + outboundCall.path()
-                        + " with 200ms delay to outbound interpreter: " + outboundInterpreter.path());
-                outboundCall.tell(new ChangeCallDirection(), null);
-                // system.scheduler().scheduleOnce(Duration.create(1000, TimeUnit.MILLISECONDS), outboundCall, new
-                // ChangeCallDirection(), system.dispatcher());
-                system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), outboundInterpreter,
-                        new StartInterpreter(outboundCall), system.dispatcher());
-                // outboundCall.tell(new ChangeCallDirection(), null);
-                // outboundInterpreter.tell(new StartInterpreter(outboundCall), self);
-                logger.info("New Intepreter for Second call leg: " + outboundInterpreter.path() + " started");
+                final ActorRef relatedInterpreter = builder.build();
+                logger.info("About to redirect related Call :" + relatedCall.path()
+                        + " with 200ms delay to related interpreter: " + relatedInterpreter.path());
+                system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), relatedInterpreter,
+                        new StartInterpreter(relatedCall), system.dispatcher());
+                logger.info("New Intepreter for Second call leg: " + relatedInterpreter.path() + " started");
             } else {
-                logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup outboundCall");
-                outboundCall.tell(new Hangup(), null);
-                getContext().stop(outboundCall);
+                logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup relatedCall: "+relatedCall.path());
+                relatedCall.tell(new Hangup(), null);
+//                getContext().stop(relatedCall);
             }
-        }
-
-        // Cleanup existing Interpreter
-        for (Iterator iterator = callObservers.iterator(); iterator.hasNext();) {
-            ActorRef existingInterpreter = (ActorRef) iterator.next();
-            logger.info("Existing Interpreter path: " + existingInterpreter.path() + " will be stopped");
-            StopInterpreter stopInterpreter = StopInterpreter.instance();
-            stopInterpreter.setLiveCallModification(true);
-            system.scheduler().scheduleOnce(Duration.create(6000, TimeUnit.MILLISECONDS), existingInterpreter, stopInterpreter,
-                    system.dispatcher());
-            // existingInterpreter.tell(stopInterpreter, null);
         }
     }
 
@@ -827,7 +822,15 @@ public final class CallManager extends UntypedActor {
         SipURI to = null;
         switch (request.type()) {
             case CLIENT: {
-                SipURI outboundIntf = outboundInterface("udp");
+                SipURI outboundIntf = null;
+                final RegistrationsDao registrations = storage.getRegistrationsDao();
+                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
+                if (registration != null && registration.getAddressOfRecord().contains("transport")) {
+                    String transport = registration.getAddressOfRecord().split(";")[1].replace("transport=", "");
+                    outboundIntf = outboundInterface(transport);
+                } else {
+                    outboundIntf = outboundInterface("udp");
+                }
                 if (request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
                     // to use it directly
@@ -837,9 +840,6 @@ public final class CallManager extends UntypedActor {
                 } else {
                     from = outboundIntf;
                 }
-//                from = outboundInterface("udp");
-                final RegistrationsDao registrations = storage.getRegistrationsDao();
-                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
                 if (registration != null) {
                     final String location = registration.getLocation();
                     to = (SipURI) sipFactory.createURI(location);
@@ -871,12 +871,12 @@ public final class CallManager extends UntypedActor {
                         from = sipFactory.createSipURI(request.from(), uri);
                     }
                 }
-                if (((SipURI)from).getUser()==null || ((SipURI)from).getUser() == "") {
-                        if (uri != null) {
-                            from = sipFactory.createSipURI(request.from(), uri);
-                        } else {
-                            from = (SipURI) sipFactory.createURI(request.from());
-                        }
+                if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
+                    if (uri != null) {
+                        from = sipFactory.createSipURI(request.from(), uri);
+                    } else {
+                        from = (SipURI) sipFactory.createURI(request.from());
+                    }
                 }
                 break;
             }
@@ -976,7 +976,7 @@ public final class CallManager extends UntypedActor {
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
 
-            if (!clonedBye.getHeaders("Route").hasNext()) {
+            if (!clonedBye.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
                 // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                 SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
                 SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
@@ -1006,6 +1006,7 @@ public final class CallManager extends UntypedActor {
             SipServletResponse okay = request.createResponse(Response.OK);
             okay.send();
             //Send the Cloned BYE
+            logger.info(String.format("B2BUA: Will send out Cloned BYE request: \n %s", clonedBye));
             clonedBye.send();
         } else {
             final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
@@ -1045,7 +1046,7 @@ public final class CallManager extends UntypedActor {
                 invite = challengeRequest;
                 challengeRequest.send();
             } else {
-                B2BUAHelper.forwardResponse(response);
+                B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
             }
         } else {
             if (application.isValid()) {
@@ -1139,7 +1140,7 @@ public final class CallManager extends UntypedActor {
     private Notification notification(final int log, final int error, final String message) {
         String version = configuration.subset("runtime-settings").getString("api-version");
         Sid accountId = null;
-//        Sid callSid = new Sid("CA00000000000000000000000000000000");
+        // Sid callSid = new Sid("CA00000000000000000000000000000000");
         if (createCallRequest != null) {
             accountId = createCallRequest.accountId();
         } else if (switchProxyRequest != null) {
@@ -1152,7 +1153,7 @@ public final class CallManager extends UntypedActor {
         final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
         builder.setSid(sid);
         builder.setAccountSid(accountId);
-//        builder.setCallSid(callSid);
+        // builder.setCallSid(callSid);
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);

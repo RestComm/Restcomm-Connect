@@ -29,15 +29,25 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public class State {
     private final Action actionOnEnter;
+    private final Action actionOnState;
     private final Action actionOnExit;
     private final String id;
 
-    public State(final String id, final Action actionOnEnter, final Action actionOnExit) {
+    public State(final String id, final Action actionOnEnter, final Action actionOnState, final Action actionOnExit) {
         super();
         checkNotNull(id, "A state can not have a null value for id.");
         this.actionOnEnter = actionOnEnter;
+        this.actionOnState = actionOnState;
         this.actionOnExit = actionOnExit;
         this.id = id;
+    }
+
+    public State(final String id, final Action actionOnEnter, final Action actionOnExit) {
+        this(id, actionOnEnter, null, actionOnExit);
+    }
+
+    public State(final String id, final Action actionOnState) {
+        this(id, null, actionOnState, null);
     }
 
     @Override
@@ -58,6 +68,10 @@ public class State {
 
     public Action getActionOnEnter() {
         return actionOnEnter;
+    }
+
+    public Action getActionOnState() {
+        return actionOnState;
     }
 
     public Action getActionOnExit() {

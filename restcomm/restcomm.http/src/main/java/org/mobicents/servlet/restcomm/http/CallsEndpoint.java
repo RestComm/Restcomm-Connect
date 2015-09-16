@@ -66,7 +66,6 @@ import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.GetCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
-import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
 
@@ -386,7 +385,6 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         String callPath = null;
         final ActorRef call;
-        ActorRef outboundCall = null;
         final CallInfo callInfo;
 
         try {
@@ -433,15 +431,6 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         if (url != null && call != null) {
             try {
-                Future<Object> future = (Future<Object>) ask(call, new GetOutboundCall(), expires);
-                Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(answer.getClass())) {
-                    //This means that the call is not associated with a outbound call. Probably because its already joined to a conference room
-                    outboundCall = null;
-                } else if (answer instanceof  ActorRef){
-                    outboundCall = (ActorRef)answer;
-                }
-
                 final String version = getApiVersion(data);
                 final URI uri = (new URL(url)).toURI();
 
@@ -451,7 +440,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                 statusCallbackMethod = (statusCallbackMethod == null) ? "POST" : statusCallbackMethod;
 
                 final UpdateCallScript update = new UpdateCallScript(call, accountSid, version, uri, method, fallbackUri,
-                        fallBackMethod, callbackUri, statusCallbackMethod, moveConnectedCallLeg, outboundCall);
+                        fallBackMethod, callbackUri, statusCallbackMethod, moveConnectedCallLeg);
                 callManager.tell(update, null);
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
