@@ -133,6 +133,17 @@ public final class Sid {
         }
     }
 
+    /**
+     * Checks for proper SID syntax the 'sid' parameter
+     * @param sid
+     * @return
+     */
+    public static boolean valid(String sid) {
+        if (pattern.matcher(sid).matches())
+            return true;
+        return false;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 5;

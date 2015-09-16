@@ -36,10 +36,17 @@ public class MyTestEndpoint extends AbstractEndpoint {
     @PostConstruct
     void init() {
         KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
-        if (session.getToken() != null) {
+        if ( session != null && session.getToken() != null) {
             this.loggedUsername = session.getToken().getPreferredUsername();
             logger.info("logged username: " + this.loggedUsername);
         }
+    }
+
+    @GET
+    @Path("test2")
+    public Response test2() {
+        logger.info("in test2()");
+        return Response.ok().build();
     }
 
     @GET
