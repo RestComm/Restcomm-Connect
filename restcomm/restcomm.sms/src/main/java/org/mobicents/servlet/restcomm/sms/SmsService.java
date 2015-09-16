@@ -356,6 +356,10 @@ public final class SmsService extends UntypedActor {
         final SipApplicationSession application = response.getApplicationSession();
         final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
         session.tell(response, self);
+        final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
+        if (origRequest != null && origRequest.getSession().isValid()) {
+            origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+        }
     }
 
     @SuppressWarnings("unchecked")

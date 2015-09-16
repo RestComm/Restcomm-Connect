@@ -217,6 +217,9 @@ public final class SmsSession extends UntypedActor {
         final String recipient = buffer.toString();
         try {
             application.setAttribute(SmsSession.class.getName(), self);
+            if (last.getOrigRequest() != null) {
+                application.setAttribute(SipServletRequest.class.getName(), last.getOrigRequest());
+            }
             final SipServletRequest sms = factory.createRequest(application, "MESSAGE", sender, recipient);
             final SipURI uri = (SipURI) factory.createURI(recipient);
             sms.pushRoute(uri);
