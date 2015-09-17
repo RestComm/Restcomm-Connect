@@ -9,6 +9,8 @@ import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.keycloak.adapters.KeycloakDeployment;
+import org.keycloak.adapters.KeycloakDeploymentBuilder;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.mobicents.servlet.restcomm.configuration.ConfiguratorBase;
@@ -31,8 +33,8 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     protected String restcommClientSecret;
     protected String authServerUrlBase;
     protected String realmPublicKey;
-
     protected String realmName;
+    protected KeycloakDeployment deployment;
 
     protected static IdentityConfigurator singleInstance;
 
@@ -73,12 +75,17 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
         this.identityMode = loadMode();
         this.authServerUrlBase = loadAuthServerUrlBase();
         if (StringUtils.isEmpty(this.authServerUrlBase)) {
-            logger.warn("Missing authorization server configuration. Please set 'identity.auth-server-url-base' configuration setting");
+            logger.warn("Missing authorization server configuration. Please set 'identity.auth-server-url-base' configuration setting.");
         }
         if (this.identityMode != IdentityMode.init) {
             // looks like we need to load other configuration options too
             this.identityInstanceId = loadInstanceId();
             this.restcommClientSecret = loadRestcommClientSecret();
+            try {
+                this.deployment = KeycloakDeploymentBuilder.build(this.getRestcommConfig());
+            } catch (IdentityNotSet e) {
+                logger.error("Instance id is missing from configuration. Restcomm won't be properly initialized. Please set 'identity.instance-id' configuration setting.", e );
+            }
         }
         // notify all who are interected when there is new identity-specific configuration
         notifyUpdateListeners();
@@ -271,6 +278,10 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
         config.setUseResourceRoleMappings(true);
 
         return config;
+    }
+
+    public KeycloakDeployment getDeployment() {
+        return deployment;
     }
 
     public void writeAdapterConfigToFile(AdapterConfig adapterConfig, String filepath) {
