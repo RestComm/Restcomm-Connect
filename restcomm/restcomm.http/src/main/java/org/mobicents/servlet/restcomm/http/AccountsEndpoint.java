@@ -199,7 +199,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
                 return status(NOT_FOUND).build();
             } else {
                 // make sure the logged user can access this account
-                secureByAccount(getKeycloakAccessToken(), account);
+                secure(account, "RestComm:Read:Accounts");
                 if (APPLICATION_XML_TYPE == responseType) {
                     final RestCommResponse response = new RestCommResponse(account);
                     return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -238,15 +238,15 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     // Returns (sub-)accounts for logged user. Proper sub-account implementation is still an issue to implement - https://github.com/Mobicents/RestComm/issues/227
     protected Response getAccounts(final MediaType responseType) {
-        String username = getLoggedUsername(); // i.e. emailAddress
         try {
-            secureApi("RestComm:Read:Accounts", getKeycloakAccessToken());
+            secure("RestComm:Read:Accounts");
         } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
 
         // get the account for the logged user (Decouples email from account SID. We rely on the username/email. We DON'T produce the account sid from username  and use the sid to retrieve the account.
-        final Account account = accountsDao.getAccount(username);
+        //final Account account = accountsDao.getAccount(username);
+        final Account account = identityContext.getEffectiveAccount(); // uses either oauth token or APIKey specified account
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
@@ -265,15 +265,13 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        // check API access only
-        String username = getLoggedUsername(); // i.e. emailAddress
         try {
-            secureApi("RestComm:Create:Accounts", getKeycloakAccessToken());
+            secure("RestComm:Create:Accounts");
         } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
 
-        final Account parentAccount = accountsDao.getAccount(username);
+        final Account parentAccount = identityContext.getEffectiveAccount();
         if ( parentAccount == null )
             return status(NOT_FOUND).build();
         Account account = null; // the newly created account

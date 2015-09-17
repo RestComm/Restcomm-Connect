@@ -16,9 +16,7 @@ import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator.IdentityNotSet;
-import org.mobicents.servlet.restcomm.identity.keycloak.IdentityUtils;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.VerificationException;
 import org.keycloak.representations.AccessToken;
@@ -49,9 +47,9 @@ public class MyTestEndpoint extends AbstractEndpoint {
     @GET
     @Path("test2")
     public Response test2() throws VerificationException, IdentityNotSet {
-        IdentityConfigurator configurator = IdentityConfigurator.getInstance();
-        AccessToken token = IdentityUtils.extractToken(configurator, request);
-        logger.info("in test2()");
+        //IdentityConfigurator configurator = IdentityConfigurator.getInstance();
+        //AccessToken token = IdentityUtils.extractOauthToken(configurator, request);
+        //logger.info("in test2()");
         return Response.ok().build();
     }
 

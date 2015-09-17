@@ -103,8 +103,11 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
         configurationSource.saveRestcommClientSecret(restcommClientSecret);
         configurationSource.saveAuthServerUrlBase(authServerUrlBase);
         logger.debug("Persisted identity specific configuration to storage");
+
+        load();
+
         // notify people
-        notifyUpdateListeners();
+        //notifyUpdateListeners();
     }
 
     private IdentityMode loadMode() {
