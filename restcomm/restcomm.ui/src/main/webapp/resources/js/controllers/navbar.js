@@ -189,14 +189,14 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
 
   $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
   $scope.createAccount = function(account) {
-    if(account.email && account.password) {
+    if(account.email) {
       // Numbers.register({PhoneNumber:number.number});
       account.friendlyName = account.friendlyName || account.email;
       RCommAccounts.register($.param(
         {
           EmailAddress : account.email,
-          Password: account.password,
-          //Role: account.role,
+          //Password: account.password,
+          Role: account.role,
           Status: account.status,
           FriendlyName: account.friendlyName ? account.friendlyName : account.email
         }),
