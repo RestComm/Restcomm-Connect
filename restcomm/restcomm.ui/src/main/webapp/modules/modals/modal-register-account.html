@@ -16,6 +16,7 @@
             <dd>
                 <input id="new-account-email" class="form-control" ng-model="newAccount.email" type="email" placeholder="labs@restcomm.org" autofocus required />
             </dd>
+            <!--
             <dt>Password</dt>
             <dd>
                 <div class="col-md-12 password-strength-modal" ng-password-strength="newAccount.password" ng-show="newAccount.password"></div>
@@ -26,6 +27,7 @@
                 <input id="new-account-password-confirmation" class="form-control" name="new-account-password-confirmation" ng-model="newAccount.passwordConfirmation" equals="{{newAccount.password}}" type="password" placeholder="mySafeP@ssw0rD!" />
                 <span></span>
             </dd>
+            -->
             <dt>Role</dt>
             <dd>
                 <select class="form-control">
@@ -43,5 +45,5 @@
 </div>
 <div class="modal-footer">
     <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-disabled="pwdStrength < 50 || newAccountForm.$invalid" ng-click="createAccount(newAccount)">Register</button>
+    <button class="btn btn-primary" ng-click="createAccount(newAccount)">Register</button>
 </div>

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -114,15 +115,15 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if (data.containsKey("Status")) {
             status = Account.Status.valueOf(data.getFirst("Status"));
         }
-        final String password = data.getFirst("Password");
-        final String authToken = new Md5Hash(password).toString();
+        //final String password = data.getFirst("Password");
+        //final String authToken = new Md5Hash(password).toString();
         final String role = data.getFirst("Role");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, null, role, uri);
     }
 
     /**
@@ -287,14 +288,20 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         String childRole = getChildRole(parentAccount);
         //account.setRole( childRole ); - no point in setting roles in restcomm accounts since they are not used
 
+        // Automatic keycloak user creation is disabled for now:
         // Everything seems set. Let's try creating the user in keycloak
-        try {
+        /*try {
             String password = data.getFirst("Password"); // password is already encoded to auth_token in createFrom() so we need to extract it again
             createKeycloakUser(account,password);
         } catch (KeycloakClientException e) {
             if ( e.getHttpStatusCode() == 409 )
                 return status(CONFLICT).build();
         }
+        */
+
+        // assign a random authToken for the account
+        account = account.setAuthToken(generateApiKey());
+
         // now, store it in Restcomm too
         accountsDao.addAccount(account);
         if (APPLICATION_JSON_TYPE == responseType) {
@@ -416,15 +423,21 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
         if (!data.containsKey("EmailAddress")) {
             throw new NullPointerException("Email address can not be null.");
-        } else if (!data.containsKey("Password")) {
+        } /*else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
-        }
+        }*/
     }
 
     // calculates the role for an account based on parent account and logged user. For now it always create a Developer
     private String getChildRole(Account parentAccount ) {
         // TODO add a proper implementation
         return "Developer";
+    }
+
+    // generates a random api key to be used for accessing an Account using Basic HTTP authentication
+    private String generateApiKey() {
+        // TODO generate proper API key values. Not just UUIDs
+        return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
 }
