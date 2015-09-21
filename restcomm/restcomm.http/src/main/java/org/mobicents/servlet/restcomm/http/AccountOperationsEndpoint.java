@@ -6,6 +6,7 @@ import static javax.ws.rs.core.Response.Status.CONFLICT;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -15,6 +16,7 @@ import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.identity.IdentityContext;
 
 @Path("/Accounts/{accountSid}/operations")
 @ThreadSafe
@@ -42,12 +44,29 @@ public class AccountOperationsEndpoint extends SecuredEndpoint {
 
     @DELETE
     @Path("/link")
-    public Response unlinkAccount(@PathParam("accountSid") String accountSid, @FormParam("username") String username) {
+    public Response unlinkAccount(@PathParam("accountSid") String accountSid) {
      // TODO - access control
         Sid sid = new Sid(accountSid);
         Account account = accountsDao.getAccount(sid);
         return unlinkAccountFromUser(account);
     }
+
+    @DELETE
+    @Path("/key")
+    public Response removeApikey(@PathParam("accountSid") String accountSid) {
+        Sid sid = new Sid(accountSid);
+        Account account = accountsDao.getAccount(sid);
+        return clearAccountKey(account);
+    }
+
+    @GET
+    @Path("/key/assign")
+    public Response assignApikey(@PathParam("accountSid") String accountSid) {
+        Sid sid = new Sid(accountSid);
+        Account account = accountsDao.getAccount(sid);
+        return assignApikey(account);
+    }
+
 
     /**
      * Links a Restcomm account with a keycloak user using the Account.emailAddress property.
@@ -73,11 +92,27 @@ public class AccountOperationsEndpoint extends SecuredEndpoint {
         return Response.ok().build();
     }
 
+    private Response clearAccountKey(Account restcommAccount) {
+        restcommAccount = restcommAccount.setAuthToken(null);
+        accountsDao.updateAccount(restcommAccount);
+        return Response.ok().build();
+    }
+
+    private Response assignApikey(Account restcommAccount) {
+        if ( ! org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getAuthToken()) )
+            return Response.status(CONFLICT).build();
+        String key = IdentityContext.generateApiKey();
+        restcommAccount = restcommAccount.setAuthToken(key);
+        accountsDao.updateAccount(restcommAccount);
+        return Response.ok().build();
+    }
+
     // Validates an username (EmailAddress) before mapping an account to it.
     // TODO - validation rules may include checks whether this address is @deployment.domain
     private boolean validateUsername(String username) {
         // TODO - implement...
         return true;
     }
+
 
 }

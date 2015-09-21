@@ -10,7 +10,7 @@ friendly_name VARCHAR(64) NOT NULL,
 account_sid VARCHAR(34),
 type VARCHAR(8) NOT NULL,
 status VARCHAR(16) NOT NULL,
-auth_token VARCHAR(32) NOT NULL,
+auth_token VARCHAR(32),
 role VARCHAR(64) NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );

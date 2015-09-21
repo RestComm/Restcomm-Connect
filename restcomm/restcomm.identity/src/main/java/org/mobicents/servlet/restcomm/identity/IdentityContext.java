@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.identity;
 
 import java.nio.charset.Charset;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -92,6 +93,12 @@ public class IdentityContext {
 
     public Account getEffectiveAccount() {
         return effectiveAccount;
+    }
+
+    // generates a random api key to be used for accessing an Account using Basic HTTP authentication
+    public static String generateApiKey() {
+        // TODO generate proper API key values. Not just UUIDs
+        return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
 }
