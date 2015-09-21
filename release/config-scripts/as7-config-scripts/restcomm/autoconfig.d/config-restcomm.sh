@@ -168,6 +168,8 @@ configDidProvisionManager() {
 				sed -i "/<nexmo>/ {
 					N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
 					N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
+					N
+					N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
 				}" $FILE
 
 				sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
@@ -287,7 +289,7 @@ configMobicentsProperties() {
 	echo "Updated mobicents-dar properties"
 }
 
-## Description: Configures TeteStax Proxy
+## Description: Configures TeleStax Proxy
 ## Parameters : 1.Enabled
 ##              2.login
 ##              3.password
@@ -307,7 +309,7 @@ configTelestaxProxy() {
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
-		echo 'Enabled TeteStax Proxy'
+		echo 'Enabled TeleStax Proxy'
 	else
 		sed -e "/<telestax-proxy>/ {
 			N; s|<enabled>.*</enabled>|<enabled>false</enabled>|
@@ -319,7 +321,7 @@ configTelestaxProxy() {
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
-		echo 'Disabled TeteStax Proxy'
+		echo 'Disabled TeleStax Proxy'
 	fi
 }
 
@@ -351,17 +353,84 @@ configMediaServerManager() {
 	fi
 }
 
+
+## Description: Configures SMPP Account Details
+## Parameters : 1.activate
+## 		2.systemID
+## 		3.password
+## 		4.systemType
+## 		5.peerIP
+## 		6.peerPort
+
+configSMPPAccount() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	activate="$1"
+	systemID="$2"
+	password="$3"
+	systemType="$4"
+	peerIP="$5"
+	peerPort="$6"
+
+
+	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE 
+
+	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
+		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
+			N
+			N
+			N
+			N
+			N; s|<systemid>.*</systemid>|<systemid>$systemID</systemid>|
+			N; s|<peerip>.*/peerip>|<peerip>$peerIP</peerip>|
+			N; s|<peerport>.*</peerport>|<peerport>$peerPort</peerport>|
+			N
+			N 
+			N; s|<password>.*</password>|<password>$password</password>|
+			N; s|<systemtype>.*</systemtype>|<systemtype>$systemType</systemtype>|
+		}" $FILE > $FILE.bak
+
+		mv $FILE.bak $FILE
+		echo 'Configured SMPP Account Details'
+
+	else
+		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
+			N
+			N
+			N
+			N
+			N; s|<systemid>.*</systemid>|<systemid></systemid>|
+			N; s|<peerip>.*/peerip>|<peerip></peerip>|
+			N; s|<peerport>.*</peerport>|<peerport></peerport>|
+			N
+			N 
+			N; s|<password>.*</password>|<password></password>|
+			N; s|<systemtype>.*</systemtype>|<systemtype></systemtype>|
+		}" $FILE > $FILE.bak
+
+		mv $FILE.bak $FILE
+		echo 'Configured SMPP Account Details'
+
+
+	fi
+}
+
+
+
+
 # MAIN
 echo 'Configuring RestComm...'
 #configJavaOpts
 configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
-configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID"
+configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
 configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$PUBLIC_IP"
+configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
 echo 'Configured RestComm!'
+
+
