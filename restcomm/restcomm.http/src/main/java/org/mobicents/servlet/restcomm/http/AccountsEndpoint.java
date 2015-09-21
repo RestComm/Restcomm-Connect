@@ -46,7 +46,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.keycloak.representations.AccessToken;
@@ -324,13 +323,15 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } else {
             result = result.setStatus(Account.Status.ACTIVE);
         }
-        if (data.containsKey("Password")) {
+        // Password is deprecated as a concept
+        /*if (data.containsKey("Password")) {
             final String hash = new Md5Hash(data.getFirst("Password")).toString();
             result = result.setAuthToken(hash);
         }
+        // Auth token is no longer specified by the user
         if (data.containsKey("Auth_Token")) {
             result = result.setAuthToken(data.getFirst("Auth_Token"));
-        }
+        }*/
         return result;
     }
 
