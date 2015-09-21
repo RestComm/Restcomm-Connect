@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
@@ -56,6 +54,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakClient.KeycloakClientException;
 import org.mobicents.servlet.restcomm.util.StringUtils;
@@ -299,7 +298,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         */
 
         // assign a random authToken for the account
-        account = account.setAuthToken(generateApiKey());
+        account = account.setAuthToken(IdentityContext.generateApiKey());
 
         // now, store it in Restcomm too
         accountsDao.addAccount(account);
@@ -433,12 +432,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     private String getChildRole(Account parentAccount ) {
         // TODO add a proper implementation
         return "Developer";
-    }
-
-    // generates a random api key to be used for accessing an Account using Basic HTTP authentication
-    private String generateApiKey() {
-        // TODO generate proper API key values. Not just UUIDs
-        return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
 }
