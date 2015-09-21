@@ -82,7 +82,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             uri = nexmoConfiguration.getString("uri");
             apiKey = nexmoConfiguration.getString("api-key");
             apiSecret = nexmoConfiguration.getString("api-secret");
-            smppSystemType = telestaxProxyConfiguration.getString("smpp-system-type");
+            smppSystemType = nexmoConfiguration.getString("smpp-system-type");
             activeConfiguration = nexmoConfiguration;
         }
         searchURI = uri + "/number/search/" + apiKey + "/" + apiSecret + "/";
@@ -315,6 +315,9 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
                     updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip"  + "&moSmppSysType=" + smppSystemType;
                 } else {
                     updateUri = updateUri + "moHttpUrl=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=" + smppSystemType ;
+
+
+
                 }
             }
             final HttpPost updatePost = new HttpPost(updateUri);
