@@ -113,13 +113,13 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }
         //final String password = data.getFirst("Password");
         //final String authToken = new Md5Hash(password).toString();
-        final String role = data.getFirst("Role");
+        //final String role = data.getFirst("Role");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, null, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, null, null, uri);
     }
 
     /**
@@ -278,8 +278,10 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if ( accountsDao.getAccount(account.getEmailAddress()) != null )
             return status(CONFLICT).build();
 
-        String childRole = getChildRole(parentAccount);
-        //account.setRole( childRole ); - no point in setting roles in restcomm accounts since they are not used
+        // set role
+        final String selectedRole = data.getFirst("Role");
+        final String childRole = getChildRole(parentAccount, selectedRole );
+        account = account.setRole(childRole);
 
         // Automatic keycloak user creation is disabled for now:
         // Everything seems set. Let's try creating the user in keycloak
@@ -423,8 +425,8 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }*/
     }
 
-    // calculates the role for an account based on parent account and logged user. For now it always create a Developer
-    private String getChildRole(Account parentAccount ) {
+    // calculates the role for a sub-account based on parent account, user selection and logged user. For now it always creates a Developer
+    private String getChildRole(Account parentAccount, String selectedRole ) {
         // TODO add a proper implementation
         return "Developer";
     }
