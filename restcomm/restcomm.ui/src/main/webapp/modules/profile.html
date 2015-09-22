@@ -113,16 +113,17 @@
 			</form>
 
 			
-			<h4 class="text-muted details-header" style="margin-top:20px;" title="Access this account using your Restcomm account credentials and Oauth"></i> &nbsp;Linked User</h4>
+			<h4 class="text-muted details-header" style="margin-top:20px;" title="Access this account using your Restcomm user credentials and Oauth"></i> &nbsp;Linked User</h4>
 			<form name="userForm" class="form-horizontal" style="margin-top:10px">
 				<div class="form-group">
 						<label class="col-md-4 control-label" for="friendly-name">
 							<h5 class="no-margins">Username</h5></label>
 					<div class="col-md-6">
-						<input ng-model="account.email_address" ng-readonly="true" id="email-address" type="text" class="form-control" placeholder="alice@telestax.com" maxlength="64"  />
+						<input ng-readonly="!!account.email_address" ng-model="userLink.email_address" ng-readonly="true" id="email-address" type="email" class="form-control" placeholder="alice@telestax.com" maxlength="64" />
 					</div>
 					<div class="col-md-2">
-						<button type="button" class="btn btn-link" title="Un-link from Restcomm User. You won't be allowed to access this account with this user's credenetials."><i class="fa fa-chain-broken"></i></button>
+						<button ng-disabled="userForm.$invalid || !userLink.email_address" ng-show="!account.email_address" ng-click="linkUser(account,userLink)" type="button" class="btn btn-link" title="Link with an existing Restcomm User. You will be allowed to access this account after logging as this user."><i class="fa fa-chain"></i></button>
+						<button ng-show="!!account.email_address" ng-click="unlinkUser(account)" type="button" class="btn btn-link" title="Un-link from Restcomm User. You won't be allowed to access this account with this user's credenetials."><i class="fa fa-chain-broken"></i></button>
 					</div>
 				</div>
 			</form>

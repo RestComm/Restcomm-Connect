@@ -81,10 +81,25 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 	*/
 	
 	$scope.loggedSid = AuthService.getLoggedSid();
+	$scope.userLink = {}; // holds all info regarding account-user linking
 
   function refreshAllAccounts () {
 	// retrieve all sub-accounts for currently logged user
 	$scope.accounts = RCommAccounts.all({format:'json'}, function (accounts) {});
+  }
+  
+  function reloadAccount() {
+	// if there is another account specified in the location bar, try to load this one
+	if ( $routeParams.accountSid ) {
+		$scope.account = RCommAccounts.view({format:'json', accountSid: $routeParams.accountSid}, function (account) {
+			onAccountReload(account);
+		});
+		
+	} else {  // retrieve currently logged account information
+		$scope.account = RCommAccounts.view({format:'json', accountSid:AuthService.getLoggedSid()}, function (account) {
+			onAccountReload(account);			
+		});
+	}
   }
     
   $scope.resetChanges = function() {
@@ -112,13 +127,31 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 	  });
   };
   
+  function onAccountReload(account) {
+	  angular.copy(account, accountBackup);
+	  $scope.userLink.email_address = account.email_address;
+  }
+  
   $scope.assignApikey = function (account) {
 	  RCommAccountOperations.assignKey({accountSid:account.sid},null, function () {
 			//console.log("assigned api key");
 			// reload current account info
 			$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
-				angular.copy(account, accountBackup);
+				onAccountReload(account);
 			});
+	  });
+  }
+
+  $scope.linkUser = function (account, userLink) {
+	  var params = {username: userLink.email_address};
+	  RCommAccountOperations.linkUser({accountSid:account.sid}, $.param(params), function () {
+		  reloadAccount();
+	  });
+  }
+  
+  $scope.unlinkUser = function (account) {
+	  RCommAccountOperations.unlinkUser({accountSid:account.sid}, function () {
+		reloadAccount();
 	  });
   }
   
@@ -128,9 +161,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 		  $location.path("/profile");
 	  })
   }
-
-  $scope.alert = {};
-
+  
   $scope.showAlert = function(type, msg) {
     $scope.alert.type = type;
     $scope.alert.msg = msg;
@@ -149,19 +180,9 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 	  refreshAllAccounts();
   });
   
+    $scope.alert = {};
 	refreshAllAccounts();
-  	
-	// if there is another account specified in the location bar, try to load this one
-	if ( $routeParams.accountSid ) {
-		$scope.account = RCommAccounts.view({format:'json', accountSid: $routeParams.accountSid}, function (account) {
-			angular.copy(account, accountBackup);
-		});
-		
-	} else {  // retrieve currently logged account information
-		$scope.account = RCommAccounts.view({format:'json', accountSid:AuthService.getLoggedSid()}, function (account) {
-			angular.copy(account, accountBackup);
-		});
-	}
+	reloadAccount();
 
 });
 
