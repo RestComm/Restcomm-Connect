@@ -47,11 +47,15 @@ public abstract class Step {
     public void setName(String name) {
         this.name = name;
     }
+
     public abstract RcmlStep render(Interpreter interpreter) throws InterpreterException;
+
     public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
         throw new RVDUnsupportedHandlerVerb();
     }
 
     // a placeholder function for steps that don't have an actual imlpementation
-    public String process(Interpreter interpreter, HttpServletRequest httpRequest ) throws InterpreterException { return null; }
+    public String process(Interpreter interpreter, HttpServletRequest httpRequest) throws InterpreterException {
+        return null;
+    }
 }

@@ -153,9 +153,10 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         final URI smsStatusCallback = readUri(map.get("sms_status_callback"));
         final URI uri = readUri(map.get("uri"));
         final URI rcmlUrl = readUri(map.get("rcml_url"));
+        final String kind = readString(map.get("kind"));
         return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     private Map<String, Object> toMap(final Application application) {
@@ -180,6 +181,7 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         map.put("sms_status_callback", writeUri(application.getSmsStatusCallback()));
         map.put("uri", writeUri(application.getUri()));
         map.put("rcml_url", writeUri(application.getRcmlUrl()));
+        map.put("kind", application.getKind());
         return map;
     }
 }

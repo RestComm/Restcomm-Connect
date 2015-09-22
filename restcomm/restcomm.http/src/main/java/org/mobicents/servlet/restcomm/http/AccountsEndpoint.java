@@ -144,8 +144,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         try {
             final Subject subject = SecurityUtils.getSubject();
             if (subject.hasRole("Administrator")
-                    || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {}
-            else {return status(UNAUTHORIZED).build();}
+                    || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
+            } else {
+                return status(UNAUTHORIZED).build();
+            }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -226,7 +228,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         // If Account already exists don't add it again
         if (dao.getAccount(account.getSid()) == null) {
             final Account parent = dao.getAccount(sid);
-            if (parent.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts")))) {
+            if (parent.getStatus().equals(Account.Status.ACTIVE)
+                    && (subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts")))) {
                 if (!subject.hasRole("Administrator") || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
                 }

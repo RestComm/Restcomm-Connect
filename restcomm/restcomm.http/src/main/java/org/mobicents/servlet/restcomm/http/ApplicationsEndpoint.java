@@ -32,7 +32,9 @@ import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -124,6 +126,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
                 .append("/Applications/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         builder.setRcmlUrl(getUrl("RcmlUrl", data));
+        builder.setKind(getApplicationKind(data));
         return builder.build();
     }
 
@@ -133,7 +136,26 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Application application = dao.getApplication(new Sid(sid));
+        Object s;
+        try {
+            s = new Sid(sid);
+        } catch (IllegalArgumentException e) {
+            // Once not a valid sid, search using the parameter as name
+            s = sid;
+        }
+        Application application = null;
+        if (s instanceof Sid) {
+            // Search as Sid
+            application = dao.getApplication((Sid) s);
+        } else {
+            // Search as friendly name
+            try {
+                String sd = URLDecoder.decode(String.valueOf(s), "UTF-8");
+                application = dao.getApplication(sd);
+            } catch (UnsupportedEncodingException e) {
+                return status(BAD_REQUEST).entity(e.getMessage()).build();
+            }
+        }
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
@@ -201,10 +223,6 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
     private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
         if (!data.containsKey("FriendlyName")) {
             throw new NullPointerException("Friendly name can not be null.");
-        } else if (!data.containsKey("VoiceCallerIdLookup")) {
-            throw new NullPointerException("Voice caller id lookup can not be null.");
-        } else if (!data.containsKey("RcmlUrl")) {
-            throw new NullPointerException("Rcml url can not be null.");
         }
     }
 
@@ -275,6 +293,9 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         }
         if (data.containsKey("RcmlUrl")) {
             result = result.setRcmlUrl(getUrl("RcmlUrl", data));
+        }
+        if (data.containsKey("Kind")) {
+            result = result.setKind(getApplicationKind(data));
         }
         return result;
     }

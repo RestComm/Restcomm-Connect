@@ -73,6 +73,7 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeSmsStatusCallback(application.getSmsStatusCallback(), writer);
         writeUri(application.getUri(), writer);
         writeRcmlUrl(application.getRcmlUrl(), writer);
+        writeKind(application.getKind(), writer);
         writer.endNode();
     }
 
@@ -99,6 +100,7 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeSmsStatusCallback(application.getSmsStatusCallback(), object);
         writeUri(application.getUri(), object);
         writeRcmlUrl(application.getRcmlUrl(), object);
+        writeKind(application.getKind(), object);
         return object;
     }
 
@@ -119,12 +121,28 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
     }
 
     private void writeRcmlUrl(final URI rcmlUrl, final HierarchicalStreamWriter writer) {
-        writer.startNode("RcmlUrl");
-        writer.setValue(rcmlUrl.toString());
-        writer.endNode();
+        if (rcmlUrl != null) {
+            writer.startNode("RcmlUrl");
+            writer.setValue(rcmlUrl.toString());
+            writer.endNode();
+        }
     }
 
     private void writeRcmlUrl(final URI rcmlUrl, final JsonObject object) {
-        object.addProperty("rcml_url", rcmlUrl.toString());
+        if (rcmlUrl != null) {
+            object.addProperty("rcml_url", rcmlUrl.toString());
+        } else {
+            object.add("rcml_url", JsonNull.INSTANCE);
+        }
+    }
+
+    private void writeKind(final String kind, final HierarchicalStreamWriter writer) {
+        writer.startNode("Kind");
+        writer.setValue(kind.toString());
+        writer.endNode();
+    }
+
+    private void writeKind(final String kind, final JsonObject object) {
+        object.addProperty("kind", kind);
     }
 }
