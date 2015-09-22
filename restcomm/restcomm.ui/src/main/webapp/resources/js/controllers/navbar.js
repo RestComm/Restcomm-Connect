@@ -117,16 +117,6 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     });
   };
   
-  $scope.revokeApikey = function (account) {
-	  RCommAccountOperations.revokeKey({accountSid:account.sid},null, function () {
-		//console.log("revoked api key");
-		// reload current account info
-		$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
-			angular.copy(account, accountBackup);
-		});
-	  });
-  };
-  
   function onAccountReload(account) {
 	  angular.copy(account, accountBackup);
 	  $scope.userLink.email_address = account.email_address;
@@ -134,23 +124,35 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   
   $scope.assignApikey = function (account) {
 	  RCommAccountOperations.assignKey({accountSid:account.sid},null, function () {
-			//console.log("assigned api key");
 			// reload current account info
 			$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
+				Notifications.success("API Key enabled.");
 				onAccountReload(account);
 			});
 	  });
   }
+  
+  $scope.revokeApikey = function (account) {
+	  RCommAccountOperations.revokeKey({accountSid:account.sid},null, function () {
+		// reload current account info
+		$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
+			Notifications.success("API Key disabled.");
+			angular.copy(account, accountBackup);
+		});
+	  });
+  };  
 
   $scope.linkUser = function (account, userLink) {
 	  var params = {username: userLink.email_address};
 	  RCommAccountOperations.linkUser({accountSid:account.sid}, $.param(params), function () {
+		  Notifications.success("Linked to user '" + userLink.email_address + "'");
 		  reloadAccount();
 	  });
   }
   
-  $scope.unlinkUser = function (account) {
+  $scope.unlinkUser = function (account,userLink) {
 	  RCommAccountOperations.unlinkUser({accountSid:account.sid}, function () {
+		  Notifications.success("Broke link with user '" + userLink.email_address + "'");
 		reloadAccount();
 	  });
   }
