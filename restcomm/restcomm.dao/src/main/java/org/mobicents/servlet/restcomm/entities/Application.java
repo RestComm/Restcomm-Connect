@@ -53,13 +53,14 @@ public final class Application {
     private final URI smsStatusCallback;
     private final URI uri;
     private final URI rcmlUrl;
+    private final String kind;
 
     public Application(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
             final Sid accountSid, final String apiVersion, final URI voiceUrl, final String voiceMethod,
             final URI voiceFallbackUrl, final String voiceFallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final Boolean hasVoiceCallerIdLookup, final URI smsUrl, final String smsMethod,
             final URI smsFallbackUrl, final String smsFallbackMethod, final URI smsStatusCallback, final URI uri,
-            final URI rcmlUrl) {
+            final URI rcmlUrl, String kind) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -81,6 +82,7 @@ public final class Application {
         this.smsStatusCallback = smsStatusCallback;
         this.uri = uri;
         this.rcmlUrl = rcmlUrl;
+        this.kind = kind;
     }
 
     public static Builder builder() {
@@ -167,88 +169,98 @@ public final class Application {
         return rcmlUrl;
     }
 
+    public String getKind() {
+        return kind;
+    }
+
     public Application setFriendlyName(final String friendlyName) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setVoiceCallerIdLookup(final boolean hasVoiceCallerIdLookup) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setVoiceUrl(final URI voiceUrl) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setVoiceMethod(final String voiceMethod) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setVoiceFallbackUrl(final URI voiceFallbackUrl) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setVoiceFallbackMethod(final String voiceFallbackMethod) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setStatusCallback(final URI statusCallback) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setStatusCallbackMethod(final String statusCallbackMethod) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setSmsUrl(final URI smsUrl) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setSmsMethod(final String smsMethod) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setSmsFallbackUrl(final URI smsFallbackUrl) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setSmsFallbackMethod(final String smsFallbackMethod) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setSmsStatusCallback(final URI smsStatusCallback) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public Application setRcmlUrl(final URI rcmlUrl) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                 voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
+    }
+
+    public Application setKind(final String kind) {
+        return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
+                voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
+                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
     }
 
     public static final class Builder {
@@ -270,6 +282,7 @@ public final class Application {
         private URI smsStatusCallback;
         private URI uri;
         private URI rcmlUrl;
+        private String kind;
 
         private Builder() {
             super();
@@ -279,7 +292,7 @@ public final class Application {
             final DateTime now = DateTime.now();
             return new Application(sid, now, now, friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
                     voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup,
-                    smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl);
+                    smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
         }
 
         public void setSid(final Sid sid) {
@@ -352,6 +365,10 @@ public final class Application {
 
         public void setRcmlUrl(final URI rcmlUrl) {
             this.rcmlUrl = rcmlUrl;
+        }
+
+        public void setKind(final String kind) {
+            this.kind = kind;
         }
     }
 }

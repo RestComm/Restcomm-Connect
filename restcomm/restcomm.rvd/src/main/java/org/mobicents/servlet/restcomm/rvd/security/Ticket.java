@@ -9,6 +9,7 @@ public class Ticket {
     private String userId;
     private Date timeCreated;
     private Date timeLastAccessed;
+    private String authenticationToken;
 
     public Ticket() {
         timeCreated = new Date();
@@ -65,10 +66,20 @@ public class Ticket {
 
     @Override
     public String toString() {
-        return "[userId: " + userId + ",ticketId: " + ticketId + ",timeCreated: " + timeCreated + ", timeLastAccessed: " + timeLastAccessed + "]";
+        return "[userId: " + userId + ",ticketId: " + ticketId + ",timeCreated: " + timeCreated + ", timeLastAccessed: "
+                + timeLastAccessed + "]";
     }
 
     public void accessedNow() {
         timeLastAccessed = new Date();
     }
+
+    public String getAuthenticationToken() {
+        return authenticationToken;
+    }
+
+    public void setAuthenticationToken(String authenticationToken) {
+        this.authenticationToken = authenticationToken;
+    }
+
 }

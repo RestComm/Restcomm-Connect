@@ -21,14 +21,15 @@ public class AuthenticationService {
     static final Logger logger = Logger.getLogger(AuthenticationService.class.getName());
     RvdConfiguration rvdSettings;
     HttpServletRequest request; // used to calculate Restcomm's IP
+    String authenticationToken;
 
     public AuthenticationService(RvdConfiguration rvdSettings, HttpServletRequest request) {
-        //logger.debug("Created RVD authentication service");
+        // logger.debug("Created RVD authentication service");
         this.rvdSettings = rvdSettings;
         this.request = request;
     }
 
-    public boolean authenticate( String username, String password ) throws RvdSecurityException {
+    public boolean authenticate(String username, String password) throws RvdSecurityException {
         logger.debug("Authenticating " + username + " on Restcomm");
         String restcommIp = rvdSettings.getEffectiveRestcommIp(request);
         String restcommAuthUrl = "http://" + restcommIp + ":" + rvdSettings.getEffectiveRestcommPort(request);
@@ -37,34 +38,38 @@ public class AuthenticationService {
         URI url;
         try {
             URIBuilder uriBuilder = new URIBuilder(restcommAuthUrl);
-            uriBuilder.setPath("/restcomm/2012-04-24/Accounts.json/" + username );
+            uriBuilder.setPath("/restcomm/2012-04-24/Accounts.json/" + username);
             url = uriBuilder.build();
         } catch (URISyntaxException e) {
             throw new RvdSecurityException("Error building restcomm authentication url: " + restcommAuthUrl, e);
         }
 
         // Set a header or HTTP authentication (looks easier than the apache client way)
-        HttpGet get = new HttpGet( url );
+        HttpGet get = new HttpGet(url);
         byte[] usernamePassBytes = (username + ":" + password).getBytes(Charset.forName("UTF-8"));
-        String authenticationToken = Base64.encodeBase64String(usernamePassBytes);
+        authenticationToken = Base64.encodeBase64String(usernamePassBytes);
         get.addHeader("Authorization", "Basic " + authenticationToken);
 
         CloseableHttpResponse response;
         try {
             response = client.execute(get);
         } catch (ClientProtocolException e) {
-            throw new RvdSecurityException("Error authenticating on restcomm",e);
+            throw new RvdSecurityException("Error authenticating on restcomm", e);
         } catch (IOException e) {
-            throw new RvdSecurityException("Error authenticating on restcomm",e);
+            throw new RvdSecurityException("Error authenticating on restcomm", e);
         }
 
         // Header[] cookieHeaders = response.getHeaders("Set-Cookie");
 
         int status = response.getStatusLine().getStatusCode();
-        if ( status == 200 )
+        if (status == 200)
             return true;
         else
             return false;
+    }
+
+    public String getAuthenticationToken() {
+        return this.authenticationToken;
     }
 
 }

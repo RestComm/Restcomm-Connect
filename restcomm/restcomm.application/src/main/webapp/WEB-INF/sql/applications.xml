@@ -7,10 +7,10 @@
   <insert id="addApplication" parameterType="map">
     INSERT INTO "restcomm_applications" ("sid", "date_created", "date_updated", "friendly_name", "account_sid", "api_version",
     "voice_url", "voice_method", "voice_fallback_url", "voice_fallback_method", "status_callback", "status_callback_method",
-    "voice_caller_id_lookup", "sms_url", "sms_method", "sms_fallback_url", "sms_fallback_method", "sms_status_callback", "uri", "rcml_url")
+    "voice_caller_id_lookup", "sms_url", "sms_method", "sms_fallback_url", "sms_fallback_method", "sms_status_callback", "uri", "rcml_url", "kind")
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{account_sid}, #{api_version}, #{voice_url}, #{voice_method},
     #{voice_fallback_url}, #{voice_fallback_method}, #{status_callback}, #{status_callback_method}, #{voice_caller_id_lookup},
-    #{sms_url}, #{sms_method}, #{sms_fallback_url}, #{sms_fallback_method}, #{sms_status_callback}, #{uri}, #{rcml_url});
+    #{sms_url}, #{sms_method}, #{sms_fallback_url}, #{sms_fallback_method}, #{sms_status_callback}, #{uri}, #{rcml_url}, #{kind});
   </insert>
   
   <select id="getApplication" parameterType="string" resultType="hashmap">
@@ -38,6 +38,6 @@
     "voice_fallback_url"=#{voice_fallback_url}, "voice_fallback_method"=#{voice_fallback_method}, "status_callback"=#{status_callback},
     "status_callback_method"=#{status_callback_method}, "voice_caller_id_lookup"=#{voice_caller_id_lookup}, "sms_url"=#{sms_url},
     "sms_method"=#{sms_method}, "sms_fallback_url"=#{sms_fallback_url}, "sms_fallback_method"=#{sms_fallback_method},
-    "sms_status_callback"=#{sms_status_callback}, "rcml_url"=#{rcml_url} WHERE "sid"=#{sid};
+    "sms_status_callback"=#{sms_status_callback}, "rcml_url"=#{rcml_url}, "kind"=#{kind} WHERE "sid"=#{sid};
   </update>
 </mapper>
