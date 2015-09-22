@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
-Built-By: sbarstow
-Build-Jdk: 1.7.0_60
-Created-By: Apache Maven 3.2.1
+Built-By: croufay
+Build-Jdk: 1.7.0_79
+Created-By: Apache Maven 3.2.2
 Archiver-Version: Plexus Archiver
 
