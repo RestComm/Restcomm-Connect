@@ -100,8 +100,8 @@
 						<input id="auth-token" type="text" class="form-control" maxlength="64" ng-model="account.auth_token" readonly />
 					</div>
 					<div class="col-md-2">
-						<button type="button" class="btn btn-link" title="Clear API Key"><i class="fa fa-trash-o"></i></button>
-						<button type="button" class="btn btn-link" title="Assign a new API Key"><i class="fa fa-refresh"></i></button>
+						<button ng-click="revokeApikey(account)" ng-disabled="!account.auth_token" type="button" class="btn btn-link" title="Revoke API Key" ><i class="fa fa-trash-o"></i></button>
+						<button ng-click="assignApikey(account)" ng-disabled="!!account.auth_token" type="button" class="btn btn-link" title="Assign a new API Key"><i class="fa fa-refresh"></i></button>
 					</div>
 				</div>
 			</form>
