@@ -41,10 +41,8 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthorizedException;
-import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -213,19 +211,16 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response deleteAccount(final String sid) {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid accountSid = new Sid((String) subject.getPrincipal());
-        final Sid sidToBeRemoved = new Sid(sid);
-
+    protected Response deleteAccount(final String operatedSid) {
+        final Sid sidToBeRemoved = new Sid(operatedSid);
         try {
-            Account account = accountsDao.getAccount(sidToBeRemoved);
-            secure(account, "RestComm:Delete:Accounts");
+            Account removedAccount = accountsDao.getAccount(sidToBeRemoved);
+            secure(removedAccount, "RestComm:Delete:Accounts");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        // Prevent removal of Administrator account
-        if (sid.equalsIgnoreCase(accountSid.toString()))
+        // Prevent removal of Logged account
+        if (operatedSid.equalsIgnoreCase(identityContext.getEffectiveAccount().getSid().toString()))
             return status(BAD_REQUEST).build();
 
         if (accountsDao.getAccount(sidToBeRemoved) == null)
