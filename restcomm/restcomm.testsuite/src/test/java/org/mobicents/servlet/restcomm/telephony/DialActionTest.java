@@ -510,7 +510,8 @@ public class DialActionTest {
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("no-answer"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
+        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
+        assertTrue(data.getFirst("DialRingDuration").equalsIgnoreCase("3"));
 
         assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));
         assertTrue(data.getFirst("Direction").equalsIgnoreCase("inbound"));
@@ -741,8 +742,14 @@ public class DialActionTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
         JsonArray cdrsArray = cdr.get("calls").getAsJsonArray();
-        assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
-        assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        if (((JsonObject)cdrsArray.get(0)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
+            assertTrue(((JsonObject)cdrsArray.get(1)).get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
+            assertTrue(((JsonObject)cdrsArray.get(1)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        } else {
+            assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
+            assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        }
+
     }
 
 
@@ -805,8 +812,13 @@ public class DialActionTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
         assertNotNull(cdr);
         JsonArray cdrsArray = cdr.get("calls").getAsJsonArray();
-        assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
-        assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        if (((JsonObject)cdrsArray.get(0)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
+            assertTrue(((JsonObject)cdrsArray.get(1)).get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
+            assertTrue(((JsonObject)cdrsArray.get(1)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        } else {
+            assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
+            assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        }
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)
