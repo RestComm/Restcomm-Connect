@@ -71,7 +71,7 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5, Auth, AuthService) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, RCommAccountOperations, md5, Auth, AuthService) {
   $scope.sid = SessionService.get('sid');
 	console.log("IN ProfileCtrl");
 	
@@ -151,6 +151,25 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     });
   };
   
+  $scope.revokeApikey = function (account) {
+	  RCommAccountOperations.revokeKey({accountSid:account.sid},null, function () {
+		console.log("revoked api key");
+		// reload current account info
+		$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
+			angular.copy(account, accountBackup);
+		});
+	  });
+  };
+  
+  $scope.assignApikey = function (account) {
+	  RCommAccountOperations.assignKey({accountSid:account.sid},null, function () {
+			console.log("assigned api key");
+			// reload current account info
+			$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
+				angular.copy(account, accountBackup);
+			});
+	  });
+  }
 
   $scope.alert = {};
 

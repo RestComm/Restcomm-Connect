@@ -325,6 +325,30 @@ rcServices.factory('RCommAccounts', function($resource) {
     });
 });
 
+rcServices.factory('RCommAccountOperations', function($resource) {
+	return $resource('/restcomm/2012-04-24/Accounts/:accountSid/operations/', {}, {
+		linkUser: { 
+			method: 'POST', 
+			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/link',
+			headers : {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			}
+		},
+		unlinkUser: {
+			method: 'DELETE',
+			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/link'
+		},
+		revokeKey: {
+			method: 'DELETE',
+			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/key'
+		},
+		assignKey: {
+			method: 'GET',
+			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/key/assign'
+		}
+	});
+});
+
 rcServices.factory('RCommNumbers', function($resource) {
   return $resource('/restcomm/2012-04-24/Accounts/:accountSid/IncomingPhoneNumbers.:format', {
       accountSid: '@accountSid',
