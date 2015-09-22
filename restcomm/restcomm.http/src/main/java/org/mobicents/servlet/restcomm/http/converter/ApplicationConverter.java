@@ -137,12 +137,18 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
     }
 
     private void writeKind(final String kind, final HierarchicalStreamWriter writer) {
-        writer.startNode("Kind");
-        writer.setValue(kind.toString());
-        writer.endNode();
+        if (kind != null) {
+            writer.startNode("Kind");
+            writer.setValue(kind.toString());
+            writer.endNode();
+        }
     }
 
     private void writeKind(final String kind, final JsonObject object) {
-        object.addProperty("kind", kind);
+        if (kind != null) {
+            object.addProperty("kind", kind);
+        } else {
+            object.add("kind", JsonNull.INSTANCE);
+        }
     }
 }
