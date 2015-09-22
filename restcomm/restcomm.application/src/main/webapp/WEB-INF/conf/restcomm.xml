@@ -82,6 +82,7 @@
 			<outboudproxy-user-at-from-header>false
 			</outboudproxy-user-at-from-header>
 			<!-- When set to true, Restcomm will use the original user for the display name of the From header -->
+
 			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<user-at-displayed-name>true</user-at-displayed-name>
 
