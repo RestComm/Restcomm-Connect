@@ -197,6 +197,9 @@ public class ProjectRestService extends RestService {
         } catch (ApplicationsApiSyncException e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        } catch (UnsupportedEncodingException e) {
+            logger.error(e.getMessage(), e);
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
 
         return Response.ok().build();

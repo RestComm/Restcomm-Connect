@@ -22,7 +22,7 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
-import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
 import javax.servlet.ServletContext;
@@ -61,9 +61,9 @@ public class ProjectApplicationsApi {
     }
 
     public void createApplication(final String ticketId, final String friendlyName, final String projectKind)
-            throws ApplicationsApiSyncException {
+            throws ApplicationsApiSyncException, UnsupportedEncodingException {
         HashMap<String, String> params = new HashMap<String, String>();
-        String rcmlUrl = "/restcomm-rvd/services/apps/" + friendlyName + "/controller";
+        String rcmlUrl = "/restcomm-rvd/services/apps/" + RvdUtils.myUrlEncode(friendlyName) + "/controller";
         params.put("FriendlyName", friendlyName);
         params.put("Kind", projectKind);
         params.put("RcmlUrl", rcmlUrl);
@@ -80,6 +80,7 @@ public class ProjectApplicationsApi {
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("FriendlyName", name);
         params.put("NewFriendlyName", newName);
+        params.put("RcmlUrl", "/restcomm-rvd/services/apps/" + RvdUtils.myUrlEncode(newName) + "/controller");
         accessApi(ticketId, params, AccessApiAction.RENAME);
     }
 
@@ -136,7 +137,7 @@ public class ProjectApplicationsApi {
                 case DELETE:
                     // Get application sid
                     friendlyName = params.get("FriendlyName");
-                    friendlyName = URLEncoder.encode(friendlyName, "UTF-8");
+                    friendlyName = RvdUtils.myUrlEncode(friendlyName);
                     try {
                         applicationResponse = client.get(
                                 "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + friendlyName + ".json")
@@ -164,7 +165,7 @@ public class ProjectApplicationsApi {
                 case RENAME:
                     // Check if new name is already in use
                     String newFriendlyName = String.valueOf(params.get("NewFriendlyName"));
-                    String newNameTemp = URLEncoder.encode(newFriendlyName, "UTF-8");
+                    String newNameTemp = RvdUtils.myUrlEncode(newFriendlyName);
                     try {
                         applicationResponse = client.get(
                                 "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + newNameTemp + ".json").done(
@@ -180,7 +181,7 @@ public class ProjectApplicationsApi {
 
                     // Get application sid
                     friendlyName = params.get("FriendlyName");
-                    friendlyName = URLEncoder.encode(friendlyName, "UTF-8");
+                    friendlyName = RvdUtils.myUrlEncode(friendlyName);
 
                     applicationResponse = client.get(
                             "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + friendlyName + ".json").done(
@@ -191,9 +192,10 @@ public class ProjectApplicationsApi {
                         throw new ApplicationsApiSyncException("Invalid Application sid obtained from API response.");
 
                     // Rename application
+                    String rcmlUrl = String.valueOf(params.get("RcmlUrl"));
                     applicationResponse = client
                             .post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + applicationSid + ".json")
-                            .addParam("FriendlyName", newFriendlyName)
+                            .addParam("FriendlyName", newFriendlyName).addParam("RcmlUrl", rcmlUrl)
                             .done(marshaler.getGson(), RestcommApplicationResponse.class);
                     friendlyName = applicationResponse.getFriendly_name();
                     if (!friendlyName.equalsIgnoreCase(newFriendlyName))
