@@ -100,7 +100,7 @@
 		<mybatis.version>3.2.2</mybatis.version>
 		<jodatime.version>2.0</jodatime.version>
 		<libphonenumber.version>4.3</libphonenumber.version>
-		<junit.version>4.10</junit.version>
+		<!-- <junit.version>4.10</junit.version> -->
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
 		<sip-ri.version>1.2.241</sip-ri.version>
@@ -133,9 +133,9 @@
 		<module>restcomm.tts.acapela</module>
 		<module>restcomm.mgcp</module>
 		<module>restcomm.fax</module>
-               <module>restcomm.mscontrol.api</module>
-               <module>restcomm.mscontrol.mms</module>
-               <module>restcomm.mscontrol.xms</module>
+		<module>restcomm.mscontrol.api</module>
+		<module>restcomm.mscontrol.mms</module>
+		<module>restcomm.mscontrol.xms</module>
 		<module>restcomm.sms.api</module>
 		<module>restcomm.telephony.api</module>
 		<module>restcomm.interpreter</module>
@@ -163,39 +163,39 @@
 
 	<dependencyManagement>
 		<dependencies>
-					<!-- SMPP Testing -->
+			<!-- SMPP Testing -->
 
-				<dependency>
-					<groupId>com.telestax.servlet</groupId>
-					<artifactId>restcomm.sms.api</artifactId>
-					<version>${project.version}</version>
-				</dependency>
-                <dependency>
-                        <groupId>junit</groupId>
-                        <artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-                </dependency>
+			<dependency>
+				<groupId>com.telestax.servlet</groupId>
+				<artifactId>restcomm.sms.api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+			</dependency>
 
-		<dependency>
-                       	<groupId>com.cloudhopper</groupId>
-                       	<artifactId>ch-commons-gsm</artifactId>
-                       	<version>${ch.commons.gsm.version}</version>
-                </dependency>
-                <dependency>
-                       	<groupId>ch.qos.logback</groupId>
-                       	<artifactId>logback-core</artifactId>
-                       	<version>${logback.version}</version>
-                </dependency>
-                <dependency>
-                       	<groupId>ch.qos.logback</groupId>
-                       	<artifactId>logback-classic</artifactId>
-                       	<version>${logback.version}</version>
-                </dependency>
-                <dependency>
-                       	<groupId>com.cloudhopper</groupId>
-                       	<artifactId>ch-smpp</artifactId>
-                       	<version>${ch.smpp.version}</version>
-                </dependency>
+			<dependency>
+				<groupId>com.cloudhopper</groupId>
+				<artifactId>ch-commons-gsm</artifactId>
+				<version>${ch.commons.gsm.version}</version>
+			</dependency>
+<!--			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-core</artifactId>
+				<version>${logback.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>${logback.version}</version>
+			</dependency>  -->
+			<dependency>
+				<groupId>com.cloudhopper</groupId>
+				<artifactId>ch-smpp</artifactId>
+				<version>${ch.smpp.version}</version>
+			</dependency>
 			<!-- Utilities -->
 			<dependency>
 				<groupId>com.google.guava</groupId>
@@ -291,7 +291,7 @@
 				<scope>provided</scope>
 			</dependency>
 
-			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
+			<!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
 				<version>${servlet-api.version}</version> </dependency -->
 
 			<dependency>
@@ -615,7 +615,7 @@
 			<version>${mobicents.checkstyle.version}</version>
 		</dependency>
 
-		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId>
+		<!--dependency> <groupId>att</groupId> <artifactId>naturalvoices</artifactId> 
 			<version>5.1</version> </dependency -->
 	</dependencies>
 
@@ -639,21 +639,12 @@
 					<useProjectReferences>false</useProjectReferences>
 				</configuration>
 			</plugin>
-			<!-- When testing maven sure fire spawns a new JVM. Setting it to never fixed the issue. -->
-			<!--
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.18.1</version>
-				<configuration>
-					<forkMode>never</forkMode>
-					<argLine>-Xms1024m -Xmx1024m -XX:MaxPermSize=2048m</argLine>
-					<systemPropertyVariables>
-						<user.name>${user.name}</user.name>
-					</systemPropertyVariables>
-				</configuration>
-			</plugin>
-			-->
+			<!-- When testing maven sure fire spawns a new JVM. Setting it to never 
+				fixed the issue. -->
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId> 
+				<version>2.18.1</version> <configuration> <forkMode>never</forkMode> <argLine>-Xms1024m 
+				-Xmx1024m -XX:MaxPermSize=2048m</argLine> <systemPropertyVariables> <user.name>${user.name}</user.name> 
+				</systemPropertyVariables> </configuration> </plugin> -->
 			<!-- Checkstyle -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -827,7 +818,7 @@
 		</repository>
 
 		<!-- Local repository for the ATT TTS Java wrapper library -->
-		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
+		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url> 
 			</repository> -->
 	</repositories>
 
