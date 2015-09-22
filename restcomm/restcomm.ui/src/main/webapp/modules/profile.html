@@ -12,9 +12,9 @@
     <div class="col-md-9" style="padding: 0;">
         
         <div class="well">
-			<h3 class="text-muted details-header"><i class="fa fa-cog"></i> Account Settings</h3>
+			<h3 class="text-muted section-heading"><i class="fa fa-cog"></i> Account Settings</h3>
 			
-			<form name="profileForm" class="form-horizontal" style="margin-top:20px">
+			<form name="profileForm" class="form-horizontal">
 				<div class="form-group">
 					<label class="col-md-4 control-label" for="account-sid">Account SID</label>
 					<div class="col-md-8">
@@ -77,11 +77,13 @@
 					</div>
 				</div>
 				
-				<div class="form-group">
-					<div class="col-md-offset-4 col-md-4">
-						<button class="btn btn-primary">Save</button>
+				<div class="row section-footer">
+					<div class="col-md-offset-4 col-md-8">
+						<button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-disabled="profileForm.$invalid">Save</button>
+						<button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()">Reset Changes</button>
 					</div>
 				</div>
+
 				<!--
 				<div class="row form-horizontal">
 					<div class="col-md-12">
@@ -91,9 +93,13 @@
 				-->
 			</form>
 			
+		</div>
 			
-			<h4 class="text-muted details-header" style="margin-top:20px;" title="Access this account using an API Key and Basic HTTP Authentication"><i class="fa fa-key"></i> &nbsp;API Credentials</h4>
-			<form name="apiCredentialsForm" class="form-horizontal" style="margin-top:10px">
+		<div class="well">
+			<h3 class="text-muted section-heading"><i class="fa fa-unlock-alt"></i> Account Access</h3>			
+			
+			<h4 class="text-muted details-header" style="margin-top:20px;" title="Access this account using an API Key and Basic HTTP Authentication"> &nbsp;API Credentials</h4>
+			<form name="apiCredentialsForm" class="form-horizontal">
 				<div class="form-group">
 					<label class="control-label col-md-4"><h5 class="no-margins">API Key</h5></label>
 					<div class="col-md-6">
@@ -107,7 +113,7 @@
 			</form>
 
 			
-			<h4 class="text-muted details-header" style="margin-top:20px;" title="Access this account using your Restcomm account credentials and Oauth"><i class="fa fa-male"></i> &nbsp;User mapping</h4>
+			<h4 class="text-muted details-header" style="margin-top:20px;" title="Access this account using your Restcomm account credentials and Oauth"></i> &nbsp;Linked User</h4>
 			<form name="userForm" class="form-horizontal" style="margin-top:10px">
 				<div class="form-group">
 						<label class="col-md-4 control-label" for="friendly-name">
@@ -126,10 +132,7 @@
 		</div>
 
         <div class="">
-            <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="accountChanged" ng-disabled="(newPassword && pwdStrength < 50) || !accountValid">Save</button>
-            <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="accountChanged">Save</button>
-            <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="accountChanged">Reset Changes</button>
-            <button class="btn btn-danger pull-left disabled">Delete Account</button>
+            <button ng-click="deleteAccount(account)" ng-disabled="loggedSid==account.sid" class="btn btn-danger pull-left">Delete Account</button>
         </div>
 
     </div>

@@ -321,7 +321,11 @@ rcServices.factory('RCommAccounts', function($resource) {
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      }
+      },
+      remove: {
+		  method:'DELETE',
+		  url: '/restcomm/2012-04-24/Accounts.:format/:accountSid.:format'
+	  }
     });
 });
 

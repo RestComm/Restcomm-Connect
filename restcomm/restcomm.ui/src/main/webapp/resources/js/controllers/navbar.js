@@ -71,78 +71,29 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, RCommAccountOperations, md5, Auth, AuthService) {
-  $scope.sid = SessionService.get('sid');
-	console.log("IN ProfileCtrl");
-	
-	var locationAccountSid = $routeParams.accountSid;
-	console.log("locationAccountSid: " + locationAccountSid);
-	
+rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, RCommAccountOperations, md5, Auth, AuthService, $location, Notifications) {
 	var accountBackup = {};
-	
-	// it there is another account specified in the location bar, try to load this one
-	if ( $routeParams.accountSid ) {
-		$scope.account = RCommAccounts.view({format:'json', accountSid: $routeParams.accountSid}, function (account) {
-			angular.copy(account, accountBackup);
-			console.log("received account");
-			console.log(accountBackup);
-		});
 		
-	} else {  // retrieve currently logged account information
-		$scope.account = RCommAccounts.view({format:'json', accountSid:AuthService.getUsername()}, function (account) {
-			angular.copy(account, accountBackup);
-			console.log("received account");
-			console.log(accountBackup);
-		});
-	}
+	/*
+	$scope.$watchCollection('[account.friendly_name]', function() {
+		console.log("fiendly_name changed!");
+	});
+	*/
 	
-	
+	$scope.loggedSid = AuthService.getLoggedSid();
+
+  function refreshAllAccounts () {
 	// retrieve all sub-accounts for currently logged user
 	$scope.accounts = RCommAccounts.all({format:'json'}, function (accounts) {});
-	
-
-  $scope.$watch('account', function() {
-    if (!angular.equals($scope.account, accountBackup)) {
-      $scope.accountChanged = true;
-      console.log("account has changed");
-      // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
-    }
-  }, true);
-  
-  
-/*
-  $scope.newPassword = $scope.newPassword2 = '';
-
-  $scope.$watchCollection('[newPassword, newPassword2]', function() {
-    if($scope.newPassword == '' && $scope.newPassword2 == '') {
-      $scope.profileForm.newPassword.$valid = $scope.profileForm.newPassword2.$valid = true;
-      $scope.accountValid = $scope.profileForm.$valid;
-      if($scope.account) {
-        $scope.account.auth_token = accountBackup.auth_token;
-      }
-      return;
-    }
-    var valid = angular.equals($scope.newPassword, $scope.newPassword2);
-    $scope.profileForm.newPassword.$valid = $scope.profileForm.newPassword2.$valid = valid;
-    $scope.accountValid = $scope.profileForm.$valid && valid;
-    $scope.account.auth_token = '<modified></modified>';
-    // console.log('NP [' + $scope.profileForm.newPassword.$valid + '] NP2 [' + $scope.profileForm.newPassword2.$valid + '] FORM [' + $scope.profileForm.$valid + ']');
-  }, true);
-
+  }
+    
   $scope.resetChanges = function() {
-    $scope.newPassword = $scope.newPassword2 = '';
     $scope.account = angular.copy(accountBackup);
-    $scope.accountChanged = false;
+    //$scope.accountChanged = false;
   };
-
-*/
   
   $scope.updateProfile = function() {
     var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status};
-
-  //  if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
-  //    params['Auth_Token'] = md5.createHash($scope.newPassword);
-  //  }
 
     RCommAccounts.update({accountSid:$scope.account.sid}, $.param(params), function() { // success
     	$scope.accounts = RCommAccounts.all({format:'json'}, function (accounts) {});
@@ -153,7 +104,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   
   $scope.revokeApikey = function (account) {
 	  RCommAccountOperations.revokeKey({accountSid:account.sid},null, function () {
-		console.log("revoked api key");
+		//console.log("revoked api key");
 		// reload current account info
 		$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
 			angular.copy(account, accountBackup);
@@ -163,12 +114,19 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   
   $scope.assignApikey = function (account) {
 	  RCommAccountOperations.assignKey({accountSid:account.sid},null, function () {
-			console.log("assigned api key");
+			//console.log("assigned api key");
 			// reload current account info
 			$scope.account = RCommAccounts.view({format:'json', accountSid: account.sid}, function (account) {
 				angular.copy(account, accountBackup);
 			});
 	  });
+  }
+  
+  $scope.deleteAccount = function (account) {
+	  RCommAccounts.remove({accountSid:account.sid}, function () {
+		  Notifications.success('Account "' + account.friendly_name + '" removed.');
+		  $location.path("/profile");
+	  })
   }
 
   $scope.alert = {};
@@ -184,27 +142,32 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     $scope.alert.msg = '';
     $scope.alert.show = false;
   };
-/*
-  // Start with querying for accounts...
-  $scope.getAccounts = function() {
-    $scope.accounts = RCommAccounts.query(function(data){
-      angular.forEach(data, function(value){
-        if(value.sid == $routeParams.accountSid) {
-          $scope.account = angular.copy(value);
-          accountBackup = angular.copy(value);
-        }
-      });
-      $scope.resetChanges();
-    });
-  };
+  
+  // catch events
+  $scope.$on("sub-account-created", function (params) {
+	  console.log("sub-account-created received");
+	  refreshAllAccounts();
+  });
+  
+	refreshAllAccounts();
+  	
+	// if there is another account specified in the location bar, try to load this one
+	if ( $routeParams.accountSid ) {
+		$scope.account = RCommAccounts.view({format:'json', accountSid: $routeParams.accountSid}, function (account) {
+			angular.copy(account, accountBackup);
+		});
+		
+	} else {  // retrieve currently logged account information
+		$scope.account = RCommAccounts.view({format:'json', accountSid:AuthService.getLoggedSid()}, function (account) {
+			angular.copy(account, accountBackup);
+		});
+	}
 
-  $scope.getAccounts();
-*/
 });
 
 // Register Account Modal
 
-var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, Notifications) {
+var RegisterAccountModalCtrl = function ($scope, $rootScope, $modalInstance, RCommAccounts, Notifications) {
 
   $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
   $scope.createAccount = function(account) {
@@ -222,6 +185,7 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
         function() { // success
           Notifications.success('Account "' + account.friendlyName + '" created successfully!');
           $modalInstance.close();
+          $rootScope.$broadcast("sub-account-created", {/*nothing here yet*/});
         },
         function() { // error
           Notifications.error('Required fields are missing.');
@@ -236,6 +200,7 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };
+
 };
 
 var AboutModalCtrl = function ($scope, $modalInstance, RCommJMX) {
