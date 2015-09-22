@@ -6,6 +6,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.keycloak.RSATokenVerifier;
 import org.keycloak.VerificationException;
@@ -24,43 +25,55 @@ import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurato
 public class IdentityContext {
     private static Logger logger = Logger.getLogger(IdentityContext.class);
 
-    AccessToken oauthToken;
-    AccountKey accountKey;
-    Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
+    final String oauthTokenString;
+    final AccessToken oauthToken;
+    final AccountKey accountKey;
+    final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
 
     public IdentityContext(IdentityConfigurator configurator, HttpServletRequest request, AccountsDao accountsDao) {
-        this.oauthToken = extractOauthToken(request, configurator);
+        final String tokenString = extractOauthTokenString(request, configurator);
+        if ( ! StringUtils.isEmpty(tokenString) ) {
+            this.oauthToken = verifyToken(tokenString, configurator);
+            this.oauthTokenString = tokenString;
+        }
+        else {
+            this.oauthToken = null;
+            this.oauthTokenString = null;
+        }
         this.accountKey = extractAccountKey(request, accountsDao);
-        updateEffectiveAccount(accountsDao);
-    }
+        //updateEffectiveAccount(accountsDao);
 
-    private void updateEffectiveAccount(AccountsDao dao) {
         if (oauthToken != null) {
-            effectiveAccount = dao.getAccount(oauthToken.getPreferredUsername());
+            effectiveAccount = accountsDao.getAccount(oauthToken.getPreferredUsername());
         } else
         if (accountKey != null) {
             effectiveAccount = accountKey.getAccount();
-        }
+        } else
+            effectiveAccount = null;
     }
 
-    private AccessToken extractOauthToken(HttpServletRequest request, IdentityConfigurator configurator) {
-        KeycloakDeployment deployment = configurator.getDeployment();
+    private String extractOauthTokenString(HttpServletRequest request, IdentityConfigurator configurator) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null) {
             String[] parts = authHeader.split(" ");
             if (parts.length >= 2 && parts[0].equals("Bearer")) {
                 String tokenString = parts[1];
-                AccessToken token;
-                try {
-                    token = RSATokenVerifier.verifyToken(tokenString, deployment.getRealmKey(), deployment.getRealmInfoUrl());
-                } catch (VerificationException e) {
-                    logger.error("Cannot verity token.", e);
-                    return null;
-                }
-                return token;
+                return tokenString;
             }
         }
         return null;
+    }
+
+    private AccessToken verifyToken(String tokenString, IdentityConfigurator configurator ) {
+        KeycloakDeployment deployment = configurator.getDeployment();
+        AccessToken token;
+        try {
+            token = RSATokenVerifier.verifyToken(tokenString, deployment.getRealmKey(), deployment.getRealmInfoUrl());
+            return token;
+        } catch (VerificationException e) {
+            logger.error("Cannot verity token.", e);
+            return null;
+        }
     }
 
     private AccountKey extractAccountKey(HttpServletRequest request, AccountsDao dao) {
@@ -85,6 +98,10 @@ public class IdentityContext {
 
     public AccessToken getOauthToken() {
         return oauthToken;
+    }
+
+    public String getOauthTokenString() {
+        return oauthTokenString;
     }
 
     public AccountKey getAccountKey() {
