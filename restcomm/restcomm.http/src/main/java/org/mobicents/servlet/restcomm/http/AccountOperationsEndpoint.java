@@ -11,12 +11,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 
 @Path("/Accounts/{accountSid}/operations")
 @ThreadSafe
@@ -77,6 +79,9 @@ public class AccountOperationsEndpoint extends SecuredEndpoint {
         if ( !validateUsername(username) )
             return Response.status(BAD_REQUEST).build();
         if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
+            RestcommIdentityApi api = new RestcommIdentityApi(identityContext, identityConfigurator);
+            if ( ! api.inviteUser(username) )
+                return Response.status(Status.NOT_FOUND).build();
             restcommAccount = restcommAccount.setEmailAddress(username);
             accountsDao.updateAccount(restcommAccount);
             return Response.ok().build();
