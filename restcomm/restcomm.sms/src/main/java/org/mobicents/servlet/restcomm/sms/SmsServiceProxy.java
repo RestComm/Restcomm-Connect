@@ -31,6 +31,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 
 import akka.actor.ActorRef;
@@ -46,9 +47,11 @@ import akka.actor.UntypedActorFactory;
 public final class SmsServiceProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
 
+    private static final Logger logger = Logger.getLogger(SmsServiceProxy.class);
+
     private ActorSystem system;
     private ActorRef service;
-
+  //  private ActorRef serviceSmpp;
     private ServletContext context;
 
     public SmsServiceProxy() {
@@ -57,7 +60,9 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
-        service.tell(request, null);
+
+            service.tell(request, null);
+
     }
 
     @Override
@@ -82,6 +87,19 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         }));
     }
 
+/**
+    private ActorRef sendToSMPPService(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
+            }
+        }));
+    }
+**/
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(SmsServiceProxy.class)) {
@@ -92,6 +110,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             service = service(configuration, factory, storage);
+            //serviceSmpp = sendToSMPPService(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
         }
     }
