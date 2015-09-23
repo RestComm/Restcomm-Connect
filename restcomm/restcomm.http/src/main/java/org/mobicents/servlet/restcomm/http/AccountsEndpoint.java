@@ -93,27 +93,20 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     // Create an account out of data. The sid for the new account is random and the account is considered a child of parentAccountSid
     private Account createFrom(final Sid parentAccountSid, final MultivaluedMap<String, String> data) {
         validate(data);
-
         final DateTime now = DateTime.now();
         final String emailAddress = data.getFirst("EmailAddress");
-
-        // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
-        //final Sid sid = Sid.generate(Sid.Type.ACCOUNT, emailAddress);
-        // Decoupling email from account sid as of https://github.com/Mobicents/RestComm/issues/257
         final Sid sid = Sid.generate(Sid.Type.ACCOUNT);
 
-        String friendlyName = emailAddress;
-        if (data.containsKey("FriendlyName")) {
-            friendlyName = data.getFirst("FriendlyName");
-        }
+        // use sid as friendly name if missing
+        String friendlyName = data.getFirst("FriendlyName");
+        if ( org.apache.commons.lang.StringUtils.isEmpty(friendlyName) )
+            friendlyName = sid.toString();
+
         final Account.Type type = Account.Type.FULL;
         Account.Status status = Account.Status.ACTIVE;
         if (data.containsKey("Status")) {
             status = Account.Status.valueOf(data.getFirst("Status"));
         }
-        //final String password = data.getFirst("Password");
-        //final String authToken = new Md5Hash(password).toString();
-        //final String role = data.getFirst("Role");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
@@ -418,11 +411,11 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
-        if (!data.containsKey("EmailAddress")) {
-            throw new NullPointerException("Email address can not be null.");
-        } /*else if (!data.containsKey("Password")) {
-            throw new NullPointerException("Password can not be null.");
-        }*/
+        //if (!data.containsKey("EmailAddress")) {
+        //    throw new NullPointerException("Email address can not be null.");
+        //} /*else if (!data.containsKey("Password")) {
+        //    throw new NullPointerException("Password can not be null.");
+        //}*/
     }
 
     // calculates the role for a sub-account based on parent account, user selection and logged user. For now it always creates a Developer
