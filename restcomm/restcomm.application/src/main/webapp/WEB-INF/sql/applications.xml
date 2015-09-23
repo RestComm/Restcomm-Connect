@@ -22,7 +22,7 @@
   </select>
   
   <select id="getApplications" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_applications" WHERE "account_sid"=#{account_sid};
+    SELECT * FROM "restcomm_applications" WHERE "account_sid"=#{account_sid} or "account_sid" is null;
   </select>
   
   <delete id="removeApplication" parameterType="string">
