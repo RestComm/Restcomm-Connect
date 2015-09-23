@@ -194,16 +194,10 @@ var RegisterAccountModalCtrl = function ($scope, $rootScope, $modalInstance, RCo
 
   $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
   $scope.createAccount = function(account) {
-    if(account.email) {
-      // Numbers.register({PhoneNumber:number.number});
-      account.friendlyName = account.friendlyName || account.email;
       RCommAccounts.register($.param(
         {
-          EmailAddress : account.email,
-          //Password: account.password,
-          Role: account.role,
           Status: account.status,
-          FriendlyName: account.friendlyName ? account.friendlyName : account.email
+          FriendlyName: account.friendlyName
         }),
         function() { // success
           Notifications.success('Account "' + account.friendlyName + '" created successfully!');
@@ -211,13 +205,9 @@ var RegisterAccountModalCtrl = function ($scope, $rootScope, $modalInstance, RCo
           $rootScope.$broadcast("sub-account-created", {/*nothing here yet*/});
         },
         function() { // error
-          Notifications.error('Required fields are missing.');
+          Notifications.error('Account creation failed.');
         }
       );
-    }
-    else {
-      Notifications.error('Required fields are missing.');
-    }
   };
 
   $scope.cancel = function () {
