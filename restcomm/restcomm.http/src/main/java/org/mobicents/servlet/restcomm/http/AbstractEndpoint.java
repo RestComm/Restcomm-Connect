@@ -25,12 +25,15 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -129,5 +132,20 @@ public abstract class AbstractEndpoint {
         if ( value.equals("") )
             return true;
         return false;
+    }
+
+    protected Response toResponse(Outcome outcome) {
+        if ( outcome.equals(Outcome.OK) )
+            return Response.ok().build();
+        if ( outcome.equals(Outcome.FAILED) )
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        if ( outcome.equals(Outcome.BAD_INPUT) )
+            return Response.status(Status.BAD_REQUEST).build();
+        if ( outcome.equals(Outcome.CONFLICT) )
+            return Response.status(Status.CONFLICT).build();
+        if ( outcome.equals(Outcome.NOT_FOUND) )
+            return Response.status(Status.NOT_FOUND).build();
+        else
+            throw new UnsupportedOperationException("Invalid outcome value: " + outcome.toString());
     }
 }
