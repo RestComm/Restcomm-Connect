@@ -22,6 +22,8 @@ public class EmailStep extends Step {
     String text;
     String to;
     String from;
+    String bcc;
+    String cc;
     String subject;
     String statusCallback;
     String method;
@@ -50,6 +52,18 @@ public class EmailStep extends Step {
     }
     public void setTo(String to) {
         this.to = to;
+    }
+    public String getCc() {
+        return cc;
+    }
+    public void setCc(String cc) {
+        this.cc = cc;
+    }
+    public String getBcc() {
+        return bcc;
+    }
+    public void setBcc(String bcc) {
+        this.bcc = bcc;
     }
     public String getSubject() {
         return subject;
@@ -85,6 +99,8 @@ public class EmailStep extends Step {
         rcmlStep.setFrom(interpreter.populateVariables(getFrom()));
         rcmlStep.setSubject(interpreter.populateVariables(getSubject()));
         rcmlStep.setTo(interpreter.populateVariables(getTo()));
+        rcmlStep.setCc(interpreter.populateVariables(getCc()));
+        rcmlStep.setBcc(interpreter.populateVariables(getBcc()));
         rcmlStep.setStatusCallback(getStatusCallback());
         rcmlStep.setText(interpreter.populateVariables(getText()));
 
