@@ -119,6 +119,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   
   function onAccountReload(account) {
 	  angular.copy(account, accountBackup);
+	  $scope.userLink = {};
 	  $scope.userLink.email_address = account.email_address;
   }
   
@@ -143,7 +144,12 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   };  
 
   $scope.linkUser = function (account, userLink) {
-	  var params = {username: userLink.email_address};
+	  var params;
+	  if ( userLink.create )
+		params = {username: userLink.email_address, create:userLink.create, friendly_name: accountBackup.friendly_name, password:accountBackup.sid};
+	  else
+	    params = {username: userLink.email_address};
+	  console.log(params);
 	  RCommAccountOperations.linkUser({accountSid:account.sid}, $.param(params), function () {
 		  Notifications.success("Linked to user '" + userLink.email_address + "'");
 		  reloadAccount();

@@ -120,6 +120,8 @@
 							<h5 class="no-margins">Username</h5></label>
 					<div class="col-md-6">
 						<input ng-readonly="!!account.email_address" ng-model="userLink.email_address" ng-readonly="true" id="email-address" type="email" class="form-control" placeholder="alice@telestax.com" maxlength="64" />
+						<!--<p class="help-block">Register a Restcomm account <a href="https://identity.restcomm.com/auth/admin/restcomm/console/" target="_blank">here</a>.</p> -->
+						<p ng-show="!account.email_address" class="help-block"><input type="checkbox"  ng-model="userLink.create"> Create </p>
 					</div>
 					<div class="col-md-2">
 						<button ng-disabled="userForm.$invalid || !userLink.email_address" ng-show="!account.email_address" ng-click="linkUser(account,userLink)" type="button" class="btn btn-link" title="Link with an existing Restcomm User. You will be allowed to access this account after logging as this user."><i class="fa fa-chain"></i></button>

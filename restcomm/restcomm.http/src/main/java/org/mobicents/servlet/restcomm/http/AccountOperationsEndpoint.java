@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.http;
 
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 
 import javax.annotation.PostConstruct;
@@ -11,14 +10,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
+import org.apache.commons.lang.StringUtils;
 
 @Path("/Accounts/{accountSid}/operations")
 @ThreadSafe
@@ -37,11 +37,19 @@ public class AccountOperationsEndpoint extends SecuredEndpoint {
 
     @POST
     @Path("/link")
-    public Response linkAccount(@PathParam("accountSid") String accountSid, @FormParam("username") String username) {
+    public Response linkAccount(@PathParam("accountSid") String accountSid, @FormParam("username") String username, @FormParam("create") String create, @FormParam("friendly_name") String friendly_name, @FormParam("password") String password) {
         // TODO - access control
         Sid sid = new Sid(accountSid);
         Account account = accountsDao.getAccount(sid);
-        return linkAccountToUser(account, username);
+        if ( "true".equals(create) && !StringUtils.isEmpty(username) ) {
+            Outcome create_outcome = createUser(username, friendly_name, password);
+            if ( create_outcome == Outcome.OK )
+                return toResponse(linkAccountToUser(account, username));
+            else
+                return toResponse(create_outcome);
+        } else {
+            return toResponse(linkAccountToUser(account, username));
+        }
     }
 
     @DELETE
@@ -75,20 +83,28 @@ public class AccountOperationsEndpoint extends SecuredEndpoint {
      * @param restcommAccount
      * @param username
      */
-    private Response linkAccountToUser(Account restcommAccount, String username) {
+    private Outcome linkAccountToUser(Account restcommAccount, String username) {
         if ( !validateUsername(username) )
-            return Response.status(BAD_REQUEST).build();
+            return Outcome.BAD_INPUT;
         if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
             RestcommIdentityApi api = new RestcommIdentityApi(identityContext, identityConfigurator);
-            if ( ! api.inviteUser(username) )
-                return Response.status(Status.NOT_FOUND).build();
+            if ( ! api.inviteUser(username) ) // assign roles
+                return Outcome.NOT_FOUND;
             restcommAccount = restcommAccount.setEmailAddress(username);
             accountsDao.updateAccount(restcommAccount);
-            return Response.ok().build();
+            return Outcome.OK;
         } else {
             // the Account is already mapped. Maybe unmap it first ?
-            return Response.status(CONFLICT).build();
+            return Outcome.CONFLICT;
         }
+    }
+
+    private Outcome createUser(String username, String friendlyName, String tempPassword) {
+        if ( !validateUsername(username) )
+            return Outcome.BAD_INPUT;
+        UserEntity user = new UserEntity(username,null, friendlyName, null, tempPassword);
+        RestcommIdentityApi api = new RestcommIdentityApi(identityContext, identityConfigurator);
+        return api.createUser(user);
     }
 
     private Response unlinkAccountFromUser(Account restcommAccount) {
@@ -118,6 +134,5 @@ public class AccountOperationsEndpoint extends SecuredEndpoint {
         // TODO - implement...
         return true;
     }
-
 
 }
