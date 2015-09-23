@@ -63,13 +63,19 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeAccountSid(final Sid accountSid, final HierarchicalStreamWriter writer) {
-        writer.startNode("AccountSid");
-        writer.setValue(accountSid.toString());
-        writer.endNode();
+        if (accountSid != null) {
+            writer.startNode("AccountSid");
+            writer.setValue(accountSid.toString());
+            writer.endNode();
+        }
     }
 
     protected void writeAccountSid(final Sid accountSid, final JsonObject object) {
-        object.addProperty("account_sid", accountSid.toString());
+        if (accountSid != null) {
+            object.addProperty("account_sid", accountSid.toString());
+        } else {
+            object.add("account_sid", JsonNull.INSTANCE);
+        }
     }
 
     protected void writeApiVersion(final String apiVersion, final HierarchicalStreamWriter writer) {
