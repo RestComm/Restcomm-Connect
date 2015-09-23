@@ -524,8 +524,6 @@ angular.module('Rvd')
 		this.text = '';
 		this.to = undefined;
 		this.from = undefined;
-		this.cc = undefined;
-		this.bcc = undefined;
 		this.subject = undefined;
 		this.statusCallback = undefined;
 		this.next = null;

@@ -10,8 +10,6 @@ public class RcmlEmailStep extends RcmlStep {
     String text;
     String from;
     String to;
-    String cc;
-    String bcc;
     String subject;
     String action;
     String method;
@@ -46,18 +44,6 @@ public class RcmlEmailStep extends RcmlStep {
     }
     public String getTo() {
         return to;
-    }
-    public void setCc(String cc) {
-        this.cc = cc;
-    }
-    public String getCc() {
-        return cc;
-    }
-    public void setBcc(String bcc) {
-        this.bcc = bcc;
-    }
-    public String getBcc() {
-        return bcc;
     }
     public void setStatusCallback(String statusCallback) {
         this.statusCallback = statusCallback;
