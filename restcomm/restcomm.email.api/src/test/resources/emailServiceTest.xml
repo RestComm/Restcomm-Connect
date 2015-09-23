@@ -14,7 +14,8 @@
 	-->
 
 <smtp-service >
-	<host></host>
-	<user></user>
-	<password></password>
+	<host>127.0.0.1</host>
+	<user>hascode</user>
+	<password>abcdef123</password>
+	<port>3025</port>
 </smtp-service>
