@@ -265,6 +265,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(faxing, finished));
         transitions.add(new Transition(sendingEmail, ready));
         transitions.add(new Transition(sendingEmail, finished));
+        transitions.add(new Transition(sendingEmail, finishDialing));
         transitions.add(new Transition(caching, finished));
         transitions.add(new Transition(playing, ready));
         transitions.add(new Transition(playing, finished));

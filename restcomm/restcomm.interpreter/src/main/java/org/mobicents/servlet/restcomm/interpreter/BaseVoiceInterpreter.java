@@ -662,6 +662,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return;
             }
 
+            // Parse "cc".
+            String cc="";
+            attribute = verb.attribute("cc");
+            if (attribute != null) {
+                cc = attribute.value();
+            }
+
+            // Parse "bcc".
+            String bcc="";
+            attribute = verb.attribute("bcc");
+            if (attribute != null) {
+                bcc = attribute.value();
+            }
+
             // Parse "subject"
             String subject;
             attribute = verb.attribute("subject");
@@ -672,7 +686,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
 
             // Send the email.
-            final Mail emailMsg = new Mail(from, to, subject, verb.text());
+            final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
     }
