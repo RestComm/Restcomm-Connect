@@ -24,10 +24,6 @@ public class EmailStepConverter implements Converter {
             writer.addAttribute("to", step.getTo());
         if (step.getFrom() != null )
             writer.addAttribute("from", step.getFrom());
-        if (step.getCc() != null )
-            writer.addAttribute("cc", step.getCc());
-        if (step.getBcc() != null )
-            writer.addAttribute("bcc", step.getBcc());
         if (step.getSubject() != null )
             writer.addAttribute("subject", step.getSubject());
         if ( step.getStatusCallback() != null )
