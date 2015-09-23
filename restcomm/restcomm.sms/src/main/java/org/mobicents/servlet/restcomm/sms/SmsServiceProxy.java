@@ -31,7 +31,6 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 
 import akka.actor.ActorRef;
@@ -47,11 +46,9 @@ import akka.actor.UntypedActorFactory;
 public final class SmsServiceProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
 
-    private static final Logger logger = Logger.getLogger(SmsServiceProxy.class);
-
     private ActorSystem system;
     private ActorRef service;
-  //  private ActorRef serviceSmpp;
+
     private ServletContext context;
 
     public SmsServiceProxy() {
@@ -60,9 +57,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
-
-            service.tell(request, null);
-
+        service.tell(request, null);
     }
 
     @Override

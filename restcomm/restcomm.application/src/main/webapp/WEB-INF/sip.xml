@@ -110,7 +110,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.smpp.SmppServiceProxy
 		</servlet-class>
-		<load-on-startup>1</load-on-startup>
+		<load-on-startup>2</load-on-startup>
 	</servlet>	
 
 	<servlet>
@@ -120,7 +120,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
 		</servlet-class>
-		<load-on-startup>2</load-on-startup>
+		<load-on-startup>3</load-on-startup>
 	</servlet>
 
 	<servlet>
@@ -130,7 +130,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
 		</servlet-class>
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
 
 	<servlet>
@@ -140,7 +140,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
 		</servlet-class>
-		<load-on-startup>4</load-on-startup>
+		<load-on-startup>5</load-on-startup>
 	</servlet>
 
 	<listener>
