@@ -16,9 +16,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <scope>provided</scope>
+            <groupId>com.telestax.servlet</groupId>
+            <artifactId>restcomm.commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.5</version>
         </dependency>
 
         <dependency>
@@ -29,12 +35,6 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.commons</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -60,8 +60,13 @@
             <scope>provided</scope>
         </dependency>
 
-        
-    </dependencies>
+        <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail</artifactId>
+            <version>1.4.0</version>
+            <scope>test</scope>
+        </dependency>
 
+    </dependencies>
 
 </project>

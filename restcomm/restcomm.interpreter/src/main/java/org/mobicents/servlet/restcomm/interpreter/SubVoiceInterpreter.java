@@ -189,7 +189,6 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         this.smsSessions = new HashMap<Sid, ActorRef>();
         this.storage = storage;
         this.synthesizer = tts(configuration.subset("speech-synthesizer"));
-        this.mailerNotify = mailer(configuration.subset("smtp-notify"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
