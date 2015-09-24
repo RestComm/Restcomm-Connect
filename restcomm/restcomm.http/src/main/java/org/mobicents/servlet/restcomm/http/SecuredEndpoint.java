@@ -24,10 +24,11 @@ import java.util.Set;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
-import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.identity.AccountKey;
@@ -44,6 +45,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected static RestcommRoles restcommRoles;
     protected IdentityConfigurator identityConfigurator;
     protected IdentityContext identityContext;
+    protected AccountsDao accountsDao;
 
     public SecuredEndpoint() {
         super();
@@ -51,6 +53,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void init(final Configuration configuration) {
         super.init(configuration);
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        this.accountsDao = storage.getAccountsDao();
         ShiroResources shiroResources = ShiroResources.getInstance();
         restcommRoles = shiroResources.get(RestcommRoles.class);
         this.identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
@@ -107,8 +111,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
         WildcardPermissionResolver resolver = new WildcardPermissionResolver();
         Permission neededPermission = resolver.resolvePermission(neededPermissionString);
-        // build the authorization token
-        SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo(roleNames);
 
         // check the neededPermission against all roles of the user
         for (String roleName: roleNames) {
