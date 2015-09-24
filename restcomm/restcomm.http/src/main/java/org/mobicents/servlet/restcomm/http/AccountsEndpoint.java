@@ -59,6 +59,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 public abstract class AccountsEndpoint extends SecuredEndpoint {
     @Context

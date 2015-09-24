@@ -196,11 +196,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
 
             // Create directory of shiro based restcomm roles
-            logger.info("Creating RestcommRoles");
             RestcommRoles restcommRoles = new RestcommRoles();
             context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
             ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
-            logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
+            //logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
 
             // Initialize identity/keycloak configuration
             IdentityConfigurationSource identityConfSource = new DbIdentityConfigurationSource(storage.getConfigurationDao());

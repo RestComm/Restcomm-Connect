@@ -69,7 +69,6 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     protected OutgoingCallerIdsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    //protected AccountsDao accountsDao;
 
     public OutgoingCallerIdsEndpoint() {
         super();
@@ -82,7 +81,6 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getOutgoingCallerIdsDao();
-        //accountsDao = storage.getAccountsDao();
         final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(OutgoingCallerId.class, converter);

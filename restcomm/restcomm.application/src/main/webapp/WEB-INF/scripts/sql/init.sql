@@ -2,12 +2,12 @@ CREATE TABLE "restcomm_accounts" (
 "sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATETIME NOT NULL,
 "date_updated" DATETIME NOT NULL,
-"email_address" LONGVARCHAR NOT NULL,
+"email_address" LONGVARCHAR,
 "friendly_name" VARCHAR(64) NOT NULL,
 "account_sid" VARCHAR(34),
 "type" VARCHAR(8) NOT NULL,
 "status" VARCHAR(16) NOT NULL,
-"auth_token" VARCHAR(32) NOT NULL,
+"auth_token" VARCHAR(32),
 "role" VARCHAR(64) NOT NULL,
 "uri" LONGVARCHAR NOT NULL
 );

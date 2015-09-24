@@ -68,7 +68,6 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
   protected UsageDao dao;
   protected Gson gson;
   protected XStream xstream;
-  //protected AccountsDao accountsDao;
 
   public UsageEndpoint() {
     super();
@@ -83,7 +82,6 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
     configuration = configuration.subset("runtime-settings");
     super.init(configuration);
     dao = storage.getUsageDao();
-    //accountsDao = storage.getAccountsDao();
     final UsageConverter converter = new UsageConverter(configuration);
     final GsonBuilder builder = new GsonBuilder();
     builder.registerTypeAdapter(Usage.class, converter);

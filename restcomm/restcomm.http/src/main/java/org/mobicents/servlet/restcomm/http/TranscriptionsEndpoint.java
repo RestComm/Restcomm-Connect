@@ -60,7 +60,6 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     protected TranscriptionsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    //protected AccountsDao accountsDao;
 
     public TranscriptionsEndpoint() {
         super();
@@ -73,7 +72,6 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getTranscriptionsDao();
-        //accountsDao = storage.getAccountsDao();
         final TranscriptionConverter converter = new TranscriptionConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Transcription.class, converter);

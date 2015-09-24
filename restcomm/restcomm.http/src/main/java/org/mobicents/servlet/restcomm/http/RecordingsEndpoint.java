@@ -60,7 +60,6 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     protected RecordingsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    //protected AccountsDao accountsDao;
 
     public RecordingsEndpoint() {
         super();
@@ -73,7 +72,6 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getRecordingsDao();
-        //accountsDao = storage.getAccountsDao();
         final RecordingConverter converter = new RecordingConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Recording.class, converter);

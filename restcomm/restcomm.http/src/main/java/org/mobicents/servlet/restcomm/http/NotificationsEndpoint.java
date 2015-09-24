@@ -60,7 +60,6 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
     protected NotificationsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    //protected AccountsDao accountsDao;
 
     public NotificationsEndpoint() {
         super();
@@ -73,7 +72,6 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getNotificationsDao();
-        //accountsDao = storage.getAccountsDao();
         final NotificationConverter converter = new NotificationConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Notification.class, converter);
