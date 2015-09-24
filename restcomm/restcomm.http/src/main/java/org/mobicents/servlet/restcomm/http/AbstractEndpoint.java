@@ -31,8 +31,6 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
@@ -50,22 +48,17 @@ public abstract class AbstractEndpoint {
     protected Logger logger = Logger.getLogger(AbstractEndpoint.class);
     private String defaultApiVersion;
     protected Configuration configuration;
-    protected AccountsDao accountsDao;
     protected String baseRecordingsPath;
-
     @Context
     protected ServletContext context;
     @Context
     HttpServletRequest request;
-
 
     public AbstractEndpoint() {
         super();
     }
 
     protected void init(final Configuration configuration) {
-        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        accountsDao = storage.getAccountsDao();
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
         defaultApiVersion = configuration.getString("api-version");

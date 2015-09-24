@@ -23,7 +23,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +53,6 @@ import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
-import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakClient.KeycloakClientException;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
@@ -231,9 +229,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-
-        // get the account for the logged user (Decouples email from account SID. We rely on the username/email. We DON'T produce the account sid from username  and use the sid to retrieve the account.
-        //final Account account = accountsDao.getAccount(username);
         final Account account = identityContext.getEffectiveAccount(); // uses either oauth token or APIKey specified account
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -354,64 +349,22 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             secure(account, "RestComm:Modify:Accounts");
             // update the model
             account = update(account, data);
-            try {
-                updateKeycloakUser(account);
-                // if all goes well, persist the updated account in database
-                accountsDao.updateAccount(account);
+            // if all goes well, persist the updated account in database
+            accountsDao.updateAccount(account);
 
-                if (APPLICATION_JSON_TYPE == responseType) {
-                    return ok(gson.toJson(account), APPLICATION_JSON).build();
-                } else if (APPLICATION_XML_TYPE == responseType) {
-                    final RestCommResponse response = new RestCommResponse(account);
-                    return ok(xstream.toXML(response), APPLICATION_XML).build();
-                } else {
-                    return null;
-                }
-            } catch (KeycloakClientException e) {
-                if ( e.getHttpStatusCode() != null ) {
-                    // TODO maybe return an different HTTP status code according to the value returned from the keycloak server
-                    logger.error(e,e);
-                    return status(INTERNAL_SERVER_ERROR).build();
-                } else
-                    throw new RuntimeException();
-
-            } catch (IOException e) {
-                throw new RuntimeException();
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(account), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(account);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
             }
         }
     }
 
-    private void updateKeycloakUser(Account restcommAccount) throws IOException, KeycloakClientException {
-        // retrieve the user from keycloak server, update and store back again
-        logger.warn("updateKeycloakUser(): this method is deprecated");
-        /*
-        UserRepresentation keycloakUser = keycloakClient.getUserInfo(restcommAccount.getEmailAddress());
-        keycloakUser.setFirstName(restcommAccount.getFriendlyName());
-        keycloakUser.setEnabled( (restcommAccount.getStatus() == Account.Status.ACTIVE) ) ;
-        keycloakClient.updateUser(restcommAccount.getEmailAddress(), keycloakUser);
-        */
-    }
-
-    private void createKeycloakUser(Account restcommAccount, String password) throws KeycloakClientException {
-        logger.warn("updateKeycloakUser(): this method is deprecated");
-        /*
-        // create and populate keycloak user object
-        UserRepresentation user = new UserRepresentation();
-        user.setUsername(restcommAccount.getEmailAddress());
-        user.setFirstName(restcommAccount.getFriendlyName());
-        user.setEnabled(restcommAccount.getStatus() == Account.Status.ACTIVE);
-        // submit for storage
-        keycloakClient.createUser(restcommAccount.getEmailAddress(), user);
-        keycloakClient.resetUserPassword(restcommAccount.getEmailAddress(), password, false);
-        // Add default roles
-        List<String> roles = new ArrayList<String>();
-        roles.add("RestcommUser");
-        roles.add("Developer");
-        keycloakClient.setUserRoles(restcommAccount.getEmailAddress(), roles);
-        */
-    }
-
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
+        // For SSO these fields are not required or are not used
         //if (!data.containsKey("EmailAddress")) {
         //    throw new NullPointerException("Email address can not be null.");
         //} /*else if (!data.containsKey("Password")) {
