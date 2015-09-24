@@ -19,18 +19,19 @@
  */
 package org.mobicents.servlet.restcomm.email.api;
 
-import akka.actor.Actor;
-import org.apache.commons.configuration.Configuration;
+import java.util.Properties;
 
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
-import java.util.Properties;
+
+import org.apache.commons.configuration.Configuration;
+
+import akka.actor.Actor;
 
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
  */
 public class EmailService implements CreateEmailService {
-
         private Configuration configuration;
         private Session session;
         private String host;
@@ -40,7 +41,6 @@ public class EmailService implements CreateEmailService {
 
         @Override
         public void CreateEmailSession(final Configuration config) {
-
             configuration = config;
 
             host = configuration.getString("host");
