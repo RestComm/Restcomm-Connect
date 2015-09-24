@@ -631,6 +631,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
         final Mail emailMsg = new Mail(EMAIL_SENDER,emailAddress,EMAIL_SUBJECT, buffer.toString());
+        if (mailerNotify == null){
+            mailerNotify = mailer(configuration.subset("smtp-notify"));
+        }
         mailerNotify.tell(new EmailRequest(emailMsg), self());
     }
 
@@ -664,6 +667,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return;
             }
 
+            // Parse "cc".
+            String cc="";
+            attribute = verb.attribute("cc");
+            if (attribute != null) {
+                cc = attribute.value();
+            }
+
+            // Parse "bcc".
+            String bcc="";
+            attribute = verb.attribute("bcc");
+            if (attribute != null) {
+                bcc = attribute.value();
+            }
+
             // Parse "subject"
             String subject;
             attribute = verb.attribute("subject");
@@ -674,7 +691,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
 
             // Send the email.
-            final Mail emailMsg = new Mail(from, to, subject, verb.text());
+            final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
+            if (mailerService == null){
+                mailerService = mailer(configuration.subset("smtp-service"));
+            }
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
     }

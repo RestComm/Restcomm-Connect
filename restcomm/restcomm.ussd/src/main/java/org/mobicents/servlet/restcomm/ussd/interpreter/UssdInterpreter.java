@@ -229,7 +229,6 @@ public class UssdInterpreter extends UntypedActor {
         this.configuration = configuration;
 
         this.storage = storage;
-        this.mailerNotify = mailer(configuration.subset("smtp-notify"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -418,6 +417,9 @@ public class UssdInterpreter extends UntypedActor {
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
         final Mail emailMsg = new Mail(EMAIL_SENDER,emailAddress,EMAIL_SUBJECT, buffer.toString());
+        if (mailerNotify == null){
+            mailerNotify = mailer(configuration.subset("smtp-notify"));
+        }
         mailerNotify.tell(new EmailRequest(emailMsg), self());
     }
 
