@@ -73,7 +73,6 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     private Gson gson;
     private GsonBuilder builder;
     private XStream xstream;
-    //protected AccountsDao accountsDao;
 
     public OutboundProxyEndpoint() {
         super();
@@ -85,7 +84,6 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        //accountsDao = daos.getAccountsDao();
         super.init(configuration);
         builder = new GsonBuilder();
         builder.setPrettyPrinting();

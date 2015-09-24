@@ -49,7 +49,6 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     protected GatewaysDao dao;
     protected Gson gson;
     protected XStream xstream;
-    //protected AccountsDao accountsDao;
     private ActorRef proxyManager;
 
     public GatewaysEndpoint() {
@@ -63,7 +62,6 @@ public class GatewaysEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getGatewaysDao();
-        //accountsDao = storage.getAccountsDao();
         final GatewayConverter converter = new GatewayConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Gateway.class, converter);

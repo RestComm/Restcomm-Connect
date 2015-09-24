@@ -88,7 +88,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
     PhoneNumberParameters phoneNumberParameters;
     private IncomingPhoneNumbersDao dao;
-    // protected AccountsDao accountsDao;
     private XStream xstream;
     protected Gson gson;
 

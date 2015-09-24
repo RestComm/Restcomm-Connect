@@ -96,7 +96,6 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     protected SmsMessagesDao dao;
     protected Gson gson;
     protected XStream xstream;
-    //protected AccountsDao accountsDao;
 
     private boolean normalizePhoneNumbers;
 
@@ -110,7 +109,6 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         dao = storage.getSmsMessagesDao();
-        //accountsDao = storage.getAccountsDao();
         aggregator = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);
