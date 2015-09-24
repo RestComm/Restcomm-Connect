@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
+import static akka.pattern.Patterns.ask;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
@@ -55,11 +56,11 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
 import org.mobicents.servlet.restcomm.email.EmailRequest;
 import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -107,7 +108,11 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
-import scala.concurrent.duration.Duration;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -116,11 +121,10 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -432,15 +436,35 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         }));
     }
 
-    void callback() {
+    //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
+    //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
+    void callback(boolean ask) {
         if (statusCallback != null) {
+            logger.info("About to execute statusCallback: "+statusCallback.toString());
             if (statusCallbackMethod == null) {
                 statusCallbackMethod = "POST";
             }
             final List<NameValuePair> parameters = parameters();
             requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
-            downloader.tell(requestCallback, null);
+            if (!ask) {
+                downloader.tell(requestCallback, null);
+            } else if (ask) {
+                final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
+                DownloaderResponse downloaderResponse = null;
+                try {
+                    downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                } catch (Exception e) {
+                    logger.error("Exception during callback with ask pattern");
+                }
+            }
+        } else {
+            logger.info("status callback is null");
         }
+    }
+
+    void callback() {
+        callback(false);
     }
 
     ActorRef cache(final String path, final String uri) {
@@ -638,6 +662,20 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 return;
             }
 
+            // Parse "cc".
+            String cc="";
+            attribute = verb.attribute("cc");
+            if (attribute != null) {
+                cc = attribute.value();
+            }
+
+            // Parse "bcc".
+            String bcc="";
+            attribute = verb.attribute("bcc");
+            if (attribute != null) {
+                bcc = attribute.value();
+            }
+
             // Parse "subject"
             String subject;
             attribute = verb.attribute("subject");
@@ -648,7 +686,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
 
             // Send the email.
-            final Mail emailMsg = new Mail(from, to, subject, verb.text());
+            final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
     }
@@ -1780,8 +1818,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     // A little clean up.
                     recordingSid = null;
                     recordingUri = null;
-                    final StopInterpreter stop = new StopInterpreter();
-                    source.tell(stop, source);
+//                    final StopInterpreter stop = new StopInterpreter();
+//                    source.tell(stop, source);
                 }
             }
             if (CallStateChanged.class.equals(klass)) {
