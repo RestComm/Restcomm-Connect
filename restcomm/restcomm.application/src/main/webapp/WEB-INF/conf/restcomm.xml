@@ -53,6 +53,10 @@
 			is TRUE Restcomm will pass callerId A to the created call -->
 		<from-address-to-proxied-calls>true</from-address-to-proxied-calls>
 
+		<!-- Control whether Restcomm will try to patch the Request-URI and SDP for B2BUA sessions with the discovered external IP Address of the peer -->
+		<!-- Default value: true -->
+		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
