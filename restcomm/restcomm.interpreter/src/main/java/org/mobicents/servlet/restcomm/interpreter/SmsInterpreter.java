@@ -122,7 +122,7 @@ public final class SmsInterpreter extends UntypedActor {
     private final Map<Sid, ActorRef> sessions;
     private Sid initialSessionSid;
     private ActorRef initialSession;
-    private final ActorRef mailerService;
+    private ActorRef mailerService;
     private SmsSessionRequest initialSessionRequest;
     // HTTP Stuff.
     private final ActorRef downloader;
@@ -223,7 +223,6 @@ public final class SmsInterpreter extends UntypedActor {
         this.fallbackMethod = fallbackMethod;
         this.sessions = new HashMap<Sid, ActorRef>();
         this.normalizeNumber = runtime.getBoolean("normalize-numbers-for-outbound-calls");
-        mailerService = mailer(configuration.subset("smtp-service"));
     }
 
     private ActorRef downloader() {
@@ -952,6 +951,9 @@ public final class SmsInterpreter extends UntypedActor {
 
             // Send the email.
             final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
+            if (mailerService == null){
+                mailerService = mailer(configuration.subset("smtp-service"));
+            }
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
     }
