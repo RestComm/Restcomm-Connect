@@ -89,7 +89,8 @@ public class RvdController extends RestService {
     private ModelMarshaler marshaler;
 
 
-    void init(RvdContext rvdContext) {
+    public void init(RvdContext rvdContext) {
+        super.init();
         this.rvdContext = rvdContext;
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();

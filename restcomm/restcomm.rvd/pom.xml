@@ -154,11 +154,6 @@
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-as7-adapter</artifactId>
 			<version>${keycloak-adapter.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-servlet-oauth-client</artifactId>
-			<version>${keycloak-adapter.version}</version>
 		</dependency>				
 		<!-- /Testing libraries -->
 	</dependencies>

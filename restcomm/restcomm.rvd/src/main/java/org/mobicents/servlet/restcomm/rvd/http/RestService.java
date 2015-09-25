@@ -4,15 +4,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.rvd.configuration.RvdConfigurator;
+import org.mobicents.servlet.restcomm.rvd.configuration.RvdConfiguratorBuilder;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
-import org.mobicents.servlet.restcomm.rvd.exceptions.UnauthorizedException;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CreateCallResponse;
@@ -23,7 +24,14 @@ import com.google.gson.Gson;
 public class RestService {
 
     @Context
-    HttpServletRequest request;
+    protected HttpServletRequest request;
+    @Context
+    protected ServletContext servletContext;
+    protected RvdConfigurator configurator;
+
+    protected void init() {
+        this.configurator = RvdConfiguratorBuilder.get();
+    }
 
     protected Response buildErrorResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, RvdException exception) {
         RvdResponse rvdResponse = new RvdResponse(rvdStatus).setException(exception);
@@ -83,20 +91,6 @@ public class RestService {
         }
         return sb.toString();
 
-    }
-
-    protected void secureByRole(String role, AccessToken accessToken) throws UnauthorizedException {
-        try {
-            accessToken.getResourceAccess().containsKey(role);
-        } catch (NullPointerException e) {
-            throw new UnauthorizedException("No access token present or no roles in it");
-        }
-    }
-
-    protected AccessToken getKeycloakAccessToken() {
-        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
-        AccessToken accessToken = session.getToken();
-        return accessToken;
     }
 
     protected Response buildWebTriggerHtmlResponse(String title, String action, String outcome, String description, Integer status ) {

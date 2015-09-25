@@ -7,7 +7,6 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -22,8 +21,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.SecurityContext;
-
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -35,7 +32,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import org.keycloak.KeycloakSecurityContext;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RasService;
@@ -49,8 +45,8 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UnauthorizedException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
-import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
+import org.mobicents.servlet.restcomm.rvd.http.SecuredRestService;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
@@ -79,37 +75,27 @@ import org.mobicents.servlet.restcomm.rvd.validation.exceptions.RvdValidationExc
 
 
 @Path("/projects")
-public class ProjectRestService extends RestService {
+public class ProjectRestService extends SecuredRestService {
 
     static final Logger logger = Logger.getLogger(ProjectRestService.class.getName());
-
-    @Context
-    ServletContext servletContext;
-    @Context
-    SecurityContext securityContext;
-    @Context
-    HttpServletRequest request;
 
     private ProjectService projectService;
     private RvdConfiguration rvdSettings;
     private ModelMarshaler marshaler;
     private WorkspaceStorage workspaceStorage;
-    private String loggedUsername;
     private RasService rasService;
 
     RvdContext rvdContext;
 
     @PostConstruct
-    void init() {
+    public void init() {
+        super.init();
         rvdContext = new RvdContext(request, servletContext);
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = new WorkspaceStorage(rvdSettings.getWorkspaceBasePath(), marshaler);
         rasService = new RasService(rvdContext, workspaceStorage);
         projectService = new ProjectService(rvdContext,workspaceStorage);
-        KeycloakSecurityContext session = (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
-        if (session.getToken() != null)
-            loggedUsername = session.getToken().getPreferredUsername();
     }
 
     /*
@@ -120,8 +106,8 @@ public class ProjectRestService extends RestService {
             throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
         ProjectState project = FsProjectStorage.loadProject(projectName, workspaceStorage);
         if ( project.getHeader().getOwner() != null ) {
-            if ( loggedUsername != null ) {
-                if ( loggedUsername.equals(project.getHeader().getOwner() ) ) {
+            if ( identityContext.getLoggedUsername() != null ) {
+                if ( identityContext.getLoggedUsername().equals(project.getHeader().getOwner() ) ) {
                     return project;
                 }
             }
@@ -131,7 +117,7 @@ public class ProjectRestService extends RestService {
     }
 
     void assertUserLogged() {
-        if (loggedUsername == null)
+        if (identityContext.getLoggedUsername() == null)
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
 
@@ -141,8 +127,8 @@ public class ProjectRestService extends RestService {
         //assertUserLogged();
         List<ProjectItem> items;
         try {
-            secureByRole("Developer", getKeycloakAccessToken());
-            items = projectService.getAvailableProjectsByOwner(loggedUsername); // there has to be a user in the context. Only logged users are allowed to to run project manager services
+            secure("Developer");
+            items = projectService.getAvailableProjectsByOwner(identityContext.getLoggedUsername()); // there has to be a user in the context. Only logged users are allowed to to run project manager services
             projectService.fillStartUrlsForProjects(items, request);
         } catch (BadWorkspaceDirectoryStructure e) {
             logger.error(e.getMessage(), e);
@@ -170,12 +156,11 @@ public class ProjectRestService extends RestService {
     @PUT
     @Path("{name}")
     public Response createProject(@PathParam("name") String name, @QueryParam("kind") String kind) throws UnauthorizedException {
-        //assertUserLogged();
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         logger.info("Creating project " + name);
         try {
 
-            ProjectState projectState = projectService.createProject(name, kind, loggedUsername);
+            ProjectState projectState = projectService.createProject(name, kind, identityContext.getLoggedUsername());
             BuildService buildService = new BuildService(workspaceStorage);
             buildService.buildProject(name, projectState);
         } catch (ProjectAlreadyExists e) {
@@ -195,12 +180,12 @@ public class ProjectRestService extends RestService {
     @POST
     @Path("{name}")
     public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) throws UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         if (projectName != null && !projectName.equals("")) {
             logger.info("Saving project " + projectName);
             try {
                 ProjectState existingProject = FsProjectStorage.loadProject(projectName, workspaceStorage);
-                if (loggedUsername != null && (loggedUsername.equals(existingProject.getHeader().getOwner())  ||  existingProject.getHeader().getOwner() == null )) {
+                if (identityContext.getLoggedUsername() != null && (identityContext.getLoggedUsername().equals(existingProject.getHeader().getOwner())  ||  existingProject.getHeader().getOwner() == null )) {
                     projectService.updateProject(request, projectName, existingProject);
                     return buildOkResponse();
                 } else {
@@ -229,7 +214,7 @@ public class ProjectRestService extends RestService {
     @DELETE
     @Path("{name}")
     public Response deleteProject(@PathParam("name") String projectName) throws ProjectDoesNotExist, UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         if ( ! RvdUtils.isEmpty(projectName) ) {
             try {
                 projectService.deleteProject(projectName);
@@ -245,7 +230,7 @@ public class ProjectRestService extends RestService {
     @PUT
     @Path("{name}/rename")
     public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         if ( !RvdUtils.isEmpty(projectName) && ! RvdUtils.isEmpty(projectNewName) ) {
             loadUserProject(projectName);
             try {
@@ -264,7 +249,7 @@ public class ProjectRestService extends RestService {
     @PUT
     @Path("{name}/upgrade")
     public Response upgradeProject(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         // TODO IMPORTANT!!! sanitize the project name!!
         ProjectState activeProject = loadUserProject(projectName);
         if ( !RvdUtils.isEmpty(projectName) ) {
@@ -298,7 +283,7 @@ public class ProjectRestService extends RestService {
         //secureByRole("Developer", getKeycloakAccessToken());
         //assertUserLogged();
         ProjectState project = ProjectService.loadProject(name, workspaceStorage);
-        if (!SecurityUtils.userCanAccessProject(loggedUsername, project))
+        if (!SecurityUtils.userCanAccessProject(identityContext.getLoggedUsername(), project))
             throw new WebApplicationException(Response.Status.UNAUTHORIZED);
         StateHeader header = project.getHeader();
         return Response.status(Status.OK).entity(marshaler.getGson().toJson(header)).type(MediaType.APPLICATION_JSON).build();
@@ -311,7 +296,7 @@ public class ProjectRestService extends RestService {
     @POST
     @Path("{name}/cc")
     public Response storeCcInfo(@PathParam("name") String projectName, @Context HttpServletRequest request) throws UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         try {
             String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
             CallControlInfo ccInfo = marshaler.toModel(data, CallControlInfo.class);
@@ -368,7 +353,7 @@ public class ProjectRestService extends RestService {
 
     @POST
     public Response importProjectArchive(@Context HttpServletRequest request) throws UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         logger.info("Importing project from raw archive");
 
         try {
@@ -437,7 +422,7 @@ public class ProjectRestService extends RestService {
     @POST
     @Path("{name}/wavs")
     public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         logger.info("running /uploadwav");
         loadUserProject(projectName);
         try {
@@ -482,7 +467,7 @@ public class ProjectRestService extends RestService {
     @DELETE
     @Path("{name}/wavs")
     public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname, @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         loadUserProject(projectName);
         try {
             projectService.removeWavFromProject(projectName, wavname);
@@ -514,7 +499,7 @@ public class ProjectRestService extends RestService {
     @POST
     @Path("{name}/build")
     public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         ProjectState activeProject = loadUserProject(name);
         BuildService buildService = new BuildService(workspaceStorage);
         try {
@@ -543,7 +528,7 @@ public class ProjectRestService extends RestService {
     @POST
     @Path("{name}/settings")
     public Response saveProjectSettings(@PathParam("name") String name) throws UnauthorizedException {
-        secureByRole("Developer", getKeycloakAccessToken());
+        secure("Developer");
         logger.info("saving project settings for " + name);
         String data;
         try {
