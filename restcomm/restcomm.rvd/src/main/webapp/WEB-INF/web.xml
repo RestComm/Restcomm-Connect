@@ -13,11 +13,6 @@
 		<load-on-startup>2</load-on-startup>
 	</servlet>
 
-	<context-param>
-		<param-name>keycloak.config.resolver</param-name>
-		<param-value>org.mobicents.servlet.restcomm.rvd.keycloak.RvdKeycloakConfigResolver</param-value>
-	</context-param>
-
 	<!-- Disable JBoss RESTeasy JAX-RS implementation as it conflicts with Jersey -->
 	<context-param>
 		<param-name>resteasy.scan</param-name>
@@ -39,25 +34,6 @@
 			<url-pattern>/api/designer/*</url-pattern>
 			<url-pattern>/api/apps/*</url-pattern>
 		</web-resource-collection>
-		<auth-constraint>
-			<!-- <role-name>RestcommUser</role-name> -->
-			<role-name>Developer</role-name>
-		</auth-constraint>
 	</security-constraint>
-
-	<login-config>
-		<auth-method>KEYCLOAK</auth-method>
-		<realm-name>restcomm</realm-name>
-	</login-config>
-
-	<security-role>
-		<role-name>admin</role-name>
-	</security-role>
-	<security-role>
-		<role-name>RestcommUser</role-name>
-	</security-role>
-	<security-role>
-		<role-name>Developer</role-name>
-	</security-role>
 
 </web-app>
