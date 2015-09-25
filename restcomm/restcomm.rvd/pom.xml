@@ -152,15 +152,14 @@
 		</dependency>
 		<dependency>
 			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-core</artifactId>
-			<version>1.4.0.Final</version>
+			<artifactId>keycloak-as7-adapter</artifactId>
+			<version>${keycloak-adapter.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-adapter-core</artifactId>
-            <version>1.4.0.Final</version>
-            <scope>provided</scope>
-        </dependency>		
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-servlet-oauth-client</artifactId>
+			<version>${keycloak-adapter.version}</version>
+		</dependency>				
 		<!-- /Testing libraries -->
 	</dependencies>
 
