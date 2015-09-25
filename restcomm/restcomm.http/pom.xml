@@ -39,16 +39,8 @@
 		
 		<dependency>
 			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-core</artifactId>
-			<version>1.4.0.Final</version>
-		</dependency>
-		
-        <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-adapter-core</artifactId>
-            <version>1.4.0.Final</version>
-            <scope>provided</scope>
-        </dependency>			
+			<artifactId>keycloak-as7-adapter</artifactId>
+		</dependency>			
 
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
