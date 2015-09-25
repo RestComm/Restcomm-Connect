@@ -13,11 +13,6 @@
         <url>http://maven.apache.org</url>
 
         <dependencies>
-            <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <scope>provided</scope>
-            </dependency>
 
             <dependency>
                 <groupId>commons-configuration</groupId>
@@ -56,15 +51,12 @@
                 <artifactId>akka-slf4j_2.10</artifactId>
             </dependency>
 
-
-
             <dependency>
                 <groupId>com.telestax.servlet</groupId>
                 <artifactId>restcomm.dao</artifactId>
                 <version>${project.version}</version>
                 <scope>provided</scope>
             </dependency>
-
 
         </dependencies>
     </project>
