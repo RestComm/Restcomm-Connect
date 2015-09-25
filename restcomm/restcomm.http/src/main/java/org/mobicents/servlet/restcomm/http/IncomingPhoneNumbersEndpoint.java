@@ -44,12 +44,14 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
@@ -223,6 +225,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if (incomingPhoneNumber == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControlIncomingPhoneNumbers(accountSid, incomingPhoneNumber);
+            } catch (AuthorizationException e) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -259,6 +266,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secureLevelControlIncomingPhoneNumbers(accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -279,6 +287,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+            secureLevelControlIncomingPhoneNumbers(accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -334,6 +343,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        try {
+            secureLevelControlIncomingPhoneNumbers(accountSid, incomingPhoneNumber);
+        } catch (AuthorizationException e) {
+            return status(UNAUTHORIZED).build();
+        }
         boolean updated = true;
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
             updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
@@ -432,6 +446,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        try {
+            secureLevelControlIncomingPhoneNumbers(accountSid, incomingPhoneNumber);
+        } catch (AuthorizationException e) {
+            return status(UNAUTHORIZED).build();
+        }
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
             phoneNumberProvisioningManager.cancelNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber));
         }
@@ -461,5 +480,20 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                 incomingPhoneNumber.isMmsCapable(),
                 incomingPhoneNumber.isFaxCapable(),
                 false);
+    }
+
+    private boolean secureLevelControlIncomingPhoneNumbers(String accountSid, IncomingPhoneNumber did) {
+        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
+        if (!sidPrincipal.equals(String.valueOf(accountSid))) {
+            Account account = accountsDao.getAccount(new Sid(accountSid));
+            if (!sidPrincipal.equals(String.valueOf(account.getAccountSid()))) {
+                throw new AuthorizationException();
+            } else if (did != null && !accountSid.equals(String.valueOf(did.getAccountSid()))) {
+                throw new AuthorizationException();
+            }
+        } else if (did != null && !sidPrincipal.equals(String.valueOf(did.getAccountSid()))) {
+            throw new AuthorizationException();
+        }
+        return true;
     }
 }

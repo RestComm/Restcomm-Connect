@@ -45,6 +45,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -136,22 +137,14 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        Object s;
-        try {
-            s = new Sid(sid);
-        } catch (IllegalArgumentException e) {
-            // Once not a valid sid, search using the parameter as name
-            s = sid;
-        }
         Application application = null;
-        if (s instanceof Sid) {
-            // Search as Sid
-            application = dao.getApplication((Sid) s);
+        if (Sid.pattern.matcher(sid).matches()) {
+            application = dao.getApplication(new Sid(sid));
         } else {
-            // Search as friendly name
             try {
-                String sd = URLDecoder.decode(String.valueOf(s), "UTF-8");
-                application = dao.getApplication(sd);
+                // Once not a valid sid, search using the parameter as name
+                String name = URLDecoder.decode(String.valueOf(sid), "UTF-8");
+                application = dao.getApplication(name);
             } catch (UnsupportedEncodingException e) {
                 return status(BAD_REQUEST).entity(e.getMessage()).build();
             }
@@ -159,6 +152,11 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControlApplications(accountSid, application);
+            } catch (AuthorizationException e) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(application);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -173,6 +171,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
     protected Response getApplications(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
+            secureLevelControlApplications(accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -191,6 +190,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
             final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:Applications");
+            secureLevelControlApplications(accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -237,6 +237,11 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControlApplications(accountSid, application);
+            } catch (AuthorizationException e) {
+                return status(UNAUTHORIZED).build();
+            }
             final Application applicationUpdate = update(application, data);
             dao.updateApplication(applicationUpdate);
             if (APPLICATION_XML_TYPE == responseType) {
@@ -298,5 +303,15 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
             result = result.setKind(getApplicationKind(data));
         }
         return result;
+    }
+
+    protected boolean secureLevelControlApplications(String accountSid, Application app) {
+        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
+        if (!sidPrincipal.equals(String.valueOf(accountSid))) {
+            throw new AuthorizationException();
+        } else if (app != null && app.getAccountSid() != null && !sidPrincipal.equals(String.valueOf(app.getAccountSid()))) {
+            throw new AuthorizationException();
+        }
+        return true;
     }
 }

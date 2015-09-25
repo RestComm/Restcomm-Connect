@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
@@ -53,6 +54,10 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
     private Response deleteApplication(final String accountSid, final String sid) {
         try {
             secure(accountsDao.getAccount(new Sid(accountSid)), "RestComm:Modify:Applications");
+            Application application = dao.getApplication(new Sid(sid));
+            if (application != null) {
+                secureLevelControlApplications(accountSid, application);
+            }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
