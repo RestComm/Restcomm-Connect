@@ -19,31 +19,28 @@
  */
 package org.mobicents.servlet.restcomm.email.api;
 
-import akka.actor.Actor;
-import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
-
+import java.util.Properties;
 
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
-import java.util.Properties;
+
+import org.apache.commons.configuration.Configuration;
+
+import akka.actor.Actor;
 
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
  */
 public class EmailService implements CreateEmailService {
-
         private Configuration configuration;
         private Session session;
         private String host;
         private String port;
         private String user;
         private String password;
-        static final Logger logger = Logger.getLogger(CreateEmailService.class.getName());
 
         @Override
         public void CreateEmailSession(final Configuration config) {
-            logger.info("***************interface EmailService**************** ");
             configuration = config;
 
             host = configuration.getString("host");

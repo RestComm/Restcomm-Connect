@@ -1,8 +1,20 @@
 package org.mobicents.servlet.restcomm;
 
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.Query;
+import javax.management.ReflectionException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.SipServlet;
@@ -153,6 +165,29 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
+    HttpConnectorList getHttpConnectors() throws MalformedObjectNameException,NullPointerException, UnknownHostException, AttributeNotFoundException,
+    InstanceNotFoundException, MBeanException, ReflectionException {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        Set<ObjectName> objs = mbs.queryNames(new ObjectName("*:type=Connector,*"),
+                Query.match(Query.attr("protocol"), Query.value("HTTP/1.1")));
+//        String hostname = InetAddress.getLocalHost().getHostName();
+//        InetAddress[] addresses = InetAddress.getAllByName(hostname);
+        ArrayList<HttpConnector> endPoints = new ArrayList<HttpConnector>();
+        for (Iterator<ObjectName> i = objs.iterator(); i.hasNext();) {
+            ObjectName obj = i.next();
+            String scheme = mbs.getAttribute(obj, "scheme").toString().replaceAll("\"", "");
+            String port = obj.getKeyProperty("port").replaceAll("\"", "");
+            String address = obj.getKeyProperty("address").replaceAll("\"", "");
+            HttpConnector httpConnector = new HttpConnector(scheme, address, Integer.parseInt(port), scheme.equalsIgnoreCase("https"));
+            endPoints.add(httpConnector);
+//            for (InetAddress addr : addresses) {
+//                HttpConnector httpConnector = new HttpConnector(scheme, addr.getHostAddress(), Integer.parseInt(port), scheme.equalsIgnoreCase("https"));
+//                endPoints.add(httpConnector);
+//            }
+        }
+        return new HttpConnectorList(endPoints);
+    }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
@@ -185,7 +220,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             try {
                 storage = storage(xml, loader);
             } catch (final ObjectInstantiationException exception) {
-                logger.error("ObjectInstantiationException during initialization", exception);
+                logger.error("ObjectInstantiationException during initialization: ", exception);
             }
             context.setAttribute(DaoManager.class.getName(), storage);
             ShiroResources.getInstance().set(DaoManager.class, storage);
@@ -193,15 +228,25 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create the media gateway.
 
 
-        // Create the media server controller factory
-        MediaServerControllerFactory mscontrollerFactory = null;
-        try {
-            mscontrollerFactory = mediaServerControllerFactory(xml, loader);
-        } catch (ServletException exception) {
-            logger.error("ServletException during initialization", exception);
-        }
-        context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
+            // Create the media server controller factory
+            MediaServerControllerFactory mscontrollerFactory = null;
+            try {
+                mscontrollerFactory = mediaServerControllerFactory(xml, loader);
+            } catch (ServletException exception) {
+                logger.error("ServletException during initialization: ", exception);
+            }
+            context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
+            HttpConnectorList httpConnectorList = null;
+            try {
+                httpConnectorList= getHttpConnectors();
+            } catch (MalformedObjectNameException | AttributeNotFoundException | InstanceNotFoundException
+                    | NullPointerException | UnknownHostException | MBeanException | ReflectionException exception) {
+                logger.error("Exception during HTTP Connectors discovery: ", exception);
+            }
+            if (httpConnectorList != null) {
+                context.setAttribute(HttpConnectorList.class.getName(), httpConnectorList);
+            }
             Version.printVersion();
             Ping ping = new Ping(xml, context);
             ping.sendPing();
