@@ -143,7 +143,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
         try {
             final Subject subject = SecurityUtils.getSubject();
-            if (subject.hasRole("Administrator")
+            if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
                     || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
             } else {
                 return status(UNAUTHORIZED).build();
@@ -174,6 +174,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         try {
             Account account = dao.getAccount(sidToBeRemoved);
             secure(account, "RestComm:Delete:Accounts");
+            secureLevelControlAccounts(account);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -237,6 +238,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             } else {
                 return status(UNAUTHORIZED).build();
             }
+        } else {
+            return status(CONFLICT).entity("The sid generated to the new account is already in use.").build();
         }
 
         if (APPLICATION_JSON_TYPE == responseType) {
@@ -278,10 +281,14 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         } else {
             account = update(account, data);
             final Subject subject = SecurityUtils.getSubject();
-            if (subject.hasRole("Administrator")
-                    || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
-                dao.updateAccount(account);
-            } else {
+            try {
+                if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
+                        || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
+                    dao.updateAccount(account);
+                } else {
+                    return status(UNAUTHORIZED).build();
+                }
+            } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
             if (APPLICATION_JSON_TYPE == responseType) {
@@ -301,5 +308,16 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
         }
+    }
+
+    private boolean secureLevelControlAccounts(Account reference) {
+        Account subjectAccount = dao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
+        Account referenceAccount = reference;
+        if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getSid()))) {
+            if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getAccountSid()))) {
+                throw new AuthorizationException();
+            }
+        }
+        return true;
     }
 }
