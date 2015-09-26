@@ -226,14 +226,14 @@ public class UssdCallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(context, request.getLocalAddr(), application.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(context, application.getVoiceUrl()));
                     builder.setMethod(application.getVoiceMethod());
                     builder.setFallbackUrl(application.getVoiceFallbackUrl());
                     builder.setFallbackMethod(application.getVoiceFallbackMethod());
                     builder.setStatusCallback(application.getStatusCallback());
                     builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
                 } else {
-                    builder.setUrl(UriUtils.resolve(context, request.getLocalAddr(), number.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(context, number.getVoiceUrl()));
                     builder.setMethod(number.getVoiceMethod());
                     builder.setFallbackUrl(number.getVoiceFallbackUrl());
                     builder.setFallbackMethod(number.getVoiceFallbackMethod());
