@@ -516,14 +516,14 @@ public final class CallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(context, application.getVoiceUrl()));
                     builder.setMethod(application.getVoiceMethod());
                     builder.setFallbackUrl(application.getVoiceFallbackUrl());
                     builder.setFallbackMethod(application.getVoiceFallbackMethod());
                     builder.setStatusCallback(application.getStatusCallback());
                     builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
                 } else {
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(context, number.getVoiceUrl()));
                     builder.setMethod(number.getVoiceMethod());
                     builder.setFallbackUrl(number.getVoiceFallbackUrl());
                     builder.setFallbackMethod(number.getVoiceFallbackMethod());
@@ -547,6 +547,7 @@ public final class CallManager extends UntypedActor {
                 errMsg = "The number does not have a Restcomm hosted application attached";
             }
             sendNotification(errMsg, 11007, "error", false);
+            logger.error(errMsg, notANumber);
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
@@ -580,12 +581,12 @@ public final class CallManager extends UntypedActor {
             final Sid sid = client.getVoiceApplicationSid();
             if (sid != null) {
                 final Application application = applications.getApplication(sid);
-                builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
+                builder.setUrl(UriUtils.resolve(context, application.getVoiceUrl()));
                 builder.setMethod(application.getVoiceMethod());
                 builder.setFallbackUrl(application.getVoiceFallbackUrl());
                 builder.setFallbackMethod(application.getVoiceFallbackMethod());
             } else {
-                URI url = UriUtils.resolve(request.getLocalAddr(), 8080, clientAppVoiceUril);
+                URI url = UriUtils.resolve(context, clientAppVoiceUril);
                 builder.setUrl(url);
                 builder.setMethod(client.getVoiceMethod());
                 builder.setFallbackUrl(client.getVoiceFallbackUrl());
