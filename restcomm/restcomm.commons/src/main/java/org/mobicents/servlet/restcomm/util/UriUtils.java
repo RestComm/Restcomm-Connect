@@ -50,7 +50,7 @@ public final class UriUtils {
      * @param uri The relative URI
      * @return The absolute URI
      */
-    public static URI resolve(final ServletContext context, final String localAddress, final URI uri) {
+    public static URI resolve(final ServletContext context, final URI uri) {
         HttpConnectorList httpConnectorList = (HttpConnectorList) context.getAttribute(HttpConnectorList.class.getName());
         HttpConnector httpConnector = null;
         if (httpConnectorList != null && !httpConnectorList.getConnectors().isEmpty()) {
@@ -66,14 +66,15 @@ public final class UriUtils {
                 httpConnector = connectors.get(0);
             }
         }
-        //HttpConnector address could be a local address while the request came from a public address
-        String address;
-        if (httpConnector.getAddress().equalsIgnoreCase(localAddress)) {
-            address = httpConnector.getAddress();
-        } else {
-            address = localAddress;
-        }
-        String base = httpConnector.getScheme()+"://" + address + ":" + httpConnector.getPort();
+// Since this is a relative URL that we are trying to resolve, we don't care about the public URL.
+//        //HttpConnector address could be a local address while the request came from a public address
+//        String address;
+//        if (httpConnector.getAddress().equalsIgnoreCase(localAddress)) {
+//            address = httpConnector.getAddress();
+//        } else {
+//            address = localAddress;
+//        }
+        String base = httpConnector.getScheme()+"://" + httpConnector.getAddress() + ":" + httpConnector.getPort();
         try {
             return resolve(new URI(base), uri);
         } catch (URISyntaxException e) {
