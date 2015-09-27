@@ -64,6 +64,7 @@ public final class ApplicationsDaoTest {
         final Sid sid = Sid.generate(Sid.Type.APPLICATION);
         URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         String method = "GET";
+        String kind = "voice";
         final Application.Builder builder = Application.builder();
         builder.setSid(sid);
         builder.setFriendlyName("Test Application");
@@ -83,6 +84,7 @@ public final class ApplicationsDaoTest {
         builder.setSmsStatusCallback(url);
         builder.setUri(url);
         builder.setRcmlUrl(url);
+        builder.setKind(kind);
         Application application = builder.build();
         final ApplicationsDao applications = manager.getApplicationsDao();
         // Create a new application in the data store.
@@ -108,9 +110,11 @@ public final class ApplicationsDaoTest {
         assertTrue(result.getSmsStatusCallback().equals(application.getSmsStatusCallback()));
         assertTrue(result.getUri().equals(application.getUri()));
         assertTrue(result.getRcmlUrl().equals(application.getRcmlUrl()));
+        assertTrue(result.getKind().equals(application.getKind()));
         // Update the application.
         url = URI.create("http://127.0.0.1:8080/restcomm/demos/world-hello.xml");
         method = "POST";
+        kind = "sms";
         application = application.setFriendlyName("Application Test");
         application = application.setVoiceCallerIdLookup(true);
         application = application.setVoiceUrl(url);
@@ -125,6 +129,7 @@ public final class ApplicationsDaoTest {
         application = application.setSmsFallbackMethod(method);
         application = application.setSmsStatusCallback(url);
         application = application.setRcmlUrl(url);
+        application = application.setKind(kind);
         applications.updateApplication(application);
         // Read the updated application from the data store.
         result = applications.getApplication(sid);
@@ -147,6 +152,7 @@ public final class ApplicationsDaoTest {
         assertTrue(result.getSmsStatusCallback().equals(application.getSmsStatusCallback()));
         assertTrue(result.getUri().equals(application.getUri()));
         assertTrue(result.getRcmlUrl().equals(application.getRcmlUrl()));
+        assertTrue(result.getKind().equals(application.getKind()));
         // Delete the application.
         applications.removeApplication(sid);
         // Validate that the application was removed.
@@ -159,6 +165,7 @@ public final class ApplicationsDaoTest {
         final Sid sid = Sid.generate(Sid.Type.APPLICATION);
         URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         String method = "GET";
+        String kind = "voice";
         final Application.Builder builder = Application.builder();
         builder.setSid(sid);
         builder.setFriendlyName("Test Application");
@@ -178,6 +185,7 @@ public final class ApplicationsDaoTest {
         builder.setSmsStatusCallback(url);
         builder.setUri(url);
         builder.setRcmlUrl(url);
+        builder.setKind(kind);
         Application application = builder.build();
         final ApplicationsDao applications = manager.getApplicationsDao();
         // Create a new application in the data store.

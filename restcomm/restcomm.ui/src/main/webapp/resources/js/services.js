@@ -27,6 +27,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.set('sid', account.sid);
     SessionService.set(prefix + 'authenticated', true);
     SessionService.set(prefix + 'logged_user', account.friendly_name);
+    SessionService.set(prefix + 'email_address', account.email_address);
   };
 
   var passwordUpdated = function() {
@@ -41,6 +42,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.unset('_sid');
     SessionService.unset('_authenticated');
     SessionService.unset('_logged_user');
+    SessionService.unset('_email_address');
   };
 
 
@@ -123,6 +125,9 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     },
     getWaitingReset: function() {
       return SessionService.get('_authenticated');
+    },
+    getEmailAddress: function() {
+      return SessionService.get('email_address')
     }
   }
 });
