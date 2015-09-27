@@ -11,6 +11,8 @@
     "next": { "$ref": "rvdproject-schema.json#/nullOrString" },
     "to": {"type": "string"},
     "from": {"type": "string"},
+    "cc": {"type": "string"},
+    "bcc": {"type": "string"},
     "subject": {"type": "string"},
     "method": {"enum": ["GET","POST"]},
     "statusCallback": {"type": "string"}
