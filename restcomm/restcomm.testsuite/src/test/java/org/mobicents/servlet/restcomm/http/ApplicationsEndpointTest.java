@@ -80,7 +80,7 @@ public class ApplicationsEndpointTest {
     public void testCreateAndGetApplication() throws ParseException, IllegalArgumentException, ClientProtocolException,
             IOException {
         // Define application attributes
-        String friendlyName, voiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, rcmlUrl;
+        String friendlyName, voiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, rcmlUrl, kind;
 
         // Test create application via POST
         MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
@@ -98,6 +98,7 @@ public class ApplicationsEndpointTest {
         applicationParams.add("SmsFallbackMethod", smsFallbackMethod = "POST");
         applicationParams.add("SmsStatusCallback", smsStatusCallback = "/restcomm/smsstatuscallback/test");
         applicationParams.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test");
+        applicationParams.add("Kind", kind = "voice");
         JsonObject applicationJson = RestcommApplicationsTool.getInstance().createApplication(deploymentUrl.toString(),
                 adminAccountSid, adminUsername, adminAuthToken, applicationParams);
         Sid applicationSid = new Sid(applicationJson.get("sid").getAsString());
@@ -125,6 +126,7 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
         assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
+        assertTrue(applicationJson.get("kind").getAsString().equals(kind));
 
         // Test asserts via GET to a application list
         JsonArray applicationsListJson = RestcommApplicationsTool.getInstance().getApplications(deploymentUrl.toString(),
@@ -148,6 +150,7 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
         assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
+        assertTrue(applicationJson.get("kind").getAsString().equals(kind));
     }
 
     @Test
@@ -168,12 +171,13 @@ public class ApplicationsEndpointTest {
         applicationParams.add("SmsFallbackMethod", "GET");
         applicationParams.add("SmsStatusCallback", "/restcomm/smsstatuscallback/test");
         applicationParams.add("RcmlUrl", "/restcomm/rcmlurl/test");
+        applicationParams.add("Kind", "voice");
         JsonObject applicationJson = RestcommApplicationsTool.getInstance().createApplication(deploymentUrl.toString(),
                 adminAccountSid, adminUsername, adminAuthToken, applicationParams);
         Sid applicationSid = new Sid(applicationJson.get("sid").getAsString());
 
         // Define new values to the application attributes (POST test)
-        String friendlyName, voiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, rcmlUrl;
+        String friendlyName, voiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, rcmlUrl, kind;
 
         MultivaluedMap<String, String> applicationParamsUpdate = new MultivaluedMapImpl();
         applicationParamsUpdate.add("FriendlyName", friendlyName = "APPUpdate2");
@@ -190,6 +194,7 @@ public class ApplicationsEndpointTest {
         applicationParamsUpdate.add("SmsFallbackMethod", smsFallbackMethod = "POST");
         applicationParamsUpdate.add("SmsStatusCallback", smsStatusCallback = "/restcomm/smsstatuscallback/test2");
         applicationParamsUpdate.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test2");
+        applicationParamsUpdate.add("Kind", kind = "voice");
 
         // Update application via POST
         RestcommApplicationsTool.getInstance().updateApplication(deploymentUrl.toString(), adminUsername, adminAuthToken,
@@ -218,6 +223,7 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
         assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
+        assertTrue(applicationJson.get("kind").getAsString().equals(kind));
 
         // Define new values to the application attributes (PUT test)
         applicationParamsUpdate = new MultivaluedMapImpl();
@@ -235,6 +241,7 @@ public class ApplicationsEndpointTest {
         applicationParamsUpdate.add("SmsFallbackMethod", smsFallbackMethod = "PUT");
         applicationParamsUpdate.add("SmsStatusCallback", smsStatusCallback = "/restcomm/smsstatuscallback/test23");
         applicationParamsUpdate.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test23");
+        applicationParamsUpdate.add("Kind", kind = "voice");
 
         // Update application via PUT
         RestcommApplicationsTool.getInstance().updateApplication(deploymentUrl.toString(), adminUsername, adminAuthToken,
@@ -262,6 +269,7 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
         assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
+        assertTrue(applicationJson.get("kind").getAsString().equals(kind));
     }
 
     @Test
@@ -282,6 +290,7 @@ public class ApplicationsEndpointTest {
         applicationParams.add("SmsFallbackMethod", "GET");
         applicationParams.add("SmsStatusCallback", "/restcomm/smsstatuscallback/test");
         applicationParams.add("RcmlUrl", "/restcomm/rcmlurl/test");
+        applicationParams.add("Kind", "voice");
         JsonObject applicationJson = RestcommApplicationsTool.getInstance().createApplication(deploymentUrl.toString(),
                 adminAccountSid, adminUsername, adminAuthToken, applicationParams);
         Sid applicationSid = new Sid(applicationJson.get("sid").getAsString());

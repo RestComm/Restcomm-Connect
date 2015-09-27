@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -40,6 +41,7 @@ import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappBinaryInfo;
@@ -211,10 +213,15 @@ public class RasRestService extends RestService {
 
     @GET
     @Path("apps")
-    public Response listRapps(@Context HttpServletRequest request) {
-        ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);
+    public Response listRapps(@Context HttpServletRequest request, @QueryParam("account") String account) {
+        account = account.replaceAll("%40", "@");
+        List<ProjectItem> items;
+        List<String> projectNames = new ArrayList<String>();
         try {
-            List<String> projectNames = FsProjectStorage.listProjectNames(workspaceStorage);
+            items = projectService.getAvailableProjectsByOwner(account);
+            for (ProjectItem project : items) {
+                projectNames.add(project.getName());
+            }
             List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage, projectService);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
