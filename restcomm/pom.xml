@@ -150,6 +150,7 @@
 		<module>restcomm.routing</module>
 		<module>restcomm.email</module>
 		<module>restcomm.email.api</module>
+		<module>restcomm.identity</module>
 
 	</modules>
 

@@ -29,10 +29,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang.StringUtils;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.CreateInstanceResponse;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdentityApiException;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
-import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakClient;
-import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakClient.KeycloakClientException;
 
 import com.google.gson.Gson;
 
@@ -56,8 +57,7 @@ public class IdentityEndpoint extends AbstractEndpoint {
 
     @POST
     @Path("/register")
-    public Response registerInstance(@FormParam("restcommBaseUrl") String baseUrl, @FormParam("username") String username, @FormParam("password") String password, @FormParam("instanceSecret") String instanceSecret ) throws KeycloakClientException {
-        String instanceName = generateInstanceName(username);
+    public Response registerInstance(@FormParam("restcommBaseUrl") String baseUrl, @FormParam("username") String username, @FormParam("password") String password, @FormParam("instanceSecret") String instanceSecret )  {
         if (StringUtils.isEmpty(instanceSecret))
             instanceSecret = generateInstanceSecret();
 
@@ -68,18 +68,20 @@ public class IdentityEndpoint extends AbstractEndpoint {
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Invalid configuration").build();
         }
 
-        KeycloakClient keycloakClient = new KeycloakClient(username, password, "restcomm-identity-rest", "restcomm", authUrlBase);
-        keycloakClient.getToken();
-        keycloakClient.addParam("name", instanceName); // what we put here??
-        keycloakClient.addParam("prefix", baseUrl);
-        keycloakClient.addParam("secret", instanceSecret);
-        keycloakClient.makePostRequest(identityConfigurator.getIdentityProxyUrl() + "/api/instances"); // we assume that the identity proxy lives together with the authorization server
+        RestcommIdentityApi api = new RestcommIdentityApi(username, password, identityConfigurator);
+        CreateInstanceResponse response;
+        try {
+            response = api.createInstance(baseUrl, instanceSecret, username);
+        } catch (RestcommIdentityApiException e) {
+            return toResponse(e.getOutcome());
+        }
+        String instanceName = response.instanceId;
 
         // We're now registered. Update configuration.
         //identityConfigurator.setAuthServerUrlBase(authUrl);
         identityConfigurator.setMode(IdentityMode.cloud); // TODO maybe turn this to 'standalone'. Is there a difference after all between 'cloud' and 'standalone'
         identityConfigurator.setRestcommClientSecret(instanceSecret);
-        identityConfigurator.setInstanceId(instanceName);
+        identityConfigurator.setInstanceId(response.instanceId);
         identityConfigurator.save();
 
         logger.info( "User '" + username + "' registed this instance as '" + instanceName + "' to authorization server " + authUrlBase);
@@ -94,11 +96,6 @@ public class IdentityEndpoint extends AbstractEndpoint {
     // generate a random secret for the instance/restcomm-rest client if none specified in the request
     protected String generateInstanceSecret() {
         return UUID.randomUUID().toString();
-    }
-
-    // convention: username-UUID
-    protected String generateInstanceName(String username) {
-        return username + "-" + UUID.randomUUID().toString().split("-")[0];
     }
 
     public class IdentityInstanceEntity {
