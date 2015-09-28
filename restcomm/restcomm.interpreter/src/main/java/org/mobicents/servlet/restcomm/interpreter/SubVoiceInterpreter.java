@@ -614,7 +614,8 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailerNotify);
+            if (mailerNotify != null)
+                context.stop(mailerNotify);
             context.stop(downloader);
             context.stop(asrService);
             context.stop(faxService);

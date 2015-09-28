@@ -986,7 +986,8 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailerNotify);
+            if (mailerNotify != null)
+                context.stop(mailerNotify);
             context.stop(downloader);
             context.stop(cache);
             context.stop(synthesizer);
