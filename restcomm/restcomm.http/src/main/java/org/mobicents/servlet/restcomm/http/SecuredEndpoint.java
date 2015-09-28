@@ -142,7 +142,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     private AuthOutcome secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
         // both api-level and account-level checks should be satisfied
-        Set<String> roleNames = accessToken.getResourceAccess(identityConfigurator.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
+        AccessToken.Access access = accessToken.getResourceAccess(identityConfigurator.getClientName(IdentityResourceNames.RESTCOMM_REST));
+        if (access == null)
+            return AuthOutcome.FAILED;
+        Set<String> roleNames = access.getRoles();
         if ( secureApi(neededPermissionString, roleNames) == AuthOutcome.FAILED )
             return AuthOutcome.FAILED;
         // check if the logged user has access to the account that is operated upon

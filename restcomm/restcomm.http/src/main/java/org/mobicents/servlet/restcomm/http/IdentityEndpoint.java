@@ -84,7 +84,7 @@ public class IdentityEndpoint extends AbstractEndpoint {
         identityConfigurator.setInstanceId(response.instanceId);
         identityConfigurator.save();
 
-        logger.info( "User '" + username + "' registed this instance as '" + instanceName + "' to authorization server " + authUrlBase);
+        logger.info( "User '" + username + "' registed instance '" + instanceName + "' to authorization server " + authUrlBase);
 
         IdentityInstanceEntity instanceEntity = new IdentityInstanceEntity();
         instanceEntity.setInstanceName(instanceName);

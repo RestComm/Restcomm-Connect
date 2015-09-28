@@ -41,7 +41,6 @@ import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.joda.time.DateTime;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -140,7 +139,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         //return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
-        return new Account(sid, now, now, emailAddress, friendlyName, null, type, status, "notused", "KeycloakUser", uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, null, type, status, null, getDefaultApiKeyRole(), uri);
     }
 
     /**
@@ -153,7 +152,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             if ( token.getPreferredUsername().equals(accountSid) ) {
                 account = accountFromAccessToken(token);
                 accountsDao.addAccount(account);
-                logger.info("Automatically imported user '" + accountSid + "' as Restcomm account '" + account.getSid() + "'" );
+                logger.info("Automatically created Account '" + account.getSid() + "' and linked to user '" + accountSid + "'" );
             }
         }
         return account;
@@ -198,7 +197,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
                     return null;
                 }
             }
-        } catch (UnauthorizedException e) {
+        } catch ( AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }
     }
@@ -375,6 +374,10 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     // calculates the role for a sub-account based on parent account, user selection and logged user. For now it always creates a Developer
     private String getChildRole(Account parentAccount, String selectedRole ) {
         // TODO add a proper implementation
+        return "Developer";
+    }
+
+    private String getDefaultApiKeyRole() {
         return "Developer";
     }
 
