@@ -66,7 +66,7 @@ public final class UriUtils {
         Set<ObjectName> tomcatObjs = mbs.queryNames(new ObjectName("*:type=Connector,*"), Query.match(Query.attr("protocol"), Query.value("HTTP/1.1")));
 
         ArrayList<HttpConnector> endPoints = new ArrayList<HttpConnector>();
-        if (jbossObjs != null) {
+        if (jbossObjs != null && jbossObjs.size() > 0) {
             for (Iterator<ObjectName> i = jbossObjs.iterator(); i.hasNext();) {
                 ObjectName obj = i.next();
                 Boolean bound = (Boolean) mbs.getAttribute(obj, "bound");
@@ -79,7 +79,7 @@ public final class UriUtils {
                     HttpConnector httpConnector = new HttpConnector(scheme, address, port, scheme.equalsIgnoreCase("https"));
                     endPoints.add(httpConnector);
                 }            }
-        } else if (tomcatObjs != null) {
+        } else if (tomcatObjs != null && tomcatObjs.size() > 0) {
             for (Iterator<ObjectName> i = tomcatObjs.iterator(); i.hasNext();) {
                 ObjectName obj = i.next();
                 String scheme = mbs.getAttribute(obj, "scheme").toString().replaceAll("\"", "");
