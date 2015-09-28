@@ -542,7 +542,7 @@ public final class CallManager extends UntypedActor {
         } catch (Exception notANumber) {
             String errMsg;
             if (number != null) {
-                errMsg = "The number " + number.getPhoneNumber() + "does not have a Restcomm hosted application attached";
+                errMsg = "The number " + number.getPhoneNumber() + " does not have a Restcomm hosted application attached";
             } else {
                 errMsg = "The number does not have a Restcomm hosted application attached";
             }
