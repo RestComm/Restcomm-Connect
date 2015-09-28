@@ -41,9 +41,9 @@ angular.element(document).ready(function ($http) {
 						console.log("Retrieved account info for user " + keycloakAuth.profile.username);
 						auth.restcommAccount = response;
 						angular.bootstrap(document, ["rcApp"]);
-					}).error(function(errorResponse) {
+					}).error(function(errorResponse, status) {
 						// Handle error case
-						console.log("Error account info for user " + keycloakAuth.profile.username);
+						console.log("Error retrieving account for user '" + keycloakAuth.profile.username + "'");
 					});
 					
 				});
