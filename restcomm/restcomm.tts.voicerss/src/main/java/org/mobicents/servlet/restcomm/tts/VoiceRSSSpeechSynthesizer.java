@@ -93,7 +93,7 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
     private void load(final Configuration configuration) throws RuntimeException {
         // Initialize male voices.
         men.put("ca", configuration.getString("languages.catalan"));
-        men.put("zh", configuration.getString("languages.chinese-china"));
+        men.put("zh-cn", configuration.getString("languages.chinese-china"));
         men.put("zh-hk", configuration.getString("languages.chinese-hongkong"));
         men.put("zh-tw", configuration.getString("languages.chinese-taiwan"));
         men.put("da", configuration.getString("languages.danish"));
