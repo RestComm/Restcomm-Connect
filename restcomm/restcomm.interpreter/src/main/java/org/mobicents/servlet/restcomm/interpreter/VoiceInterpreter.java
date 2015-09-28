@@ -2146,8 +2146,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailerNotify);
-            context.stop(mailerService);
+            if (mailerNotify != null)
+                context.stop(mailerNotify);
+            if (mailerService != null)
+                context.stop(mailerService);
             context.stop(downloader);
             context.stop(asrService);
             context.stop(faxService);
