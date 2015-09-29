@@ -124,7 +124,7 @@
 						<p ng-show="!account.email_address" class="help-block"><input type="checkbox"  ng-model="userLink.create"> Create </p>
 					</div>
 					<div class="col-md-2">
-						<button ng-disabled="userForm.$invalid || !userLink.email_address" ng-show="!account.email_address" ng-click="linkUser(account,userLink)" type="button" class="btn btn-link" title="Link with an existing Restcomm User. You will be allowed to access this account after logging as this user."><i class="fa fa-chain"></i></button>
+						<button ng-disabled="userForm.$invalid || !userLink.email_address" ng-show="!account.email_address" ng-click="linkUser(account,userLink)" type="button" class="btn btn-link" title="Link account with an existing or new Restcomm User. You will then be allowed to access this account using this user's credentials."><i class="fa fa-chain"></i></button>
 						<button ng-show="!!account.email_address" ng-click="unlinkUser(account,userLink)" type="button" class="btn btn-link" title="Un-link from Restcomm User. You won't be allowed to access this account with this user's credenetials."><i class="fa fa-chain-broken"></i></button>
 					</div>
 				</div>
