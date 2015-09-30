@@ -18,20 +18,22 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+package org.mobicents.servlet.restcomm;
 
-package org.mobicents.servlet.restcomm.mscontrol.xms;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import java.util.List;
 
 /**
- * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-@Immutable
-public final class QueryNetworkConnection {
+public class HttpConnectorList {
+    private final List<HttpConnector> connectors;
 
-    public QueryNetworkConnection() {
-        super();
+    public HttpConnectorList(final List<HttpConnector> connectors) {
+        this.connectors = connectors;
     }
 
+    public List<HttpConnector> getConnectors() {
+        return connectors;
+    }
 }

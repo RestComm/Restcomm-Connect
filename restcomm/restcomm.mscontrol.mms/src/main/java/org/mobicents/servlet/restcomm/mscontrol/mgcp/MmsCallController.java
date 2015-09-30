@@ -157,7 +157,7 @@ public class MmsCallController extends MediaServerController {
     private Sid accountId;
     private Sid recordingSid;
     private URI recordingUri;
-    private Boolean recording;
+    private Boolean recording = false;
     private DateTime recordStarted;
     private DaoManager daoManager;
 
