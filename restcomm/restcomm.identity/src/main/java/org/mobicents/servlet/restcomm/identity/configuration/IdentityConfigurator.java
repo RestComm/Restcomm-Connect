@@ -28,6 +28,7 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     protected static final String IDENTITY_PROXY_CONTEXT_NAME = "restcomm-identity";
     protected static final String IDENTITY_PROXY_CLIENT_NAME = "restcomm-identity-rest";
     private static final Boolean DEFAULT_AUTO_IMPORT_USERS = true; // move this option to the configuration file at some point
+    private static final String DEFAULT_ADMINISTRATOR_ROLE = "Administrator";
 
     protected IdentityMode identityMode;
     protected String identityInstanceId; // instance ID on authorization server
@@ -167,6 +168,10 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
 
     public String getRestcommClientSecret() {
         return restcommClientSecret;
+    }
+
+    public String getAdministratorRole() {
+        return DEFAULT_ADMINISTRATOR_ROLE;
     }
 
     @Override

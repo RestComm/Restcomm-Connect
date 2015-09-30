@@ -167,7 +167,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             return AuthOutcome.FAILED;
 
         Set<String> roleNames = accountKey.getRoles();
-        if ( secureApi(permission, roleNames) == AuthOutcome.FAILED )
+        if ( !roleNames.contains(identityConfigurator.getAdministratorRole()) && secureApi(permission, roleNames) == AuthOutcome.FAILED )
             return AuthOutcome.FAILED;
         // check if the logged user has access to the account that is operated upon
         if ( secureAccount(accountKey.getAccount(), account) == AuthOutcome.FAILED )
