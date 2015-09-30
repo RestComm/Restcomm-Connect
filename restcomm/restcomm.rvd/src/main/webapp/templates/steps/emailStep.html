@@ -1,0 +1,64 @@
+<div class="step email-step panel panel-rvdstep">
+    <div class="panel-heading">
+        <step-heading></step-heading>
+    </div>
+    <div class="panel-body" ng-hide='step.iface.isCollapsed'>
+        <div class='row form-group'>
+            <div lookup-context class='col-md-12'>
+                <div class="form-group">
+                    <span class="help-block">{{'emailStepEmailLabel' | translate}} &nbsp;<i class="fa fa-info-circle rvd-clickable" 				popover="{{'emailStepEmailLabelPopover' | translate}}" popover-placement='top'></i></span>
+                    <textarea ng-model='step.text' lookup-target class="form-control"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div lookup-context class='col-md-12'>
+                <form name="formSubject" novalidate>
+                    <div>
+                        <span class="help-block">{{'emailSubjectEmailLabel' | translate}}</span>
+                        <input ng-model='step.subject' lookup-target auto-clear  type='text' name='subject' class="form-control" required ></input>
+                    </div>
+                    <div ng-show="formSubject.subject.$invalid" class="validation-error pull-left">{{'sayEmailSubjectValidationError' | translate}}</div>
+                </form>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class='col-md-6'>
+                <form name="formTo" novalidate>
+                    <div lookup-context class="input-group input-group-sm">
+                        <span class="input-group-addon">{{'emailStepToLabel' | translate}}</span>
+                        <input type='text' name='to' ng-model='step.to' lookup-target auto-clear class="form-control" required></input>
+                    </div>
+                    <div ng-show="formTo.to.$invalid" class="validation-error pull-left">{{'sayEmailValidationError' | translate}}</div>
+                </form>
+            </div>
+            <div class='col-md-6'>
+                <form name="formFrom" novalidate>
+                    <div lookup-context class="input-group input-group-sm">
+                        <span class="input-group-addon">{{'emailStepFromLabel' | translate}}</span>
+                        <input type='text' name='from'  ng-model='step.from' lookup-target auto-clear class="form-control" required></input>
+                    </div>
+                    <div ng-show="formFrom.from.$invalid" class="validation-error">{{'sayEmailValidationError' | translate}}</div>
+                </form>
+            </div>
+        </div>
+        <div class="form-group row">
+           <div class='col-md-6'>
+               <form name="formCc" novalidate>
+                   <div lookup-context class="input-group input-group-sm">
+                       <span class="input-group-addon">{{'emailStepCcLabel' | translate}}&nbsp;<i class="fa fa-info-circle rvd-clickable" popover="{{'emailStepBccLabelPopover' | translate}}" popover-placement='top'></i></span>
+                       <input type='text' name='cc' ng-model='step.cc' lookup-target auto-clear class="form-control" ></input>
+                    </div>
+               </form>
+          </div>
+            <div class='col-md-6'>
+              <form name="formBcc" novalidate>
+                    <div lookup-context class="input-group input-group-sm">
+                        <span class="input-group-addon">{{'emailStepBccLabel' | translate}}&nbsp;<i class="fa fa-info-circle rvd-clickable" popover="{{'emailStepCcLabelPopover' | translate}}" popover-placement='top'></i></span>
+                        <input type='text' name='bcc'  ng-model='step.bcc' lookup-target auto-clear class="form-control" ></input>
+                   </div>
+              </form>
+            </div>
+        </div>
+    </div>
+</div>

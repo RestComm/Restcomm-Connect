@@ -8,7 +8,9 @@ var App = angular.module('Rvd', [
 	'ui.sortable',
 	'basicDragdrop',
 	'pascalprecht.translate',
-	'ngSanitize'
+	'ngSanitize',
+	'ngResource',
+	'ngCookies'
 ]);
 
 var rvdMod = App;
@@ -34,7 +36,7 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		controller : 'designerCtrl',
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
-			projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
+			//projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
 			project: function(designerService, $route) { return designerService.openProject($route.current.params.projectName); },
 			bundledWavs: function(designerService) { return designerService.getBundledWavs()}
 		}
@@ -79,8 +81,9 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
   		prefix: '/restcomm-rvd/languages/',
   		suffix: '.json'
 	});
-	$translateProvider.use('en-US');
-
+	$translateProvider.useCookieStorage();
+	$translateProvider.preferredLanguage('en-US');
+	
 }]);
 
 App.factory( 'dragService', [function () {

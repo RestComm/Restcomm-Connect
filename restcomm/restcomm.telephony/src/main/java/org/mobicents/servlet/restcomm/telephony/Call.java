@@ -160,6 +160,7 @@ public final class Call extends UntypedActor {
     private DateTime created;
     private final List<ActorRef> observers;
     private boolean receivedBye;
+    private boolean muted;
 
     // Conferencing
     private ActorRef conference;
@@ -178,6 +179,7 @@ public final class Call extends UntypedActor {
     private DaoManager daoManager;
     private boolean liveCallModification;
     private boolean recording;
+    private Sid parentCallSid;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -354,7 +356,7 @@ public final class Call extends UntypedActor {
         final State state = fsm.state();
         logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString());
         logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
-                + sender.getClass());
+                + sender.path().toString());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -475,6 +477,7 @@ public final class Call extends UntypedActor {
             username = request.username();
             password = request.password();
             type = request.type();
+            parentCallSid = request.getParentCallSid();
             recordsDao = request.getDaoManager().getCallDetailRecordsDao();
             String toHeaderString = to.toString();
             if (toHeaderString.indexOf('?') != -1) {
@@ -511,6 +514,7 @@ public final class Call extends UntypedActor {
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());
                     builder.setCallerName(name);
+                    builder.setStartTime(new DateTime());
                     String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
                     builder.setFrom(fromString);
                     // builder.setForwardedFrom(callInfo.forwardedFrom());
@@ -528,6 +532,7 @@ public final class Call extends UntypedActor {
                     final URI uri = URI.create(buffer.toString());
                     builder.setUri(uri);
                     builder.setCallPath(self().path().toString());
+                    builder.setParentCallSid(parentCallSid);
                     outgoingCallRecord = builder.build();
                     recordsDao.addCallDetailRecord(outgoingCallRecord);
                 } else {
@@ -555,6 +560,10 @@ public final class Call extends UntypedActor {
             buffer.append(to.getHost());
             if (to.getPort() > -1) {
                 buffer.append(":").append(to.getPort());
+            }
+            String transport = to.getTransportParam();
+            if (transport != null) {
+                buffer.append(";transport=").append(to.getTransportParam());
             }
             final SipURI uri = factory.createSipURI(null, buffer.toString());
             final SipApplicationSession application = factory.createApplicationSession();
@@ -913,8 +922,14 @@ public final class Call extends UntypedActor {
             // Issue 99: https://bitbucket.org/telestax/telscale-restcomm/issue/99
             if (response.getStatus() == SipServletResponse.SC_OK && isOutbound()) {
                 final SipServletRequest ack = response.createAck();
+                SipSession session = response.getSession();
+
                 final SipServletRequest originalInvite = response.getRequest();
                 final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                if ((SipURI) session.getAttribute("realInetUri") == null) {
+//                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
+                  session.setAttribute("realInetUri", realInetUri);
+              }
                 final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
 
                 if (realInetUri != null
@@ -953,7 +968,6 @@ public final class Call extends UntypedActor {
             // Record call data
             if (outgoingCallRecord != null && isOutbound() && !outgoingCallRecord.getStatus().equalsIgnoreCase("in_progress")) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
-                outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
                 outgoingCallRecord = outgoingCallRecord.setAnsweredBy(to.getUser());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1032,7 +1046,7 @@ public final class Call extends UntypedActor {
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
                 final int seconds = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
@@ -1082,13 +1096,15 @@ public final class Call extends UntypedActor {
         if (is(inProgress)) {
             // Forward to media server controller
             this.msController.tell(message, sender);
+            muted = true;
         }
     }
 
     private void onUnmute(Unmute message, ActorRef self, ActorRef sender) {
-        if (is(inProgress)) {
+        if (is(inProgress) && muted) {
             // Forward to media server controller
             this.msController.tell(message, sender);
+            muted = false;
         }
     }
 
@@ -1353,7 +1369,7 @@ public final class Call extends UntypedActor {
 
         invite.getHeaders(RecordRouteHeader.NAME);
 
-        ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
+        ListIterator<String> recordRouteList = bye.getHeaders(RecordRouteHeader.NAME);
 
         if (invite.getHeader("X-Sip-Balancer") != null) {
             logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
@@ -1362,16 +1378,20 @@ public final class Call extends UntypedActor {
             recordRouteList.next();
             recordRouteList.remove();
         }
-
         if (recordRouteList.hasNext()) {
             logger.info("Record Route is set, wont change the Request URI");
-        } else if (realInetUri != null
-                && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-            logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                    + " as a request uri of the BYE request");
-            bye.setRequestURI(realInetUri);
+        } else {
+            logger.info("Checking RURI, realInetUri: "+realInetUri+" byeRURI: "+byeRURI);
+            logger.debug("byeRURI.isSiteLocalAddress(): "+byeRURI.isSiteLocalAddress());
+            logger.debug("byeRURI.isAnyLocalAddress(): "+byeRURI.isAnyLocalAddress());
+            logger.debug("byeRURI.isLoopbackAddress(): "+byeRURI.isLoopbackAddress());
+            if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                + " as a request uri of the BYE request");
+                bye.setRequestURI(realInetUri);
+            }
         }
-
+        logger.info("Will sent out BYE to: "+bye.getRequestURI());
         bye.send();
     }
 
@@ -1410,7 +1430,7 @@ public final class Call extends UntypedActor {
                         answer = SdpUtils.endWithNewLine(answer);
                         okay.setContent(answer, "application/sdp");
                         okay.send();
-                    } else if (SipSession.State.CONFIRMED.equals(sessionState)) {
+                    } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
                         // We have an ongoing call and Restcomm executes new RCML app on that
                         // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
                         SipServletRequest reInvite = invite.getSession().createRequest("INVITE");

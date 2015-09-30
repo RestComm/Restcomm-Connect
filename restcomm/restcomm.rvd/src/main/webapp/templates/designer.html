@@ -7,19 +7,24 @@
 			</div>
 			<div ng-switch-default class='navbar-text navbar-rvd-centered'>
 				{{'designerUnknownErrorLabel1' | translate}} <a href="#">{{'designerUnknownErrorLabel2' | translate}}</a>
-			</div>			
+			</div>
 		</div>
 	</nav>
 
-	<div ng-hide='projectError'>	
+	<div ng-hide='projectError'>
 		<nav  class="rvd-menu navbar navbar-default" role="navigation">
 			<div class="collapse navbar-collapse navbar-ex1-collapse">
-	
+
 				<div class="navbar-header">
 					<a class="navbar-brand">{{projectName}}</a>
 				</div>
-	
+
 				<ul class="nav navbar-nav navbar-right">
+<!-- 				
+					<li>
+						<button ng-click="showGraph = !showGraph" class="btn navbar-link navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram <i ng-show="showGraph" class="fa fa-check"></i></button>
+					</li>	
+ -->									
 					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">{{'designerWebTriggerLink' | translate}}</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{'designerExportLink' | translate}} <b class="caret"></b></a>
@@ -35,38 +40,69 @@
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{{'designerProjectSettingsTitle' | translate}}"><i class="fa fa-cog"></i> <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">{{'designerProjectSettingsLink' | translate}}</a></li>
-							<!--<li><a class="rvd-clickable-text" ng-click="showSettingsModal(settings)" class="rvd-clickable-text" title="Global RVD designer settings">IDE Settings</a></li> -->
-							<li><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text">{{'designerApplicationLogLink' | translate}}</a></li>
+							<li ng-show="getProjectSettings().logging"><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text disabled">{{'designerApplicationLogLink' | translate}}</a></li>
+							<li ng-hide="getProjectSettings().logging" class="disabled"><a>{{'designerApplicationLogLink' | translate}}</a></li>
 						</ul>
 					</li>
 				</ul>
 			</div>
 		</nav>
-		
-		<div class='row rvd-submenu'>	
+
+		<div class='row rvd-submenu'>
 		</div>
-	
+		
+		<div class="graph-wrap">
+			<!--
+			<div class="row" ng-if="showGraph">
+				<div class="col-md-12" style="margin: 5px;">
+					<button class="btn btn-sm btn-success pull-right" ng-click="drawGraph()"><i class="fa fa-refresh"></i> Refresh</button>
+					<button class="btn btn-sm btn-default pull-right" style="margin-right: 5px;" ng-click="makeFullScreen('paperContainer')"><i class="fa fa-arrows-alt"></i> Full Screen</button>
+				</div>
+			</div>
+			-->
+			<div class="row" ng-if="showGraph">
+				<div class="col-md-12">
+					<div class="graph" >
+							<div  style="margin: 5px; position:relative;">
+								<div class="graph-controls form-group">
+									<button ng-click="makeFullScreen('paperContainer')" class="btn" title="Make fullscreen"><i class="fa fa-arrows-alt"></i></button>
+									<button ng-click="drawGraph()" class="btn" title="Refresh"><i class="fa fa-refresh"></i></button>
+									
+								</div>
+								<!--<div class="text-center" style="overflow: scroll;" id="paper" ng-init="drawGraph()"></div>-->
+								<div id="paperContainer" >
+									<div class="text-center" id="paper" style="overflow: scroll;" ng-init="drawGraph()"></div>
+								</div>
+							</div>
+							
+					</div>
+					<hr>
+				</div>
+			</div>
+		</div>
+
 		<div class="rvd-rcmlview row">
-	
+
 			<!-- Left menu -->
 			<div class="col-md-2">
-	
+
 				<div ng-show='!project.projectKind || project.projectKind=="voice"' class='form-group'>
 					<div basic-draggable drop-target='.steps' class="verb-button button-play label label-primary rvd-pickable"><i class='fa fa-play-circle'></i> &nbsp;{{'designerVoicePlayLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' drag-model='protos.stepProto.say' class="verb-button button-say label label-primary rvd-pickable"><i class='fa fa-quote-left'></i> &nbsp;{{'designerVoiceSayLabel' | translate}}</div>
-					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;{{'designerVoiceCollectLabel' | translate}}</div>					
-					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;{{'designerVoiceDialLabel' | translate}}</div>					
-					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;{{'designerVoiceHangUpLabel' | translate}}</div>					
+					<div basic-draggable drop-target='.steps' class="verb-button button-gather label label-primary rvd-pickable"><i class='fa fa-th'></i> &nbsp;{{'designerVoiceCollectLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-dial label label-primary rvd-pickable"><i class='fa fa-phone'></i> &nbsp;{{'designerVoiceDialLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-hungup label label-primary rvd-pickable"><i class='fa fa-times'></i> &nbsp;{{'designerVoiceHangUpLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-externalService label label-primary rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;{{'designerVoiceExternalServiceLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;{{'designerVoiceLogLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-reject label label-primary rvd-pickable"><i class='fa fa-thumbs-o-down'></i> &nbsp;{{'designerVoiceRejectLabel' | translate}}</div>
-					
+
 					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;{{'designerVoiceRedirectLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-pause label label-primary rvd-pickable"><i class='fa fa-pause'></i> &nbsp;{{'designerVoicePauseLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;{{'designerVoiceSmsLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-email label label-primary rvd-pickable"><i class='fa fa-comment-o'></i> &nbsp;{{'designerVoiceEmailLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-record label label-primary rvd-pickable"><i class='fa fa-microphone'></i> &nbsp;{{'designerVoiceRecordLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-fax label label-primary rvd-pickable"><i class='fa fa-print'></i> &nbsp;{{'designerVoiceFaxLabel' | translate}}</div>
-				</div>			
+				</div>
 				<div ng-show='project.projectKind=="ussd"' class='form-group'>
 					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-ussdLanguage rvd-pickable"><i class='fa fa-globe'></i> &nbsp;{{'designerUssdLanguageLabel' | translate}}</div>
 					<div basic-draggable drop-target='.ussd-collect-messages,.steps' class="label label-primary verb-button button-ussdSay rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;{{'designerUssdUssdMessageLabel' | translate}}</div>
@@ -78,19 +114,20 @@
 					<div basic-draggable drop-target='.steps' class="verb-button button-sms label label-primary rvd-pickable"><i class='fa fa-envelope-o'></i> &nbsp;{{'designerSmsSmsLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-redirect label label-primary rvd-pickable"><i class='fa fa-link'></i> &nbsp;{{'designerSmsRedirectLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="label label-primary verb-button button-externalService rvd-pickable"><i class='fa fa-external-link'></i> &nbsp;{{'designerSmsExternalServiceLabel' | translate}}</div>
+					<div basic-draggable drop-target='.steps' class="verb-button button-email label label-primary rvd-pickable"><i class='fa fa-comment-o'></i> &nbsp;{{'designerVoiceEmailLabel' | translate}}</div>
 					<div basic-draggable drop-target='.steps' class="verb-button button-log label label-primary rvd-pickable"><i class='fa fa-align-justify'></i> &nbsp;{{'designerSmsLogLabel' | translate}}</div>
-				</div>				
-			
+				</div>
+
 				<!-- wavManager -->
 				<div ng-controller="wavManagerController" ng-show='project.projectKind=="voice"'>
 					<h5 class='text-center'><strong>{{'designerAudioResourcesLabel' | translate}}</strong></h5>
-					
+
 					<div class='drop-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
 						<div class="drop-prompt">{{'designerDropAudioLabel' | translate}}</div>
 					</div>
 					<div ng-file-drop-available="dropSupported=true" ng-show="!dropSupported">{{'designerHtml5DropLabel' | translate}}</div>
-					
-					<div>	
+
+					<div>
 						<div class='text-left more-audio-resources'>
 							<a class='rvd-clickable' ng-show='!showAudioResources' ng-click='showAudioResources = true'>{{'designerMoreLabel' | translate}}</a>
 						</div>
@@ -103,34 +140,48 @@
 									</div>
 								</div>
 								<div class="col-md-12 text-center delete-confirmation " ng-show="wavItem.viewMode=='confirm-delete'">
-									<div>{{'designerConfirmDeleteLabel1' | translate}} <em>{{wavItem.filename}}</em> {{'designerConfirmDeleteLabel2' | translate}}</div> 
+									<div>{{'designerConfirmDeleteLabel1' | translate}} <em>{{wavItem.filename}}</em> {{'designerConfirmDeleteLabel2' | translate}}</div>
 									<i class="fa fa-trash-o rvd-clickable" ng-click="deleteWav(wavItem)"></i> &nbsp; <a class="rvd-clickable" ng-click="wavItem.viewMode=false">{{'designerCancelLabel' | translate}}</a>
-								</div>						
+								</div>
 							</div>
 							<a class='rvd-clickable' ng-click="showAudioResources = false"><i class="fa fa-angle-double-up" ></i></a>
 						</div>
-					</div>	
+					</div>
 				</div>
 			</div>
 			<!-- /wavManager -->
-	
+
 			<!-- Workspace on the right -->
 			<div class="col-md-10">
 				<div class="editor">
 					<div class="panel-body editor">
-						<!--<ul class="nav nav-pills">
-						
-						</ul>-->
-						<div class="row">
-							<div class="col-md-9 form-group">
+						<div class="row" id="es">
+							<div class="col-md-8 form-group">
 								<ul class="top-menu nav nav-pills">
+
 									<li class="dropdown">
-										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="{{'designerStartupModuleLinkTitle' | translate}}">{{'designerStartupModuleLink' | translate}} <strong>{{nodeNamed(project.startNodeName).label}}</strong>	 <span class="caret"></span></a>
+										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="Select module to edit">{{'designerModules' | translate}} <span class="caret"></span></a>
 										<ul class="dropdown-menu">
-											<li ng-repeat='node in getAllTargets()'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+											<li class="rvd-clickable-text"><a ng-click="editAllNodes(getAllTargets(), searchToken, moduleFilterEnabled)"><span ng-hide="moduleFilterEnabled">{{'designerEditAll' | translate}}</span><span ng-show="moduleFilterEnabled">{{'designerEditFiltered' | translate}}</span></a></li>
+											<li class="rvd-clickable-text"><a ng-click="hideAllNodes(getAllTargets())"><span>{{'designerHideAllLink' | translate}}</span></a></li>
+											<li class="divider" role="presentation"></li>
+											<li class="rvd-clickable-text" ng-repeat='node in getAllTargets() | filterNodesByLabel:searchToken:moduleFilterEnabled | orderBy:"label"'><a ng-click="editNode(node.name)">{{node.label}}</a></li>
 										</ul>
 									</li>
-									<li><a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="{{'designerNewModuleLinkTitle' | translate}}"><i class='fa fa-plus'></i>&nbsp; {{'designerNewModuleLink' | translate}}</a></li>
+									<li style="margin-right: 5px">
+										<button ng-show="!moduleFilterEnabled" ng-click="toggleModuleFilter()" title="{{'designerModulesToggleFilteringTitle' | translate}}" class="btn" type="button"><i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i></button>
+										<div ng-show="moduleFilterEnabled" class="input-group module-filter">
+											<div class="input-group-btn">
+												<button type="button" class="btn btn-default" ng-click="toggleModuleFilter()" title="Toggle filtering in Modules dropdown">
+													<i class="fa fa-filter"  title="{{'designerInputSearchLabelTitle' | translate}}"></i>
+												</button>
+											</div>
+											<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
+										</div>
+									</li>
+									<li>
+										<a ng-click="addNodeClicked(project.projectKind)" class="btn-primary rvd-clickable-text" title="{{'designerNewModuleLinkTitle' | translate}}"><i class='fa fa-plus'></i></a></li>
+									</li>
 									<!--
 									<li>
 										<a ng-click="showExceptionConfig()" class="rvd-clickable-text">Exceptions</a>
@@ -141,6 +192,24 @@
 									<span class="validation-error">{{'designerValidationErrorLabel1' | translate}} <em>{{'designerValidationErrorLabel2' | translate}}</em> {{'designerValidationErrorLabel3' | translate}}</span>
 								</div>
 							</div>
+
+							<div class="col-md-4">
+								<ul class="top-menu nav nav-pills pull-right">
+									<li class="dropdown">
+										<a href="#" class="btn-primary dropdown-toggle" data-toggle="dropdown" title="{{'designerStartupModuleLinkTitle' | translate}}">{{'designerStartupModuleLink' | translate}} <strong>{{nodeNamed(project.startNodeName).label}}</strong>	 <span class="caret"></span></a>
+										<ul class="dropdown-menu">
+											<li class="rvd-clickable-text" ng-repeat='node in getAllTargets() | orderBy:"label"'><a ng-click="setStartNode(node.name)">{{node.label}}</a></li>
+										</ul>
+									</li>
+								</ul>
+							</div>
+
+<!--
+							<div class="col-md-3">
+								<button class="btn btn-default" ng-click="showGraph = !showGraph"><i class="fa fa-code-fork"></i> <span ng-hide="showGraph">Show</span><span ng-show="showGraph">Hide</span> Diagram</button>
+							</div>
+-->							
+<!--
 							<div class="col-md-3">
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-search" title="{{'designerInputSearchLabelTitle' | translate}}"></i></span>
@@ -159,9 +228,10 @@
 								</div>
 								<div class="help-block" style="margin-top: 0px;"><small><i>{{'designerInputSearchHelp' | translate}}</i></small></div>
 							</div>
+-->
+						
 						</div>
-						
-						
+
 						<ul class="nav nav-tabs">
 							<!-- tabs -->
 							<li ng-repeat='nodeSummary in getEditedNodeNames()'
@@ -184,28 +254,31 @@
 									</div>
 							</span></li>
 						</ul>
-						
+
+						<div class="rvd-node" ng-show="visibleNodes.length == 0" class="row">
+							<div class="no-modules-warning text-muted">No modules are being edited. Use the <i>Modules</i> dropdown to edit an existing module or create a new one.</div>
+						</div>
 
 						<div class="rvd-node" ng-repeat="nodeSummary in getEditedNodeNames()" ng-show="isNodeActive(nodeSummary.name)">
-							
+
 							<div ng-controller="nodeController">
-								<ng-include src="'templates/modules/' + node.kind + 'Module.html'"></ng-include>							
+								<ng-include src="'templates/modules/' + node.kind + 'Module.html'"></ng-include>
 							</div>
 						</div>
-	
+
 					</div>
 				</div>
 			</div>
-			
-			<!-- 
+
+			<!--
 			<div ng-controller="exceptionConfigCtrl">
 				<a ng-click="openExceptionModel()">Show exceptions</a>
 			</div>
 			 -->
-	
-	
+
+
 		</div>
-	
+
 	</div>
 </div>
 

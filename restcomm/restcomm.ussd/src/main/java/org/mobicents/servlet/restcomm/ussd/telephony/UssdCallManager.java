@@ -71,8 +71,6 @@ public class UssdCallManager extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static final String EMAIL_SENDER = "restcomm@restcomm.org";
-    static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
 
     private final ActorSystem system;
     private final Configuration configuration;
@@ -228,14 +226,14 @@ public class UssdCallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(application.getVoiceUrl()));
                     builder.setMethod(application.getVoiceMethod());
                     builder.setFallbackUrl(application.getVoiceFallbackUrl());
                     builder.setFallbackMethod(application.getVoiceFallbackMethod());
                     builder.setStatusCallback(application.getStatusCallback());
                     builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
                 } else {
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                     builder.setMethod(number.getVoiceMethod());
                     builder.setFallbackUrl(number.getVoiceFallbackUrl());
                     builder.setFallbackMethod(number.getVoiceFallbackMethod());

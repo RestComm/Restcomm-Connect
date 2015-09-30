@@ -113,6 +113,9 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
         if ( "sms".equals(kind) ) {
             return upgradeSmsStep(sourceStep);
         } else
+        if ( "email".equals(kind) ) {
+            return upgradeEmailStep(sourceStep);
+        } else
         if ( "record".equals(kind) ) {
             return upgradeRecordStep(sourceStep);
         } else
@@ -377,6 +380,18 @@ public class ProjectUpgrader714To10 extends ProjectUpgrader {
     }
 
     private JsonElement upgradeFaxStep(JsonElement sourceStep) {
+        JsonObject o = sourceStep.getAsJsonObject();
+        JsonObject t = o;
+
+        if (t.get("next").isJsonPrimitive() && "".equals(t.get("next").getAsString()) )
+            t.add("next", null);
+
+        t.add("iface", new JsonObject());
+
+        return t;
+    }
+
+    private JsonElement upgradeEmailStep(JsonElement sourceStep) {
         JsonObject o = sourceStep.getAsJsonObject();
         JsonObject t = o;
 

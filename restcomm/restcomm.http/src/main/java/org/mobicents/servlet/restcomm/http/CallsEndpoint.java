@@ -33,6 +33,7 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -181,16 +182,27 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 
-        CallDetailRecordFilter filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
-                parentCallSid, null, null);
+        CallDetailRecordFilter filterForTotal;
+        try {
+            filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
+                    parentCallSid, null, null);
+        } catch (ParseException e) {
+            return status(BAD_REQUEST).build();
+        }
+
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
 
-        CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
-                parentCallSid, limit, offset);
+        CallDetailRecordFilter filter;
+        try {
+            filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
+                    parentCallSid, limit, offset);
+        } catch ( ParseException e) {
+            return status(BAD_REQUEST).build();
+        }
 
         final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
 
@@ -262,14 +274,14 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30,
-                        CreateCall.Type.SIP, accountId);
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
+                        accountId, null);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30,
-                        CreateCall.Type.CLIENT, accountId);
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
+                        accountId, null);
             } else {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30,
-                        CreateCall.Type.PSTN, accountId);
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
+                        accountId, null);
             }
             create.setCreateCDR(false);
             if (callManager == null)
@@ -300,32 +312,32 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                                     fallbackUrl, fallbackMethod, callback, callbackMethod);
                             callManager.tell(execute, null);
                             // Create a call detail record for the call.
-                            // final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                            // builder.setSid(callInfo.sid());
-                            // builder.setDateCreated(callInfo.dateCreated());
-                            // builder.setAccountSid(accountId);
-                            // builder.setTo(to);
-                            // builder.setCallerName(callInfo.fromName());
-                            // builder.setFrom(from);
-                            // builder.setForwardedFrom(callInfo.forwardedFrom());
-                            // builder.setStatus(callInfo.state().toString());
-                            // final DateTime now = DateTime.now();
-                            // builder.setStartTime(now);
-                            // builder.setDirection(callInfo.direction());
-                            // builder.setApiVersion(version);
-                            // final StringBuilder buffer = new StringBuilder();
-                            // buffer.append("/").append(version).append("/Accounts/");
-                            // buffer.append(accountId.toString()).append("/Calls/");
-                            // buffer.append(callInfo.sid().toString());
-                            // final URI uri = URI.create(buffer.toString());
-                            // builder.setUri(uri);
+                            //                            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                            //                            builder.setSid(callInfo.sid());
+                            //                            builder.setDateCreated(callInfo.dateCreated());
+                            //                            builder.setAccountSid(accountId);
+                            //                            builder.setTo(to);
+                            //                            builder.setCallerName(callInfo.fromName());
+                            //                            builder.setFrom(from);
+                            //                            builder.setForwardedFrom(callInfo.forwardedFrom());
+                            //                            builder.setStatus(callInfo.state().toString());
+                            //                            final DateTime now = DateTime.now();
+                            //                            builder.setStartTime(now);
+                            //                            builder.setDirection(callInfo.direction());
+                            //                            builder.setApiVersion(version);
+                            //                            final StringBuilder buffer = new StringBuilder();
+                            //                            buffer.append("/").append(version).append("/Accounts/");
+                            //                            buffer.append(accountId.toString()).append("/Calls/");
+                            //                            buffer.append(callInfo.sid().toString());
+                            //                            final URI uri = URI.create(buffer.toString());
+                            //                            builder.setUri(uri);
 
                             CallDetailRecord cdr = daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid());
                             //
-                            // builder.setCallPath(call.path().toString());
+                            //                            builder.setCallPath(call.path().toString());
                             //
-                            // final CallDetailRecord cdr = builder.build();
-                            // daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
+                            //                            final CallDetailRecord cdr = builder.build();
+                            //                            daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
                             if (APPLICATION_JSON_TYPE == responseType) {
                                 return ok(gson.toJson(cdr), APPLICATION_JSON).build();
                             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -336,8 +348,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                         }
                     }
                 } else {
-                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " + managerResponse.error())
-                            .build();
+                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " +managerResponse.error()).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();
@@ -369,7 +380,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         String fallBackMethod = data.getFirst("FallbackMethod");
         final String statusCallBack = data.getFirst("StatusCallback");
         String statusCallbackMethod = data.getFirst("StatusCallbackMethod");
-        // Restcomm- Move connected call leg (if exists) to the new URL
+        //Restcomm-  Move connected call leg (if exists) to the new URL
         Boolean moveConnectedCallLeg = Boolean.valueOf(data.getFirst("MoveConnectedCallLeg"));
 
         String callPath = null;

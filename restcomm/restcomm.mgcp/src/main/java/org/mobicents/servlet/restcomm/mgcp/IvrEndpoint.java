@@ -99,7 +99,7 @@ public final class IvrEndpoint extends GenericEndpoint {
         final NotificationRequest request = new NotificationRequest(self(), id, requestId);
         request.setSignalRequests(signal);
         request.setNotifiedEntity(agent);
-        request.setRequestedEvents(REQUESTED_EVENTS);
+//        request.setRequestedEvents(REQUESTED_EVENTS);
         gateway.tell(request, self());
     }
 

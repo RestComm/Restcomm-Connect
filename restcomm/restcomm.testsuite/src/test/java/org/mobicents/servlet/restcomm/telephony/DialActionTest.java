@@ -508,7 +508,7 @@ public class DialActionTest {
         assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
         assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
         assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("no_answer"));
+        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("no-answer"));
         assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
 
         assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));

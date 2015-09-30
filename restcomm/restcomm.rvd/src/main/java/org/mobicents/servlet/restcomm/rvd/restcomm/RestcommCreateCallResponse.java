@@ -1,12 +1,12 @@
 package org.mobicents.servlet.restcomm.rvd.restcomm;
 
-public class CreateCallResponse {
+public class RestcommCreateCallResponse {
 
     String sid;
     String to;
     String from;
 
-    public CreateCallResponse() {
+    public RestcommCreateCallResponse() {
         // TODO Auto-generated constructor stub
     }
 
