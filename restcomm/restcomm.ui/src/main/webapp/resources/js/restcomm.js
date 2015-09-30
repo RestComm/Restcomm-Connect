@@ -19,9 +19,6 @@ var rcMod = angular.module('rcApp', [
 
 // authMode reflects whether Restcomm is hooked up to the cloud or not. It is one of 'init-cloud-standalone'
 rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($routeProvider, $locationProvider, authMode) {
-  
-  console.log("auth mode: " + authMode);
-  
   if (authMode == 'cloud') {
 	  $routeProvider.
 		when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
