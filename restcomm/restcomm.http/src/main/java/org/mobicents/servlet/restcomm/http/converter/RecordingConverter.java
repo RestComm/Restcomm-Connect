@@ -59,6 +59,9 @@ public final class RecordingConverter extends AbstractConverter implements JsonS
         writeDuration(recording.getDuration(), writer);
         writeApiVersion(recording.getApiVersion(), writer);
         writeUri(recording.getUri(), writer);
+        writer.startNode("FileUri");
+        writer.setValue(recording.getFileUri().toString());
+        writer.endNode();
         writer.endNode();
     }
 
@@ -73,6 +76,7 @@ public final class RecordingConverter extends AbstractConverter implements JsonS
         writeDuration(recording.getDuration(), object);
         writeApiVersion(recording.getApiVersion(), object);
         writeUri(recording.getUri(), object);
+        object.addProperty("file_uri", recording.getFileUri().toString());
         return object;
     }
 }
