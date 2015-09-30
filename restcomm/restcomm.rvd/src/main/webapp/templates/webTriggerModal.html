@@ -1,61 +1,74 @@
-<div class="modal-header">
-	<h3 class="modal-title"><i class="fa fa-cog"></i> {{'webTriggerModalHeaderLabel' | translate}}</h3>
-</div>
-<div class="modal-body">
-	<div class="help-block">{{'webTriggerModalDescriptorLabel' | translate}}</div>
-	<div class="form-group">
-			{{'webTriggerModalCheckbox' | translate}} &nbsp;<input ng-change="setWebTriggerStatus(webTriggerEnabled);" ng-model="webTriggerEnabled" type="checkbox">
+<div class="web-trigger">
+	<div class="modal-header">
+		<h3 class="modal-title"><i class="fa fa-cog"></i> {{'webTriggerModalHeaderLabel' | translate}}</h3>
 	</div>
-
-	<div ng-if="ccInfo!=null">
-		
+	<div class="modal-body">
+		<div class="help-block">{{'webTriggerModalDescriptorLabel' | translate}}</div>
 		<div class="form-group">
-			<h5><strong>{{'webTriggerModalWebTriggerUrlLabel' | translate}}</strong></h5>
-			<div>
-				<i ng-bind-html="getWebTriggerUrl()"></i>
-			</div>
-			<div class="help-block">
-				<small>{{'webTriggerModalWebTriggerUrlHelp1' | translate}} <code>{{'webTriggerModalWebTriggerUrlHelp2' | translate}}</code> {{'webTriggerModalWebTriggerUrlHelp3' | translate}} <code>{{'webTriggerModalWebTriggerUrlHelp4' | translate}}</code> {{'webTriggerModalWebTriggerUrlHelp5' | translate}} <i>{{'webTriggerModalWebTriggerUrlHelp6' | translate}}</i> {{'webTriggerModalWebTriggerUrlHelp7' | translate}} <em>{{'webTriggerModalWebTriggerUrlHelp8' | translate}}</em> {{'webTriggerModalWebTriggerUrlHelp9' | translate}}</small>
-			</div>			
+				{{'webTriggerModalCheckbox' | translate}} &nbsp;<input ng-change="setWebTriggerStatus(webTriggerEnabled);" ng-model="webTriggerEnabled" type="checkbox">
 		</div>
-		<div class="rvd-spacer20"></div>
-		
-		<div class="form-group">
-			<h5><strong>{{'webTriggerModalAccessTokenLabel' | translate}}</strong></h5>
-			<div class="help-block">
-				{{'webTriggerModalAccessTokenHelp1' | translate}} <code>{{'webTriggerModalAccessTokenHelp2' | translate}}</code> {{'webTriggerModalAccessTokenHelp3' | translate}}
+	
+		<div ng-if="ccInfo!=null">
+			
+			<div class="form-group">
+				<h5><strong>{{'webTriggerModalWebTriggerUrlLabel' | translate}}</strong></h5>
+				<div>
+					<i ng-bind-html="getWebTriggerUrl()"></i>
+				</div>
+				<div class="help-block">
+					<small>{{'webTriggerModalWebTriggerUrlHelp1' | translate}} <code>{{'webTriggerModalWebTriggerUrlHelp2' | translate}}</code> {{'webTriggerModalWebTriggerUrlHelp3' | translate}} <code>{{'webTriggerModalWebTriggerUrlHelp4' | translate}}</code> {{'webTriggerModalWebTriggerUrlHelp5' | translate}} <i>{{'webTriggerModalWebTriggerUrlHelp6' | translate}}</i> {{'webTriggerModalWebTriggerUrlHelp7' | translate}} <em>{{'webTriggerModalWebTriggerUrlHelp8' | translate}}</em> {{'webTriggerModalWebTriggerUrlHelp9' | translate}}</small>
+				</div>			
 			</div>
-			<div class="input-group">
-				<span class="input-group-addon">{{'webTriggerModalAccessTokenInput' | translate}}</span>
-				<input ng-model="ccInfo.accessToken" auto-clear type="text" class="form-control">
-			</div>				
+			<div class="rvd-spacer20"></div>
+			
+			<div class="form-group">
+				<h5><strong>{{'webTriggerModalAccessTokenLabel' | translate}}</strong></h5>
+				<div class="help-block">
+					{{'webTriggerModalAccessTokenHelp1' | translate}} <code>{{'webTriggerModalAccessTokenHelp2' | translate}}</code> {{'webTriggerModalAccessTokenHelp3' | translate}}
+				</div>
+				<div class="input-group">
+					<span class="input-group-addon">{{'webTriggerModalAccessTokenInput' | translate}}</span>
+					<input ng-model="ccInfo.accessToken" auto-clear type="text" class="form-control">
+				</div>				
+			</div>
+			<div class="rvd-spacer20"></div>	
+			
+			<div class="form-group">
+				<h5><strong>{{'webTriggerModalFallbackParamLabel' | translate}}</strong></h5>
+				<div class="help-block">{{'webTriggerModalFallbackParamHelp1' | translate}} <code class="help-tooltip" title="{{'webTriggerModalFallbackParamTitle1' | translate}}">{{'webTriggerModalFallbackParamHelp2' | translate}}</code> {{'webTriggerModalFallbackParamHelp3' | translate}} <code class="help-tooltip" title="{{'webTriggerModalFallbackParamTitle' | translate}}">{{'webTriggerModalFallbackParamHelp4' | translate}}</code> {{'webTriggerModalFallbackParamHelp5' | translate}}</div>
+				<div class="row">
+					<div class="input-group col-md-6">
+						<span class="input-group-addon">{{'webTriggerModalToInput' | translate}}</span>
+						<input ng-model="ccInfo.lanes[0].startPoint.to" type="text" class="form-control">
+					</div>
+					<div class="input-group col-md-6">
+						<span class="input-group-addon">{{'webTriggerModalFromInput' | translate}}</span>
+						<input ng-model="ccInfo.lanes[0].startPoint.from" type="text" class="form-control">
+					</div>
+				</div>
+				<div class="help-block ">
+					<small>
+						{{'webTriggerModalFallbackParamHelp6' | translate}} <i>{{'webTriggerModalFallbackParamHelp7' | translate}}</i> {{'webTriggerModalFallbackParamHelp8' | translate}} <i>{{'webTriggerModalFallbackParamHelp9' | translate}}</i> {{'webTriggerModalFallbackParamHelp10' | translate}}
+						<code>{{'webTriggerModalFallbackParamHelp11' | translate}}</code> {{'webTriggerModalFallbackParamHelp12' | translate}} <code>{{'webTriggerModalFallbackParamHelp13' | translate}}</code> {{'webTriggerModalFallbackParamHelp14' | translate}} <code>{{'webTriggerModalFallbackParamHelp15' | translate}}</code> {{'webTriggerModalFallbackParamHelp16' | translate}} <code>{{'webTriggerModalFallbackParamHelp17' | translate}}</code>
+					</small>
+				</div>
+			</div>
+			
+			
+			
 		</div>
-		<div class="rvd-spacer20"></div>	
-		
-		<div class="form-group">
-			<h5><strong>{{'webTriggerModalFallbackParamLabel' | translate}}</strong></h5>
-			<div class="help-block">{{'webTriggerModalFallbackParamHelp1' | translate}} <code class="help-tooltip" title="{{'webTriggerModalFallbackParamTitle1' | translate}}">{{'webTriggerModalFallbackParamHelp2' | translate}}</code> {{'webTriggerModalFallbackParamHelp3' | translate}} <code class="help-tooltip" title="{{'webTriggerModalFallbackParamTitle' | translate}}">{{'webTriggerModalFallbackParamHelp4' | translate}}</code> {{'webTriggerModalFallbackParamHelp5' | translate}}</div>
-			<div class="row">
-				<div class="input-group col-md-6">
-					<span class="input-group-addon">{{'webTriggerModalToInput' | translate}}</span>
-					<input ng-model="ccInfo.lanes[0].startPoint.to" type="text" class="form-control">
-				</div>
-				<div class="input-group col-md-6">
-					<span class="input-group-addon">{{'webTriggerModalFromInput' | translate}}</span>
-					<input ng-model="ccInfo.lanes[0].startPoint.from" type="text" class="form-control">
+	</div>
+	<div class="modal-footer">
+		<div>
+			<div ng-show="! rvdSettings.apiServerUsername" class="footer-warning">
+				<span class="validation-warning">Warning! Restcomm API credentials are missing. Please provide them before running the trigger.</span>
+				<div style="font-size: 85%">
+					<a target="_blank" href="http://docs.telestax.com/restcomm-web-trigger-use-cases/#configure-rvd-environment">Learn more...</a>
 				</div>
 			</div>
-			<div class="help-block ">
-				<small>
-					{{'webTriggerModalFallbackParamHelp6' | translate}} <i>{{'webTriggerModalFallbackParamHelp7' | translate}}</i> {{'webTriggerModalFallbackParamHelp8' | translate}} <i>{{'webTriggerModalFallbackParamHelp9' | translate}}</i> {{'webTriggerModalFallbackParamHelp10' | translate}}
-					<code>{{'webTriggerModalFallbackParamHelp11' | translate}}</code> {{'webTriggerModalFallbackParamHelp12' | translate}} <code>{{'webTriggerModalFallbackParamHelp13' | translate}}</code> {{'webTriggerModalFallbackParamHelp14' | translate}} <code>{{'webTriggerModalFallbackParamHelp15' | translate}}</code> {{'webTriggerModalFallbackParamHelp16' | translate}} <code>{{'webTriggerModalFallbackParamHelp17' | translate}}</code>
-				</small>
-			</div>
+			<button class="btn btn-primary" ng-click="save(projectName,ccInfo)">{{'webTriggerModalSaveButton' | translate}}</button>
+			<button class="btn btn-default" ng-click="cancel()">{{'webTriggerModalCancelButton' | translate}}</button>
 		</div>
 		
 	</div>
-</div>
-<div class="modal-footer">
-	<button class="btn btn-primary" ng-click="save(projectName,ccInfo)">{{'webTriggerModalSaveButton' | translate}}</button>
-	<button class="btn btn-default" ng-click="cancel()">{{'webTriggerModalCancelButton' | translate}}</button>
 </div>

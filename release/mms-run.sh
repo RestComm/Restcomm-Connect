@@ -93,6 +93,8 @@ if [ "x$JAVA" = "x" ]; then
     if [ "x$JAVA_HOME" != "x" ]; then
 	JAVA="$JAVA_HOME/bin/java"
     else
+	JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+	JAVA_HOME=$JAVA_HOME/..
 	JAVA="java"
     fi
 fi
@@ -144,6 +146,7 @@ if [ "x$JAVA_HOME" != "x" ]; then
         echo 'ERROR: The extension lib for Java does not exist. Please configure $JAVA_HOME/jre/lib/ext'
         exit 1
     fi
+fi
 
 # Setup path for native libs
 LD_LIBRARY_PATH="$MMS_HOME/native"

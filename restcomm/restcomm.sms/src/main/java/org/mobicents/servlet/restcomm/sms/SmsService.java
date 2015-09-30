@@ -93,6 +93,9 @@ public final class SmsService extends UntypedActor {
     // alternatively the Request URI can be used
     private boolean useTo = true;
 
+    //Control whether Restcomm will patch SDP for B2BUA calls
+    private boolean patchForNatB2BUASessions;
+
     public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
@@ -106,6 +109,7 @@ public final class SmsService extends UntypedActor {
         this.servletContext = servletContext;
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
+        patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
     }
 
     private void message(final Object message) throws IOException {
@@ -147,7 +151,7 @@ public final class SmsService extends UntypedActor {
             Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
                 // to the b2bua
-                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
+                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     // if all goes well with proxying the SIP MESSAGE on to the target client
                     // then we can end further processing of this request
                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
@@ -184,8 +188,7 @@ public final class SmsService extends UntypedActor {
             // Store the sms record in the sms session.
             session.tell(new SmsSessionAttribute("record", record), self());
             // Send the SMS.
-            final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),
-                    null);
+            final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, null);
             session.tell(sms, self());
             }
         } else {
@@ -242,16 +245,16 @@ public final class SmsService extends UntypedActor {
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsUrl()));
+                        builder.setUrl(UriUtils.resolve(application.getSmsUrl()));
                         builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
+                        builder.setFallbackUrl(UriUtils.resolve(application.getSmsFallbackUrl()));
                         builder.setFallbackMethod(application.getSmsFallbackMethod());
                     } else {
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, appUri));
+                        builder.setUrl(UriUtils.resolve(appUri));
                         builder.setMethod(number.getSmsMethod());
                         URI appFallbackUrl = number.getSmsFallbackUrl();
                         if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
+                            builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
                             builder.setFallbackMethod(number.getSmsFallbackMethod());
                         }
                     }
@@ -337,12 +340,16 @@ public final class SmsService extends UntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
         // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
         if (B2BUAHelper.isB2BUASession(response)) {
-            B2BUAHelper.forwardResponse(response);
+            B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
             return;
         }
         final SipApplicationSession application = response.getApplicationSession();
         final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
         session.tell(response, self);
+        final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
+        if (origRequest != null && origRequest.getSession().isValid()) {
+            origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+        }
     }
 
     @SuppressWarnings("unchecked")

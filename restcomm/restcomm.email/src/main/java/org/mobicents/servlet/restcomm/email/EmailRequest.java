@@ -17,14 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.email;
 
 /**
- * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- *
+ * @author liblefty@gmail.com (Lefteris Banos)
  */
-public class GetOutboundCall {
-    public GetOutboundCall() {
+public class EmailRequest {
+    private final Mail emailmsg;
+
+    public  EmailRequest(Mail object){
         super();
+        this.emailmsg=object;
     }
+
+    public Mail getObject(){
+        return this.emailmsg;
+    }
+
 }

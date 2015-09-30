@@ -28,7 +28,7 @@ configSipStack() {
             echo "#org.mobicents.ha.javax.sip.REACHABLE_CHECK=" >> $lb_file
 	fi
 
-	if [ "$ACTIVE_PROXY" == "true" ]; then
+        if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
 		sed -e 's|^#org.mobicents.ha.javax.sip.BALANCERS=|org.mobicents.ha.javax.sip.BALANCERS=|' \
 		    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$proxy_address:5065|" \
    		    -e 's|^#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \

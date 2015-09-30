@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
+import static akka.pattern.Patterns.ask;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
@@ -55,8 +56,11 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.restcomm.email.EmailRequest;
+import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.MailMan;
+import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -104,7 +108,11 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
-import scala.concurrent.duration.Duration;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -113,11 +121,10 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -132,8 +139,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
-    static final String EMAIL_SENDER = "restcomm@restcomm.org";
-    static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
+    static String EMAIL_SENDER;
+
 
     // States for the FSM.
     // ==========================
@@ -157,6 +164,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     final State creatingSmsSession;
     final State sendingSms;
     final State hangingUp;
+    final State sendingEmail;
     // final State finished;
 
     // FSM.
@@ -169,7 +177,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     // The downloader will fetch resources for us using HTTP.
     ActorRef downloader = null;
     // The mail man that will deliver e-mail.
-    ActorRef mailer = null;
+    ActorRef mailerNotify = null;
+    ActorRef mailerService = null;
     // The call manager.
     ActorRef callManager = null;
     // The conference manager.
@@ -224,6 +233,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String emailAddress;
     // application data.
     HttpRequestDescriptor request;
+    HttpRequestDescriptor requestCallback;
     HttpResponseDescriptor response;
     // The RCML parser.
     ActorRef parser;
@@ -261,6 +271,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         creatingSmsSession = new State("creating sms session", new CreatingSmsSession(source), null);
         sendingSms = new State("sending sms", new SendingSms(source), null);
         hangingUp = new State("hanging up", new HangingUp(source), null);
+        sendingEmail = new State("sending Email", new SendingEmail(source), null);
 
         // Initialize the transitions for the FSM.
         transitions.add(new Transition(uninitialized, acquiringAsrInfo));
@@ -277,7 +288,17 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(faxing, creatingRecording));
         transitions.add(new Transition(faxing, creatingSmsSession));
         transitions.add(new Transition(faxing, hangingUp));
+        transitions.add(new Transition(sendingEmail, sendingEmail));
+        transitions.add(new Transition(sendingEmail, caching));
+        transitions.add(new Transition(sendingEmail, pausing));
+        transitions.add(new Transition(sendingEmail, redirecting));
+        transitions.add(new Transition(sendingEmail, synthesizing));
+        transitions.add(new Transition(sendingEmail, processingGatherChildren));
+        transitions.add(new Transition(sendingEmail, creatingRecording));
+        transitions.add(new Transition(sendingEmail, creatingSmsSession));
+        transitions.add(new Transition(sendingEmail, hangingUp));
         transitions.add(new Transition(caching, faxing));
+        transitions.add(new Transition(caching, sendingEmail));
         transitions.add(new Transition(caching, playing));
         transitions.add(new Transition(caching, caching));
         transitions.add(new Transition(caching, pausing));
@@ -292,6 +313,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(checkingCache, checkingCache));
         transitions.add(new Transition(playing, hangingUp));
         transitions.add(new Transition(synthesizing, faxing));
+        transitions.add(new Transition(synthesizing, sendingEmail));
         transitions.add(new Transition(synthesizing, pausing));
         transitions.add(new Transition(synthesizing, checkingCache));
         transitions.add(new Transition(synthesizing, caching));
@@ -302,6 +324,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(synthesizing, synthesizing));
         transitions.add(new Transition(synthesizing, hangingUp));
         transitions.add(new Transition(redirecting, faxing));
+        transitions.add(new Transition(redirecting, sendingEmail));
         transitions.add(new Transition(redirecting, pausing));
         transitions.add(new Transition(redirecting, checkingCache));
         transitions.add(new Transition(redirecting, caching));
@@ -314,6 +337,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(creatingRecording, finishRecording));
         transitions.add(new Transition(creatingRecording, hangingUp));
         transitions.add(new Transition(finishRecording, faxing));
+        transitions.add(new Transition(finishRecording, sendingEmail));
         transitions.add(new Transition(finishRecording, pausing));
         transitions.add(new Transition(finishRecording, checkingCache));
         transitions.add(new Transition(finishRecording, caching));
@@ -330,6 +354,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(gathering, finishGathering));
         transitions.add(new Transition(gathering, hangingUp));
         transitions.add(new Transition(finishGathering, faxing));
+        transitions.add(new Transition(finishGathering, sendingEmail));
         transitions.add(new Transition(finishGathering, pausing));
         transitions.add(new Transition(finishGathering, checkingCache));
         transitions.add(new Transition(finishGathering, caching));
@@ -342,6 +367,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         transitions.add(new Transition(creatingSmsSession, sendingSms));
         transitions.add(new Transition(creatingSmsSession, hangingUp));
         transitions.add(new Transition(sendingSms, faxing));
+        transitions.add(new Transition(sendingSms, sendingEmail));
         transitions.add(new Transition(sendingSms, pausing));
         transitions.add(new Transition(sendingSms, caching));
         transitions.add(new Transition(sendingSms, synthesizing));
@@ -410,15 +436,35 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         }));
     }
 
-    void callback() {
+    //Callback using the Akka ask pattern (http://doc.akka.io/docs/akka/2.2.5/java/untyped-actors.html#Ask__Send-And-Receive-Future) will force VoiceInterpter to wait until
+    //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
+    void callback(boolean ask) {
         if (statusCallback != null) {
+            logger.info("About to execute statusCallback: "+statusCallback.toString());
             if (statusCallbackMethod == null) {
                 statusCallbackMethod = "POST";
             }
             final List<NameValuePair> parameters = parameters();
-            request = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
-            downloader.tell(request, null);
+            requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
+            if (!ask) {
+                downloader.tell(requestCallback, null);
+            } else if (ask) {
+                final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
+                DownloaderResponse downloaderResponse = null;
+                try {
+                    downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                } catch (Exception e) {
+                    logger.error("Exception during callback with ask pattern");
+                }
+            }
+        } else {
+            logger.info("status callback is null");
         }
+    }
+
+    void callback() {
+        callback(false);
     }
 
     ActorRef cache(final String path, final String uri) {
@@ -472,8 +518,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
-                return new MailMan(configuration);
+            public Actor create() throws Exception {
+                final CreateEmailService builder = new EmailService();
+                builder.CreateEmailSession(configuration);
+                EMAIL_SENDER=builder.getUser();
+                return builder.build();
             }
         }));
     }
@@ -549,6 +598,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         if (emailAddress == null || emailAddress.isEmpty()) {
             return;
         }
+        final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
         final StringBuilder buffer = new StringBuilder();
         buffer.append("<strong>").append("Sid: ").append("</strong></br>");
         buffer.append(notification.getSid().toString()).append("</br>");
@@ -578,8 +628,73 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         buffer.append(notification.getResponseHeaders()).append("</br>");
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
-        final Mail email = new Mail(EMAIL_SENDER, emailAddress, EMAIL_SUBJECT, buffer.toString());
-        mailer.tell(email, self());
+        final Mail emailMsg = new Mail(EMAIL_SENDER,emailAddress,EMAIL_SUBJECT, buffer.toString());
+        if (mailerNotify == null){
+            mailerNotify = mailer(configuration.subset("smtp-notify"));
+        }
+        mailerNotify.tell(new EmailRequest(emailMsg), self());
+    }
+
+    private final class SendingEmail extends AbstractAction {
+        public SendingEmail(final ActorRef source){
+            super(source);
+        }
+
+        @Override
+        public void execute( final Object message) throws Exception {
+            final Tag verb = (Tag)message;
+            // Parse "from".
+            String from;
+            Attribute attribute = verb.attribute("from");
+            if (attribute != null) {
+                from = attribute.value();
+            }else{
+                Exception error = new Exception("From attribute was not defined");
+                source.tell(new EmailResponse(error,error.getMessage()), source);
+                return;
+            }
+
+            // Parse "to".
+            String to;
+            attribute = verb.attribute("to");
+            if (attribute != null) {
+                to = attribute.value();
+            }else{
+                Exception error = new Exception("To attribute was not defined");
+                source.tell(new EmailResponse(error,error.getMessage()), source);
+                return;
+            }
+
+            // Parse "cc".
+            String cc="";
+            attribute = verb.attribute("cc");
+            if (attribute != null) {
+                cc = attribute.value();
+            }
+
+            // Parse "bcc".
+            String bcc="";
+            attribute = verb.attribute("bcc");
+            if (attribute != null) {
+                bcc = attribute.value();
+            }
+
+            // Parse "subject"
+            String subject;
+            attribute = verb.attribute("subject");
+            if (attribute != null) {
+                subject = attribute.value();
+            }else{
+                subject="Restcomm Email Service";
+            }
+
+            // Send the email.
+            final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
+            if (mailerService == null){
+                mailerService = mailer(configuration.subset("smtp-service"));
+            }
+            mailerService.tell(new EmailRequest(emailMsg), self());
+        }
     }
 
     void smsResponse(final Object message) {
@@ -1700,17 +1815,17 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, source);
+                        downloader.tell(request, null);
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         downloader.tell(request, null);
-                        source.tell(new StopInterpreter(), source);
                     }
                     // A little clean up.
                     recordingSid = null;
                     recordingUri = null;
-                    return;
+//                    final StopInterpreter stop = new StopInterpreter();
+//                    source.tell(stop, source);
                 }
             }
             if (CallStateChanged.class.equals(klass)) {

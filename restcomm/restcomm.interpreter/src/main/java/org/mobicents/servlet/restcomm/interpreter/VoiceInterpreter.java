@@ -31,6 +31,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -62,6 +63,7 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -109,7 +111,7 @@ import org.mobicents.servlet.restcomm.telephony.DestroyConference;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
-import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
+import org.mobicents.servlet.restcomm.telephony.GetRelatedCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.Reject;
@@ -229,6 +231,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
         transitions.add(new Transition(initializingCall, downloadingRcml));
+        transitions.add(new Transition(initializingCall, ready));
+        transitions.add(new Transition(initializingCall, finishDialing));
         transitions.add(new Transition(initializingCall, hangingUp));
         transitions.add(new Transition(initializingCall, finished));
         transitions.add(new Transition(downloadingRcml, ready));
@@ -241,6 +245,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(downloadingFallbackRcml, finished));
         transitions.add(new Transition(ready, initializingCall));
         transitions.add(new Transition(ready, faxing));
+        transitions.add(new Transition(ready, sendingEmail));
         transitions.add(new Transition(ready, pausing));
         transitions.add(new Transition(ready, checkingCache));
         transitions.add(new Transition(ready, caching));
@@ -258,6 +263,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(rejecting, finished));
         transitions.add(new Transition(faxing, ready));
         transitions.add(new Transition(faxing, finished));
+        transitions.add(new Transition(sendingEmail, ready));
+        transitions.add(new Transition(sendingEmail, finished));
+        transitions.add(new Transition(sendingEmail, finishDialing));
         transitions.add(new Transition(caching, finished));
         transitions.add(new Transition(playing, ready));
         transitions.add(new Transition(playing, finished));
@@ -279,6 +287,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(startDialing, processingDialChildren));
         transitions.add(new Transition(startDialing, acquiringConferenceInfo));
         transitions.add(new Transition(startDialing, faxing));
+        transitions.add(new Transition(startDialing, sendingEmail));
         transitions.add(new Transition(startDialing, pausing));
         transitions.add(new Transition(startDialing, checkingCache));
         transitions.add(new Transition(startDialing, caching));
@@ -316,6 +325,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(bridged, finished));
         transitions.add(new Transition(finishDialing, ready));
         transitions.add(new Transition(finishDialing, faxing));
+        transitions.add(new Transition(finishDialing, sendingEmail));
         transitions.add(new Transition(finishDialing, pausing));
         transitions.add(new Transition(finishDialing, checkingCache));
         transitions.add(new Transition(finishDialing, caching));
@@ -339,6 +349,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(conferencing, finished));
         transitions.add(new Transition(finishConferencing, ready));
         transitions.add(new Transition(finishConferencing, faxing));
+        transitions.add(new Transition(finishConferencing, sendingEmail));
         transitions.add(new Transition(finishConferencing, pausing));
         transitions.add(new Transition(finishConferencing, checkingCache));
         transitions.add(new Transition(finishConferencing, caching));
@@ -376,7 +387,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.smsSessions = new HashMap<Sid, ActorRef>();
         this.storage = storage;
         this.synthesizer = tts(configuration.subset("speech-synthesizer"));
-        this.mailer = mailer(configuration.subset("smtp"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -525,7 +535,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // update db and callback statusCallback url.
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
-                    fsm.transition(message, downloadingRcml);
+                  if (parser != null) {
+                      fsm.transition(message, ready);
+                    } else {
+                        fsm.transition(message, downloadingRcml);
+                    }
                 } else if (joiningConference.equals(state)) {
                     fsm.transition(message, conferencing);
                 } else if (forking.equals(state)) {
@@ -644,6 +658,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, playing);
                     } else if (fax.equals(verb.name())) {
                         fsm.transition(message, faxing);
+                    } else if (email.equals(verb.name())) {
+                    fsm.transition(message, sendingEmail);
                     }
                 } else if (processingGatherChildren.equals(state)) {
                     fsm.transition(message, processingGatherChildren);
@@ -692,6 +708,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, creatingRecording);
             } else if (sms.equals(verb.name())) {
                 fsm.transition(message, creatingSmsSession);
+            } else if (email.equals(verb.name())) {
+                fsm.transition(message, sendingEmail);
             } else {
                 invalidVerb(verb);
             }
@@ -701,6 +719,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, gathering);
         } else if (MediaGroupResponse.class.equals(klass)) {
             final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
+            logger.info("MediaGroupResponse, succeeded: "+response.succeeded()+"  "+response.cause());
             if (response.succeeded()) {
                 if (playingRejectionPrompt.equals(state)) {
                     fsm.transition(message, hangingUp);
@@ -763,6 +782,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             smsResponse(message);
         } else if (FaxResponse.class.equals(klass)) {
             fsm.transition(message, ready);
+        } else if (EmailResponse.class.equals(klass)) {
+            final EmailResponse response = (EmailResponse) message;
+            if (!response.succeeded()) {
+                logger.error(
+                    "There was an error while sending an email :" + response.error(),
+                        response.cause());
+            }
+                fsm.transition(message, ready);
         } else if (StopInterpreter.class.equals(klass)) {
             this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
             if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
@@ -786,8 +813,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
-        } else if (GetOutboundCall.class.equals(klass)) {
-            onGetOutboundCall((GetOutboundCall) message, self, sender);
+        } else if (GetRelatedCall.class.equals(klass)) {
+            onGetRelatedCall((GetRelatedCall) message, self, sender);
         }
     }
 
@@ -820,9 +847,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private void onGetOutboundCall(GetOutboundCall message, ActorRef self, ActorRef sender) {
+    private void onGetRelatedCall(GetRelatedCall message, ActorRef self, ActorRef sender) {
+        final ActorRef callActor = message.call();
         if (outboundCall != null) {
-            sender.tell(outboundCall, self);
+            if (callActor.equals(outboundCall)) {
+                sender.tell(call, self);
+            } else if (callActor.equals(call)) {
+                sender.tell(outboundCall, self);
+            }
         } else {
             // If previously that was a p2p call that changed to conference (for hold)
             // and now it changes again to a new url, the outbound call is null since
@@ -832,10 +864,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void conferenceStateModeratorPresent(final Object message) {
-        if (!startConferenceOnEnter && !muteCall) {
-            logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call");
-            call.tell(new Unmute(), self());
-        }
+        logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: "+call.path().toString());
+        call.tell(new Unmute(), self());
 
         if (confSubVoiceInterpreter != null) {
             logger.info("VoiceInterpreter stopping confSubVoiceInterpreter");
@@ -1358,14 +1388,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 CreateCall create = null;
                 final Tag child = dialChildren.get(0);
                 if (Nouns.client.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.CLIENT, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.CLIENT, accountId, null);
+                    }
                 } else if (Nouns.number.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.PSTN, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.PSTN, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.PSTN, accountId, null);
+                    }
                 } else if (Nouns.uri.equals(child.name())) {
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                            CreateCall.Type.SIP, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null);
+                    }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
                     String username = null;
@@ -1376,8 +1421,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (child.attribute("password") != null) {
                         password = child.attribute("password").value();
                     }
-                    create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                            CreateCall.Type.SIP, accountId);
+                    if (call != null && callInfo != null) {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, callInfo.sid());
+                    } else {
+                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
+                                CreateCall.Type.SIP, accountId, null);
+                    }
                 }
                 callManager.tell(create, source);
             } else {
@@ -1543,7 +1593,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         // Handle Failed Calls
         if (message instanceof CallManagerResponse && !(((CallManagerResponse<ActorRef>) message).succeeded())) {
             parameters.add(new BasicNameValuePair("DialCallSid", null));
-            parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.name()));
+            parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.toString()));
             parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
             parameters.add(new BasicNameValuePair("RecordingUrl", null));
             parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
@@ -1560,13 +1610,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("DialCallSid", dialCallSid));
                 // parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
                 // .toString()));
-                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
+                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
                 parameters.add(new BasicNameValuePair("DialCallSid", null));
-                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.name()));
+                parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
@@ -1657,8 +1707,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-
-            Attribute attribute = verb.attribute("action");
+            Attribute attribute = null;
+           if(verb !=null) {
+                 attribute = verb.attribute("action");
+            }
 
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
                 if (message instanceof ReceiveTimeout) {
@@ -1688,6 +1740,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     dialChildren = null;
                     outboundCall = null;
+                    callback();
                     return;
                 } else if (bridged.equals(state)) {
                     outboundCall.tell(new Hangup(), source);
@@ -1719,6 +1772,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("Executing Dial Action url");
                     executeDialAction(message, null);
                 }
+                callback();
                 return;
             } else {
                 logger.info("Action attribute is null.");
@@ -1726,7 +1780,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
-            parser.tell(next, source);
+            if(parser !=null) {
+                parser.tell(next, source);
+            }
+
             dialChildren = null;
             outboundCall = null;
         }
@@ -1741,6 +1798,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final ConferenceCenterResponse response = (ConferenceCenterResponse) message;
             conference = response.get();
+            final GetConferenceInfo request = new GetConferenceInfo();
             conference.tell(new Observe(source), source);
             conference.tell(new GetConferenceInfo(), source);
         }
@@ -2027,7 +2085,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
-                callback();
+                callback(true);
             }
 
             // XXX review bridge cleanup!!
@@ -2088,7 +2146,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailer);
+            if (mailerNotify != null)
+                context.stop(mailerNotify);
+            if (mailerService != null)
+                context.stop(mailerService);
             context.stop(downloader);
             context.stop(asrService);
             context.stop(faxService);

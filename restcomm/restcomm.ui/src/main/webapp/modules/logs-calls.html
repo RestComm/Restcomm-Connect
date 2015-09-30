@@ -44,13 +44,19 @@
                 <div class="form-group col-md-3 date-group-sm">
                     <div class="input-group">
                         <span class="input-group-addon">Date</span>
-                        <input type="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+                        <input id="startpicker" pick-a-date="date" class="input-sm form-control" placeholder="Start Date" ng-model="search.start_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="startDate" class="btn btn-default input-sm" ng-click="openDate('startDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
                     </div>
                 </div>
                 <div class="form-group col-md-3 date-group-sm">
                     <div class="input-group">
                         <span class="input-group-addon">To</span>
-                        <input type="date" class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                        <input id="endpicker" pick-a-date="date" pick-a-date-options="options"  class="input-sm form-control" placeholder="End Date" ng-model="search.end_time" />
+                        <span class="input-group-btn">
+                            <button  type="button" id="endDate" class="btn btn-default input-sm" ng-click="openDate('endDate')"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
                     </div>
                 </div>
                 <div class="form-group col-md-2 filter-field" style="width: 110px;">

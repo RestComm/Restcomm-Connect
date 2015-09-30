@@ -32,14 +32,14 @@ import org.mobicents.servlet.restcomm.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 /**
  *
@@ -247,7 +247,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             try {
                 storage = storage(xml, loader);
             } catch (final ObjectInstantiationException exception) {
-                logger.error("ObjectInstantiationException during initialization", exception);
+                logger.error("ObjectInstantiationException during initialization: ", exception);
             }
             context.setAttribute(DaoManager.class.getName(), storage);
             ShiroResources.getInstance().set(DaoManager.class, storage);
@@ -259,7 +259,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             try {
                 mscontrollerFactory = mediaServerControllerFactory(xml, loader);
             } catch (ServletException exception) {
-                logger.error("ServletException during initialization", exception);
+                logger.error("ServletException during initialization: ", exception);
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 

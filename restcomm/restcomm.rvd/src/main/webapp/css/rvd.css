@@ -491,8 +491,6 @@ textarea.medium {
 	margin-right: auto;
 }
 
-
-/* ------------------ #/designer --------------------------- */
 .editor .panel-heading {
 	padding: 5px 10px;
 }
@@ -561,6 +559,35 @@ textarea.medium {
 	background-color: #428BCA;
 	opacity: 0.8;
 }
+
+.rvd-designer .module-filter {
+	width: 200px;
+}
+
+.rvd-designer .no-modules-warning {
+	text-align: center;
+	padding-top: 100px;
+}
+
+/* Graph */
+.graph {
+	border: 1px solid #D3D3D3;
+	border-radius: 3px;
+}
+#paper {
+	padding: 20px;
+	
+	/*display: inline-block;*/
+	overflow: hidden;
+}
+#paperContainer {
+
+}
+.graph .graph-controls {
+	position:absolute;
+	right:20px;
+}
+
 
 
 /* ------------------ #/packaging/ view -------------------- */
@@ -640,6 +667,14 @@ textarea.medium {
 .rvd-grey {
 	color: #888;
 }
+
+/* ----------------- Web Trigger modal -------------------- */
+.web-trigger .footer-warning {
+	float: left;
+	width: 72%;
+	text-align: left;
+}
+
 
 /* ------------------ directives -------------------- */
 /*.variable-lookup button {
