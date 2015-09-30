@@ -22,8 +22,6 @@ rcServices.factory('SessionService', function() {
 });
 
 rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
-	console.log("creating AuthService");
-	
 	var serviceInstance = {};
 		
 	serviceInstance.isLoggedIn = function() {
@@ -35,6 +33,9 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 		  //var accountSid = "AC" + md5.createHash(username);
 		  //return accountSid;
 		return Auth.restcommAccount.sid;
+	}
+	serviceInstance.getLoggedAccount = function () {
+		return Auth.restcommAccount;
 	}
 	serviceInstance.getUsername = function() {
 		return Auth.authz.profile.username;
@@ -72,6 +73,9 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 	}
 	serviceInstance.secure = function(role) {
 			return serviceInstance.secureAny([role]);
+	}
+	serviceInstance.hasRole = function(role) {
+		return Auth.authz.hasResourceRole(role, Auth.authz.clientId);
 	}
 
     
