@@ -38,7 +38,7 @@ angular.element(document).ready(function ($http) {
 							Authorization: 'Bearer ' + keycloakAuth.token
 						}
 					}).success(function(response) {
-						console.log("Retrieved account info for user " + keycloakAuth.profile.username);
+						//console.log("Retrieved account info for user " + keycloakAuth.profile.username);
 						auth.restcommAccount = response;
 						angular.bootstrap(document, ["rcApp"]);
 					}).error(function(errorResponse, status) {
