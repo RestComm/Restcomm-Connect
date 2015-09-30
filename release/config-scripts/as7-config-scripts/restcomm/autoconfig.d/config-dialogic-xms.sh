@@ -9,9 +9,9 @@ RESTCOMM_DEPLOY=$RESTCOMM_STANDALONE/deployments/restcomm.war
 activateXMS() {
 	restcomm_conf=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	ms_address="$1"
-	
+
 	sed -e "/<mscontrol>/ {
-		N; s|<compatibility>.*<\/compatibility>|<compatibility>xms<\/compatibility>|
+		N; s|<compatibility>.*<\/compatibility>|<compatibility>$MS_COMPATIBILITY_MODE<\/compatibility>|
 		N; s|<media-server \".*\">|<media-server name=\"Dialogic XMS\" class=\"com.dialogic.dlg309\">|
 		N; s|<address>.*<\/address>|<address>$ms_address<\/address>|
 	}" $restcomm_conf > $restcomm_conf.bak
@@ -20,6 +20,6 @@ activateXMS() {
 }
 
 #MAIN
-echo 'Configuring Dialogic XMS...'
+echo "Configuring Dialogic XMS...MS_MODE: $MS_COMPATIBILITY_MODE"
 activateXMS $MS_ADDRESS
 echo '...finished configuring Dialogic XMS!'
