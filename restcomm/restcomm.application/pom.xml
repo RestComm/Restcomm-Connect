@@ -221,7 +221,7 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.mscontrol.xms</artifactId>
+			<artifactId>restcomm.mscontrol.jsr309</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

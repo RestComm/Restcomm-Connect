@@ -245,16 +245,16 @@ public final class SmsService extends UntypedActor {
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsUrl()));
+                        builder.setUrl(UriUtils.resolve(application.getSmsUrl()));
                         builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
+                        builder.setFallbackUrl(UriUtils.resolve(application.getSmsFallbackUrl()));
                         builder.setFallbackMethod(application.getSmsFallbackMethod());
                     } else {
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, appUri));
+                        builder.setUrl(UriUtils.resolve(appUri));
                         builder.setMethod(number.getSmsMethod());
                         URI appFallbackUrl = number.getSmsFallbackUrl();
                         if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
+                            builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
                             builder.setFallbackMethod(number.getSmsFallbackMethod());
                         }
                     }

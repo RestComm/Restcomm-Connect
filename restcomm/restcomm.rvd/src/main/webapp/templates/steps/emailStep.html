@@ -42,16 +42,23 @@
                 </form>
             </div>
         </div>
-        <!--div class="form-group row">
-            <div class="col-md-8">
-                <div class="input-group form-group input-group-sm">
-                    <span class="input-group-addon help-tooltip" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'smsStepContinueToTooltip' | translate}}">{{'emailStepContinueLabel' | translate}}</span>
-                    <select sync-model name='next' null-if-empty ng-model='step.next' ng-options='target.name as target.label for target in getAllTargets()' class="form-control">
-                        <option value=""></option>
-                    </select>
-                </div>
-                <div class="validation-error" ng-show="form.next.$invalid">{{'emailStepChooseTargetLabel' | translate}}</div>
+        <div class="form-group row">
+           <div class='col-md-6'>
+               <form name="formCc" novalidate>
+                   <div lookup-context class="input-group input-group-sm">
+                       <span class="input-group-addon">{{'emailStepCcLabel' | translate}}&nbsp;<i class="fa fa-info-circle rvd-clickable" popover="{{'emailStepBccLabelPopover' | translate}}" popover-placement='top'></i></span>
+                       <input type='text' name='cc' ng-model='step.cc' lookup-target auto-clear class="form-control" ></input>
+                    </div>
+               </form>
+          </div>
+            <div class='col-md-6'>
+              <form name="formBcc" novalidate>
+                    <div lookup-context class="input-group input-group-sm">
+                        <span class="input-group-addon">{{'emailStepBccLabel' | translate}}&nbsp;<i class="fa fa-info-circle rvd-clickable" popover="{{'emailStepCcLabelPopover' | translate}}" popover-placement='top'></i></span>
+                        <input type='text' name='bcc'  ng-model='step.bcc' lookup-target auto-clear class="form-control" ></input>
+                   </div>
+              </form>
             </div>
-        </div-->
+        </div>
     </div>
 </div>
