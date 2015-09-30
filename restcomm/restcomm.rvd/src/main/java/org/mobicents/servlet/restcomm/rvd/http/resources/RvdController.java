@@ -106,7 +106,7 @@ public class RvdController extends RestService {
             // logging rcml response, if configured
             // make sure logging is enabled before allowing access to sensitive log information
             ProjectSettings projectSettings = rvdContext.getProjectSettings();
-            if (projectSettings.getLogging() == true && projectSettings.getLoggingRCML() == true){
+            if (projectSettings.getLogging() == true && (projectSettings.getLoggingRCML() != null && projectSettings.getLoggingRCML() == true) ){
                 interpreter.getProjectLogger().log( rcmlResponse, false).tag("app", appname).tag("RCML").done();
             }
 
