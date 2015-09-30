@@ -29,6 +29,7 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeUri;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -70,8 +72,10 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         if (s3AccessTool != null) {
             URI s3Uri = s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
             if (s3Uri != null) {
-                recording = recording.updateUri(s3Uri);
+                recording = recording.updateFileUri(s3Uri);
             }
+        } else {
+            recording = recording.updateFileUri(generateLocalFileUri("/restcomm/recordings/"+ recording.getSid()+".wav"));
         }
         final SqlSession session = sessions.openSession();
         try {
@@ -80,6 +84,15 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         } finally {
             session.close();
         }
+    }
+
+    public URI generateLocalFileUri(String recordingRelativeUri) {
+        URI uriToResolve = null;
+        try {
+            //For local stored recordings, add .wav suffix to the URI
+            uriToResolve = new URI(recordingRelativeUri+".wav");
+        } catch (URISyntaxException e) {}
+        return UriUtils.resolve(uriToResolve);
     }
 
     @Override
@@ -153,6 +166,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         map.put("duration", recording.getDuration());
         map.put("api_version", recording.getApiVersion());
         map.put("uri", writeUri(recording.getUri()));
+        map.put("file_uri", writeUri(recording.getFileUri()));
         return map;
     }
 
@@ -165,6 +179,12 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         final Double duration = readDouble(map.get("duration"));
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
-        return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri);
+        //For backward compatibility. For old an database that we upgraded to the latest schema, the file_uri will be null so we need
+        //to create the file_uri on the fly
+        String fileUri = (String) map.get("file_uri");
+        if (fileUri == null || fileUri.isEmpty()) {
+            fileUri = generateLocalFileUri("/restcomm/recordings/"+ sid+".wav").toString();
+        }
+        return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, readUri(fileUri));
     }
 }

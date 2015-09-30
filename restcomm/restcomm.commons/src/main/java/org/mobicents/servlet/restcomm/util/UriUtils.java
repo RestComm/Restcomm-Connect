@@ -17,7 +17,6 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.Query;
 import javax.management.ReflectionException;
-import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.HttpConnector;
@@ -103,7 +102,7 @@ public final class UriUtils {
      * @param uri The relative URI
      * @return The absolute URI
      */
-    public static URI resolve(final ServletContext context, final URI uri) {
+    public static URI resolve(final URI uri) {
         if (httpConnector == null) {
             HttpConnectorList httpConnectorList = null;
             try {
@@ -124,9 +123,6 @@ public final class UriUtils {
                 if (httpConnector == null) {
                     httpConnector = connectors.get(0);
                 }
-            }
-            if (httpConnectorList != null) {
-                context.setAttribute(HttpConnectorList.class.getName(), httpConnectorList);
             }
         }
 
