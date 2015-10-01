@@ -19,7 +19,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mscontrol.xms;
+package org.mobicents.servlet.restcomm.mscontrol.jsr309;
 
 import javax.media.mscontrol.MsControlFactory;
 
@@ -36,13 +36,13 @@ import akka.actor.UntypedActorFactory;
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  *
  */
-public class XmsControllerFactory implements MediaServerControllerFactory {
+public class Jsr309ControllerFactory implements MediaServerControllerFactory {
 
     // Actor system
     private final ActorSystem system;
 
     // JSR-309
-    private MsControlFactory msControlFactory;
+    private final MsControlFactory msControlFactory;
 
     // Factories
     private final CallControllerFactory callControllerFactory;
@@ -52,21 +52,18 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
     // Media Server Info
     private final MediaServerInfo mediaServerInfo;
 
-    public XmsControllerFactory(ActorSystem system, MediaServerInfo mediaServerInfo) {
+    public Jsr309ControllerFactory(ActorSystem system, MediaServerInfo mediaServerInfo, MsControlFactory msControlFactory) {
         // Actor system
         this.system = system;
 
         // Factories
+        this.msControlFactory = msControlFactory;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
         this.bridgeControllerFactory = new BridgeControllerFactory();
 
         // Media Server Info
         this.mediaServerInfo = mediaServerInfo;
-    }
-
-    public void setMsControlFactory(MsControlFactory factory) {
-        this.msControlFactory = factory;
     }
 
     @Override
@@ -93,7 +90,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             if (msControlFactory == null) {
                 throw new IllegalStateException("No media server control factory has been set.");
             }
-            return new XmsCallController(msControlFactory, mediaServerInfo);
+            return new Jsr309CallController(msControlFactory, mediaServerInfo);
         }
 
     }
@@ -107,7 +104,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             if (msControlFactory == null) {
                 throw new IllegalStateException("No media server control factory has been set.");
             }
-            return new XmsConferenceController(msControlFactory, mediaServerInfo);
+            return new Jsr309ConferenceController(msControlFactory, mediaServerInfo);
         }
 
     }
@@ -121,7 +118,7 @@ public class XmsControllerFactory implements MediaServerControllerFactory {
             if (msControlFactory == null) {
                 throw new IllegalStateException("No media server control factory has been set.");
             }
-            return new XmsBridgeController(msControlFactory, mediaServerInfo);
+            return new Jsr309BridgeController(msControlFactory, mediaServerInfo);
         }
 
     }
