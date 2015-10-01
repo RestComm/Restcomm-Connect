@@ -57,6 +57,7 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.smpp.SmppClientOpsThread;
+import org.mobicents.servlet.restcomm.smpp.SmppService;
 import org.mobicents.servlet.restcomm.smpp.SmppSessionOutbound;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
@@ -92,6 +93,7 @@ public final class SmsService extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
 
+
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo = true;
@@ -109,6 +111,7 @@ public final class SmsService extends UntypedActor {
         this.servletContext = servletContext;
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
+
     }
 
     private ActorRef sendToSMPPService() {
@@ -133,35 +136,29 @@ public final class SmsService extends UntypedActor {
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
 
+        //************************SIP Request Send to SMPP Endpoint**************************************
 
-        /// used to direct message to SMPP endpoint
-        final SipURI getUri = (SipURI) request.getRequestURI();
-        final String to = getUri.getUser();
-        if (to.toLowerCase().startsWith("smpp") ){
-            logger.info("Sending message to SMPP endpoint - to: " + to );
-            ActorRef smppServiceSend =  sendToSMPPService();
-            ActorRef session = session();
-
-            //get SMPP session
-            SmppSession smppSession = SmppClientOpsThread.getSmppSessionForOutbound();
-            //make sure smpp session is bound
-
-            if (smppSession.isBound() && smppSession != null){
-                //accept sms and forward to SMPPSessionOutbound
-                logger.info("There is an Smpp Session running, message will be accepted");
-                final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
-                messageAccepted.send();
-                //send message to SmppSessionOutbound
-                smppServiceSend.tell(request, null);
+        //If SMPP is activated send all SMS through the SMPP connection else
+        //go through normal SIP SMS aggregator
+        if (SmppService.getSmppActivated().equalsIgnoreCase("true")){
+            try {
+            final SipURI getUri = (SipURI) request.getRequestURI();
+            final String to = getUri.getUser();
+                logger.info("Sending message to SMPP endpoint - to: " + to );
+                ActorRef smppServiceSend =  sendToSMPPService();
+                SmppSession smppSession = SmppClientOpsThread.getSmppSessionForOutbound();
+                if (smppSession.isBound() && smppSession != null){
+                    logger.info("There is an Smpp Session running, message will be accepted and forwarded to SMPP");
+                    final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
+                    messageAccepted.send();
+                    //send message to SmppSessionOutbound
+                    smppServiceSend.tell(request, null);
+                    }
+            }catch (final Exception exception) {
+                // Log the exception.
+                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
+                }
             }
-
-            //store message request in db
-          //  recordSmppMessageInDB (clients,  client,  request , to, session );
-            return;
-        }
-
-
-
 
         // Make sure we force clients to authenticate.
         if (client != null) {
@@ -236,10 +233,11 @@ public final class SmsService extends UntypedActor {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
             response.send();
             // We didn't find anyway to handle the SMS.
-            String errMsg = "Restcomm cannot process this SMS because the destination number cannot be found. To: "+toUser;
+            String errMsg = "Restcomm cannot process this SMS because the destination number is not hosted locally. To: "+toUser;
             sendNotification(errMsg, 11005, "error", true);
         }
     }
+
 
     /**
      *

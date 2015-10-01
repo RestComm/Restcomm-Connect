@@ -51,8 +51,8 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
     private ActorSystem system;
     private ActorRef service;
-  //  private ActorRef serviceSmpp;
     private ServletContext context;
+    private static ActorSystem smppSystem = null  ; //smppSystem;
 
     public SmsServiceProxy() {
         super();
@@ -60,7 +60,6 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
     @Override
     protected void doRequest(final SipServletRequest request) throws ServletException, IOException {
-
             service.tell(request, null);
 
     }
@@ -87,18 +86,16 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         }));
     }
 
-/**
-    private ActorRef sendToSMPPService(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
-            }
-        }));
+    //use to set Akka ActorSystem to be used in SmsSession
+    public void setSmppSystem(ActorSystem smppSystem){
+        SmsServiceProxy.smppSystem = smppSystem;
     }
-**/
+
+    public static ActorSystem getSmppSystem(){
+       return SmsServiceProxy.smppSystem ;
+    }
+
 
     @Override
     public void servletInitialized(SipServletContextEvent event) {
@@ -109,6 +106,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             //        configuration = configuration.subset("sms-aggregator");
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            setSmppSystem(system); //used to set ActorySystem to be used in SmsSession
             service = service(configuration, factory, storage);
             //serviceSmpp = sendToSMPPService(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
