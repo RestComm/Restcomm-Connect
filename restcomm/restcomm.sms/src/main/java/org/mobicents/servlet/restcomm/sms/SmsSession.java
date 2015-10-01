@@ -43,9 +43,14 @@ import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.smpp.SmppService;
+import org.mobicents.servlet.restcomm.smpp.SmppSessionOutbound;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -69,9 +74,9 @@ public final class SmsSession extends UntypedActor {
     private ConcurrentHashMap<String, String> customHttpHeaderMap;
 
     private final DaoManager storage;
-
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
+    private ActorSystem system = SmsServiceProxy.getSmppSystem();
 
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
             final DaoManager storage) {
@@ -172,8 +177,9 @@ public final class SmsSession extends UntypedActor {
         }
     }
 
-    private void outbound(final Object message) {
+private void outbound(final Object message) throws IOException {
         last = (SmsSessionRequest) message;
+
         if (initial == null) {
             initial = last;
         }
@@ -210,6 +216,28 @@ public final class SmsSession extends UntypedActor {
             buffer.append(to).append("@").append(service);
         }
         final String recipient = buffer.toString();
+
+        //************************SIP Request Send to SMPP Endpoint**************************************
+
+        //If SMPP is activated send all SMS through the SMPP connection else
+        //go through normal SIP SMS aggregator
+        if (SmppService.getSmppActivated().equalsIgnoreCase("true")){
+            try{
+               //application.setAttribute(SmsSession.class.getName(), self);
+                final SipServletRequest request = factory.createRequest(application, "MESSAGE", sender, recipient);
+                final SipURI smppUri = (SipURI) factory.createURI(recipient);
+                final SipURI getUri = smppUri;
+                final String smppTo = getUri.getUser();
+                request.setContent(body, "text/plain");
+                    logger.info("Sending message to SMPP endpoint - to: " + to );
+                    ActorRef smppServiceSend =  sendToSMPPService();
+                    smppServiceSend.tell(request, null);
+            }catch (final Exception exception) {
+                // Log the exception.
+                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
+                }
+            }else {
+
         try {
             application.setAttribute(SmsSession.class.getName(), self);
             if (last.getOrigRequest() != null) {
@@ -240,7 +268,20 @@ public final class SmsSession extends UntypedActor {
             // Log the exception.
             logger.error(exception.getMessage(), exception);
         }
-    }
+    } }
+
+
+private ActorRef sendToSMPPService() {
+    return system.actorOf(new Props(new UntypedActorFactory() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public UntypedActor create() throws Exception {
+            return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
+        }
+    }));
+}
+
 
     private void stopObserving(final Object message) {
         final StopObserving request = (StopObserving) message;

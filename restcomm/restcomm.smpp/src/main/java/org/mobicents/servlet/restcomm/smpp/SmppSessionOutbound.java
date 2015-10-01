@@ -34,21 +34,17 @@ public class SmppSessionOutbound extends UntypedActor {
 
         //get SMPP session from
         SmppSession smppSession = SmppClientOpsThread.getSmppSessionForOutbound();
-        String sourceAddress;
-        String destinationAddress;
-
-        final SipURI getUri = (SipURI) request.getRequestURI();
+       final SipURI getUri = (SipURI) request.getRequestURI();
         String to = getUri.getUser();
-        String smppDestPrefix = "smpp";
-        //if there is no dest address after the prefix use address map in restcomm.xml
-        if ( to.equalsIgnoreCase("smpp")){
-            sourceAddress =  SmppService.getSmppSourceAddressMap();
-            destinationAddress = SmppService.getSmppDestinationAddressMap() ;
-        }else{
-            sourceAddress =  SmppService.getSmppSourceAddressMap(); //get source from restcomm.xml file
-          //remove the smpp prefix from the destination address
-            destinationAddress = to.toLowerCase().substring(smppDestPrefix.length());
-        }
+        String getFrom = request.getFrom().getURI().toString()  ; // .getURI().toString();
+        //extract source address from example sip:1234564@sip.nexmo.com
+        int start = "sip:".length();
+        String textEnd = "@";
+        int end = getFrom.indexOf(textEnd);
+        String from = getFrom.substring(start, end);
+
+        String sourceAddress = from;
+        String destinationAddress = to;
 
 
         //make sure SMPP session is bound before attempting to send message
@@ -56,32 +52,20 @@ public class SmppSessionOutbound extends UntypedActor {
             String requestMessage =  request.getContent().toString(); // get SMS from the SipServletRequest
             byte[] textBytes = CharsetUtil.encode(requestMessage, CharsetUtil.CHARSET_GSM);
             int smppTonNpiValue =  Integer.parseInt(SmppService.getSmppTonNpiValue()) ;
-          /**
-            String sourceAddress =  SmppService.getSmppSourceAddressMap();
-            String destinationAddress = to.toLowerCase().substring(smppDestPrefix.length());  //SmppService.getSmppDestinationAddressMap() ;
-
-**/
-
             // add delivery receipt
             //submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
             SubmitSm submit0 = new SubmitSm();
             submit0.setSourceAddress(new Address((byte)smppTonNpiValue, (byte) smppTonNpiValue, sourceAddress ));
             submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, destinationAddress));
             submit0.setShortMessage(textBytes);
-
-       //send message to SMPP endpoint
-                try {
+               try {
                     SubmitSmResp submitResp = smppSession.submit(submit0, 10000);
-                    //send response back to Restcomm
-                  //  final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
-                  //  messageAccepted.send();
 
                 } catch (RecoverablePduException | UnrecoverablePduException
                         | SmppTimeoutException | SmppChannelException
                         | InterruptedException e) {
                     // TODO Auto-generated catch block
-                  //  logger.error("response after sending submit submitResp : " + submitResp );
-                    e.printStackTrace();
+                    logger.error("SMPP message cannot be sent : " + e );
                 }
         }else{
             logger.error("Message cannot be sent because SMPP session is not yet bound");
@@ -96,7 +80,6 @@ public class SmppSessionOutbound extends UntypedActor {
         if ( message instanceof SipServletRequest){
             sendSmsFromRestcommToSmpp((SipServletRequest)message);
         }
-        // TODO Auto-generated method stub
 
     }
 
