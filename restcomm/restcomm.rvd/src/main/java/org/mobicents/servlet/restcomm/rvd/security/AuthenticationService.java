@@ -30,8 +30,9 @@ public class AuthenticationService {
 
     public boolean authenticate( String username, String password ) throws RvdSecurityException {
         logger.debug("Authenticating " + username + " on Restcomm");
-        String restcommIp = rvdSettings.getEffectiveRestcommIp(request);
-        String restcommAuthUrl = "http://" + restcommIp + ":" + rvdSettings.getEffectiveRestcommPort(request);
+        //String restcommIp = rvdSettings.getEffectiveRestcommIp(request);
+        //String restcommAuthUrl = "http://" + restcommIp + ":" + rvdSettings.getEffectiveRestcommPort(request);
+        String restcommAuthUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
 
         CloseableHttpClient client = HttpClients.createDefault();
         URI url;
