@@ -46,7 +46,7 @@ public class SettingsRestService extends RestService {
 
     @PostConstruct
     void init() {
-        settings = RvdConfiguration.getInstance(servletContext);
+        settings = RvdConfiguration.getInstance();
         marshaler = new ModelMarshaler();
         //workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
     }
