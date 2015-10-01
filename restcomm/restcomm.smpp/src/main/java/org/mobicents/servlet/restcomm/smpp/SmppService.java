@@ -59,6 +59,7 @@ public final class SmppService extends UntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ServletContext servletContext;
+    private static String smppActivated;
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
@@ -89,8 +90,8 @@ public final class SmppService extends UntypedActor {
         this.servletContext = servletContext;
 
         Configuration config = this.configuration.subset("smpp");
-
-        logger.error("checking if to use SMPP connection set to : " +  config.getString("[@activateSmppConnection]") );
+        smppActivated = config.getString("[@activateSmppConnection]");
+        logger.info("checking if to use SMPP for SMS. SMPP activation is set to : " +  smppActivated );
 
         //get smpp address map from restcomm.xml file
         this.smppSourceAddressMap = config.getString("connections.connection[@sourceAddressMap]");
@@ -100,7 +101,7 @@ public final class SmppService extends UntypedActor {
 
 
         //check if SMPP has been activated in the restcomm.xml file
-        if (config.getString("[@activateSmppConnection]").equalsIgnoreCase("true")){
+        if (smppActivated.equalsIgnoreCase("true")){
             this.initializeSmppConnections();
         }else{
             logger.warning("Restcomm SMPP integration has not been activated, check the restcomm.xml file");
@@ -120,6 +121,9 @@ public final class SmppService extends UntypedActor {
         return smppSourceAddressMap;
     }
 
+    public static String getSmppActivated(){
+        return smppActivated;
+    }
 
     @Override
     public void onReceive(Object message) throws Exception {
