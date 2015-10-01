@@ -4,17 +4,17 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-
 import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityException;
 
 public class AuthenticationService {
@@ -34,7 +34,7 @@ public class AuthenticationService {
         //String restcommAuthUrl = "http://" + restcommIp + ":" + rvdSettings.getEffectiveRestcommPort(request);
         String restcommAuthUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
 
-        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpClient client = CustomHttpClientBuilder.buildHttpClient();
         URI url;
         try {
             URIBuilder uriBuilder = new URIBuilder(restcommAuthUrl);
