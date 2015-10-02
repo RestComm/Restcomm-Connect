@@ -138,6 +138,11 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -155,6 +160,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+            secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -255,6 +261,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         final Sid accountId = new Sid(accountSid);
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
+            secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -372,6 +379,12 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(callSid));
+
+        try {
+            secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
 
         final String url = data.getFirst("Url");
         String method = data.getFirst("Method");

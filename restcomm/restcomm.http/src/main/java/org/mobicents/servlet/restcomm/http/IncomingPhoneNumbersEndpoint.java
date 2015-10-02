@@ -44,14 +44,12 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
-import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
@@ -226,7 +224,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControlIncomingPhoneNumbers(accountSid, incomingPhoneNumber);
+                secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
             } catch (AuthorizationException e) {
                 return status(UNAUTHORIZED).build();
             }
@@ -266,7 +264,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
-            secureLevelControlIncomingPhoneNumbers(accountSid, null);
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -287,7 +285,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
-            secureLevelControlIncomingPhoneNumbers(accountSid, null);
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -344,7 +342,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
-            secureLevelControlIncomingPhoneNumbers(accountSid, incomingPhoneNumber);
+            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }
@@ -447,7 +445,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
-            secureLevelControlIncomingPhoneNumbers(accountSid, incomingPhoneNumber);
+            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }
@@ -480,20 +478,5 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                 incomingPhoneNumber.isMmsCapable(),
                 incomingPhoneNumber.isFaxCapable(),
                 false);
-    }
-
-    private boolean secureLevelControlIncomingPhoneNumbers(String accountSid, IncomingPhoneNumber did) {
-        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
-        if (!sidPrincipal.equals(String.valueOf(accountSid))) {
-            Account account = accountsDao.getAccount(new Sid(accountSid));
-            if (!sidPrincipal.equals(String.valueOf(account.getAccountSid()))) {
-                throw new AuthorizationException();
-            } else if (did != null && !accountSid.equals(String.valueOf(did.getAccountSid()))) {
-                throw new AuthorizationException();
-            }
-        } else if (did != null && !sidPrincipal.equals(String.valueOf(did.getAccountSid()))) {
-            throw new AuthorizationException();
-        }
-        return true;
     }
 }
