@@ -7,27 +7,23 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 
 
 public class CustomHttpClientBuilder {
-
-    private static final String SSL_MODE_CONF_KEY = "sslMode";
-    private static final SslMode DEFAULT_SSL_MODE = SslMode.allowall;
 
     private CustomHttpClientBuilder() {
         // TODO Auto-generated constructor stub
     }
 
 
-    public static HttpClient buildHttpClient(Configuration config) {
-        SslMode mode = getSslMode(config);
+    public static HttpClient buildHttpClient(MainConfigurationSet config) {
+        SslMode mode = config.getSslMode();
         if ( mode == SslMode.strict )
             return new DefaultHttpClient();
         else
@@ -53,15 +49,6 @@ public class CustomHttpClientBuilder {
         // TODO what happens with custom https ports ? Only 443 and 8443 are covered here.
 
         return httpClient;
-    }
-
-    private static SslMode getSslMode(Configuration config) {
-        String sslModeString = config.getString(SSL_MODE_CONF_KEY);
-        if ( ! StringUtils.isEmpty(sslModeString) ) {
-            SslMode mode = SslMode.valueOf(sslModeString);
-            return mode;
-        }
-        return DEFAULT_SSL_MODE;
     }
 
 }
