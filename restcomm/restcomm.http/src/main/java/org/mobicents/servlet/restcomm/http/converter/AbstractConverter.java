@@ -356,13 +356,11 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeVoiceApplicationSid(final Sid voiceApplicationSid, final HierarchicalStreamWriter writer) {
-        writer.startNode("VoiceApplicationSid");
         if (voiceApplicationSid != null) {
+            writer.startNode("VoiceApplicationSid");
             writer.setValue(voiceApplicationSid.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     protected void writeVoiceApplicationSid(final Sid voiceApplicationSid, final JsonObject object) {

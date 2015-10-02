@@ -29,8 +29,8 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Transcription;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -46,6 +46,10 @@ public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
     public Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
         try {
             secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Transcriptions");
+            Transcription transcription = dao.getTranscription(new Sid(sid));
+            if (transcription != null) {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
+            }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

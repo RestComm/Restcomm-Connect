@@ -76,8 +76,8 @@ public class RestcommClient {
                 String name = String.valueOf(pair.getKey());
                 String value = String.valueOf(pair.getValue());
                 if (!RvdUtils.isEmpty(name) && !RvdUtils.isEmpty(value)) {
-                    paramNames.add(String.valueOf(pair.getKey()));
-                    paramValues.add(String.valueOf(pair.getValue()));
+                    paramNames.add(name);
+                    paramValues.add(value);
                 }
                 it.remove();
             }
