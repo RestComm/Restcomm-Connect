@@ -268,6 +268,14 @@
 			<!-- <external-address></external-address> -->
 		</mgcp-server>
 	</media-server-manager>
+	
+	<!-- Adjust http client behaviour for outgoing requests -->
+	<http-client>
+		<!-- Do not verify peer certificate for https connections. Two modes are supported:
+			'allowall' : Disables peer certificate verification. Use it when testing.
+			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->
+		<ssl-mode>allowall</ssl-mode>	
+	</http-client>
 
 	<!-- The SMS aggregator is responsible for the handling of SMS messages 
 		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator 
