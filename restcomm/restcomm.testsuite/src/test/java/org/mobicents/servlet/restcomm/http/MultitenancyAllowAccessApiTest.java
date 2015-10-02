@@ -25,11 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -39,13 +35,15 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import wiremock.org.apache.http.client.ClientProtocolException;
 
 /**
+ * The aim of this scenario is to ensure that an account can manage its own information and the information from its sub
+ * accounts. Accounts and Applications endpoints are tested separately due its particularities.
+ * 
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
@@ -62,6 +60,8 @@ public class MultitenancyAllowAccessApiTest {
     private final static String primaryUsername = "primary@company.com";
     private final static String primaryAccountSid = "AC1ec5d14c34a421c7697e1ce5d4eac782";
     private final static String subaccountaAccountSid = "AC5fa870789e95b7867a0fc0b85c5805e9";
+    private final static String subaccountbAccountSid = "AC5fa870789e95b7867a0fc0b85c5805e8";
+    private final static String primaryApplicationSid = "APcf92fc10ab384116bfe3df19ef741c7a";
     private final static String accountsPassword = "RestComm";
 
     private final static int httpOk = 200;
@@ -71,7 +71,7 @@ public class MultitenancyAllowAccessApiTest {
     private final static String jsonExtension = ".json";
 
     private enum Endpoint {
-
+        
         INCOMING_PHONE_NUMBERS("IncomingPhoneNumbers", true, false, true, true, new HashMap<String,String>(){{ put("PhoneNumber","1111"); put("AreaCode","100"); }}, "PNff22dc8d1cdf4d449d666ac09f0bb110", "PN9f9cf955aeb94ebb9d2e09cead5683a4"),
         CALLS("Calls", true, false, false, false, null, "CA9aa1b61e9b864477a820d5c1c9d9bb7d", "CAc6a057e16aa74cb0923c538725ffcf01"), 
         SMS_MESSAGES("SMS/Messages", true, false, false, false, null, "SMa272937700b3461bb5d68a3569c61bf1", "SMa272937700b3461bb5d68a3569c61bf2"), 
@@ -238,6 +238,40 @@ public class MultitenancyAllowAccessApiTest {
                 logger.info("Tested endpoint " + endpoint.name + " (deleteElementSubaccount). Status code = " + statusCode);
             }
         }
+    }
+
+    @Test
+    public void accountsApi() throws ClientProtocolException, IOException {
+        // Same account
+        String baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
+        int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm");}});
+        assertTrue(statusCode == httpOk);
+        
+        // Sub account
+        baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + subaccountbAccountSid, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test2@test.com"); put("Password","RestComm");}});
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().delete(baseUrl + jsonExtension + "/" + subaccountbAccountSid + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpDeleteOk || statusCode == httpOk);
+    }
+
+    @Test
+    public void applicationsApi() throws ClientProtocolException, IOException {
+        String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/Applications";
+        int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST"); }});
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("FriendlyName","TEST123"); }});
+        assertTrue(statusCode == httpOk);
+        statusCode = RestcommMultitenancyTool.getInstance().delete(baseUrl + "/" + primaryApplicationSid + jsonExtension, primaryUsername, accountsPassword);
+        assertTrue(statusCode == httpOk);
     }
 
     private Endpoint[] modifyPostParameters(String suffix) {
