@@ -33,11 +33,14 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.provisioning.number.api.ProvisionProvider;
 
 /**
@@ -104,7 +107,7 @@ public class Ping {
                     List<NameValuePair> parameters = new ArrayList<NameValuePair>();
                     parameters.add(new BasicNameValuePair("apidata", body));
                     post.setEntity(new UrlEncodedFormEntity(parameters));
-                    final DefaultHttpClient client = new DefaultHttpClient();
+                    final HttpClient client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
 
                     //This will work as a flag for LB that this request will need to be modified and proxied to VI
                     post.addHeader("TelestaxProxy", String.valueOf(proxyEnabled));
