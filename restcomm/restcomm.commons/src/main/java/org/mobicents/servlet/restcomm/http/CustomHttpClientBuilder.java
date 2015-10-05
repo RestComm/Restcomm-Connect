@@ -22,7 +22,7 @@ public class CustomHttpClientBuilder {
     }
 
 
-    public static HttpClient buildHttpClient(MainConfigurationSet config) {
+    public static HttpClient build(MainConfigurationSet config) {
         SslMode mode = config.getSslMode();
         if ( mode == SslMode.strict )
             return new DefaultHttpClient();
