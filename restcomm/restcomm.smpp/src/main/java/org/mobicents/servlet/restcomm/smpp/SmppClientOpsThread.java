@@ -73,14 +73,16 @@ public class SmppClientOpsThread implements Runnable{
 
     protected volatile boolean started = true;
 
+    private final int sipPort;
 
 
 
     /**
      *
      */
-    public SmppClientOpsThread(DefaultSmppClient clientBootstrap) {
+    public SmppClientOpsThread(DefaultSmppClient clientBootstrap, int sipPort) {
         this.clientBootstrap = clientBootstrap;
+        this.sipPort = sipPort;
     }
 
 
@@ -453,7 +455,7 @@ public class SmppClientOpsThread implements Runnable{
 
         //get the IP address of restcomm instance from the restcomm.xml file
         String restcommInstanceIp = configuration.subset("runtime-settings").getString("external-ip");
-        String restcommPort = "5080";
+        String restcommPort = String.valueOf(sipPort);
         String ipAddress = "@" + restcommInstanceIp + ":" + restcommPort; //@IP:5080
         String smmpRemoteSourceIp = "@" + smppSession.getConfiguration().getHost() + ":" + restcommPort ; //result in sip:6666@PeerIP:5080
 

@@ -20,6 +20,8 @@
 
 package org.mobicents.servlet.restcomm.smpp;
 
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -31,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -226,7 +229,7 @@ public final class SmppService extends UntypedActor {
         // configurable?
         this.clientBootstrap = new DefaultSmppClient(this.executor, 25, monitorExecutor);
 
-        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap);
+        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort());
 
         (new Thread(this.smppClientOpsThread)).start();
 
@@ -238,7 +241,18 @@ public final class SmppService extends UntypedActor {
 
     }
 
-
+    private SipURI outboundInterface(String transport) {
+        SipURI result = null;
+        @SuppressWarnings("unchecked")
+        final List<SipURI> uris = (List<SipURI>) this.servletContext.getAttribute(OUTBOUND_INTERFACES);
+        for (final SipURI uri : uris) {
+            final String interfaceTransport = uri.getTransportParam();
+            if (transport.equalsIgnoreCase(interfaceTransport)) {
+                result = uri;
+            }
+        }
+        return result;
+    }
 
 
 
