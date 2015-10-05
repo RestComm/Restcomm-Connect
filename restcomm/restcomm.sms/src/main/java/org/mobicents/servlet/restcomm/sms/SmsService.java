@@ -247,16 +247,21 @@ public final class SmsService extends UntypedActor {
                         final Application application = applications.getApplication(sid);
                         builder.setUrl(UriUtils.resolve(application.getSmsUrl()));
                         builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(application.getSmsFallbackUrl()));
+                        URI appFallbackUrl = application.getVoiceFallbackUrl();
+                        if (appFallbackUrl != null)
+                            builder.setFallbackUrl(UriUtils.resolve(appFallbackUrl));
+                        else
+                            builder.setFallbackUrl(null);
                         builder.setFallbackMethod(application.getSmsFallbackMethod());
                     } else {
                         builder.setUrl(UriUtils.resolve(appUri));
                         builder.setMethod(number.getSmsMethod());
-                        URI appFallbackUrl = number.getSmsFallbackUrl();
-                        if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
-                            builder.setFallbackMethod(number.getSmsFallbackMethod());
-                        }
+                        URI appFallbackUrl = number.getVoiceFallbackUrl();
+                        if (appFallbackUrl != null)
+                            builder.setFallbackUrl(UriUtils.resolve(appFallbackUrl));
+                        else
+                            builder.setFallbackUrl(null);
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
                     interpreter = builder.build();
                 }

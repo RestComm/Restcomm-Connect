@@ -25,6 +25,7 @@ import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -228,14 +229,22 @@ public class UssdCallManager extends UntypedActor {
                     final Application application = applications.getApplication(sid);
                     builder.setUrl(UriUtils.resolve(application.getVoiceUrl()));
                     builder.setMethod(application.getVoiceMethod());
-                    builder.setFallbackUrl(application.getVoiceFallbackUrl());
+                    URI uri = application.getVoiceFallbackUrl();
+                    if (uri != null)
+                        builder.setFallbackUrl(UriUtils.resolve(uri));
+                    else
+                        builder.setFallbackUrl(null);
                     builder.setFallbackMethod(application.getVoiceFallbackMethod());
                     builder.setStatusCallback(application.getStatusCallback());
                     builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                     builder.setMethod(number.getVoiceMethod());
-                    builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                    URI uri = number.getVoiceFallbackUrl();
+                    if (uri != null)
+                        builder.setFallbackUrl(UriUtils.resolve(uri));
+                    else
+                        builder.setFallbackUrl(null);
                     builder.setFallbackMethod(number.getVoiceFallbackMethod());
                     builder.setStatusCallback(number.getStatusCallback());
                     builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
