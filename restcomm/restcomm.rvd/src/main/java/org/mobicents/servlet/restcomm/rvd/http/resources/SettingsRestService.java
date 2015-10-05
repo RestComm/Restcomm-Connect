@@ -57,7 +57,7 @@ public class SettingsRestService extends RestService {
         try {
             // Create a settings model from the request
             String data;
-            data = IOUtils.toString(request.getInputStream());
+            data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
             SettingsModel settingsModel = marshaler.toModel(data, SettingsModel.class);
 
             // Store the model to a .settings file in the root of the workspace
