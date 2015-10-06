@@ -271,10 +271,10 @@
 	
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
-		<!-- Do not verify peer certificate for https connections. Two modes are supported:
+		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.
 			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->
-		<ssl-mode>allowall</ssl-mode>	
+		<ssl-mode>strict</ssl-mode>	
 	</http-client>
 
 	<!-- The SMS aggregator is responsible for the handling of SMS messages 
