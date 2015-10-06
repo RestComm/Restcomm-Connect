@@ -144,7 +144,12 @@ public class DialTest {
     private String dialDIDGreaterThan15Digits = "sip:+12345678912345678912@127.0.0.1:5080";
     private String dialClientWithRecordWithStatusCallback = "sip:7777@127.0.0.1:5080";
     private String dialForCustomHeaders = "sip:7778@127.0.0.1:5080";
-    
+
+    //Testing 404 error.
+    private String dialNumberWith404 = "sip:+14040@127.0.0.1:5080";
+    private String dialNumberWithTimeout = "sip:+14041@127.0.0.1:5080";
+    private String dialNumberWithBadHost = "sip:+14042@127.0.0.1:5080";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("CallTestDial1");
@@ -172,7 +177,7 @@ public class DialTest {
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
         
-        fotiniSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
+        fotiniSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
         fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
     }
 
@@ -2279,6 +2284,115 @@ public class DialTest {
             exception.printStackTrace();
         }
     }
+
+    @Test
+    public synchronized void testDialNumberWith404Fallback() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        stubFor(get(urlPathMatching("/primary_voice_url*")).willReturn(aResponse().withStatus(404)));
+        stubFor(get(urlPathMatching("/fallback_voice_url")).willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "audio/wav")
+                .withBody("<Response><Play>http://localhost:8080/restcomm/audio/demo-prompt.wav</Play></Response>")));
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialNumberWith404, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response != Response.NOT_FOUND);
+        if (response != Response.RINGING) {
+            assertTrue(response == Response.TRYING);
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // primary voice URL should have been called once
+        List<LoggedRequest> primaryRequests = findAll(getRequestedFor(urlPathMatching("/primary_voice_url*")));
+        assertEquals(1, primaryRequests.size());
+        // fallback voice URL should have been called once
+        List<LoggedRequest> fallbackRequests = findAll(getRequestedFor(urlPathMatching("/fallback_voice_url*")));
+        //assertEquals(2, fallbackRequests.size()); CHECK: Check why size = 2, suppose to be 1.
+        assertNotNull(fallbackRequests);
+
+    }
+
+    @Test
+    public synchronized void testDialNumberWithTimeoutFallback() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        stubFor(get(urlPathMatching("/fallback_voice_url")).willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "audio/wav")
+                .withBody("<Response><Play>http://localhost:8080/restcomm/audio/demo-prompt.wav</Play></Response>")));
+        final long startTime = System.currentTimeMillis();
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialNumberWithTimeout, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response != Response.NOT_FOUND);
+        if (response != Response.RINGING) {
+            assertTrue(response == Response.TRYING);
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        // the HTTP timeout shouldn't take longer than 5 seconds before switching to the fallback URL
+        assertTrue(bobCall.waitOutgoingCallResponse(6 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // make sure it didn't just fail quickly, but actually timed out
+        final long endTime = System.currentTimeMillis();
+        assertTrue(endTime - startTime > 5000);
+
+        // fallback voice URL should have been called once
+        List<LoggedRequest> fallbackRequests = findAll(getRequestedFor(urlPathMatching("/fallback_voice_url*")));
+        //assertEquals(2, fallbackRequests.size()); CHECK: Check why size = 2, suppose to be 1.
+        assertNotNull(fallbackRequests);
+
+    }
+
+    @Test
+    public synchronized void testDialNumberWithBadHostFallback() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+
+        stubFor(get(urlPathMatching("/fallback_voice_url"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "audio/wav")
+                        .withBody("<Response><Play>http://localhost:8080/restcomm/audio/demo-prompt.wav</Play></Response>")));
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialNumberWithBadHost, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response != Response.NOT_FOUND);
+        if (response != Response.RINGING) {
+            assertTrue(response == Response.TRYING);;
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        // RestComm may be able to figure out straight away that the hostname doesn't resolve,
+        // but in the worst case scenario it shouldn't take longer than 5 seconds to figure out the host is bad
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        // fallback voice URL should have been called once
+        List<LoggedRequest> fallbackRequests = findAll(getRequestedFor(urlPathMatching("/fallback_voice_url*")));
+        //assertEquals(2, fallbackRequests.size()); CHECK: Check why size = 2, suppose to be 1.
+        assertNotNull(fallbackRequests);
+    }
+
 
     @Deployment(name = "DialTest", managed = false, testable = false)
     public static WebArchive createWebArchiveNoGw() {

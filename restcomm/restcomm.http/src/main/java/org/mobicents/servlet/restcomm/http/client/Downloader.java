@@ -45,6 +45,9 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -65,11 +68,14 @@ public final class Downloader extends UntypedActor {
         HttpResponse response = null;
         HttpRequestDescriptor temp = descriptor;
         do {
-            final DefaultHttpClient client = new DefaultHttpClient();
+            HttpParams httpParameters = new BasicHttpParams();
+            int timeoutConnection = 5000;
+            HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+            final DefaultHttpClient client = new DefaultHttpClient(httpParameters);
             client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-//            client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
+//          client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
             request = request(temp);
-//            request.setHeader(CoreProtocolPNames.HTTP_CONTENT_CHARSET, Consts.UTF_8.name());
+//          request.setHeader(CoreProtocolPNames.HTTP_CONTENT_CHARSET, Consts.UTF_8.name());
             response = client.execute((HttpUriRequest) request);
             code = response.getStatusLine().getStatusCode();
             if (isRedirect(code)) {
