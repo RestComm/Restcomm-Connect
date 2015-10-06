@@ -26,6 +26,7 @@ import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.MediaType;
@@ -43,6 +44,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -51,6 +53,8 @@ import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -58,7 +62,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
-public abstract class AccountsEndpoint extends SecuredEndpoint {
+public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -114,36 +118,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     /**
-     * Creates an account object from the details contained in an AccessToken. No db persistence is done here.
-     * @param token
-     * @return
-     */
-    private Account accountFromAccessToken(AccessToken token) {
-
-        final DateTime now = DateTime.now();
-        final String username = token.getPreferredUsername();
-
-        // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
-        final Sid sid = Sid.generate(Sid.Type.ACCOUNT, username );
-
-        // Use keycloak firstname/lastname as a friendly name if available. Otherwise fall back to keycloak username.
-        String friendlyName = token.getName(); // e.g. Orestis Tsakiridis
-        String emailAddress = token.getPreferredUsername(); // TODO what do we do here? Restcomm treats emailAddress as username
-
-        final Account.Type type = Account.Type.FULL;
-        Account.Status status = Account.Status.ACTIVE;
-
-        String rootUri = configuration.getString("root-uri");
-        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
-        final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
-        final URI uri = URI.create(buffer.toString());
-        //return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
-        return new Account(sid, now, now, emailAddress, friendlyName, null, type, status, null, getDefaultApiKeyRole(), uri);
-    }
-
-    /**
-     * If the requested account does not exist and it's the user himself that makes the request create a new one based
+     * If the requested account does not exist and it's the user himself that makes the request, create a new one based
      * on the token information. Of course take into account the configuration too.
      */
     private Account handleMissingAccount( String accountSid, AccessToken token) {
@@ -319,24 +294,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         return result;
     }
 
-    // converts submitted form data to a keyclock UserRepresentation object
-    /*
-    private static UserRepresentation toUserRepresentation(MultivaluedMap<String, String> userData) {
-        UserRepresentation user = new UserRepresentation();
-        user.setFirstName("test");
-        return user;
-    }
-    */
-
-    /*
-    private static UserRepresentation toUserRepresentation(Account account) {
-        UserRepresentation user = new UserRepresentation();
-        user.setUsername(account.getEmailAddress());
-        user.setFirstName(account.getFriendlyName());
-        user.setEnabled(account.getStatus() == Account.Status.ACTIVE);
-        return user;
-    } */
-
     protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid sid = new Sid(accountSid);
         Account account = accountsDao.getAccount(sid);
@@ -362,6 +319,72 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
+    /**
+     * Links a Restcomm account with a keycloak user using the Account.emailAddress property.
+     * Both local account records and authorization server user roles are updated.
+     *
+     * @param restcommAccount
+     * @param username
+     */
+    protected Outcome linkAccountToUser(Account restcommAccount, String username) {
+        if ( !validateUsername(username) )
+            return Outcome.BAD_INPUT;
+        if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
+            RestcommIdentityApi api = new RestcommIdentityApi(identityContext, identityConfigurator);
+            if ( ! api.inviteUser(username) ) // assign roles
+                return Outcome.NOT_FOUND;
+            restcommAccount = restcommAccount.setEmailAddress(username);
+            accountsDao.updateAccount(restcommAccount);
+            return Outcome.OK;
+        } else {
+            // the Account is already mapped. Maybe unmap it first ?
+            return Outcome.CONFLICT;
+        }
+    }
+
+    /**
+     * Breaks the link between an account and a user by clearing EmailAddress 'reference' property.
+     * The user KEEPS the roles that grant him access though.
+     *
+     * @param restcommAccount
+     * @return
+     */
+    protected Response unlinkAccountFromUser(Account restcommAccount) {
+        restcommAccount = restcommAccount.setEmailAddress(null);
+        accountsDao.updateAccount(restcommAccount);
+        return Response.ok().build();
+    }
+
+    protected Response clearAccountKey(Account restcommAccount) {
+        restcommAccount = restcommAccount.setAuthToken(null);
+        accountsDao.updateAccount(restcommAccount);
+        return Response.ok().build();
+    }
+
+    protected Response assignApikey(Account restcommAccount) {
+        if ( ! org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getAuthToken()) )
+            return Response.status(CONFLICT).build();
+        String key = IdentityContext.generateApiKey();
+        restcommAccount = restcommAccount.setAuthToken(key);
+        accountsDao.updateAccount(restcommAccount);
+        return Response.ok().build();
+    }
+
+    protected Outcome createUser(String username, String friendlyName, String tempPassword) {
+        if ( !validateUsername(username) )
+            return Outcome.BAD_INPUT;
+        UserEntity user = new UserEntity(username,null, friendlyName, null, tempPassword);
+        RestcommIdentityApi api = new RestcommIdentityApi(identityContext, identityConfigurator);
+        return api.createUser(user);
+    }
+
+    // Validates an username (EmailAddress) before mapping an account to it.
+    // TODO - validation rules may include checks whether this address is @deployment.domain
+    protected boolean validateUsername(String username) {
+        // TODO - implement...
+        return true;
+    }
+
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
         // For SSO these fields are not required or are not used
         //if (!data.containsKey("EmailAddress")) {
@@ -374,10 +397,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     // calculates the role for a sub-account based on parent account, user selection and logged user. For now it always creates a Developer
     private String getChildRole(Account parentAccount, String selectedRole ) {
         // TODO add a proper implementation
-        return "Developer";
-    }
-
-    private String getDefaultApiKeyRole() {
         return "Developer";
     }
 

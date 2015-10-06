@@ -29,6 +29,7 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     protected static final String IDENTITY_PROXY_CLIENT_NAME = "restcomm-identity-rest";
     private static final Boolean DEFAULT_AUTO_IMPORT_USERS = true; // move this option to the configuration file at some point
     private static final String DEFAULT_ADMINISTRATOR_ROLE = "Administrator";
+    private static final String DEFAULT_LEGACY_ADMINISTRATOR_SID = "ACae6e420f425248d6a26948c17a9e2acf";
 
     protected IdentityMode identityMode;
     protected String identityInstanceId; // instance ID on authorization server
@@ -37,6 +38,7 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     protected String realmPublicKey;
     protected String realmName;
     protected KeycloakDeployment deployment;
+    protected KeycloakDeployment unregisteredDeployment;
 
     protected static IdentityConfigurator singleInstance;
 
@@ -88,6 +90,8 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
             } catch (IdentityNotSet e) {
                 logger.error("Instance id is missing from configuration. Restcomm won't be properly initialized. Please set 'identity.instance-id' configuration setting.", e );
             }
+        } else {
+            this.unregisteredDeployment = KeycloakDeploymentBuilder.build(this.getUnregisteredRestcommConfig());
         }
         // notify all who are interected when there is new identity-specific configuration
         notifyUpdateListeners();
@@ -187,6 +191,10 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
     @Override
     public Boolean getAutoImportUsers() {
         return DEFAULT_AUTO_IMPORT_USERS;
+    }
+
+    public String getLegacyAdministratorSid() {
+        return DEFAULT_LEGACY_ADMINISTRATOR_SID;
     }
 
     @Override
@@ -293,8 +301,24 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
         return config;
     }
 
+    public AdapterConfig getUnregisteredRestcommConfig() {
+        AdapterConfig config = new AdapterConfig();
+        config.setRealm(getRealmName());
+        config.setRealmKey(getRealmKey());
+        config.setAuthServerUrl(getAuthServerUrl());
+        config.setSslRequired("all");
+        config.setResource("unregistered-restcomm");
+        config.setPublicClient(true);
+
+        return config;
+    }
+
     public KeycloakDeployment getDeployment() {
         return deployment;
+    }
+
+    public KeycloakDeployment getUnregisteredDeployment() {
+        return unregisteredDeployment;
     }
 
     public void writeAdapterConfigToFile(AdapterConfig adapterConfig, String filepath) {

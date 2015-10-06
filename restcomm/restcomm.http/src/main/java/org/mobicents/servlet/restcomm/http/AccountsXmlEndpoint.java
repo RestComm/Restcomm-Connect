@@ -25,6 +25,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -33,7 +34,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.endpoints.Outcome;
+import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -99,4 +104,47 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
             final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
     }
+
+    @POST
+    @Path("/{accountSid}/operations/link")
+    public Response linkAccount(@PathParam("accountSid") String accountSid, @FormParam("username") String username, @FormParam("create") String create, @FormParam("friendly_name") String friendly_name, @FormParam("password") String password) {
+        // TODO - access control
+        Sid sid = new Sid(accountSid);
+        Account account = accountsDao.getAccount(sid);
+        if ( "true".equals(create) && !StringUtils.isEmpty(username) ) {
+            Outcome create_outcome = createUser(username, friendly_name, password);
+            if ( create_outcome == Outcome.OK )
+                return toResponse(linkAccountToUser(account, username));
+            else
+                return toResponse(create_outcome);
+        } else {
+            return toResponse(linkAccountToUser(account, username));
+        }
+    }
+
+    @DELETE
+    @Path("/{accountSid}/operations/link")
+    public Response unlinkAccount(@PathParam("accountSid") String accountSid) {
+     // TODO - access control
+        Sid sid = new Sid(accountSid);
+        Account account = accountsDao.getAccount(sid);
+        return unlinkAccountFromUser(account);
+    }
+
+    @DELETE
+    @Path("/{accountSid}/operations/key")
+    public Response removeApikey(@PathParam("accountSid") String accountSid) {
+        Sid sid = new Sid(accountSid);
+        Account account = accountsDao.getAccount(sid);
+        return clearAccountKey(account);
+    }
+
+    @GET
+    @Path("/{accountSid}/operations/key/assign")
+    public Response assignApikey(@PathParam("accountSid") String accountSid) {
+        Sid sid = new Sid(accountSid);
+        Account account = accountsDao.getAccount(sid);
+        return assignApikey(account);
+    }
+
 }
