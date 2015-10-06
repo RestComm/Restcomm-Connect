@@ -51,12 +51,16 @@ public class RestcommIdentityApi {
 
     public RestcommIdentityApi(final String username, final String password, final IdentityConfigurator configurator) {
         this.configurator = configurator;
-        tokenString = getTokenString(username, password);
+        tokenString = retrieveTokenString(username, password);
         if (tokenString == null)
             throw new IllegalStateException("No oauth token in context.");
     }
 
-    private String getTokenString(String username, String password) {
+    public String getTokenString() {
+        return tokenString;
+    }
+
+    private String retrieveTokenString(String username, String password) {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
@@ -90,6 +94,13 @@ public class RestcommIdentityApi {
         }
     }
 
+    /**
+     * Grants user 'username' access to this instance. Default instance-specific roles are assigned.
+     * Currently logged user token is used to access restcomm-identity proxy.
+     *
+     * @param username
+     * @return
+     */
     public boolean inviteUser(String username) {
         CloseableHttpClient client = null;
         try {

@@ -7,10 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.keycloak.RSATokenVerifier;
-import org.keycloak.VerificationException;
-import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -23,7 +19,6 @@ import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurato
  *
  */
 public class IdentityContext {
-    private static Logger logger = Logger.getLogger(IdentityContext.class);
 
     final String oauthTokenString;
     final AccessToken oauthToken;
@@ -65,15 +60,7 @@ public class IdentityContext {
     }
 
     private AccessToken verifyToken(String tokenString, IdentityConfigurator configurator ) {
-        KeycloakDeployment deployment = configurator.getDeployment();
-        AccessToken token;
-        try {
-            token = RSATokenVerifier.verifyToken(tokenString, deployment.getRealmKey(), deployment.getRealmInfoUrl());
-            return token;
-        } catch (VerificationException e) {
-            logger.error("Cannot verity token.", e);
-            return null;
-        }
+        return IdentityUtils.verifyToken(tokenString, configurator.getDeployment());
     }
 
     private AccountKey extractAccountKey(HttpServletRequest request, AccountsDao dao) {

@@ -80,6 +80,15 @@ public final class MybatisAccountsDao implements AccountsDao {
         return account;
     }
 
+    @Override
+    public Account getAccountByEmail(final String name) {
+        Account account = null;
+
+        account = getAccount(namespace + "getAccountByEmail", name);
+
+        return account;
+    }
+
     private Account getAccount(final String selector, final Object parameters) {
         final SqlSession session = sessions.openSession();
         try {

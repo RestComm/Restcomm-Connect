@@ -34,6 +34,8 @@ public interface AccountsDao {
 
     Account getAccount(String name);
 
+    Account getAccountByEmail(String email);
+
     List<Account> getAccounts(Sid sid);
 
     void removeAccount(Sid sid);

@@ -29,6 +29,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang.StringUtils;
+import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.endpoints.Outcome;
+import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.identity.IdentityUtils;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.CreateInstanceResponse;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdentityApiException;
@@ -41,9 +48,10 @@ import com.google.gson.Gson;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 @Path("/instance")
-public class IdentityEndpoint extends AbstractEndpoint {
+public class IdentityEndpoint extends AccountsCommonEndpoint {
 
     private IdentityConfigurator identityConfigurator;
+    private AccountsDao accountsDao;
 
     public IdentityEndpoint() {
         // TODO Auto-generated constructor stub
@@ -52,9 +60,19 @@ public class IdentityEndpoint extends AbstractEndpoint {
     @PostConstruct
     private void init() {
         identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
+        DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        this.accountsDao = daoManager.getAccountsDao();
     }
 
-
+    /**
+     * Registers this restcomm instance to the authorization server. username/password credentials are used for authentication.
+     * The registering user is granted Administrator access to the instance and is linked to the (legacy) administrator account.
+     * @param baseUrl
+     * @param username
+     * @param password
+     * @param instanceSecret
+     * @return
+     */
     @POST
     @Path("/register")
     public Response registerInstance(@FormParam("restcommBaseUrl") String baseUrl, @FormParam("username") String username, @FormParam("password") String password, @FormParam("instanceSecret") String instanceSecret )  {
@@ -67,8 +85,13 @@ public class IdentityEndpoint extends AbstractEndpoint {
             logger.error("Missing identity.auth-server-url-base configuration setting.");
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Invalid configuration").build();
         }
-
+        // authenticate and retreive a token
         RestcommIdentityApi api = new RestcommIdentityApi(username, password, identityConfigurator);
+        String tokenString = api.getTokenString();
+        AccessToken accessToken = IdentityUtils.verifyToken(tokenString, identityConfigurator.getUnregisteredDeployment());
+        if ( accessToken == null )
+            return toResponse(Outcome.NOT_ALLOWED);
+
         CreateInstanceResponse response;
         try {
             response = api.createInstance(baseUrl, instanceSecret, username);
@@ -83,8 +106,21 @@ public class IdentityEndpoint extends AbstractEndpoint {
         identityConfigurator.setRestcommClientSecret(instanceSecret);
         identityConfigurator.setInstanceId(response.instanceId);
         identityConfigurator.save();
-
         logger.info( "User '" + username + "' registed instance '" + instanceName + "' to authorization server " + authUrlBase);
+
+        // Link to existing legacy administrator account. It has to be there.
+        // TODO this account is queried using the default SID. Will this assumption hold? If now another way to retrieve this account should be found.
+        Account existingAccount = accountsDao.getAccount(new Sid(identityConfigurator.getLegacyAdministratorSid()));
+        if ( existingAccount == null ) {
+            // if the account is missing a new one is created and linked to the user
+            Account newAccount = accountFromAccessToken(accessToken);
+            accountsDao.addAccount(newAccount);
+            logger.warn("Legacy administrator account (" + identityConfigurator.getLegacyAdministratorSid() + ") was not found. New administrator account (" + newAccount.getSid().toString() + ") was created for user '" + username + "'. Default resources may not be available.");
+        } else {
+            existingAccount = existingAccount.setEmailAddress(username);
+            accountsDao.updateAccount(existingAccount);
+            logger.info("User '" + username + "' was granted administrator access to instance '" + response.instanceId + "'");
+        }
 
         IdentityInstanceEntity instanceEntity = new IdentityInstanceEntity();
         instanceEntity.setInstanceName(instanceName);
