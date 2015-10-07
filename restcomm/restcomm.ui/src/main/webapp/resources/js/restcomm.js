@@ -29,7 +29,8 @@ rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($route
 			authorized: function (AuthService) { return AuthService.secure('Developer'); }
 		}}).
 		when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl', resolve: {
-			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+			authorized: function (AuthService) { return AuthService.secure('Developer'); },
+			hasAccount: function (AuthService) { return AuthService.hasAccount();}
 		}}).
 		when('/numbers', {redirectTo: '/numbers/incoming'}).
 		when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl', resolve: {
@@ -97,7 +98,10 @@ rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($route
 		when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl', resolve: {
 			authorized: function (AuthService) { return AuthService.secure('Developer'); }
 		}}).
-		when('/unauthorized', {templateUrl: 'modules/unauthorized.html'})		
+		when('/unauthorized', {templateUrl: 'modules/errors/unauthorized.html'}).	
+		when('/unlinked', {templateUrl: 'modules/errors/unlinked.html', resolve: {
+			authorized: function (AuthService) { return AuthService.secure('Developer'); }
+		}})	
 		.otherwise({redirectTo: '/dashboard'});
 	  // $locationProvider.html5Mode(true);
 	} else
