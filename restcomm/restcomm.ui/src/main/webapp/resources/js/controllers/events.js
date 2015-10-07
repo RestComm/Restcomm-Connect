@@ -21,4 +21,5 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 				});
 			}
 	});
+	
 });

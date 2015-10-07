@@ -28,6 +28,9 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 		return Auth.loggedIn;
       //return SessionService.get('authenticated');
     }
+	serviceInstance.getAuthStatus = function () {
+		return Auth.authStatus;
+	}
 	serviceInstance.getLoggedSid = function() {
 		  //var username = Auth.authz.profile.username;
 		  //var accountSid = "AC" + md5.createHash(username);
@@ -51,11 +54,11 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 		var deferred = $q.defer();
 		for (var i=0; i<roles.length; i++) {
 			if ( Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId ) ) {
-				deferred.resolve();
+				deferred.resolve("AUTH_STATUS_INSTANCE");
 				return deferred.promise;
 			}
 		}
-		deferred.reject();
+		deferred.reject("AUTH_STATUS_REALM");
 		Notifications.error("You are not authorized to access this resource");
 		return deferred.promise;
 	}
@@ -63,12 +66,12 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 		var deferred = $q.defer();
 		for (var i=0; i<roles.length; i++) {
 			if ( ! Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId) ) {
-				deferred.reject();
+				deferred.reject("AUTH_STATUS_REALM");
 				Notifications.error("You are not authorized to access this resource");
 				return deferred.promise;
 			}
 		}
-		deferred.resolve();
+		deferred.resolve("AUTH_STATUS_INSTANCE");
 		return deferred.promise;
 	}
 	serviceInstance.secure = function(role) {
@@ -82,101 +85,6 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
     return serviceInstance;
 		
 });
-
-/*
-rcServices.service('AuthService', function($http, $location, SessionService, md5) {
-  var cacheSession = function(account, first) {
-    var prefix = first ? '_' : '';
-    SessionService.set('sid', account.sid);
-    SessionService.set(prefix + 'authenticated', true);
-    SessionService.set(prefix + 'logged_user', account.friendly_name);
-  };
-
-  var passwordUpdated = function() {
-    SessionService.rename('_authenticated', 'authenticated');
-    SessionService.rename('_logged_user', 'logged_user');
-  };
-
-  var uncacheSession = function() {
-    SessionService.unset('sid');
-    SessionService.unset('authenticated');
-    SessionService.unset('logged_user');
-    SessionService.unset('_sid');
-    SessionService.unset('_authenticated');
-    SessionService.unset('_logged_user');
-  };
-
-
-  return {
-    login: function(credentials) {
-      // TEMPORARY... FIXME!
-      var apiPath = "http://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
-
-
-      var login = $http.get(apiPath).
-        success(function(data, status, headers, config) {
-          if (status == 200) {
-            //if(data.date_created && data.date_created == data.date_updated) {
-            if(data.status) {
-              if(data.status == 'uninitialized') {
-                cacheSession(data, true);
-              }
-              else if(data.status == 'suspended') {
-                // no-op
-              }
-              else if (data.status == 'active') {
-                cacheSession(data, false);
-              }
-            }
-          }
-          else {
-            uncacheSession();
-          }
-        }).
-        error(function(data) {
-          alert("Login failed! Please confirm your credentials.");
-        }
-      );
-      return login;
-    },
-    logout: function() {
-      // TODO: Logout from restcomm ?
-      uncacheSession();
-      // FIXME: return logout;
-    },
-    updatePassword: function(credentials, newPassword) {
-      // TEMPORARY... FIXME!
-      var apiPath = "http://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts/" + this.getAccountSid() + ".json";
-      http://127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf.json
-        var params = {};
-      params["Auth_Token"] = md5.createHash(newPassword);
-
-      var update = $http({method: 'PUT', url: apiPath, data: $.param(params), headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).
-        success(function(data) {
-          passwordUpdated();
-        }).
-        error(function(data) {
-          alert("Failed to update password. Please try again.");
-        }
-      );
-      return update;
-    },
-    isLoggedIn: function() {
-      return SessionService.get('authenticated');
-    },
-    getLoggedUser: function() {
-      return SessionService.get('logged_user');
-    },
-    getAccountSid: function() {
-      var sid = SessionService.get('sid')
-      return sid ? sid : SessionService.get('_sid');
-    },
-    getWaitingReset: function() {
-      return SessionService.get('_authenticated');
-    }
-  }
-});
-*/
 
 rcServices.factory('Notifications', function($rootScope, $timeout, $log) {
   // time (in ms) the notifications are shown

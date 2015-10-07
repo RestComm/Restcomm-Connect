@@ -135,6 +135,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         try {
+            secure();
             // now load the account that is operated upon
             Sid sid = null;
             Account account = null;

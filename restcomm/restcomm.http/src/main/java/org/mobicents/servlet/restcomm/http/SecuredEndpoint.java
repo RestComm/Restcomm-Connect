@@ -81,6 +81,30 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         throw new AuthorizationException();
     }
 
+    /**
+     * Allows general purpose access if one of the following happens:
+     * - User carries a token that contains a role (any role) for this application/client
+     * - Account key was verified.
+     */
+    protected void secure() {
+        Set<String> roleNames = null;
+        if ( identityContext.getOauthToken() != null ) {
+            try {
+                roleNames = identityContext.getOauthToken().getResourceAccess(identityConfigurator.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
+            } catch (NullPointerException e) {
+                throw new AuthorizationException();
+            }
+            if (roleNames != null)
+                return;
+        }
+        else
+        if ( identityContext.getAccountKey() != null ) {
+            if ( identityContext.getAccountKey().isVerified() )
+                return;
+        }
+        throw new AuthorizationException();
+    }
+
     protected void secure (final String permission) {
         Set<String> roleNames = null;
         if ( identityContext.getOauthToken() != null )
