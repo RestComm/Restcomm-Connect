@@ -12,5 +12,8 @@ angular.module('rcApp').controller('AppCtrl', function ($rootScope,$scope,AuthSe
 		console.log("failed to change routes: " + rejection);
 		if (rejection == "AUTH_STATUS_REALM")
 			$location.path("/unauthorized");
+		else
+		if (rejection == "AUTH_STATUS_NOACCOUNT")
+			$location.path("/unlinked");			
 	});
 });

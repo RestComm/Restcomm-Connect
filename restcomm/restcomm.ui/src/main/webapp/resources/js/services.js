@@ -80,6 +80,14 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 	serviceInstance.hasRole = function(role) {
 		return Auth.authz.hasResourceRole(role, Auth.authz.clientId);
 	}
+	serviceInstance.hasAccount = function() {
+		var deferred = $q.defer();
+		if (!!Auth.restcommAccount)
+			deferred.resolve(true);
+		else
+			deferred.reject("AUTH_STATUS_NOACCOUNT");
+		return deferred.promise;
+	}
 
     
     return serviceInstance;
