@@ -115,6 +115,7 @@
 		<script src="https://identity.restcomm.com/auth/js/keycloak.js"></script>
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
         <script type="text/javascript" src="resources/js/controllers.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/application.js"></script>
         <script type="text/javascript" src="resources/js/controllers/global.js"></script>
         <script type="text/javascript" src="resources/js/controllers/navbar.js"></script>
         <script type="text/javascript" src="resources/js/controllers/login.js"></script>
@@ -143,7 +144,7 @@
 
         <script type="text/javascript" src="keycloak-app.js"></script>
     </head>
-    <body>
+    <body ng-controller="AppCtrl">
         <div id="wrap">
             <div class="notifications-wrapper" data-ng-show="notifications.data.length > 0">
                 <div ng-repeat="notification in notifications.data">
@@ -178,7 +179,7 @@
                         </div><!--/.nav-collapse -->
                         
                         <!-- Normal path: if the instnace is registered, normal path -->
-                        <div ng-if="authMode != 'init'" class="navbar-collapse collapse">
+                        <div ng-if="auth.getAuthStatus()=='instance' && authMode != 'init'" class="navbar-collapse collapse">
                             <div ng-show="auth.isLoggedIn()">
                             <ul class="nav navbar-nav">
                                 <li><a> </a></li>

@@ -27,7 +27,6 @@ angular.element(document).ready(function ($http) {
 				});
 				
 				keycloakAuth.loadUserProfile().success(function () {
-					// try importing the logged user into Restcomm 
 					var initInjector = angular.injector(["ng"]);
 					var $myhttp = initInjector.get("$http");
 					
@@ -40,10 +39,14 @@ angular.element(document).ready(function ($http) {
 					}).success(function(response) {
 						//console.log("Retrieved account info for user " + keycloakAuth.profile.username);
 						auth.restcommAccount = response;
+						auth.authStatus = "instance"; // instance | realm | failed
 						angular.bootstrap(document, ["rcApp"]);
 					}).error(function(errorResponse, status) {
 						// Handle error case
+						if (status == 401)
+							auth.authStatus = "realm"; // access to realm but not to this instance
 						console.log("Error retrieving account for user '" + keycloakAuth.profile.username + "'");
+						angular.bootstrap(document, ["rcApp"]);
 					});
 					
 				});

@@ -97,7 +97,8 @@ rcMod.config(['$routeProvider', '$locationProvider', 'authMode', function($route
 		when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl', resolve: {
 			authorized: function (AuthService) { return AuthService.secure('Developer'); }
 		}}).
-		otherwise({redirectTo: '/dashboard'});
+		when('/unauthorized', {templateUrl: 'modules/unauthorized.html'})		
+		.otherwise({redirectTo: '/dashboard'});
 	  // $locationProvider.html5Mode(true);
 	} else
 	if (authMode == 'init') {

@@ -10,7 +10,7 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
   });
   
   $scope.authMode = authMode;
-  $scope.auth = AuthService;
+  //$scope.auth = AuthService;
   $scope.sid = SessionService.get('sid');
 
   $scope.testNotifications = function() {
