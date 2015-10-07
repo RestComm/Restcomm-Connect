@@ -170,9 +170,9 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         }
         return status;
     }
-    
+
     protected Response getClientPresence(final String accountSid, final String sid, final MediaType responseType){
-    	try {
+        try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();

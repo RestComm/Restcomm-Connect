@@ -100,10 +100,10 @@ public final class MybatisClientsDao implements ClientsDao {
             session.close();
         }
     }
-    
+
     @Override
     public Client getClientPresence(final Sid sid){
-    	return cleanPresenceAuxiliarAttributes(getClient(namespace + "getClientPresence", sid.toString()));
+        return cleanPresenceAuxiliarAttributes(getClient(namespace + "getClientPresence", sid.toString()));
     }
 
     @Override
@@ -136,10 +136,10 @@ public final class MybatisClientsDao implements ClientsDao {
             session.close();
         }
     }
-    
+
     @Override
     public void updateClientPresence(final Client client){
-    	final SqlSession session = sessions.openSession();
+        final SqlSession session = sessions.openSession();
         try {
             session.update(namespace + "updateClientPresence", toMap(client));
             session.commit();
@@ -164,9 +164,9 @@ public final class MybatisClientsDao implements ClientsDao {
         final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
         final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
         final URI uri = readUri(map.get("uri"));
-        final DateTime dateLastUsage = readDateTime(map.get("date_last_usage"));
+        final DateTime latestAppearance = readDateTime(map.get("latest_appearance"));
         return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     private Map<String, Object> toMap(final Client client) {
@@ -186,10 +186,10 @@ public final class MybatisClientsDao implements ClientsDao {
         map.put("voice_fallback_method", client.getVoiceFallbackMethod());
         map.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
         map.put("uri", writeUri(client.getUri()));
-        map.put("date_last_usage", writeDateTime(client.getDateLastUsage()));
+        map.put("latest_appearance", writeDateTime(client.getLatestAppearance()));
         return map;
     }
-    
+
     /**
      * Evaluates informed {@link Client} object to deal properly with the
      * difference between a non existent {@link Client} and a {@link Client}
@@ -203,10 +203,10 @@ public final class MybatisClientsDao implements ClientsDao {
      * and <b>null</b> if there is no such client on database.
      */
     private Client cleanPresenceAuxiliarAttributes(Client client){
-    	if(client != null){
-    		return new Client(null, null, null, null, null, null, null, null, null, 
-    				null, null, null, null, null, null, client.getDateLastUsage());
-    	}
-    	return null;
+        if (client != null) {
+            return new Client(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                    client.getLatestAppearance());
+        }
+        return null;
     }
 }

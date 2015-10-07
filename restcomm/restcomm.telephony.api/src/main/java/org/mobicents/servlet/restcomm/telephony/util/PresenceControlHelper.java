@@ -21,31 +21,26 @@ package org.mobicents.servlet.restcomm.telephony.util;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Client;
-import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
- * Manages {@link Client} presence information and keep them
- * up to date as new SIP messages are received.
- * 
+ * Manages {@link Client} presence information and keep them up to date as new SIP messages are received.
+ *
  * @author guilherme.jansen@telestax.com
  */
 public class PresenceControlHelper {
-	
-	/**
-	 * Update client presence information, setting the date of last usage 
-	 * to the current time.
-	 * 
-	 * @param sipMessage
-	 * @param clientInfo
-	 * @param storage
-	 */
-	public static void updateClientPresence(final String login, ClientsDao clients){
-		final Client client = new Client(null, null, null, null, null, null, login, null, null, 
-				null, null, null, null, null, null, DateTime.now());
-		clients.updateClientPresence(client);
-	}
+
+    /**
+     * Update client presence information, setting the date of last usage to the current time.
+     *
+     * @param sipMessage
+     * @param clientInfo
+     * @param storage
+     */
+    public static void updateClientPresence(final String login, ClientsDao clients) {
+        final Client client = new Client(null, null, null, null, null, null, login, null, null, null, null, null, null, null,
+                null, DateTime.now());
+        clients.updateClientPresence(client);
+    }
 
 }

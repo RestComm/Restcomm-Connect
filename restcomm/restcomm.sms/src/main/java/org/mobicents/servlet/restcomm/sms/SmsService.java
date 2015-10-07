@@ -153,6 +153,8 @@ public final class SmsService extends UntypedActor {
                     // then we can end further processing of this request
                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
                             + toClient.getLogin());
+                    // Update presence info
+                    PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
                     return;
                 }
             } else {
@@ -188,9 +190,9 @@ public final class SmsService extends UntypedActor {
             final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),
                     null);
             session.tell(sms, self());
+                // Update presence info
+                PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
             }
-            //Update presence info
-            PresenceControlHelper.updateClientPresence(request.getFrom().getDisplayName(), storage.getClientsDao());
         } else {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
             response.send();

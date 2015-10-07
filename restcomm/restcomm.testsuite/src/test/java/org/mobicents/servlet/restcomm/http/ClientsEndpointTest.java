@@ -53,8 +53,11 @@ public class ClientsEndpointTest {
     private SipPhone bobPhone;
     private String bobContact = "sip:bob@127.0.0.1:5090";
     private String adminUsername = "administrator@company.com";
+    private String presenceUsername = "presence@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String presenceAccountSid = "ACae6e420f425248d6a26948c17a9e2acd";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String steveClientSid = "CLae6e420f425248d6a26948c17a9e2acd";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -126,31 +129,27 @@ public class ClientsEndpointTest {
     
     @Test
     public void presenceInfoAtClientsList() throws ClientProtocolException, IOException, ParseException, InterruptedException{
-        CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234", null);
-        CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "alice", "1234", null);
-        JsonArray clients = RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), adminUsername, adminAccountSid, adminAuthToken);
+        JsonArray clients = RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), presenceUsername,
+                presenceAccountSid, adminAuthToken);
         JsonObject client1 = clients.get(0).getAsJsonObject();
-        JsonObject client2 = clients.get(1).getAsJsonObject();
-        String dateLastUsage1 = client1.get("date_last_usage").getAsString();
-        String dateLastUsage2 = client2.get("date_last_usage").getAsString();
-        assertTrue(dateLastUsage1.equalsIgnoreCase("offline"));
-        assertTrue(dateLastUsage1.equalsIgnoreCase(dateLastUsage2));
+        String latestAppearance = client1.get("latest_appearance").getAsString();
+        assertTrue(latestAppearance.equalsIgnoreCase("offline"));
     }
     
     @Test
     public void presenceInfoAtSingleClient() throws ClientProtocolException, IOException, ParseException, InterruptedException{
-    	String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234", null);
-        JsonObject client = RestcommClientsTool.getInstance().getClient(deploymentUrl.toString(), adminUsername, adminAccountSid, adminAuthToken, clientSID, false);
-        String dateLastUsage = client.get("date_last_usage").getAsString();
-        assertTrue(dateLastUsage.equalsIgnoreCase("offline"));
+        JsonObject client = RestcommClientsTool.getInstance().getClient(deploymentUrl.toString(), presenceUsername,
+                presenceAccountSid, adminAuthToken, steveClientSid, false);
+        String latestAppearance = client.get("latest_appearance").getAsString();
+        assertTrue(latestAppearance.equalsIgnoreCase("offline"));
     }
     
     @Test
     public void presenceInfoSpecificPath() throws ClientProtocolException, IOException, ParseException, InterruptedException{
-    	String clientSID = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "bob", "1234", null);
-        JsonObject client = RestcommClientsTool.getInstance().getClient(deploymentUrl.toString(), adminUsername, adminAccountSid, adminAuthToken, clientSID, true);
-        String dateLastUsage = client.get("date_last_usage").getAsString();
-        assertTrue(dateLastUsage.equalsIgnoreCase("offline"));
+        JsonObject client = RestcommClientsTool.getInstance().getClient(deploymentUrl.toString(), presenceUsername,
+                presenceAccountSid, adminAuthToken, steveClientSid, true);
+        String latestAppearance = client.get("latest_appearance").getAsString();
+        assertTrue(latestAppearance.equalsIgnoreCase("offline"));
     }
     
     @Test
@@ -166,21 +165,21 @@ public class ClientsEndpointTest {
     	// Verifying new presence info at clients list
     	JsonArray clients = RestcommClientsTool.getInstance().getClients(deploymentUrl.toString(), adminUsername, adminAccountSid, adminAuthToken);
     	JsonObject client = clients.get(0).getAsJsonObject();
-    	String dateLastUsageString = client.get("date_last_usage").getAsString();
-    	Date dateLastUsage = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).parse(dateLastUsageString);
-    	assertNotNull(dateLastUsage);
+        String latestAppearanceString = client.get("latest_appearance").getAsString();
+    	Date latestAppearance = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).parse(latestAppearanceString);
+    	assertNotNull(latestAppearance);
     	
     	//Verifying new presence info at single client
     	client = RestcommClientsTool.getInstance().getClient(deploymentUrl.toString(), adminUsername, adminAccountSid, adminAuthToken, clientSID, false);
-    	dateLastUsageString = client.get("date_last_usage").getAsString();
-    	dateLastUsage = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).parse(dateLastUsageString);
-    	assertNotNull(dateLastUsage);
+        latestAppearanceString = client.get("latest_appearance").getAsString();
+    	latestAppearance = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).parse(latestAppearanceString);
+    	assertNotNull(latestAppearance);
     	
     	//Verifying new presence info at specific path
     	client = RestcommClientsTool.getInstance().getClient(deploymentUrl.toString(), adminUsername, adminAccountSid, adminAuthToken, clientSID, true);
-    	dateLastUsageString = client.get("date_last_usage").getAsString();
-    	dateLastUsage = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).parse(dateLastUsageString);
-    	assertNotNull(dateLastUsage);
+        latestAppearanceString = client.get("latest_appearance").getAsString();
+    	latestAppearance = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).parse(latestAppearanceString);
+    	assertNotNull(latestAppearance);
     }
     
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
@@ -195,7 +194,7 @@ public class ClientsEndpointTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_clientsTest", "data/hsql/restcomm.script");
         return archive;
     }
 }

@@ -49,12 +49,12 @@ public final class Client {
     private final String voiceFallbackMethod;
     private final Sid voiceApplicationSid;
     private final URI uri;
-    private final DateTime dateLastUsage;
+    private final DateTime latestAppearance;
 
     public Client(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
             final String apiVersion, final String friendlyName, final String login, final String password,
             final Integer status, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
-            String voiceFallbackMethod, final Sid voiceApplicationSid, final URI uri, final DateTime dateLastUsage) {
+            String voiceFallbackMethod, final Sid voiceApplicationSid, final URI uri, final DateTime latestAppearance) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -71,7 +71,7 @@ public final class Client {
         this.voiceFallbackMethod = voiceFallbackMethod;
         this.voiceApplicationSid = voiceApplicationSid;
         this.uri = uri;
-        this.dateLastUsage = dateLastUsage;
+        this.latestAppearance = latestAppearance;
     }
 
     public static Builder builder() {
@@ -137,50 +137,51 @@ public final class Client {
     public URI getUri() {
         return uri;
     }
-    
-    public DateTime getDateLastUsage(){
-    	return dateLastUsage;
+
+    public DateTime getLatestAppearance() {
+        return latestAppearance;
     }
 
     public Client setFriendlyName(final String friendlyName) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     public Client setPassword(final String password) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     public Client setStatus(final int status) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     public Client setVoiceUrl(final URI voiceUrl) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     public Client setVoiceMethod(final String voiceMethod) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     public Client setVoiceFallbackUrl(final URI voiceFallbackUrl) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     public Client setVoiceFallbackMethod(final String voiceFallbackMethod) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     public Client setVoiceApplicationSid(final Sid voiceApplicationSid) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, dateLastUsage);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
+
 
     @NotThreadSafe
     public static final class Builder {

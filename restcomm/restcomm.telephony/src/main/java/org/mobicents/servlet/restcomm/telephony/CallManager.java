@@ -301,7 +301,7 @@ public final class CallManager extends UntypedActor {
                     || CallControlHelper.checkAuthentication(request, storage)) {
                 // if the client has authenticated, update presence info and try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
-            	PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
+                PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
                     return;
                 } // else continue trying other ways to handle the request

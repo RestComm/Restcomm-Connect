@@ -152,7 +152,7 @@ voice_fallback_url MEDIUMTEXT,
 voice_fallback_method VARCHAR(4),
 voice_application_sid VARCHAR(34),
 uri MEDIUMTEXT NOT NULL,
-date_last_usage DATETIME
+latest_appearance DATETIME
 );
 
 CREATE TABLE restcomm_registrations (

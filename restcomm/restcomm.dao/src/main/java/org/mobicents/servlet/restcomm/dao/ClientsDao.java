@@ -35,7 +35,7 @@ public interface ClientsDao {
     Client getClient(String user);
 
     List<Client> getClients(Sid accountSid);
-    
+
     Client getClientPresence(Sid sid);
 
     void removeClient(Sid sid);
@@ -43,7 +43,7 @@ public interface ClientsDao {
     void removeClients(Sid accountSid);
 
     void updateClient(Client client);
-    
+
     void updateClientPresence(Client client);
-    
+
 }

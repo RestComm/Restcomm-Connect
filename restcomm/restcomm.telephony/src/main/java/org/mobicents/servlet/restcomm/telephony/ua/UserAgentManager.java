@@ -313,7 +313,7 @@ public final class UserAgentManager extends UntypedActor {
         }
         // Success
         // Update presence info
-        PresenceControlHelper.updateClientPresence(request.getFrom().getDisplayName(), storage.getClientsDao());
+        PresenceControlHelper.updateClientPresence(name, storage.getClientsDao());
         response.send();
         // Cleanup
         // if(request.getSession().isValid()) {

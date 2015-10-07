@@ -80,18 +80,18 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     public Response getClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return getClient(accountSid, sid, APPLICATION_XML_TYPE);
     }
-    
+
     @Path("/{sid}/presence.json")
     @GET
     public Response getClientPresenceAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid){
-    	return getClientPresence(accountSid, sid, APPLICATION_JSON_TYPE);
+        return getClientPresence(accountSid, sid, APPLICATION_JSON_TYPE);
     }
-    
+
     @Path("/{sid}/presence")
     @GET
-    
+
     public Response getClientPresenceAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid){
-    	return getClientPresence(accountSid, sid, APPLICATION_XML_TYPE);
+        return getClientPresence(accountSid, sid, APPLICATION_XML_TYPE);
     }
 
     @GET

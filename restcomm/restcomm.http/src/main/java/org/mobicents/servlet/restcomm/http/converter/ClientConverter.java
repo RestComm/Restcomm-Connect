@@ -20,8 +20,11 @@
 package org.mobicents.servlet.restcomm.http.converter;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Client;
 
@@ -67,7 +70,7 @@ public class ClientConverter extends AbstractConverter implements JsonSerializer
         writeVoiceFallbackMethod(client.getVoiceFallbackMethod(), writer);
         writeVoiceApplicationSid(client.getVoiceApplicationSid(), writer);
         writeUri(client.getUri(), writer);
-        writeDateLastUsage(client.getDateLastUsage(), writer);
+        writeLatestAppearance(client.getLatestAppearance(), writer);
         writer.endNode();
     }
 
@@ -89,39 +92,58 @@ public class ClientConverter extends AbstractConverter implements JsonSerializer
         writeVoiceFallbackMethod(client.getVoiceFallbackMethod(), object);
         writeVoiceApplicationSid(client.getVoiceApplicationSid(), object);
         writeUri(client.getUri(), object);
-        writeDateLastUsage(client.getDateLastUsage(), object);
+        writeLatestAppearance(client.getLatestAppearance(), object);
         return object;
     }
 
     protected void writeLogin(final String login, final HierarchicalStreamWriter writer) {
         if(login != null){
-        	writer.startNode("Login");
-        	writer.setValue(login);
-        	writer.endNode();
+            writer.startNode("Login");
+            writer.setValue(login);
+            writer.endNode();
         }
     }
 
     protected void writeLogin(final String login, final JsonObject object) {
-    	if(login != null){
-    		object.addProperty("login", login);
-    	} else {
-    		object.add("login", JsonNull.INSTANCE);
-    	}
+        if (login != null) {
+            object.addProperty("login", login);
+        } else {
+            object.add("login", JsonNull.INSTANCE);
+        }
     }
 
     protected void writePassword(final String password, final HierarchicalStreamWriter writer) {
         if(password != null){
-        	writer.startNode("Password");
-        	writer.setValue(password);
-        	writer.endNode();
+            writer.startNode("Password");
+            writer.setValue(password);
+            writer.endNode();
         }
     }
 
     protected void writePassword(final String password, final JsonObject object) {
-    	if(password != null){
-    		object.addProperty("password", password);
-    	} else {
-    		object.add("password", JsonNull.INSTANCE);
-    	}
+        if (password != null) {
+            object.addProperty("password", password);
+        } else {
+            object.add("password", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeLatestAppearance(final DateTime latestAppearance, final HierarchicalStreamWriter writer) {
+        writer.startNode("LatestAppearance");
+        if (latestAppearance != null) {
+            writer.setValue(new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(latestAppearance.toDate()));
+        } else {
+            writer.setValue("offline");
+        }
+        writer.endNode();
+    }
+
+    protected void writeLatestAppearance(final DateTime latestAppearance, final JsonObject object) {
+        if (latestAppearance != null) {
+            object.addProperty("latest_appearance",
+                    new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(latestAppearance.toDate()));
+        } else {
+            object.addProperty("latest_appearance", "offline");
+        }
     }
 }

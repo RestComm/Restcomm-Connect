@@ -21,3 +21,5 @@ GRANT DBA TO SA
 SET WRITE_DELAY 10
 SET SCHEMA PUBLIC
 INSERT INTO "restcomm_accounts" VALUES('ACae6e420f425248d6a26948c17a9e2acf','2012-04-24 22:51:29.372000000','2012-04-24 22:51:29.372000000','administrator@company.com','Default Administrator Account',NULL,'Full','active','77f8c12cc7b8f8423e5c38b035249166','Administrator','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf')
+INSERT INTO "restcomm_accounts" VALUES('ACae6e420f425248d6a26948c17a9e2acd','2012-04-24 22:51:29.372000000','2012-04-24 22:51:29.372000000','presence@company.com','Presence Test Account',NULL,'Full','active','77f8c12cc7b8f8423e5c38b035249166','Administrator','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acd')
+INSERT INTO "restcomm_clients" VALUES('CLae6e420f425248d6a26948c17a9e2acd','2012-04-24 22:51:29.372000000','2012-04-24 22:51:29.372000000','ACae6e420f425248d6a26948c17a9e2acd','2012-04-24','Steve','steve','1234',1,'hello-world.xml','POST','world-hello.xml','GET','ACae6e420f425248d6a26948c17a9e2acd','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acd/Clients/CLae6e420f425248d6a26948c17a9e2acd', NULL)
