@@ -14,8 +14,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
@@ -135,7 +135,7 @@ public class RestcommClient {
         this.port = port;
         this.username = username;
         this.password = password;
-        apacheClient = HttpClients.createDefault();
+        apacheClient = CustomHttpClientBuilder.buildHttpClient();
     }
 
 

@@ -17,5 +17,18 @@
 	<!-- 
 	<restcommPublicIp>192.168.0.53</restcommPublicIp>
 	-->
-	
+
+	<!--
+		Control whether outgoing https requests verify peer site certificate or not. Two modes of operation are supported:
+
+		'strict' : 	Requests will verify the server certificate and fail in case of an error. 
+		'allowall': 	Requests will not verify the server certificate thus allowing contacting servers with certificates 
+				that are not signed by a well-known CA or self-signed certificates. It's better to avoid 
+				this mode in production environments.
+				
+		By default 'allowall' mode is used.
+	-->
+	<!-- 
+	<sslMode>allowall</sslMode> 
+	-->
 </rvd>
