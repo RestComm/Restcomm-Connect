@@ -852,34 +852,40 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case PSTN: {
-                to = sipFactory.createSipURI(request.to(), uri);
-                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
-                SipURI outboundIntf = outboundInterface(transport);
-                final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
-                        "outboudproxy-user-at-from-header");
-                if (request.from() != null && request.from().contains("@")) {
-                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
-                    // to use it directly
-                    from = (SipURI) sipFactory.createURI(request.from());
-                } else if (useLocalAddressAtFromHeader) {
-                    from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
-                } else {
-                    if (outboudproxyUserAtFromHeader) {
-                        // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
-                        // of the sip uri for the From header
-                        from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
-                    } else {
-                        from = sipFactory.createSipURI(request.from(), uri);
-                    }
-                }
-                if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
-                    if (uri != null) {
-                        from = sipFactory.createSipURI(request.from(), uri);
-                    } else {
+                if (uri != null) {
+                    to = sipFactory.createSipURI(request.to(), uri);
+                    String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+                    SipURI outboundIntf = outboundInterface(transport);
+                    final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
+                            "outboudproxy-user-at-from-header");
+                    if (request.from() != null && request.from().contains("@")) {
+                        // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
+                        // to use it directly
                         from = (SipURI) sipFactory.createURI(request.from());
+                    } else if (useLocalAddressAtFromHeader) {
+                        from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                    } else {
+                        if (outboudproxyUserAtFromHeader) {
+                            // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
+                            // of the sip uri for the From header
+                            from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
+                        } else {
+                            from = sipFactory.createSipURI(request.from(), uri);
+                        }
                     }
+                    if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
+                        if (uri != null) {
+                            from = sipFactory.createSipURI(request.from(), uri);
+                        } else {
+                            from = (SipURI) sipFactory.createURI(request.from());
+                        }
+                    }
+                    break;
+                } else {
+                    String errMsg = "The Active Outbound Proxy is null. Please check configuration";
+                    sendNotification(errMsg, 11008, "error", true);
+                    throw new NullPointerException(errMsg);
                 }
-                break;
             }
             case SIP: {
                 to = (SipURI) sipFactory.createURI(request.to());
