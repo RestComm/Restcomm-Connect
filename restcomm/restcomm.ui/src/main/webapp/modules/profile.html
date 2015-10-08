@@ -40,21 +40,6 @@
 						<input id="friendly-name" type="text" class="form-control" placeholder="Friendly Name" maxlength="64" ng-model="account.friendly_name" />
 					</div>
 				</div>
-				<!--
-				<div class="form-group" ng-class="{'has-error':!profileForm.newPassword.$valid}">
-					<label class="col-md-4 control-label" for="date-created">
-						<h5 class="no-margins">Password</h5>
-					</label>
-					<div class="col-md-4">
-						<style type="text/css">div.password-strength span { right: 20px !important; }</style>
-						<div ng-show="newPassword" class="col-md-12 password-strength" ng-password-strength="newPassword" style="padding: inherit;"></div>
-						<input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newPassword}" placeholder="New Password" ng-model="newPassword" />
-					</div>
-					<div class="col-md-4">
-						<input id="passwordConfirmation" name="newPassword2" type="password" class="form-control" placeholder="Confirm New Password" ng-model="newPassword2" />
-					</div>
-				</div>
-				-->
 				<div class="form-group">
 					<label class="col-md-4 control-label" for="account-type">
 						<h5 class="no-margins">Type</h5>
@@ -117,11 +102,11 @@
 			<form name="userForm" class="form-horizontal" style="margin-top:10px">
 				<div class="form-group">
 						<label class="col-md-4 control-label" for="friendly-name">
-							<h5 class="no-margins">Username</h5></label>
+							<h5 class="no-margins" title="Username of the Restcomm user to link to">Username</h5></label>
 					<div class="col-md-6">
 						<input ng-readonly="!!account.email_address" ng-model="userLink.email_address" ng-readonly="true" id="email-address" type="email" class="form-control" placeholder="alice@telestax.com" maxlength="64" />
 						<!--<p class="help-block">Register a Restcomm account <a href="https://identity.restcomm.com/auth/admin/restcomm/console/" target="_blank">here</a>.</p> -->
-						<p ng-show="!account.email_address" class="help-block"><input type="checkbox"  ng-model="userLink.create"> Create </p>
+						<p ng-show="!account.email_address" class="help-block" title="Create this user in the authorization server. The account SID will be used as a default password."><input type="checkbox"  ng-model="userLink.create"> Create </p>
 					</div>
 					<div class="col-md-2">
 						<button ng-disabled="userForm.$invalid || !userLink.email_address" ng-show="!account.email_address" ng-click="linkUser(account,userLink)" type="button" class="btn btn-link" title="Link account with an existing or new Restcomm User. You will then be allowed to access this account using this user's credentials."><i class="fa fa-chain"></i></button>
