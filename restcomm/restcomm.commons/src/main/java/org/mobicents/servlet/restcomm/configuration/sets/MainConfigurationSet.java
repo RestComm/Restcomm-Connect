@@ -26,12 +26,12 @@ import org.mobicents.servlet.restcomm.http.SslMode;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Provides a typed interface to a set of configuration options retrieved from a 
- * configuration source. 
- * 
+ * Provides a typed interface to a set of configuration options retrieved from a
+ * configuration source.
+ *
  * To add a new option in this set define its name as static fields and then initialize,
  * validate it in the constructor.
- *  
+ *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */

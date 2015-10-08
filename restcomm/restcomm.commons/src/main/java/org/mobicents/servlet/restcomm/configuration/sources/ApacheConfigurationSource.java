@@ -23,7 +23,7 @@ package org.mobicents.servlet.restcomm.configuration.sources;
 import org.apache.commons.configuration.Configuration;
 
 /**
- * 
+ *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */
