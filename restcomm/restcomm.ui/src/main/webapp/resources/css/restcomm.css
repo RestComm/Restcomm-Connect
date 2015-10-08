@@ -137,6 +137,13 @@ input.ng-dirty.ng-invalid {
 	text-decoration: underline;
 }
 
+/* Error views classes - unregistered/unauthorized/unlinked.html-------------- */
+
+.error-message {
+	margin-top: 80px;
+}
+
+
 /* Index.html classes ------------------------------------------------------- */
 
 ul#rightMenu > li i {

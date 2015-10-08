@@ -26,15 +26,11 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 		
 	serviceInstance.isLoggedIn = function() {
 		return Auth.loggedIn;
-      //return SessionService.get('authenticated');
     }
 	serviceInstance.getAuthStatus = function () {
 		return Auth.authStatus;
 	}
 	serviceInstance.getLoggedSid = function() {
-		  //var username = Auth.authz.profile.username;
-		  //var accountSid = "AC" + md5.createHash(username);
-		  //return accountSid;
 		return Auth.restcommAccount.sid;
 	}
 	serviceInstance.getLoggedAccount = function () {

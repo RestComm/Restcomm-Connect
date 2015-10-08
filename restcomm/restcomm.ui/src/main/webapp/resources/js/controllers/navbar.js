@@ -20,28 +20,6 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
     Notifications.success('This is an success message');
   };
 
-  $scope.logout = function() {
-    AuthService.logout();
-    //$http.get('/restcomm/2012-04-24/Logout')
-    /*.
-     success(function() {console.log('Logged out from API.');}).
-     error(function() {console.log('Failed to logout from API.');})*/;
-  };
-
-  // otsakir - disable it for now. maybe it's not needed
-  /*
-  if(AuthService.isLoggedIn()) {
-    var accountsList = RCommAccounts.query(function() {
-      $scope.accountsList = accountsList;
-      for (var x in accountsList){
-        if(accountsList[x].sid == $scope.sid) {
-          $scope.currentAccount = accountsList[x];
-        }
-      }
-    });
-  }
-  */
-
   // add account -------------------------------------------------------------
 
   $scope.showRegisterAccountModal = function () {
@@ -112,6 +90,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 
     RCommAccounts.update({accountSid:$scope.account.sid}, $.param(params), function() { // success
     	$scope.accounts = RCommAccounts.all({format:'json'}, function (accounts) {});
+    	Notifications.success("Account settings updated");
     }, function() { // error
       $scope.showAlert('error', 'Failure Updating Profile. Please check data and try again.');
     });
@@ -151,8 +130,11 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 	    params = {username: userLink.email_address};
 	  console.log(params);
 	  RCommAccountOperations.linkUser({accountSid:account.sid}, $.param(params), function () {
-		  Notifications.success("Linked to user '" + userLink.email_address + "'");
+		  Notifications.success("Linked to user '" + userLink.email_address + "'.");
 		  reloadAccount();
+	  }, function (response) {
+		  if (response.status == 409)
+			  Notifications.error("User '" + userLink.email_address + "' already exists.");
 	  });
   }
   

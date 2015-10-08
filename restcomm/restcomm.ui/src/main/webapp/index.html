@@ -132,6 +132,8 @@
         <script type="text/javascript" src="resources/js/controllers/register.js"></script>
         <script type="text/javascript" src="resources/js/controllers/terms.js"></script>
         <script type="text/javascript" src="resources/js/controllers/unregistered.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/unauthorized.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/unlinked.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
         <script type="text/javascript" src="resources/js/directives.js"></script>
@@ -216,7 +218,7 @@
                                         	<li class=""><a href="#/register"><i class="fa fa-cloud"></i> Register ...</a> </li>
                                         	-->
                                         <li ng-show="auth.hasRole('Administrator')" class="divider"></li>
-                                        <li><a href="#" ng-click="logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
+                                        <li><a href="#" ng-click="auth.logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
                                     </ul>
                                 </li>
                             </ul>
