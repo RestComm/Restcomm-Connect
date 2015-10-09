@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -123,7 +124,7 @@ public class RasRestService extends RestService {
         logger.info("saving restcomm app '" + projectName + "'");
         try {
             String rappData;
-            rappData = IOUtils.toString(request.getInputStream());
+            rappData = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
 
             Gson gson = new Gson();
             Rapp rapp = gson.fromJson(rappData, Rapp.class);
@@ -366,7 +367,7 @@ public class RasRestService extends RestService {
     public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
         try {
             String bootstrapInfo;
-            bootstrapInfo = IOUtils.toString(request.getInputStream());
+            bootstrapInfo = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
 
             FsProjectStorage.storeBootstrapInfo(bootstrapInfo, projectName, workspaceStorage);
             return buildOkResponse();
