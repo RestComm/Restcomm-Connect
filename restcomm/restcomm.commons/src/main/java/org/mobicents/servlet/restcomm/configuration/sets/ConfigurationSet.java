@@ -23,8 +23,8 @@ import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
 /**
  * A logical group of configuration options. It encapsulates storage, initialization
- * and validation operations. Extend it to add new groups. 
- * 
+ * and validation operations. Extend it to add new groups.
+ *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */

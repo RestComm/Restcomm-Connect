@@ -31,7 +31,7 @@ import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationS
 /**
  * Singleton like class that provides access to ConfigurationSets.
  * Use get+() functions to access configuration sets.
- * 
+ *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */
