@@ -20,7 +20,7 @@
 package org.mobicents.servlet.restcomm.configuration.sources;
 
 /**
- * 
+ *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */
