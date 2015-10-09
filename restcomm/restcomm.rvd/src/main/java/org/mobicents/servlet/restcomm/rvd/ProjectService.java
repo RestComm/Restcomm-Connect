@@ -37,6 +37,7 @@ import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -288,7 +289,7 @@ public class ProjectService {
     public void updateProject(HttpServletRequest request, String projectName, ProjectState existingProject) throws RvdException {
         String stateData = null;
         try {
-            stateData = IOUtils.toString(request.getInputStream());
+            stateData = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
         } catch (IOException e) {
             throw new RvdException("Internal error while retrieving raw project",e);
         }
