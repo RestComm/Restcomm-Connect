@@ -32,6 +32,7 @@ public final class UriUtils {
 
     private static Logger logger = Logger.getLogger(UriUtils.class);
     private static HttpConnector httpConnector;
+    private static HttpConnectorList httpConnectorList;
     /**
      * Default constructor.
      */
@@ -92,7 +93,8 @@ public final class UriUtils {
         if (endPoints.isEmpty()) {
             logger.error("Coundn't discover any Http Interfaces");
         }
-        return new HttpConnectorList(endPoints);
+        httpConnectorList = new HttpConnectorList(endPoints);
+        return httpConnectorList;
     }
 
     /**
@@ -104,12 +106,13 @@ public final class UriUtils {
      */
     public static URI resolve(final URI uri) {
         if (httpConnector == null) {
-            HttpConnectorList httpConnectorList = null;
-            try {
-                httpConnectorList = getHttpConnectors();
-            } catch (MalformedObjectNameException | AttributeNotFoundException | InstanceNotFoundException
-                    | NullPointerException | UnknownHostException | MBeanException | ReflectionException exception) {
-                logger.error("Exception during HTTP Connectors discovery: ", exception);
+            if (httpConnectorList == null) {
+                try {
+                    httpConnectorList = getHttpConnectors();
+                } catch (MalformedObjectNameException | AttributeNotFoundException | InstanceNotFoundException
+                        | NullPointerException | UnknownHostException | MBeanException | ReflectionException exception) {
+                    logger.error("Exception during HTTP Connectors discovery: ", exception);
+                }
             }
             if (httpConnectorList != null && !httpConnectorList.getConnectors().isEmpty()) {
                 List<HttpConnector> connectors = httpConnectorList.getConnectors();
@@ -140,5 +143,12 @@ public final class UriUtils {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Badly formed URI: " + base, e);
         }
+    }
+
+    public static HttpConnectorList getHttpConnectorList() {
+        if (httpConnectorList == null) {
+            getHttpConnectorList();
+        }
+        return httpConnectorList;
     }
 }
