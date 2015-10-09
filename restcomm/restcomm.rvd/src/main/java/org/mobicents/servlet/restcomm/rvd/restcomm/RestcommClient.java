@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.restcomm;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +112,7 @@ public class RestcommClient {
                             else
                                 throw new RestcommClientException("Error invoking Restcomm REST api").setStatusCode(statusCode);
                         }
-                        String content = IOUtils.toString(apiResponse.getEntity().getContent());
+                        String content = IOUtils.toString(apiResponse.getEntity().getContent(), Charset.forName("UTF-8"));
                         return gson.fromJson( content, resultClass );
                     } finally {
                         apiResponse.close();
