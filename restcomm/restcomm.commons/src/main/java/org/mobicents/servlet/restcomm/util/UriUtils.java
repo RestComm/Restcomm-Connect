@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.util;
 
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -22,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.HttpConnector;
 import org.mobicents.servlet.restcomm.HttpConnectorList;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 
 /**
  * Utility class to manipulate URI.
@@ -137,7 +139,23 @@ public final class UriUtils {
 //        } else {
 //            address = localAddress;
 //        }
-        String base = httpConnector.getScheme()+"://" + httpConnector.getAddress() + ":" + httpConnector.getPort();
+        String restcommAddress = null;
+        if (RestcommConfiguration.getInstance().getMain().isUseHostnameToResolveRelativeUrls()) {
+            restcommAddress = RestcommConfiguration.getInstance().getMain().getHostname();
+            if (restcommAddress == null || restcommAddress.isEmpty()) {
+                try {
+                    InetAddress addr = InetAddress.getByName(httpConnector.getAddress());
+                    restcommAddress = addr.getCanonicalHostName();
+                } catch (UnknownHostException e) {
+                    logger.error("Unable to resolve: " + httpConnector + " to hostname: " + e);
+                    restcommAddress = httpConnector.getAddress();
+                }
+            }
+        } else {
+            restcommAddress = httpConnector.getAddress();
+        }
+
+        String base = httpConnector.getScheme()+"://" + restcommAddress + ":" + httpConnector.getPort();
         try {
             return resolve(new URI(base), uri);
         } catch (URISyntaxException e) {
