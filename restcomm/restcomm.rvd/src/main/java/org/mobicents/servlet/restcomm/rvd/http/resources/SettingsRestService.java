@@ -46,7 +46,7 @@ public class SettingsRestService extends RestService {
 
     @PostConstruct
     void init() {
-        settings = RvdConfiguration.getInstance(servletContext);
+        settings = RvdConfiguration.getInstance();
         marshaler = new ModelMarshaler();
         //workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
     }
@@ -57,7 +57,7 @@ public class SettingsRestService extends RestService {
         try {
             // Create a settings model from the request
             String data;
-            data = IOUtils.toString(request.getInputStream());
+            data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
             SettingsModel settingsModel = marshaler.toModel(data, SettingsModel.class);
 
             // Store the model to a .settings file in the root of the workspace

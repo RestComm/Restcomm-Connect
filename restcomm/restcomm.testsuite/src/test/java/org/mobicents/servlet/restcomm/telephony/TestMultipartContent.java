@@ -45,7 +45,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.telephony.RestResources.DialActionResources;
 
 /**
  * Test for Multipart Content type. UFone Issue 31380.
@@ -191,8 +190,6 @@ public class TestMultipartContent {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-
-        DialActionResources.resetData();
     }
 
     @Test
