@@ -891,9 +891,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ApiVersion", version));
         final String direction = callInfo.direction();
         parameters.add(new BasicNameValuePair("Direction", direction));
-        final String callerName = callInfo.fromName();
+        final String callerName = (callInfo.fromName()==null || callInfo.fromName().isEmpty()) ? "null" : callInfo.fromName();
         parameters.add(new BasicNameValuePair("CallerName", callerName));
-        final String forwardedFrom = callInfo.forwardedFrom();
+        final String forwardedFrom = (callInfo.forwardedFrom()==null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
@@ -1592,7 +1592,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         // Handle Failed Calls
         if (message instanceof CallManagerResponse && !(((CallManagerResponse<ActorRef>) message).succeeded())) {
-            parameters.add(new BasicNameValuePair("DialCallSid", null));
+            if (outboundCallInfo != null) {
+                parameters.add(new BasicNameValuePair("DialCallSid", (outboundCallInfo.sid() == null) ? "null" : outboundCallInfo.sid().toString()));
+            } else {
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
+            }
             parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.toString()));
             parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
             parameters.add(new BasicNameValuePair("RecordingUrl", null));
@@ -1615,7 +1619,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
-                parameters.add(new BasicNameValuePair("DialCallSid", null));
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
                 parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
@@ -1644,11 +1648,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
-                parameters.add(new BasicNameValuePair("DialCallSid", null));
-                parameters.add(new BasicNameValuePair("DialCallStatus", null));
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
+                parameters.add(new BasicNameValuePair("DialCallStatus", "null"));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
-                parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
+                parameters.add(new BasicNameValuePair("PublicRecordingUrl", "null"));
             }
         }
 
