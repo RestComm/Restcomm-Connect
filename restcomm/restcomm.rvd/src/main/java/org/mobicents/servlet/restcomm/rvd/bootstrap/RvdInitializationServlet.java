@@ -19,7 +19,7 @@ public class RvdInitializationServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config) ;
         logger.info("Initializing RVD");
-        RvdConfiguration settings = RvdConfiguration.getInstance(config.getServletContext());
+        RvdConfiguration settings = RvdConfiguration.createOnce(config.getServletContext());
         ModelMarshaler marshaler = new ModelMarshaler();
         WorkspaceStorage workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
         UpgradeService upgradeService = new UpgradeService(workspaceStorage);
