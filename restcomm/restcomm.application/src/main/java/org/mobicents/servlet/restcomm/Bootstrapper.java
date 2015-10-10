@@ -305,6 +305,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             Version.printVersion();
             GenerateInstanceId generateInstanceId = new GenerateInstanceId(context);
             InstanceId instanceId = generateInstanceId.instanceId();
+            context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
             Ping ping = new Ping(xml, context);
             ping.sendPing();
