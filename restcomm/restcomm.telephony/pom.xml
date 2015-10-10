@@ -129,6 +129,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.monitoring.service</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>${sip-ri.version}</version>

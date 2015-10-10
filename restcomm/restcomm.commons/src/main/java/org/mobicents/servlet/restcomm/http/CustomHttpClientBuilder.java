@@ -26,13 +26,18 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.mobicents.servlet.restcomm.HttpConnector;
+import org.mobicents.servlet.restcomm.HttpConnectorList;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 /**
  *
@@ -55,22 +60,30 @@ public class CustomHttpClientBuilder {
     }
 
     private static HttpClient buildAllowallClient() {
-        SSLSocketFactory sslsf;
-        try {
-            sslsf = new SSLSocketFactory(new TrustStrategy() {
-                public boolean isTrusted(
-                    final X509Certificate[] chain, String authType) throws CertificateException {
-                    // Oh, I am easy...
-                    return true;
-                }
-            });
-        } catch (KeyManagementException | UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException e) {
-            throw new RuntimeException("Error creating HttpClient", e);
-        }
+        HttpConnectorList httpConnectorList = UriUtils.getHttpConnectorList();
         HttpClient httpClient = new DefaultHttpClient();
-        httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme("https", 443, sslsf));
-        httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme("https", 8443, sslsf));
-        // TODO what happens with custom https ports ? Only 443 and 8443 are covered here.
+        //Enable SSL only if we have HTTPS connector
+        List<HttpConnector> connectors = httpConnectorList.getConnectors();
+        Iterator<HttpConnector> iterator = connectors.iterator();
+        while (iterator.hasNext()) {
+            HttpConnector connector = iterator.next();
+            if (connector.isSecure()) {
+                SSLSocketFactory sslsf;
+                try {
+                    sslsf = new SSLSocketFactory(new TrustStrategy() {
+                        public boolean isTrusted(
+                            final X509Certificate[] chain, String authType) throws CertificateException {
+                            // Oh, I am easy...
+                            return true;
+                        }
+                    });
+                } catch (KeyManagementException | UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException e) {
+                    throw new RuntimeException("Error creating HttpClient", e);
+                }
+                httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme(connector.getScheme(), connector.getPort(), sslsf));
+                break;
+            }
+        }
 
         return httpClient;
     }
