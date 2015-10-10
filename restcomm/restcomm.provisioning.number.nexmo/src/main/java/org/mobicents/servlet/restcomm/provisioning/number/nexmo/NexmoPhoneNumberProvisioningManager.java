@@ -124,7 +124,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
                     getFriendlyName(number.get("msisdn").getAsString(), countryCode),
                     number.get("msisdn").getAsString(),
                     null, null, null, null, null, null,
-                    countryCode, isVoiceCapable, isSmsCapable, null, null, null);
+                    countryCode, number.get("cost").getAsString(), isVoiceCapable, isSmsCapable, null, null, null);
             numbers.add(phoneNumber);
         }
         return numbers;
@@ -158,11 +158,11 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
                 queryUri = queryUri + "&";
             }
             if(listFilters.getSmsEnabled() != null && listFilters.getVoiceEnabled() != null) {
-                queryUri = queryUri + "features=" + listFilters.getSmsEnabled() + "," + listFilters.getVoiceEnabled();
+                queryUri = queryUri + "features=SMS,VOICE";
             } else if(listFilters.getSmsEnabled() != null) {
-                queryUri = queryUri + "features=" + listFilters.getSmsEnabled();
+                queryUri = queryUri + "features=SMS";
             } else {
-                queryUri = queryUri + "features=" + listFilters.getVoiceEnabled();
+                queryUri = queryUri + "features=VOICE";
             }
         }
         if(listFilters.getRangeIndex() != -1) {

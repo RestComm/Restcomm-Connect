@@ -102,7 +102,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         System.out.println(jsonResponse.toString());
         System.out.println(jsonResponse.size());
         
-        assertTrue(jsonResponse.size() == 249);
+        assertTrue(jsonResponse.size() == 250);
     }
     
     /*
