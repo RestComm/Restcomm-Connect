@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.util;
 
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -22,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.HttpConnector;
 import org.mobicents.servlet.restcomm.HttpConnectorList;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 
 /**
  * Utility class to manipulate URI.
@@ -32,6 +34,7 @@ public final class UriUtils {
 
     private static Logger logger = Logger.getLogger(UriUtils.class);
     private static HttpConnector httpConnector;
+    private static HttpConnectorList httpConnectorList;
     /**
      * Default constructor.
      */
@@ -92,7 +95,8 @@ public final class UriUtils {
         if (endPoints.isEmpty()) {
             logger.error("Coundn't discover any Http Interfaces");
         }
-        return new HttpConnectorList(endPoints);
+        httpConnectorList = new HttpConnectorList(endPoints);
+        return httpConnectorList;
     }
 
     /**
@@ -104,12 +108,13 @@ public final class UriUtils {
      */
     public static URI resolve(final URI uri) {
         if (httpConnector == null) {
-            HttpConnectorList httpConnectorList = null;
-            try {
-                httpConnectorList = getHttpConnectors();
-            } catch (MalformedObjectNameException | AttributeNotFoundException | InstanceNotFoundException
-                    | NullPointerException | UnknownHostException | MBeanException | ReflectionException exception) {
-                logger.error("Exception during HTTP Connectors discovery: ", exception);
+            if (httpConnectorList == null) {
+                try {
+                    httpConnectorList = getHttpConnectors();
+                } catch (MalformedObjectNameException | AttributeNotFoundException | InstanceNotFoundException
+                        | NullPointerException | UnknownHostException | MBeanException | ReflectionException exception) {
+                    logger.error("Exception during HTTP Connectors discovery: ", exception);
+                }
             }
             if (httpConnectorList != null && !httpConnectorList.getConnectors().isEmpty()) {
                 List<HttpConnector> connectors = httpConnectorList.getConnectors();
@@ -134,11 +139,34 @@ public final class UriUtils {
 //        } else {
 //            address = localAddress;
 //        }
-        String base = httpConnector.getScheme()+"://" + httpConnector.getAddress() + ":" + httpConnector.getPort();
+        String restcommAddress = null;
+        if (RestcommConfiguration.getInstance().getMain().isUseHostnameToResolveRelativeUrls()) {
+            restcommAddress = RestcommConfiguration.getInstance().getMain().getHostname();
+            if (restcommAddress == null || restcommAddress.isEmpty()) {
+                try {
+                    InetAddress addr = InetAddress.getByName(httpConnector.getAddress());
+                    restcommAddress = addr.getCanonicalHostName();
+                } catch (UnknownHostException e) {
+                    logger.error("Unable to resolve: " + httpConnector + " to hostname: " + e);
+                    restcommAddress = httpConnector.getAddress();
+                }
+            }
+        } else {
+            restcommAddress = httpConnector.getAddress();
+        }
+
+        String base = httpConnector.getScheme()+"://" + restcommAddress + ":" + httpConnector.getPort();
         try {
             return resolve(new URI(base), uri);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Badly formed URI: " + base, e);
         }
+    }
+
+    public static HttpConnectorList getHttpConnectorList() {
+        if (httpConnectorList == null) {
+            getHttpConnectorList();
+        }
+        return httpConnectorList;
     }
 }

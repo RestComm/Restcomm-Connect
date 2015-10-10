@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -40,7 +41,7 @@ public class LoginRestService extends RestService {
 
     @PostConstruct
     void init() {
-        rvdSettings = rvdSettings.getInstance(servletContext);
+        rvdSettings = rvdSettings.getInstance();
     }
 
     /*
@@ -82,7 +83,7 @@ public class LoginRestService extends RestService {
     public Response postLogin(@Context HttpServletRequest request) throws IOException { // TODO make sure IOException is handled properly!
         //logger.debug("Running login");
 
-        String data = IOUtils.toString(request.getInputStream());
+        String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
         Gson gson = new Gson();
         LoginForm credentials = gson.fromJson(data,LoginForm.class);
         AuthenticationService authService = new AuthenticationService(rvdSettings, request);

@@ -21,6 +21,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
@@ -271,6 +272,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(DaoManager.class.getName(), storage);
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
+            // Create high-level restcomm configuration
+            RestcommConfiguration.createOnce(xml);
+
             // Create the media gateway.
 
             //Initialize Monitoring Service

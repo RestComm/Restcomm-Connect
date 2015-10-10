@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -539,7 +540,7 @@ public class FsProjectStorage {
         FileOutputStream stateFile_os;
         try {
             stateFile_os = new FileOutputStream(storage.rootPath + File.separator + projectName + File.separator + "state");
-            IOUtils.write(newState, stateFile_os);
+            IOUtils.write(newState, stateFile_os, Charset.forName("UTF-8"));
             stateFile_os.close();
         } catch (FileNotFoundException e) {
             throw new StorageException("Error updating state file for project '" + projectName + "'", e);
