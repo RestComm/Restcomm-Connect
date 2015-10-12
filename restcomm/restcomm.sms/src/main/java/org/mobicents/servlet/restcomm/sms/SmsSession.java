@@ -45,6 +45,7 @@ import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.smpp.SmppService;
 import org.mobicents.servlet.restcomm.smpp.SmppSessionOutbound;
+import org.mobicents.servlet.restcomm.telephony.TextMessage;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -74,12 +75,15 @@ public final class SmsSession extends UntypedActor {
     private ConcurrentHashMap<String, String> customHttpHeaderMap;
 
     private final DaoManager storage;
+
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
     private ActorSystem system = SmsServiceProxy.getSmppSystem();
 
+    private final ActorRef monitoringService;
+
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-            final DaoManager storage) {
+            final DaoManager storage, final ActorRef monitoringService) {
         super();
         this.configuration = configuration;
         this.factory = factory;
@@ -87,6 +91,7 @@ public final class SmsSession extends UntypedActor {
         this.transport = transport;
         this.attributes = new HashMap<String, Object>();
         this.storage = storage;
+        this.monitoringService = monitoringService;
     }
 
     private void inbound(final Object message) throws IOException {
@@ -177,9 +182,8 @@ public final class SmsSession extends UntypedActor {
         }
     }
 
-private void outbound(final Object message) throws IOException {
+    private void outbound(final Object message) {
         last = (SmsSessionRequest) message;
-
         if (initial == null) {
             initial = last;
         }
@@ -193,6 +197,7 @@ private void outbound(final Object message) throws IOException {
             return;
         }
 
+        monitoringService.tell(new TextMessage(from, to, TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
         final Client toClient = clients.getClient(to);
         Registration toClientRegistration = null;
