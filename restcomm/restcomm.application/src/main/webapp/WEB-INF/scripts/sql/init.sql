@@ -160,7 +160,8 @@ CREATE TABLE "restcomm_registrations" (
 "user_name" VARCHAR(64) NOT NULL,
 "user_agent" LONGVARCHAR,
 "ttl" INT NOT NULL,
-"location" LONGVARCHAR NOT NULL
+"location" LONGVARCHAR NOT NULL, 
+"webrtc" BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE "restcomm_short_codes" (

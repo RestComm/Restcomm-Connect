@@ -164,7 +164,8 @@ display_name VARCHAR(255),
 user_name VARCHAR(64) NOT NULL,
 user_agent MEDIUMTEXT,
 ttl INT NOT NULL,
-location MEDIUMTEXT NOT NULL
+location MEDIUMTEXT NOT NULL,
+webrtc BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE restcomm_short_codes (
