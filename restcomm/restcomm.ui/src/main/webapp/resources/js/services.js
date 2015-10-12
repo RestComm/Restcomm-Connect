@@ -47,7 +47,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
   return {
     login: function(credentials) {
       // TEMPORARY... FIXME!
-      var apiPath = "http://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
+      var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
 
 
       var login = $http.get(apiPath).
@@ -96,7 +96,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     },
     updatePassword: function(credentials, newPassword) {
       // TEMPORARY... FIXME!
-      var apiPath = "http://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts/" + this.getAccountSid() + ".json";
+      var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts/" + this.getAccountSid() + ".json";
       http://127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf.json
         var params = {};
       params["Auth_Token"] = md5.createHash(newPassword);
