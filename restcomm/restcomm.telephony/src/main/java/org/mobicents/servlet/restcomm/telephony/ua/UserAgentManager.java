@@ -71,9 +71,10 @@ public final class UserAgentManager extends UntypedActor {
     private final DaoManager storage;
     private final ServletContext servletContext;
 
-    public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage, final ServletContext servletContext) {
+    public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
+            final ServletContext servletContext) {
         super();
-//        this.configuration = configuration;
+        // this.configuration = configuration;
         this.servletContext = servletContext;
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
@@ -137,7 +138,8 @@ public final class UserAgentManager extends UntypedActor {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
             if ("REGISTER".equalsIgnoreCase(method)) {
-                if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
+                if (authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP
+                                         // authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
                     if (authorization != null && permitted(authorization, method)) {
                         register(message);
@@ -186,8 +188,8 @@ public final class UserAgentManager extends UntypedActor {
     private void ping(final String to) throws Exception {
         final SipApplicationSession application = factory.createApplicationSession();
         String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
-        if(toTransport == null) {
-            //RESTCOMM-301 NPE in RestComm Ping
+        if (toTransport == null) {
+            // RESTCOMM-301 NPE in RestComm Ping
             toTransport = "udp";
         }
         if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
@@ -257,14 +259,16 @@ public final class UserAgentManager extends UntypedActor {
         final int port = request.getInitialRemotePort();
         final String transport = uri.getTransportParam();
 
-        //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
+        // Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
         final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
-        if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null && !initialPortBeforeLB.isEmpty()) {
-            logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
+        if (initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null
+                && !initialPortBeforeLB.isEmpty()) {
+            logger.info("Client in front of LB. Patching URI: " + uri.toString() + " with IP: " + initialIpBeforeLB
+                    + " and PORT: " + initialPortBeforeLB + " for USER: " + user);
             patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
         } else {
-            logger.info("Patching URI: "+uri.toString()+" with IP: "+ip+" and PORT: "+port+" for USER: "+user);
+            logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
             patch(uri, ip, port);
         }
 
@@ -289,24 +293,26 @@ public final class UserAgentManager extends UntypedActor {
         if (ua == null)
             ua = "GenericUA";
 
-        final Registration registration = new Registration(sid, now, now, aor, name, user, ua, ttl, address);
+        boolean webRTC = isWebRTC(transport, ua);
+
+        final Registration registration = new Registration(sid, now, now, aor, name, user, ua, ttl, address, webRTC);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
             // Remove Registration if ttl=0
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
-            logger.info("The user agent manager unregistered " + user + " at address "+address);
+            logger.info("The user agent manager unregistered " + user + " at address " + address);
         } else {
 
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
-                logger.info("The user agent manager updated " + user + " at address "+address);
+                logger.info("The user agent manager updated " + user + " at address " + address);
             } else {
                 // Add registration since it doesn't exists on the DB
                 registrations.addRegistration(registration);
-                logger.info("The user agent manager registered " + user + " at address "+address);
+                logger.info("The user agent manager registered " + user + " at address " + address);
             }
             response.setHeader("Contact", contact(uri, ttl));
         }
@@ -319,8 +325,26 @@ public final class UserAgentManager extends UntypedActor {
         if (request.getApplicationSession().isValid()) {
             try {
                 request.getApplicationSession().invalidate();
-            } catch (IllegalStateException exception) {}
+            } catch (IllegalStateException exception) {
+            }
         }
+    }
+
+    /**
+     * Checks whether the client is WebRTC or not.
+     *
+     * <p>
+     * A client is considered WebRTC if one of the following statements is true:<br>
+     * 1. The chosen transport is WebSockets (transport=ws).<br>
+     * 2. The User-Agent corresponds to one of TeleStax mobile clients.
+     * </p>
+     *
+     * @param transport
+     * @param userAgent
+     * @return
+     */
+    private boolean isWebRTC(String transport, String userAgent) {
+        return "ws".equals(transport) || userAgent.contains("Restcomm");
     }
 
     private String contact(final SipURI uri, final int expires) {
