@@ -205,9 +205,9 @@
 	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}/restcomm.docs">
 	        <arg line="${release.build.goals} -Pmobicents" />
 	</exec>
-	<exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api">
+	<!--exec failonerror="true" executable="${mvn.executable}" dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api">
 	        <arg line="javadoc:javadoc" />
-	</exec>
+	</exec-->
 </target>
 
 <target name="copy-restcomm">
