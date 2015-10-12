@@ -13,6 +13,7 @@
 	  <groupId>com.telestax.servlet</groupId>
 	  <artifactId>restcomm.commons</artifactId>
 	  <version>${project.version}</version>
+	  <scope>provided</scope>
 	</dependency>
 	
   </dependencies>
