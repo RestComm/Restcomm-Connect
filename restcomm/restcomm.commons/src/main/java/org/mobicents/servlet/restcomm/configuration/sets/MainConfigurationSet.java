@@ -39,8 +39,10 @@ import org.apache.commons.lang.StringUtils;
 public class MainConfigurationSet extends ConfigurationSet {
 
     private static final String SSL_MODE_KEY = "http-client.ssl-mode";
+    private static final String HTTP_RESPONSE_TIMEOUT = "http-client.response-timeout";
     private static final SslMode SSL_MODE_DEFAULT = SslMode.strict;
     private final SslMode sslMode;
+    private final int responseTimeout;
     private static final String USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY = "http-client.use-hostname-to-resolve-relative-url";
     private static final String HOSTNAME_TO_USE_FOR_RELATIVE_URLS_KEY = "http-client.hostname";
     private static final boolean RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT = true;
@@ -54,12 +56,17 @@ public class MainConfigurationSet extends ConfigurationSet {
         String resolveRelativeUrlHostname;
 
         try {
+            this.responseTimeout = Integer.parseInt(source.getProperty(HTTP_RESPONSE_TIMEOUT));
+        } catch (Exception e) {
+            throw new RuntimeException("Error initializing '" + HTTP_RESPONSE_TIMEOUT + "' configuration setting", e);
+        }
+        try {
             sslMode = SSL_MODE_DEFAULT;
             String sslModeRaw = source.getProperty(SSL_MODE_KEY);
             if ( ! StringUtils.isEmpty(sslModeRaw) )
                 sslMode = SslMode.valueOf(sslModeRaw);
         } catch (Exception e) {
-            throw new RuntimeException("Error initializing '" + SSL_MODE_KEY + "' configuration setting", e);
+            throw new RuntimeException("Error initializing '" + SSL_MODE_KEY  + "' configuration setting", e);
         }
         this.sslMode = sslMode;
 
@@ -76,6 +83,10 @@ public class MainConfigurationSet extends ConfigurationSet {
 
     public SslMode getSslMode() {
         return sslMode;
+    }
+
+    public int getResponseTimeout() {
+        return responseTimeout;
     }
 
     public boolean isUseHostnameToResolveRelativeUrls() {
