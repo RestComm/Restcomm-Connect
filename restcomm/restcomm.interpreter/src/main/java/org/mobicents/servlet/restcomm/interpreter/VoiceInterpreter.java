@@ -243,6 +243,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(downloadingFallbackRcml, ready));
         transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
         transitions.add(new Transition(downloadingFallbackRcml, finished));
+        transitions.add(new Transition(downloadingFallbackRcml, notFound));
         transitions.add(new Transition(ready, initializingCall));
         transitions.add(new Transition(ready, faxing));
         transitions.add(new Transition(ready, sendingEmail));
@@ -638,19 +639,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
                 fsm.transition(message, ready);
-            } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
-                fsm.transition(message, notFound);
-            } else {
-                if (downloadingRcml.equals(state)) {
-                    if (fallbackUrl != null) {
-                        fsm.transition(message, downloadingFallbackRcml);
-                    } else {
-                        fsm.transition(message, finished);
-                    }
-                } else {
+            } else if(downloadingRcml.equals(state)) {
+                if (fallbackUrl != null) {
+                    fsm.transition(message, downloadingFallbackRcml);
+                }else if (HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()){
+                    fsm.transition(message, notFound);
+                }else {
                     fsm.transition(message, finished);
                 }
-            }
+            } else if (response.succeeded() && downloadingFallbackRcml.equals(state) && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
+                fsm.transition(message, notFound);
+            } else {
+                    fsm.transition(message, finished);
+                }
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
