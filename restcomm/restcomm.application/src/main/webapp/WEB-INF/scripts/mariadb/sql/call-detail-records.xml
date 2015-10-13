@@ -6,9 +6,9 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
     INSERT INTO restcomm_call_detail_records (sid, parent_call_sid, date_created, date_updated, account_sid, recipient, sender, phone_number_sid, status,
-    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path) VALUES (#{sid}, #{parent_call_sid},
+    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration) VALUES (#{sid}, #{parent_call_sid},
 		#{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price},
-		#{direction},	#{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path});
+		#{direction},	#{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration});
   </insert>
   
   <select id="getCallDetailRecord" parameterType="string" resultType="hashmap">
@@ -99,6 +99,6 @@
   
   <update id="updateCallDetailRecord" parameterType="map">
     UPDATE restcomm_call_detail_records SET date_updated=#{date_updated}, status=#{status}, start_time=#{start_time}, end_time=#{end_time}, duration=#{duration},
-    price=#{price}, answered_by=#{answered_by} WHERE sid=#{sid};
+    price=#{price}, answered_by=#{answered_by}, ring_duration=#{ring_duration} WHERE sid=#{sid};
   </update>
 </mapper>

@@ -159,6 +159,7 @@ public final class Call extends UntypedActor {
     private String direction;
     private String forwardedFrom;
     private DateTime created;
+    private DateTime ConUpdated;
     private final List<ActorRef> observers;
     private boolean receivedBye;
     private boolean muted;
@@ -292,7 +293,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, ConUpdated);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -536,8 +537,6 @@ public final class Call extends UntypedActor {
                     builder.setParentCallSid(parentCallSid);
                     outgoingCallRecord = builder.build();
                     recordsDao.addCallDetailRecord(outgoingCallRecord);
-                } else {
-                    cdr.setStatus(external.name());
                 }
             }
         }
@@ -770,6 +769,11 @@ public final class Call extends UntypedActor {
             if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                outgoingCallRecord = outgoingCallRecord.setDuration(0);
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
@@ -942,6 +946,23 @@ public final class Call extends UntypedActor {
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
             }
+
+            //Set Call created time, only for "Talk time".
+            ConUpdated = DateTime.now();
+
+            //Update CDR for Outbound Call.
+            if (recordsDao != null) {
+                if (outgoingCallRecord != null && isOutbound()) {
+                    final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                    outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                    outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                }
+            }
+
 
             final String externalIp = response.getInitialRemoteAddr();
             final byte[] sdp = response.getRawContent();
