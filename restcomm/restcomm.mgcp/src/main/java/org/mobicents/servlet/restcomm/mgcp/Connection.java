@@ -30,6 +30,8 @@ import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 import jain.protocol.ip.mgcp.message.parms.EndpointIdentifier;
+import jain.protocol.ip.mgcp.message.parms.LocalOptionExtension;
+import jain.protocol.ip.mgcp.message.parms.LocalOptionValue;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 
@@ -86,6 +88,7 @@ public final class Connection extends UntypedActor {
     private ConnectionIdentifier connId;
     private ConnectionDescriptor localDesc;
     private ConnectionDescriptor remoteDesc;
+    private boolean webrtc;
 
     public Connection(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final long timeout) {
         super();
@@ -134,6 +137,7 @@ public final class Connection extends UntypedActor {
         this.connId = null;
         this.localDesc = null;
         this.remoteDesc = null;
+        this.webrtc = false;
     }
 
     private void observe(final Object message) {
@@ -168,8 +172,10 @@ public final class Connection extends UntypedActor {
         } else if (OpenConnection.class.equals(klass)) {
             final OpenConnection request = (OpenConnection) message;
             if (request.descriptor() == null) {
+                this.webrtc = request.isWebrtc();
                 fsm.transition(message, openingHalfWay);
             } else {
+                // TODO check based on descriptor if connection is webrtc
                 fsm.transition(message, opening);
             }
         } else if (UpdateConnection.class.equals(klass)) {
@@ -395,6 +401,10 @@ public final class Connection extends UntypedActor {
                 crcx.setRemoteConnectionDescriptor(remoteDesc);
             }
             crcx.setNotifiedEntity(agent);
+            LocalOptionValue[] localOptions = new LocalOptionValue[] { new LocalOptionExtension("webrtc",
+                    String.valueOf(webrtc)) };
+            crcx.setLocalConnectionOptions(localOptions);
+
             gateway.tell(crcx, source);
             // Make sure we don't wait for a response indefinitely.
             getContext().setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
