@@ -468,6 +468,7 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	registerVariable("core_DialCallStatus");
 	registerVariable("core_DialCallSid");
 	registerVariable("core_DialCallDuration");
+	registerVariable("core_DialRingDuration");
 	registerVariable("core_RecordingUrl");
 	// after record
 	registerVariable("core_RecordingUrl");

@@ -1586,6 +1586,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                         Duration.create(10, TimeUnit.SECONDS));
                 outboundCallInfo = callResponse.get();
+                final long dialRingDuration = new Interval(this.outboundCallInfo.dateCreated(), this.outboundCallInfo.dateConUpdated()).toDuration()
+                        .getStandardSeconds();
+                parameters.add(new BasicNameValuePair("DialRingDuration", String.valueOf(dialRingDuration)));
             } catch (Exception e) {
                 logger.error("Timeout waiting for outbound call info: \n" + e);
             }
@@ -1607,7 +1610,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         else if (message instanceof ReceiveTimeout) {
             if (outboundCallInfo != null) {
                 final String dialCallSid = this.outboundCallInfo.sid().toString();
-                final long dialCallDuration = new Interval(this.outboundCallInfo.dateCreated(), DateTime.now()).toDuration()
+                final long dialCallDuration = new Interval(this.outboundCallInfo.dateConUpdated(), DateTime.now()).toDuration()
                         .getStandardSeconds();
                 final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
                 final String publicRecordingUrl = this.publicRecordingUri == null ? null : this.publicRecordingUri.toString();
@@ -1631,7 +1634,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (outboundCallInfo != null) {
                 final String dialCallSid = this.outboundCallInfo.sid().toString();
                 final CallStateChanged.State dialCallStatus = this.outboundCallInfo.state();
-                final long dialCallDuration = new Interval(this.outboundCallInfo.dateCreated(), DateTime.now()).toDuration()
+                final long dialCallDuration = new Interval(this.outboundCallInfo.dateConUpdated(), DateTime.now()).toDuration()
                         .getStandardSeconds();
                 final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
                 final String publicRecordingUrl = this.publicRecordingUri == null ? null : this.publicRecordingUri.toString();
@@ -1645,7 +1648,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
                             .toString()));
                 }
-                parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
+                if(callState == CallStateChanged.State.BUSY)
+                    parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
+                else
+                    parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
