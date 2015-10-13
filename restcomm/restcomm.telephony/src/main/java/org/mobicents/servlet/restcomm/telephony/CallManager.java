@@ -821,6 +821,8 @@ public final class CallManager extends UntypedActor {
         final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
         SipURI from = null;
         SipURI to = null;
+        boolean webRTC = false;
+
         switch (request.type()) {
             case CLIENT: {
                 SipURI outboundIntf = null;
@@ -844,6 +846,7 @@ public final class CallManager extends UntypedActor {
                 if (registration != null) {
                     final String location = registration.getLocation();
                     to = (SipURI) sipFactory.createURI(location);
+                    webRTC = registration.isWebRTC();
                 } else {
                     String errMsg = "The SIP Client is not registered or does not exist";
                     sendNotification(errMsg, 11008, "error", true);
@@ -915,10 +918,10 @@ public final class CallManager extends UntypedActor {
         InitializeOutbound init;
         if (request.from() != null && !request.from().contains("@") && userAtDisplayedName) {
             init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
-                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);
         } else {
             init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(), request.isFromApi(),
-                    runtime.getString("api-version"), request.accountId(), request.type(), storage);
+                    runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);
         }
         if (request.parentCallSid() != null) {
             init.setParentCallSid(request.parentCallSid());
