@@ -266,7 +266,7 @@ rappManagerCtrl.getProducts = function ($q, $http, rappManagerConfig) {
 	$http({
 		method:"GET", 
 		//url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token + "&cacheInvalidator=" + new Date().getTime()
-		url:"http://" + rappManagerConfig.rasHost + "/edd-api/products/?key=" + rappManagerConfig.rasApiKey + "&token=" + rappManagerConfig.rasToken + "&cacheInvalidator=" + new Date().getTime()
+		url:"https://" + rappManagerConfig.rasHost + "/edd-api/products/?key=" + rappManagerConfig.rasApiKey + "&token=" + rappManagerConfig.rasToken + "&cacheInvalidator=" + new Date().getTime()
 	}).success(function (data) {
 		console.log("succesfully retrieved " + data.products.length + " products from AppStore");
 		deferred.resolve(data.products);
