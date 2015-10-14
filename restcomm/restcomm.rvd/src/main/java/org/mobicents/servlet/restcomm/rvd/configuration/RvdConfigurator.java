@@ -27,6 +27,7 @@ public class RvdConfigurator {
     RvdConfigurator(ServletContext servletContext) {
         rvdContextRootPath = servletContext.getRealPath("");
         cache = emptyDeployment;
+        checkDeployment();
     }
 
     public String getContextRootPath() {
