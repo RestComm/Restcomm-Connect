@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.media.mscontrol.EventType;
@@ -49,6 +51,7 @@ import javax.media.mscontrol.mediagroup.signals.SignalDetector;
 import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 import javax.media.mscontrol.mixer.MediaMixer;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
+import javax.media.mscontrol.networkconnection.SdpPortManager;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
 import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -137,6 +140,7 @@ public class Jsr309CallController extends MediaServerController {
     private String remoteSdp;
     private String connectionMode;
     private boolean callOutbound;
+    private boolean webrtc;
 
     // Conference runtime stuff
     private ActorRef bridge;
@@ -206,6 +210,7 @@ public class Jsr309CallController extends MediaServerController {
         this.localSdp = "";
         this.remoteSdp = "";
         this.callOutbound = false;
+        this.webrtc = false;
         this.connectionMode = "inactive";
         this.recording = Boolean.FALSE;
         this.playing = Boolean.FALSE;
@@ -466,6 +471,7 @@ public class Jsr309CallController extends MediaServerController {
             this.callOutbound = message.isOutbound();
             this.connectionMode = message.getConnectionMode();
             this.remoteSdp = message.getSessionDescription();
+            this.webrtc = message.isWebrtc();
 
             fsm.transition(message, initializing);
         }
@@ -827,6 +833,14 @@ public class Jsr309CallController extends MediaServerController {
 
                 // Create network connection
                 networkConnection = mediaSession.createNetworkConnection(NetworkConnection.BASIC);
+
+                // Distinguish between WebRTC and SIP calls
+                Parameters sdpParameters = mediaSession.createParameters();
+                Map<String, String> configurationData = new HashMap<String, String>();
+                configurationData.put("webrtc", String.valueOf(webrtc));
+                sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
+                networkConnection.setParameters(sdpParameters);
+
                 networkConnection.getSdpPortManager().addListener(sdpListener);
                 if (callOutbound) {
                     networkConnection.getSdpPortManager().generateSdpOffer();
