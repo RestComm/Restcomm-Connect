@@ -55,7 +55,7 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
     public JsonElement serialize(MonitoringServiceResponse monitoringServiceResponse, Type typeOfSrc, JsonSerializationContext context) {
         Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
         JsonObject result = new JsonObject();
-        JsonArray metrics = new JsonArray();
+        JsonObject metrics = new JsonObject();
         JsonArray callsArray = new JsonArray();
 
         //First add InstanceId and Version details
@@ -63,13 +63,11 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
         result.addProperty("Version", org.mobicents.servlet.restcomm.Version.getVersion());
         result.addProperty("Revision", org.mobicents.servlet.restcomm.Version.getRevision());
 
-        JsonObject element= new JsonObject();
         Iterator<String> counterIterator = countersMap.keySet().iterator();
         while (counterIterator.hasNext()) {
             String counter = counterIterator.next();
-            element.addProperty(counter, countersMap.get(counter));
+            metrics.addProperty(counter, countersMap.get(counter));
         }
-        metrics.add(element);
         result.add("Metrics", metrics);
 
         if (monitoringServiceResponse.getCallDetailsList().size() > 0)
