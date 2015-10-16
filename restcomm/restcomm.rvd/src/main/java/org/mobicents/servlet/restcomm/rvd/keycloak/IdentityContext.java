@@ -19,6 +19,7 @@ public class IdentityContext {
     final String loggedUsername;
 
     public IdentityContext(RvdConfigurator configurator, HttpServletRequest request) {
+        configurator.checkDeployment();
         final String tokenString = extractOauthTokenString(request, configurator);
         if ( ! RvdUtils.isEmpty(tokenString) ) {
             oauthToken = verifyToken(tokenString, configurator);
