@@ -94,6 +94,47 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 	
 }]);
 
+App.config(function($provide,$httpProvider) {
+	$provide.factory('identityInterceptor', function($q, keycloakAuth) {
+		  return {
+		    'request': function (config) {
+	            var deferred = $q.defer();
+	            if (keycloakAuth.authz.token) {
+	                keycloakAuth.authz.updateToken(5).success(function() {
+	                    config.headers = config.headers || {};
+	                    config.headers.Authorization = 'Bearer ' + keycloakAuth.authz.token;
+
+	                    deferred.resolve(config);
+	                }).error(function() {
+	                        deferred.reject('Failed to refresh token');
+	                    });
+	            }
+	            return deferred.promise;
+	        },
+		    // optional method
+		   'responseError': function(response) {
+	           if (response.status == 401) {
+	               console.log('session timeout?');
+	               logout();
+	           } else if (response.status == 403) {
+	               alert("Forbidden");
+	           } else if (response.status == 404) {
+	               //alert("Not found");
+	           } else if (response.status) {
+	               if (response.data && response.data.errorMessage) {
+	                   alert(response.data.errorMessage);
+	               } else {
+	                   alert("An unexpected server error has occurred");
+	               }
+	           }
+	           return $q.reject(response);
+	       }
+		  };
+	});
+	$httpProvider.interceptors.push('identityInterceptor');
+});
+
+
 App.factory( 'dragService', [function () {
 	var dragInfo;
 	var dragId = 0;
