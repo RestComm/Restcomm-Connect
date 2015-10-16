@@ -78,6 +78,7 @@ import org.mobicents.servlet.restcomm.util.UriUtils;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.telestax.servlet.MonitoringService;
 
 import akka.actor.ActorContext;
 import akka.actor.ActorRef;
@@ -117,6 +118,7 @@ public final class CallManager extends UntypedActor {
     private final ActorRef sms;
     private final SipFactory sipFactory;
     private final DaoManager storage;
+    private final ActorRef monitoring;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -232,6 +234,9 @@ public final class CallManager extends UntypedActor {
         allowFallbackToPrimary = outboundProxyConfig.getBoolean("allow-fallback-to-primary", false);
 
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
+
+        //Monitoring Service
+        this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
     }
 
     private ActorRef call() {
@@ -273,6 +278,7 @@ public final class CallManager extends UntypedActor {
             okay.send();
             return;
         }
+        //Run proInboundAction Extensions here
         // If it's a new invite lets try to handle it.
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
@@ -524,6 +530,7 @@ public final class CallManager extends UntypedActor {
                     builder.setStatusCallback(number.getStatusCallback());
                     builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 }
+                builder.setMonitoring(monitoring);
                 final ActorRef interpreter = builder.build();
                 final ActorRef call = call();
                 final SipApplicationSession application = request.getApplicationSession();
@@ -585,6 +592,7 @@ public final class CallManager extends UntypedActor {
                 builder.setFallbackUrl(client.getVoiceFallbackUrl());
                 builder.setFallbackMethod(client.getVoiceFallbackMethod());
             }
+            builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
             final ActorRef call = call();
             final SipApplicationSession application = request.getApplicationSession();
@@ -722,6 +730,7 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
+        builder.setMonitoring(monitoring);
         final ActorRef interpreter = builder.build();
         interpreter.tell(new StartInterpreter(request.call()), self);
     }
@@ -786,6 +795,7 @@ public final class CallManager extends UntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
+        builder.setMonitoring(monitoring);
 
         // Ask first call leg to execute with the new Interpreter
         final ActorRef interpreter = builder.build();
@@ -852,34 +862,40 @@ public final class CallManager extends UntypedActor {
                 break;
             }
             case PSTN: {
-                to = sipFactory.createSipURI(request.to(), uri);
-                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
-                SipURI outboundIntf = outboundInterface(transport);
-                final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
-                        "outboudproxy-user-at-from-header");
-                if (request.from() != null && request.from().contains("@")) {
-                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
-                    // to use it directly
-                    from = (SipURI) sipFactory.createURI(request.from());
-                } else if (useLocalAddressAtFromHeader) {
-                    from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
-                } else {
-                    if (outboudproxyUserAtFromHeader) {
-                        // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
-                        // of the sip uri for the From header
-                        from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
-                    } else {
-                        from = sipFactory.createSipURI(request.from(), uri);
-                    }
-                }
-                if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
-                    if (uri != null) {
-                        from = sipFactory.createSipURI(request.from(), uri);
-                    } else {
+                if (uri != null) {
+                    to = sipFactory.createSipURI(request.to(), uri);
+                    String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+                    SipURI outboundIntf = outboundInterface(transport);
+                    final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
+                            "outboudproxy-user-at-from-header");
+                    if (request.from() != null && request.from().contains("@")) {
+                        // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
+                        // to use it directly
                         from = (SipURI) sipFactory.createURI(request.from());
+                    } else if (useLocalAddressAtFromHeader) {
+                        from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                    } else {
+                        if (outboudproxyUserAtFromHeader) {
+                            // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
+                            // of the sip uri for the From header
+                            from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
+                        } else {
+                            from = sipFactory.createSipURI(request.from(), uri);
+                        }
                     }
+                    if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
+                        if (uri != null) {
+                            from = sipFactory.createSipURI(request.from(), uri);
+                        } else {
+                            from = (SipURI) sipFactory.createURI(request.from());
+                        }
+                    }
+                    break;
+                } else {
+                    String errMsg = "The Active Outbound Proxy is null. Please check configuration";
+                    sendNotification(errMsg, 11008, "error", true);
+                    throw new NullPointerException(errMsg);
                 }
-                break;
             }
             case SIP: {
                 to = (SipURI) sipFactory.createURI(request.to());

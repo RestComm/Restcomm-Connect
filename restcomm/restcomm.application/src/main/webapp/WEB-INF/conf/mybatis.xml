@@ -37,5 +37,6 @@
     <mapper url="file://${sql}/announcements.xml"/>
     <mapper url="file://${sql}/usage.xml"/>
     <mapper url="file://${sql}/configuration.xml"/>
+    <mapper url="file://${sql}/instanceId.xml"/>
   </mappers>
 </configuration>

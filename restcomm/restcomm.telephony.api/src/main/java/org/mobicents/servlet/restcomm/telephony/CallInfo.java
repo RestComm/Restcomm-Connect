@@ -34,7 +34,7 @@ import org.mobicents.servlet.restcomm.telephony.CallStateChanged.State;
 @Immutable
 public final class CallInfo {
     private final Sid sid;
-    private final State state;
+    private State state;
     private final CreateCall.Type type;
     private final String direction;
     private final DateTime dateCreated;
@@ -92,6 +92,10 @@ public final class CallInfo {
 
     public State state() {
         return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
     }
 
     public String to() {

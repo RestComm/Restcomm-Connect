@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
@@ -93,7 +92,7 @@
 		<shirocore.version>1.2.0</shirocore.version>
 		<shiroweb.version>1.2.0</shiroweb.version>
 		<jersey.version>1.13</jersey.version>
-		<httpclient.version>4.3.6</httpclient.version>
+		<httpclient.version>4.2.5</httpclient.version>
 		<gson.version>2.3.1</gson.version>
 		<xstream.version>1.4.2</xstream.version>
 		<mongodb.version>2.7.2</mongodb.version>
@@ -115,7 +114,6 @@
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
 		<aws.sdk.version>1.9.24</aws.sdk.version>
-		<keycloak-adapter.version>1.4.0.Final</keycloak-adapter.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -151,8 +149,10 @@
 		<module>restcomm.email</module>
 		<module>restcomm.email.api</module>
 		<module>restcomm.identity</module>
-
-	</modules>
+		<module>restcomm.extension.api</module>
+		<module>restcomm.extension.traffic.throttling</module>
+    <module>restcomm.monitoring.service</module>
+  </modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -461,13 +461,6 @@
 				<artifactId>aws-java-sdk-s3</artifactId>
 				<version>${aws.sdk.version}</version>
 			</dependency>
-			
-			<dependency>
-				<groupId>org.keycloak</groupId>
-				<artifactId>keycloak-as7-adapter</artifactId>
-				<version>${keycloak-adapter.version}</version>
-			</dependency>
-			
 		</dependencies>
 	</dependencyManagement>
 
@@ -593,7 +586,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g />
+						<g/>
 					</compilerArguments>
 					<source>1.7</source>
 					<target>1.7</target>
@@ -631,7 +624,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile />
+					<useFile/>
 				</configuration>
 				<dependencies>
 					<dependency>

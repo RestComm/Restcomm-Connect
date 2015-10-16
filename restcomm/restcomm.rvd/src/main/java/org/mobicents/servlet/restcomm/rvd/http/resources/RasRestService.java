@@ -230,7 +230,7 @@ public class RasRestService extends RestService {
     public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
         try {
             String bootstrapInfo;
-            bootstrapInfo = IOUtils.toString(request.getInputStream());
+            bootstrapInfo = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
 
             FsProjectStorage.storeBootstrapInfo(bootstrapInfo, projectName, workspaceStorage);
             return buildOkResponse();

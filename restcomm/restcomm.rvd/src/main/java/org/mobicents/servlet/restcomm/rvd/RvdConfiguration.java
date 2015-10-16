@@ -1,7 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
-import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,10 +11,11 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.rvd.commons.http.SslMode;
 import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.StreamException;
 
 public class RvdConfiguration {
     static final Logger logger = Logger.getLogger(RvdConfiguration.class.getName());
@@ -40,42 +42,72 @@ public class RvdConfiguration {
     public static final String RESTCOMM_HEADER_PREFIX_DIAL = "DialSipHeader_"; // another prefix
 
     private String workspaceBasePath;
-    private String prototypeProjectsPath;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
     private RvdConfig rvdConfig;  // the configuration settings from rvd.xml
-    //private String effectiveRestcommIp; // the IP address to access .wavs and other resources from the internet. It takes into account rvd.xml and servletContext
+
+    private String contextRootPath;
+    private SslMode sslMode;
 
 
-    public static RvdConfiguration getInstance(ServletContext servletContext) {
+    public static RvdConfiguration getInstance() {
         if ( instance == null ) {
-            instance = new RvdConfiguration(servletContext);
+            throw new IllegalStateException("RVD configuration has not been loaded.");
         }
         return instance;
     }
 
-    private RvdConfiguration(ServletContext servletContext) {
-        this.prototypeProjectsPath = servletContext.getRealPath(File.separator) + "protoProjects";
-        String workspaceBasePath = servletContext.getRealPath(File.separator) + WORKSPACE_DIRECTORY_NAME;
-
-        // Try loading from configuration from XML file
-        try {
-            InputStream is = servletContext.getResourceAsStream("/WEB-INF/rvd.xml");
-            XStream xstream = new XStream();
-            xstream.alias("rvd", RvdConfig.class);
-            rvdConfig = (RvdConfig) xstream.fromXML( is );
-            if (rvdConfig.getWorkspaceLocation() != null  &&  !"".equals(rvdConfig.getWorkspaceLocation()) ) {
-                if ( rvdConfig.getWorkspaceLocation().startsWith("/") )
-                    workspaceBasePath = rvdConfig.getWorkspaceLocation(); // this is an absolute path
-                else
-                    workspaceBasePath = servletContext.getRealPath(File.separator) + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked under RVD context
+    public static RvdConfiguration createOnce(ServletContext servletContext) {
+        synchronized (RvdConfiguration.class) {
+            if ( instance == null ) {
+                instance = new RvdConfiguration(servletContext);
             }
-        } catch (StreamException e) {
-            logger.warn("RVD configuration file not found - WEB-INF/rvd.xml");
+            return instance;
         }
+    }
+
+    private RvdConfiguration(ServletContext servletContext) {
+        contextRootPath = servletContext.getRealPath("/");
+        logger.info("contextRootPath: " + contextRootPath);
+        load();
+    }
+
+    private void load() {
+        // load configuration from rvd.xml file
+        rvdConfig = loadRvdXmlConfig(contextRootPath + "WEB-INF/rvd.xml");
+        // workspaceBasePath option
+        String workspaceBasePath = contextRootPath + WORKSPACE_DIRECTORY_NAME;
+        if (rvdConfig.getWorkspaceLocation() != null  &&  !"".equals(rvdConfig.getWorkspaceLocation()) ) {
+            if ( rvdConfig.getWorkspaceLocation().startsWith("/") )
+                workspaceBasePath = rvdConfig.getWorkspaceLocation(); // this is an absolute path
+            else
+                workspaceBasePath = contextRootPath + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked under RVD context
+        }
+        this.workspaceBasePath = workspaceBasePath;
+        //  sslMode option
+        sslMode = SslMode.allowall; // default
+        if ( ! RvdUtils.isEmpty(rvdConfig.getSslMode()) )
+            sslMode = SslMode.valueOf(rvdConfig.getSslMode());
+
 
         logger.info("Using workspace at " + workspaceBasePath);
+    }
 
-        this.workspaceBasePath = workspaceBasePath;
+    /**
+     * Loads rvd.xml into an RvdConfig. Returns null if the file is not found
+     * @param pathToXml
+     * @return
+     */
+    private RvdConfig loadRvdXmlConfig(String pathToXml) {
+        try {
+            FileInputStream input = new FileInputStream(pathToXml);
+            XStream xstream = new XStream();
+            xstream.alias("rvd", RvdConfig.class);
+            rvdConfig = (RvdConfig) xstream.fromXML( input );
+            return rvdConfig;
+        } catch (FileNotFoundException e) {
+            logger.warn("RVD configuration file not found: " + pathToXml);
+            return null;
+        }
     }
 
     public String getWorkspaceBasePath() {
@@ -84,11 +116,6 @@ public class RvdConfiguration {
 
     public String getProjectBasePath(String projectName) {
         return this.workspaceBasePath + File.separator + projectName;
-    }
-
-    // for RVD 7.1.5 and later
-    public String getPrototypeProjectsPath() {
-        return prototypeProjectsPath;
     }
 
     public static String getRvdProjectVersion() {
@@ -148,6 +175,7 @@ public class RvdConfiguration {
         return restcommParameterNames;
     }
 
-
-
+    public SslMode getSslMode() {
+        return sslMode;
+    }
 }

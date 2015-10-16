@@ -532,7 +532,7 @@ public class ProjectRestService extends SecuredRestService {
         logger.info("saving project settings for " + name);
         String data;
         try {
-            data = IOUtils.toString(request.getInputStream());
+            data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
             ProjectSettings projectSettings = marshaler.toModel(data, ProjectSettings.class);
             FsProjectStorage.storeProjectSettings(projectSettings, name, workspaceStorage);
             return Response.ok().build();

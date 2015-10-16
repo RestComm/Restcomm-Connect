@@ -21,7 +21,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.configuration.DbIdentityConfigurationSource;
@@ -44,6 +46,8 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+
+import com.telestax.servlet.MonitoringService;
 
 /**
  *
@@ -217,6 +221,19 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return daoManager;
     }
 
+    private ActorRef monitoringService(final Configuration configuration, final ClassLoader loader) {
+        final ActorRef monitoring = system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return (UntypedActor) new ObjectFactory(loader).getObjectInstance(MonitoringService.class.getName());
+            }
+        }));
+        return monitoring;
+
+    }
+
     private String uri(final ServletContext context) {
         return context.getContextPath();
     }
@@ -226,6 +243,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
             final ServletContext context = event.getServletContext();
             final String path = context.getRealPath("WEB-INF/conf/restcomm.xml");
+            final String extensionConfigurationPath = context.getRealPath("WEB-INF/conf/extensions.xml");
             // Initialize the configuration interpolator.
             final ConfigurationStringLookup strings = new ConfigurationStringLookup();
             strings.addProperty("home", home(context));
@@ -258,6 +276,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(DaoManager.class.getName(), storage);
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
+            // Create high-level restcomm configuration
+            RestcommConfiguration.createOnce(xml);
 
             // Create directory of shiro based restcomm roles
             RestcommRoles restcommRoles = new RestcommRoles();
@@ -272,6 +292,25 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             // Create the media gateway.
 
+            //Initialize Monitoring Service
+            ActorRef monitoring = monitoringService(xml, loader);
+            if (monitoring != null) {
+                context.setAttribute(MonitoringService.class.getName(), monitoring);
+                logger.info("Monitoring Service created and stored in the context");
+            } else {
+                logger.error("Monitoring Service is null");
+            }
+
+            //Initialize Extensions
+            Configuration extensionConfiguration = null;
+            try {
+                extensionConfiguration = new XMLConfiguration(extensionConfigurationPath);
+            } catch (final ConfigurationException exception) {
+                logger.error(exception);
+            }
+            ExtensionScanner extensionScanner = new ExtensionScanner(extensionConfiguration);
+            extensionScanner.start();
+
             // Create the media server controller factory
             MediaServerControllerFactory mscontrollerFactory = null;
             try {
@@ -281,7 +320,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
+            //Last, print Version and send PING if needed
             Version.printVersion();
+            GenerateInstanceId generateInstanceId = new GenerateInstanceId(context);
+            InstanceId instanceId = generateInstanceId.instanceId();
+            context.setAttribute(InstanceId.class.getName(), instanceId);
+            monitoring.tell(instanceId, null);
             Ping ping = new Ping(xml, context);
             ping.sendPing();
         }
