@@ -38,20 +38,6 @@ angular.element(document).ready(function ($http) {
 });
 
 /*
-module.controller('GlobalCtrl', function($scope, $http) {
-    $scope.products = [];
-    $scope.reloadData = function() {
-        $http.get("/database/products").success(function(data) {
-            $scope.products = angular.fromJson(data);
-
-        });
-
-    };
-    $scope.logout = logout;
-});
-*/
-
-
 angular.module('Rvd').factory('authInterceptor', function($q, keycloakAuth) {
     return {
         request: function (config) {
@@ -103,3 +89,4 @@ angular.module('Rvd').factory('errorInterceptor', function($q) {
         });
     };
 });
+*/
