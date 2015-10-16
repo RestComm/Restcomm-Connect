@@ -57,7 +57,7 @@ public class DesignerRestService extends RestService {
     public void init() {
         super.init();
         rvdContext = new RvdContext(request, servletContext);
-        settings = RvdConfiguration.getInstance(servletContext);
+        settings = RvdConfiguration.getInstance();
         marshaler = new ModelMarshaler();
     }
 
