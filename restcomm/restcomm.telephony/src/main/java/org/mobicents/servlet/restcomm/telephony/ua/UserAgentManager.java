@@ -51,10 +51,14 @@ import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.UserRegistration;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
+
+import com.telestax.servlet.MonitoringService;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorContext;
+import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
@@ -70,11 +74,13 @@ public final class UserAgentManager extends UntypedActor {
     private final SipFactory factory;
     private final DaoManager storage;
     private final ServletContext servletContext;
+    private ActorRef monitoringService;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage, final ServletContext servletContext) {
         super();
 //        this.configuration = configuration;
         this.servletContext = servletContext;
+        monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
@@ -296,9 +302,10 @@ public final class UserAgentManager extends UntypedActor {
             // Remove Registration if ttl=0
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
+            monitoringService.tell(new UserRegistration(user, address, false), self());
             logger.info("The user agent manager unregistered " + user + " at address "+address);
         } else {
-
+            monitoringService.tell(new UserRegistration(user, address, true), self());
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
