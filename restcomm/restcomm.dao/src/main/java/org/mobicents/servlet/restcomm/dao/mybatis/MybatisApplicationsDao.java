@@ -139,24 +139,12 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         final String friendlyName = readString(map.get("friendly_name"));
         final Sid accountSid = readSid(map.get("account_sid"));
         final String apiVersion = readString(map.get("api_version"));
-        final URI voiceUrl = readUri(map.get("voice_url"));
-        final String voiceMethod = readString(map.get("voice_method"));
-        final URI voiceFallbackUrl = readUri(map.get("voice_fallback_url"));
-        final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
-        final URI statusCallback = readUri(map.get("status_callback"));
-        final String statusCallbackMethod = readString(map.get("status_callback_method"));
         final Boolean hasVoiceCallerIdLookup = readBoolean(map.get("voice_caller_id_lookup"));
-        final URI smsUrl = readUri(map.get("sms_url"));
-        final String smsMethod = readString(map.get("sms_method"));
-        final URI smsFallbackUrl = readUri(map.get("sms_fallback_url"));
-        final String smsFallbackMethod = readString(map.get("sms_fallback_method"));
-        final URI smsStatusCallback = readUri(map.get("sms_status_callback"));
         final URI uri = readUri(map.get("uri"));
         final URI rcmlUrl = readUri(map.get("rcml_url"));
-        final String kind = readString(map.get("kind"));
-        return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, voiceUrl, voiceMethod,
-                voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, hasVoiceCallerIdLookup, smsUrl,
-                smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, uri, rcmlUrl, kind);
+        final Application.Kind kind = readApplicationKind(map.get("kind"));
+        return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
+                uri, rcmlUrl, kind);
     }
 
     private Map<String, Object> toMap(final Application application) {
@@ -167,21 +155,10 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         map.put("friendly_name", application.getFriendlyName());
         map.put("account_sid", writeSid(application.getAccountSid()));
         map.put("api_version", application.getApiVersion());
-        map.put("voice_url", writeUri(application.getVoiceUrl()));
-        map.put("voice_method", application.getVoiceMethod());
-        map.put("voice_fallback_url", writeUri(application.getVoiceFallbackUrl()));
-        map.put("voice_fallback_method", application.getVoiceFallbackMethod());
-        map.put("status_callback", writeUri(application.getStatusCallback()));
-        map.put("status_callback_method", application.getStatusCallbackMethod());
         map.put("voice_caller_id_lookup", application.hasVoiceCallerIdLookup());
-        map.put("sms_url", writeUri(application.getSmsUrl()));
-        map.put("sms_method", application.getSmsMethod());
-        map.put("sms_fallback_url", writeUri(application.getSmsFallbackUrl()));
-        map.put("sms_fallback_method", application.getSmsFallbackMethod());
-        map.put("sms_status_callback", writeUri(application.getSmsStatusCallback()));
         map.put("uri", writeUri(application.getUri()));
         map.put("rcml_url", writeUri(application.getRcmlUrl()));
-        map.put("kind", application.getKind());
+        map.put("kind", writeApplicationKind(application.getKind()));
         return map;
     }
 }

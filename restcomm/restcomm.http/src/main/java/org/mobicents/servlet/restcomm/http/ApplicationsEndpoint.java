@@ -108,18 +108,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setAccountSid(accountSid);
         builder.setApiVersion(getApiVersion(data));
-        builder.setVoiceUrl(getUrl("VoiceUrl", data));
-        builder.setVoiceMethod(getMethod("VoideMethod", data));
-        builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
-        builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-        builder.setStatusCallback(getUrl("StatusCallback", data));
-        builder.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
         builder.setHasVoiceCallerIdLookup(new Boolean(data.getFirst("VoiceCallerIdLookup")));
-        builder.setSmsUrl(getUrl("SmsUrl", data));
-        builder.setSmsMethod(getMethod("SmsMethod", data));
-        builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
-        builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
-        builder.setSmsStatusCallback(getUrl("SmsStatusCallback", data));
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
@@ -127,7 +116,9 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
                 .append("/Applications/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         builder.setRcmlUrl(getUrl("RcmlUrl", data));
-        builder.setKind(getApplicationKind(data));
+        if (data.containsKey("Kind")) {
+            builder.setKind(Application.Kind.getValueOf(data.getFirst("Kind")));
+        }
         return builder.build();
     }
 
@@ -263,44 +254,11 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (data.containsKey("VoiceCallerIdLookup")) {
             result = result.setVoiceCallerIdLookup(new Boolean(data.getFirst("VoiceCallerIdLookup")));
         }
-        if (data.containsKey("VoiceUrl")) {
-            result = result.setVoiceUrl(getUrl("VoiceUrl", data));
-        }
-        if (data.containsKey("VoiceMethod")) {
-            result = result.setVoiceMethod(getMethod("VoiceMethod", data));
-        }
-        if (data.containsKey("VoiceFallbackUrl")) {
-            result = result.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
-        }
-        if (data.containsKey("VoiceFallbackMethod")) {
-            result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-        }
-        if (data.containsKey("StatusCallback")) {
-            result = result.setStatusCallback(getUrl("StatusCallback", data));
-        }
-        if (data.containsKey("StatusCallbackMethod")) {
-            result = result.setStatusCallbackMethod(getMethod("StatusCallbackMethod", data));
-        }
-        if (data.containsKey("SmsUrl")) {
-            result = result.setSmsUrl(getUrl("SmsUrl", data));
-        }
-        if (data.containsKey("SmsMethod")) {
-            result = result.setSmsMethod(getMethod("SmsMethod", data));
-        }
-        if (data.containsKey("SmsFallbackUrl")) {
-            result = result.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
-        }
-        if (data.containsKey("SmsFallbackMethod")) {
-            result = result.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
-        }
-        if (data.containsKey("SmsStatusCallback")) {
-            result = result.setSmsStatusCallback(getUrl("SmsStatusCallback", data));
-        }
         if (data.containsKey("RcmlUrl")) {
             result = result.setRcmlUrl(getUrl("RcmlUrl", data));
         }
         if (data.containsKey("Kind")) {
-            result = result.setKind(getApplicationKind(data));
+            result = result.setKind(Application.Kind.getValueOf(data.getFirst("Kind")));
         }
         return result;
     }

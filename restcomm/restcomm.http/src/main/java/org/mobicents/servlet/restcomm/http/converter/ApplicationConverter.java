@@ -59,18 +59,7 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeFriendlyName(application.getFriendlyName(), writer);
         writeAccountSid(application.getAccountSid(), writer);
         writeApiVersion(application.getApiVersion(), writer);
-        writeVoiceUrl(application.getVoiceUrl(), writer);
-        writeVoiceMethod(application.getVoiceMethod(), writer);
-        writeVoiceFallbackUrl(application.getVoiceFallbackUrl(), writer);
-        writeVoiceFallbackMethod(application.getVoiceFallbackMethod(), writer);
-        writeStatusCallback(application.getStatusCallback(), writer);
-        writeStatusCallbackMethod(application.getStatusCallbackMethod(), writer);
         writeVoiceCallerIdLookup(application.hasVoiceCallerIdLookup(), writer);
-        writeSmsUrl(application.getSmsUrl(), writer);
-        writeSmsMethod(application.getSmsMethod(), writer);
-        writeSmsFallbackUrl(application.getSmsFallbackUrl(), writer);
-        writeSmsFallbackMethod(application.getSmsFallbackMethod(), writer);
-        writeSmsStatusCallback(application.getSmsStatusCallback(), writer);
         writeUri(application.getUri(), writer);
         writeRcmlUrl(application.getRcmlUrl(), writer);
         writeKind(application.getKind(), writer);
@@ -86,38 +75,11 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeFriendlyName(application.getFriendlyName(), object);
         writeAccountSid(application.getAccountSid(), object);
         writeApiVersion(application.getApiVersion(), object);
-        writeVoiceUrl(application.getVoiceUrl(), object);
-        writeVoiceMethod(application.getVoiceMethod(), object);
-        writeVoiceFallbackUrl(application.getVoiceFallbackUrl(), object);
-        writeVoiceFallbackMethod(application.getVoiceFallbackMethod(), object);
-        writeStatusCallback(application.getStatusCallback(), object);
-        writeStatusCallbackMethod(application.getStatusCallbackMethod(), object);
         writeVoiceCallerIdLookup(application.hasVoiceCallerIdLookup(), object);
-        writeSmsUrl(application.getSmsUrl(), object);
-        writeSmsMethod(application.getSmsMethod(), object);
-        writeSmsFallbackUrl(application.getSmsFallbackUrl(), object);
-        writeSmsFallbackMethod(application.getSmsFallbackMethod(), object);
-        writeSmsStatusCallback(application.getSmsStatusCallback(), object);
         writeUri(application.getUri(), object);
         writeRcmlUrl(application.getRcmlUrl(), object);
         writeKind(application.getKind(), object);
         return object;
-    }
-
-    private void writeSmsStatusCallback(final URI smsStatusCallback, final HierarchicalStreamWriter writer) {
-        if (smsStatusCallback != null) {
-            writer.startNode("SmsStatusCallback");
-            writer.setValue(smsStatusCallback.toString());
-            writer.endNode();
-        }
-    }
-
-    private void writeSmsStatusCallback(final URI smsStatusCallback, final JsonObject object) {
-        if (smsStatusCallback != null) {
-            object.addProperty("sms_status_callback", smsStatusCallback.toString());
-        } else {
-            object.add("sms_status_callback", JsonNull.INSTANCE);
-        }
     }
 
     private void writeRcmlUrl(final URI rcmlUrl, final HierarchicalStreamWriter writer) {
@@ -136,7 +98,7 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         }
     }
 
-    private void writeKind(final String kind, final HierarchicalStreamWriter writer) {
+    private void writeKind(final Application.Kind kind, final HierarchicalStreamWriter writer) {
         if (kind != null) {
             writer.startNode("Kind");
             writer.setValue(kind.toString());
@@ -144,9 +106,9 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         }
     }
 
-    private void writeKind(final String kind, final JsonObject object) {
+    private void writeKind(final Application.Kind kind, final JsonObject object) {
         if (kind != null) {
-            object.addProperty("kind", kind);
+            object.addProperty("kind", kind.toString());
         } else {
             object.add("kind", JsonNull.INSTANCE);
         }

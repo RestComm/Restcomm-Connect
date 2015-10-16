@@ -242,18 +242,15 @@ public final class SmsService extends UntypedActor {
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsUrl()));
-                        builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
-                        builder.setFallbackMethod(application.getSmsFallbackMethod());
+                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getRcmlUrl()));
                     } else {
                         builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, appUri));
-                        builder.setMethod(number.getSmsMethod());
-                        URI appFallbackUrl = number.getSmsFallbackUrl();
-                        if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
-                            builder.setFallbackMethod(number.getSmsFallbackMethod());
-                        }
+                    }
+                    builder.setMethod(number.getSmsMethod());
+                    URI appFallbackUrl = number.getSmsFallbackUrl();
+                    if (appFallbackUrl != null) {
+                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
                     interpreter = builder.build();
                 }
