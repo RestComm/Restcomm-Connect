@@ -92,7 +92,7 @@
 		<shirocore.version>1.2.0</shirocore.version>
 		<shiroweb.version>1.2.0</shiroweb.version>
 		<jersey.version>1.13</jersey.version>
-		<httpclient.version>4.2.5</httpclient.version>
+		<httpclient.version>4.3.6</httpclient.version>
 		<gson.version>2.3.1</gson.version>
 		<xstream.version>1.4.2</xstream.version>
 		<mongodb.version>2.7.2</mongodb.version>
@@ -114,6 +114,7 @@
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
 		<aws.sdk.version>1.9.24</aws.sdk.version>
+		<keycloak-adapter.version>1.4.0.Final</keycloak-adapter.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -461,6 +462,13 @@
 				<artifactId>aws-java-sdk-s3</artifactId>
 				<version>${aws.sdk.version}</version>
 			</dependency>
+			
+			<dependency>
+				<groupId>org.keycloak</groupId>
+				<artifactId>keycloak-as7-adapter</artifactId>
+				<version>${keycloak-adapter.version}</version>
+			</dependency>
+			
 		</dependencies>
 	</dependencyManagement>
 
