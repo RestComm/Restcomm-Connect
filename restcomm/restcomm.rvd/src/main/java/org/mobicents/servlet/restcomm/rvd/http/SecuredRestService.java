@@ -22,7 +22,7 @@ public class SecuredRestService extends RestService {
     }
 
     protected void secure(String role) throws UnauthorizedException {
-        configurator.checkDeployment(); // TODO - implement a better mechanism: in all secure() calls (hopefully one per request) we check if the deployment was been updated and reload in that case
+        // configurator.checkDeployment(); // TODO - implement a better mechanism: in all secure() calls (hopefully one per request) we check if the deployment was been updated and reload in that case
         KeycloakDeployment deployment = configurator.getDeployment();
         if ( deployment != null) {
             AccessToken token = identityContext.getOauthToken();

@@ -28,6 +28,9 @@ public class RvdConfigurator {
         rvdContextRootPath = servletContext.getRealPath("");
         cache = emptyDeployment;
         checkDeployment();
+        if (getDeployment() == null) {
+            logger.warn("No identity configuration found. Make sure Restcomm instance is properly registered to an authorization server before using RVD.");
+        }
     }
 
     public String getContextRootPath() {
@@ -63,6 +66,7 @@ public class RvdConfigurator {
     private KeycloakDeployment createFreshKeycloakDeployment(String configFilepath) {
         InputStream is;
         try {
+            logger.info("Detected change in identity configuration. A new keycloak deployment will be created.");
             is = new FileInputStream(configFilepath);
         } catch (FileNotFoundException e) {
             logger.error("Could not open keycloak adapter config file: '" + configFilepath + "'. Identity/security features will be disabled" );

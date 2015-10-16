@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServlet;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.configuration.RvdConfiguratorBuilder;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -19,6 +20,8 @@ public class RvdInitializationServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config) ;
         logger.info("Initializing RVD");
+        RvdConfiguratorBuilder.createOnce(config.getServletContext());
+        // old RVD configuration
         RvdConfiguration settings = RvdConfiguration.createOnce(config.getServletContext());
         ModelMarshaler marshaler = new ModelMarshaler();
         WorkspaceStorage workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
