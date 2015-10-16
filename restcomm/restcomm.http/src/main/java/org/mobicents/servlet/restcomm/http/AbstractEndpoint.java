@@ -110,14 +110,6 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
-    protected String getApplicationKind(final MultivaluedMap<String, String> data) {
-        String kind = "voice";
-        if (data.containsKey("Kind")) {
-            kind = data.getFirst("Kind");
-        }
-        return kind;
-    }
-
     protected void secure(final Account account, final String permission) throws AuthorizationException {
         final Subject subject = SecurityUtils.getSubject();
         final Sid accountSid = account.getSid();

@@ -95,20 +95,10 @@ CREATE TABLE "restcomm_applications" (
 "friendly_name" VARCHAR(64) NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
 "api_version" VARCHAR(10) NOT NULL,
-"voice_url" LONGVARCHAR,
-"voice_method" VARCHAR(4),
-"voice_fallback_url" LONGVARCHAR,
-"voice_fallback_method" VARCHAR(4),
-"status_callback" LONGVARCHAR,
-"status_callback_method" VARCHAR(4),
 "voice_caller_id_lookup" BOOLEAN NOT NULL,
-"sms_url" LONGVARCHAR,
-"sms_method" VARCHAR(4),
-"sms_fallback_url" LONGVARCHAR,
-"sms_fallback_method" VARCHAR(4),
-"sms_status_callback" LONGVARCHAR,
 "uri" LONGVARCHAR NOT NULL,
-"rcml_url" LONGVARCHAR NOT NULL
+"rcml_url" LONGVARCHAR,
+"kind" VARCHAR(5)
 );
 
 CREATE TABLE "restcomm_call_detail_records" (

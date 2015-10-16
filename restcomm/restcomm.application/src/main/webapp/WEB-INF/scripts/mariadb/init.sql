@@ -98,20 +98,10 @@ date_updated DATETIME NOT NULL,
 friendly_name VARCHAR(64) NOT NULL,
 account_sid VARCHAR(34) NOT NULL,
 api_version VARCHAR(10) NOT NULL,
-voice_url MEDIUMTEXT,
-voice_method VARCHAR(4),
-voice_fallback_url MEDIUMTEXT,
-voice_fallback_method VARCHAR(4),
-status_callback MEDIUMTEXT,
-status_callback_method VARCHAR(4),
 voice_caller_id_lookup BOOLEAN NOT NULL,
-sms_url MEDIUMTEXT,
-sms_method VARCHAR(4),
-sms_fallback_url MEDIUMTEXT,
-sms_fallback_method VARCHAR(4),
-sms_status_callback MEDIUMTEXT,
 uri MEDIUMTEXT NOT NULL,
-rcml_url MEDIUMTEXT NOT NULL
+rcml_url MEDIUMTEXT,
+kind VARCHAR(5)
 );
 
 CREATE TABLE restcomm_call_detail_records (

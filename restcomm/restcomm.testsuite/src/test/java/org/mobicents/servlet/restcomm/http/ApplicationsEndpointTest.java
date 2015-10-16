@@ -80,23 +80,12 @@ public class ApplicationsEndpointTest {
     public void testCreateAndGetApplication() throws ParseException, IllegalArgumentException, ClientProtocolException,
             IOException {
         // Define application attributes
-        String friendlyName, voiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, rcmlUrl, kind;
+        String friendlyName, voiceCallerIdLookup, rcmlUrl, kind;
 
         // Test create application via POST
         MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
         applicationParams.add("FriendlyName", friendlyName = "APPCreateGet");
         applicationParams.add("VoiceCallerIdLookup", voiceCallerIdLookup = "true");
-        applicationParams.add("VoiceUrl", voiceUrl = "/restcomm/voiceurl/test");
-        applicationParams.add("VoiceMethod", voiceMethod = "POST");
-        applicationParams.add("VoiceFallbackUrl", voiceFallbackUrl = "/restcomm/voicefallbackurl/test");
-        applicationParams.add("VoiceFallbackMethod", voiceFallbackMethod = "POST");
-        applicationParams.add("StatusCallback", statusCallback = "/restcomm/statuscallback/test");
-        applicationParams.add("StatusCallbackMethod", statusCallbackMethod = "POST");
-        applicationParams.add("SmsUrl", smsUrl = "/restcomm/smsurl/test");
-        applicationParams.add("SmsMethod", smsMethod = "POST");
-        applicationParams.add("SmsFallbackUrl", smsFallbackUrl = "/restcomm/smsfallbackurl/test");
-        applicationParams.add("SmsFallbackMethod", smsFallbackMethod = "POST");
-        applicationParams.add("SmsStatusCallback", smsStatusCallback = "/restcomm/smsstatuscallback/test");
         applicationParams.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test");
         applicationParams.add("Kind", kind = "voice");
         JsonObject applicationJson = RestcommApplicationsTool.getInstance().createApplication(deploymentUrl.toString(),
@@ -114,17 +103,6 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(applicationJson.get("api_version").getAsString().equals("2012-04-24"));
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
-        assertTrue(applicationJson.get("voice_url").getAsString().equals(voiceUrl));
-        assertTrue(applicationJson.get("voice_method").getAsString().equals(voiceMethod));
-        assertTrue(applicationJson.get("voice_fallback_url").getAsString().equals(voiceFallbackUrl));
-        assertTrue(applicationJson.get("voice_fallback_method").getAsString().equals(voiceFallbackMethod));
-        assertTrue(applicationJson.get("status_callback").getAsString().equals(statusCallback));
-        assertTrue(applicationJson.get("status_callback_method").getAsString().equals(statusCallbackMethod));
-        assertTrue(applicationJson.get("sms_url").getAsString().equals(smsUrl));
-        assertTrue(applicationJson.get("sms_method").getAsString().equals(smsMethod));
-        assertTrue(applicationJson.get("sms_fallback_url").getAsString().equals(smsFallbackUrl));
-        assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
-        assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
 
@@ -138,17 +116,6 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(applicationJson.get("api_version").getAsString().equals("2012-04-24"));
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
-        assertTrue(applicationJson.get("voice_url").getAsString().equals(voiceUrl));
-        assertTrue(applicationJson.get("voice_method").getAsString().equals(voiceMethod));
-        assertTrue(applicationJson.get("voice_fallback_url").getAsString().equals(voiceFallbackUrl));
-        assertTrue(applicationJson.get("voice_fallback_method").getAsString().equals(voiceFallbackMethod));
-        assertTrue(applicationJson.get("status_callback").getAsString().equals(statusCallback));
-        assertTrue(applicationJson.get("status_callback_method").getAsString().equals(statusCallbackMethod));
-        assertTrue(applicationJson.get("sms_url").getAsString().equals(smsUrl));
-        assertTrue(applicationJson.get("sms_method").getAsString().equals(smsMethod));
-        assertTrue(applicationJson.get("sms_fallback_url").getAsString().equals(smsFallbackUrl));
-        assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
-        assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
     }
@@ -159,17 +126,6 @@ public class ApplicationsEndpointTest {
         MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
         applicationParams.add("FriendlyName", "APPUpdate");
         applicationParams.add("VoiceCallerIdLookup", "true");
-        applicationParams.add("VoiceUrl", "/restcomm/voiceurl/test");
-        applicationParams.add("VoiceMethod", "GET");
-        applicationParams.add("VoiceFallbackUrl", "/restcomm/voicefallbackurl/test");
-        applicationParams.add("VoiceFallbackMethod", "GET");
-        applicationParams.add("StatusCallback", "/restcomm/statuscallback/test");
-        applicationParams.add("StatusCallbackMethod", "GET");
-        applicationParams.add("SmsUrl", "/restcomm/smsurl/test");
-        applicationParams.add("SmsMethod", "GET");
-        applicationParams.add("SmsFallbackUrl", "/restcomm/smsfallbackurl/test");
-        applicationParams.add("SmsFallbackMethod", "GET");
-        applicationParams.add("SmsStatusCallback", "/restcomm/smsstatuscallback/test");
         applicationParams.add("RcmlUrl", "/restcomm/rcmlurl/test");
         applicationParams.add("Kind", "voice");
         JsonObject applicationJson = RestcommApplicationsTool.getInstance().createApplication(deploymentUrl.toString(),
@@ -177,22 +133,11 @@ public class ApplicationsEndpointTest {
         Sid applicationSid = new Sid(applicationJson.get("sid").getAsString());
 
         // Define new values to the application attributes (POST test)
-        String friendlyName, voiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsStatusCallback, rcmlUrl, kind;
+        String friendlyName, voiceCallerIdLookup, rcmlUrl, kind;
 
         MultivaluedMap<String, String> applicationParamsUpdate = new MultivaluedMapImpl();
         applicationParamsUpdate.add("FriendlyName", friendlyName = "APPUpdate2");
         applicationParamsUpdate.add("VoiceCallerIdLookup", voiceCallerIdLookup = "false");
-        applicationParamsUpdate.add("VoiceUrl", voiceUrl = "/restcomm/voiceurl/test2");
-        applicationParamsUpdate.add("VoiceMethod", voiceMethod = "POST");
-        applicationParamsUpdate.add("VoiceFallbackUrl", voiceFallbackUrl = "/restcomm/voicefallbackurl/test2");
-        applicationParamsUpdate.add("VoiceFallbackMethod", voiceFallbackMethod = "POST");
-        applicationParamsUpdate.add("StatusCallback", statusCallback = "/restcomm/statuscallback/test2");
-        applicationParamsUpdate.add("StatusCallbackMethod", statusCallbackMethod = "POST");
-        applicationParamsUpdate.add("SmsUrl", smsUrl = "/restcomm/smsurl/test2");
-        applicationParamsUpdate.add("SmsMethod", smsMethod = "POST");
-        applicationParamsUpdate.add("SmsFallbackUrl", smsFallbackUrl = "/restcomm/smsfallbackurl/test2");
-        applicationParamsUpdate.add("SmsFallbackMethod", smsFallbackMethod = "POST");
-        applicationParamsUpdate.add("SmsStatusCallback", smsStatusCallback = "/restcomm/smsstatuscallback/test2");
         applicationParamsUpdate.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test2");
         applicationParamsUpdate.add("Kind", kind = "voice");
 
@@ -211,17 +156,6 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(applicationJson.get("api_version").getAsString().equals("2012-04-24"));
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
-        assertTrue(applicationJson.get("voice_url").getAsString().equals(voiceUrl));
-        assertTrue(applicationJson.get("voice_method").getAsString().equals(voiceMethod));
-        assertTrue(applicationJson.get("voice_fallback_url").getAsString().equals(voiceFallbackUrl));
-        assertTrue(applicationJson.get("voice_fallback_method").getAsString().equals(voiceFallbackMethod));
-        assertTrue(applicationJson.get("status_callback").getAsString().equals(statusCallback));
-        assertTrue(applicationJson.get("status_callback_method").getAsString().equals(statusCallbackMethod));
-        assertTrue(applicationJson.get("sms_url").getAsString().equals(smsUrl));
-        assertTrue(applicationJson.get("sms_method").getAsString().equals(smsMethod));
-        assertTrue(applicationJson.get("sms_fallback_url").getAsString().equals(smsFallbackUrl));
-        assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
-        assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
 
@@ -229,17 +163,6 @@ public class ApplicationsEndpointTest {
         applicationParamsUpdate = new MultivaluedMapImpl();
         applicationParamsUpdate.add("FriendlyName", friendlyName = "APPUpdate23");
         applicationParamsUpdate.add("VoiceCallerIdLookup", voiceCallerIdLookup = "true");
-        applicationParamsUpdate.add("VoiceUrl", voiceUrl = "/restcomm/voiceurl/test23");
-        applicationParamsUpdate.add("VoiceMethod", voiceMethod = "PUT");
-        applicationParamsUpdate.add("VoiceFallbackUrl", voiceFallbackUrl = "/restcomm/voicefallbackurl/test23");
-        applicationParamsUpdate.add("VoiceFallbackMethod", voiceFallbackMethod = "PUT");
-        applicationParamsUpdate.add("StatusCallback", statusCallback = "/restcomm/statuscallback/test23");
-        applicationParamsUpdate.add("StatusCallbackMethod", statusCallbackMethod = "PUT");
-        applicationParamsUpdate.add("SmsUrl", smsUrl = "/restcomm/smsurl/test23");
-        applicationParamsUpdate.add("SmsMethod", smsMethod = "PUT");
-        applicationParamsUpdate.add("SmsFallbackUrl", smsFallbackUrl = "/restcomm/smsfallbackurl/test23");
-        applicationParamsUpdate.add("SmsFallbackMethod", smsFallbackMethod = "PUT");
-        applicationParamsUpdate.add("SmsStatusCallback", smsStatusCallback = "/restcomm/smsstatuscallback/test23");
         applicationParamsUpdate.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test23");
         applicationParamsUpdate.add("Kind", kind = "voice");
 
@@ -257,17 +180,6 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(applicationJson.get("api_version").getAsString().equals("2012-04-24"));
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
-        assertTrue(applicationJson.get("voice_url").getAsString().equals(voiceUrl));
-        assertTrue(applicationJson.get("voice_method").getAsString().equals(voiceMethod));
-        assertTrue(applicationJson.get("voice_fallback_url").getAsString().equals(voiceFallbackUrl));
-        assertTrue(applicationJson.get("voice_fallback_method").getAsString().equals(voiceFallbackMethod));
-        assertTrue(applicationJson.get("status_callback").getAsString().equals(statusCallback));
-        assertTrue(applicationJson.get("status_callback_method").getAsString().equals(statusCallbackMethod));
-        assertTrue(applicationJson.get("sms_url").getAsString().equals(smsUrl));
-        assertTrue(applicationJson.get("sms_method").getAsString().equals(smsMethod));
-        assertTrue(applicationJson.get("sms_fallback_url").getAsString().equals(smsFallbackUrl));
-        assertTrue(applicationJson.get("sms_fallback_method").getAsString().equals(smsFallbackMethod));
-        assertTrue(applicationJson.get("sms_status_callback").getAsString().equals(smsStatusCallback));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
     }
@@ -278,17 +190,6 @@ public class ApplicationsEndpointTest {
         MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
         applicationParams.add("FriendlyName", "APPDelete");
         applicationParams.add("VoiceCallerIdLookup", "true");
-        applicationParams.add("VoiceUrl", "/restcomm/voiceurl/test");
-        applicationParams.add("VoiceMethod", "GET");
-        applicationParams.add("VoiceFallbackUrl", "/restcomm/voicefallbackurl/test");
-        applicationParams.add("VoiceFallbackMethod", "GET");
-        applicationParams.add("StatusCallback", "/restcomm/statuscallback/test");
-        applicationParams.add("StatusCallbackMethod", "GET");
-        applicationParams.add("SmsUrl", "/restcomm/smsurl/test");
-        applicationParams.add("SmsMethod", "GET");
-        applicationParams.add("SmsFallbackUrl", "/restcomm/smsfallbackurl/test");
-        applicationParams.add("SmsFallbackMethod", "GET");
-        applicationParams.add("SmsStatusCallback", "/restcomm/smsstatuscallback/test");
         applicationParams.add("RcmlUrl", "/restcomm/rcmlurl/test");
         applicationParams.add("Kind", "voice");
         JsonObject applicationJson = RestcommApplicationsTool.getInstance().createApplication(deploymentUrl.toString(),
