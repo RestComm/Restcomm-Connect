@@ -122,6 +122,7 @@ public final class PhoneNumber {
     private String region;
     private Integer postalCode;
     private String isoCountry;
+    private String cost;
 
     // Capabilities
     private Boolean voiceCapable;
@@ -132,14 +133,14 @@ public final class PhoneNumber {
 
     public PhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata, final String rateCenter,
             final Double latitude, final Double longitude, final String region, final Integer postalCode,
-            final String isoCountry) {
-        this(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode, isoCountry, null, null,
+            final String isoCountry, final String cost) {
+        this(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode, isoCountry, cost, null, null,
                 null, null, null);
     }
 
     public PhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata, final String rateCenter,
             final Double latitude, final Double longitude, final String region, final Integer postalCode,
-            final String isoCountry, final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable,
+            final String isoCountry, final String cost, final Boolean voiceCapable, final Boolean smsCapable, final Boolean mmsCapable,
             final Boolean faxCapable, final Boolean ussdCapable) {
         super();
         this.friendlyName = friendlyName;
@@ -151,6 +152,7 @@ public final class PhoneNumber {
         this.region = region;
         this.postalCode = postalCode;
         this.isoCountry = isoCountry;
+        this.cost = cost;
         this.voiceCapable = voiceCapable;
         this.smsCapable = smsCapable;
         this.mmsCapable = mmsCapable;
@@ -282,6 +284,20 @@ public final class PhoneNumber {
      */
     public void setIsoCountry(String isoCountry) {
         this.isoCountry = isoCountry;
+    }
+
+    /**
+     * @return the phone number cost
+     */
+    public String getCost() {
+        return cost;
+    }
+
+    /**
+     * @param isoCountry the isoCountry to set
+     */
+    public void setCost(String cost) {
+        this.cost = cost;
     }
 
     /**
