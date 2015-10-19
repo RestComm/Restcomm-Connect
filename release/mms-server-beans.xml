@@ -13,9 +13,6 @@
     
     <!-- Network interfaces definition -->
     <bean name="localhost" class="org.mobicents.media.server.io.network.UdpManager">
-        <constructor>
-            <parameter><inject bean="Scheduler"/></parameter>
-        </constructor>
         <property name="bindAddress">127.0.0.1</property>
         <property name="localBindAddress">127.0.0.1</property>
         <property name="externalAddress"><null/></property>
