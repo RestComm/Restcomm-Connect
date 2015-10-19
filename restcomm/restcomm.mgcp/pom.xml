@@ -5,39 +5,34 @@
     <artifactId>restcomm</artifactId>
     <version>7.4.0-SNAPSHOT</version>
   </parent>
-  
+
   <artifactId>restcomm.mgcp</artifactId>
   <name>restcomm.mgcp</name>
-  
+
   <properties>
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  
+
   <dependencies>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
 		</dependency>
-		
+
 		<dependency>
   			<groupId>com.typesafe.akka</groupId>
   			<artifactId>akka-actor_2.10</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-slf4j_2.10</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>javax.sdp</groupId>
-			<artifactId>nist-sdp</artifactId>
 		</dependency>
 
 		<dependency>
@@ -83,13 +78,13 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.scalatest</groupId>
 			<artifactId>scalatest_2.9.1</artifactId>
 			<scope>test</scope>
 		</dependency>
-			
+
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-testkit_2.10</artifactId>

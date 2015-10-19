@@ -80,7 +80,6 @@
 		<slf4j.version>1.5.5</slf4j.version>
 		<commons-configuration.version>1.7</commons-configuration.version>
 		<commons-io.version>2.4</commons-io.version>
-		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
 		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
@@ -211,12 +210,6 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-log4j12</artifactId>
 				<version>${slf4j.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>javax.sdp</groupId>
-				<artifactId>nist-sdp</artifactId>
-				<version>${jain.sdp.version}</version>
 			</dependency>
 
 			<dependency>
