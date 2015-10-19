@@ -167,8 +167,9 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
   };
 
   $scope.searching = false;
+  $scope.pageSize = 10;
 
-  $scope.findNumbers = function(areaCode, countryCode) {
+  $scope.findNumbers = function(pageNr) {
     $scope.searching = true;
     $scope.availableNumbers = null;
     var queryParams = {accountSid: $scope.sid, countryCode: $scope.newNumber.countryCode.code};
@@ -177,6 +178,8 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
     angular.forEach($scope.newNumber.capabilities, function(value, key) {
       this[value + 'Enabled'] = 'true';
     }, queryParams);
+    queryParams.RangeSize = $scope.pageSize || 10;
+    queryParams.RangeIndex = $scope.currentPage = pageNr || 1;
     $scope.availableNumbers = RCommAvailableNumbers.query(queryParams);
     $scope.availableNumbers.$promise.then(
       //success
@@ -189,6 +192,15 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
       }
     );
   }
+
+  $scope.nextRange = function() {
+    $scope.findNumbers(++$scope.currentPage);
+  }
+
+  $scope.prevRange = function() {
+    $scope.findNumbers(--$scope.currentPage);
+  }
+
 };
 
 
