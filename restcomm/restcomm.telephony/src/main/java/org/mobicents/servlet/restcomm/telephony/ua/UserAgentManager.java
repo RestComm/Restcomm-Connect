@@ -51,10 +51,14 @@ import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.UserRegistration;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
+
+import com.telestax.servlet.MonitoringService;
 
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorContext;
+import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
@@ -70,12 +74,14 @@ public final class UserAgentManager extends UntypedActor {
     private final SipFactory factory;
     private final DaoManager storage;
     private final ServletContext servletContext;
+    private ActorRef monitoringService;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
         super();
         // this.configuration = configuration;
         this.servletContext = servletContext;
+        monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
@@ -138,8 +144,7 @@ public final class UserAgentManager extends UntypedActor {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
             if ("REGISTER".equalsIgnoreCase(method)) {
-                if (authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP
-                                         // authentication
+                if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
                     if (authorization != null && permitted(authorization, method)) {
                         register(message);
@@ -259,13 +264,11 @@ public final class UserAgentManager extends UntypedActor {
         final int port = request.getInitialRemotePort();
         final String transport = uri.getTransportParam();
 
-        // Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
+        //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
         final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
-        if (initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null
-                && !initialPortBeforeLB.isEmpty()) {
-            logger.info("Client in front of LB. Patching URI: " + uri.toString() + " with IP: " + initialIpBeforeLB
-                    + " and PORT: " + initialPortBeforeLB + " for USER: " + user);
+        if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null && !initialPortBeforeLB.isEmpty()) {
+            logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
             patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
         } else {
             logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
@@ -302,9 +305,10 @@ public final class UserAgentManager extends UntypedActor {
             // Remove Registration if ttl=0
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
-            logger.info("The user agent manager unregistered " + user + " at address " + address);
+            monitoringService.tell(new UserRegistration(user, address, false), self());
+            logger.info("The user agent manager unregistered " + user + " at address "+address);
         } else {
-
+            monitoringService.tell(new UserRegistration(user, address, true), self());
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);

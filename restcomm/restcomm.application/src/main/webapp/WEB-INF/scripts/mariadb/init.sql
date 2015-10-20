@@ -1,6 +1,12 @@
 CREATE DATABASE IF NOT EXISTS restcomm;
 USE restcomm;
 
+CREATE TABLE restcomm_instance_id ( 
+instance_id VARCHAR(34) NOT NULL PRIMARY KEY,
+date_created DATETIME NOT NULL,
+date_updated DATETIME NOT NULL
+);
+
 CREATE TABLE restcomm_accounts (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
@@ -35,6 +41,7 @@ longitude DOUBLE,
 region VARCHAR(2),
 postal_code INT,
 iso_country VARCHAR(2) NOT NULL,
+cost VARCHAR(10),
 voice_capable BOOLEAN,
 sms_capable BOOLEAN,
 mms_capable BOOLEAN,
@@ -69,6 +76,7 @@ date_updated DATETIME NOT NULL,
 friendly_name VARCHAR(64) NOT NULL,
 account_sid VARCHAR(34) NOT NULL,
 phone_number VARCHAR(30) NOT NULL,
+cost VARCHAR(10),
 api_version VARCHAR(10) NOT NULL,
 voice_caller_id_lookup BOOLEAN NOT NULL,
 voice_url MEDIUMTEXT,
