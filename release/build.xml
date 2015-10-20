@@ -140,8 +140,7 @@
   <target name="get-olympus" unless="got.olympus">
     <echo>Downloading mobicents Olympus version: ${olympus.version}</echo>
     <exec executable="wget" failonerror="true">
-      <arg value="${mobicents-olympus.download.url}"/>
-			<arg value=" --directory-prefix=${configuration.directory}" />
+      <arg value="--directory-prefix=${configuration.directory} ${mobicents-olympus.download.url}"/>
     </exec>
   </target>
 
