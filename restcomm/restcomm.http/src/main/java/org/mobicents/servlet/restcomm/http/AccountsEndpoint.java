@@ -49,6 +49,7 @@ import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.exceptions.ConstraintViolationException;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -92,11 +93,19 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    // Create an account out of data. The sid for the new account is random and the account is considered a child of parentAccountSid
+
+    /**
+     * Create an account out of data. The sid for the new account is random and the account is considered a
+     * child of parentAccountSid. EmailAddress property is ignored.
+     *
+     * @param parentAccountSid
+     * @param data
+     * @return
+     */
     private Account createFrom(final Sid parentAccountSid, final MultivaluedMap<String, String> data) {
         validate(data);
         final DateTime now = DateTime.now();
-        final String emailAddress = data.getFirst("EmailAddress");
+        //final String emailAddress = data.getFirst("EmailAddress");
         final Sid sid = Sid.generate(Sid.Type.ACCOUNT);
 
         // use sid as friendly name if missing
@@ -114,7 +123,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, null, null, uri);
+        return new Account(sid, now, now, null, friendlyName, parentAccountSid, type, status, null, null, uri);
     }
 
     /**
@@ -222,6 +231,18 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         }
     }
 
+    /**
+     * Create a new restcomm account based on data from request. The following fields are taken into account:
+     *
+     *  - FriendlyName
+     *  - AccountStatue
+     *
+     *  Note that EmailAddress is ignored
+     *
+     * @param data
+     * @param responseType
+     * @return
+     */
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure("RestComm:Create:Accounts");
@@ -247,22 +268,16 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         final String childRole = getChildRole(parentAccount, selectedRole );
         account = account.setRole(childRole);
 
-        // Automatic keycloak user creation is disabled for now:
-        // Everything seems set. Let's try creating the user in keycloak
-        /*try {
-            String password = data.getFirst("Password"); // password is already encoded to auth_token in createFrom() so we need to extract it again
-            createKeycloakUser(account,password);
-        } catch (KeycloakClientException e) {
-            if ( e.getHttpStatusCode() == 409 )
-                return status(CONFLICT).build();
-        }
-        */
-
         // assign a random authToken for the account
         account = account.setAuthToken(IdentityContext.generateApiKey());
 
-        // now, store it in Restcomm too
-        accountsDao.addAccount(account);
+        // store restcomm account
+        // note that email_address should be empty since it is ignored in createFrom()
+        try {
+            accountsDao.addAccount(account);
+        } catch (ConstraintViolationException e) {
+            return status(CONFLICT).build();
+        }
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(account), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {
@@ -283,15 +298,6 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         } else {
             result = result.setStatus(Account.Status.ACTIVE);
         }
-        // Password is deprecated as a concept
-        /*if (data.containsKey("Password")) {
-            final String hash = new Md5Hash(data.getFirst("Password")).toString();
-            result = result.setAuthToken(hash);
-        }
-        // Auth token is no longer specified by the user
-        if (data.containsKey("Auth_Token")) {
-            result = result.setAuthToken(data.getFirst("Auth_Token"));
-        }*/
         return result;
     }
 
@@ -307,7 +313,11 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
             // update the model
             account = update(account, data);
             // if all goes well, persist the updated account in database
-            accountsDao.updateAccount(account);
+            try {
+                accountsDao.updateAccount(account);
+            } catch (ConstraintViolationException e) {
+                return status(CONFLICT).build();
+            }
 
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
@@ -335,7 +345,11 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
             if ( ! api.inviteUser(username) ) // assign roles
                 return Outcome.NOT_FOUND;
             restcommAccount = restcommAccount.setEmailAddress(username);
-            accountsDao.updateAccount(restcommAccount);
+            try {
+                accountsDao.updateAccount(restcommAccount);
+            } catch (ConstraintViolationException e) {
+                return Outcome.CONFLICT;
+            }
             return Outcome.OK;
         } else {
             // the Account is already mapped. Maybe unmap it first ?
