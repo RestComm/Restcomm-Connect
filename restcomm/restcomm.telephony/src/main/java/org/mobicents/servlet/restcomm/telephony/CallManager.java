@@ -319,13 +319,10 @@ public final class CallManager extends UntypedActor {
         logger.info("mediaExternalIp: " + mediaExternalIp);
         logger.info("proxyIp: " + proxyIp);
 
-        if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have
-            // little control over
-            logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "
-                    + request.getRequestURI().toString());
+        if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
             Client toClient = clients.getClient(toUser);
-            if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
-                // the b2bua
+            if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
+                logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
                             + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
