@@ -336,7 +336,8 @@ public final class UserAgentManager extends UntypedActor {
      * <p>
      * A client is considered WebRTC if one of the following statements is true:<br>
      * 1. The chosen transport is WebSockets (transport=ws).<br>
-     * 2. The User-Agent corresponds to one of TeleStax mobile clients.
+     * 2. The chosen transport is WebSockets Secured (transport=wss).<br>
+     * 3. The User-Agent corresponds to one of TeleStax mobile clients.
      * </p>
      *
      * @param transport
@@ -344,7 +345,7 @@ public final class UserAgentManager extends UntypedActor {
      * @return
      */
     private boolean isWebRTC(String transport, String userAgent) {
-        return "ws".equals(transport) || userAgent.contains("Restcomm");
+        return "ws".equals(transport) || "wss".equals(transport) || userAgent.contains("Restcomm");
     }
 
     private String contact(final SipURI uri, final int expires) {
