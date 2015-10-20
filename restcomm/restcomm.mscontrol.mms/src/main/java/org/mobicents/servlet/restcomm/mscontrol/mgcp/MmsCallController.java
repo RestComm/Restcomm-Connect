@@ -198,6 +198,7 @@ public class MmsCallController extends MediaServerController {
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.acquiringMediaGatewayInfo));
+        transitions.add(new Transition(this.uninitialized, this.closingRemoteConnection));
         transitions.add(new Transition(this.acquiringMediaGatewayInfo, this.acquiringMediaSession));
         transitions.add(new Transition(this.acquiringMediaSession, this.acquiringBridge));
         transitions.add(new Transition(this.acquiringBridge, this.creatingMediaGroup));
