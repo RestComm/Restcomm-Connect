@@ -1,1 +1,0 @@
-export JAVA_OPTS="-Xms1024m -Xmx6144m -Xmn256m -XX:+CMSIncrementalPacing -XX:CMSIncrementalDutyCycle=100 -XX:CMSIncrementalDutyCycleMin=100 -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:MaxPermSize=256m"
