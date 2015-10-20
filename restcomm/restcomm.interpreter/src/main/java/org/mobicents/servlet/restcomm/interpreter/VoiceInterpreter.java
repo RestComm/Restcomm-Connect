@@ -196,7 +196,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage) {
+            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -398,9 +398,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (!uri.endsWith("/")) {
             uri = uri + "/";
         }
+        try {
+            uri = UriUtils.resolve(new URI(uri)).toString();
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException while trying to resolve Cache URI: "+e);
+        }
         uri = uri + accountId.toString();
         this.cache = cache(path, uri);
         this.downloader = downloader();
+        this.monitoring = monitoring;
     }
 
     private boolean is(State state) {
@@ -416,7 +422,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
-        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        try {
+            base = UriUtils.resolve(new URI(base)).toString();
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException when trying to resolve Error-Dictionary URI: "+e);
+        }
         StringBuilder buffer = new StringBuilder();
         buffer.append(base);
         if (!base.endsWith("/")) {
@@ -891,9 +902,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ApiVersion", version));
         final String direction = callInfo.direction();
         parameters.add(new BasicNameValuePair("Direction", direction));
-        final String callerName = callInfo.fromName();
+        final String callerName = (callInfo.fromName()==null || callInfo.fromName().isEmpty()) ? "null" : callInfo.fromName();
         parameters.add(new BasicNameValuePair("CallerName", callerName));
-        final String forwardedFrom = callInfo.forwardedFrom();
+        final String forwardedFrom = (callInfo.forwardedFrom()==null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
@@ -1468,7 +1479,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             path += "ringing.wav";
             URI uri = null;
             try {
-                uri = URI.create(path);
+                uri = UriUtils.resolve(new URI(path));
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1539,7 +1550,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         path += recordingSid.toString() + ".wav";
         httpRecordingUri += recordingSid.toString() + ".wav";
         this.recordingUri = URI.create(path);
-        this.publicRecordingUri = URI.create(httpRecordingUri);
+        try {
+            this.publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException when trying to resolve Recording URI: "+e);
+        }
         recordingCall = true;
         StartRecording message = new StartRecording(accountId, callInfo.sid(), runtimeSettings, storage, recordingSid,
                 recordingUri);
@@ -1592,7 +1607,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         // Handle Failed Calls
         if (message instanceof CallManagerResponse && !(((CallManagerResponse<ActorRef>) message).succeeded())) {
-            parameters.add(new BasicNameValuePair("DialCallSid", null));
+            if (outboundCallInfo != null) {
+                parameters.add(new BasicNameValuePair("DialCallSid", (outboundCallInfo.sid() == null) ? "null" : outboundCallInfo.sid().toString()));
+            } else {
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
+            }
             parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.toString()));
             parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
             parameters.add(new BasicNameValuePair("RecordingUrl", null));
@@ -1615,7 +1634,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
-                parameters.add(new BasicNameValuePair("DialCallSid", null));
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
                 parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
@@ -1644,11 +1663,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
-                parameters.add(new BasicNameValuePair("DialCallSid", null));
-                parameters.add(new BasicNameValuePair("DialCallStatus", null));
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
+                parameters.add(new BasicNameValuePair("DialCallStatus", "null"));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
-                parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
+                parameters.add(new BasicNameValuePair("PublicRecordingUrl", "null"));
             }
         }
 
@@ -1851,7 +1870,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     path += "beep.wav";
                     URI uri = null;
                     try {
-                        uri = URI.create(path);
+                        uri = UriUtils.resolve(new URI(path));
                     } catch (final Exception exception) {
                         final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                         final NotificationsDao notifications = storage.getNotificationsDao();

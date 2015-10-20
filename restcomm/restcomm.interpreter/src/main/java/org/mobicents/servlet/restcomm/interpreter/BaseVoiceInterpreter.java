@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -244,6 +245,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     String finishOnKey;
     int numberOfDigits = Short.MAX_VALUE;
     StringBuffer collectedDigits;
+    //Monitoring service
+    ActorRef monitoring;
 
     final Set<Transition> transitions = new HashSet<Transition>();
 
@@ -536,7 +539,12 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
-        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        try {
+            base = UriUtils.resolve(new URI(base)).toString();
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException when trying to resolve Error-Dictionary URI: "+e);
+        }
         StringBuilder buffer = new StringBuilder();
         buffer.append(base);
         if (!base.endsWith("/")) {
@@ -789,6 +797,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final SpeechSynthesizerResponse<SpeechSynthesizerInfo> response = (SpeechSynthesizerResponse<SpeechSynthesizerInfo>) message;
             synthesizerInfo = response.get();
             call.tell(new Observe(source), source);
+            //Enable Monitoring Service for the call
+            if (monitoring != null)
+               call.tell(new Observe(monitoring), source);
             call.tell(new GetCallInfo(), source);
         }
     }
@@ -864,7 +875,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             path += "reject.wav";
             URI uri = null;
             try {
-                uri = URI.create(path);
+                uri = UriUtils.resolve(new URI(path));
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1393,7 +1404,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             path += "/";
                         }
                         path += "one-second-silence.wav";
-                        final URI uri = URI.create(path);
+                        final URI uri = UriUtils.resolve(new URI(path));
                         for (int counter = 0; counter < length; counter++) {
                             gatherPrompts.add(uri);
                         }
@@ -1626,7 +1637,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             path += recordingSid.toString() + ".wav";
             httpRecordingUri += recordingSid.toString() + ".wav";
             recordingUri = URI.create(path);
-            publicRecordingUri = URI.create(httpRecordingUri);
+            try {
+                publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+            } catch (URISyntaxException e) {
+                logger.error("URISyntaxException when trying to resolve Recording URI: "+e);
+            }
             Record record = null;
             if (playBeep) {
                 final List<URI> prompts = new ArrayList<URI>(1);
@@ -1636,7 +1651,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 path += "beep.wav";
                 try {
-                    prompts.add(URI.create(path));
+                    prompts.add(UriUtils.resolve(new URI(path)));
                 } catch (final Exception exception) {
                     final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                     notifications.addNotification(notification);
@@ -1806,7 +1821,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             httpRecordingUri += "/";
                         }
                         httpRecordingUri += recordingSid.toString() + ".wav";
-                        URI publicRecordingUri = URI.create(httpRecordingUri);
+                        URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
                         parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
                         parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                     }

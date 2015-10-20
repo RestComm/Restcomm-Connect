@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.telestax.servlet</groupId>
@@ -81,7 +80,6 @@
 		<slf4j.version>1.5.5</slf4j.version>
 		<commons-configuration.version>1.7</commons-configuration.version>
 		<commons-io.version>2.4</commons-io.version>
-		<jain.sdp.version>1.0</jain.sdp.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
 		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
@@ -103,7 +101,7 @@
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
-		<sip-ri.version>1.2.241</sip-ri.version>
+		<sip-ri.version>1.2.245</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>1.0.1</mss.arquillian.version>
 		<mss.shrinkwrap.version>1.0.1</mss.shrinkwrap.version>
@@ -149,8 +147,10 @@
 		<module>restcomm.routing</module>
 		<module>restcomm.email</module>
 		<module>restcomm.email.api</module>
-
-	</modules>
+		<module>restcomm.extension.api</module>
+		<module>restcomm.extension.traffic.throttling</module>
+    <module>restcomm.monitoring.service</module>
+  </modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -210,12 +210,6 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-log4j12</artifactId>
 				<version>${slf4j.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>javax.sdp</groupId>
-				<artifactId>nist-sdp</artifactId>
-				<version>${jain.sdp.version}</version>
 			</dependency>
 
 			<dependency>
@@ -584,7 +578,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<compilerArguments>
-						<g />
+						<g/>
 					</compilerArguments>
 					<source>1.7</source>
 					<target>1.7</target>
@@ -622,7 +616,7 @@
 					<configLocation>/checkstyle/checkstyle.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
-					<useFile />
+					<useFile/>
 				</configuration>
 				<dependencies>
 					<dependency>

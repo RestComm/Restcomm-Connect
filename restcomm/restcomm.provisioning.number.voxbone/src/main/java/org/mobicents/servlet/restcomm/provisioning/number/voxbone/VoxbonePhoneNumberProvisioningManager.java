@@ -160,7 +160,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
                         friendlyName,
                         number.get("didGroupId").getAsString(),
                         null, null, null, null, null, null,
-                        countryCode, isVoiceCapable, isSmsCapable, null, isFaxCapable, null);
+                        countryCode, null, isVoiceCapable, isSmsCapable, null, isFaxCapable, null);
                 numbers.add(phoneNumber);
             }
         }
