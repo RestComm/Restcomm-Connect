@@ -837,7 +837,7 @@ public class Jsr309CallController extends MediaServerController {
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
-                configurationData.put("webrtc", String.valueOf(webrtc));
+                configurationData.put("webrtc", webrtc ? "yes" : "no");
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
