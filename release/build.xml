@@ -141,7 +141,7 @@
     <echo>Downloading mobicents Olympus version: ${olympus.version}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${mobicents-olympus.download.url}"/>
-			<arg value=" -P {configuration.directory}" />
+			<arg value=" --directory-prefix=${configuration.directory}" />
     </exec>
   </target>
 
