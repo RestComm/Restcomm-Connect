@@ -36,6 +36,7 @@ public final class IncomingPhoneNumber {
     private String friendlyName;
     private Sid accountSid;
     private String phoneNumber;
+    private String cost;
     private String apiVersion;
     private Boolean hasVoiceCallerIdLookup;
     private URI voiceUrl;
@@ -66,19 +67,19 @@ public final class IncomingPhoneNumber {
     private Boolean pureSip;
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
-            final String friendlyName, final Sid accountSid, final String phoneNumber, final String apiVersion,
+            final String friendlyName, final Sid accountSid, final String phoneNumber, final String cost, final String apiVersion,
             final Boolean hasVoiceCallerIdLookup, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
             final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
             final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
             final String ussdFallbackMethod, final Sid ussdApplicationSid) {
-        this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, apiVersion, hasVoiceCallerIdLookup,
+        this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion, hasVoiceCallerIdLookup,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
                 voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, null, null, null, null, null);
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
-            final String friendlyName, final Sid accountSid, final String phoneNumber, final String apiVersion,
+            final String friendlyName, final Sid accountSid, final String phoneNumber, final String cost, final String apiVersion,
             final Boolean hasVoiceCallerIdLookup, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
             final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
@@ -92,6 +93,7 @@ public final class IncomingPhoneNumber {
         this.friendlyName = friendlyName;
         this.accountSid = accountSid;
         this.phoneNumber = phoneNumber;
+        this.cost = cost;
         this.apiVersion = apiVersion;
         this.hasVoiceCallerIdLookup = hasVoiceCallerIdLookup;
         this.voiceUrl = voiceUrl;
@@ -201,6 +203,20 @@ public final class IncomingPhoneNumber {
      */
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    /**
+     * @return the cost
+     */
+    public String getCost() {
+        return cost;
+    }
+
+    /**
+     * @param cost the cost to set
+     */
+    public void setCost(String cost) {
+        this.cost = cost;
     }
 
     /**
@@ -557,6 +573,7 @@ public final class IncomingPhoneNumber {
         private String friendlyName;
         private Sid accountSid;
         private String phoneNumber;
+        private String cost;
         private String apiVersion;
         private Boolean hasVoiceCallerIdLookup;
         private URI voiceUrl;
@@ -592,7 +609,7 @@ public final class IncomingPhoneNumber {
 
         public IncomingPhoneNumber build() {
             final DateTime now = DateTime.now();
-            return new IncomingPhoneNumber(sid, now, now, friendlyName, accountSid, phoneNumber, apiVersion,
+            return new IncomingPhoneNumber(sid, now, now, friendlyName, accountSid, phoneNumber, cost, apiVersion,
                     hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                     statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
                     smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip);
@@ -612,6 +629,10 @@ public final class IncomingPhoneNumber {
 
         public void setPhoneNumber(final String phoneNumber) {
             this.phoneNumber = phoneNumber;
+        }
+
+        public void setCost(final String cost) {
+            this.cost = cost;
         }
 
         public void setApiVersion(final String apiVersion) {

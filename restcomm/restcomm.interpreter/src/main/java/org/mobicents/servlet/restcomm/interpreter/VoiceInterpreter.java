@@ -398,6 +398,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (!uri.endsWith("/")) {
             uri = uri + "/";
         }
+        try {
+            uri = UriUtils.resolve(new URI(uri)).toString();
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException while trying to resolve Cache URI: "+e);
+        }
         uri = uri + accountId.toString();
         this.cache = cache(path, uri);
         this.downloader = downloader();
@@ -417,7 +422,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
-        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        try {
+            base = UriUtils.resolve(new URI(base)).toString();
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException when trying to resolve Error-Dictionary URI: "+e);
+        }
         StringBuilder buffer = new StringBuilder();
         buffer.append(base);
         if (!base.endsWith("/")) {
@@ -1469,7 +1479,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             path += "ringing.wav";
             URI uri = null;
             try {
-                uri = URI.create(path);
+                uri = UriUtils.resolve(new URI(path));
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1540,7 +1550,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         path += recordingSid.toString() + ".wav";
         httpRecordingUri += recordingSid.toString() + ".wav";
         this.recordingUri = URI.create(path);
-        this.publicRecordingUri = URI.create(httpRecordingUri);
+        try {
+            this.publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException when trying to resolve Recording URI: "+e);
+        }
         recordingCall = true;
         StartRecording message = new StartRecording(accountId, callInfo.sid(), runtimeSettings, storage, recordingSid,
                 recordingUri);
@@ -1856,7 +1870,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     path += "beep.wav";
                     URI uri = null;
                     try {
-                        uri = URI.create(path);
+                        uri = UriUtils.resolve(new URI(path));
                     } catch (final Exception exception) {
                         final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                         final NotificationsDao notifications = storage.getNotificationsDao();

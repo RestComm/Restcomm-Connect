@@ -137,6 +137,36 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResultUSRange));
     }
+    
+//    @Test
+//    public void testSearchUSPhoneNumbersSMSOnly() {
+////        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?index=2&size=5"))
+////                .willReturn(aResponse()
+////                    .withStatus(200)
+////                    .withHeader("Content-Type", "text/json")
+////                    .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
+//        // Get Account using admin email address and user email address
+//        Client jerseyClient = Client.create();
+//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+//
+//        String provisioningURL = deploymentUrl + baseURL + "SK/Local.json";
+//        WebResource webResource = jerseyClient.resource(provisioningURL);
+//
+//        ClientResponse clientResponse = webResource.queryParam("SmsEnabled","true").accept("application/json")
+//                .get(ClientResponse.class);
+//        assertTrue(clientResponse.getStatus() == 200);
+//        String response = clientResponse.getEntity(String.class);
+//        System.out.println(response);
+//        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+//        JsonParser parser = new JsonParser();
+//        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+//        
+//        System.out.println(jsonResponse);
+//        
+//        assertTrue(jsonResponse.size() == 5);
+//        System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
+//        assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResultUSRange));
+//    }
   
     @Deployment(name = "NexmoAvailablePhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {

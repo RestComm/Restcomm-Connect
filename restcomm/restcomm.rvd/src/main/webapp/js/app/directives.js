@@ -120,7 +120,7 @@ angular.module('Rvd').directive('variableLookup', ['variableRegistry', function 
 //use it this way: <input type="text" ng-focus="isFocused" ng-focus-lost="loseFocus()">
 //for more information: http://stackoverflow.com/questions/14859266/input-autofocus-attribute/14859639#14859639 
 
-angular.module('ng').directive('ngFocus', function($timeout) {
+angular.module('Rvd').directive('ngFocus', function($timeout) {
  return {
      link: function ( scope, element, attrs ) {
          scope.$watch( attrs.ngFocus, function ( val ) {
