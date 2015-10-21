@@ -362,7 +362,7 @@ public final class CallManager extends UntypedActor {
                     final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
                     final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
                             "outboudproxy-user-at-from-header", true);
-                    if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) || 
+                    if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) ||
                             (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))) {
                         logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
                                 + " toHost: " + toHost + " proxyUri: " + proxyURI);
