@@ -226,9 +226,9 @@ public class UssdCallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getRcmlUrl()));
+                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                 } else {
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                 }
                 builder.setMethod(number.getVoiceMethod());
                 builder.setFallbackUrl(number.getVoiceFallbackUrl());

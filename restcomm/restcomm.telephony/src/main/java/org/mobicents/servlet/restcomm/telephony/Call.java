@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -86,13 +87,13 @@ import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.util.SdpUtils;
 
-import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -1118,11 +1119,18 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void onStopObserving(StopObserving message, ActorRef self, ActorRef sender) throws Exception {
-        final ActorRef observer = message.observer();
+    private void onStopObserving(StopObserving stopObservingMessage, ActorRef self, ActorRef sender) throws Exception {
+        final ActorRef observer = stopObservingMessage.observer();
         if (observer != null) {
+            observer.tell(stopObservingMessage, self);
             this.observers.remove(observer);
         } else {
+            Iterator<ActorRef> observerIter = observers.iterator();
+            while (observerIter.hasNext()) {
+                ActorRef observerNext = observerIter.next();
+                observerNext.tell(stopObservingMessage, self);
+//                this.observers.remove(observerNext);
+            }
             this.observers.clear();
         }
     }
@@ -1430,7 +1438,7 @@ public final class Call extends UntypedActor {
                         answer = SdpUtils.endWithNewLine(answer);
                         okay.setContent(answer, "application/sdp");
                         okay.send();
-                    } else if (SipSession.State.CONFIRMED.equals(sessionState)) {
+                    } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
                         // We have an ongoing call and Restcomm executes new RCML app on that
                         // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
                         SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
@@ -1558,4 +1566,13 @@ public final class Call extends UntypedActor {
         }
     }
 
+    @Override
+    public void postStop() {
+        try {
+            onStopObserving(new StopObserving(), self(), null);
+        } catch (Exception exception) {
+            logger.info("Exception during Call postStop while trying to remove observers: "+exception);
+        }
+        super.postStop();
+    }
 }

@@ -123,6 +123,13 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.monitoring.service</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
 		<!-- Testing -->
 
 		<dependency>
@@ -213,10 +220,5 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.cafesip.sipunit</groupId>
-			<artifactId>sipunit</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 </project>

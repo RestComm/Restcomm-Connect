@@ -1,6 +1,12 @@
 CREATE DATABASE IF NOT EXISTS restcomm;
 USE restcomm;
 
+CREATE TABLE restcomm_instance_id ( 
+instance_id VARCHAR(34) NOT NULL PRIMARY KEY,
+date_created DATETIME NOT NULL,
+date_updated DATETIME NOT NULL
+);
+
 CREATE TABLE restcomm_accounts (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
@@ -197,7 +203,8 @@ account_sid VARCHAR(34) NOT NULL,
 call_sid VARCHAR(34) NOT NULL,
 duration DOUBLE NOT NULL,
 api_version VARCHAR(10) NOT NULL,
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL,
+file_uri MEDIUMTEXT
 );
 
 CREATE TABLE restcomm_transcriptions (

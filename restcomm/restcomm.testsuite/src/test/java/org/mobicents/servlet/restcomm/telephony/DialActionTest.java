@@ -20,6 +20,12 @@
 
 package org.mobicents.servlet.restcomm.telephony;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,7 +39,6 @@ import java.util.List;
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
 import javax.sip.message.Response;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
@@ -51,11 +56,13 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
-import org.mobicents.servlet.restcomm.telephony.RestResources.DialActionResources;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
 
 /**
@@ -82,6 +89,10 @@ public class DialActionTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
+    
+    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/DialAction Method: POST
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -135,8 +146,6 @@ public class DialActionTest {
 
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
-
-        DialActionResources.resetData();
     }
 
     @After
@@ -168,13 +177,15 @@ public class DialActionTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
-        
-        DialActionResources.resetData();
         Thread.sleep(2000);
     }
 
     @Test
     public void testDialActionInvalidCall() throws ParseException, InterruptedException {
+        
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
@@ -202,34 +213,27 @@ public class DialActionTest {
             exception.printStackTrace();
         }
 
-        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-
-        assertNotNull(data);
-        assertTrue(data.getFirst("DialCallSid").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("failed"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
-
-        assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));
-        assertTrue(data.getFirst("Direction").equalsIgnoreCase("inbound"));
-        assertTrue(data.getFirst("ApiVersion").equalsIgnoreCase("2012-04-24"));
-        assertTrue(data.getFirst("From").equalsIgnoreCase("bob"));
-
-        assertTrue(data.containsKey("AccountSid"));
-        assertTrue(data.containsKey("CallStatus"));
-        assertTrue(data.containsKey("CallerName"));
-        assertTrue(data.containsKey("ForwardedFrom"));
-        assertTrue(data.containsKey("CallSid"));
-
-        String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=0"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
 
     @Test
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException {
 
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -278,34 +282,27 @@ public class DialActionTest {
             exception.printStackTrace();
         }
 
-        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-
-        assertNotNull(data);
-        assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
-
-        assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));
-        assertTrue(data.getFirst("Direction").equalsIgnoreCase("inbound"));
-        assertTrue(data.getFirst("ApiVersion").equalsIgnoreCase("2012-04-24"));
-        assertTrue(data.getFirst("From").equalsIgnoreCase("bob"));
-
-        assertTrue(data.containsKey("AccountSid"));
-        assertTrue(data.containsKey("CallStatus"));
-        assertTrue(data.containsKey("CallerName"));
-        assertTrue(data.containsKey("ForwardedFrom"));
-        assertTrue(data.containsKey("CallSid"));
-        
-        String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=completed"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=3"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
 
     @Test
     public void testDialActionAliceAnswersAliceHangup() throws ParseException, InterruptedException {
 
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -354,34 +351,27 @@ public class DialActionTest {
             exception.printStackTrace();
         }
 
-        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        
-        assertNotNull(data);
-        assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
-
-        assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));
-        assertTrue(data.getFirst("Direction").equalsIgnoreCase("inbound"));
-        assertTrue(data.getFirst("ApiVersion").equalsIgnoreCase("2012-04-24"));
-        assertTrue(data.getFirst("From").equalsIgnoreCase("bob"));
-
-        assertTrue(data.containsKey("AccountSid"));
-        assertTrue(data.containsKey("CallStatus"));
-        assertTrue(data.containsKey("CallerName"));
-        assertTrue(data.containsKey("ForwardedFrom"));
-        assertTrue(data.containsKey("CallSid"));
-        
-        String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=completed"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=3"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
     
     @Test
     public void testDialActionAliceAnswersBobDisconnects() throws ParseException, InterruptedException {
 
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -430,34 +420,27 @@ public class DialActionTest {
             exception.printStackTrace();
         }
 
-        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        
-        assertNotNull(data);
-        assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("completed"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
-
-        assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));
-        assertTrue(data.getFirst("Direction").equalsIgnoreCase("inbound"));
-        assertTrue(data.getFirst("ApiVersion").equalsIgnoreCase("2012-04-24"));
-        assertTrue(data.getFirst("From").equalsIgnoreCase("bob"));
-
-        assertTrue(data.containsKey("AccountSid"));
-        assertTrue(data.containsKey("CallStatus"));
-        assertTrue(data.containsKey("CallerName"));
-        assertTrue(data.containsKey("ForwardedFrom"));
-        assertTrue(data.containsKey("CallSid"));
-        
-        String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=completed"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=3"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
     
     @Test
     public void testDialActionAliceNOAnswer() throws ParseException, InterruptedException {
 
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -501,35 +484,28 @@ public class DialActionTest {
         } catch (final InterruptedException exception) {
             exception.printStackTrace();
         }
-
-        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-
-        assertNotNull(data);
-        assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("no-answer"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("3"));
-
-        assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));
-        assertTrue(data.getFirst("Direction").equalsIgnoreCase("inbound"));
-        assertTrue(data.getFirst("ApiVersion").equalsIgnoreCase("2012-04-24"));
-        assertTrue(data.getFirst("From").equalsIgnoreCase("bob"));
-
-        assertTrue(data.containsKey("AccountSid"));
-        assertTrue(data.containsKey("CallStatus"));
-        assertTrue(data.containsKey("CallerName"));
-        assertTrue(data.containsKey("ForwardedFrom"));
-        assertTrue(data.containsKey("CallSid"));
         
-        String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=no-answer"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=3"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
 
     @Test
     public void testDialActionAliceBusy() throws ParseException, InterruptedException {
 
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -572,34 +548,27 @@ public class DialActionTest {
             exception.printStackTrace();
         }
         
-        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        
-        assertNotNull(data);
-        assertTrue(!data.getFirst("DialCallSid").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("RecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("PublicRecordingUrl").equalsIgnoreCase(""));
-        assertTrue(data.getFirst("DialCallStatus").equalsIgnoreCase("busy"));
-        assertTrue(data.getFirst("DialCallDuration").equalsIgnoreCase("0"));
-
-        assertTrue(data.getFirst("To").equalsIgnoreCase("+12223334455"));
-        assertTrue(data.getFirst("Direction").equalsIgnoreCase("inbound"));
-        assertTrue(data.getFirst("ApiVersion").equalsIgnoreCase("2012-04-24"));
-        assertTrue(data.getFirst("From").equalsIgnoreCase("bob"));
-
-        assertTrue(data.containsKey("AccountSid"));
-        assertTrue(data.containsKey("CallStatus"));
-        assertTrue(data.containsKey("CallerName"));
-        assertTrue(data.containsKey("ForwardedFrom"));
-        assertTrue(data.containsKey("CallSid"));
-
-        String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance()
-                .getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=busy"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=0"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
 
     @Test
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
+        
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+        
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -663,16 +632,18 @@ public class DialActionTest {
             exception.printStackTrace();
         }
 
-        // Assert custom headers were sent to the Action URL with prefix SipHeader_
-        MultivaluedMap<String, String> data = DialActionResources.getPostRequestData();
-        assertNotNull(data);
-        assertTrue(data.getFirst("SipHeader_X-My-Custom-Header").equals("My Custom Value"));
-        assertTrue(data.getFirst("SipHeader_X-OtherHeader").equals("Other Value"));
-        assertTrue(data.getFirst("SipHeader_X-another-header").equals("another value"));
-
-        String sid = data.getFirst("DialCallSid");
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("SipHeader_X-My-Custom-Header=My+Custom+Value"));
+        assertTrue(requestBody.contains("SipHeader_X-OtherHeader=Other+Value"));
+        assertTrue(requestBody.contains("SipHeader_X-another-header=another+value"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
+        
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)
@@ -690,7 +661,6 @@ public class DialActionTest {
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialActionTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
-        archive.addPackage("org.mobicents.servlet.restcomm.telephony.RestResources");
         logger.info("Packaged Test App");
         return archive;
     }

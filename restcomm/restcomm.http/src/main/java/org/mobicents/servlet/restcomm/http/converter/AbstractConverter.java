@@ -327,7 +327,11 @@ public abstract class AbstractConverter implements Converter {
 
     protected void writeType(final String type, final HierarchicalStreamWriter writer) {
         writer.startNode("Type");
-        writer.setValue(type);
+        if (type != null) {
+            writer.setValue(type);
+        } else {
+            writer.setValue(null);
+        }
         writer.endNode();
     }
 

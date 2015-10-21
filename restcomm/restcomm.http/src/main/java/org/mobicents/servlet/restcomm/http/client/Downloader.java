@@ -32,6 +32,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -39,7 +40,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -65,7 +67,7 @@ public final class Downloader extends UntypedActor {
         HttpResponse response = null;
         HttpRequestDescriptor temp = descriptor;
         do {
-            final DefaultHttpClient client = new DefaultHttpClient();
+            final HttpClient client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
             client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
 //            client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
             request = request(temp);
