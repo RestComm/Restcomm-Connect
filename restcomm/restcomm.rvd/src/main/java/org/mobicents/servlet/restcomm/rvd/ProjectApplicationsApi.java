@@ -21,8 +21,8 @@
 
 package org.mobicents.servlet.restcomm.rvd;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.HashMap;
 
 import javax.servlet.ServletContext;
@@ -30,7 +30,6 @@ import javax.servlet.ServletContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationsApiSyncException;
-import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
@@ -93,9 +92,7 @@ public class ProjectApplicationsApi {
     private void accessApi(final String ticketId, final HashMap<String, String> params, final AccessApiAction action)
             throws ApplicationsApiSyncException {
         try {
-            // Load configuration from Restcomm
-            ApiServerConfig apiServerConfig = RestcommConfiguration.getApiServerConfig(servletContext
-                    .getRealPath(File.separator));
+            URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
 
             // Load rvd settings
             SettingsModel settingsModel = SettingsModel.createDefault();
@@ -105,11 +102,11 @@ public class ProjectApplicationsApi {
             // Setup required values depending on existing setup
             String apiHost = settingsModel.getApiServerHost();
             if (RvdUtils.isEmpty(apiHost))
-                apiHost = apiServerConfig.getHost();
+                apiHost = restcommBaseUri.getHost();
 
             Integer apiPort = settingsModel.getApiServerRestPort();
             if (apiPort == null)
-                apiPort = apiServerConfig.getPort();
+                apiPort = restcommBaseUri.getPort();
 
             String authenticationToken = TicketRepository.getInstance().findTicket(ticketId).getAuthenticationToken();
             String username = TicketRepository.getInstance().findTicket(ticketId).getUserId();
@@ -123,7 +120,7 @@ public class ProjectApplicationsApi {
             if (RvdUtils.isEmpty(username))
                 throw new ApplicationsApiSyncException("Could not determine account to create new Application.");
 
-            RestcommClient client = new RestcommClient(apiHost, apiPort, username, authenticationToken);
+            RestcommClient client = new RestcommClient(restcommBaseUri.getScheme(), apiHost, apiPort, username, authenticationToken);
             client.setAuthenticationTokenAsPassword(true);
 
             // Find the account sid for the apiUsername

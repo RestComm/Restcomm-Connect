@@ -3,17 +3,27 @@ package org.mobicents.servlet.restcomm.rvd;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.commons.http.SslMode;
+import org.mobicents.servlet.restcomm.rvd.configuration.RestcommConfig;
+import org.mobicents.servlet.restcomm.rvd.http.utils.UriUtils;
 import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
-import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
+import org.w3c.dom.Document;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -44,10 +54,10 @@ public class RvdConfiguration {
     private String workspaceBasePath;
     private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
     private RvdConfig rvdConfig;  // the configuration settings from rvd.xml
+    private RestcommConfig restcommConfig;
 
     private String contextRootPath;
-    private SslMode sslMode;
-
+    private URI restcommBaseUri;
 
     public static RvdConfiguration getInstance() {
         if ( instance == null ) {
@@ -83,11 +93,8 @@ public class RvdConfiguration {
                 workspaceBasePath = contextRootPath + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked under RVD context
         }
         this.workspaceBasePath = workspaceBasePath;
-        //  sslMode option
-        sslMode = SslMode.allowall; // default
-        if ( ! RvdUtils.isEmpty(rvdConfig.getSslMode()) )
-            sslMode = SslMode.valueOf(rvdConfig.getSslMode());
 
+        restcommConfig = loadRestcommXmlConfig(contextRootPath + "../restcomm.war/WEB-INF/conf/restcomm.xml");
 
         logger.info("Using workspace at " + workspaceBasePath);
     }
@@ -106,6 +113,39 @@ public class RvdConfiguration {
             return rvdConfig;
         } catch (FileNotFoundException e) {
             logger.warn("RVD configuration file not found: " + pathToXml);
+            return null;
+        }
+    }
+
+    /**
+     * Load configuration options from restcomm.xml that make sence for RVD.
+     * @param pathToXml
+     * @return
+     */
+    private RestcommConfig loadRestcommXmlConfig(String pathToXml) {
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder;
+        File file = new File(pathToXml);
+        try {
+            docBuilder = docBuilderFactory.newDocumentBuilder();
+            Document doc = docBuilder.parse(file);
+            XPathFactory xPathfactory = XPathFactory.newInstance();
+            XPath xpath = xPathfactory.newXPath();
+            // read ssl-mode
+            XPathExpression expr = xpath.compile("/restcomm/http-client/ssl-mode/text()");
+            String sslMode = (String) expr.evaluate(doc, XPathConstants.STRING);
+            // read use-hostname-to-resolve-relative-url
+            expr = xpath.compile("/restcomm/http-client/use-hostname-to-resolve-relative-url/text()");
+            String useHostname = (String) expr.evaluate(doc, XPathConstants.STRING);
+            // read hostname
+            expr = xpath.compile("/restcomm/http-client/hostname/text()");
+            String hostname = (String) expr.evaluate(doc, XPathConstants.STRING);
+
+            RestcommConfig config = new RestcommConfig(sslMode, hostname, useHostname);
+            return config;
+
+        } catch (Exception e) {
+            logger.error("Error parsing Restcomm config file: " + file.getPath(), e);
             return null;
         }
     }
@@ -176,6 +216,28 @@ public class RvdConfiguration {
     }
 
     public SslMode getSslMode() {
-        return sslMode;
+        return restcommConfig.getSslMode();
+    }
+
+    public boolean getUseHostnameToResolveRelativeUrl() {
+        return restcommConfig.isUseHostnameToResolveRelativeUrl();
+    }
+
+    public String getHostnameOverride() {
+        return restcommConfig.getHostname();
+    }
+
+    // this is lazy loaded because HttpConnector enumeration (done in resolve()) fails otherwise
+    public URI getRestcommBaseUri() {
+        if (this.restcommBaseUri == null) {
+            UriUtils uriUtils = new UriUtils(this);
+            URI restcommBaseUri = null;
+            try {
+                URI uri = new URI("/");
+                restcommBaseUri = uriUtils.resolve(uri);
+            } catch (URISyntaxException e) { /* we should never reach here */ throw new IllegalStateException(); }
+            this.restcommBaseUri = restcommBaseUri;
+        }
+        return restcommBaseUri;
     }
 }

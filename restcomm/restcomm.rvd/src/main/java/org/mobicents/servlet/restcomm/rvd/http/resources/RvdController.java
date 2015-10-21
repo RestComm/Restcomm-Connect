@@ -1,9 +1,9 @@
 package org.mobicents.servlet.restcomm.rvd.http.resources;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
 import java.util.List;
@@ -29,7 +29,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
-import org.mobicents.servlet.restcomm.rvd.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
@@ -41,7 +40,6 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.UnauthorizedCal
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceError;
-import org.mobicents.servlet.restcomm.rvd.model.ApiServerConfig;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
@@ -227,39 +225,6 @@ public class RvdController extends RestService {
     // *** Call control functionality ***
     // **********************************
 
-    /**
-     * Retrieves restcomm.xml dependent information, host ip and port
-     */
-    private ApiServerConfig getApiServerConfig(String filesystemContextPath) throws CallControlException {
-        try {
-            return RestcommConfiguration.getApiServerConfig(filesystemContextPath);
-        } catch (Exception e) {
-            throw new CallControlInvalidConfigurationException(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Runs a query on Restcomm numbers api and tries to match an application named X with its number. If any match is found it
-     * returns it
-     *
-     * @param apiHost
-     * @param apiPort
-     * @param apiUsername
-     * @param apiPort2
-     * @param projectName
-     * @return
-     * @throws StorageException
-     * @throws CallControlException
-     */
-    /*
-     * private String guessApplicationDID(String apiHost, Integer apiPort, String apiUsername, String accountSid, String
-     * projectName) { URIBuilder uriBuilder = new
-     * URIBuilder().setHost(apiHost).setPort(apiPort).setPath("/restcomm/2012-04-24/Numbers.json") CloseableHttpClient client =
-     * HttpClients.createDefault(); CloseableHttpResponse response; HttpGet get = new HttpGet( url );
-     * get.addHeader("Authorization", "Basic " + RvdUtils.buildHttpAuthorizationToken(esStep.getUsername(),
-     * esStep.getPassword())); response = client.execute( get ); }
-     */
-
     private RestcommCreateCallResponse executeAction(String projectName, HttpServletRequest request, String toParam,
             String fromParam, String accessToken, UriInfo ui) throws StorageException, CallControlException {
         rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
@@ -276,9 +241,9 @@ public class RvdController extends RestService {
         }
 
         // Load configuration from Restcomm
-        ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
-        logger.debug("WebTrigger restcomm client: using restcomm host " + apiServerConfig.getHost() + " and port: "
-                + apiServerConfig.getPort());
+        URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
+        //ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
+        logger.debug("WebTrigger restcomm client: using restcomm at " + restcommBaseUri);
 
         // Load rvd settings
         SettingsModel settingsModel = SettingsModel.createDefault();
@@ -288,11 +253,11 @@ public class RvdController extends RestService {
         // Setup required values depending on existing setup
         String apiHost = settingsModel.getApiServerHost();
         if (RvdUtils.isEmpty(apiHost))
-            apiHost = apiServerConfig.getHost();
+            apiHost = restcommBaseUri.getHost();
 
         Integer apiPort = settingsModel.getApiServerRestPort();
         if (apiPort == null)
-            apiPort = apiServerConfig.getPort();
+            apiPort = restcommBaseUri.getPort();
 
         String apiUsername = settingsModel.getApiServerUsername();
 
@@ -355,7 +320,7 @@ public class RvdController extends RestService {
 
         try {
             // Find the account sid for the apiUsername
-            RestcommClient client = new RestcommClient(apiHost, apiPort, apiUsername, apiPassword);
+            RestcommClient client = new RestcommClient(restcommBaseUri.getScheme(), apiHost, apiPort, apiUsername, apiPassword);
             RestcommAccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + apiUsername).done(
                     marshaler.getGson(), RestcommAccountInfoResponse.class);
             String accountSid = accountResponse.getSid();

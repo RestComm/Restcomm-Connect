@@ -28,6 +28,7 @@ import com.google.gson.Gson;
 
 public class RestcommClient {
 
+    private String protocol;
     private String host;
     private Integer port;
     private String username;
@@ -90,7 +91,7 @@ public class RestcommClient {
             URIBuilder uriBuilder = new URIBuilder();
             uriBuilder.setHost(client.host);
             uriBuilder.setPort(client.port);
-            uriBuilder.setScheme("http"); // hardcoded
+            uriBuilder.setScheme(client.protocol);
             uriBuilder.setPath(path);
 
             try {
@@ -184,8 +185,9 @@ public class RestcommClient {
 
     }
 
-    public RestcommClient(String host, int port, String username, String password) {
+    public RestcommClient(String protocol, String host, int port, String username, String password) {
         // TODO Auto-generated constructor stub
+        this.protocol = protocol;
         this.host = host;
         this.port = port;
         this.username = username;
