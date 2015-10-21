@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import scala.concurrent.duration.FiniteDuration;
@@ -40,6 +41,7 @@ import akka.testkit.JavaTestKit;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@Ignore
 public final class DiskCacheTest {
     private ActorSystem system;
     private ActorRef cache;

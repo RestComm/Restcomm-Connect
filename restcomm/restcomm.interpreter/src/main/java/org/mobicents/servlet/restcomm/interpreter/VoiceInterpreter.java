@@ -111,7 +111,7 @@ import org.mobicents.servlet.restcomm.telephony.DestroyConference;
 import org.mobicents.servlet.restcomm.telephony.Dial;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
-import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
+import org.mobicents.servlet.restcomm.telephony.GetRelatedCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.Reject;
@@ -196,7 +196,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage) {
+            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -265,6 +265,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(faxing, finished));
         transitions.add(new Transition(sendingEmail, ready));
         transitions.add(new Transition(sendingEmail, finished));
+        transitions.add(new Transition(sendingEmail, finishDialing));
         transitions.add(new Transition(caching, finished));
         transitions.add(new Transition(playing, ready));
         transitions.add(new Transition(playing, finished));
@@ -386,8 +387,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.smsSessions = new HashMap<Sid, ActorRef>();
         this.storage = storage;
         this.synthesizer = tts(configuration.subset("speech-synthesizer"));
-        mailerNotify = mailer(configuration.subset("smtp-notify"));
-        mailerService = mailer(configuration.subset("smtp-service"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -402,6 +401,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         uri = uri + accountId.toString();
         this.cache = cache(path, uri);
         this.downloader = downloader();
+        this.monitoring = monitoring;
     }
 
     private boolean is(State state) {
@@ -814,8 +814,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
-        } else if (GetOutboundCall.class.equals(klass)) {
-            onGetOutboundCall((GetOutboundCall) message, self, sender);
+        } else if (GetRelatedCall.class.equals(klass)) {
+            onGetRelatedCall((GetRelatedCall) message, self, sender);
         }
     }
 
@@ -848,9 +848,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    private void onGetOutboundCall(GetOutboundCall message, ActorRef self, ActorRef sender) {
+    private void onGetRelatedCall(GetRelatedCall message, ActorRef self, ActorRef sender) {
+        final ActorRef callActor = message.call();
         if (outboundCall != null) {
-            sender.tell(outboundCall, self);
+            if (callActor.equals(outboundCall)) {
+                sender.tell(call, self);
+            } else if (callActor.equals(call)) {
+                sender.tell(outboundCall, self);
+            }
         } else {
             // If previously that was a p2p call that changed to conference (for hold)
             // and now it changes again to a new url, the outbound call is null since
@@ -887,9 +892,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("ApiVersion", version));
         final String direction = callInfo.direction();
         parameters.add(new BasicNameValuePair("Direction", direction));
-        final String callerName = callInfo.fromName();
+        final String callerName = (callInfo.fromName()==null || callInfo.fromName().isEmpty()) ? "null" : callInfo.fromName();
         parameters.add(new BasicNameValuePair("CallerName", callerName));
-        final String forwardedFrom = callInfo.forwardedFrom();
+        final String forwardedFrom = (callInfo.forwardedFrom()==null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
@@ -1588,7 +1593,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         // Handle Failed Calls
         if (message instanceof CallManagerResponse && !(((CallManagerResponse<ActorRef>) message).succeeded())) {
-            parameters.add(new BasicNameValuePair("DialCallSid", null));
+            if (outboundCallInfo != null) {
+                parameters.add(new BasicNameValuePair("DialCallSid", (outboundCallInfo.sid() == null) ? "null" : outboundCallInfo.sid().toString()));
+            } else {
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
+            }
             parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.FAILED.toString()));
             parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
             parameters.add(new BasicNameValuePair("RecordingUrl", null));
@@ -1611,7 +1620,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
-                parameters.add(new BasicNameValuePair("DialCallSid", null));
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
                 parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
@@ -1640,11 +1649,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                 parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
             } else {
-                parameters.add(new BasicNameValuePair("DialCallSid", null));
-                parameters.add(new BasicNameValuePair("DialCallStatus", null));
+                parameters.add(new BasicNameValuePair("DialCallSid", "null"));
+                parameters.add(new BasicNameValuePair("DialCallStatus", "null"));
                 parameters.add(new BasicNameValuePair("DialCallDuration", "0"));
                 parameters.add(new BasicNameValuePair("RecordingUrl", null));
-                parameters.add(new BasicNameValuePair("PublicRecordingUrl", null));
+                parameters.add(new BasicNameValuePair("PublicRecordingUrl", "null"));
             }
         }
 
@@ -2081,7 +2090,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
-                callback();
+                callback(true);
             }
 
             // XXX review bridge cleanup!!
@@ -2142,8 +2151,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
-            context.stop(mailerNotify);
-            context.stop(mailerService);
+            if (mailerNotify != null)
+                context.stop(mailerNotify);
+            if (mailerService != null)
+                context.stop(mailerService);
             context.stop(downloader);
             context.stop(asrService);
             context.stop(faxService);

@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.rvd.restcomm;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,9 +19,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
+import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
@@ -157,8 +158,8 @@ public class RestcommClient {
                             else
                                 throw new RestcommClientException("Error invoking Restcomm REST api").setStatusCode(statusCode);
                         }
-                        String content = IOUtils.toString(apiResponse.getEntity().getContent());
-                        return gson.fromJson(content, resultClass);
+                        String content = IOUtils.toString(apiResponse.getEntity().getContent(), Charset.forName("UTF-8"));
+                        return gson.fromJson( content, resultClass );
                     } finally {
                         apiResponse.close();
                     }
@@ -189,7 +190,7 @@ public class RestcommClient {
         this.port = port;
         this.username = username;
         this.password = password;
-        apacheClient = HttpClients.createDefault();
+        apacheClient = CustomHttpClientBuilder.buildHttpClient();
     }
 
     public Request get(String path) {

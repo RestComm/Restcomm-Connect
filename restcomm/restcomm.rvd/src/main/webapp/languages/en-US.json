@@ -215,6 +215,11 @@
   	"sayEmailValidationError": "Please insert a valid email address",
 	"emailStepToLabel": "To",
 	"emailStepFromLabel": "From",
+    "emailStepCcLabel": "Cc",
+  	"emailStepBccLabel": "Bcc",
+   	"emailStepEmailLabelPopover":"Subject of the email",
+ 	"emailStepBccLabelPopover":"Add email addresses separated with a coma (,)",
+ 	"emailStepCcLabelPopover":"Add email addresses separated with a coma (,)",
 	"emailStepContinueTooltip": "Choose the module to continue to after the email has been enqueued. Leave it blank to continue to the next step.",
 	"emailStepContinueLabel": "Continue to",
 	"emailStepChooseTargetLabel": "Choose a target",
@@ -354,7 +359,7 @@
 	"projectLogReloadLabel": "Reload",
 	"projectLogResetLabel": "Reset",
 
-	"projectManagerChooseProjectLabel1": "Please chose a",
+	"projectManagerChooseProjectLabel1": "Please choose a",
 	"projectManagerChooseProjectLabel2": "project from the list below or create a new one",
 	"projectManagerExistingProjectsLabel1": "Existing",
 	"projectManagerExistingProjectsLabel2": "projects",
@@ -373,7 +378,8 @@
 	"sms":"sms",
 
 	"projectSettingsModalSettingsLabel": "Settings",
-	"projectSettingsModalEnableAppLabel": "Enable application logging",
+	"projectSettingsModalEnableAppLabel": "Application logging",
+	"projectSettingsModalLogRcmlLabel": "Log RCML",
 	"projectSettingsModalSaveButton": "Save",
 	"projectSettingsModalCancelButton": "Cancel",
 

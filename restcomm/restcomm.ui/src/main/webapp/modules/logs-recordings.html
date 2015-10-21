@@ -54,7 +54,8 @@
                 <td><div>{{ recording.to ? recording.to : '&lt;callee&gt;' }}</div></td>
                 <td><div class="text-center">{{ recording.duration ? (recording.duration + "s") : '. . .' }}</div></td>
                 <td><div class="text-center"><a href="#/logs/calls/{{ recording.call_sid }}">{{ recording.call_sid }}</a></div></td>
-                <td><div class="text-center"><a href="/restcomm/recordings/{{ recording.sid }}.wav" target="_blank" tooltip="Download"><i class="fa fa-download"></i></a></div></td>
+                <!-- <td><div class="text-center"><a href="/restcomm/recordings/{{ recording.sid }}.wav" target="_blank" tooltip="Download"><i class="fa fa-download"></i></a></div></td> -->
+                <td><div class="text-center"><a href="{{ recording.file_uri }}" target="_blank" tooltip="Download"><i class="fa fa-download"></i></a></div></td>
             </tr>
             </tbody>
             <tfoot>
