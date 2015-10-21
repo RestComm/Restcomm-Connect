@@ -148,6 +148,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         builder.setSid(sid);
         builder.setAccountSid(accountSid);
         String phoneNumber = data.getFirst("PhoneNumber");
+        String cost = data.getFirst("Cost");
         builder.setPhoneNumber(phoneNumber);
         builder.setFriendlyName(getFriendlyName(phoneNumber, data));
         if (data.containsKey("VoiceCapable")) {
@@ -472,6 +473,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         return new org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber(
                 incomingPhoneNumber.getFriendlyName(),
                 incomingPhoneNumber.getPhoneNumber(),
+                null,
                 null,
                 null,
                 null,

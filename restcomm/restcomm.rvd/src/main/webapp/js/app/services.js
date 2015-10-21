@@ -46,7 +46,7 @@ angular.module('Rvd').service('projectModules', [function () {
 }]);
 */
 
-angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', function ($http, $browser, $q) {
+angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', function ($http, $cookies, $q) {
 	//console.log("Creating authentication service");
 	var serviceInstance = {};
 	var authInfo = {};
@@ -54,7 +54,7 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 	function refresh() {
 		authInfo.rvdticket = undefined;
 		authInfo.username = undefined;
-		var matches = RegExp( "^([^:]+)\:(.*)$" ).exec( $browser.cookies().rvdticket );
+		var matches = RegExp( "^([^:]+)\:(.*)$" ).exec( $cookies.get("rvdticket") );
 		if (matches != null) {
 			authInfo.rvdticket = matches[2];
 			authInfo.username = matches[1];
@@ -96,7 +96,7 @@ angular.module('Rvd').service('authentication', ['$http', '$browser', '$q', func
 	}
 	
 	serviceInstance.clearTicket = function () {
-		$browser.cookies().rvdticket = undefined;
+		$cookies.remove("rvdticket");
 		authInfo.rvdticket = undefined;
 		authInfo.username = undefined;
 	}
@@ -268,7 +268,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 				$scope.ccInfo = createCcInfo();
 		}	
 		$scope.getWebTriggerUrl = function () {
-			return "http://" + $location.host() + ":" +  $location.port() + "/restcomm-rvd/services/apps/" +  encodeURIComponent(projectName) + '/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span>';
+			return $location.protocol() + "://" + $location.host() + ":" +  $location.port() + "/restcomm-rvd/services/apps/" +  encodeURIComponent(projectName) + '/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span>';
 		};
 		$scope.getRvdHost = function() {
 			return $location.host();

@@ -38,11 +38,11 @@ import org.apache.commons.lang.StringUtils;
 @Immutable
 public class MainConfigurationSet extends ConfigurationSet {
 
-    private static final String SSL_MODE_KEY = "http-client.ssl-mode";
+    public static final String SSL_MODE_KEY = "http-client.ssl-mode";
     private static final SslMode SSL_MODE_DEFAULT = SslMode.strict;
     private final SslMode sslMode;
-    private static final String USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY = "http-client.use-hostname-to-resolve-relative-url";
-    private static final String HOSTNAME_TO_USE_FOR_RELATIVE_URLS_KEY = "http-client.hostname";
+    public static final String USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY = "http-client.use-hostname-to-resolve-relative-url";
+    public static final String HOSTNAME_TO_USE_FOR_RELATIVE_URLS_KEY = "http-client.hostname";
     private static final boolean RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT = true;
     private final boolean useHostnameToResolveRelativeUrls;
     private final String hostname;
@@ -53,6 +53,7 @@ public class MainConfigurationSet extends ConfigurationSet {
         boolean resolveRelativeUrlWithHostname;
         String resolveRelativeUrlHostname;
 
+        // http-client.ssl-mode
         try {
             sslMode = SSL_MODE_DEFAULT;
             String sslModeRaw = source.getProperty(SSL_MODE_KEY);
@@ -63,6 +64,8 @@ public class MainConfigurationSet extends ConfigurationSet {
         }
         this.sslMode = sslMode;
 
+        // http-client.hostname
+        // http-client.use-hostname-to-resolve-relative-url
         try {
             resolveRelativeUrlWithHostname = RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT;
             resolveRelativeUrlWithHostname = Boolean.valueOf(source.getProperty(USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY));
