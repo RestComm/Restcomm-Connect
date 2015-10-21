@@ -45,5 +45,11 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>javax.sip</groupId>
+			<artifactId>jain-sip-ri</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
 	</dependencies>
 </project>
