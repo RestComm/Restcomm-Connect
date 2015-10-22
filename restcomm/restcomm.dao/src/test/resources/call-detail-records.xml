@@ -32,9 +32,17 @@
   </select>
   
   <select id="getCallDetailRecordsByStartTime" parameterType="date" resultType="hashmap">
-    SELECT * FROM "restcomm_call_detail_records" WHERE "start_time"gt;=#{start_time} AND "start_time"&lt;DATE_ADD(#{start_time},INTERVAL 1 DAY);
+    SELECT * FROM "restcomm_call_detail_records" WHERE "start_time"&gt;=#{start_time} AND "start_time"&lt;DATE_ADD(#{start_time},INTERVAL 1 DAY);
   </select>
-  
+
+  <select id="getCallDetailRecordsByEndTime" parameterType="date" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "end_time"&gt;=#{start_time} AND "end_time"&lt;DATE_ADD(#{end_time},INTERVAL 1 DAY);
+  </select>
+
+  <select id="getCallDetailRecordsByStarTimeAndEndTime" parameterType="date" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "start_time"&gt;=#{start_time} AND "end_time"&lt;=#{end_time};
+  </select>
+
   <select id="getCallDetailRecordsByParentCall" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "parent_call_sid"=#{parent_call_sid};
   </select>
