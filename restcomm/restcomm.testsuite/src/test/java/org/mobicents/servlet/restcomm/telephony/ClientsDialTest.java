@@ -325,7 +325,7 @@ public class ClientsDialTest {
     @Test
     public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
         String invalidNumber = "+123456789";
-        SipPhone georgePhone2 = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:5070");
+        SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:5070");
         
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
@@ -345,7 +345,7 @@ public class ClientsDialTest {
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
-        final SipCall georgeCall = georgePhone2.createSipCall();
+        final SipCall georgeCall = outboundProxy.createSipCall();
         georgeCall.listenForIncomingCall();
         
         georgeCall.waitForIncomingCall(5 * 1000);
@@ -363,7 +363,7 @@ public class ClientsDialTest {
             mariaDialog = mariaCall.getDialog();
         }
 
-        georgePhone2.dispose();
+        outboundProxy.dispose();
     }
     
     @Test
