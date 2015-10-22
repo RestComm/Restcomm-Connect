@@ -37,6 +37,9 @@
 		<if test="startTime != null">
 		    AND start_time &gt;= #{startTime}
 		</if>
+		<if test="endTime != null">
+			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+		</if>
 	</select>
   
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
@@ -58,7 +61,11 @@
 		</if>
 		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
 		<if test="startTime != null">
-		    AND start_time &gt;= #{startTime} order by start_time
+		    AND start_time &gt;= #{startTime}
+		</if>
+
+		<if test="endTime != null">
+			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY) order by start_time
 		</if>
 		
 		LIMIT #{limit} OFFSET #{offset}
@@ -82,8 +89,12 @@
   </select>
   
   <select id="getCallDetailRecordsByStartTime" parameterType="date" resultType="hashmap">
-    SELECT * FROM restcomm_call_detail_records WHERE start_timegt;=#{start_time} AND start_time&lt;DATE_ADD(#{start_time},INTERVAL 1 DAY);
+    SELECT * FROM restcomm_call_detail_records WHERE start_time&gt;=#{start_time} AND start_time&lt;DATE_ADD(#{start_time},INTERVAL 1 DAY);
   </select>
+
+	<select id="getCallDetailRecordsByEndTime" parameterType="date" resultType="hashmap">
+		SELECT * FROM restcomm_call_detail_records WHERE end_time&gt;=#{end_time} AND end_time&lt;DATE_ADD(#{end_time},INTERVAL 1 DAY);
+	</select>
   
   <select id="getCallDetailRecordsByParentCall" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_call_detail_records WHERE parent_call_sid=#{parent_call_sid};
