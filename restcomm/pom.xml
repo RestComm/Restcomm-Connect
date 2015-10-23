@@ -139,7 +139,6 @@
 		<module>restcomm.interpreter</module>
 		<module>restcomm.http</module>
 		<module>restcomm.sms</module>
-		<module>restcomm.smpp.handler</module>
 		<module>restcomm.smpp</module>
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
