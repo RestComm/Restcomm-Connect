@@ -96,6 +96,7 @@ public class LoginRestService extends RestService {
                 TicketRepository tickets = TicketRepository.getInstance();
                 Ticket ticket = new Ticket(credentials.getUsername());
                 ticket.setAuthenticationToken(authService.getAuthenticationToken()); // used for API access
+                ticket.setCookieBased(true);
                 tickets.putTicket( ticket );
 
                 //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();

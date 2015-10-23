@@ -5,13 +5,12 @@ import java.security.Principal;
 public class RvdUser implements Principal {
 
     private String name; // the name of the Restcomm user
+    private String ticketId;
 
-    public RvdUser() {
-    }
-
-    public RvdUser(String name) {
+    public RvdUser(String name, String ticketId) {
         super();
         this.name = name;
+        this.ticketId = ticketId;
     }
 
     @Override
@@ -21,6 +20,10 @@ public class RvdUser implements Principal {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getTicketId() {
+        return ticketId;
     }
 
     @Override

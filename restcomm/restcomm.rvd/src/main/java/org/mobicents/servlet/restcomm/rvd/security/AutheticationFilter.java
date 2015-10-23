@@ -64,6 +64,22 @@ public class AutheticationFilter implements ResourceFilter, ContainerRequestFilt
                     if ( authToken.equals(basicAuthTicket.getAuthenticationToken() ) ) {
                         basicAuthTicket.accessedNow();
                         basicAuthStatus = true;
+                        return wrapResponse(request, username, basicAuthTicket.getTicketId());
+                    }
+                } else {
+                    // try to authenticate
+                    AuthenticationService authService = new AuthenticationService();
+                    try {
+                        if ( authService.authenticate(basicAuthCredentials[0], basicAuthCredentials[1]) ) {
+                            Ticket newTicket = new Ticket(username, username);
+                            newTicket.setAuthenticationToken(basicAuthCredentials[1]);
+                            newTicket.setCookieBased(false);
+                            tickets.putTicket( newTicket );
+                            // create the user for the context
+                            return wrapResponse(request, username, newTicket.getTicketId());
+                        }
+                    } catch (RvdSecurityException e1) {
+                        logger.error("Internal error while authentication against restcomm for user '" + basicAuthCredentials[0] + "'", e1 );
                     }
                 }
             }
@@ -79,47 +95,19 @@ public class AutheticationFilter implements ResourceFilter, ContainerRequestFilt
             if ( ticketParts.length == 2 ) {
                 String ticketUsername = ticketParts[0];
                 String ticketId = ticketParts[1];
-                //throw new WebApplicationException();
-                //String ticketId = "111"; // simulate retrieving ticketId from a header
-                //logger.debug("Received a request with ticket " + rawTicket);
 
                 cookieAuthTicket = tickets.findTicket(ticketId);
                 if ( cookieAuthTicket != null ) {
                     if ( cookieAuthTicket.getUserId() != null && cookieAuthTicket.getUserId().equals(ticketUsername) ) {
                         cookieAuthTicket.accessedNow();
                         cookieAuthStatus = true;
+                        return wrapResponse(request, cookieAuthTicket.getUserId(), cookieAuthTicket.getTicketId());
                     }
                 }
             }
             // Since access was not granted, this is probably an bad cookie. Remove it from the request so that it won't be renewed from the SessionKeepAliveFilter
             if ( !cookieAuthStatus )
                 request.getCookies().remove(RvdConfiguration.TICKET_COOKIE_NAME);
-        }
-
-        // We know the status of both Basic HTTP and Cookie authentication. Now we should decide.
-        if ( basicAuthStatus == true) {
-            return wrapResponse(request, basicAuthTicket.getUserId());
-        } else
-        if ( cookieAuthStatus == true ) {
-            return wrapResponse(request, cookieAuthTicket.getUserId());
-        } else {
-            // if there are any basic http auth credentials and no ticket for them, try to authenticate
-            if ( basicAuthCredentials != null && basicAuthTicket == null ) {
-                AuthenticationService authService = new AuthenticationService();
-                try {
-                    if ( authService.authenticate(basicAuthCredentials[0], basicAuthCredentials[1]) ) {
-                        String username = basicAuthCredentials[0];
-                        Ticket newTicket = new Ticket(username, username);
-                        newTicket.setAuthenticationToken(basicAuthCredentials[1]);
-                        tickets.putTicket( newTicket );
-                        // create the user for the context
-                        return wrapResponse(request, username);
-                    }
-                } catch (RvdSecurityException e1) {
-                    logger.error("Internal error while authentication against restcomm for user '" + basicAuthCredentials[0] + "'", e1 );
-                }
-            }
-
         }
 
         logger.debug("denied access for request ");
@@ -129,8 +117,8 @@ public class AutheticationFilter implements ResourceFilter, ContainerRequestFilt
         throw new WebApplicationException( res );
     }
 
-    private ContainerRequest wrapResponse(ContainerRequest request, String username) {
-        RvdUser user = new RvdUser(username);
+    private ContainerRequest wrapResponse(ContainerRequest request, String username, String ticketId) {
+        RvdUser user = new RvdUser(username, ticketId);
         SecurityContext securityContext = new RvdSecurityContext(user);
         request.setSecurityContext(securityContext);
         return request;

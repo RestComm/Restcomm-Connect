@@ -134,18 +134,11 @@ public class ProjectRestService extends RestService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listProjects(@Context HttpServletRequest request) {
-        // logger.debug("SecurityContext: " + securityContext);
-        // logger.debug("User principal: " + securityContext.getUserPrincipal());
-        // logger.debug("isSecure: " + securityContext.isSecure());
-
         Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
         try {
-            items = projectService.getAvailableProjectsByOwner(loggedUser.getName()); // there has to be a user in the context.
-                                                                                      // Only logged users are allowed to to run
-                                                                                      // project manager services
+            items = projectService.getAvailableProjectsByOwner(loggedUser.getName());
             projectService.fillStartUrlsForProjects(items, request);
-
         } catch (BadWorkspaceDirectoryStructure e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
