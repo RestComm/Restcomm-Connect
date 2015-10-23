@@ -55,31 +55,15 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
     private ActorRef service;
     private ActorRef serviceSmpp;
     private static ServletContext context;
-    private static ServletContext  smppServletContext;
-    private static SipFactory  smppSipFactory;
-    private String servletContextRealPath;
+    //private static ServletContext  smppServletContext;
+    //private static SipFactory  smppSipFactory;
+    // private String servletContextRealPath;
     private SipFactory factory;
 
 
 
     public SmppServiceProxy() {
         super();
-    }
-
-    public static void setSmppServletContext(ServletContext context){
-         smppServletContext = context;
-    }
-
-    public ServletContext getSmppServletContext(){
-        return this.smppServletContext;
-    }
-
-    public static void setSmppSipFactory (SipFactory sipFactory){
-        smppSipFactory = sipFactory;
-    }
-
-    public SipFactory getSmppSipFactory(){
-        return this.smppSipFactory;
     }
 
 
@@ -108,38 +92,30 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
     }
 
 
-    private ActorRef sendToSMPPService(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
-            }
-        }));
-    }
-
     @Override
     public void servletInitialized(SipServletContextEvent event) {
 
-         if (event.getSipServlet().getClass().equals(SmppServiceProxy.class)) {
-                 //used to persist the servlet context
-                 setSmppServletContext(event.getServletContext());
+        if (event.getSipServlet().getClass().equals(SmppServiceProxy.class)) {
+            //used to persist the servlet context
+            //setSmppServletContext(event.getServletContext());
 
-                 context = event.getServletContext();
-                 factory = (SipFactory) context.getAttribute(SIP_FACTORY);
+            context = event.getServletContext();
+            factory = (SipFactory) context.getAttribute(SIP_FACTORY);
 
-                 //used to persist the sipFactory
-                 setSmppSipFactory (factory);
+            //used to persist the sipFactory
+            // setSmppSipFactory (factory);
 
-                    Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-                    // configuration = configuration.subset("sms-aggregator");
-                    final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-                    system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
-                    service = service(configuration, factory, storage);
-                    serviceSmpp = sendToSMPPService(configuration, factory, storage);
-                    context.setAttribute(SmppService.class.getName(), service);
+            Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+            // configuration = configuration.subset("sms-aggregator");
+            final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+            system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+            service = service(configuration, factory, storage);
+            //serviceSmpp = sendToSMPPService(configuration, factory, storage);
+            context.setAttribute(SmppService.class.getName(), service);
 
+
+            //Used to get SmsService info to be used for SMPP inbound in SmppHandlerProcessMessages
+            new SmppInitConfigurationDetails(system, configuration, factory, storage, context);
         }
     }
 
