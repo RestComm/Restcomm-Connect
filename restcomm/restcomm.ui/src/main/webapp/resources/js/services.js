@@ -28,6 +28,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.set(prefix + 'authenticated', true);
     SessionService.set(prefix + 'logged_user', account.friendly_name);
     SessionService.set(prefix + 'email_address', account.email_address);
+    SessionService.set(prefix + 'auth_token', account.auth_token);
   };
 
   var passwordUpdated = function() {
@@ -43,6 +44,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.unset('_authenticated');
     SessionService.unset('_logged_user');
     SessionService.unset('_email_address');
+    SessionService.unset('_auth_token');
   };
 
 
@@ -127,8 +129,11 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
       return SessionService.get('_authenticated');
     },
     getEmailAddress: function() {
-      return SessionService.get('email_address')
-    }
+      return SessionService.get('email_address');
+    },
+    getAuthToken: function() {
+        return SessionService.get('auth_token');
+    }    
   }
 });
 
