@@ -212,6 +212,7 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps")
     public Response listRapps(@Context HttpServletRequest request, @QueryParam("account") String account) {
@@ -240,6 +241,7 @@ public class RasRestService extends RestService {
      * @param request
      * @return
      */
+    @RvdAuth
     @POST
     @Path("apps")
     public Response newRasApp(@Context HttpServletRequest request) {
@@ -304,6 +306,7 @@ public class RasRestService extends RestService {
 
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}/config")
     public Response getConfig(@PathParam("name") String projectName) {
@@ -333,6 +336,7 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}")
     public Response getRapp(@PathParam("name") String projectName) throws StorageException {
@@ -349,6 +353,7 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}/config/dev")
     public Response getConfigFromPackaging(@PathParam("name") String projectName) {
@@ -369,6 +374,7 @@ public class RasRestService extends RestService {
      * @param projectName
      * @return
      */
+    @RvdAuth
     @POST
     @Path("apps/{name}/bootstrap")
     public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
@@ -386,6 +392,7 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}/bootstrap")
     public Response getBootstrap(@PathParam("name") String projectName) {

@@ -86,7 +86,7 @@ public class LoginRestService extends RestService {
         String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
         Gson gson = new Gson();
         LoginForm credentials = gson.fromJson(data,LoginForm.class);
-        AuthenticationService authService = new AuthenticationService(rvdSettings, request);
+        AuthenticationService authService = new AuthenticationService();
 
         try {
             if ( authService.authenticate(credentials.getUsername(), credentials.getPassword()) ) {

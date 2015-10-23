@@ -50,6 +50,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
+import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -118,6 +119,7 @@ public class RvdController extends RestService {
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
     }
 
+    @RvdAuth
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response listApps(@Context HttpServletRequest request) {
