@@ -43,10 +43,9 @@ import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
-
-import org.mobicents.servlet.restcomm.smpp.SmppService;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionOutbound;
-
+import org.mobicents.servlet.restcomm.smpp.SmppClientOpsThread;
+import org.mobicents.servlet.restcomm.smpp.SmppHandlerProcessMessages;
+import org.mobicents.servlet.restcomm.smpp.SmppOutboundMessageEntity;
 import org.mobicents.servlet.restcomm.telephony.TextMessage;
 
 import akka.actor.ActorRef;
@@ -57,6 +56,7 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+import com.cloudhopper.smpp.SmppSession;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -77,9 +77,16 @@ public final class SmsSession extends UntypedActor {
     private ConcurrentHashMap<String, String> customHttpHeaderMap;
 
     private final DaoManager storage;
+
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
-    private ActorSystem system = SmsServiceProxy.getSmppSystem();
+
+
+    private final Configuration config = SmsInitConfigurationDetails.getConfiguration().subset("smpp");
+    private final String smppActivated = config.getString("[@activateSmppConnection]");
+    private final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
+    private final ActorSystem system = SmsInitConfigurationDetails.getSystem();
+
 
     private final ActorRef monitoringService;
 
@@ -93,6 +100,8 @@ public final class SmsSession extends UntypedActor {
         this.attributes = new HashMap<String, Object>();
         this.storage = storage;
         this.monitoringService = monitoringService;
+
+
     }
 
     private void inbound(final Object message) throws IOException {
@@ -144,24 +153,34 @@ public final class SmsSession extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
+
+        logger.info("Inside the SMS session class name: " + message.getClass());
+
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
         if (Observe.class.equals(klass)) {
+            logger.info("Inside the SMS session Observe.class.equals ");
             observe(message);
         } else if (StopObserving.class.equals(klass)) {
+            logger.info("Inside the SMS session StopObserving.class.equals ");
             stopObserving(message);
         } else if (GetLastSmsRequest.class.equals(klass)) {
+            logger.info("Inside the SMS session GetLastSmsRequest.class.equals");
             sender.tell(last, self);
         } else if (SmsSessionAttribute.class.equals(klass)) {
+            logger.info("Inside the SMS session SmsSessionAttribute.class.equals");
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
         } else if (SmsSessionRequest.class.equals(klass)) {
+            logger.info("Inside the SMS session SmsSessionRequest.class.equals");
             customHttpHeaderMap = ((SmsSessionRequest) message).headers();
             outbound(message);
         } else if (message instanceof SipServletRequest) {
+            logger.info("Inside the SMS session  instanceof SipServletRequest");
             inbound(message);
         } else if (message instanceof SipServletResponse) {
+            logger.info("Inside the SMS session instanceof SipServletResponse");
             response(message);
         }
     }
@@ -183,9 +202,8 @@ public final class SmsSession extends UntypedActor {
         }
     }
 
-private void outbound(final Object message) throws IOException {
+    private void outbound(final Object message) {
         last = (SmsSessionRequest) message;
-
         if (initial == null) {
             initial = last;
         }
@@ -208,6 +226,27 @@ private void outbound(final Object message) throws IOException {
             toClientRegistration = registrations.getRegistration(toClient.getLogin());
         }
 
+        //******************************SMPP*******************************************
+
+        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
+            logger.info("SMPP session is available and connected, outbound message will be forwarded ");
+            try {
+
+                final String smppFrom = from ; //fromUri.getUser();
+                final String smppTo = to ; //sipUri.getUser();
+                final String smppContent = body; //request.getContent().toString();
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
+                ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
+                sendOutboundMessage.tell(sms, null);
+
+            }catch (final Exception exception) {
+                // Log the exception.
+                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
+            }
+
+            return;
+        }
+
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
         buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
@@ -223,27 +262,6 @@ private void outbound(final Object message) throws IOException {
             buffer.append(to).append("@").append(service);
         }
         final String recipient = buffer.toString();
-
-        //************************SIP Request Send to SMPP Endpoint**************************************
-
-        //If SMPP is activated send all SMS through the SMPP connection else
-        //go through normal SIP SMS aggregator
-        if (SmppService.getSmppActivated().equalsIgnoreCase("true")){
-            try{
-               //application.setAttribute(SmsSession.class.getName(), self);
-                final SipServletRequest request = factory.createRequest(application, "MESSAGE", sender, recipient);
-                final SipURI smppUri = (SipURI) factory.createURI(recipient);
-                final SipURI getUri = smppUri;
-                final String smppTo = getUri.getUser();
-                request.setContent(body, "text/plain");
-                    logger.info("Sending message to SMPP endpoint - to: " + to );
-                    ActorRef smppServiceSend =  sendToSMPPService();
-                    smppServiceSend.tell(request, null);
-            }catch (final Exception exception) {
-                // Log the exception.
-                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
-                }
-            }else {
 
         try {
             application.setAttribute(SmsSession.class.getName(), self);
@@ -274,20 +292,8 @@ private void outbound(final Object message) throws IOException {
             }
             // Log the exception.
             logger.error(exception.getMessage(), exception);
-        }
-    } }
+        }}
 
-
-private ActorRef sendToSMPPService() {
-    return system.actorOf(new Props(new UntypedActorFactory() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public UntypedActor create() throws Exception {
-            return new  SmppSessionOutbound(); //.sendSmsFromRestcommToSmpp();
-        }
-    }));
-}
 
 
     private void stopObserving(final Object message) {
@@ -297,4 +303,18 @@ private ActorRef sendToSMPPService() {
             observers.remove(observer);
         }
     }
+
+
+    private ActorRef sendOutboundSmppMessages() {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new  SmppHandlerProcessMessages(); //.sendSmsFromRestcommToSmpp();
+            }
+        }));
+    }
+
+
 }

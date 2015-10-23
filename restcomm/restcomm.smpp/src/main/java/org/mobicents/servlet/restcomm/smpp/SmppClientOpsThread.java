@@ -26,13 +26,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipServletRequest;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.PduAsyncResponse;
@@ -60,21 +62,16 @@ public class SmppClientOpsThread implements Runnable{
 
     private static final Logger logger = Logger
             .getLogger(SmppClientOpsThread.class);
-
     private static final long SCHEDULE_CONNECT_DELAY = 1000 * 30; // 30 sec
-
     private List<ChangeRequest> pendingChanges = new CopyOnWriteArrayList<ChangeRequest>();
-
     private Object waitObject = new Object();
-
     private final DefaultSmppClient clientBootstrap ;
-
-    private static SmppSession smppSessionForOutbound ;
-
+    private static SmppSession getSmppSession ;
     protected volatile boolean started = true;
+    private static int sipPort;
 
-    private final int sipPort;
 
+    private final ActorSystem system = ActorSystem.create("SmppActorSystem");
 
 
     /**
@@ -102,7 +99,7 @@ public class SmppClientOpsThread implements Runnable{
         synchronized (this.pendingChanges) {
             this.pendingChanges.add(new ChangeRequest(esme,
                     ChangeRequest.CONNECT, System.currentTimeMillis()
-                            + SCHEDULE_CONNECT_DELAY));
+                    + SCHEDULE_CONNECT_DELAY));
         }
 
         synchronized (this.waitObject) {
@@ -115,7 +112,7 @@ public class SmppClientOpsThread implements Runnable{
         synchronized (this.pendingChanges) {
             this.pendingChanges.add(new ChangeRequest(esme,
                     ChangeRequest.ENQUIRE_LINK, System.currentTimeMillis()
-                            + esme.getEnquireLinkDelay()));
+                    + esme.getEnquireLinkDelay()));
         }
 
         synchronized (this.waitObject) {
@@ -244,6 +241,7 @@ public class SmppClientOpsThread implements Runnable{
         SmppSession smppSession = esme.getSmppSession();
         if ((smppSession != null && smppSession.isBound())
                 || (smppSession != null && smppSession.isBinding())) {
+
             // If process has already begun lets not do it again
             return;
         }
@@ -278,8 +276,9 @@ public class SmppClientOpsThread implements Runnable{
 
             session0 = clientBootstrap.bind(config0, sessionHandler);
 
+
             //getting session to be used to process SMS received from Restcomm
-               smppSessionForOutbound = session0;
+            getSmppSession = session0;
 
             // Set in ESME
             esme.setSmppSession((DefaultSmppSession) session0);
@@ -358,29 +357,21 @@ public class SmppClientOpsThread implements Runnable{
         public PduResponse firePduRequestReceived(PduRequest pduRequest) {
             // TODO : SMPP request received. Let RestComm know so it calls
             // coresponding App
-            //logger.info("PduRequest received for Smpp " + this.esme.getName() + " PduRequest= " + pduRequest);
 
             PduResponse response = pduRequest.createResponse();
-
-
             //Nexmo keeps sending enquire_link in response that causes
             //problem with normal PDU request. This tells Restcomm SMPP to do Nothing
             //with the request
             if( pduRequest.toString().toLowerCase().contains("enquire_link") ){
-
-
                 //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
-
             }else{
-
 
                 DeliverSm deliverSm = (DeliverSm) pduRequest;
                 String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
                 String destSmppAddress = deliverSm.getDestAddress().getAddress();
                 String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
-
-            //send received SMPP PDU message to restcomm
-            try {
+                //send received SMPP PDU message to restcomm
+                try {
                     sendSmppMessageToRestcomm (decodedPduMessage, destSmppAddress, sourceSmppAddress ) ;
                 } catch (IOException | ServletException e) {
                     // TODO Auto-generated catch block
@@ -412,7 +403,7 @@ public class SmppClientOpsThread implements Runnable{
         @Override
         public void fireUnknownThrowable(Throwable e) {
             logger.error("UnknownThrowable for Smpp " + this.esme.getName()
-                    + " Closing Smpp session and restrting BIND process again",
+                    + " Closing Smpp session and restarting BIND process again",
                     e);
             // TODO is this ok?
 
@@ -429,7 +420,7 @@ public class SmppClientOpsThread implements Runnable{
                     "UnrecoverablePduException for Smpp "
                             + this.esme.getName()
                             + " Closing Smpp session and restrting BIND process again",
-                    e);
+                            e);
 
             this.esme.getSmppSession().close();
 
@@ -440,40 +431,38 @@ public class SmppClientOpsThread implements Runnable{
 
     }
     //smpp session to be used for sending SMS from Restcomm to smpp endpoint
-    public static SmppSession getSmppSessionForOutbound (){
-        return smppSessionForOutbound ;
+    public static SmppSession getSmppSession (){
+        return getSmppSession ;
     }
 
-    public void sendSmppMessageToRestcomm (String smppMessage, String destSmppAddress, String sourceSmppAddress) throws IOException, ServletException{
+    public static int getSipPort (){
+        return sipPort ;
+    }
 
-        SmppSession smppSession = SmppClientOpsThread.getSmppSessionForOutbound();
+    public void sendSmppMessageToRestcomm (String smppMessage, String smppTo, String smppFrom) throws IOException, ServletException{
 
-
-        SmppServiceProxy ssp = new SmppServiceProxy();
-        ServletContext context = ssp.getSmppServletContext();
-        Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-
-        //get the IP address of restcomm instance from the restcomm.xml file
-        String restcommInstanceIp = configuration.subset("runtime-settings").getString("external-ip");
-        String restcommPort = String.valueOf(sipPort);
-        String ipAddress = "@" + restcommInstanceIp + ":" + restcommPort; //@IP:5080
-        String smmpRemoteSourceIp = "@" + smppSession.getConfiguration().getHost() + ":" + restcommPort ; //result in sip:6666@PeerIP:5080
-
-       // logger.error("IP address from restcomm.xml file" + ip);
-
-       SipApplicationSession sipAppSession = ssp.getSmppSipFactory().createApplicationSession();
-        String smppOriginalMessage = smppMessage ;
-        String method = "MESSAGE";
-        String from = "sip:" + sourceSmppAddress + smmpRemoteSourceIp;
-        String to =  "sip:" + destSmppAddress + ipAddress;
-              javax.servlet.sip.Address factoryTo = ssp.getSmppSipFactory().createAddress(to);
-             javax.servlet.sip.Address  factoryFrom = ssp.getSmppSipFactory().createAddress(from);
-             SipServletRequest sipRequest = ssp.getSmppSipFactory().createRequest(sipAppSession, method, factoryFrom, factoryTo);
-             sipRequest.setContent(smppOriginalMessage, "text/html; charset=UTF-8");
-             //sipRequest.getSession().setHandler("SmsService");
-             sipRequest.send();
+        SmppSession smppSession = SmppClientOpsThread.getSmppSession();
+        String to = smppTo;
+        String from = smppFrom;
+        String inboundMessage = smppMessage;
+        SmppInboundMessageEntity smppInboundMessage =  new SmppInboundMessageEntity(to, from,inboundMessage );
+        ActorRef sendIncomingSmppToSmppHandler = smppInboundToHandler();
+        sendIncomingSmppToSmppHandler.tell(smppInboundMessage, null);
 
     }
+
+    private ActorRef smppInboundToHandler() {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new  SmppHandlerProcessMessages();
+            }
+        }));
+    }
+
+
 
 
 }

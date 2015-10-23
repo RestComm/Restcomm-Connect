@@ -49,7 +49,8 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
     private ActorSystem system;
     private ActorRef service;
     private ServletContext context;
-    private static ActorSystem smppSystem = null  ; //smppSystem;
+
+    //    private final ActorSystem smppSystem = SmsInitConfigurationDetails.getSystem();
 
     public SmsServiceProxy() {
         super();
@@ -60,6 +61,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
 
         service.tell(request, null);
 
+
     }
 
     @Override
@@ -67,11 +69,11 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         service.tell(response, null);
     }
 
-//    @Override
-//    public void init(final ServletConfig config) throws ServletException {
-//        Configuration configuration = (Configuration) config.getServletContext().getAttribute(Configuration.class.getName());
-//        configuration.setProperty(ServletConfig.class.getName(), config);
-//    }
+    //    @Override
+    //    public void init(final ServletConfig config) throws ServletException {
+    //        Configuration configuration = (Configuration) config.getServletContext().getAttribute(Configuration.class.getName());
+    //        configuration.setProperty(ServletConfig.class.getName(), config);
+    //    }
 
     private ActorRef service(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
@@ -85,15 +87,6 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
     }
 
 
-    //use to set Akka ActorSystem to be used in SmsSession
-    public void setSmppSystem(ActorSystem smppSystem){
-        SmsServiceProxy.smppSystem = smppSystem;
-    }
-
-    public static ActorSystem getSmppSystem(){
-       return SmsServiceProxy.smppSystem ;
-    }
-
 
     @Override
     public void servletInitialized(SipServletContextEvent event) {
@@ -104,10 +97,14 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             //        configuration = configuration.subset("sms-aggregator");
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
-            setSmppSystem(system); //used to set ActorySystem to be used in SmsSession
+            //setSmppSystem(system); //used to set ActorySystem to be used in SmsSession
             service = service(configuration, factory, storage);
             //serviceSmpp = sendToSMPPService(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
+
+            //Used to get SmsService info to be used for SMPP inbound in SmppHandlerProcessMessages
+            new SmsInitConfigurationDetails(system, configuration, factory, storage, context);
+
         }
     }
 }
