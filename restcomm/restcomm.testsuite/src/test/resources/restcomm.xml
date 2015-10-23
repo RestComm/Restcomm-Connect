@@ -15,20 +15,18 @@
 		<api-version>2012-04-24</api-version>
 
 		<!-- The location where the audio prompts are located. -->
-		<prompts-uri>http://127.0.0.1:8080/restcomm/audio</prompts-uri>
+		<prompts-uri>/restcomm/audio</prompts-uri>
 
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
-		<cache-uri>http://127.0.0.1:8080/restcomm/cache</cache-uri>
+		<cache-uri>/restcomm/cache</cache-uri>
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings
-		</recordings-uri>
+		<recordings-uri>/restcomm/recordings</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors
-		</error-dictionary-uri>
+		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -299,7 +297,18 @@
 			<italian>it-it</italian>
 			<japanese>ja-jp</japanese>
 			<korean>ko-kr</korean>
-			<norwegian>nb-no</norwegian>
+			<norwegian>nb-no</norwegian>	<!-- Adjust http client behaviour for outgoing requests -->
+	<http-client>
+		<!-- Control peer certificate verification for https connections. Two modes are supported:
+			'allowall' : Disables peer certificate verification. Use it when testing.
+			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->
+		<ssl-mode>strict</ssl-mode>
+		<!-- Control whether relative URL should be resolved using hostname instead of IP Address.
+		If for any reason hostname resolution fails, IP Address will be used -->
+		<use-hostname-to-resolve-relative-url>true</use-hostname-to-resolve-relative-url>
+		<!-- Optionally provide the hostname to be used, otherwise Java will try to get the hostname of the machine JVM is running -->
+		<hostname></hostname>
+	</http-client>
 			<polish>pl-pl</polish>
 			<portuguese-brasil>pt-br</portuguese-brasil>
 			<portuguese-portugal>pt-pt</portuguese-portugal>
