@@ -10,6 +10,7 @@ public class Ticket {
     private Date timeCreated;
     private Date timeLastAccessed;
     private String authenticationToken;
+    private Boolean cookieBased;
 
     public Ticket() {
         timeCreated = new Date();
@@ -62,6 +63,14 @@ public class Ticket {
 
     public void setTimeLastAccessed(Date timeLastAccessed) {
         this.timeLastAccessed = timeLastAccessed;
+    }
+
+    public Boolean getCookieBased() {
+        return cookieBased;
+    }
+
+    public void setCookieBased(Boolean cookieBased) {
+        this.cookieBased = cookieBased;
     }
 
     @Override

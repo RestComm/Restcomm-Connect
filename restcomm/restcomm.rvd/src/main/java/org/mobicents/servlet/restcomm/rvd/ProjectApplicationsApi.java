@@ -36,6 +36,7 @@ import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommApplicationResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient.RestcommClientException;
+import org.mobicents.servlet.restcomm.rvd.security.Ticket;
 import org.mobicents.servlet.restcomm.rvd.security.TicketRepository;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -108,7 +109,8 @@ public class ProjectApplicationsApi {
             if (apiPort == null)
                 apiPort = restcommBaseUri.getPort();
 
-            String authenticationToken = TicketRepository.getInstance().findTicket(ticketId).getAuthenticationToken();
+            Ticket ticket = TicketRepository.getInstance().findTicket(ticketId);
+            String authenticationToken = ticket.getAuthenticationToken();
             String username = TicketRepository.getInstance().findTicket(ticketId).getUserId();
 
             if (RvdUtils.isEmpty(apiHost) || apiPort == null)
@@ -121,7 +123,7 @@ public class ProjectApplicationsApi {
                 throw new ApplicationsApiSyncException("Could not determine account to create new Application.");
 
             RestcommClient client = new RestcommClient(restcommBaseUri.getScheme(), apiHost, apiPort, username, authenticationToken);
-            client.setAuthenticationTokenAsPassword(true);
+            client.setAuthenticationTokenAsPassword(ticket.getCookieBased());
 
             // Find the account sid for the apiUsername
             RestcommAccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + username).done(

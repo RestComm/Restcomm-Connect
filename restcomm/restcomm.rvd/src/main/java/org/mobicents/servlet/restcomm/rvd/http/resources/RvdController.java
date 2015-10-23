@@ -6,8 +6,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
-import java.util.List;
-
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -28,11 +26,9 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.ProjectAwareRvdContext;
-import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
-import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlBadRequestException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlInvalidConfigurationException;
@@ -45,22 +41,17 @@ import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
-import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.BadWorkspaceDirectoryStructure;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
-
-import com.google.gson.Gson;
 
 @Path("apps")
 public class RvdController extends RestService {
@@ -117,35 +108,6 @@ public class RvdController extends RestService {
 
         logger.debug(rcmlResponse);
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
-    }
-
-    @RvdAuth
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response listApps(@Context HttpServletRequest request) {
-        RvdContext rvdContext = new RvdContext(request, servletContext);
-        ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);
-        init(rvdContext);
-        List<ProjectItem> items;
-        try {
-            items = ProjectService.getAvailableProjects(workspaceStorage); // there has to be a user in the context. Only logged
-                                                                           // users are allowed to to run project manager
-                                                                           // services
-            projectService.fillStartUrlsForProjects(items, request);
-
-        } catch (BadWorkspaceDirectoryStructure e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (StorageException e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        } catch (RvdException e) {
-            logger.error(e.getMessage(), e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-
-        Gson gson = new Gson();
-        return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
     }
 
     @GET

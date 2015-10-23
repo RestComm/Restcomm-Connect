@@ -27,6 +27,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.ProjectApplicationsApi;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RasService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
@@ -48,6 +49,7 @@ import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.security.RvdUser;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -248,7 +250,8 @@ public class RasRestService extends RestService {
         logger.info("uploading new ras app");
 
         BuildService buildService = new BuildService(workspaceStorage);
-        String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
+        //String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
+        RvdUser loggedUser = (RvdUser) securityContext.getUserPrincipal();
 
 
         try {
@@ -267,9 +270,16 @@ public class RasRestService extends RestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
-                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser, projectService);
+                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser.getName(), projectService);
                         ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
-                        buildService.buildProject(effectiveProjectName, projectState);
+
+                        ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
+                        applicationsApi.createApplication(loggedUser.getTicketId(), effectiveProjectName, projectState.getHeader().getProjectKind());
+                        try {
+                            buildService.buildProject(effectiveProjectName, projectState);
+                        } catch (Exception e) {
+                            applicationsApi.rollbackCreateApplication(loggedUser.getTicketId(), effectiveProjectName);
+                        }
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);
