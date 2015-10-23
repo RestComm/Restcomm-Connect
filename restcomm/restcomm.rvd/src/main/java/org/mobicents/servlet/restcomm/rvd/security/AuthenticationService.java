@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.ClientProtocolException;
@@ -20,20 +19,16 @@ import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityExcepti
 public class AuthenticationService {
     static final Logger logger = Logger.getLogger(AuthenticationService.class.getName());
     RvdConfiguration rvdSettings;
-    HttpServletRequest request; // used to calculate Restcomm's IP
     String authenticationToken;
+    String baseRestcommUrl;
 
-    public AuthenticationService(RvdConfiguration rvdSettings, HttpServletRequest request) {
-        // logger.debug("Created RVD authentication service");
-        this.rvdSettings = rvdSettings;
-        this.request = request;
+    public AuthenticationService() {
+        this.baseRestcommUrl = RvdConfiguration.getInstance().getRestcommBaseUri().toString();
     }
 
     public boolean authenticate(String username, String password) throws RvdSecurityException {
         logger.debug("Authenticating " + username + " on Restcomm");
-        //String restcommIp = rvdSettings.getEffectiveRestcommIp(request);
-        //String restcommAuthUrl = "http://" + restcommIp + ":" + rvdSettings.getEffectiveRestcommPort(request);
-        String restcommAuthUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        String restcommAuthUrl = baseRestcommUrl;
 
         CloseableHttpClient client = CustomHttpClientBuilder.buildHttpClient();
         URI url;
