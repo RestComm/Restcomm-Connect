@@ -61,11 +61,6 @@
 			<artifactId>restcomm.commons</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		  <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.smpp</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
@@ -80,6 +75,7 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
+
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
@@ -101,7 +97,16 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-	</dependencies>
+	
+	  <dependency>
+            <groupId>com.telestax.servlet</groupId>
+            <artifactId>restcomm.smpp</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+    </dependencies>
 
 	<build>
 		<plugins>

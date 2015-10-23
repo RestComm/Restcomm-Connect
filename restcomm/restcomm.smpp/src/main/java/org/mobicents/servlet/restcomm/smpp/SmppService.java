@@ -128,6 +128,7 @@ public final class SmppService extends UntypedActor {
         return smppActivated;
     }
 
+
     @Override
     public void onReceive(Object message) throws Exception {
         logger.info("onReceive = " + message);
@@ -242,6 +243,8 @@ public final class SmppService extends UntypedActor {
         }
 
         logger.info("SMPP Service started");
+
+
 
     }
 
