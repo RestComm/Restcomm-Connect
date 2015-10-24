@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -217,12 +218,12 @@ public class RasRestService extends RestService {
     @RvdAuth
     @GET
     @Path("apps")
-    public Response listRapps(@Context HttpServletRequest request, @QueryParam("account") String account) {
-        account = account.replaceAll("%40", "@");
+    public Response listRapps(@Context HttpServletRequest request) {
+        Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
         List<String> projectNames = new ArrayList<String>();
         try {
-            items = projectService.getAvailableProjectsByOwner(account);
+            items = projectService.getAvailableProjectsByOwner(loggedUser.getName());
             for (ProjectItem project : items) {
                 projectNames.add(project.getName());
             }
