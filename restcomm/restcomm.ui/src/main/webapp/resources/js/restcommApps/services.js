@@ -11,11 +11,10 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	}
 	// fetch apps from remote site
 	function fetchLocalApps(deferred) {
-		var email = AuthService.getEmailAddress();
 		//var deferred = $q.defer();
 		$http({
 			method:"GET",
-			url:"/restcomm-rvd/services/ras/apps?account=" + email.replace("@", "%40")
+			url:"/restcomm-rvd/services/ras/apps"
 		}).success(function (data) {
 			console.log("Received apps from RVD");
 			//localApps = data.payload;
