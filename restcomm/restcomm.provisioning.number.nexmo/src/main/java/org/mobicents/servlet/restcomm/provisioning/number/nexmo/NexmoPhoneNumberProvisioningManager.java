@@ -42,6 +42,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
@@ -144,8 +145,12 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
 
         String queryUri = searchURI + country;
         boolean queryParamAdded = false;
-        if(filterPattern != null) {
-            queryUri = queryUri + "?pattern=" + filterPattern.toString();
+        if("US".equalsIgnoreCase(country) && listFilters.getAreaCode() != null) {
+            // https://github.com/Mobicents/RestComm/issues/551 fixing the search pattern for US when Area Code is selected
+            queryUri = queryUri + "?pattern=1" + listFilters.getAreaCode() + "&search_pattern=0";
+            queryParamAdded = true;
+        } else if(filterPattern != null) {
+            queryUri = queryUri + "?pattern=" + filterPattern.toString() + "&search_pattern=1";
             queryParamAdded = true;
         }
         if(listFilters.getSmsEnabled() != null || listFilters.getVoiceEnabled() != null) {
@@ -195,13 +200,25 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
 //                        get.addHeader("OutboundIntf", uri.getHost()+":"+uri.getPort()+":"+uri.getTransportParam());
 //                    }
 //                }
+            if(logger.isDebugEnabled()) {
+                logger.debug("Nexmo query " + queryUri);
+            }
             final HttpResponse response = client.execute(get);
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 final String content = StringUtils.toString(response.getEntity().getContent());
                 JsonParser parser = new JsonParser();
                 JsonObject jsonResponse = parser.parse(content).getAsJsonObject();
-
-                long count = jsonResponse.getAsJsonPrimitive("count").getAsLong();
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Nexmo response " + jsonResponse.toString());
+                }
+                JsonPrimitive countPrimitive = jsonResponse.getAsJsonPrimitive("count");
+                if(countPrimitive == null) {
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("No numbers found");
+                    }
+                    return new ArrayList<PhoneNumber>();
+                }
+                long count = countPrimitive.getAsLong();
                 if(logger.isDebugEnabled()) {
                     logger.debug("Number of numbers found : "+count);
                 }
