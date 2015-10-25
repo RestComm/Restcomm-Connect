@@ -21,11 +21,8 @@
 package org.mobicents.servlet.restcomm.provisioning.number.nexmo;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertTrue;
 
@@ -42,7 +39,6 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mobicents.servlet.restcomm.provisioning.number.vi.AvailablePhoneNumbersEndpointTestUtils;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
@@ -60,8 +56,8 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 public class NexmoAvailablePhoneNumbersEndpointTest {
     private final static Logger logger = Logger.getLogger(NexmoAvailablePhoneNumbersEndpointTest.class.getName());
 
-    private static final String version = "7.4.0-SNAPSHOT";
-            //org.mobicents.servlet.restcomm.Version.getVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion(); 
+            //"7.4.0-SNAPSHOT";
 
     @ArquillianResource
     private Deployer deployer;
