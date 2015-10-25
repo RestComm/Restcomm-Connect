@@ -25,10 +25,12 @@ package org.mobicents.servlet.restcomm.provisioning.number.nexmo;
  *
  */
 public class NexmoAvailablePhoneNumbersEndpointTestUtils {
+    public static final String body501AreaCode = "{\"count\":6,\"numbers\":[{\"country\":\"US\",\"msisdn\":\"15013036357\",\"cost\":\"0.67\",\"type\":\"mobile-lvn\",\"features\":[\"VOICE\",\"SMS\"]},{\"country\":\"US\",\"msisdn\":\"15013036361\",\"cost\":\"0.67\",\"type\":\"mobile-lvn\",\"features\":[\"VOICE\",\"SMS\"]},{\"country\":\"US\",\"msisdn\":\"15013036365\",\"cost\":\"0.67\",\"type\":\"mobile-lvn\",\"features\":[\"VOICE\",\"SMS\"]},{\"country\":\"US\",\"msisdn\":\"15013036367\",\"cost\":\"0.67\",\"type\":\"mobile-lvn\",\"features\":[\"VOICE\",\"SMS\"]},{\"country\":\"US\",\"msisdn\":\"15013036371\",\"cost\":\"0.67\",\"type\":\"mobile-lvn\",\"features\":[\"VOICE\",\"SMS\"]},{\"country\":\"US\",\"msisdn\":\"15013036372\",\"cost\":\"0.67\",\"type\":\"mobile-lvn\",\"features\":[\"VOICE\",\"SMS\"]}]}";
     public static String jsonResponseES700 = 
             "{\"count\":1,\"numbers\":[{\"country\":\"ES\",\"msisdn\":\"34911067000\",\"type\":\"landline\",\"features\":[\"SMS\"],\"cost\":\"0.50\"}]}";
     public static String jsonResponseUSRange = 
             "{\"count\":177,\"numbers\":[{\"country\":\"US\",\"msisdn\":\"15102694548\",\"type\":\"mobile-lvn\",\"features\":[\"SMS\",\"VOICE\"],\"cost\":\"0.67\"},{\"country\":\"US\",\"msisdn\":\"17088568490\",\"type\":\"mobile-lvn\",\"features\":[\"SMS\",\"VOICE\"],\"cost\":\"0.67\"},{\"country\":\"US\",\"msisdn\":\"17088568491\",\"type\":\"mobile-lvn\",\"features\":[\"SMS\",\"VOICE\"],\"cost\":\"0.67\"},{\"country\":\"US\",\"msisdn\":\"17088568492\",\"type\":\"mobile-lvn\",\"features\":[\"SMS\",\"VOICE\"],\"cost\":\"0.67\"},{\"country\":\"US\",\"msisdn\":\"17088568973\",\"type\":\"mobile-lvn\",\"features\":[\"SMS\",\"VOICE\"],\"cost\":\"0.67\"}]}";
     public static String jsonResultES700 = "{\"friendlyName\":\"+34911067000\",\"phoneNumber\":\"34911067000\",\"isoCountry\":\"ES\",\"cost\":\"0.50\",\"voiceCapable\":false,\"smsCapable\":true}";
     public static String jsonResultUSRange = "{\"friendlyName\":\"+15102694548\",\"phoneNumber\":\"15102694548\",\"isoCountry\":\"US\",\"cost\":\"0.67\",\"voiceCapable\":true,\"smsCapable\":true}";
+    public static String firstJSonResult501AreaCode = "{\"friendlyName\":\"+15013036357\",\"phoneNumber\":\"15013036357\",\"isoCountry\":\"US\",\"cost\":\"0.67\",\"voiceCapable\":true,\"smsCapable\":true}";
 }
