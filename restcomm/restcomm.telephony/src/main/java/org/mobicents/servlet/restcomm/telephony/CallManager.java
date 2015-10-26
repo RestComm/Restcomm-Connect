@@ -515,20 +515,15 @@ public final class CallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(application.getVoiceUrl()));
-                    builder.setMethod(application.getVoiceMethod());
-                    builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(application.getVoiceFallbackMethod());
-                    builder.setStatusCallback(application.getStatusCallback());
-                    builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
-                    builder.setMethod(number.getVoiceMethod());
-                    builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                    builder.setStatusCallback(number.getStatusCallback());
-                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 }
+                builder.setMethod(number.getVoiceMethod());
+                builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                builder.setStatusCallback(number.getStatusCallback());
+                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 builder.setMonitoring(monitoring);
                 final ActorRef interpreter = builder.build();
                 final ActorRef call = call();
@@ -580,17 +575,14 @@ public final class CallManager extends UntypedActor {
             final Sid sid = client.getVoiceApplicationSid();
             if (sid != null) {
                 final Application application = applications.getApplication(sid);
-                builder.setUrl(UriUtils.resolve(application.getVoiceUrl()));
-                builder.setMethod(application.getVoiceMethod());
-                builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                builder.setFallbackMethod(application.getVoiceFallbackMethod());
+                builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
             } else {
                 URI url = UriUtils.resolve(clientAppVoiceUril);
                 builder.setUrl(url);
-                builder.setMethod(client.getVoiceMethod());
-                builder.setFallbackUrl(client.getVoiceFallbackUrl());
-                builder.setFallbackMethod(client.getVoiceFallbackMethod());
             }
+            builder.setMethod(client.getVoiceMethod());
+            builder.setFallbackUrl(client.getVoiceFallbackUrl());
+            builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
             final ActorRef call = call();

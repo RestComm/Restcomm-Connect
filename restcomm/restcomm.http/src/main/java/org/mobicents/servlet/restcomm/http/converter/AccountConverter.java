@@ -60,6 +60,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writer.startNode("Account");
         writeSid(account.getSid(), writer);
         writeFriendlyName(account.getFriendlyName(), writer);
+        writeEmailAddress(account, writer);
         writeStatus(account.getStatus().toString(), writer);
         writeType(account.getType().toString(), writer);
         writeDateCreated(account.getDateCreated(), writer);
@@ -75,6 +76,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         final JsonObject object = new JsonObject();
         writeSid(account.getSid(), object);
         writeFriendlyName(account.getFriendlyName(), object);
+        writeEmailAddress(account, object);
         writeType(account.getType().toString(), object);
         writeStatus(account.getStatus().toString(), object);
         writeDateCreated(account.getDateCreated(), object);
@@ -229,5 +231,15 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private void writeTranscriptions(final Account account, final JsonObject object) {
         object.addProperty("transcriptions", prefix(account) + "/Transcriptions.json");
+    }
+
+    private void writeEmailAddress(final Account account, final HierarchicalStreamWriter writer) {
+        writer.startNode("EmailAddress");
+        writer.setValue(account.getEmailAddress());
+        writer.close();
+    }
+
+    private void writeEmailAddress(final Account account, final JsonObject object) {
+        object.addProperty("email_address", account.getEmailAddress());
     }
 }

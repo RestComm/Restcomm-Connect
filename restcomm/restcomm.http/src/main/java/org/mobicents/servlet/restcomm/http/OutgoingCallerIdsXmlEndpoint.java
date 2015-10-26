@@ -21,19 +21,22 @@ package org.mobicents.servlet.restcomm.http;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+
 import static javax.ws.rs.core.MediaType.*;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.shiro.authz.AuthorizationException;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.entities.OutgoingCallerId;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
@@ -49,6 +52,10 @@ public final class OutgoingCallerIdsXmlEndpoint extends OutgoingCallerIdsEndpoin
     private Response deleteOutgoingCallerId(String accountSid, String sid) {
         try {
             secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:OutgoingCallerIds");
+            OutgoingCallerId oci = dao.getOutgoingCallerId(new Sid(sid));
+            if (oci != null) {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(oci.getAccountSid()));
+            }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
