@@ -158,10 +158,7 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(application.getSmsUrl()));
-                        builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(application.getSmsFallbackUrl()));
-                        builder.setFallbackMethod(application.getSmsFallbackMethod());
+                        builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                     } else {
                         builder.setUrl(UriUtils.resolve(appUri));
                         builder.setMethod(number.getSmsMethod());
