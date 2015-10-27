@@ -4,6 +4,7 @@ import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurati
 
 public class IdentityModeEntity {
     private IdentityMode mode;
+    private String authServerUrlBase;
 
     public IdentityModeEntity() {
         // TODO Auto-generated constructor stub
@@ -15,6 +16,14 @@ public class IdentityModeEntity {
 
     public void setMode(IdentityMode mode) {
         this.mode = mode;
+    }
+
+    public String getAuthServerUrlBase() {
+        return authServerUrlBase;
+    }
+
+    public void setAuthServerUrlBase(String authServerUrlBase) {
+        this.authServerUrlBase = authServerUrlBase;
     }
 
 }
