@@ -108,13 +108,11 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
     }
 
     private void writeSmsApplicationSid(final Sid smsApplicationSid, final HierarchicalStreamWriter writer) {
-        writer.startNode("SmsApplicationSid");
         if (smsApplicationSid != null) {
+            writer.startNode("SmsApplicationSid");
             writer.setValue(smsApplicationSid.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     private void writeSmsApplicationSid(final Sid smsApplicationSid, final JsonObject object) {

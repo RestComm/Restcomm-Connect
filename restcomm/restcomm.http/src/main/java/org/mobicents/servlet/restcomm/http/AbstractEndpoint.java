@@ -28,6 +28,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
@@ -112,9 +113,25 @@ public abstract class AbstractEndpoint {
     protected void secure(final Account account, final String permission) throws AuthorizationException {
         final Subject subject = SecurityUtils.getSubject();
         final Sid accountSid = account.getSid();
-        if (account.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject.isPermitted(permission)))) {
+        if (account.getStatus().equals(Account.Status.ACTIVE)
+                && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject
+                        .isPermitted(permission)))) {
             return;
         } else {
+            throw new AuthorizationException();
+        }
+    }
+
+    protected void secureLevelControl(AccountsDao accountsDao, String accountSid, String referenceAccountSid) {
+        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
+        if (!sidPrincipal.equals(accountSid)) {
+            Account account = accountsDao.getAccount(new Sid(accountSid));
+            if (!sidPrincipal.equals(String.valueOf(account.getAccountSid()))) {
+                throw new AuthorizationException();
+            } else if (referenceAccountSid != null && !accountSid.equals(referenceAccountSid)) {
+                throw new AuthorizationException();
+            }
+        } else if (referenceAccountSid != null && !sidPrincipal.equals(referenceAccountSid)) {
             throw new AuthorizationException();
         }
     }

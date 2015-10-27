@@ -75,7 +75,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
                 recording = recording.updateFileUri(s3Uri);
             }
         } else {
-            recording = recording.updateFileUri(generateLocalFileUri("/restcomm/recordings/"+ recording.getSid()+".wav"));
+            recording = recording.updateFileUri(generateLocalFileUri("/restcomm/recordings/" + recording.getSid()));
         }
         final SqlSession session = sessions.openSession();
         try {
@@ -183,7 +183,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         //to create the file_uri on the fly
         String fileUri = (String) map.get("file_uri");
         if (fileUri == null || fileUri.isEmpty()) {
-            fileUri = generateLocalFileUri("/restcomm/recordings/"+ sid+".wav").toString();
+            fileUri = generateLocalFileUri("/restcomm/recordings/" + sid).toString();
         }
         return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, readUri(fileUri));
     }
