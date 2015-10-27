@@ -41,11 +41,11 @@ longitude DOUBLE,
 region VARCHAR(2),
 postal_code INT,
 iso_country VARCHAR(2) NOT NULL,
-cost VARCHAR(10),
 voice_capable BOOLEAN,
 sms_capable BOOLEAN,
 mms_capable BOOLEAN,
-fax_capable BOOLEAN
+fax_capable BOOLEAN,
+cost VARCHAR(10)
 );
 
 CREATE TABLE restcomm_outgoing_caller_ids (
@@ -76,7 +76,6 @@ date_updated DATETIME NOT NULL,
 friendly_name VARCHAR(64) NOT NULL,
 account_sid VARCHAR(34) NOT NULL,
 phone_number VARCHAR(30) NOT NULL,
-cost VARCHAR(10),
 api_version VARCHAR(10) NOT NULL,
 voice_caller_id_lookup BOOLEAN NOT NULL,
 voice_url MEDIUMTEXT,
@@ -96,7 +95,8 @@ voice_capable BOOLEAN,
 sms_capable BOOLEAN,
 mms_capable BOOLEAN,
 fax_capable BOOLEAN,
-pure_sip BOOLEAN
+pure_sip BOOLEAN,
+cost VARCHAR(10)
 );
 
 CREATE TABLE restcomm_applications (
