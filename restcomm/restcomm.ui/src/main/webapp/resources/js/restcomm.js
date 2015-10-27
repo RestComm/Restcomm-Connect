@@ -113,9 +113,20 @@ angular
   });
 */
 
+// Ideally we would use AuthService instead of SessionService dep here to retrieve email and token, but it causes a circular dependency issue. So we go right to the source - SessionService 
 rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location',function($q,$location){
+  factory('authHttpResponseInterceptor',['$q','$location','SessionService',function($q,$location,SessionService){
     return {
+      request: function(config) {
+    	  var rvd_prefix = "/restcomm-rvd/";
+    	  if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix ) {
+    		  //console.log("Adding auth headers to RVD request - " + config.url);
+		      var auth_header = SessionService.get("email_address") + ":" + SessionService.get("auth_token");
+		      auth_header = "Basic " + btoa(auth_header);
+		      config.headers.authorization = auth_header;
+    	  }
+	      return config;
+	    },
       response: function(response){
         if (response.status === 401) {
           $location.path('/login').search('returnTo', $location.path());

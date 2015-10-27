@@ -27,6 +27,8 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.set('sid', account.sid);
     SessionService.set(prefix + 'authenticated', true);
     SessionService.set(prefix + 'logged_user', account.friendly_name);
+    SessionService.set(prefix + 'email_address', account.email_address);
+    SessionService.set(prefix + 'auth_token', account.auth_token);
   };
 
   var passwordUpdated = function() {
@@ -41,6 +43,8 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.unset('_sid');
     SessionService.unset('_authenticated');
     SessionService.unset('_logged_user');
+    SessionService.unset('_email_address');
+    SessionService.unset('_auth_token');
   };
 
 
@@ -123,7 +127,13 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     },
     getWaitingReset: function() {
       return SessionService.get('_authenticated');
-    }
+    },
+    getEmailAddress: function() {
+      return SessionService.get('email_address');
+    },
+    getAuthToken: function() {
+        return SessionService.get('auth_token');
+    }    
   }
 });
 
@@ -454,7 +464,7 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 });
 
 rcServices.factory('RCommApps', function($resource) {
-	  return $resource('/restcomm-rvd/services/apps');
+	  return $resource('/restcomm-rvd/services/projects');
 });
 
 rcServices.factory('RCommAvailableNumbers', function($resource) {
