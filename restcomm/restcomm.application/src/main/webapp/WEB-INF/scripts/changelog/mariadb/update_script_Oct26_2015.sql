@@ -2,6 +2,9 @@
 #Date: Oct 27
 #Author: George Vagenas
 
+#To run the script use mysql client:
+#mysql -u yourusername -p yourpassword yourdatabase < sql_update_script.sql
+
 USE restcomm;
 
 #Drop and create again the "restcomm_applications" table
