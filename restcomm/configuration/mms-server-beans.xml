@@ -4,15 +4,21 @@
 	xmlns="urn:jboss:bean-deployer:2.0">
 
     <!-- System clock -->
-    <bean name="SystemClock" class="org.mobicents.media.server.scheduler.DefaultClock"/>
+    <!-- System clock -->
+    <bean name="SystemClock" class="org.mobicents.media.server.scheduler.WallClock"/>
 
     <!-- EDF scheduler -->
-    <bean name="Scheduler" class="org.mobicents.media.server.scheduler.Scheduler">
+    <bean name="Scheduler" class="org.mobicents.media.server.scheduler.PriorityQueueScheduler">
         <property name="clock"><inject bean="SystemClock"/></property>        
     </bean>    
+
+    <bean name="ServiceScheduler" class="org.mobicents.media.server.scheduler.ServiceScheduler"/>
     
     <!-- Network interfaces definition -->
     <bean name="localhost" class="org.mobicents.media.server.io.network.UdpManager">
+        <constructor>
+            <parameter><inject bean="ServiceScheduler"/></parameter>
+        </constructor>
         <property name="bindAddress">127.0.0.1</property>
         <property name="localBindAddress">127.0.0.1</property>
         <property name="externalAddress"><null/></property>
