@@ -40,6 +40,41 @@ configConnectors() {
 
 	mv $FILE.bak $FILE
 	echo 'Configured SIP Connectors and Bindings'
+
+	if [[ "$TRUSTSTORE_FILE" == '' ]]; then
+		echo "TRUSTSTORE_FILE is not set";
+		sed -e "s/<connector name=\"https\" \(.*\)>/<\!--connector name=\"https\" \1>/" \
+		 -e "s/<\/connector>/<\/connector-->/" $FILE > $FILE.bak
+		 mv $FILE.bak $FILE
+		 sed -e "s/<\!--connector name=\"http\" \(.*\)-->/<connector name=\"http\" \1\/>/" $FILE > $FILE.bak
+		 mv $FILE.bak $FILE
+	else
+		if [[ "$TRUSTSTORE_PASSWORD"  == '' ]]; then
+			echo "TRUSTSTORE_PASSWORD is not set";
+		else
+			if [[ "$TRUSTSTORE_ALIAS" == '' ]]; then
+				echo "TRUSTSTORE_ALIAS is not set";
+			else
+				echo "TRUSTORE_FILE is set to '$TRUSTSTORE_FILE' ";
+				echo "TRUSTSTORE_PASSWORD is set to '$TRUSTSTORE_PASSWORD' ";
+				echo "TRUSTSTORE_ALIAS is set to '$TRUSTSTORE_ALIAS' ";
+				echo "Will properly configure HTTPS Connector ";
+				if [ "$DISABLE_HTTP" == "true" ] || [ "$DISABLE_HTTP" == "TRUE" ]; then
+					echo "DISABLE_HTTP is '$DISABLE_HTTP'. Will disable HTTP Connector"
+					sed -e "s/<connector name=\"http\" \(.*\)\/>/<\!--connector name=\"http\" \1-->/" $FILE > $FILE.bak
+					mv $FILE.bak $FILE
+				else
+					sed -e "s/<\!--connector name=\"http\" \(.*\)-->/<connector name=\"http\" \1\/>/" $FILE > $FILE.bak
+					mv $FILE.bak $FILE
+				fi
+				sed -e "s/<\!--connector name=\"https\" \(.*\)>/<connector name=\"https\" \1>/" \
+				-e "s/<ssl name=\"https\" key-alias=\"KEY_ALIAS\" password=\"SECRET\" certificate-key-file=\"\\\${jboss\.server\.config\.dir}\/keystore.jks\" \(.*\)\/>/<ssl name=\"https\" key-alias=\"$TRUSTSTORE_ALIAS\" password=\"$TRUSTSTORE_PASSWORD\" certificate-key-file=\"\\\${jboss\.server\.config\.dir}\/$TRUSTSTORE_FILE\" \1\/>/" \
+				-e "s/<\/connector-->/<\/connector>/" $FILE > $FILE.bak
+				mv $FILE.bak $FILE
+				echo "Properly configured HTTPS Connector to use trustStore file $RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE"
+			fi
+		fi
+	fi
 }
 
 #MAIN

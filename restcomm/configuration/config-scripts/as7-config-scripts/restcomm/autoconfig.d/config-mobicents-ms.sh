@@ -26,7 +26,7 @@ configUdpManager() {
 	echo 'Configured UDP Manager'
 }
 
-configJavaOpts() {
+configJavaOptsMem() {
     FILE=$MMS_HOME/bin/run.sh
 
 	# Find total available memory on the instance
@@ -66,6 +66,30 @@ fi
 if [[ -z "$MEDIASERVER_HIGHEST_PORT" ]]; then
 	MEDIASERVER_HIGHEST_PORT="65535"
 fi
+
+if [[ "$TRUSTSTORE_FILE" == '' ]]; then
+	echo "TRUSTSTORE_FILE is not set";
+	FILE=$MMS_HOME/bin/run.sh
+	sed -e "/# Setup MMS specific properties/ {
+		N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME \\\$JAVA_OPTS\"|
+	}" $FILE > $FILE.bak
+	mv $FILE.bak $FILE
+else
+	echo "TRUSTSTORE_FILE is set to '$TRUSTSTORE_FILE'";
+	if [[ "$TRUSTSTORE_PASSWORD"  == '' ]]; then
+		echo "TRUSTSTORE_PASSWORD is not set";
+	else
+		echo "TRUSTSTORE_PASSWORD is set to '$TRUSTSTORE_PASSWORD' will properly configure MMS";
+		FILE=$MMS_HOME/bin/run.sh
+		JAVA_OPTS_TRUSTORE="-Djavax.net.ssl.trustStore=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE -Djavax.net.ssl.trustStorePassword=$TRUSTSTORE_PASSWORD"
+		sed -e "/# Setup MMS specific properties/ {
+		  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME \\\$JAVA_OPTS $JAVA_OPTS_TRUSTORE\"|
+		}" $FILE > $FILE.bak
+		mv $FILE.bak $FILE
+		echo "Properly configured MMS to use trustStore file $RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE"
+	fi
+fi
+
 echo "Configuring Mobicents Media Server... BIND_ADDRESS $BIND_ADDRESS NETWORK $NETWORK SUBNET_MASK $SUBNET_MASK RTP_LOW_PORT $MEDIASERVER_LOWEST_PORT RTP_HIGH_PORT $MEDIASERVER_HIGHEST_PORT"
 configUdpManager $BIND_ADDRESS $NETWORK $SUBNET_MASK
 #configJavaOpts
