@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -45,6 +46,7 @@ import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
+import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -365,6 +367,7 @@ public class RvdController extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("{appname}/log")
     public Response appLog(@PathParam("appname") String appName) {
@@ -398,6 +401,7 @@ public class RvdController extends RestService {
         }
     }
 
+    @RvdAuth
     @DELETE
     @Path("{appname}/log")
     public Response resetAppLog(@PathParam("appname") String appName) {
