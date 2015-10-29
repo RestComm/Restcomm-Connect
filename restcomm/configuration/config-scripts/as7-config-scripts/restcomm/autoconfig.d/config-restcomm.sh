@@ -87,6 +87,14 @@ configRestcomm() {
 	fi
 	mv $FILE.bak $FILE
 	echo 'Updated RestComm configuration'
+
+	if [ "$SSL_MODE" == "strict" ] || [ "$SSL_MODE" == "STRICT" ]; then
+		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>strict<\/ssl-mode>/" $FILE > $FILE.bak
+		mv $FILE.bak $FILE
+	else
+		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/" $FILE > $FILE.bak
+		mv $FILE.bak $FILE
+	fi
 }
 
 ## Description: Configures Voip Innovations Credentials

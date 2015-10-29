@@ -281,7 +281,7 @@ public class UssdCallManager extends UntypedActor {
         final ActorRef ussdCall = ussdCall();
         final ActorRef self = self();
         final InitializeOutbound init = new InitializeOutbound(null, from, to, ussdUsername, ussdPassword, request.timeout(),
-                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, false);
         ussdCall.tell(init, self);
         return ussdCall;
     }

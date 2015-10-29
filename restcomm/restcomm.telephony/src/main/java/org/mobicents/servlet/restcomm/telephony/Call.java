@@ -162,6 +162,7 @@ public final class Call extends UntypedActor {
     private final List<ActorRef> observers;
     private boolean receivedBye;
     private boolean muted;
+    private boolean webrtc;
 
     // Conferencing
     private ActorRef conference;
@@ -292,7 +293,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -498,6 +499,7 @@ public final class Call extends UntypedActor {
             }
             timeout = request.timeout();
             direction = request.isFromApi() ? OUTBOUND_API : OUTBOUND_DIAL;
+            webrtc = request.isWebrtc();
 
             // Notify the observers.
             external = CallStateChanged.State.QUEUED;
@@ -884,7 +886,7 @@ public final class Call extends UntypedActor {
             // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv", "", true);
+                command = new CreateMediaSession("sendrecv", "", true, webrtc);
             } else {
                 if (!liveCallModification) {
                     command = generateRequest(invite);
@@ -902,7 +904,7 @@ public final class Call extends UntypedActor {
             final String externalIp = sipMessage.getInitialRemoteAddr();
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
-            return new CreateMediaSession("sendrecv", offer, false);
+            return new CreateMediaSession("sendrecv", offer, false, webrtc);
         }
     }
 
