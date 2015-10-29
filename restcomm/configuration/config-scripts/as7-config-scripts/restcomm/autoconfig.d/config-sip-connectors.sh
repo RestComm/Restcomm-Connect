@@ -68,7 +68,7 @@ configConnectors() {
 					mv $FILE.bak $FILE
 				fi
 				sed -e "s/<\!--connector name=\"https\" \(.*\)>/<connector name=\"https\" \1>/" \
-				-e "s/<ssl name=\"https\" key-alias=\"KEY_ALIAS\" password=\"SECRET\" certificate-key-file=\"\\\${jboss\.server\.config\.dir}\/keystore.jks\" \(.*\)\/>/<ssl name=\"https\" key-alias=\"$TRUSTSTORE_ALIAS\" password=\"$TRUSTSTORE_PASSWORD\" certificate-key-file=\"\\\${jboss\.server\.config\.dir}\/$TRUSTSTORE_FILE\" \1\/>/" \
+				-e "s/<ssl name=\"https\" key-alias=\".*\" password=\".*\" certificate-key-file=\"\\\${jboss\.server\.config\.dir}\/.*\" \(.*\)\/>/<ssl name=\"https\" key-alias=\"$TRUSTSTORE_ALIAS\" password=\"$TRUSTSTORE_PASSWORD\" certificate-key-file=\"\\\${jboss\.server\.config\.dir}\/$TRUSTSTORE_FILE\" \1\/>/" \
 				-e "s/<\/connector-->/<\/connector>/" $FILE > $FILE.bak
 				mv $FILE.bak $FILE
 				echo "Properly configured HTTPS Connector to use trustStore file $RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE"
