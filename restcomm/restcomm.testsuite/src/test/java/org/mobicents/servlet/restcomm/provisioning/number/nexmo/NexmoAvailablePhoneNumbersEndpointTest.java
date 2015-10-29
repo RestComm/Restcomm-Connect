@@ -173,6 +173,39 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.firstJSonResult501AreaCode));
     }
     
+    /*
+     * 
+     */
+    @Test
+    public void testSearchCALocalPhoneNumbersWithContainsAreaCode() {
+        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/CA\\?pattern=418&search_pattern=1"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/json")
+                    .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.bodyCA418AreaCode)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "CA/Local.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.queryParam("Contains","418").accept("application/json")
+                .get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+        
+        System.out.println(jsonResponse);
+        
+        assertTrue(jsonResponse.size() == 10);
+        System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
+        assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.firstJSonResultCA418AreaCode));
+    }
+    
 //    @Test
 //    public void testSearchUSPhoneNumbersSMSOnly() {
 ////        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?index=2&size=5"))
