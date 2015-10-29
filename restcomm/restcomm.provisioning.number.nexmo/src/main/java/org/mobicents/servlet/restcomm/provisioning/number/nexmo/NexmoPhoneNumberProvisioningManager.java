@@ -144,6 +144,13 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             logger.debug("searchPattern " + listFilters.getFilterPattern());
         }
         Pattern filterPattern = listFilters.getFilterPattern();
+        String filterPatternString = null;
+        if(filterPattern != null) {
+            filterPatternString = filterPattern.toString().replaceAll("[^\\d]", "");
+        }
+        if(logger.isDebugEnabled()) {
+            logger.debug("searchPattern simplified for nexmo " + filterPatternString);
+        }
 
         String queryUri = searchURI + country;
         boolean queryParamAdded = false;
@@ -151,8 +158,8 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             // https://github.com/Mobicents/RestComm/issues/551 fixing the search pattern for US when Area Code is selected
             queryUri = queryUri + "?pattern=1" + listFilters.getAreaCode() + "&search_pattern=0";
             queryParamAdded = true;
-        } else if(filterPattern != null) {
-            queryUri = queryUri + "?pattern=" + filterPattern.toString() + "&search_pattern=1";
+        } else if(filterPatternString != null) {
+            queryUri = queryUri + "?pattern=" + filterPatternString + "&search_pattern=1";
             queryParamAdded = true;
         }
         if(listFilters.getSmsEnabled() != null || listFilters.getVoiceEnabled() != null) {
