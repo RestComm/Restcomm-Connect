@@ -1,0 +1,89 @@
+{
+  "id" : null,
+  "name" : "RestcommMetrics",
+  "description" : "Restcomm application metrics.",
+  "category" : "restcomm",
+  "inputs" : [ {
+    "title" : "RestcommMetrics",
+    "configuration" : {
+      "configURL" : "http://YOUR_IP_HERE:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics",
+      "configLabel" : "restcomm",
+      "configHeadersToRecord" : "",
+      "configPassword" : "YOUR_PASSWORD_HERE",
+      "configInterval" : 10,
+      "configUsername" : "administrator@company.com",
+      "configHttpProxy" : "",
+      "configTimeout" : 20,
+      "configLogResponseBody" : true,
+      "configMethod" : "GET",
+      "configRequestBody" : "",
+      "configTimeoutUnit" : "SECONDS",
+      "configHeadersToSend" : "",
+      "override_source" : "",
+      "configIntervalUnit" : "SECONDS"
+    },
+    "type" : "org.graylog2.plugin.httpmonitor.HttpMonitorInput",
+    "global" : false,
+    "extractors" : [ {
+      "title" : "Step1",
+      "type" : "JSON",
+      "configuration" : {
+        "flatten" : false,
+        "key_separator" : ".",
+        "list_separator" : ", ",
+        "kv_separator" : "="
+      },
+      "converters" : [ ],
+      "order" : 0,
+      "cursor_strategy" : "CUT",
+      "target_field" : "full_message",
+      "source_field" : "full_message",
+      "condition_type" : "NONE",
+      "condition_value" : ""
+    } ],
+    "static_fields" : { }
+  }, {
+    "title" : "RestcommSipSubsystem",
+    "configuration" : {
+      "configURL" : "http://YOUR_IP_HERE:9990/management/deployment/restcomm.war/subsystem/sip?include-runtime=true&json.pretty",
+      "configLabel" : "RestcommSipSubsystem",
+      "configHeadersToRecord" : "",
+      "configPassword" : "YOUR_PASSWORD_HERE",
+      "configInterval" : 10,
+      "configUsername" : "adminUser",
+      "configHttpProxy" : "",
+      "configTimeout" : 20,
+      "configLogResponseBody" : true,
+      "configMethod" : "GET",
+      "configRequestBody" : "",
+      "configTimeoutUnit" : "SECONDS",
+      "configHeadersToSend" : "",
+      "override_source" : "",
+      "configIntervalUnit" : "SECONDS"
+    },
+    "type" : "org.graylog2.plugin.httpmonitor.HttpMonitorInput",
+    "global" : false,
+    "extractors" : [ {
+      "title" : "Step1",
+      "type" : "JSON",
+      "configuration" : {
+        "flatten" : false,
+        "key_separator" : ".",
+        "list_separator" : ", ",
+        "kv_separator" : "="
+      },
+      "converters" : [ ],
+      "order" : 0,
+      "cursor_strategy" : "CUT",
+      "target_field" : "full_message",
+      "source_field" : "full_message",
+      "condition_type" : "NONE",
+      "condition_value" : ""
+    } ],
+    "static_fields" : { }
+  } ],
+  "streams" : [ ],
+  "outputs" : [ ],
+  "dashboards" : [ ],
+  "grok_patterns" : [ ]
+}

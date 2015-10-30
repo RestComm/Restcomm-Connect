@@ -1,0 +1,165 @@
+{
+  "id" : null,
+  "name" : "RestcommMetricsDashboard",
+  "description" : "Dashboard for Restcomm Metrics",
+  "category" : "restcomm",
+  "inputs" : [ ],
+  "streams" : [ ],
+  "outputs" : [ ],
+  "dashboards" : [ {
+    "title" : "RestcommDashboard",
+    "description" : "Dashboard for Restcomm Metrics",
+    "dashboard_widgets" : [ {
+      "description" : "Live Incoming/Outgoing Calls",
+      "type" : "STACKED_CHART",
+      "configuration" : {
+        "timerange" : {
+          "type" : "relative",
+          "range" : 300
+        },
+        "interval" : "minute",
+        "renderer" : "bar",
+        "interpolation" : "linear",
+        "series" : [ {
+          "query" : "*",
+          "field" : "Metrics.LiveIncomingCalls",
+          "statistical_function" : "min"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.LiveOutgoingCalls",
+          "statistical_function" : "mean"
+        } ]
+      },
+      "col" : 1,
+      "row" : 1,
+      "cache_time" : 10
+    }, {
+      "description" : "Outgoing/Incoming/Total Calls since Uptime",
+      "type" : "STACKED_CHART",
+      "configuration" : {
+        "timerange" : {
+          "type" : "relative",
+          "range" : 300
+        },
+        "interval" : "minute",
+        "renderer" : "bar",
+        "interpolation" : "linear",
+        "series" : [ {
+          "query" : "*",
+          "field" : "Metrics.OutgoingCallsSinceUptime",
+          "statistical_function" : "mean"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.IncomingCallsSinceUptime",
+          "statistical_function" : "mean"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.TotalCallsSinceUptime",
+          "statistical_function" : "mean"
+        } ]
+      },
+      "col" : 1,
+      "row" : 2,
+      "cache_time" : 10
+    }, {
+      "description" : "Call Metrics",
+      "type" : "STACKED_CHART",
+      "configuration" : {
+        "timerange" : {
+          "type" : "relative",
+          "range" : 300
+        },
+        "interval" : "minute",
+        "renderer" : "bar",
+        "interpolation" : "linear",
+        "series" : [ {
+          "query" : "*",
+          "field" : "Metrics.FailedCalls",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.CompletedCalls",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.CanceledCalls",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.NoAnswerCalls",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.NotFoundCalls",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.CanceledCalls",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.BusyCalls",
+          "statistical_function" : "max"
+        } ]
+      },
+      "col" : 1,
+      "row" : 3,
+      "cache_time" : 10
+    }, {
+      "description" : "Registered Users",
+      "type" : "FIELD_CHART",
+      "configuration" : {
+        "valuetype" : "max",
+        "timerange" : {
+          "type" : "relative",
+          "range" : 300
+        },
+        "renderer" : "bar",
+        "interpolation" : "linear",
+        "field" : "Metrics.RegisteredUsers",
+        "query" : "*",
+        "interval" : "minute"
+      },
+      "col" : 3,
+      "row" : 1,
+      "cache_time" : 10
+    }, {
+      "description" : "Text Messages Metrics",
+      "type" : "STACKED_CHART",
+      "configuration" : {
+        "timerange" : {
+          "type" : "relative",
+          "range" : 300
+        },
+        "interval" : "minute",
+        "renderer" : "bar",
+        "interpolation" : "linear",
+        "series" : [ {
+          "query" : "*",
+          "field" : "Metrics.TextMessageInboundToApp",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.TextMessageOutbound",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.TextMessageNotFound",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.TextMessageInboundToProxyOut",
+          "statistical_function" : "max"
+        }, {
+          "query" : "*",
+          "field" : "Metrics.TextMessageInboundToClient",
+          "statistical_function" : "max"
+        } ]
+      },
+      "col" : 3,
+      "row" : 2,
+      "cache_time" : 10
+    } ]
+  } ],
+  "grok_patterns" : [ ]
+}

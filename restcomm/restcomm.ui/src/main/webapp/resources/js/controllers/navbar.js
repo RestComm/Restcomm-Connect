@@ -173,8 +173,11 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
           Notifications.success('Account "' + account.friendlyName + '" created successfully!');
           $modalInstance.close();
         },
-        function() { // error
-          Notifications.error('Required fields are missing.');
+        function(response) { // error
+        	if (response.status == 409)
+        		Notifications.error("User already exists.");
+        	else
+        		Notifications.error('Required fields are missing.');
         }
       );
     }

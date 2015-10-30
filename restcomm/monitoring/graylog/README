@@ -1,0 +1,6 @@
+Graylog Content Pack for:
+1. JainSip and Sip Servlets Input metrics
+2. Restcomm application Input metrics
+3. Dashboard with Restcomm metrics
+
+Use Graylog 1.2.2 or later
