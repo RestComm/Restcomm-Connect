@@ -397,6 +397,7 @@ public class ProjectRestService extends RestService {
         logger.info("Importing project from raw archive");
         ProjectApplicationsApi applicationsApi = null;
         String projectName = null;
+        Principal loggedUser = securityContext.getUserPrincipal();
 
         try {
             if (request.getHeader("Content-Type") != null
@@ -416,7 +417,7 @@ public class ProjectRestService extends RestService {
                     // They will be ignored
                     if (item.getName() != null) {
                         String effectiveProjectName = projectService
-                                .importProjectFromArchive(item.openStream(), item.getName());
+                                .importProjectFromArchive(item.openStream(), item.getName(), loggedUser.getName());
                         // buildService.buildProject(effectiveProjectName);
 
                         // Load project kind
