@@ -154,8 +154,9 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
 
         String queryUri = searchURI + country;
         boolean queryParamAdded = false;
-        if("US".equalsIgnoreCase(country) && listFilters.getAreaCode() != null) {
+        if(("US".equalsIgnoreCase(country) || "CA".equalsIgnoreCase(country)) && listFilters.getAreaCode() != null) {
             // https://github.com/Mobicents/RestComm/issues/551 fixing the search pattern for US when Area Code is selected
+            // https://github.com/Mobicents/RestComm/issues/602 fixing the search pattern for CA when Area Code is selected
             queryUri = queryUri + "?pattern=1" + listFilters.getAreaCode() + "&search_pattern=0";
             queryParamAdded = true;
         } else if(filterPatternString != null) {
