@@ -321,7 +321,7 @@ public class RasRestService extends RestService {
     @GET
     @Path("apps/{name}/config")
     public Response getConfig(@PathParam("name") String projectName) {
-        logger.info("getting configuration options for " + projectName);
+        //logger.info("getting configuration options for " + projectName);
 
         RappConfig rappConfig;
         // first, try to return the 'Rapp' from the packaging directory
@@ -368,7 +368,7 @@ public class RasRestService extends RestService {
     @GET
     @Path("apps/{name}/config/dev")
     public Response getConfigFromPackaging(@PathParam("name") String projectName) {
-        logger.info("getting configuration options for " + projectName);
+        //logger.info("getting configuration options for " + projectName);
        try {
             Rapp rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
             return buildOkResponse(rapp.getConfig());
