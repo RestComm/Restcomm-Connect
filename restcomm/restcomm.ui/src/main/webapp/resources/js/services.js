@@ -483,7 +483,7 @@ rcServices.factory('RCommAvailableNumbers', function($resource) {
       getAreaCodes: {
         method: 'GET',
         isArray: true,
-        url: '/resources/json/area-codes.:format'
+        url: '/resources/json/area-codes-:countryCode.:format'
       },
       getAvailableCountries: {
         method: 'GET',

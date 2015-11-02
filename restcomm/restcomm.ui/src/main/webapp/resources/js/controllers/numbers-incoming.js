@@ -83,7 +83,8 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   $scope.countries = allCountries;
   $scope.providerCountries = providerCountries;
 
-  $scope.areaCodes = RCommAvailableNumbers.getAreaCodes();
+  $scope.areaCodesUS = RCommAvailableNumbers.getAreaCodes({countryCode: 'US'});
+  $scope.areaCodesCA = RCommAvailableNumbers.getAreaCodes({countryCode: 'CA'});
   $scope.selected = undefined;
 
   $scope.registerIncomingNumber = function(number) {
@@ -152,7 +153,8 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
   $scope.countries = allCountries;
   $scope.providerCountries = providerCountries;
 
-  $scope.areaCodes = RCommAvailableNumbers.getAreaCodes();
+  $scope.areaCodesUS = RCommAvailableNumbers.getAreaCodes({countryCode: 'US'});
+  $scope.areaCodesCA = RCommAvailableNumbers.getAreaCodes({countryCode: 'CA'});
   $scope.selected = undefined;
 
   $scope.setProvider = function(isProvider) {
