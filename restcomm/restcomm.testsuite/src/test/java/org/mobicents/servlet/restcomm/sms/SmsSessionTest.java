@@ -6,9 +6,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,8 @@ import org.junit.runner.RunWith;
 //import org.mobicents.servlet.restcomm.sms.Version;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -48,6 +51,8 @@ public final class SmsSessionTest {
 
     @ArquillianResource
     private Deployer deployer;
+    @ArquillianResource
+    URL deploymentUrl;
     
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -62,6 +67,9 @@ public final class SmsSessionTest {
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5092";
     
+    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
     public SmsSessionTest() {
         super();
     }
@@ -243,6 +251,81 @@ public final class SmsSessionTest {
         assertTrue(messages.get(0).equals("Its great to hear from you!"));
     }
     
+    @Test
+    public void sendMessageUsingValidContentType() throws ParseException {
+        final String proxy = phone.getStackAddress() + ":5080;lr/udp";
+        final String to = "sip:+12223334450@127.0.0.1:5080";
+        final String body = "VALID-CONTENT-TYPE";
+        final SipCall call = phone.createSipCall();
+        gov.nist.javax.sip.header.ContentType header = new gov.nist.javax.sip.header.ContentType();
+        header.setContentType("text");
+        header.setContentSubType("plain;charset=UTF-8");
+        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        replaceHeaders.add(header);
+        call.initiateOutgoingMessage(null, to, proxy, new ArrayList<Header>(), replaceHeaders, body);
+        assertLastOperationSuccess(call);
+        // Verify if message was properly registered
+        JsonArray array = SmsEndpointTool.getInstance().getSmsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        boolean found = false;
+        for (int i = 0; i < array.size(); i++) {
+            if (((JsonObject) array.get(i)).get("body").getAsString().equals(body)) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue(found);
+    }
+
+    @Test
+    public void sendMessageUsingInvalidContentType() throws ParseException {
+        final String proxy = phone.getStackAddress() + ":5080;lr/udp";
+        final String to = "sip:+12223334450@127.0.0.1:5080";
+        final String body = "INVALID-CONTENT-TYPE-COMPOSING";
+        final SipCall call = phone.createSipCall();
+        gov.nist.javax.sip.header.ContentType header = new gov.nist.javax.sip.header.ContentType();
+        header.setContentType("application");
+        header.setContentSubType("im-iscomposing+xml");
+        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        replaceHeaders.add(header);
+        call.initiateOutgoingMessage(null, to, proxy, new ArrayList<Header>(), replaceHeaders, body);
+        assertLastOperationSuccess(call);
+        // Verify if message was properly discarded
+        JsonArray array = SmsEndpointTool.getInstance().getSmsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        boolean found = false;
+        for (int i = 0; i < array.size(); i++) {
+            if (((JsonObject) array.get(i)).get("body").getAsString().equals(body)) {
+                found = true;
+                break;
+            }
+        }
+        assertFalse(found);
+    }
+
+    @Test
+    public void sendMessageUsingInvalidContentType2() throws ParseException {
+        final String proxy = phone.getStackAddress() + ":5080;lr/udp";
+        final String to = "sip:+12223334450@127.0.0.1:5080";
+        final String body = "INVALID-CONTENT-TYPE-HTML";
+        final SipCall call = phone.createSipCall();
+        gov.nist.javax.sip.header.ContentType header = new gov.nist.javax.sip.header.ContentType();
+        header.setContentType("text");
+        header.setContentSubType("html;charset=UTF-8");
+        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
+        replaceHeaders.add(header);
+        call.initiateOutgoingMessage(null, to, proxy, new ArrayList<Header>(), replaceHeaders, body);
+        assertLastOperationSuccess(call);
+        // Verify if message was properly discarded
+        JsonArray array = SmsEndpointTool.getInstance().getSmsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        boolean found = false;
+        for (int i = 0; i < array.size(); i++) {
+            if (((JsonObject) array.get(i)).get("body").getAsString().equals(body)) {
+                found = true;
+                break;
+            }
+        }
+        assertFalse(found);
+    }
+
     @Deployment(name = "SmsSessionTest", managed = true, testable = false)
     public static WebArchive createWebArchive() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
