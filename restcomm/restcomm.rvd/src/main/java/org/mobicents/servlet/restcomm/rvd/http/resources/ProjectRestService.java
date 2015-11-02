@@ -37,6 +37,7 @@ import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationApiNotSynchedException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationsApiSyncException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
@@ -303,7 +304,11 @@ public class ProjectRestService extends RestService {
             assertProjectAvailable(projectName);
             try {
                 ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
-                applicationsApi.renameApplication(ticket, projectName, projectNewName);
+                try {
+                    applicationsApi.renameApplication(ticket, projectName, projectNewName);
+                } catch (ApplicationApiNotSynchedException e) {
+                    logger.warn(e.getMessage());
+                }
                 projectService.renameProject(projectName, projectNewName);
                 return Response.ok().build();
             } catch (ProjectDirectoryAlreadyExists e) {
