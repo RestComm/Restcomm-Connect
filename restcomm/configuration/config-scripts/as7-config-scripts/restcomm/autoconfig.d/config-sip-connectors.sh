@@ -37,9 +37,14 @@ configConnectors() {
 		    $FILE > $FILE.bak
 		fi
 	fi
-
 	mv $FILE.bak $FILE
 	echo 'Configured SIP Connectors and Bindings'
+
+
+	#Enable SipServlet statistics
+	grep -q 'gather-statistics' $FILE || sed -i "s|congestion-control-interval=\".*\"|& gather-statistics=\"true\"|" $FILE
+	echo "Configured gather-statistics"
+
 
 	if [[ "$TRUSTSTORE_FILE" == '' ]]; then
 		echo "TRUSTSTORE_FILE is not set";
