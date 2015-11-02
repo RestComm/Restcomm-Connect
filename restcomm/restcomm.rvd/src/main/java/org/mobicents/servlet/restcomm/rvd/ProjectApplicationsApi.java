@@ -29,6 +29,7 @@ import javax.servlet.ServletContext;
 
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationAlreadyExists;
+import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationApiNotSynchedException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationsApiSyncException;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
@@ -182,9 +183,16 @@ public class ProjectApplicationsApi {
                     friendlyName = params.get("FriendlyName");
                     friendlyName = RvdUtils.myUrlEncode(friendlyName);
 
+                    try {
                     applicationResponse = client.get(
                             "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + friendlyName + ".json").done(
                             marshaler.getGson(), RestcommApplicationResponse.class);
+                    } catch (RestcommClientException e) {
+                        if (e.getStatusCode() == 404)
+                            throw new ApplicationApiNotSynchedException("Cannot sync project '" + friendlyName + "' rename. It seems old and does not have a respective restcomm Application. The issue will be ignored.", e); // ignore the issue if the respective Application entity does not exist (old projects). Will handle project upgrade with https://github.com/Mobicents/RestComm/issues/553
+                        else
+                            throw e; // else re-throw
+                    }
 
                     applicationSid = applicationResponse.getSid();
                     if (applicationSid == null)
@@ -208,6 +216,8 @@ public class ProjectApplicationsApi {
             } else {
                 throw new ApplicationsApiSyncException(e.getMessage(), e).setStatusCode(e.getStatusCode());
             }
+        } catch (ApplicationsApiSyncException e) {
+            throw e; // throw ApplicationsApiSyncException* exceptions as is and not wrapped in another ApplicationsApiSyncException as done below
         } catch (Exception e) {
             throw new ApplicationsApiSyncException(e.getMessage(), e);
         }
