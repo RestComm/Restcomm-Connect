@@ -174,6 +174,40 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
     }
     
     /*
+     * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
+     * available local phone numbers in the United States in the 510 area code.
+     */
+    @Test
+    public void testSearchCALocalPhoneNumbersWith450AreaCode() {
+        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/CA\\?pattern=1450&search_pattern=0"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/json")
+                    .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.bodyCA450AreaCode)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "CA/Local.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.queryParam("AreaCode","450").accept("application/json")
+                .get(ClientResponse.class);
+        assertTrue(clientResponse.getStatus() == 200);
+        String response = clientResponse.getEntity(String.class);
+        System.out.println(response);
+        assertTrue(!response.trim().equalsIgnoreCase("[]"));
+        JsonParser parser = new JsonParser();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+        
+        System.out.println(jsonResponse);
+        
+        assertTrue(jsonResponse.size() == 10);
+        System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
+        assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.firstJSonResultCA450AreaCode));
+    }
+    
+    /*
      * 
      */
     @Test
