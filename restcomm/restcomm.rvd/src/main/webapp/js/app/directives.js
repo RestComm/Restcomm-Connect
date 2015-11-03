@@ -87,7 +87,9 @@ angular.module('Rvd').directive('lookupTarget', [function () {
 					var selStart = element[0].selectionStart;
 					var value = scope.$eval(attrs.ngModel) || "";
 					value = value.substring(0,selStart) + "$"+args+ (value.substring(selStart) == "" ? "" : ("" + value.substring(selStart)));
-					scope.$eval(attrs.ngModel + "='"+value+"'");
+					// escape single quotes
+					value = value.replace(/'/g,"\\\'");
+					scope.$eval(attrs.ngModel + "='"+value+"'");					
 				}
 				var selStart = element[0].selectionStart;
 				var selEnd = element[0].selectionEnd;
