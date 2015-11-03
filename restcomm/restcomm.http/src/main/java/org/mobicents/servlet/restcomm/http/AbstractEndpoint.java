@@ -112,11 +112,15 @@ public abstract class AbstractEndpoint {
 
     protected void secure(final Account account, final String permission) throws AuthorizationException {
         final Subject subject = SecurityUtils.getSubject();
-        final Sid accountSid = account.getSid();
-        if (account.getStatus().equals(Account.Status.ACTIVE)
-                && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject
-                        .isPermitted(permission)))) {
-            return;
+        if (account != null && account.getSid() != null) {
+            final Sid accountSid = account.getSid();
+            if (account.getStatus().equals(Account.Status.ACTIVE)
+                    && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject
+                            .isPermitted(permission)))) {
+                return;
+            } else {
+                throw new AuthorizationException();
+            }
         } else {
             throw new AuthorizationException();
         }
