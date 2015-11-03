@@ -81,7 +81,12 @@ else
 	else
 		echo "TRUSTSTORE_PASSWORD is set to '$TRUSTSTORE_PASSWORD' will properly configure MMS";
 		FILE=$MMS_HOME/bin/run.sh
-		JAVA_OPTS_TRUSTORE="-Djavax.net.ssl.trustStore=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE -Djavax.net.ssl.trustStorePassword=$TRUSTSTORE_PASSWORD"
+		if [[ "$TRUSTSTORE_FILE" = /* ]]; then
+			CERTIFICATION_FILE=$TRUSTSTORE_FILE
+		else
+			CERTIFICATION_FILE=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE
+		fi
+		JAVA_OPTS_TRUSTORE="-Djavax.net.ssl.trustStore=$CERTIFICATION_FILE -Djavax.net.ssl.trustStorePassword=$TRUSTSTORE_PASSWORD"
 		sed -e "/# Setup MMS specific properties/ {
 		  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME \\\$JAVA_OPTS $JAVA_OPTS_TRUSTORE\"|
 		}" $FILE > $FILE.bak
