@@ -13,6 +13,7 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $mod
   $scope.currentPage = 1; //current page
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
+  $scope.toggle = true;
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
