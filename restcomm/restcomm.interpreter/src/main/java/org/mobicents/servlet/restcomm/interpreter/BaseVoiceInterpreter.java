@@ -1830,15 +1830,19 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, null);
+                        downloader.tell(request, self());
+                        // A little clean up.
+                        recordingSid = null;
+                        recordingUri = null;
+                        return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         downloader.tell(request, null);
+                        // A little clean up.
+                        recordingSid = null;
+                        recordingUri = null;
                     }
-                    // A little clean up.
-                    recordingSid = null;
-                    recordingUri = null;
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
                 }
