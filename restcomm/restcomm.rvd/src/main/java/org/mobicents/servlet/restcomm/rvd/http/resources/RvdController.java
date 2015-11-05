@@ -65,19 +65,18 @@ public class RvdController extends RestService {
     HttpServletRequest request;
 
     private RvdConfiguration rvdSettings;
-    private RvdContext rvdContext;
+    private ProjectAwareRvdContext rvdContext;
 
     private WorkspaceStorage workspaceStorage;
     private ModelMarshaler marshaler;
 
     void init(RvdContext rvdContext) {
-        this.rvdContext = rvdContext;
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = rvdContext.getWorkspaceStorage();
     }
 
-    private Response runInterpreter(ProjectAwareRvdContext rvdContext, String appname, HttpServletRequest httpRequest,
+    private Response runInterpreter(String appname, HttpServletRequest httpRequest,
             MultivaluedMap<String, String> requestParams) {
         String rcmlResponse;
         try {
@@ -117,11 +116,10 @@ public class RvdController extends RestService {
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerGet(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest,
             @Context UriInfo ui) {
-        ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
-
             init(rvdContext);
+
             logger.info("Received Restcomm GET request");
             Enumeration<String> headerNames = (Enumeration<String>) httpRequest.getHeaderNames();
             while (headerNames.hasMoreElements()) {
@@ -131,7 +129,7 @@ public class RvdController extends RestService {
             logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
             MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
-            return runInterpreter(rvdContext, appname, httpRequest, requestParams);
+            return runInterpreter(appname, httpRequest, requestParams);
         } catch (StorageException e) {
             logger.error(e, e);
             return Response.ok(Interpreter.rcmlOnException(), MediaType.APPLICATION_XML).build();
@@ -144,15 +142,15 @@ public class RvdController extends RestService {
     @Produces(MediaType.APPLICATION_XML)
     public Response controllerPost(@PathParam("appname") String appname, @Context HttpServletRequest httpRequest,
             MultivaluedMap<String, String> requestParams) {
-        ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
             init(rvdContext);
+
             logger.info("Received Restcomm POST request");
             logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
             logger.debug("POST Params: " + requestParams.toString());
 
-            return runInterpreter(rvdContext, appname, httpRequest, requestParams);
+            return runInterpreter(appname, httpRequest, requestParams);
         } catch (StorageException e) {
             logger.error(e, e);
             return Response.ok(Interpreter.rcmlOnException(), MediaType.APPLICATION_XML).build();
@@ -162,7 +160,6 @@ public class RvdController extends RestService {
     @GET
     @Path("{appname}/resources/{filename}")
     public Response getWav(@PathParam("appname") String projectName, @PathParam("filename") String filename) {
-        ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
             init(rvdContext);
@@ -193,8 +190,10 @@ public class RvdController extends RestService {
 
     private RestcommCreateCallResponse executeAction(String projectName, HttpServletRequest request, String toParam,
             String fromParam, String accessToken, UriInfo ui) throws StorageException, CallControlException {
-        rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
-        init(rvdContext);
+
+        logger.info( "WebTrigger: Application '" + projectName + "' initiated. URL: " + ui.getRequestUri().toString());
+        if (rvdContext.getProjectSettings().getLogging())
+            rvdContext.getProjectLogger().log("WebTrigger incoming request: " + ui.getRequestUri().toString(),false).tag("app", projectName).tag("WebTrigger").done();
 
         // Load CC info from project
         CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
@@ -310,9 +309,9 @@ public class RvdController extends RestService {
             @QueryParam("to") String toParam, @QueryParam("from") String fromParam, @QueryParam("token") String accessToken,
             @Context UriInfo ui) {
         String selectedMediaType = MediaType.TEXT_HTML;
-
-        ProjectAwareRvdContext rvdContext;
         try {
+            rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
+            init(rvdContext);
             RestcommCreateCallResponse createCallResponse = executeAction(projectName, request, toParam, fromParam,
                     accessToken, ui);
             return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "success",
@@ -344,8 +343,9 @@ public class RvdController extends RestService {
             @Context UriInfo ui) {
         String selectedMediaType = MediaType.APPLICATION_JSON;
 
-        ProjectAwareRvdContext rvdContext;
         try {
+            rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
+            init(rvdContext);
             RestcommCreateCallResponse createCallResponse = executeAction(projectName, request, toParam, fromParam,
                     accessToken, ui);
             return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.success, 200, createCallResponse);
@@ -371,7 +371,6 @@ public class RvdController extends RestService {
     @GET
     @Path("{appname}/log")
     public Response appLog(@PathParam("appname") String appName) {
-        ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
             init(rvdContext);
@@ -405,7 +404,6 @@ public class RvdController extends RestService {
     @DELETE
     @Path("{appname}/log")
     public Response resetAppLog(@PathParam("appname") String appName) {
-        ProjectAwareRvdContext rvdContext;
         try {
             rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
             init(rvdContext);
