@@ -31,15 +31,20 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.set(prefix + 'auth_token', account.auth_token);
   };
 
-  var passwordUpdated = function() {
+  var passwordUpdated = function(newAuthToken) {
     SessionService.rename('_authenticated', 'authenticated');
     SessionService.rename('_logged_user', 'logged_user');
+    SessionService.rename('_email_address', 'email_address');
+    SessionService.rename('_auth_token', 'auth_token');
+    SessionService.set('auth_token', newAuthToken);
   };
 
   var uncacheSession = function() {
     SessionService.unset('sid');
     SessionService.unset('authenticated');
     SessionService.unset('logged_user');
+    SessionService.unset('email_address');
+    SessionService.unset('auth_token');
     SessionService.unset('_sid');
     SessionService.unset('_authenticated');
     SessionService.unset('_logged_user');
@@ -107,7 +112,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
 
       var update = $http({method: 'PUT', url: apiPath, data: $.param(params), headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).
         success(function(data) {
-          passwordUpdated();
+          passwordUpdated(params["Auth_Token"]);
         }).
         error(function(data) {
           alert("Failed to update password. Please try again.");
