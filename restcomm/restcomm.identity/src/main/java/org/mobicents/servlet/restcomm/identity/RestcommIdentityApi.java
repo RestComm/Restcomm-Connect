@@ -28,6 +28,7 @@ import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.KeycloakUriBuilder;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+
 import com.google.gson.Gson;
 
 /**
@@ -40,20 +41,36 @@ public class RestcommIdentityApi {
     protected Logger logger = Logger.getLogger(RestcommIdentityApi.class);
 
     private String tokenString;
-    private IdentityConfigurator configurator;
+    //private IdentityConfigurator configurator;
+    private String authServerBaseUrl;
+    //private String username = "not available";
+    private String identityInstanceId;
+    private String realm;
+
+    public RestcommIdentityApi(String authurl, String username, String password) {
+        this(authurl,username,password,IdentityConfigurator.DEFAULT_REALM_NAME);
+    }
+
+    public RestcommIdentityApi(String authurl, String username, String password, String realm) {
+        this.authServerBaseUrl = authurl;
+        this.realm = realm;
+        this.tokenString = retrieveTokenString(username, password);
+        if (tokenString == null)
+            throw new IllegalStateException("No oauth token in context.");
+    }
 
     public RestcommIdentityApi(final IdentityContext identityContext, final IdentityConfigurator configurator) {
         tokenString = identityContext.getOauthTokenString();
         if (tokenString == null)
             throw new IllegalStateException("No oauth token in context.");
-        this.configurator = configurator;
+        this.authServerBaseUrl = configurator.getAuthServerUrlBase();
+        this.identityInstanceId = configurator.getIdentityInstanceId();
+        this.realm = configurator.getRealmName();
+
     }
 
-    public RestcommIdentityApi(final String username, final String password, final IdentityConfigurator configurator) {
-        this.configurator = configurator;
-        tokenString = retrieveTokenString(username, password);
-        if (tokenString == null)
-            throw new IllegalStateException("No oauth token in context.");
+    void bindInstance(String instanceId) {
+        this.identityInstanceId = instanceId;
     }
 
     public String getTokenString() {
@@ -64,13 +81,13 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(configurator.getAuthServerUrl())
-                    .path(ServiceUrlConstants.TOKEN_PATH).build(configurator.getRealmName()));
+            HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(IdentityConfigurator.getAuthServerUrl(authServerBaseUrl))
+                    .path(ServiceUrlConstants.TOKEN_PATH).build(realm));
             List <NameValuePair> formparams = new ArrayList <NameValuePair>();
             formparams.add(new BasicNameValuePair("username", username));
             formparams.add(new BasicNameValuePair("password", password));
             formparams.add(new BasicNameValuePair(OAuth2Constants.GRANT_TYPE, "password"));
-            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, configurator.getIdentityProxyClientName()));
+            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, IdentityConfigurator.IDENTITY_PROXY_CLIENT_NAME));
             UrlEncodedFormEntity form = new UrlEncodedFormEntity(formparams, "UTF-8");
             post.setEntity(form);
 
@@ -102,14 +119,17 @@ public class RestcommIdentityApi {
      * @return
      */
     public boolean inviteUser(String username) {
+        if (this.identityInstanceId == null)
+            throw new IllegalStateException("No identity instance id is set");
+
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost request = new HttpPost(configurator.getIdentityProxyUrl() + "/api/instances/" + configurator.getIdentityInstanceId() + "/users/" + username + "/invite");
+            HttpPost request = new HttpPost(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + this.identityInstanceId + "/users/" + username + "/invite");
             request.addHeader("Authorization", "Bearer " + tokenString);
             HttpResponse response = client.execute(request);
             if (response.getStatusLine().getStatusCode() >= 300) {
-                logger.error("Error inviting user '" + username + "' to instance '" + configurator.getIdentityInstanceId() + "' - " + response.getStatusLine().toString());
+                logger.error("Error inviting user '" + username + "' to instance '" + this.identityInstanceId + "' - " + response.getStatusLine().toString());
                 return false;
             } else
                 return true;
@@ -128,7 +148,7 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost request = new HttpPost(configurator.getIdentityProxyUrl() + "/api/users");
+            HttpPost request = new HttpPost(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/users");
             request.addHeader("Authorization", "Bearer " + tokenString);
             request.addHeader("Content-Type", "application/json");
 
@@ -153,11 +173,11 @@ public class RestcommIdentityApi {
         }
     }
 
-    public CreateInstanceResponse createInstance(String prefix, String secret, String username) throws RestcommIdentityApiException {
+    public CreateInstanceResponse createInstance(String prefix, String secret) throws RestcommIdentityApiException {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost request = new HttpPost(configurator.getIdentityProxyUrl() + "/api/instances");
+            HttpPost request = new HttpPost(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances");
             request.addHeader("Authorization", "Bearer " + tokenString);
             List<NameValuePair> params = new ArrayList<NameValuePair>();
             params.add(new BasicNameValuePair("prefix",prefix));
@@ -171,7 +191,7 @@ public class RestcommIdentityApi {
                 CreateInstanceResponse createdInstance = gson.fromJson( new InputStreamReader(response.getEntity().getContent()), CreateInstanceResponse.class);
                 return createdInstance;
             } else {
-                logger.error("Error creating instance for user '" + username + "'");
+                //logger.error("Error creating instance for user '" + username + "'");
                 throw new RestcommIdentityApiException(Outcome.fromHttpStatus(status));
             }
         } catch ( IOException e) {
