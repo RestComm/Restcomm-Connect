@@ -7,7 +7,6 @@ public interface IdentityConfigurationSet extends ConfigurationSet {
     String getRealmName();
     String getAuthServerUrl();
     String getIdentityProxyUrl();
-    String getIdentityProxyUrl(String authServerUrlBase );
     String getIdentityInstanceId();
     String getRestcommClientSecret();
     Boolean getAutoImportUsers();

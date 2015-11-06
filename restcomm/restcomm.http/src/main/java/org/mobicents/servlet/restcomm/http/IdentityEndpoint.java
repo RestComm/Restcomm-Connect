@@ -85,13 +85,14 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
             logger.error("Missing identity.auth-server-url-base configuration setting.");
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Invalid configuration").build();
         }
-        // authenticate and retreive a token
-        RestcommIdentityApi api = new RestcommIdentityApi(username, password, identityConfigurator);
+        // authenticate and retrieve a token
+        RestcommIdentityApi api = new RestcommIdentityApi(authUrlBase, username, password);
+        // update configuration        
         String tokenString = api.getTokenString();
         AccessToken accessToken = IdentityUtils.verifyToken(tokenString, identityConfigurator.getUnregisteredDeployment());
         if ( accessToken == null )
             return toResponse(Outcome.NOT_ALLOWED);
-
+        // create the instance (clients, roles, grant user roles) in keycloak
         CreateInstanceResponse response;
         try {
             response = api.createInstance(baseUrl, instanceSecret, username);
