@@ -27,6 +27,10 @@
 	<select id="getAccounts" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_accounts WHERE account_sid=#{account_sid};
 	</select>
+	
+	<select id="getAllAccounts" resultType="hashmap">
+		SELECT * FROM restcomm_accounts;
+	</select>	
 
 	<delete id="removeAccount" parameterType="string">
 		DELETE FROM restcomm_accounts WHERE sid=#{sid};

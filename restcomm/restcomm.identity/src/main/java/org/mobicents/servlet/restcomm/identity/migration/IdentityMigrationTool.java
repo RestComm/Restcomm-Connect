@@ -20,20 +20,23 @@
 
 package org.mobicents.servlet.restcomm.identity.migration;
 
+import java.util.List;
+
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
-import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 /**
- * 
+ *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */
 public class IdentityMigrationTool {
+    private static Logger logger = Logger.getLogger(IdentityMigrationTool.class);
 
     private AccountsDao accountsDao;
     private RestcommIdentityApi identityApi;
@@ -47,11 +50,15 @@ public class IdentityMigrationTool {
     }
 
     public void migrateUsers() {
-       // RestcommIdentityApi api = new RestcommIdentityApi(authurl, username, password)
+       List<Account> accounts = accountsDao.getAccounts(); // retrieve all available accounts
+       for (Account account: accounts) {
+           migrateAccount(account);
+       }
+       report("migration done");
+
     }
 
-    public boolean migrateAccount(String accountSid) {
-        Account account = accountsDao.getAccount(new Sid(accountSid));
+    public boolean migrateAccount(Account account) {
         if (StringUtils.isEmpty(account.getEmailAddress()))
             report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + ") - account has no email address and won't be migrated");
         else {
@@ -84,7 +91,7 @@ public class IdentityMigrationTool {
     }
 
     private void report(String message) {
-
+        logger.info(message);
     }
 
 }

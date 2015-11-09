@@ -69,7 +69,7 @@ public class RestcommIdentityApi {
 
     }
 
-    void bindInstance(String instanceId) {
+    public void bindInstance(String instanceId) {
         this.identityInstanceId = instanceId;
     }
 
@@ -77,7 +77,7 @@ public class RestcommIdentityApi {
         return tokenString;
     }
 
-    private String retrieveTokenString(String username, String password) {
+    public String retrieveTokenString(String username, String password) {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();

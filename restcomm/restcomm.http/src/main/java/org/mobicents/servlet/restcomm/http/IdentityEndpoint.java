@@ -87,7 +87,7 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
         }
         // authenticate and retrieve a token
         RestcommIdentityApi api = new RestcommIdentityApi(authUrlBase, username, password);
-        // update configuration        
+        // update configuration
         String tokenString = api.getTokenString();
         AccessToken accessToken = IdentityUtils.verifyToken(tokenString, identityConfigurator.getUnregisteredDeployment());
         if ( accessToken == null )
@@ -95,7 +95,7 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
         // create the instance (clients, roles, grant user roles) in keycloak
         CreateInstanceResponse response;
         try {
-            response = api.createInstance(baseUrl, instanceSecret, username);
+            response = api.createInstance(baseUrl, instanceSecret);
         } catch (RestcommIdentityApiException e) {
             return toResponse(e.getOutcome());
         }
