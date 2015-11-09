@@ -10,8 +10,8 @@ import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 
 public class RestcommIdentityApiTest {
 
-    static String authServerBaseUrl = "https://identity.restcomm.com";
-    static String username = "test_user";
+    static String authServerBaseUrl = "http://192.168.1.3:8080"; //"https://identity.restcomm.com";
+    static String username = "otsakir@gmail.com";  //"test_user";
     static String password = "password";
     static String realm = "restcomm";
 

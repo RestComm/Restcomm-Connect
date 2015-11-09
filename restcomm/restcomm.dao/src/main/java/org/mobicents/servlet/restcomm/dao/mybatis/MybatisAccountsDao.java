@@ -124,6 +124,30 @@ public final class MybatisAccountsDao implements AccountsDao {
         }
     }
 
+    /**
+     * Returns all available accounts.
+     *
+     * If toplevel is true it will return only the toplevel accounts.
+     * @param toplevel
+     * @return
+     */
+    @Override
+    public List<Account> getAccounts() {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAllAccounts");
+            final List<Account> accounts = new ArrayList<Account>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    accounts.add(toAccount(result));
+                }
+            }
+            return accounts;
+        } finally {
+            session.close();
+        }
+    }
+
     @Override
     public void removeAccount(final Sid sid) {
         removeAccount(namespace + "removeAccount", sid);

@@ -38,6 +38,8 @@ public interface AccountsDao {
 
     List<Account> getAccounts(Sid sid);
 
+    List<Account> getAccounts();
+
     void removeAccount(Sid sid);
 
     void updateAccount(Account account);
