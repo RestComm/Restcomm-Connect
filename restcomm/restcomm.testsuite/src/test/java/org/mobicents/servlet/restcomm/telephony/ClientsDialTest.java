@@ -251,7 +251,7 @@ public class ClientsDialTest {
         
         long totalTime = endTime - startTime;
         assertTrue(3 <= totalTime);
-        assertTrue(totalTime >= 4);
+        assertTrue(totalTime <= 4);
         
         Thread.sleep(3000);
 
