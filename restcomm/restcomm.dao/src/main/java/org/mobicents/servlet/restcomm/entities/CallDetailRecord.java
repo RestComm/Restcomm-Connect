@@ -45,6 +45,7 @@ public final class CallDetailRecord {
     private final DateTime startTime;
     private final DateTime endTime;
     private final Integer duration;
+    private final Integer ringDuration;
     private final BigDecimal price;
     private final Currency priceUnit;
     private final String direction;
@@ -60,7 +61,7 @@ public final class CallDetailRecord {
             final Sid accountSid, final String to, final String from, final Sid phoneNumberSid, final String status,
             final DateTime startTime, final DateTime endTime, final Integer duration, final BigDecimal price,
             final Currency priceUnit, final String direction, final String answeredBy, final String apiVersion,
-            final String forwardedFrom, final String callerName, final URI uri, final String callPath) {
+            final String forwardedFrom, final String callerName, final URI uri, final String callPath,final Integer ringDuration) {
         super();
         this.sid = sid;
         this.parentCallSid = parentCallSid;
@@ -83,6 +84,7 @@ public final class CallDetailRecord {
         this.callerName = callerName;
         this.uri = uri;
         this.callPath = callPath;
+        this.ringDuration = ringDuration;
     }
 
     public static Builder builder() {
@@ -137,6 +139,10 @@ public final class CallDetailRecord {
         return duration;
     }
 
+    public Integer getRingDuration() {
+        return ringDuration;
+    }
+
     public BigDecimal getPrice() {
         return (price == null) ? new BigDecimal("0.0") : price;
     }
@@ -176,37 +182,43 @@ public final class CallDetailRecord {
     public CallDetailRecord setStatus(final String status) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath);
+                callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setStartTime(final DateTime startTime) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath);
+                callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setEndTime(final DateTime endTime) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath);
+                callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setDuration(final Integer duration) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath);
+                callerName, uri, callPath,ringDuration);
+    }
+
+    public CallDetailRecord setRingDuration(final Integer ringDuration) {
+        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setPrice(final BigDecimal price) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath);
+                callerName, uri, callPath,ringDuration);
     }
 
     public CallDetailRecord setAnsweredBy(final String answeredBy) {
         return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath);
+                callerName, uri, callPath, ringDuration);
     }
 
     @NotThreadSafe
@@ -223,6 +235,7 @@ public final class CallDetailRecord {
         private DateTime startTime;
         private DateTime endTime;
         private Integer duration;
+        private Integer ringDuration;
         private BigDecimal price;
         private Currency priceUnit;
         private String direction;
@@ -256,12 +269,13 @@ public final class CallDetailRecord {
             callerName = null;
             uri = null;
             callPath = null;
+            ringDuration = null;
         }
 
         public CallDetailRecord build() {
             return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid,
                     status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                    callerName, uri, callPath);
+                    callerName, uri, callPath,ringDuration);
         }
 
         public void setSid(final Sid sid) {

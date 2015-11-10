@@ -38,6 +38,7 @@ public final class CallInfo {
     private final CreateCall.Type type;
     private final String direction;
     private final DateTime dateCreated;
+    private final DateTime dateConUpdated;
     private final String forwardedFrom;
     private final String fromName;
     private final String from;
@@ -48,7 +49,7 @@ public final class CallInfo {
 
     public CallInfo(final Sid sid, final State state, final CreateCall.Type type, final String direction,
             final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
-            final SipServletRequest invite, final SipServletResponse lastResponse, boolean webrtc) {
+            final SipServletRequest invite, final SipServletResponse lastResponse,final DateTime dateConUpdated) {
         super();
         this.sid = sid;
         this.state = state;
@@ -60,12 +61,17 @@ public final class CallInfo {
         this.to = to;
         this.invite = invite;
         this.lastResponse = lastResponse;
+        this.dateConUpdated = dateConUpdated;
         this.type = type;
         this.webrtc = webrtc;
     }
 
     public DateTime dateCreated() {
         return dateCreated;
+    }
+
+    public DateTime dateConUpdated() {
+        return dateConUpdated;
     }
 
     public String direction() {
