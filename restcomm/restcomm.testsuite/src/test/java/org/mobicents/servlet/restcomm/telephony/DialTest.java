@@ -1152,7 +1152,7 @@ public class DialTest {
         assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
                 null, null));
         // the number dialed uses a callerId of "+13055872294", which is what George should receive
-        assertEquals("sip:+13055872294@127.0.0.1:5080", georgeCall.getLastReceivedRequest().getMessage().getHeader("Contact"));
+        assertEquals("Contact: \"+13055872294\" <sip:+13055872294@127.0.0.1:5080>", georgeCall.getLastReceivedRequest().getMessage().getHeader("Contact"));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
