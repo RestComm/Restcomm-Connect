@@ -21,12 +21,21 @@
                         <div class="input-group f16">
                             <span class="input-group-addon"><span ng-show="newNumber.countryCode" class="flag {{newNumber.countryCode.code|lowercase}}"></span><span ng-hide="newNumber.countryCode"><i class="fa fa-globe"></i></span></span>
                             <input type="text" ng-model="newNumber.countryCode" placeholder="Country" typeahead="country as (country.name + ' (' + country.dial_code + ')') for country in countries | filter:$viewValue | limitTo: 10 " typeahead-template-url="countriesTemplate.html" typeahead-editable="false" class="form-control" autofocus>
-                            <div class="input-group-btn" ng-show="newNumber.countryCode.code === 'US'">
+                            <div class="input-group-btn" ng-if="newNumber.countryCode.code === 'US'" ng-init="newNumber.area_code = undefined">
                                 <button class="btn btn-default dropdown-toggle" style="width: 100px;" type="button" id="dropdownMenu1" data-toggle="dropdown">
                                     {{newNumber.area_code || "Area Code"}} <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu scrollable-menu" role="menu">
-                                    <li role="presentation" class="dropdown-header" ng-repeat-start="ac in areaCodes">{{ac.name}}</li>
+                                    <li role="presentation" class="dropdown-header" ng-repeat-start="ac in areaCodesUS">{{ac.name}}</li>
+                                    <li role="presentation" ng-repeat="code in ac.codes" ng-repeat-end><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = code">{{code}}</a></li>
+                                </ul>
+                            </div>
+                            <div class="input-group-btn" ng-if="newNumber.countryCode.code === 'CA'" ng-init="newNumber.area_code = undefined">
+                                <button class="btn btn-default dropdown-toggle" style="width: 100px;" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                                    {{newNumber.area_code || "Area Code"}} <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu scrollable-menu" role="menu">
+                                    <li role="presentation" class="dropdown-header" ng-repeat-start="ac in areaCodesCA">{{ac.name}}</li>
                                     <li role="presentation" ng-repeat="code in ac.codes" ng-repeat-end><a role="menuitem" tabindex="-1" href="" ng-click="newNumber.area_code = code">{{code}}</a></li>
                                 </ul>
                             </div>

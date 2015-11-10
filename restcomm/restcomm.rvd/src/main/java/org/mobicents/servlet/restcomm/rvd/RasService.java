@@ -171,7 +171,7 @@ public class RasService {
 
         // add project state
         ProjectState projectState = workspaceStorage.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
-        projectState.getHeader().setOwner(null); // RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
+        projectState.getHeader().setOwner( RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
         FsProjectStorage.storeProject(true, projectState, newProjectName,workspaceStorage);
         //projectStorage.storeProject(newProjectName, projectState, true);
 

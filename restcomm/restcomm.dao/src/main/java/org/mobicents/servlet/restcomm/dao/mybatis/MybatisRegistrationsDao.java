@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readInteger;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
@@ -96,6 +97,33 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     }
 
     @Override
+    public List<Registration> getRegistrations(String user) {
+        final SqlSession session = sessions.openSession();
+        try {
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
+            // we get all registrations and sort them by latest updated date so that we target the device where the user last
+            // updated the registration
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            final List<Registration> records = new ArrayList<Registration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    records.add(toPresenceRecord(result));
+                }
+                if (records.isEmpty()) {
+                    return null;
+                } else {
+                    Collections.sort(records);
+                    return records;
+                }
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public List<Registration> getRegistrations() {
         final SqlSession session = sessions.openSession();
         try {
@@ -157,6 +185,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         map.put("location", registration.getLocation());
         map.put("user_agent", registration.getUserAgent());
         map.put("ttl", registration.getTimeToLive());
+        map.put("webrtc", registration.isWebRTC());
         return map;
     }
 
@@ -171,7 +200,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final String location = readString(map.get("location"));
         final String userAgent = readString(map.get("user_agent"));
         final Integer timeToLive = readInteger(map.get("ttl"));
+        final Boolean webRTC = readBoolean(map.get("webrtc"));
         return new Registration(sid, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
-                timeToLive, location);
+                timeToLive, location, webRTC);
     }
 }
