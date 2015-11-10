@@ -1,14 +1,14 @@
 package org.mobicents.servlet.restcomm.configuration.sets;
 
+import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
-import org.sonatype.aether.util.StringUtils;
 
 public class IdentityMigrationConfigurationSet extends ConfigurationSet {
     // keys to retrieve options from source
     public static final String AUTH_SERVER_BASE_URL_KEY = "identity.migration.auth-server-url-base";
     public static final String USERNAME_KEY = "identity.migration.username";
     public static final String PASSWORD_KEY = "identity.migration.password";
-    public static final String INVITE_EXISTING_USERS_KEY = "identity.migration.inviteExistingUsers";
+    public static final String INVITE_EXISTING_USERS_KEY = "identity.migration.invite-existing-users";
 
     private final String authServerBaseUrl;
     private final String username;

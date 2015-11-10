@@ -49,7 +49,8 @@ public class IdentityMigrationTool {
     }
 
     public void migrate() {
-        report("starting migration");
+        report("migration started");
+        registerInstance("http://localhost", "my-secret"); // TODO - replace hardocded values with real stuff
         report("migration finished");
     }
 
