@@ -95,7 +95,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
             session.close();
         }
     }
-    
+
     @Override
     public List<Registration> getRegistrations(String user) {
         final SqlSession session = sessions.openSession();
