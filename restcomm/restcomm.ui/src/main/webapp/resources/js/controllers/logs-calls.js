@@ -15,7 +15,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
   $scope.entryLimit = 10; //max rows for data table
   $scope.noOfPages = 1; //max rows for data table
   $scope.reverse = false;
-  $scope.predicate = "";
+  $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;

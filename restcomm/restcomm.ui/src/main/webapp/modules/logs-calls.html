@@ -97,7 +97,7 @@
             <!--<th <th class="width-15pc">&nbsp;</th>-->
             </thead>
             <tbody>
-            <tr ng-repeat="call in filtered = (callsLogsList  | orderBy:sort:reverse)">
+            <tr ng-repeat="call in filtered = (callsLogsList | filter:query | orderBy:sort:reverse)">
 
             <!--<tr ng-repeat="call in callsLogsList">-->
                 <td><a href="" ng-click="showCallDetailsModal(call)">{{  call.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
