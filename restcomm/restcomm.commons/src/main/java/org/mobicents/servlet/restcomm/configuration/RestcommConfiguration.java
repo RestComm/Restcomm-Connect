@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.configuration.sets.ConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityMigrationConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 
@@ -44,7 +45,9 @@ public class RestcommConfiguration {
     }
 
     public RestcommConfiguration(Configuration apacheConf) {
-        addConfigurationSet("main", new MainConfigurationSet( new ApacheConfigurationSource(apacheConf)));
+        ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(apacheConf);
+        addConfigurationSet("main", new MainConfigurationSet(apacheSource));
+        addConfigurationSet("identityMigration", new IdentityMigrationConfigurationSet(apacheSource));
         // addConfigurationSet("identity", new IdentityConfigurationSet( new DbConfigurationSource(dbConf)));
         // ...
     }
@@ -66,6 +69,10 @@ public class RestcommConfiguration {
         sets.put("main", newMain);
     }
     */
+
+    public IdentityMigrationConfigurationSet getIdentityMigration() {
+        return (IdentityMigrationConfigurationSet) sets.get("identityMigration");
+    }
 
     // define getters  for additional ConfigurationSets here
     // ...
