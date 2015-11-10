@@ -31,6 +31,8 @@ public enum Outcome {
     public static Outcome fromHttpStatus(int status) {
         if (status == 200)
             return OK;
+        if (status == 204)
+            return OK;
         if (status == 404)
             return NOT_FOUND;
         if (status == 401 || status == 403)

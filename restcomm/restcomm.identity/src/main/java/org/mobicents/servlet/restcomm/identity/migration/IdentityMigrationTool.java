@@ -20,12 +20,11 @@
 
 package org.mobicents.servlet.restcomm.identity.migration;
 
-import java.util.List;
-
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdentityApiException;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -49,16 +48,31 @@ public class IdentityMigrationTool {
         this.inviteExistingUsers = inviteExisting;
     }
 
-    public void migrateUsers() {
-       List<Account> accounts = accountsDao.getAccounts(); // retrieve all available accounts
-       for (Account account: accounts) {
-           migrateAccount(account);
-       }
-       report("migration done");
-
+    public void migrate() {
+        report("starting migration");
+        report("migration finished");
     }
 
-    public boolean migrateAccount(Account account) {
+    boolean registerInstance(String instancePrefix, String secret) {
+        String instanceId;
+        try {
+            instanceId = identityApi.createInstance(instancePrefix, secret).instanceId;
+        } catch (RestcommIdentityApiException e) {
+            report(e.getMessage());
+            return false;
+        }
+        identityApi.bindInstance(instanceId);
+        return true;
+    }
+
+    void migrateUsers() {
+        //List<Account> accounts = accountsDao.getAccounts(); // retrieve all available accounts
+        //for (Account account: accounts) {
+        //    migrateAccount(account);
+        //}
+    }
+
+    boolean migrateAccount(Account account) {
         if (StringUtils.isEmpty(account.getEmailAddress()))
             report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + ") - account has no email address and won't be migrated");
         else {

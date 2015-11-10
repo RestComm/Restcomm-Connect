@@ -26,9 +26,11 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
+import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.configuration.DbIdentityConfigurationSource;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSource;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
@@ -238,6 +240,20 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
+    private void identityMigration(DaoManager daos) {
+        // TODO - replace these hardcoded values with values from the actual configuration
+        String authServerBaseUrl = "http://192.168.1.3:8080";
+        String username = "riAdmin";
+        String password = "password";
+
+        RestcommIdentityApi api = null; //new RestcommIdentityApi(authServerBaseUrl, username, password);
+        IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, false); // TODO - replace hardcoded "inviteExisting" parameter
+        migrationTool.migrate();
+
+        //String instanceId = api.createInstance("http://localhost", "my-secret").instanceId;
+        //api.bindInstance(instanceId);
+    }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
@@ -278,6 +294,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
             RestcommConfiguration.createOnce(xml);
+
+            // Identity migration. Register instance to auth server and migrate users.
+            identityMigration(storage);
 
             // Create directory of shiro based restcomm roles
             RestcommRoles restcommRoles = new RestcommRoles();

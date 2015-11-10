@@ -31,9 +31,10 @@ public class RestcommIdentityApiTest {
     @Test
     public void testCreateAndInviteUser() {
         UserEntity user = new UserEntity("test_invited_user",null, "Test Invited User", null, "invited_password");
-        assertEquals(api.createUser(user), Outcome.OK);
-        assertTrue(api.inviteUser("test_invited_user"));
-        // TODO remove user
+        assertEquals("Error creating user", Outcome.OK, api.createUser(user));
+        assertTrue("Error inviting user",api.inviteUser("test_invited_user"));
+        assertEquals("Error removing user",Outcome.OK, api.dropUser("test_invited_user"));
     }
+    
 
 }
