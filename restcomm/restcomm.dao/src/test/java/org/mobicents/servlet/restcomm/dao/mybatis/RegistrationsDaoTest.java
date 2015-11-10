@@ -64,7 +64,7 @@ public final class RegistrationsDaoTest {
         String username = "tom_" + now;
         String displayName = "Tom_" + now;
         Registration registration = new Registration(sid, now, now, now, "sip:tom@company.com", displayName, username,
-                "TestUserAgent/1.0", 3600, "sip:tom@company.com");
+                "TestUserAgent/1.0", 3600, "sip:tom@company.com", true);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));
@@ -84,6 +84,7 @@ public final class RegistrationsDaoTest {
         assertTrue(result.getLocation().equals(registration.getLocation()));
         assertTrue(result.getUserAgent().equals(registration.getUserAgent()));
         assertTrue(result.getTimeToLive() == registration.getTimeToLive());
+        assertTrue(result.isWebRTC());
         // Update the registration.
         registration = registration.setTimeToLive(3600);
         registrations.updateRegistration(registration);
@@ -100,6 +101,7 @@ public final class RegistrationsDaoTest {
         assertTrue(result.getLocation().equals(registration.getLocation()));
         assertTrue(result.getUserAgent().equals(registration.getUserAgent()));
         assertTrue(result.getTimeToLive() == registration.getTimeToLive());
+        assertTrue(result.isWebRTC());
         // Delete the registration.
         registrations.removeRegistration(registration);
         // Validate that the registration was removed.
@@ -113,7 +115,7 @@ public final class RegistrationsDaoTest {
         String username = "tom_" + now;
         String displayName = "Tom_" + now;
         Registration registration = new Registration(sid, now, now, now, "sip:tom@company.com", displayName, username, null,
-                3600, "sip:tom@company.com");
+                3600, "sip:tom@company.com", true);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));
@@ -122,7 +124,6 @@ public final class RegistrationsDaoTest {
         assertNotNull(registrations.getRegistration(username));
         // Expected to fail if UA is null
         assertFalse(registrations.hasRegistration(registration));
-
     }
 
     @Test
@@ -132,7 +133,7 @@ public final class RegistrationsDaoTest {
         String username = "tom_" + now;
         String displayName = null;
         Registration registration = new Registration(sid, now, now, now, "sip:tom@company.com", displayName, username,
-                "TestUserAgent/1.0", 3600, "sip:tom@company.com");
+                "TestUserAgent/1.0", 3600, "sip:tom@company.com", false);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));

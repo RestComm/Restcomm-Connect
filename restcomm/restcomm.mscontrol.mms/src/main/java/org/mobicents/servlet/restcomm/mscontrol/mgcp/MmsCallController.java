@@ -137,6 +137,7 @@ public class MmsCallController extends MediaServerController {
     private String remoteSdp;
     private String connectionMode;
     private boolean callOutbound;
+    private boolean webrtc;
 
     // CallMediaGroup
     private ActorRef mediaGroup;
@@ -253,6 +254,7 @@ public class MmsCallController extends MediaServerController {
         this.remoteSdp = "";
         this.callOutbound = false;
         this.connectionMode = "inactive";
+        this.webrtc = false;
 
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
@@ -431,6 +433,7 @@ public class MmsCallController extends MediaServerController {
         this.connectionMode = message.getConnectionMode();
         this.callOutbound = message.isOutbound();
         this.remoteSdp = message.getSessionDescription();
+        this.webrtc = message.isWebrtc();
 
         fsm.transition(message, acquiringMediaGatewayInfo);
     }
@@ -727,10 +730,10 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             OpenConnection open = null;
             if (callOutbound) {
-                open = new OpenConnection(ConnectionMode.SendRecv);
+                open = new OpenConnection(ConnectionMode.SendRecv, webrtc);
             } else {
                 final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
-                open = new OpenConnection(descriptor, ConnectionMode.SendRecv);
+                open = new OpenConnection(descriptor, ConnectionMode.SendRecv, webrtc);
             }
             remoteConn.tell(open, source);
         }

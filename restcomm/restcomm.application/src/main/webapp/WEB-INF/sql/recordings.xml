@@ -5,7 +5,7 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.RecordingsDao">
   <insert id="addRecording" parameterType="map">
-    INSERT INTO "restcomm_recordings" ("sid", "date_created", "date_updated", "account_sid", "call_sid", "duration", "api_version", "uri", "file_uri"")
+    INSERT INTO "restcomm_recordings" ("sid", "date_created", "date_updated", "account_sid", "call_sid", "duration", "api_version", "uri", "file_uri")
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{call_sid}, #{duration}, #{api_version}, #{uri}, #{file_uri});
   </insert>
   
