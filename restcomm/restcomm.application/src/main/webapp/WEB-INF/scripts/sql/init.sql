@@ -122,7 +122,8 @@ CREATE TABLE "restcomm_call_detail_records" (
 "api_version" VARCHAR(10) NOT NULL,
 "forwarded_from" VARCHAR(15),
 "caller_name" VARCHAR(30),
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"ring_duration" INT
 );
 
 CREATE TABLE "restcomm_clients" (
