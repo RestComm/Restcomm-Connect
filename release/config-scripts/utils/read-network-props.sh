@@ -19,7 +19,7 @@ getPrivateIP() {
 getPublicIP() {
         PIP_IP=`wget --tries=5 --timeout=5 -qO- http://ipecho.net/plain`
         if [[ -z "$PIP_IP" ]]; then
-            PIP=`wget --tries=5 --timeout=5 -qO- http://observebox.com/ip`
+            PIP=`wget --tries=5 --timeout=5 -qO- http://ip-addr.es`
         fi
         if [[ -z "$PIP" ]]; then
             echo "Failed to determine public IP"
