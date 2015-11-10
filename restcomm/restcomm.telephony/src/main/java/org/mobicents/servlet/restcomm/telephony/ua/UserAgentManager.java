@@ -44,7 +44,6 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
-import org.cafesip.sipunit.SipMessage;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -57,13 +56,13 @@ import org.mobicents.servlet.restcomm.util.DigestAuthentication;
 
 import com.telestax.servlet.MonitoringService;
 
-import scala.concurrent.duration.Duration;
 import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
