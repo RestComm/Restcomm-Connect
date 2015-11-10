@@ -95,6 +95,33 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
             session.close();
         }
     }
+    
+    @Override
+    public List<Registration> getRegistrations(String user) {
+        final SqlSession session = sessions.openSession();
+        try {
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
+            // we get all registrations and sort them by latest updated date so that we target the device where the user last
+            // updated the registration
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            final List<Registration> records = new ArrayList<Registration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    records.add(toPresenceRecord(result));
+                }
+                if (records.isEmpty()) {
+                    return null;
+                } else {
+                    Collections.sort(records);
+                    return records;
+                }
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
 
     @Override
     public List<Registration> getRegistrations() {
