@@ -14,7 +14,7 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
   $scope.reverse = false;
-  $scope.predicate = "";
+  $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
