@@ -44,6 +44,7 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
+import org.cafesip.sipunit.SipMessage;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -215,11 +216,23 @@ public final class UserAgentManager extends UntypedActor {
 
     private void pong(final Object message) {
         final SipServletResponse response = (SipServletResponse) message;
-        // if(response.getSession().isValid()) {
-        // response.getSession().invalidate();
-        // }
-        if (response.getApplicationSession().isValid()) {
-            response.getApplicationSession().invalidate();
+        if (response.getMethod().equalsIgnoreCase("OPTIONS")){
+            // if(response.getSession().isValid()) {
+            // response.getSession().invalidate();
+            // }
+            String user = ((SipURI)response.getTo().getURI()).getUser();
+            String host = ((SipURI)response.getTo().getURI()).getHost();
+
+            final RegistrationsDao registrations = storage.getRegistrationsDao();
+            final List<Registration> registration = registrations.getRegistrations(user);
+            for (Registration reg : registration) {
+                if (reg.getLocation().equalsIgnoreCase(host))
+                    registrations.removeRegistration(reg);
+            }
+
+            if (response.getApplicationSession().isValid()) {
+                response.getApplicationSession().invalidate();
+            }
         }
     }
 

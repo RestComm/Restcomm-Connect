@@ -29,7 +29,11 @@ import java.net.URL;
 import java.text.ParseException;
 
 import javax.sip.Dialog;
+import javax.sip.InvalidArgumentException;
+import javax.sip.RequestEvent;
+import javax.sip.SipException;
 import javax.sip.address.SipURI;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.cafesip.sipunit.Credential;
@@ -166,6 +170,31 @@ public class RegisterClientTest {
         assertTrue(mariaPhone2.register(uri, "maria", "1234", mariaContact2, 3600, 3600));
 
         Thread.sleep(1000);
+
+        assertTrue(georgePhone.unregister(georgeContact, 0));
+        assertTrue(mariaPhone.unregister(mariaContact, 0));
+        assertTrue(mariaPhone2.unregister(mariaContact2, 0));
+    }    
+    
+    @Test
+    public void testRegisterClientAndRemoveItAfterNoResponseToOptions() throws ParseException, InterruptedException, SipException, InvalidArgumentException {
+
+        assertNotNull(georgeRestcommClientSid);
+
+        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 300, 300));
+
+        Thread.sleep(150);
+
+        georgePhone.listenRequestMessage();
+        RequestEvent reqEvent = georgePhone.waitRequest(5000);
+        assertTrue(reqEvent.getRequest().getMethod().equals(Request.OPTIONS));
+        Response resp = georgeSipStack.getMessageFactory().createResponse(200, reqEvent.getRequest());
+        reqEvent.getServerTransaction().sendResponse(resp);
+
+        
+
 
         assertTrue(georgePhone.unregister(georgeContact, 0));
         assertTrue(mariaPhone.unregister(mariaContact, 0));
