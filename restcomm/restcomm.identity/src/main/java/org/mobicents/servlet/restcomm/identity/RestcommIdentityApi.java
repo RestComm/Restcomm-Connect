@@ -12,6 +12,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContextBuilder;
@@ -162,6 +163,26 @@ public class RestcommIdentityApi {
                 return Outcome.FAILED;
             } else
                 return Outcome.OK;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public Outcome dropUser(String username) {
+        CloseableHttpClient client = null;
+        try {
+            client = buildHttpClient();
+            HttpDelete request = new HttpDelete(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/users/" + username);
+            request.addHeader("Authorization", "Bearer " + tokenString);
+
+            HttpResponse response = client.execute(request);
+            return Outcome.fromHttpStatus(response.getStatusLine().getStatusCode());
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
