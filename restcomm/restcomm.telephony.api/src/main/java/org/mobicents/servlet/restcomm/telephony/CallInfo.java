@@ -49,7 +49,7 @@ public final class CallInfo {
 
     public CallInfo(final Sid sid, final State state, final CreateCall.Type type, final String direction,
             final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
-            final SipServletRequest invite, final SipServletResponse lastResponse,final DateTime dateConUpdated) {
+            final SipServletRequest invite, final SipServletResponse lastResponse,final boolean webrtc, final DateTime dateConUpdated) {
         super();
         this.sid = sid;
         this.state = state;

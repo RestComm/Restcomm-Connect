@@ -62,6 +62,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
@@ -178,6 +179,7 @@ public class DialActionTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
+        wireMockRule.resetRequests();
         Thread.sleep(2000);
     }
 
@@ -494,7 +496,8 @@ public class DialActionTest {
         assertTrue(requestBody.contains("DialCallStatus=no-answer"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
-        assertTrue(requestBody.contains("DialCallDuration=3"));
+        assertTrue(requestBody.contains("DialRingDuration=3"));
+        assertTrue(requestBody.contains("DialCallDuration=0"));
         String dialCallSid = params[9].split("=")[1];
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
