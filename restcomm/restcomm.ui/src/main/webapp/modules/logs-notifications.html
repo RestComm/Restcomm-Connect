@@ -42,14 +42,14 @@
 
         <table ng-show="(notificationsLogsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
             <thead>
-            <th class="width-15pc">DATE <button ng-click="toggle=!toggle"><span  ng-class="{'glyphicon glyphicon-arrow-up':toggle,'glyphicon glyphicon-arrow-down':!toggle}" ></span></button></th>
+            <th class="width-20pc" style="border-bottom: 3px solid #428bca;text-align: center;">DATE<span class="pull-right"><button style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;" ng-click="sortBy('date_created');toggleD=!toggleD;reverse=toggleD"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></button></span></th>
             <th class="width-5pc">TYPE</th>
             <th class="width-5pc">CODE</th>
             <th class="width-10pc">CALL</th>
             <th class="width-20pc">TEXT</th>
             </thead>
             <tbody>
-            <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:'date_created':toggle) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+            <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:sort:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
                 <td><a href="" ng-click="showNotificationDetailsModal(notification)">{{ notification.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
                 <td><div class="text-center" tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-remove-sign' : 'fa fa-warning'"></i></div></td>
                 <td><div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div></td>
