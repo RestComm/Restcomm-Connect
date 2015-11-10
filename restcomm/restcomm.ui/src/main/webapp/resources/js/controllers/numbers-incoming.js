@@ -55,7 +55,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
 
   // are we editing details...
   //if($scope.phoneSid === $routeParams.phoneSid) {
@@ -76,14 +76,15 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   //}
 
   // query for available apps
-  $scope.availableApps = RCommApps.query();
+  $scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
   $scope.localApps = localApps;
 
   //$scope.countries = countries;
   $scope.countries = allCountries;
   $scope.providerCountries = providerCountries;
 
-  $scope.areaCodes = RCommAvailableNumbers.getAreaCodes();
+  $scope.areaCodesUS = RCommAvailableNumbers.getAreaCodes({countryCode: 'US'});
+  $scope.areaCodesCA = RCommAvailableNumbers.getAreaCodes({countryCode: 'CA'});
   $scope.selected = undefined;
 
   $scope.registerIncomingNumber = function(number) {
@@ -152,7 +153,8 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
   $scope.countries = allCountries;
   $scope.providerCountries = providerCountries;
 
-  $scope.areaCodes = RCommAvailableNumbers.getAreaCodes();
+  $scope.areaCodesUS = RCommAvailableNumbers.getAreaCodes({countryCode: 'US'});
+  $scope.areaCodesCA = RCommAvailableNumbers.getAreaCodes({countryCode: 'CA'});
   $scope.selected = undefined;
 
   $scope.setProvider = function(isProvider) {

@@ -1812,8 +1812,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
                     if (amazonS3Enabled) {
                         //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
-                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toURL().toString()));
-                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getUri().toURL().toString()));
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getFileUri().toURL().toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getFileUri().toURL().toString()));
                     } else {
                         // Redirect to the action url.
                         String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
@@ -1830,15 +1830,19 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, null);
+                        downloader.tell(request, self());
+                        // A little clean up.
+                        recordingSid = null;
+                        recordingUri = null;
+                        return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         downloader.tell(request, null);
+                        // A little clean up.
+                        recordingSid = null;
+                        recordingUri = null;
                     }
-                    // A little clean up.
-                    recordingSid = null;
-                    recordingUri = null;
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
                 }

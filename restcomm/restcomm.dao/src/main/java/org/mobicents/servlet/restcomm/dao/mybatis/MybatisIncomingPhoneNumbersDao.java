@@ -166,7 +166,6 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final String friendlyName = readString(map.get("friendly_name"));
         final Sid accountSid = readSid(map.get("account_sid"));
         final String phoneNumber = readString(map.get("phone_number"));
-        final String cost = readString(map.get("cost"));
         final String apiVersion = readString(map.get("api_version"));
         final Boolean hasVoiceCallerIdLookup = readBoolean(map.get("voice_caller_id_lookup"));
         final URI voiceUrl = readUri(map.get("voice_url"));
@@ -192,6 +191,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final Boolean mmsCapable = readBoolean(map.get("mms_capable"));
         final Boolean faxCapable = readBoolean(map.get("fax_capable"));
         final Boolean pureSip = readBoolean(map.get("pure_sip"));
+        final String cost = readString(map.get("cost"));
         return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
@@ -206,7 +206,6 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("friendly_name", incomingPhoneNumber.getFriendlyName());
         map.put("account_sid", writeSid(incomingPhoneNumber.getAccountSid()));
         map.put("phone_number", incomingPhoneNumber.getPhoneNumber());
-        map.put("cost", incomingPhoneNumber.getCost());
         map.put("api_version", incomingPhoneNumber.getApiVersion());
         map.put("voice_caller_id_lookup", incomingPhoneNumber.hasVoiceCallerIdLookup());
         map.put("voice_url", writeUri(incomingPhoneNumber.getVoiceUrl()));
@@ -232,6 +231,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("mms_capable", incomingPhoneNumber.isMmsCapable());
         map.put("fax_capable", incomingPhoneNumber.isFaxCapable());
         map.put("pure_sip", incomingPhoneNumber.isPureSip());
+        map.put("cost", incomingPhoneNumber.getCost());
         return map;
     }
 }

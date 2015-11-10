@@ -32,20 +32,22 @@ public final class CreateMediaSession {
     private final boolean outbound;
     private final String connectionMode;
     private final String sessionDescription;
+    private final boolean webrtc;
 
-    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound) {
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc) {
         super();
         this.connectionMode = connectionMode;
         this.sessionDescription = sessionDescription;
         this.outbound = outbound;
+        this.webrtc = webrtc;
     }
 
     public CreateMediaSession(String connectionMode) {
-        this("sendrecv", "", false);
+        this("sendrecv", "", false, false);
     }
 
     public CreateMediaSession() {
-        this("", "", false);
+        this("", "", false, false);
     }
 
     public String getConnectionMode() {
@@ -58,6 +60,10 @@ public final class CreateMediaSession {
 
     public boolean isOutbound() {
         return outbound;
+    }
+
+    public boolean isWebrtc() {
+        return webrtc;
     }
 
 }

@@ -144,6 +144,7 @@ public class DialTest {
     private String dialDIDGreaterThan15Digits = "sip:+12345678912345678912@127.0.0.1:5080";
     private String dialClientWithRecordWithStatusCallback = "sip:7777@127.0.0.1:5080";
     private String dialForCustomHeaders = "sip:7778@127.0.0.1:5080";
+    private String recordWithRCMLFromRecordAction = "sip:+12223334448@127.0.0.1:5080";
     
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -583,7 +584,8 @@ public class DialTest {
         cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
-        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-2)).get("duration").getAsInt() == 8);
+        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-2)).get("duration").getAsInt() == 3);
+        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-2)).get("ring_duration").getAsInt() == 5);
         assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-1)).get("duration").getAsInt() == 8);
         if (((JsonObject)cdrsArray.get(initialCdrSize)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
             assertTrue(((JsonObject)cdrsArray.get(initialCdrSize)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(initialCdrSize+1)).get("parent_call_sid").getAsString()));
@@ -1879,6 +1881,68 @@ public class DialTest {
         }
     }
     
+//    private String rcmlToReturn = "<Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
+    //Non regression test for https://github.com/Mobicents/RestComm/issues/612
+    @Test
+    public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException {
+        deployer.deploy("DialTest");
+        
+        stubFor(post(urlEqualTo("/test"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(rcmlToReturn)));
+        
+        //Prepare Fotini phone to receive a call
+        final SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, recordWithRCMLFromRecordAction, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        //At this point bob leaves a voicemail
+        
+        //Now Fotini should receive a call
+        assertTrue(fotiniCall.waitForIncomingCall(30 * 1000));
+        assertTrue(fotiniCall.sendIncomingCallResponse(100, "Trying-Fotini", 600));
+        assertTrue(fotiniCall.sendIncomingCallResponse(180, "Ringing-Fotini", 600));
+        String receivedBody = new String(fotiniCall.getLastReceivedRequest().getRawContent());
+        assertTrue(fotiniCall.sendIncomingCallResponse(Response.OK, "OK-Fotini", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(fotiniCall.waitForAck(5000));
+        fotiniCall.listenForDisconnect();
+
+        Thread.sleep(2000);
+
+        // hangup.
+
+        assertTrue(bobCall.disconnect());
+
+        assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+    
   private String sayRcml = "<Response><Say>Hello</Say></Response>";
   //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
   @Test
@@ -2309,6 +2373,7 @@ public class DialTest {
         archive.addAsWebResource("sip-dial-url-screening-test.jsp");
         archive.addAsWebResource("hello-play.xml");
         archive.addAsWebResource("send-sms.xml");
+        archive.addAsWebResource("record-withActionUrl.xml");
         logger.info("Packaged Test App");
         return archive;
     }

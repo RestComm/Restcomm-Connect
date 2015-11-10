@@ -1,4 +1,4 @@
-angular.module("rcApp.restcommApps").service("rappService", function ($http, $q, Notifications) {
+angular.module("rcApp.restcommApps").service("rappService", function ($http, $q, Notifications, AuthService) {
 	var service = {};
 	//var localApps = undefined;
 	var deferred;
