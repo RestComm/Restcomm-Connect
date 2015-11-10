@@ -159,9 +159,11 @@ public final class Call extends UntypedActor {
     private String direction;
     private String forwardedFrom;
     private DateTime created;
+    private DateTime ConUpdated;
     private final List<ActorRef> observers;
     private boolean receivedBye;
     private boolean muted;
+    private boolean webrtc;
 
     // Conferencing
     private ActorRef conference;
@@ -292,7 +294,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, ConUpdated);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -498,6 +500,7 @@ public final class Call extends UntypedActor {
             }
             timeout = request.timeout();
             direction = request.isFromApi() ? OUTBOUND_API : OUTBOUND_DIAL;
+            webrtc = request.isWebrtc();
 
             // Notify the observers.
             external = CallStateChanged.State.QUEUED;
@@ -770,6 +773,11 @@ public final class Call extends UntypedActor {
             if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                outgoingCallRecord = outgoingCallRecord.setDuration(0);
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
+                recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
         }
     }
@@ -884,7 +892,7 @@ public final class Call extends UntypedActor {
             // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv", "", true);
+                command = new CreateMediaSession("sendrecv", "", true, webrtc);
             } else {
                 if (!liveCallModification) {
                     command = generateRequest(invite);
@@ -902,7 +910,7 @@ public final class Call extends UntypedActor {
             final String externalIp = sipMessage.getInitialRemoteAddr();
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
-            return new CreateMediaSession("sendrecv", offer, false);
+            return new CreateMediaSession("sendrecv", offer, false, webrtc);
         }
     }
 
@@ -942,6 +950,23 @@ public final class Call extends UntypedActor {
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
             }
+
+            //Set Call created time, only for "Talk time".
+            ConUpdated = DateTime.now();
+
+            //Update CDR for Outbound Call.
+            if (recordsDao != null) {
+                if (outgoingCallRecord != null && isOutbound()) {
+                    final int seconds = (int) ((DateTime.now().getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                    outgoingCallRecord = outgoingCallRecord.setRingDuration(seconds);
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                    outgoingCallRecord = outgoingCallRecord.setStartTime(DateTime.now());
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                    outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                    recordsDao.updateCallDetailRecord(outgoingCallRecord);
+                }
+            }
+
 
             final String externalIp = response.getInitialRemoteAddr();
             final byte[] sdp = response.getRawContent();

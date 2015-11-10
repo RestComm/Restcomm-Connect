@@ -97,6 +97,11 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
         if (recording == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(recording.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(recording), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -111,6 +116,7 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
     protected Response getRecordings(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

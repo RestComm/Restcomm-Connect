@@ -2,6 +2,8 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Principal;
+import java.util.ArrayList;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -26,6 +28,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
+import org.mobicents.servlet.restcomm.rvd.ProjectApplicationsApi;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RasService;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
@@ -41,11 +44,13 @@ import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem;
+import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
+import org.mobicents.servlet.restcomm.rvd.security.RvdUser;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -210,12 +215,18 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps")
     public Response listRapps(@Context HttpServletRequest request) {
-        ProjectService projectService = new ProjectService(rvdContext, workspaceStorage);
+        Principal loggedUser = securityContext.getUserPrincipal();
+        List<ProjectItem> items;
+        List<String> projectNames = new ArrayList<String>();
         try {
-            List<String> projectNames = FsProjectStorage.listProjectNames(workspaceStorage);
+            items = projectService.getAvailableProjectsByOwner(loggedUser.getName());
+            for (ProjectItem project : items) {
+                projectNames.add(project.getName());
+            }
             List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage, projectService);
             return buildOkResponse(rapps);
         } catch (StorageException e) {
@@ -233,13 +244,15 @@ public class RasRestService extends RestService {
      * @param request
      * @return
      */
+    @RvdAuth
     @POST
     @Path("apps")
     public Response newRasApp(@Context HttpServletRequest request) {
         logger.info("uploading new ras app");
 
         BuildService buildService = new BuildService(workspaceStorage);
-        String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
+        //String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
+        RvdUser loggedUser = (RvdUser) securityContext.getUserPrincipal();
 
 
         try {
@@ -258,9 +271,16 @@ public class RasRestService extends RestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
-                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser, projectService);
+                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser.getName(), projectService);
                         ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
-                        buildService.buildProject(effectiveProjectName, projectState);
+
+                        ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
+                        applicationsApi.createApplication(loggedUser.getTicketId(), effectiveProjectName, projectState.getHeader().getProjectKind());
+                        try {
+                            buildService.buildProject(effectiveProjectName, projectState);
+                        } catch (Exception e) {
+                            applicationsApi.rollbackCreateApplication(loggedUser.getTicketId(), effectiveProjectName);
+                        }
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);
@@ -297,10 +317,11 @@ public class RasRestService extends RestService {
 
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}/config")
     public Response getConfig(@PathParam("name") String projectName) {
-        logger.info("getting configuration options for " + projectName);
+        //logger.info("getting configuration options for " + projectName);
 
         RappConfig rappConfig;
         // first, try to return the 'Rapp' from the packaging directory
@@ -326,6 +347,7 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}")
     public Response getRapp(@PathParam("name") String projectName) throws StorageException {
@@ -342,10 +364,11 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}/config/dev")
     public Response getConfigFromPackaging(@PathParam("name") String projectName) {
-        logger.info("getting configuration options for " + projectName);
+        //logger.info("getting configuration options for " + projectName);
        try {
             Rapp rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
             return buildOkResponse(rapp.getConfig());
@@ -362,6 +385,7 @@ public class RasRestService extends RestService {
      * @param projectName
      * @return
      */
+    @RvdAuth
     @POST
     @Path("apps/{name}/bootstrap")
     public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
@@ -379,6 +403,7 @@ public class RasRestService extends RestService {
         }
     }
 
+    @RvdAuth
     @GET
     @Path("apps/{name}/bootstrap")
     public Response getBootstrap(@PathParam("name") String projectName) {

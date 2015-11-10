@@ -249,9 +249,9 @@ public class ClientsDialTest {
         assertTrue(dimitriCall.respondToDisconnect());
         long endTime   = System.currentTimeMillis();
         
-        long totalTime = endTime - startTime;
-        assertTrue(3 <= totalTime);
-        assertTrue(totalTime >= 4);
+        double totalTime = (endTime - startTime)/1000.0;
+        assertTrue(3.0 <= totalTime);
+        assertTrue(totalTime <= 4.0);
         
         Thread.sleep(3000);
 
