@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.http.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -47,6 +48,11 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.stream.XMLStreamException;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -61,7 +67,7 @@ public final class Downloader extends UntypedActor {
     }
 
     public HttpResponseDescriptor fetch(final HttpRequestDescriptor descriptor) throws IllegalArgumentException, IOException,
-            URISyntaxException {
+            URISyntaxException, XMLStreamException {
         int code = -1;
         HttpRequest request = null;
         HttpResponse response = null;
@@ -94,7 +100,7 @@ public final class Downloader extends UntypedActor {
                     code, errorReason);
             logger.warning(httpErrorMessage);
         }
-        return response(request, response);
+        return  validateXML(response(request, response));
     }
 
     private boolean isRedirect(final int code) {
@@ -104,6 +110,18 @@ public final class Downloader extends UntypedActor {
 
     private boolean isHttpError(final int code) {
         return (code >= 400);
+    }
+
+    private HttpResponseDescriptor validateXML (final HttpResponseDescriptor descriptor) throws XMLStreamException {
+        try {
+            // parse an XML document into a DOM tree
+            String xml =  descriptor.getContentAsString();
+            DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            parser.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
+            return descriptor;
+        } catch (final Exception e) {
+            throw new XMLStreamException("Error parsing the RCML:" + e);
+        }
     }
 
     @Override
