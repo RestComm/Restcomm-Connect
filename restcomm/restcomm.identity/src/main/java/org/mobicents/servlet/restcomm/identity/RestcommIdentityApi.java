@@ -226,6 +226,25 @@ public class RestcommIdentityApi {
         }
     }
 
+    public Outcome dropInstance(String instanceId) {
+        CloseableHttpClient client = null;
+        try {
+            client = buildHttpClient();
+            HttpDelete request = new HttpDelete(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + instanceId);
+            request.addHeader("Authorization", "Bearer " + tokenString);
+
+            HttpResponse response = client.execute(request);
+            return Outcome.fromHttpStatus(response.getStatusLine().getStatusCode());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     private CloseableHttpClient buildHttpClient() {
         // TODO - use a proper certificate on identity.restcomm.com instead of a self-signed one

@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.identity;
 
 import static org.junit.Assert.*;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
@@ -16,6 +17,7 @@ public class RestcommIdentityApiTest {
     static String realm = "restcomm";
 
     static RestcommIdentityApi api;
+    static String instanceId;
 
     public RestcommIdentityApiTest() {
         // TODO Auto-generated constructor stub
@@ -24,7 +26,7 @@ public class RestcommIdentityApiTest {
     @BeforeClass
     public static void createInstance() throws RestcommIdentityApiException {
         api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm);
-        String instanceId = api.createInstance("http://localhost", "my-secret").instanceId;
+        instanceId = api.createInstance("http://localhost", "my-secret").instanceId;
         api.bindInstance(instanceId);
     }
 
@@ -35,6 +37,14 @@ public class RestcommIdentityApiTest {
         assertTrue("Error inviting user",api.inviteUser("test_invited_user"));
         assertEquals("Error removing user",Outcome.OK, api.dropUser("test_invited_user"));
     }
-    
+
+    @AfterClass
+    public static void removeInstance() throws RestcommIdentityApiException {
+        if (instanceId != null) {
+            Outcome outcome = api.dropInstance(instanceId);
+            assertEquals("Error removing instance", Outcome.OK, outcome);
+        }
+    }
+
 
 }
