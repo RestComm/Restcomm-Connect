@@ -97,13 +97,13 @@ $scope.sort = function(item) {
         }
        if ($scope.predicate == 'cost') {
           if (item[$scope.predicate])
-            return parseFloat(item[$scope.predicate]).toFixed(3);
+            return parseFloat(item[$scope.predicate]);
           else
            return  item[$scope.predicate] = parseFloat('0.00');
         }
         if ($scope.predicate == 'duration') {
          if (item[$scope.predicate])
-           return parseFloat(item[$scope.predicate]).toFixed(3);
+           return parseFloat(item[$scope.predicate]);
           else
            return  item[$scope.predicate] = parseFloat('0');
         }
