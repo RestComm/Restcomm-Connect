@@ -9,11 +9,13 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
     public static final String USERNAME_KEY = "identity.migration.username";
     public static final String PASSWORD_KEY = "identity.migration.password";
     public static final String INVITE_EXISTING_USERS_KEY = "identity.migration.invite-existing-users";
+    public static final String ADMIN_ACCOUNT_SID_KEY = "identity.migration.admin-account-sid";
 
     private final String authServerBaseUrl;
     private final String username;
     private final String password;
     private final Boolean inviteExistingUsers;
+    private final String adminAccountSid;
 
     // default values
     public static final String AUTH_SERVER_BASE_URL_DEFAULT = "https://identity.restcomm.com";
@@ -41,6 +43,8 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
         } catch (Exception e) {
             throw new RuntimeException("Error initializing '" + INVITE_EXISTING_USERS_KEY + "' configuration setting", e);
         }
+        // adminAccountSid option
+        this.adminAccountSid = source.getProperty(ADMIN_ACCOUNT_SID_KEY);
     }
 
     public String getAuthServerBaseUrl() {
@@ -57,6 +61,10 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
 
     public Boolean getInviteExistingUsers() {
         return inviteExistingUsers;
+    }
+
+    public String getAdminAccountSid() {
+        return adminAccountSid;
     }
 
 }

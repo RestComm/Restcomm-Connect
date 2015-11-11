@@ -4,7 +4,9 @@ import org.apache.log4j.Logger;
 import org.keycloak.RSATokenVerifier;
 import org.keycloak.VerificationException;
 import org.keycloak.adapters.KeycloakDeployment;
+import org.keycloak.adapters.KeycloakDeploymentBuilder;
 import org.keycloak.representations.AccessToken;
+import org.keycloak.representations.adapters.config.AdapterConfig;
 
 public class IdentityUtils {
     private static Logger logger = Logger.getLogger(IdentityUtils.class);
@@ -23,6 +25,11 @@ public class IdentityUtils {
             logger.error("Cannot verity token.", e);
             return null;
         }
+    }
+
+    public static KeycloakDeployment createDeployment(AdapterConfig adapterConfig) {
+        KeycloakDeployment deployment = KeycloakDeploymentBuilder.build(adapterConfig);
+        return deployment;
     }
 
 }
