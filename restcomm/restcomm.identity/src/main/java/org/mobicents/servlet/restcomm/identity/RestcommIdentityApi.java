@@ -24,6 +24,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.constants.ServiceUrlConstants;
+import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.KeycloakUriBuilder;
@@ -44,7 +45,7 @@ public class RestcommIdentityApi {
     private String tokenString;
     //private IdentityConfigurator configurator;
     private String authServerBaseUrl;
-    //private String username = "not available";
+    private String username;
     private String identityInstanceId;
     private String realm;
 
@@ -58,6 +59,7 @@ public class RestcommIdentityApi {
         this.tokenString = retrieveTokenString(username, password);
         if (tokenString == null)
             throw new IllegalStateException("No oauth token in context.");
+        this.username = username;
     }
 
     public RestcommIdentityApi(final IdentityContext identityContext, final IdentityConfigurator configurator) {
@@ -67,15 +69,26 @@ public class RestcommIdentityApi {
         this.authServerBaseUrl = configurator.getAuthServerUrlBase();
         this.identityInstanceId = configurator.getIdentityInstanceId();
         this.realm = configurator.getRealmName();
-
+        AccessToken accessToken = identityContext.getOauthToken();
+        if (accessToken == null)
+            throw new IllegalStateException("Missing oauth token from identity context");
+        this.username = identityContext.getOauthToken().getPreferredUsername();
     }
 
     public void bindInstance(String instanceId) {
         this.identityInstanceId = instanceId;
     }
 
+    public String getBoundInstanceId() {
+        return identityInstanceId;
+    }
+
     public String getTokenString() {
         return tokenString;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String retrieveTokenString(String username, String password) {

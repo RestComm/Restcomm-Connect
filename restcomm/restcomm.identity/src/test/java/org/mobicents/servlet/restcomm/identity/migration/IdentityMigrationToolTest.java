@@ -3,6 +3,7 @@ package org.mobicents.servlet.restcomm.identity.migration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdentityApiException;
@@ -41,6 +42,8 @@ public class IdentityMigrationToolTest {
 
         assertTrue(migrationTool.migrateAccount(account));
         assertNotNull( api.retrieveTokenString("account1@company.com", "auth_token1") );
+
+        api.dropUser("account1@company.com");
     }
 
     @Test
@@ -67,14 +70,16 @@ public class IdentityMigrationToolTest {
         // try to migrate over him
         Account existingAccount = dao.buildTestAccount(null,  "existing@company.com", "existing user", "password", null);
         assertFalse("Existing user shouldn't be migrated as the 'inviteExistingUsers' policy is false.", migrationTool.migrateAccount(existingAccount));
-
         // create migration tool with 'inviteExisting' == true
         migrationTool = new IdentityMigrationTool(dao, api, true);
         assertTrue("Existing user shouldn't be migrated as the 'inviteExistingUsers' policy is false.", migrationTool.migrateAccount(existingAccount));
+        // remove user
+        api.dropUser("existing@company.com");
     }
 
     @AfterClass
     public static void shutdown() {
+        assertEquals("Error removing instance " + api.getBoundInstanceId(), Outcome.OK, api.dropInstance(api.getBoundInstanceId()));
     }
 
 }

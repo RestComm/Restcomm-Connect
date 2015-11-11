@@ -20,6 +20,8 @@
 
 package org.mobicents.servlet.restcomm.identity.migration;
 
+import java.util.List;
+
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -40,21 +42,31 @@ public class IdentityMigrationTool {
     private AccountsDao accountsDao;
     private RestcommIdentityApi identityApi;
     private boolean inviteExistingUsers;
+    private String adminAccountSid;
 
-    public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting) {
+    public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting, String adminAccountSid) {
         super();
         this.accountsDao = dao;
         this.identityApi = identityApi;
         this.inviteExistingUsers = inviteExisting;
+        this.adminAccountSid = adminAccountSid;
+    }
+
+    public IdentityMigrationTool(AccountsDao accountsDao, RestcommIdentityApi identityApi, boolean inviteExistingUsers) {
+        this(accountsDao, identityApi, inviteExistingUsers, null);
     }
 
     public void migrate() {
         report("migration started");
-        registerInstance("http://localhost", "my-secret"); // TODO - replace hardocded values with real stuff
+        registerInstance("http://localhost", "my-secret"); // TODO - replace hardcoded values with real stuff
+        migrateUsers();
+        linkAdministratorAccount();
+        //updateConfiguration();
         report("migration finished");
     }
 
     boolean registerInstance(String instancePrefix, String secret) {
+        report("registering instance to auth server");
         String instanceId;
         try {
             instanceId = identityApi.createInstance(instancePrefix, secret).instanceId;
@@ -67,10 +79,38 @@ public class IdentityMigrationTool {
     }
 
     void migrateUsers() {
-        //List<Account> accounts = accountsDao.getAccounts(); // retrieve all available accounts
-        //for (Account account: accounts) {
-        //    migrateAccount(account);
-        //}
+        report("migrating users");
+        List<Account> accounts = accountsDao.getAccounts(); // retrieve all available accounts
+        for (Account account: accounts) {
+            migrateAccount(account);
+        }
+    }
+
+    boolean linkAdministratorAccount() {
+        if (adminAccountSid == null)
+            adminAccountSid = guessAccountSid();
+
+        if (adminAccountSid == null) {
+            //report("Error. No administrator account found to be linked to '" + username +"'. Please set 'identity.migration.admin-account-sid' in restcomm.xml.");
+            return false;
+        }
+
+        Account adminAccount = accountsDao.getAccount(adminAccountSid);
+        adminAccount = adminAccount.setEmailAddress(identityApi.getUsername());
+        accountsDao.updateAccount(adminAccount);
+        report("User '" + identityApi.getUsername() + "' was granted administrator access to instance '" + identityApi.getBoundInstanceId() + "'");
+
+        return true;
+    }
+
+    String guessAccountSid() {
+        report("WARNING: Using a hardcoded admin account sid!");
+        return "ACae6e420f425248d6a26948c17a9e2acf";
+        //throw new UnsupportedOperationException();
+    }
+
+    void updateConfiguration() {
+        throw new UnsupportedOperationException();
     }
 
     boolean migrateAccount(Account account) {
