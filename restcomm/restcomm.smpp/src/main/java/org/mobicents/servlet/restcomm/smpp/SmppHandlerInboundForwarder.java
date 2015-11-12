@@ -69,11 +69,23 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
         final Client client = clients.getClient(to);
 
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+        //IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
         if (number == null) {
-            number = numbers.getIncomingPhoneNumber(to);
+
+            logger.error("There is no matching Restcomm registered number to handle inbound SMPP number : " + to );
+            //number = numbers.getIncomingPhoneNumber(to);
+            return;
+        }
+
+
+        if (number.getSmsUrl() == null){
+            logger.error("A matching Registered Restcomm number is found, but no SMS URL App is attached. " );
+            return;
         }
         URI appUri = number.getSmsUrl();
+
+
 
         if (appUri != null){
             //final String toUser = CallControlHelper.getUserSipId(request, useTo);
