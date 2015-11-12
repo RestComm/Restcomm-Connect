@@ -18,7 +18,7 @@ import org.mobicents.servlet.restcomm.configuration.ConfiguratorBase;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class IdentityConfigurator extends ConfiguratorBase implements IdentityConfigurationSet  {
+public class IdentityConfiguratorOLD extends ConfiguratorBase implements IdentityConfigurationSet  {
     protected Logger logger = Logger.getLogger(IdentityConfigurator.class);
 
     protected static final IdentityMode DEFAULT_IDENTITY_MODE = IdentityMode.init;
@@ -61,7 +61,7 @@ public class IdentityConfigurator extends ConfiguratorBase implements IdentityCo
         return singleInstance;
     }
 
-    private IdentityConfigurator(IdentityConfigurationSource source, ServletContext servletContext) {
+    private IdentityConfiguratorOLD(IdentityConfigurationSource source, ServletContext servletContext) {
         this.configurationSource = source;
         this.realmName = DEFAULT_REALM_NAME;
         this.realmPublicKey = DEFAULT_REALM_PUBLIC_KEY;
