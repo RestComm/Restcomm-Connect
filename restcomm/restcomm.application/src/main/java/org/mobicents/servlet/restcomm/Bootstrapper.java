@@ -21,8 +21,12 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.configuration.DatabaseConfigurationSource;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityMigrationConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
@@ -243,14 +247,24 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     private void identityMigration(RestcommConfiguration config, DaoManager daos ) {
         // TODO - replace these hardcoded values with values from the actual configuration
-        IdentityMigrationConfigurationSet identityConfig = config.getIdentityMigration();
+        IdentityMigrationConfigurationSet identityMigrationConfig = config.getIdentityMigration();
+        IdentityConfigurationSet identityConfig = config.getIdentity();
 
-        RestcommIdentityApi api = new RestcommIdentityApi(identityConfig.getAuthServerBaseUrl(), identityConfig.getUsername(), identityConfig.getPassword());
-        IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityConfig.getInviteExistingUsers());
+        RestcommIdentityApi api = new RestcommIdentityApi(identityMigrationConfig.getAuthServerBaseUrl(), identityMigrationConfig.getUsername(), identityMigrationConfig.getPassword());
+        IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityMigrationConfig.getInviteExistingUsers(), identityMigrationConfig.getAdminAccountSid(), identityConfig, identityMigrationConfig.getRedirectUris() );
         migrationTool.migrate();
+        config.reloadIdentity();
+    }
 
-        //String instanceId = api.createInstance("http://localhost", "my-secret").instanceId;
-        //api.bindInstance(instanceId);
+    private RestcommConfiguration setupRestcommConfiguration(Configuration xml, DaoManager daoManager) {
+        RestcommConfiguration config = RestcommConfiguration.createOnce();
+        ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
+        config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
+        config.addConfigurationSet("identityMigration", new IdentityMigrationConfigurationSet(apacheSource));
+        DatabaseConfigurationSource dbSource = new DatabaseConfigurationSource(daoManager.getConfigurationDao());
+        config.addConfigurationSet("identity", new IdentityConfigurationSet(dbSource));
+
+        return config;
     }
 
     @Override
@@ -292,7 +306,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
-            RestcommConfiguration.createOnce(xml);
+            setupRestcommConfiguration(xml, storage);
 
             // Identity migration. Register instance to auth server and migrate users.
             identityMigration(RestcommConfiguration.getInstance(), storage);

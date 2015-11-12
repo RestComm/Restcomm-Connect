@@ -12,6 +12,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 import org.mobicents.servlet.restcomm.http.SslMode;
 
 public class RestcommConfigurationTest {
@@ -27,17 +28,19 @@ public class RestcommConfigurationTest {
         URL url = this.getClass().getResource("/restcomm.xml");
         // String relativePath = "../../../../../../../../restcomm.application/src/main/webapp/WEB-INF/conf/restcomm.xml";
         xml = new XMLConfiguration(url);
-        conf = new RestcommConfiguration(xml);
+        conf = new RestcommConfiguration();
+        ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
+        conf.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
     }
-    
-    @Test 
+
+    @Test
     public void allConfiguraitonSetsAreAvailable() {
         assertNotNull(conf.getMain());
         // add new sets here ...
         // ...
     }
 
-    // Test properties for the 'Main' configuration set 
+    // Test properties for the 'Main' configuration set
     @Test
     public void mainSetConfigurationOptionsAreValid() {
         MainConfigurationSet main = conf.getMain();
@@ -45,17 +48,17 @@ public class RestcommConfigurationTest {
         assertTrue( main.getHostname().equals(""));
         assertTrue( main.isUseHostnameToResolveRelativeUrls() == true );
     }
-    
-    @Test 
+
+    @Test
     public void validSingletonOperation() {
         // make sure it is created
-        RestcommConfiguration.createOnce(xml);
+        RestcommConfiguration.createOnce();
         RestcommConfiguration conf1 = RestcommConfiguration.getInstance();
         assertNotNull(conf1);
         // make sure it's not created again for subsequent calls
-        RestcommConfiguration.createOnce(xml);
+        RestcommConfiguration.createOnce();
         RestcommConfiguration conf2 = RestcommConfiguration.getInstance();
-        assertTrue( conf1 == conf2 );        
+        assertTrue( conf1 == conf2 );
     }
 
 }

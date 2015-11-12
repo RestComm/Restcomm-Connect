@@ -95,7 +95,7 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
         // create the instance (clients, roles, grant user roles) in keycloak
         CreateInstanceResponse response;
         try {
-            response = api.createInstance(baseUrl, instanceSecret);
+            response = api.createInstance(new String[] {baseUrl}, instanceSecret);
         } catch (RestcommIdentityApiException e) {
             return toResponse(e.getOutcome());
         }

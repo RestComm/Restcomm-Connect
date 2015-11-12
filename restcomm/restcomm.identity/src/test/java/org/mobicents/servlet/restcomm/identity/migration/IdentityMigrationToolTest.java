@@ -28,7 +28,7 @@ public class IdentityMigrationToolTest {
     public static void setup() throws RestcommIdentityApiException {
         // create api
         api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm);
-        String instanceId = api.createInstance("http://localhost", "my-secret").instanceId;
+        String instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
         api.bindInstance(instanceId);
 
     }

@@ -91,6 +91,10 @@ public class RestcommIdentityApi {
         return username;
     }
 
+    public String getAuthServerBaseUrl() {
+        return authServerBaseUrl;
+    }
+
     public String retrieveTokenString(String username, String password) {
         CloseableHttpClient client = null;
         try {
@@ -207,14 +211,14 @@ public class RestcommIdentityApi {
         }
     }
 
-    public CreateInstanceResponse createInstance(String prefix, String secret) throws RestcommIdentityApiException {
+    public CreateInstanceResponse createInstance(String[] redirectUris, String secret) throws RestcommIdentityApiException {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
             HttpPost request = new HttpPost(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances");
             request.addHeader("Authorization", "Bearer " + tokenString);
             List<NameValuePair> params = new ArrayList<NameValuePair>();
-            params.add(new BasicNameValuePair("prefix",prefix));
+            params.add(new BasicNameValuePair("prefix",redirectUris[0])); // TODO - make sure all the items of the array (not only the first) are passed and also check the receiving side
             params.add(new BasicNameValuePair("secret",secret));
             request.setEntity(new UrlEncodedFormEntity(params));
 

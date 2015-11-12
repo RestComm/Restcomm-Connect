@@ -10,12 +10,14 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
     public static final String PASSWORD_KEY = "identity.migration.password";
     public static final String INVITE_EXISTING_USERS_KEY = "identity.migration.invite-existing-users";
     public static final String ADMIN_ACCOUNT_SID_KEY = "identity.migration.admin-account-sid";
+    public static final String REDIRECT_URIS_KEY = "identity.migration.redirect-uris";
 
     private final String authServerBaseUrl;
     private final String username;
     private final String password;
     private final Boolean inviteExistingUsers;
     private final String adminAccountSid;
+    private final String[] redirectUris;
 
     // default values
     public static final String AUTH_SERVER_BASE_URL_DEFAULT = "https://identity.restcomm.com";
@@ -45,6 +47,12 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
         }
         // adminAccountSid option
         this.adminAccountSid = source.getProperty(ADMIN_ACCOUNT_SID_KEY);
+        // redirect uris option
+        String redirectUrisRaw = source.getProperty(REDIRECT_URIS_KEY);
+        if (!StringUtils.isEmpty(redirectUrisRaw))
+            this.redirectUris = redirectUrisRaw.split(",");
+        else
+            this.redirectUris = null;
     }
 
     public String getAuthServerBaseUrl() {
@@ -65,6 +73,10 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
 
     public String getAdminAccountSid() {
         return adminAccountSid;
+    }
+
+    public String[] getRedirectUris() {
+        return redirectUris;
     }
 
 }

@@ -12,16 +12,20 @@ import javax.ws.rs.Produces;
 
 import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator.IdentityNotSet;
 import org.mobicents.servlet.restcomm.identity.entities.IdentityModeEntity;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakConfigurationBuilder;
 
 import com.google.gson.Gson;
 
 @Path("/config")
 public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
-    private IdentityConfigurator identityConfigurator;
+    private IdentityConfigurationSet identityConfig;
+    private KeycloakConfigurationBuilder confBuilder;
 
     public KeycloakResourcesEndpoint() {
         super();
@@ -29,15 +33,16 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
-        identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
+        this.identityConfig = RestcommConfiguration.getInstance().getIdentity();
+        this.confBuilder = new KeycloakConfigurationBuilder(identityConfig.getRealm(), identityConfig.getRealmKey(), identityConfig.getAuthServerUrl(), identityConfig.getInstanceId(), identityConfig.getRestcommClientSecret());
     }
 
     @GET
     @Path("/mode")
     public Response getMode() {
         IdentityModeEntity modeEntity = new IdentityModeEntity();
-        modeEntity.setMode(identityConfigurator.getMode());
-        modeEntity.setAuthServerUrlBase(identityConfigurator.getAuthServerUrlBase());
+        modeEntity.setMode(IdentityMode.valueOf(identityConfig.getMode()));
+        modeEntity.setAuthServerUrlBase(identityConfig.getAuthServerBaseUrl());
         Gson gson = new Gson();
         return Response.ok(gson.toJson(modeEntity),MediaType.APPLICATION_JSON).build();
     }
@@ -48,7 +53,7 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     public Response getRestcommUIConfig() throws IOException {
         BaseAdapterConfig config;
         try {
-            config = identityConfigurator.getRestcommUIConfig();
+            config = confBuilder.getRestcommUIConfig();
         } catch (IdentityNotSet e) {
             return Response.status(Status.NOT_FOUND).build();
         }
@@ -61,7 +66,7 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     public Response getRestcommRvdUIConfig() throws IOException {
         BaseAdapterConfig config;
         try {
-            config = identityConfigurator.getRestcommRvdUIConfig();
+            config = confBuilder.getRestcommRvdUIConfig();
         } catch (IdentityNotSet e) {
             return Response.status(Status.NOT_FOUND).build();
         }

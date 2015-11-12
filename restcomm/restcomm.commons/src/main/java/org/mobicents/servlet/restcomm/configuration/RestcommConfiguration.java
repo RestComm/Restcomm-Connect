@@ -23,11 +23,10 @@ package org.mobicents.servlet.restcomm.configuration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.configuration.sets.ConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityMigrationConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 
 /**
  * Singleton like class that provides access to ConfigurationSets.
@@ -44,6 +43,7 @@ public class RestcommConfiguration {
         // No ConfigurationSets added. You'll have to it manually with addConfigurationSet().
     }
 
+    /*
     public RestcommConfiguration(Configuration apacheConf) {
         ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(apacheConf);
         addConfigurationSet("main", new MainConfigurationSet(apacheSource));
@@ -51,6 +51,7 @@ public class RestcommConfiguration {
         // addConfigurationSet("identity", new IdentityConfigurationSet( new DbConfigurationSource(dbConf)));
         // ...
     }
+    */
 
     public void addConfigurationSet(String setKey, ConfigurationSet set ) {
         sets.put(setKey, set);
@@ -74,15 +75,25 @@ public class RestcommConfiguration {
         return (IdentityMigrationConfigurationSet) sets.get("identityMigration");
     }
 
+    public IdentityConfigurationSet getIdentity() {
+        return (IdentityConfigurationSet) sets.get("identity");
+    }
+
+    public void reloadIdentity() {
+        IdentityConfigurationSet oldSet = getIdentity();
+        IdentityConfigurationSet newSet = new IdentityConfigurationSet(oldSet.getSource());
+        sets.put("identity", newSet);
+    }
+
     // define getters  for additional ConfigurationSets here
     // ...
 
     // singleton stuff
     private static RestcommConfiguration instance;
-    public static RestcommConfiguration createOnce(Configuration apacheConf) {
+    public static RestcommConfiguration createOnce() {
         synchronized (RestcommConfiguration.class) {
             if (instance == null) {
-                instance = new RestcommConfiguration(apacheConf);
+                instance = new RestcommConfiguration();
             }
         }
         return instance;
