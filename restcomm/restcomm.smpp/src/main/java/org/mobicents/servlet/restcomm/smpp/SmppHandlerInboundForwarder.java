@@ -1,9 +1,7 @@
 package org.mobicents.servlet.restcomm.smpp;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.URI;
-import java.util.Currency;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,16 +16,11 @@ import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
-import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.entities.SmsMessage;
-import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
-import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppStartInterpreter;
-import org.mobicents.servlet.restcomm.telephony.TextMessage;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
@@ -92,6 +85,9 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
             if( redirectToHostedSmsApp(self,request, accounts, applications,to  )){
 
                 logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
+                /**
+                // if(appUri != null && number != null){
+                logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
 
                 logger.info("from : " + from);
                 logger.info("to : " + to);
@@ -128,7 +124,7 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
                 // Send the SMS.
                 final SmppSessionObjects.SmppSessionRequest sms = new SmppSessionObjects().new SmppSessionRequest(from, to, body , null);
                 monitoringService.tell(new TextMessage(from, to, TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
-                session.tell(sms, self());
+                session.tell(sms, self());**/
             }
             else {
                 logger.error("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + number );
