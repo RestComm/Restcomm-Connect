@@ -34,7 +34,7 @@ import org.mobicents.servlet.restcomm.http.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.configuration.DbIdentityConfigurationSource;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSource;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
@@ -245,7 +245,18 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
-    private void identityMigration(RestcommConfiguration config, DaoManager daos ) {
+    private RestcommConfiguration initRestcommConfiguration(Configuration xml, DaoManager daoManager) {
+        RestcommConfiguration config = RestcommConfiguration.createOnce();
+        ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
+        config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
+        config.addConfigurationSet("identityMigration", new IdentityMigrationConfigurationSet(apacheSource));
+        DatabaseConfigurationSource dbSource = new DatabaseConfigurationSource(daoManager.getConfigurationDao());
+        config.addConfigurationSet("identity", new IdentityConfigurationSet(dbSource));
+
+        return config;
+    }
+
+    private void identityMigration(RestcommConfiguration config, DaoManager daos, KeycloakContext keycloakContext ) {
         // TODO - replace these hardcoded values with values from the actual configuration
         IdentityMigrationConfigurationSet identityMigrationConfig = config.getIdentityMigration();
         IdentityConfigurationSet identityConfig = config.getIdentity();
@@ -256,15 +267,21 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         config.reloadIdentity();
     }
 
-    private RestcommConfiguration setupRestcommConfiguration(Configuration xml, DaoManager daoManager) {
-        RestcommConfiguration config = RestcommConfiguration.createOnce();
-        ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
-        config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
-        config.addConfigurationSet("identityMigration", new IdentityMigrationConfigurationSet(apacheSource));
-        DatabaseConfigurationSource dbSource = new DatabaseConfigurationSource(daoManager.getConfigurationDao());
-        config.addConfigurationSet("identity", new IdentityConfigurationSet(dbSource));
+    /**
+     * Create keycloak context, a singleton that holds the KeycloakDeployment structures.
+     */
+    private KeycloakContext buildKeycloakContext(RestcommConfiguration config) {
+        IdentityMigrationConfigurationSet imConfig = config.getIdentityMigration();
+        IdentityConfigurationSet iConfig = config.getIdentity();
 
-        return config;
+        if ( "init".equals(iConfig.getMode()) ) {
+            // use information from restcomm.xml based identity.migration config
+            KeycloakContext.init(imConfig);
+        } else {
+            // use information from identity configuration (stored in DB)
+            KeycloakContext.init(iConfig);
+        }
+        return KeycloakContext.getInstance();
     }
 
     @Override
@@ -306,11 +323,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
-            setupRestcommConfiguration(xml, storage);
-
+            RestcommConfiguration restcommConfig = initRestcommConfiguration(xml, storage);
+            // Create keylcoak context
+            KeycloakContext keycloakContext = buildKeycloakContext(restcommConfig);
+            context.setAttribute(KeycloakContext.class.getName(), keycloakContext);
             // Identity migration. Register instance to auth server and migrate users.
             identityMigration(RestcommConfiguration.getInstance(), storage);
-
             // Create directory of shiro based restcomm roles
             RestcommRoles restcommRoles = new RestcommRoles();
             context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
@@ -318,8 +336,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             //logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
 
             // Initialize identity/keycloak configuration
-            IdentityConfigurationSource identityConfSource = new DbIdentityConfigurationSource(storage.getConfigurationDao());
-            IdentityConfigurator keycloakConfig = IdentityConfigurator.create(identityConfSource,context);
+            //IdentityConfigurationSource identityConfSource = new DbIdentityConfigurationSource(storage.getConfigurationDao());
+            //IdentityConfigurator keycloakConfig = IdentityConfigurator.create(identityConfSource,context);
             context.setAttribute(IdentityConfigurator.class.getName(), keycloakConfig);
 
             // Create the media gateway.

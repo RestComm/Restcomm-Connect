@@ -18,10 +18,14 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
     private final Boolean inviteExistingUsers;
     private final String adminAccountSid;
     private final String[] redirectUris;
+    private final String realm;
+    private final String realmkey;
 
     // default values
     public static final String AUTH_SERVER_BASE_URL_DEFAULT = "https://identity.restcomm.com";
     public static final Boolean INVITE_EXISTING_USERS_DEFAULT = false;
+    public static final String REALM_DEFAULT = "restcomm";
+    public static final String REALM_KEY_DEFAULT = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv";
 
     public IdentityMigrationConfigurationSet(ConfigurationSource source) {
         super(source);
@@ -53,6 +57,10 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
             this.redirectUris = redirectUrisRaw.split(",");
         else
             this.redirectUris = null;
+        // realm option. Not loaded from source yet. Just a placeholder for the defaults.
+        this.realm = REALM_DEFAULT;
+        // realmKey option
+        this.realmkey = REALM_KEY_DEFAULT;
     }
 
     public String getAuthServerBaseUrl() {
@@ -77,6 +85,14 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
 
     public String[] getRedirectUris() {
         return redirectUris;
+    }
+
+    public String getRealm() {
+        return realm;
+    }
+
+    public String getRealmkey() {
+        return realmkey;
     }
 
 }

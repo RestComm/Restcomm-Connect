@@ -46,7 +46,7 @@ public class KeycloakConfigurationBuilder {
     }
 
  // Returns null if no instanceId is set
-    public AdapterConfig getRestcommConfig(String instanceId) {
+    public AdapterConfig getRestcommConfig() {
         if ( StringUtils.isEmpty(instanceId) )
             return null;
         AdapterConfig config = new AdapterConfig();

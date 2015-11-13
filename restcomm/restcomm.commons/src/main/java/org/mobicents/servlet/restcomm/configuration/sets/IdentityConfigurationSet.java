@@ -24,6 +24,10 @@ public class IdentityConfigurationSet extends ConfigurationSet {
     // TODO - don't forget to use generate a new public key for identity.restcomm.com and put it here
     private static final String REALM_KEY_DEFAULT = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv";
 
+    // other static stuff to keep them all in a single place
+    public static final String IDENTITY_PROXY_CLIENT_NAME = "restcomm-identity-rest";
+    public static final String IDENTITY_PROXY_CONTEXT_NAME = "restcomm-identity";
+
     public IdentityConfigurationSet(ConfigurationSource source) {
         super(source);
         // authServerBaseUrl option
@@ -91,6 +95,16 @@ public class IdentityConfigurationSet extends ConfigurationSet {
 
     public String getAuthServerUrl() {
         return getAuthServerBaseUrl() + "/auth";
+    }
+
+    // static getters
+
+    public static String getAuthServerUrl(String authServerBaseUrl) {
+        return authServerBaseUrl + "/auth";
+    }
+
+    public static String getIdentityProxyUrl(String authServerBaseUrl) {
+        return authServerBaseUrl + "/" + IDENTITY_PROXY_CONTEXT_NAME;
     }
 
 }
