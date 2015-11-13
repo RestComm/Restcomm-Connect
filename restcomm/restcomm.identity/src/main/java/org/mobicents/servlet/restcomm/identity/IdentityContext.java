@@ -11,7 +11,7 @@ import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 
 /**
  * A per-request security context providing access to Oauth tokens or Account API Keys.
@@ -25,10 +25,10 @@ public class IdentityContext {
     final AccountKey accountKey;
     final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
 
-    public IdentityContext(IdentityConfigurator configurator, HttpServletRequest request, AccountsDao accountsDao) {
-        final String tokenString = extractOauthTokenString(request, configurator);
+    public IdentityContext(KeycloakContext keycloakContext, HttpServletRequest request, AccountsDao accountsDao) {
+        final String tokenString = extractOauthTokenString(request);
         if ( ! StringUtils.isEmpty(tokenString) ) {
-            this.oauthToken = verifyToken(tokenString, configurator);
+            this.oauthToken = verifyToken(tokenString, keycloakContext);
             this.oauthTokenString = tokenString;
         }
         else {
@@ -47,7 +47,7 @@ public class IdentityContext {
             effectiveAccount = null;
     }
 
-    private String extractOauthTokenString(HttpServletRequest request, IdentityConfigurator configurator) {
+    private String extractOauthTokenString(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null) {
             String[] parts = authHeader.split(" ");
@@ -59,8 +59,8 @@ public class IdentityContext {
         return null;
     }
 
-    private AccessToken verifyToken(String tokenString, IdentityConfigurator configurator ) {
-        return IdentityUtils.verifyToken(tokenString, configurator.getDeployment());
+    private AccessToken verifyToken(String tokenString, KeycloakContext keycloakContext ) {
+        return IdentityUtils.verifyToken(tokenString, keycloakContext.getDeployment());
     }
 
     private AccountKey extractAccountKey(HttpServletRequest request, AccountsDao dao) {

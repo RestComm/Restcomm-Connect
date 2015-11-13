@@ -28,8 +28,9 @@ import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.KeycloakUriBuilder;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 
 import com.google.gson.Gson;
 
@@ -49,26 +50,24 @@ public class RestcommIdentityApi {
     private String identityInstanceId;
     private String realm;
 
-    public RestcommIdentityApi(String authurl, String username, String password) {
-        this(authurl,username,password,IdentityConfigurator.DEFAULT_REALM_NAME);
-    }
 
-    public RestcommIdentityApi(String authurl, String username, String password, String realm) {
+    public RestcommIdentityApi(String authurl, String username, String password, String realm, String instanceId) {
         this.authServerBaseUrl = authurl;
         this.realm = realm;
         this.tokenString = retrieveTokenString(username, password);
         if (tokenString == null)
             throw new IllegalStateException("No oauth token in context.");
         this.username = username;
+        this.identityInstanceId = instanceId;
     }
 
-    public RestcommIdentityApi(final IdentityContext identityContext, final IdentityConfigurator configurator) {
+    public RestcommIdentityApi(final IdentityContext identityContext, final KeycloakContext keycloakContext) {
         tokenString = identityContext.getOauthTokenString();
         if (tokenString == null)
             throw new IllegalStateException("No oauth token in context.");
-        this.authServerBaseUrl = configurator.getAuthServerUrlBase();
-        this.identityInstanceId = configurator.getIdentityInstanceId();
-        this.realm = configurator.getRealmName();
+        this.authServerBaseUrl = keycloakContext.getAuthServerUrl();
+        this.identityInstanceId = keycloakContext.getInstanceId();
+        this.realm = keycloakContext.getRealmName();
         AccessToken accessToken = identityContext.getOauthToken();
         if (accessToken == null)
             throw new IllegalStateException("Missing oauth token from identity context");
@@ -99,13 +98,12 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(IdentityConfigurator.getAuthServerUrl(authServerBaseUrl))
-                    .path(ServiceUrlConstants.TOKEN_PATH).build(realm));
+            HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(IdentityConfigurationSet.getAuthServerUrl(authServerBaseUrl)).path(ServiceUrlConstants.TOKEN_PATH).build(realm));
             List <NameValuePair> formparams = new ArrayList <NameValuePair>();
             formparams.add(new BasicNameValuePair("username", username));
             formparams.add(new BasicNameValuePair("password", password));
             formparams.add(new BasicNameValuePair(OAuth2Constants.GRANT_TYPE, "password"));
-            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, IdentityConfigurator.IDENTITY_PROXY_CLIENT_NAME));
+            formparams.add(new BasicNameValuePair(OAuth2Constants.CLIENT_ID, IdentityConfigurationSet.IDENTITY_PROXY_CLIENT_NAME));
             UrlEncodedFormEntity form = new UrlEncodedFormEntity(formparams, "UTF-8");
             post.setEntity(form);
 
@@ -143,7 +141,7 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost request = new HttpPost(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + this.identityInstanceId + "/users/" + username + "/invite");
+            HttpPost request = new HttpPost(IdentityConfigurationSet.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + this.identityInstanceId + "/users/" + username + "/invite");
             request.addHeader("Authorization", "Bearer " + tokenString);
             HttpResponse response = client.execute(request);
             if (response.getStatusLine().getStatusCode() >= 300) {
@@ -166,7 +164,7 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost request = new HttpPost(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/users");
+            HttpPost request = new HttpPost(IdentityConfigurationSet.getIdentityProxyUrl(authServerBaseUrl) + "/api/users");
             request.addHeader("Authorization", "Bearer " + tokenString);
             request.addHeader("Content-Type", "application/json");
 
@@ -195,7 +193,7 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpDelete request = new HttpDelete(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/users/" + username);
+            HttpDelete request = new HttpDelete(IdentityConfigurationSet.getIdentityProxyUrl(authServerBaseUrl) + "/api/users/" + username);
             request.addHeader("Authorization", "Bearer " + tokenString);
 
             HttpResponse response = client.execute(request);
@@ -215,7 +213,7 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpPost request = new HttpPost(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances");
+            HttpPost request = new HttpPost(IdentityConfigurationSet.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances");
             request.addHeader("Authorization", "Bearer " + tokenString);
             List<NameValuePair> params = new ArrayList<NameValuePair>();
             params.add(new BasicNameValuePair("prefix",redirectUris[0])); // TODO - make sure all the items of the array (not only the first) are passed and also check the receiving side
@@ -247,7 +245,7 @@ public class RestcommIdentityApi {
         CloseableHttpClient client = null;
         try {
             client = buildHttpClient();
-            HttpDelete request = new HttpDelete(IdentityConfigurator.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + instanceId);
+            HttpDelete request = new HttpDelete(IdentityConfigurationSet.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + instanceId);
             request.addHeader("Authorization", "Bearer " + tokenString);
 
             HttpResponse response = client.execute(request);
