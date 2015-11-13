@@ -56,13 +56,12 @@ import org.mobicents.servlet.restcomm.util.DigestAuthentication;
 
 import com.telestax.servlet.MonitoringService;
 
-import scala.concurrent.duration.Duration;
-import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,8 +85,7 @@ public final class UserAgentManager extends UntypedActor {
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
         this.storage = storage;
-        final ActorContext context = context();
-        context.setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
+        getContext().setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
     }
 
     private void clean() {
@@ -96,7 +94,9 @@ public final class UserAgentManager extends UntypedActor {
         for (final Registration result : results) {
             final DateTime expires = result.getDateExpires();
             if (expires.isBeforeNow() || expires.isEqualNow()) {
+                logger.info("Registration: "+result.getAddressOfRecord()+" expired and will remove it now");
                 registrations.removeRegistration(result);
+                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             }
         }
     }
@@ -210,17 +210,15 @@ public final class UserAgentManager extends UntypedActor {
         ping.setRequestURI(uri);
         final SipSession session = ping.getSession();
         session.setHandler("UserAgentManager");
+        logger.debug("About to send OPTIONS keepalive to: "+to);
         ping.send();
     }
 
     private void pong(final Object message) {
         final SipServletResponse response = (SipServletResponse) message;
-        // if(response.getSession().isValid()) {
-        // response.getSession().invalidate();
-        // }
-        if (response.getApplicationSession().isValid()) {
-            response.getApplicationSession().invalidate();
-        }
+            if (response.getApplicationSession().isValid()) {
+                response.getApplicationSession().invalidate();
+            }
     }
 
     private SipURI outboundInterface(String toTransport) {

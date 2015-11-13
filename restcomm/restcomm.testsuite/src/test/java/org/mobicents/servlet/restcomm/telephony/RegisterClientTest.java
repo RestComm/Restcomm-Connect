@@ -29,7 +29,11 @@ import java.net.URL;
 import java.text.ParseException;
 
 import javax.sip.Dialog;
+import javax.sip.InvalidArgumentException;
+import javax.sip.RequestEvent;
+import javax.sip.SipException;
 import javax.sip.address.SipURI;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.cafesip.sipunit.Credential;
@@ -170,7 +174,7 @@ public class RegisterClientTest {
         assertTrue(georgePhone.unregister(georgeContact, 0));
         assertTrue(mariaPhone.unregister(mariaContact, 0));
         assertTrue(mariaPhone2.unregister(mariaContact2, 0));
-    }    
+    }
     
     @Test
     public void testGeorgeCallMaria() throws ParseException, InterruptedException {

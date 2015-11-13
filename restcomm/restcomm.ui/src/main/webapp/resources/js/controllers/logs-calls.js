@@ -14,7 +14,8 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
   $scope.noOfPages = 1; //max rows for data table
-  $scope.toggle = true;
+  $scope.reverse = false;
+  $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
@@ -41,6 +42,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
       $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
     }, 10);
   };
+
 
   var createSearchParams = function(search) {
     var params = {};
@@ -87,6 +89,35 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
         angular.element('#endpicker').trigger('click');
    }
 };
+
+
+$scope.sort = function(item) {
+        if ($scope.predicate == 'date_created') {
+            return new Date(item.date_created);
+        }
+       if ($scope.predicate == 'cost') {
+          if (item[$scope.predicate])
+            return parseFloat(item[$scope.predicate]);
+          else
+           return  item[$scope.predicate] = parseFloat('0.00');
+        }
+        if ($scope.predicate == 'duration') {
+         if (item[$scope.predicate])
+           return parseFloat(item[$scope.predicate]);
+          else
+           return  item[$scope.predicate] = parseFloat('0');
+        }
+    };
+
+$scope.sortBy = function(field) {
+        if ($scope.predicate != field) {
+            $scope.predicate = field;
+            $scope.reverse = false;
+        } else {
+            $scope.reverse = !$scope.reverse;
+        }
+    };
+
 
   // initialize with a query
   $scope.getCallsList(0);
