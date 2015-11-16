@@ -81,7 +81,7 @@ public class RestcommConfiguration {
 
     public void reloadIdentity() {
         IdentityConfigurationSet oldSet = getIdentity();
-        IdentityConfigurationSet newSet = new IdentityConfigurationSet(oldSet.getSource());
+        IdentityConfigurationSet newSet = new IdentityConfigurationSet(oldSet);
         sets.put("identity", newSet);
     }
 

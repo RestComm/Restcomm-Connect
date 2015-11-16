@@ -44,6 +44,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
@@ -56,7 +58,7 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
@@ -67,7 +69,8 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    protected  IdentityConfigurator identityConfigurator;
+    protected  IdentityConfigurationSet identityConfiguration;
+    protected KeycloakContext keycloakContext;
     protected Gson gson;
     protected XStream xstream;
 
@@ -80,7 +83,8 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
-        identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
+        identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
+        keycloakContext = (KeycloakContext) context.getAttribute(KeycloakContext.class.getName());
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -132,7 +136,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
      */
     private Account handleMissingAccount( String accountSid, AccessToken token) {
         Account account = null;
-        if ( identityConfigurator.getAutoImportUsers() ) {
+        if ( identityConfiguration.getAutoImportUsers() ) {
             if ( token.getPreferredUsername().equals(accountSid) ) {
                 account = accountFromAccessToken(token);
                 accountsDao.addAccount(account);
@@ -341,7 +345,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
         if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
-            RestcommIdentityApi api = new RestcommIdentityApi(identityContext, identityConfigurator);
+            RestcommIdentityApi api = new RestcommIdentityApi(identityContext, keycloakContext);
             if ( ! api.inviteUser(username) ) // assign roles
                 return Outcome.NOT_FOUND;
             restcommAccount = restcommAccount.setEmailAddress(username);
@@ -389,7 +393,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
         UserEntity user = new UserEntity(username,null, friendlyName, null, tempPassword);
-        RestcommIdentityApi api = new RestcommIdentityApi(identityContext, identityConfigurator);
+        RestcommIdentityApi api = new RestcommIdentityApi(identityContext, keycloakContext);
         return api.createUser(user);
     }
 

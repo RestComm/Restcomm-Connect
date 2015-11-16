@@ -19,6 +19,10 @@
  */
 package org.mobicents.servlet.restcomm.configuration.sets;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mobicents.servlet.restcomm.configuration.ConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
 /**
@@ -28,15 +32,39 @@ import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */
-public class ConfigurationSet {
-    private final ConfigurationSource source;
+public abstract class ConfigurationSet {
+    protected final ConfigurationSource source;
+    protected List<ConfigurationUpdateListener> updateListeners;
 
-    protected ConfigurationSet(ConfigurationSource source) {
+    protected ConfigurationSet(ConfigurationSource source, List<ConfigurationUpdateListener> listeners) {
         super();
         this.source = source;
+        if (listeners != null)
+            this.updateListeners = listeners;
+        else
+            this.updateListeners = new ArrayList<ConfigurationUpdateListener>();
+    }
+
+    protected ConfigurationSet(ConfigurationSource source) {
+        this(source, null);
     }
 
     public ConfigurationSource getSource() {
         return source;
+    }
+
+    public void registerUpdateListener(ConfigurationUpdateListener listener) {
+        updateListeners.add(listener);
+        listener.configurationUpdated(this); // first run of the listener right after it's registered
+    }
+
+    private void notifyUpdateListeners() {
+        for (ConfigurationUpdateListener listener : updateListeners) {
+            listener.configurationUpdated(this);
+        }
+    }
+
+    protected void reloaded() {
+        notifyUpdateListeners();
     }
 }

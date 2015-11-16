@@ -32,8 +32,6 @@ import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
-import org.mobicents.servlet.restcomm.identity.configuration.DbIdentityConfigurationSource;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSource;
 import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
@@ -261,7 +259,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         IdentityMigrationConfigurationSet identityMigrationConfig = config.getIdentityMigration();
         IdentityConfigurationSet identityConfig = config.getIdentity();
 
-        RestcommIdentityApi api = new RestcommIdentityApi(identityMigrationConfig.getAuthServerBaseUrl(), identityMigrationConfig.getUsername(), identityMigrationConfig.getPassword());
+        RestcommIdentityApi api = new RestcommIdentityApi(identityMigrationConfig.getAuthServerBaseUrl(), identityMigrationConfig.getUsername(), identityMigrationConfig.getPassword(), identityMigrationConfig.getRealm(), null);
         IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityMigrationConfig.getInviteExistingUsers(), identityMigrationConfig.getAdminAccountSid(), identityConfig, identityMigrationConfig.getRedirectUris() );
         migrationTool.migrate();
         config.reloadIdentity();
@@ -328,17 +326,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             KeycloakContext keycloakContext = buildKeycloakContext(restcommConfig);
             context.setAttribute(KeycloakContext.class.getName(), keycloakContext);
             // Identity migration. Register instance to auth server and migrate users.
-            identityMigration(RestcommConfiguration.getInstance(), storage);
+            identityMigration(RestcommConfiguration.getInstance(), storage, keycloakContext);
             // Create directory of shiro based restcomm roles
             RestcommRoles restcommRoles = new RestcommRoles();
             context.setAttribute(RestcommRoles.class.getName(), restcommRoles);
             ShiroResources.getInstance().set(RestcommRoles.class, restcommRoles );
             //logger.info("RestcommRoles: " + ShiroResources.getInstance().get(RestcommRoles.class).toString() );
-
-            // Initialize identity/keycloak configuration
-            //IdentityConfigurationSource identityConfSource = new DbIdentityConfigurationSource(storage.getConfigurationDao());
-            //IdentityConfigurator keycloakConfig = IdentityConfigurator.create(identityConfSource,context);
-            context.setAttribute(IdentityConfigurator.class.getName(), keycloakConfig);
 
             // Create the media gateway.
 

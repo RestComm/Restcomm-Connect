@@ -28,7 +28,7 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
     public static final String REALM_KEY_DEFAULT = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv";
 
     public IdentityMigrationConfigurationSet(ConfigurationSource source) {
-        super(source);
+        super(source,null);
         // authServerBaseUrl option
         String authServerBaseUrl = source.getProperty(AUTH_SERVER_BASE_URL_KEY);
         if (StringUtils.isEmpty(authServerBaseUrl))
@@ -61,6 +61,8 @@ public class IdentityMigrationConfigurationSet extends ConfigurationSet {
         this.realm = REALM_DEFAULT;
         // realmKey option
         this.realmkey = REALM_KEY_DEFAULT;
+
+        this.reloaded();
     }
 
     public String getAuthServerBaseUrl() {

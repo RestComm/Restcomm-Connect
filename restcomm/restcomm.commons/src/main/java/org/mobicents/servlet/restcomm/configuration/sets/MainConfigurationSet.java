@@ -48,7 +48,7 @@ public class MainConfigurationSet extends ConfigurationSet {
     private final String hostname;
 
     public MainConfigurationSet(ConfigurationSource source) {
-        super(source);
+        super(source,null);
         SslMode sslMode;
         boolean resolveRelativeUrlWithHostname;
         String resolveRelativeUrlHostname;
@@ -75,6 +75,8 @@ public class MainConfigurationSet extends ConfigurationSet {
         }
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
+
+        this.reloaded();
     }
 
     public SslMode getSslMode() {

@@ -1,20 +1,18 @@
 package org.mobicents.servlet.restcomm.identity.entities;
 
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
-
 public class IdentityModeEntity {
-    private IdentityMode mode;
+    private String mode;
     private String authServerUrlBase;
 
     public IdentityModeEntity() {
         // TODO Auto-generated constructor stub
     }
 
-    public IdentityMode getMode() {
+    public String getMode() {
         return mode;
     }
 
-    public void setMode(IdentityMode mode) {
+    public void setMode(String mode) {
         this.mode = mode;
     }
 
