@@ -27,6 +27,7 @@ import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -34,8 +35,8 @@ import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.identity.AccountKey;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNames;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 
 
 /**
@@ -43,9 +44,10 @@ import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNam
  */
 public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected static RestcommRoles restcommRoles;
-    protected IdentityConfigurator identityConfigurator;
+    protected IdentityConfigurationSet identityConfiguration;
     protected IdentityContext identityContext;
     protected AccountsDao accountsDao;
+    protected KeycloakContext keycloakContext;
 
     public SecuredEndpoint() {
         super();
@@ -57,8 +59,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         this.accountsDao = storage.getAccountsDao();
         ShiroResources shiroResources = ShiroResources.getInstance();
         restcommRoles = shiroResources.get(RestcommRoles.class);
-        this.identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
-        this.identityContext = new IdentityContext(identityConfigurator, request, accountsDao);
+        this.keycloakContext = (KeycloakContext) context.getAttribute(KeycloakContext.class.getName());
+        //this.identityConfiguration = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
+        this.identityContext = new IdentityContext(keycloakContext, request, accountsDao);
+
     }
 
     // Authorize request by using either keycloak token or API key method. If any of them succeeds, request is allowed
@@ -90,7 +94,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         Set<String> roleNames = null;
         if ( identityContext.getOauthToken() != null ) {
             try {
-                roleNames = identityContext.getOauthToken().getResourceAccess(identityConfigurator.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
+                roleNames = identityContext.getOauthToken().getResourceAccess(keycloakContext.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
             } catch (NullPointerException e) {
                 throw new AuthorizationException();
             }
@@ -108,7 +112,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected void secure (final String permission) {
         Set<String> roleNames = null;
         if ( identityContext.getOauthToken() != null )
-            roleNames = identityContext.getOauthToken().getResourceAccess(identityConfigurator.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
+            roleNames = identityContext.getOauthToken().getResourceAccess(keycloakContext.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
         else
         if ( identityContext.getAccountKey() != null ) {
             if ( identityContext.getAccountKey().isVerified() )
@@ -166,7 +170,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     private AuthOutcome secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
         // both api-level and account-level checks should be satisfied
-        AccessToken.Access access = accessToken.getResourceAccess(identityConfigurator.getClientName(IdentityResourceNames.RESTCOMM_REST));
+        AccessToken.Access access = accessToken.getResourceAccess(keycloakContext.getClientName(IdentityResourceNames.RESTCOMM_REST));
         if (access == null)
             return AuthOutcome.FAILED;
         Set<String> roleNames = access.getRoles();
@@ -191,7 +195,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             return AuthOutcome.FAILED;
 
         Set<String> roleNames = accountKey.getRoles();
-        if ( !roleNames.contains(identityConfigurator.getAdministratorRole()) && secureApi(permission, roleNames) == AuthOutcome.FAILED )
+        if ( !roleNames.contains(identityConfiguration.getAdministratorRole()) && secureApi(permission, roleNames) == AuthOutcome.FAILED )
             return AuthOutcome.FAILED;
         // check if the logged user has access to the account that is operated upon
         if ( secureAccount(accountKey.getAccount(), account) == AuthOutcome.FAILED )

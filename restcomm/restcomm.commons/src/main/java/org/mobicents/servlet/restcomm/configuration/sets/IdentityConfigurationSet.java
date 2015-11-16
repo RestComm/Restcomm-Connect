@@ -1,6 +1,9 @@
 package org.mobicents.servlet.restcomm.configuration.sets;
 
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
+import org.mobicents.servlet.restcomm.configuration.ConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
 public class IdentityConfigurationSet extends ConfigurationSet {
@@ -27,9 +30,18 @@ public class IdentityConfigurationSet extends ConfigurationSet {
     // other static stuff to keep them all in a single place
     public static final String IDENTITY_PROXY_CLIENT_NAME = "restcomm-identity-rest";
     public static final String IDENTITY_PROXY_CONTEXT_NAME = "restcomm-identity";
+    private static final String ADMINISTRATOR_ROLE = "Administrator";
 
     public IdentityConfigurationSet(ConfigurationSource source) {
-        super(source);
+        this(source,null);
+    }
+
+    public IdentityConfigurationSet(ConfigurationSet oldSet) {
+        this(oldSet.source,oldSet.updateListeners);
+    }
+
+    private IdentityConfigurationSet(ConfigurationSource source, List<ConfigurationUpdateListener> listeners) {
+        super(source,listeners);
         // authServerBaseUrl option
         this.authServerBaseUrl = source.getProperty(AUTH_SERVER_BASE_URL_KEY);
         // mode option
@@ -57,6 +69,8 @@ public class IdentityConfigurationSet extends ConfigurationSet {
             this.realmKey = REALM_KEY_DEFAULT;
         else
             this.realmKey = realmKey;
+
+        this.reloaded();
     }
 
     private boolean validateMode(String mode) {
@@ -97,6 +111,12 @@ public class IdentityConfigurationSet extends ConfigurationSet {
         return getAuthServerBaseUrl() + "/auth";
     }
 
+    // hardcoded getters
+
+    public Boolean getAutoImportUsers() {
+        return true;
+    }
+
     // static getters
 
     public static String getAuthServerUrl(String authServerBaseUrl) {
@@ -105,6 +125,10 @@ public class IdentityConfigurationSet extends ConfigurationSet {
 
     public static String getIdentityProxyUrl(String authServerBaseUrl) {
         return authServerBaseUrl + "/" + IDENTITY_PROXY_CONTEXT_NAME;
+    }
+
+    public static String getAdministratorRole() {
+        return ADMINISTRATOR_ROLE;
     }
 
 }

@@ -9,10 +9,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.mobicents.servlet.restcomm.configuration.ConfigurationUpdateListener;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator.IdentityNotSet;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.identity.IdentityUtils;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakConfigurationBuilder;
 
-public class RvdConfigurationUpdateListener implements ConfigurationUpdateListener<IdentityConfigurator> {
+public class RvdConfigurationUpdateListener implements ConfigurationUpdateListener<IdentityConfigurationSet> {
 
     // Relative path of the rvd keycloak adapter configuration parent directory based on Restcomm context root path
     private static final String RVD_ADAPTER_PATH = "/WEB-INF/conf/rvd";
@@ -30,7 +31,7 @@ public class RvdConfigurationUpdateListener implements ConfigurationUpdateListen
      * with options built out of current restcomm configuration.
      */
     @Override
-    public void configurationUpdated(IdentityConfigurator configurator) {
+    public void configurationUpdated(IdentityConfigurationSet configurationSet) {
         // Create the rvd configuration directory if it does not exist
         File adapterParentDir = new File(absoluteRvdAdapterPath);
         if ( ! adapterParentDir.exists() ) {
@@ -43,19 +44,20 @@ public class RvdConfigurationUpdateListener implements ConfigurationUpdateListen
 
         // remove adapter file if still in 'init' mode
         String adapterConfigFilePath = absoluteRvdAdapterPath + "/keycloak.json";
-        if (configurator.getMode() == IdentityMode.init) {
+        if ("init".equals(configurationSet.getMode())) {
             FileUtils.deleteQuietly(new File(adapterConfigFilePath)); // remove RVD keycloak adapter to have a consistent setup
             return;
         }
 
         // create adapter file - keycloak.json
-        try {
-            AdapterConfig adapterConfig = configurator.getRestcommRvdConfig();
-            configurator.writeAdapterConfigToFile(adapterConfig, adapterConfigFilePath);
-            logger.info("Updated RVD keycloak adapter configuration file: '" + adapterConfigFilePath + "'");
-        } catch (IdentityNotSet e) {
-            logger.error("Restcomm not registered to an authorization server. There is probably a configuration error. RVD keycloak adapter configuration won't be updated.",e);
+        KeycloakConfigurationBuilder confBuilder = new KeycloakConfigurationBuilder(configurationSet.getRealm(),configurationSet.getRealmKey(),configurationSet.getAuthServerUrl(),configurationSet.getInstanceId(),configurationSet.getRestcommClientSecret());
+        AdapterConfig adapterConfig = confBuilder.getRestcommRvdConfig();
+        if (adapterConfig == null) {
+            logger.error("Restcomm not registered to an authorization server. There is probably a configuration error. RVD keycloak adapter configuration won't be updated.");
+            return;
         }
+        IdentityUtils.writeAdapterConfigToFile(adapterConfig, adapterConfigFilePath);
+        logger.info("Updated RVD keycloak adapter configuration file: '" + adapterConfigFilePath + "'");
     }
 
 }

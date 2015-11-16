@@ -8,7 +8,7 @@ public class CustomConfigurationSet extends ConfigurationSet {
     private String property1;
 
     public CustomConfigurationSet(ConfigurationSource source) {
-        super(source);
+        super(source,null);
         property1 = source.getProperty(PROPERTY1_KEY);
     }
 

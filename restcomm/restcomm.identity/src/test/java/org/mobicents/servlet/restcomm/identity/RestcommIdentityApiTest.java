@@ -25,7 +25,7 @@ public class RestcommIdentityApiTest {
 
     @BeforeClass
     public static void createInstance() throws RestcommIdentityApiException {
-        api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm);
+        api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm, null);
         instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
         api.bindInstance(instanceId);
     }

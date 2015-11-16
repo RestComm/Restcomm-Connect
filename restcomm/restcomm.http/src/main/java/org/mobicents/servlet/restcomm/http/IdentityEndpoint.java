@@ -19,8 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import java.util.UUID;
-
 import javax.annotation.PostConstruct;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -28,19 +26,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.commons.lang.StringUtils;
-import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.endpoints.Outcome;
-import org.mobicents.servlet.restcomm.entities.Account;
-import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.identity.IdentityUtils;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
-import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.CreateInstanceResponse;
-import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdentityApiException;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator;
+import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 
 import com.google.gson.Gson;
 
@@ -50,7 +41,7 @@ import com.google.gson.Gson;
 @Path("/instance")
 public class IdentityEndpoint extends AccountsCommonEndpoint {
 
-    private IdentityConfigurator identityConfigurator;
+    private IdentityConfigurationSet identityConfiguration;
     private AccountsDao accountsDao;
 
     public IdentityEndpoint() {
@@ -59,7 +50,7 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
 
     @PostConstruct
     private void init() {
-        identityConfigurator = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
+        this.identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = daoManager.getAccountsDao();
     }
@@ -76,9 +67,20 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
     @POST
     @Path("/register")
     public Response registerInstance(@FormParam("restcommBaseUrl") String baseUrl, @FormParam("username") String username, @FormParam("password") String password, @FormParam("instanceSecret") String instanceSecret )  {
-        if (StringUtils.isEmpty(instanceSecret))
-            instanceSecret = generateInstanceSecret();
+        //if (StringUtils.isEmpty(instanceSecret))
+        //    instanceSecret = generateInstanceSecret();
 
+        // if it is already registered do nothing
+        if ( identityConfiguration.getMode() != "init" )
+            return Response.status(Status.CONFLICT).entity("Instance already registered").build();
+
+        RestcommIdentityApi api = new RestcommIdentityApi(identityConfiguration.getAuthServerBaseUrl(),username,password,identityConfiguration.getRealm(),null);
+        IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, true,null,identityConfiguration,new String[] {baseUrl});
+        migrationTool.migrate();
+
+
+
+/*
         // fail if no auth server url is set
         String authUrlBase = identityConfigurator.getAuthServerUrlBase();
         if (StringUtils.isEmpty(authUrlBase)) {
@@ -122,18 +124,19 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
             accountsDao.updateAccount(existingAccount);
             logger.info("User '" + username + "' was granted administrator access to instance '" + response.instanceId + "'");
         }
-
+        */
+        IdentityConfigurationSet newConfig = RestcommConfiguration.getInstance().getIdentity();
         IdentityInstanceEntity instanceEntity = new IdentityInstanceEntity();
-        instanceEntity.setInstanceName(instanceName);
+        instanceEntity.setInstanceName(newConfig.getInstanceId());
         Gson gson = new Gson();
 
         return Response.ok().entity(gson.toJson(instanceEntity)).build();
     }
 
     // generate a random secret for the instance/restcomm-rest client if none specified in the request
-    protected String generateInstanceSecret() {
+    /*protected String generateInstanceSecret() {
         return UUID.randomUUID().toString();
-    }
+    }*/
 
     public class IdentityInstanceEntity {
         private String instanceName;

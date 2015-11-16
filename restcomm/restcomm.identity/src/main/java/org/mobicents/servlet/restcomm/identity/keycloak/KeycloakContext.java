@@ -4,6 +4,7 @@ import org.keycloak.adapters.KeycloakDeployment;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityMigrationConfigurationSet;
 import org.mobicents.servlet.restcomm.identity.IdentityUtils;
+import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNames;
 
 public class KeycloakContext {
     // keycloak specific properties
@@ -73,6 +74,17 @@ public class KeycloakContext {
 
     public static KeycloakContext getInstance() {
         return instance;
+    }
+
+
+    public String getClientName(IdentityResourceNames clientType) {
+        switch (clientType) {
+            case RESTCOMM_REST: return instanceId + "-restcomm-rest";
+            case RESTCOMM_UI: return instanceId + "-restcomm-ui";
+            case RESTCOMM_RVD_REST: return instanceId + "-restcomm-rvd-rest";
+            case RESTCOMM_RVD_UI: return instanceId + "-restcomm-rvd-ui";
+        }
+        throw new IllegalStateException("Invalid IdentityResourceName found: " + clientType.toString());
     }
 
 

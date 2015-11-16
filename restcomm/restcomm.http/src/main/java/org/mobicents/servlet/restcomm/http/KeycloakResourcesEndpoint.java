@@ -14,8 +14,6 @@ import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurationSet.IdentityMode;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityConfigurator.IdentityNotSet;
 import org.mobicents.servlet.restcomm.identity.entities.IdentityModeEntity;
 import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakConfigurationBuilder;
 
@@ -41,7 +39,7 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     @Path("/mode")
     public Response getMode() {
         IdentityModeEntity modeEntity = new IdentityModeEntity();
-        modeEntity.setMode(IdentityMode.valueOf(identityConfig.getMode()));
+        modeEntity.setMode(identityConfig.getMode());
         modeEntity.setAuthServerUrlBase(identityConfig.getAuthServerBaseUrl());
         Gson gson = new Gson();
         return Response.ok(gson.toJson(modeEntity),MediaType.APPLICATION_JSON).build();
@@ -52,11 +50,9 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     @Produces("application/json")
     public Response getRestcommUIConfig() throws IOException {
         BaseAdapterConfig config;
-        try {
-            config = confBuilder.getRestcommUIConfig();
-        } catch (IdentityNotSet e) {
+        config = confBuilder.getRestcommUIConfig();
+        if (config == null)
             return Response.status(Status.NOT_FOUND).build();
-        }
         return Response.ok(JsonSerialization.writeValueAsPrettyString(config), MediaType.APPLICATION_JSON).build();
     }
 
@@ -65,11 +61,9 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
     @Produces("application/json")
     public Response getRestcommRvdUIConfig() throws IOException {
         BaseAdapterConfig config;
-        try {
-            config = confBuilder.getRestcommRvdUIConfig();
-        } catch (IdentityNotSet e) {
+        config = confBuilder.getRestcommRvdUIConfig();
+        if (config == null)
             return Response.status(Status.NOT_FOUND).build();
-        }
         return Response.ok(JsonSerialization.writeValueAsPrettyString(config), MediaType.APPLICATION_JSON).build();
     }
 
