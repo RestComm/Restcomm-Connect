@@ -1295,11 +1295,12 @@ public final class Call extends UntypedActor {
 //                }
 
                 // XXX shouldnt it move to failingBusy IF dialing ????
-                if (is(dialing)) {
-                    break;
-                } else {
-                    fsm.transition(message, failingBusy);
-                }
+//                if (is(dialing)) {
+//                    break;
+//                } else {
+//                    fsm.transition(message, failingBusy);
+//                }
+                fsm.transition(message, failingBusy);
                 break;
             }
             case SipServletResponse.SC_UNAUTHORIZED:
