@@ -135,16 +135,16 @@ public class RestcommCallsTool {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, true);
+        String url = getAccountsUrl(deploymentUrl, username, false);
 
         WebResource webResource = jerseyClient.resource(url);
 
         String response = null;
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        params.add("sid", String.valueOf(sid));
-
-        response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+        webResource = webResource.path(String.valueOf(sid)+".json");
+        logger.info("The URI to sent: "+webResource.getURI());
+        
+        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
 
         JsonParser parser = new JsonParser();
