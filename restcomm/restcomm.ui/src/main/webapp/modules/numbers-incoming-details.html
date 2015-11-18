@@ -2,7 +2,7 @@
 
 <rc-page-title icon="phone" title="{{ numberDetails.phone_number }}" sub-title="{{ numberDetails.friendly_name }}"></rc-page-title>
 
-<div class="well well-sm">
+<div class="well well-sm" ng-show="numberDetails.capabilities.voice_capable">
     <h3 class="text-muted details-header">Voice</h3>
     <fieldset>
         <label class="pull-left" for="voice-url">
@@ -31,7 +31,7 @@
         </span>
     </fieldset>
 </div>
-<div class="well well-sm">
+<div class="well well-sm" ng-show="numberDetails.capabilities.sms_capable">
     <h3 class="text-muted details-header">SMS</h3>
     <fieldset>
         <label class="pull-left" for="sms-url">
@@ -71,7 +71,7 @@
         </span>
     </fieldset>
 </div>
-<div class="well well-sm">
+<div class="well well-sm" ng-show="numberDetails.capabilities.voice_capable">
     <h3 class="text-muted details-header">MISC</h3>
     <fieldset>
         <label class="checkbox pull-left">
