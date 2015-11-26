@@ -23,7 +23,7 @@ package org.mobicents.servlet.restcomm.identity.migration;
 import java.util.List;
 import java.util.UUID;
 
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sources.MutableConfigurationSource;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
@@ -47,19 +47,19 @@ public class IdentityMigrationTool {
     private RestcommIdentityApi identityApi;
     private boolean inviteExistingUsers;
     private String adminAccountSid;
-    private IdentityConfigurationSet identityConfiguration; // needed to persist new configuration after migration
+    private MutableIdentityConfigurationSet mutableIdentityConfiguration; // needed to persist new configuration after migration
     // the following are updated throughout the migration
     private String instanceId;
     private String clientSecret;
     private String[] redirectUris;
 
-    public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting, String adminAccountSid, IdentityConfigurationSet identityConfig, String[] redirectUris) {
+    public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting, String adminAccountSid, MutableIdentityConfigurationSet identityConfig, String[] redirectUris) {
         super();
         this.accountsDao = dao;
         this.identityApi = identityApi;
         this.inviteExistingUsers = inviteExisting;
         this.adminAccountSid = adminAccountSid;
-        this.identityConfiguration = identityConfig;
+        this.mutableIdentityConfiguration = identityConfig;
         this.redirectUris = redirectUris;
     }
 
@@ -126,13 +126,13 @@ public class IdentityMigrationTool {
 
     void updateConfiguration() {
         report("--- Updating muttable configuration ---");
-        if ( identityConfiguration == null )
+        if ( mutableIdentityConfiguration == null )
             throw new UnsupportedOperationException();
-        MutableConfigurationSource source = (MutableConfigurationSource) identityConfiguration.getSource();
-        source.setProperty(identityConfiguration.AUTH_SERVER_BASE_URL_KEY, identityApi.getAuthServerBaseUrl());
-        source.setProperty(identityConfiguration.MODE_KEY, IdentityMode.cloud.toString());
-        source.setProperty(identityConfiguration.INSTANCE_ID_KEY, this.instanceId);
-        source.setProperty(identityConfiguration.RESTCOMM_CLIENT_SECRET_KEY, this.clientSecret);
+        MutableConfigurationSource source = (MutableConfigurationSource) mutableIdentityConfiguration.getSource();
+        //source.setProperty(mutableIdentityConfiguration.AUTH_SERVER_BASE_URL_KEY, identityApi.getAuthServerBaseUrl());
+        source.setProperty(mutableIdentityConfiguration.MODE_KEY, IdentityMode.cloud.toString());
+        source.setProperty(mutableIdentityConfiguration.INSTANCE_ID_KEY, this.instanceId);
+        source.setProperty(mutableIdentityConfiguration.RESTCOMM_CLIENT_SECRET_KEY, this.clientSecret);
         report("Configuration updated.");
     }
 

@@ -23,8 +23,8 @@ import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.configuration.DatabaseConfigurationSource;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityMigrationConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -32,6 +32,7 @@ import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
+import org.mobicents.servlet.restcomm.identity.configuration.RvdConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
@@ -243,41 +244,44 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
-    private RestcommConfiguration initRestcommConfiguration(Configuration xml, DaoManager daoManager) {
+    private RestcommConfiguration initRestcommConfiguration(Configuration xml, DaoManager daoManager, ServletContext serevletContext) {
         RestcommConfiguration config = RestcommConfiguration.createOnce();
         ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
         config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
-        config.addConfigurationSet("identityMigration", new IdentityMigrationConfigurationSet(apacheSource));
+        IdentityConfigurationSet identityConfig = new IdentityConfigurationSet(apacheSource);
+        config.addConfigurationSet("identity", identityConfig);
         DatabaseConfigurationSource dbSource = new DatabaseConfigurationSource(daoManager.getConfigurationDao());
-        config.addConfigurationSet("identity", new IdentityConfigurationSet(dbSource));
+        RvdConfigurationUpdateListener rvdListener = new RvdConfigurationUpdateListener(serevletContext,identityConfig);
+        MutableIdentityConfigurationSet identityDbConfig = new MutableIdentityConfigurationSet(dbSource);
+        identityDbConfig.registerUpdateListener(rvdListener);
+        config.addConfigurationSet("mutable-identity", identityDbConfig);
 
         return config;
     }
 
     private void identityMigration(RestcommConfiguration config, DaoManager daos, KeycloakContext keycloakContext ) {
         // TODO - replace these hardcoded values with values from the actual configuration
-        IdentityMigrationConfigurationSet identityMigrationConfig = config.getIdentityMigration();
-        IdentityConfigurationSet identityConfig = config.getIdentity();
+        IdentityConfigurationSet identityMigrationConfig = config.getIdentity();
+        if (identityMigrationConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup)) {
+            MutableIdentityConfigurationSet identityConfig = config.getMutableIdentity();
 
-        RestcommIdentityApi api = new RestcommIdentityApi(identityMigrationConfig.getAuthServerBaseUrl(), identityMigrationConfig.getUsername(), identityMigrationConfig.getPassword(), identityMigrationConfig.getRealm(), null);
-        IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityMigrationConfig.getInviteExistingUsers(), identityMigrationConfig.getAdminAccountSid(), identityConfig, identityMigrationConfig.getRedirectUris() );
-        migrationTool.migrate();
-        config.reloadIdentity();
+            RestcommIdentityApi api = new RestcommIdentityApi(identityMigrationConfig.getAuthServerBaseUrl(), identityMigrationConfig.getUsername(), identityMigrationConfig.getPassword(), identityMigrationConfig.getRealm(), null);
+            IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityMigrationConfig.getInviteExistingUsers(), identityMigrationConfig.getAdminAccountSid(), identityConfig, identityMigrationConfig.getRedirectUris());
+            migrationTool.migrate();
+            config.reloadIdentity();
+        }
     }
 
     /**
      * Create keycloak context, a singleton that holds the KeycloakDeployment structures.
      */
     private KeycloakContext buildKeycloakContext(RestcommConfiguration config) {
-        IdentityMigrationConfigurationSet imConfig = config.getIdentityMigration();
-        IdentityConfigurationSet iConfig = config.getIdentity();
+        IdentityConfigurationSet imConfig = config.getIdentity();
+        MutableIdentityConfigurationSet iConfig = config.getMutableIdentity();
 
         if ( "init".equals(iConfig.getMode()) ) {
             // use information from restcomm.xml based identity.migration config
             KeycloakContext.init(imConfig);
-        } else {
-            // use information from identity configuration (stored in DB)
-            KeycloakContext.init(iConfig);
         }
         return KeycloakContext.getInstance();
     }
@@ -321,7 +325,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
-            RestcommConfiguration restcommConfig = initRestcommConfiguration(xml, storage);
+            RestcommConfiguration restcommConfig = initRestcommConfiguration(xml, storage, context);
             // Create keylcoak context
             KeycloakContext keycloakContext = buildKeycloakContext(restcommConfig);
             context.setAttribute(KeycloakContext.class.getName(), keycloakContext);

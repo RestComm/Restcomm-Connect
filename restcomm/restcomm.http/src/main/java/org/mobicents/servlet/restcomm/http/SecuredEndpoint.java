@@ -27,7 +27,7 @@ import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.representations.AccessToken;
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -44,7 +44,7 @@ import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
  */
 public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected static RestcommRoles restcommRoles;
-    protected IdentityConfigurationSet identityConfiguration;
+    protected MutableIdentityConfigurationSet identityConfiguration;
     protected IdentityContext identityContext;
     protected AccountsDao accountsDao;
     protected KeycloakContext keycloakContext;
@@ -60,7 +60,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         ShiroResources shiroResources = ShiroResources.getInstance();
         restcommRoles = shiroResources.get(RestcommRoles.class);
         this.keycloakContext = (KeycloakContext) context.getAttribute(KeycloakContext.class.getName());
-        //this.identityConfiguration = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
+        //this.mutableIdentityConfiguration = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
         this.identityContext = new IdentityContext(keycloakContext, request, accountsDao);
 
     }

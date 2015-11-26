@@ -29,8 +29,8 @@ import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.util.KeycloakUriBuilder;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
-import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 
 import com.google.gson.Gson;
 
@@ -61,13 +61,13 @@ public class RestcommIdentityApi {
         this.identityInstanceId = instanceId;
     }
 
-    public RestcommIdentityApi(final IdentityContext identityContext, final KeycloakContext keycloakContext) {
+    public RestcommIdentityApi(final IdentityContext identityContext, final IdentityConfigurationSet imConfig, final MutableIdentityConfigurationSet iConfig) {
         tokenString = identityContext.getOauthTokenString();
         if (tokenString == null)
             throw new IllegalStateException("No oauth token in context.");
-        this.authServerBaseUrl = keycloakContext.getAuthServerUrl();
-        this.identityInstanceId = keycloakContext.getInstanceId();
-        this.realm = keycloakContext.getRealmName();
+        this.authServerBaseUrl = imConfig.getAuthServerUrl();
+        this.identityInstanceId = iConfig.getInstanceId();
+        this.realm = imConfig.getRealm();
         AccessToken accessToken = identityContext.getOauthToken();
         if (accessToken == null)
             throw new IllegalStateException("Missing oauth token from identity context");

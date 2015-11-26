@@ -46,6 +46,7 @@ import org.joda.time.DateTime;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
@@ -69,7 +70,8 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    protected  IdentityConfigurationSet identityConfiguration;
+    protected MutableIdentityConfigurationSet mutableIdentityConfiguration;
+    protected IdentityConfigurationSet identityConfiguration;
     protected KeycloakContext keycloakContext;
     protected Gson gson;
     protected XStream xstream;
@@ -83,6 +85,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
+        mutableIdentityConfiguration = RestcommConfiguration.getInstance().getMutableIdentity();
         identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
         keycloakContext = (KeycloakContext) context.getAttribute(KeycloakContext.class.getName());
         final AccountConverter converter = new AccountConverter(configuration);
@@ -136,7 +139,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
      */
     private Account handleMissingAccount( String accountSid, AccessToken token) {
         Account account = null;
-        if ( identityConfiguration.getAutoImportUsers() ) {
+        if ( mutableIdentityConfiguration.getAutoImportUsers() ) {
             if ( token.getPreferredUsername().equals(accountSid) ) {
                 account = accountFromAccessToken(token);
                 accountsDao.addAccount(account);
@@ -345,7 +348,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
         if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
-            RestcommIdentityApi api = new RestcommIdentityApi(identityContext, keycloakContext);
+            RestcommIdentityApi api = new RestcommIdentityApi(identityContext, RestcommConfiguration.getInstance().getIdentity(), RestcommConfiguration.getInstance().getMutableIdentity());
             if ( ! api.inviteUser(username) ) // assign roles
                 return Outcome.NOT_FOUND;
             restcommAccount = restcommAccount.setEmailAddress(username);
@@ -393,7 +396,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
         UserEntity user = new UserEntity(username,null, friendlyName, null, tempPassword);
-        RestcommIdentityApi api = new RestcommIdentityApi(identityContext, keycloakContext);
+        RestcommIdentityApi api = new RestcommIdentityApi(identityContext,identityConfiguration,mutableIdentityConfiguration );
         return api.createUser(user);
     }
 

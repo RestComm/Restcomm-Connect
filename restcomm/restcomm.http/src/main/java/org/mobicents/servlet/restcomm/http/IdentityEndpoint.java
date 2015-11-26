@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -41,7 +42,8 @@ import com.google.gson.Gson;
 @Path("/instance")
 public class IdentityEndpoint extends AccountsCommonEndpoint {
 
-    private IdentityConfigurationSet identityConfiguration;
+    private MutableIdentityConfigurationSet iConfig;
+    private IdentityConfigurationSet imConfig;
     private AccountsDao accountsDao;
 
     public IdentityEndpoint() {
@@ -50,7 +52,8 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
 
     @PostConstruct
     private void init() {
-        this.identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
+        this.iConfig = RestcommConfiguration.getInstance().getMutableIdentity();
+        this.imConfig = RestcommConfiguration.getInstance().getIdentity();
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = daoManager.getAccountsDao();
     }
@@ -67,69 +70,21 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
     @POST
     @Path("/register")
     public Response registerInstance(@FormParam("restcommBaseUrl") String baseUrl, @FormParam("username") String username, @FormParam("password") String password, @FormParam("instanceSecret") String instanceSecret )  {
-        //if (StringUtils.isEmpty(instanceSecret))
-        //    instanceSecret = generateInstanceSecret();
-
+        // make sure registration/migration through UI is enabled
+        if ( ! imConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui))
+            return Response.status(Status.BAD_REQUEST).build();
         // if it is already registered do nothing
-        if ( identityConfiguration.getMode() != "init" )
+        if ( ! "init".equals(iConfig.getMode()) )
             return Response.status(Status.CONFLICT).entity("Instance already registered").build();
-
-        RestcommIdentityApi api = new RestcommIdentityApi(identityConfiguration.getAuthServerBaseUrl(),username,password,identityConfiguration.getRealm(),null);
-        IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, true,null,identityConfiguration,new String[] {baseUrl});
+        // do the actual migration/registration
+        RestcommIdentityApi api = new RestcommIdentityApi(imConfig.getAuthServerBaseUrl(),username,password, imConfig.getRealm(),null);
+        IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, true,null, iConfig,new String[] {baseUrl});
         migrationTool.migrate();
-
-
-
-/*
-        // fail if no auth server url is set
-        String authUrlBase = identityConfigurator.getAuthServerUrlBase();
-        if (StringUtils.isEmpty(authUrlBase)) {
-            logger.error("Missing identity.auth-server-url-base configuration setting.");
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Invalid configuration").build();
-        }
-        // authenticate and retrieve a token
-        RestcommIdentityApi api = new RestcommIdentityApi(authUrlBase, username, password);
-        // update configuration
-        String tokenString = api.getTokenString();
-        AccessToken accessToken = IdentityUtils.verifyToken(tokenString, identityConfigurator.getUnregisteredDeployment());
-        if ( accessToken == null )
-            return toResponse(Outcome.NOT_ALLOWED);
-        // create the instance (clients, roles, grant user roles) in keycloak
-        CreateInstanceResponse response;
-        try {
-            response = api.createInstance(new String[] {baseUrl}, instanceSecret);
-        } catch (RestcommIdentityApiException e) {
-            return toResponse(e.getOutcome());
-        }
-        String instanceName = response.instanceId;
-
-        // We're now registered. Update configuration.
-        //identityConfigurator.setAuthServerUrlBase(authUrl);
-        identityConfigurator.setMode(IdentityMode.cloud); // TODO maybe turn this to 'standalone'. Is there a difference after all between 'cloud' and 'standalone'
-        identityConfigurator.setRestcommClientSecret(instanceSecret);
-        identityConfigurator.setInstanceId(response.instanceId);
-        identityConfigurator.save();
-        logger.info( "User '" + username + "' registed instance '" + instanceName + "' to authorization server " + authUrlBase);
-
-        // Link to existing legacy administrator account. It has to be there.
-        // TODO this account is queried using the default SID. Will this assumption hold? If now another way to retrieve this account should be found.
-        Account existingAccount = accountsDao.getAccount(new Sid(identityConfigurator.getLegacyAdministratorSid()));
-        if ( existingAccount == null ) {
-            // if the account is missing a new one is created and linked to the user
-            Account newAccount = accountFromAccessToken(accessToken);
-            accountsDao.addAccount(newAccount);
-            logger.warn("Legacy administrator account (" + identityConfigurator.getLegacyAdministratorSid() + ") was not found. New administrator account (" + newAccount.getSid().toString() + ") was created for user '" + username + "'. Default resources may not be available.");
-        } else {
-            existingAccount = existingAccount.setEmailAddress(username);
-            accountsDao.updateAccount(existingAccount);
-            logger.info("User '" + username + "' was granted administrator access to instance '" + response.instanceId + "'");
-        }
-        */
-        IdentityConfigurationSet newConfig = RestcommConfiguration.getInstance().getIdentity();
+        // build response
+        MutableIdentityConfigurationSet newConfig = RestcommConfiguration.getInstance().getMutableIdentity();
         IdentityInstanceEntity instanceEntity = new IdentityInstanceEntity();
         instanceEntity.setInstanceName(newConfig.getInstanceId());
         Gson gson = new Gson();
-
         return Response.ok().entity(gson.toJson(instanceEntity)).build();
     }
 

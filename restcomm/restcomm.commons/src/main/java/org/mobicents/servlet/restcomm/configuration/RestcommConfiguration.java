@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.mobicents.servlet.restcomm.configuration.sets.ConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityMigrationConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 
 /**
@@ -47,8 +47,8 @@ public class RestcommConfiguration {
     public RestcommConfiguration(Configuration apacheConf) {
         ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(apacheConf);
         addConfigurationSet("main", new MainConfigurationSet(apacheSource));
-        addConfigurationSet("identityMigration", new IdentityMigrationConfigurationSet(apacheSource));
-        // addConfigurationSet("identity", new IdentityConfigurationSet( new DbConfigurationSource(dbConf)));
+        addConfigurationSet("identityMigration", new IdentityConfigurationSet(apacheSource));
+        // addConfigurationSet("identity", new MutableIdentityConfigurationSet( new DbConfigurationSource(dbConf)));
         // ...
     }
     */
@@ -71,17 +71,17 @@ public class RestcommConfiguration {
     }
     */
 
-    public IdentityMigrationConfigurationSet getIdentityMigration() {
-        return (IdentityMigrationConfigurationSet) sets.get("identityMigration");
-    }
-
     public IdentityConfigurationSet getIdentity() {
         return (IdentityConfigurationSet) sets.get("identity");
     }
 
+    public MutableIdentityConfigurationSet getMutableIdentity() {
+        return (MutableIdentityConfigurationSet) sets.get("mutable-identity");
+    }
+
     public void reloadIdentity() {
-        IdentityConfigurationSet oldSet = getIdentity();
-        IdentityConfigurationSet newSet = new IdentityConfigurationSet(oldSet);
+        MutableIdentityConfigurationSet oldSet = getMutableIdentity();
+        MutableIdentityConfigurationSet newSet = new MutableIdentityConfigurationSet(oldSet);
         sets.put("identity", newSet);
     }
 

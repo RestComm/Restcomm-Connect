@@ -14,6 +14,7 @@ import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 import org.keycloak.util.JsonSerialization;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.identity.entities.IdentityModeEntity;
 import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakConfigurationBuilder;
 
@@ -22,6 +23,7 @@ import com.google.gson.Gson;
 @Path("/config")
 public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
+    private MutableIdentityConfigurationSet mutableIdentityConfig;
     private IdentityConfigurationSet identityConfig;
     private KeycloakConfigurationBuilder confBuilder;
 
@@ -31,15 +33,16 @@ public class KeycloakResourcesEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
+        this.mutableIdentityConfig = RestcommConfiguration.getInstance().getMutableIdentity();
         this.identityConfig = RestcommConfiguration.getInstance().getIdentity();
-        this.confBuilder = new KeycloakConfigurationBuilder(identityConfig.getRealm(), identityConfig.getRealmKey(), identityConfig.getAuthServerUrl(), identityConfig.getInstanceId(), identityConfig.getRestcommClientSecret());
+        this.confBuilder = new KeycloakConfigurationBuilder(identityConfig.getRealm(), identityConfig.getRealmkey(), identityConfig.getAuthServerUrl(), mutableIdentityConfig.getInstanceId(), mutableIdentityConfig.getRestcommClientSecret());
     }
 
     @GET
     @Path("/mode")
     public Response getMode() {
         IdentityModeEntity modeEntity = new IdentityModeEntity();
-        modeEntity.setMode(identityConfig.getMode());
+        modeEntity.setMode(mutableIdentityConfig.getMode());
         modeEntity.setAuthServerUrlBase(identityConfig.getAuthServerBaseUrl());
         Gson gson = new Gson();
         return Response.ok(gson.toJson(modeEntity),MediaType.APPLICATION_JSON).build();
