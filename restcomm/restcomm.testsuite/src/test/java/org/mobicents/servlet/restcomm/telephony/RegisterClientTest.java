@@ -155,6 +155,8 @@ public class RegisterClientTest {
         if (mariaPhone2 != null) {
             mariaPhone2.dispose();
         }
+
+        Thread.sleep(2000);
     }
 
     @Test
@@ -189,7 +191,7 @@ public class RegisterClientTest {
 
         Thread.sleep(1000);
         georgePhone.listenRequestMessage();
-        RequestEvent reqEvent = georgePhone.waitRequest(15000);
+        RequestEvent reqEvent = georgePhone.waitRequest(65000);
         assertTrue(reqEvent != null);
         assertTrue(reqEvent.getRequest().getMethod().equals(Request.OPTIONS));
 
