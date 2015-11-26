@@ -1,31 +1,42 @@
 package org.mobicents.servlet.restcomm.configuration.sets;
 
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
-import org.mobicents.servlet.restcomm.configuration.ConfigurationUpdateListener;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
 public class IdentityConfigurationSet extends ConfigurationSet {
+    private static Logger logger = Logger.getLogger(IdentityConfigurationSet.class);
 
+    // identity connectivity keys
     public static final String AUTH_SERVER_BASE_URL_KEY = "identity.auth-server-base-url";
-    public static final String MODE_KEY = "identity.mode";
-    public static final String RESTCOMM_CLIENT_SECRET_KEY = "identity.restcomm-client-secret";
-    public static final String INSTANCE_ID_KEY = "identity.instance-id";
-    public static final String REALM_KEY = "identity.realm";
-    public static final String REALM_KEY_KEY = "identity.realmKey";
+    public static final String REALM_KEY_KEY = "identity.realm-public-key";
+    // migration/registration-specific keys
+    public static final String USERNAME_KEY = "identity.migration.username";
+    public static final String PASSWORD_KEY = "identity.migration.password";
+    public static final String INVITE_EXISTING_USERS_KEY = "identity.migration.invite-existing-users";
+    public static final String ADMIN_ACCOUNT_SID_KEY = "identity.migration.admin-account-sid";
+    public static final String REDIRECT_URIS_KEY = "identity.migration.redirect-uris";
+    public static final String METHOD_KEY = "identity.migration.method";
 
+    // identity connectivity variables
     private final String authServerBaseUrl;
-    private final String mode;
-    private final String restcommClientSecret;
-    private final String instanceId;
     private final String realm;
-    private final String realmKey;
+    private final String realmkey;
+    // migration/registration specific variables
+    private final String username;
+    private final String password;
+    private final Boolean inviteExistingUsers;
+    private final String adminAccountSid;
+    private final String[] redirectUris;
+    private MigrationMethod method;
 
-    private static final String MODE_DEFAULT = "init";
-    private static final String REALM_DEFAULT = "restcomm";
-    // TODO - don't forget to use generate a new public key for identity.restcomm.com and put it here
-    private static final String REALM_KEY_DEFAULT = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv";
+    // default values
+    public static final String AUTH_SERVER_BASE_URL_DEFAULT = "https://identity.restcomm.com";
+    public static final Boolean INVITE_EXISTING_USERS_DEFAULT = false;
+    public static final String REALM_DEFAULT = "restcomm";
+    // TODO replace this default value (or remove it??)
+    public static final String REALM_KEY_DEFAULT = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv";
+    public static final MigrationMethod METHOD_DEFAULT = MigrationMethod.ui;
 
     // other static stuff to keep them all in a single place
     public static final String IDENTITY_PROXY_CLIENT_NAME = "restcomm-identity-rest";
@@ -33,91 +44,95 @@ public class IdentityConfigurationSet extends ConfigurationSet {
     private static final String ADMINISTRATOR_ROLE = "Administrator";
 
     public IdentityConfigurationSet(ConfigurationSource source) {
-        this(source,null);
-    }
-
-    public IdentityConfigurationSet(ConfigurationSet oldSet) {
-        this(oldSet.source,oldSet.updateListeners);
-    }
-
-    private IdentityConfigurationSet(ConfigurationSource source, List<ConfigurationUpdateListener> listeners) {
-        super(source,listeners);
+        super(source,null);
         // authServerBaseUrl option
-        this.authServerBaseUrl = source.getProperty(AUTH_SERVER_BASE_URL_KEY);
-        // mode option
-        String mode = source.getProperty(MODE_KEY);
-        if (StringUtils.isEmpty(mode))
-            this.mode = MODE_DEFAULT;
+        String authServerBaseUrl = source.getProperty(AUTH_SERVER_BASE_URL_KEY);
+        if (StringUtils.isEmpty(authServerBaseUrl))
+            authServerBaseUrl = AUTH_SERVER_BASE_URL_DEFAULT;
+        this.authServerBaseUrl = authServerBaseUrl;
+        // username option
+        this.username = source.getProperty(USERNAME_KEY);
+        // password option
+        this.password = source.getProperty(PASSWORD_KEY);
+        // inviteExistingUsersRaw option
+        try {
+            String inviteExistingUsersRaw = source.getProperty(INVITE_EXISTING_USERS_KEY);
+            if (StringUtils.isEmpty(inviteExistingUsersRaw))
+                this.inviteExistingUsers = INVITE_EXISTING_USERS_DEFAULT;
+            else {
+                this.inviteExistingUsers = Boolean.parseBoolean(inviteExistingUsersRaw);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error initializing '" + INVITE_EXISTING_USERS_KEY + "' configuration setting", e);
+        }
+        // adminAccountSid option
+        this.adminAccountSid = source.getProperty(ADMIN_ACCOUNT_SID_KEY);
+        // redirect uris option
+        String redirectUrisRaw = source.getProperty(REDIRECT_URIS_KEY);
+        if (!StringUtils.isEmpty(redirectUrisRaw))
+            this.redirectUris = redirectUrisRaw.split(",");
         else
-        if (validateMode(mode))
-            this.mode = mode;
-        else
-            throw new RuntimeException("Error initializing '" + MODE_KEY + "' configuration setting. Invalid value: " + mode);
-        // restcommClientSecret option
-        this.restcommClientSecret = source.getProperty(RESTCOMM_CLIENT_SECRET_KEY);
-        // instanceId option
-        this.instanceId = source.getProperty(INSTANCE_ID_KEY);
-        // realm option
-        String realm = source.getProperty(REALM_KEY);
-        if (StringUtils.isEmpty(realm))
-            this.realm = REALM_DEFAULT;
-        else
-            this.realm = realm;
-        // realm key option
-        String realmKey = source.getProperty(REALM_KEY_KEY);
-        if (StringUtils.isEmpty(realmKey))
-            this.realmKey = REALM_KEY_DEFAULT;
-        else
-            this.realmKey = realmKey;
+            this.redirectUris = null;
+        // realm option. Not loaded from source yet. Just a placeholder for the defaults.
+        this.realm = REALM_DEFAULT;
+        // realmKey option
+        String realmkey = source.getProperty(REALM_KEY_KEY);
+        if(StringUtils.isEmpty(realmkey))
+            this.realmkey = REALM_KEY_DEFAULT;
+        else {
+            this.realmkey = realmkey;
+        }
+
+        // method option
+        try {
+            this.method = MigrationMethod.valueOf(source.getProperty(METHOD_KEY));
+        } catch (IllegalArgumentException | NullPointerException e){
+            logger.warn("Error parsing '" + METHOD_KEY + "' property in restcomm.xml. Using default: '" + METHOD_DEFAULT.toString() + "'" , e);
+            this.method = METHOD_DEFAULT;
+        }
 
         this.reloaded();
-    }
-
-    private boolean validateMode(String mode) {
-        if (!StringUtils.isEmpty(mode)) {
-            if (mode.equals("init") || mode.equals("cloud") || mode.equals("standalone"))
-                return true;
-        }
-        return false;
     }
 
     public String getAuthServerBaseUrl() {
         return authServerBaseUrl;
     }
 
-    public String getMode() {
-        return mode;
+    public String getUsername() {
+        return username;
     }
 
-    public String getRestcommClientSecret() {
-        return restcommClientSecret;
+    public String getPassword() {
+        return password;
     }
 
-    public String getInstanceId() {
-        return instanceId;
+    public Boolean getInviteExistingUsers() {
+        return inviteExistingUsers;
+    }
+
+    public String getAdminAccountSid() {
+        return adminAccountSid;
+    }
+
+    public String[] getRedirectUris() {
+        return redirectUris;
     }
 
     public String getRealm() {
         return realm;
     }
 
-    public String getRealmKey() {
-        return realmKey;
+    public String getRealmkey() {
+        return realmkey;
     }
 
-    // secondary getters built on top of configuration defined above
+    public MigrationMethod getMethod() {
+        return method;
+    }
 
     public String getAuthServerUrl() {
-        return getAuthServerBaseUrl() + "/auth";
+        return authServerBaseUrl + "/auth";
     }
-
-    // hardcoded getters
-
-    public Boolean getAutoImportUsers() {
-        return true;
-    }
-
-    // static getters
 
     public static String getAuthServerUrl(String authServerBaseUrl) {
         return authServerBaseUrl + "/auth";
@@ -127,8 +142,9 @@ public class IdentityConfigurationSet extends ConfigurationSet {
         return authServerBaseUrl + "/" + IDENTITY_PROXY_CONTEXT_NAME;
     }
 
-    public static String getAdministratorRole() {
-        return ADMINISTRATOR_ROLE;
+    public enum MigrationMethod {
+        startup,
+        ui
     }
 
 }
