@@ -79,10 +79,10 @@ public class RestcommConfiguration {
         return (MutableIdentityConfigurationSet) sets.get("mutable-identity");
     }
 
-    public void reloadIdentity() {
+    public void reloadMutableIdentity() {
         MutableIdentityConfigurationSet oldSet = getMutableIdentity();
         MutableIdentityConfigurationSet newSet = new MutableIdentityConfigurationSet(oldSet);
-        sets.put("identity", newSet);
+        sets.put("mutable-identity", newSet);
     }
 
     // define getters  for additional ConfigurationSets here

@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.identity.keycloak;
 
 import org.keycloak.adapters.KeycloakDeployment;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.identity.IdentityUtils;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNames;
 
@@ -60,13 +61,8 @@ public class KeycloakContext {
         setInstance(instance);
     }
 
-    //public static void init(MutableIdentityConfigurationSet config) {
-    //    KeycloakContext instance = new KeycloakContext(config.getRealm(), config.getRealmKey(), config.getAuthServerUrl(), config.getInstanceId(), config.getRestcommClientSecret());
-    //    setInstance(instance);
-    //}
-
-    public static void init(IdentityConfigurationSet config) {
-        KeycloakContext instance = new KeycloakContext(config.getRealm(), config.getRealmkey(), config.getAuthServerBaseUrl() + "/auth", null, null);
+    public static void init(IdentityConfigurationSet config, MutableIdentityConfigurationSet mutableConfig) {
+        KeycloakContext instance = new KeycloakContext(config.getRealm(), config.getRealmkey(), config.getAuthServerBaseUrl() + "/auth", mutableConfig.getInstanceId(), mutableConfig.getRestcommClientSecret());
         setInstance(instance);
     }
 
@@ -74,11 +70,9 @@ public class KeycloakContext {
         KeycloakContext.instance = inst;
     }
 
-
     public static KeycloakContext getInstance() {
         return instance;
     }
-
 
     public String getClientName(IdentityResourceNames clientType) {
         switch (clientType) {
@@ -89,6 +83,5 @@ public class KeycloakContext {
         }
         throw new IllegalStateException("Invalid IdentityResourceName found: " + clientType.toString());
     }
-
 
 }

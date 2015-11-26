@@ -87,7 +87,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         super.init(configuration);
         mutableIdentityConfiguration = RestcommConfiguration.getInstance().getMutableIdentity();
         identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
-        keycloakContext = (KeycloakContext) context.getAttribute(KeycloakContext.class.getName());
+        keycloakContext = KeycloakContext.getInstance();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
