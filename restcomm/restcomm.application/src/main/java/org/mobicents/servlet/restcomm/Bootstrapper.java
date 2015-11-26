@@ -260,15 +260,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     }
 
     private void identityMigration(RestcommConfiguration config, DaoManager daos, KeycloakContext keycloakContext ) {
-        // TODO - replace these hardcoded values with values from the actual configuration
-        IdentityConfigurationSet identityMigrationConfig = config.getIdentity();
-        if (identityMigrationConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup)) {
-            MutableIdentityConfigurationSet identityConfig = config.getMutableIdentity();
+        IdentityConfigurationSet identityConfig = config.getIdentity();
+        if (identityConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup)) {
+            MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
 
-            RestcommIdentityApi api = new RestcommIdentityApi(identityMigrationConfig.getAuthServerBaseUrl(), identityMigrationConfig.getUsername(), identityMigrationConfig.getPassword(), identityMigrationConfig.getRealm(), null);
-            IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityMigrationConfig.getInviteExistingUsers(), identityMigrationConfig.getAdminAccountSid(), identityConfig, identityMigrationConfig.getRedirectUris());
+            RestcommIdentityApi api = new RestcommIdentityApi(identityConfig.getAuthServerBaseUrl(), identityConfig.getUsername(), identityConfig.getPassword(), identityConfig.getRealm(), null);
+            IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityConfig.getInviteExistingUsers(), identityConfig.getAdminAccountSid(), mutableIdentityConfig, identityConfig.getRedirectUris());
             migrationTool.migrate();
-            config.reloadIdentity();
+            config.reloadMutableIdentity();
         }
     }
 
@@ -276,13 +275,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
      * Create keycloak context, a singleton that holds the KeycloakDeployment structures.
      */
     private KeycloakContext buildKeycloakContext(RestcommConfiguration config) {
-        IdentityConfigurationSet imConfig = config.getIdentity();
-        MutableIdentityConfigurationSet iConfig = config.getMutableIdentity();
-
-        if ( "init".equals(iConfig.getMode()) ) {
-            // use information from restcomm.xml based identity.migration config
-            KeycloakContext.init(imConfig);
-        }
+        KeycloakContext.init(config.getIdentity(),config.getMutableIdentity());
         return KeycloakContext.getInstance();
     }
 
@@ -327,10 +320,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create high-level restcomm configuration
             RestcommConfiguration restcommConfig = initRestcommConfiguration(xml, storage, context);
             // Create keylcoak context
-            KeycloakContext keycloakContext = buildKeycloakContext(restcommConfig);
-            context.setAttribute(KeycloakContext.class.getName(), keycloakContext);
+            KeycloakContext.init(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity());
             // Identity migration. Register instance to auth server and migrate users.
-            identityMigration(RestcommConfiguration.getInstance(), storage, keycloakContext);
+            identityMigration(RestcommConfiguration.getInstance(), storage, KeycloakContext.getInstance());
+            // Reload keycloak context after migration
+            KeycloakContext.init(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity());
             // Create directory of shiro based restcomm roles
             RestcommRoles restcommRoles = new RestcommRoles();
             context.setAttribute(RestcommRoles.class.getName(), restcommRoles);

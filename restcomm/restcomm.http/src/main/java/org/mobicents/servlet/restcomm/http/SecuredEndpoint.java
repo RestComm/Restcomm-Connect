@@ -59,7 +59,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         this.accountsDao = storage.getAccountsDao();
         ShiroResources shiroResources = ShiroResources.getInstance();
         restcommRoles = shiroResources.get(RestcommRoles.class);
-        this.keycloakContext = (KeycloakContext) context.getAttribute(KeycloakContext.class.getName());
+        this.keycloakContext = KeycloakContext.getInstance();
         //this.mutableIdentityConfiguration = (IdentityConfigurator) context.getAttribute(IdentityConfigurator.class.getName());
         this.identityContext = new IdentityContext(keycloakContext, request, accountsDao);
 
