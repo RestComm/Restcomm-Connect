@@ -56,7 +56,7 @@ public class RestcommIdentityApi {
         this.realm = realm;
         this.tokenString = retrieveTokenString(username, password);
         if (tokenString == null)
-            throw new IllegalStateException("No oauth token in context.");
+            throw new IllegalStateException("No oauth token in context. Could not retrieve token for user '" + username + "'");
         this.username = username;
         this.identityInstanceId = instanceId;
     }

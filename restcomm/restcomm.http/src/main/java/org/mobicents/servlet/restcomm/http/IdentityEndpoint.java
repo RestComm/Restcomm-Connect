@@ -32,6 +32,7 @@ import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSe
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 
 import com.google.gson.Gson;
@@ -42,8 +43,8 @@ import com.google.gson.Gson;
 @Path("/instance")
 public class IdentityEndpoint extends AccountsCommonEndpoint {
 
-    private MutableIdentityConfigurationSet iConfig;
-    private IdentityConfigurationSet imConfig;
+    private MutableIdentityConfigurationSet imConfig;
+    private IdentityConfigurationSet iConfig;
     private AccountsDao accountsDao;
 
     public IdentityEndpoint() {
@@ -52,8 +53,8 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
 
     @PostConstruct
     private void init() {
-        this.iConfig = RestcommConfiguration.getInstance().getMutableIdentity();
-        this.imConfig = RestcommConfiguration.getInstance().getIdentity();
+        this.imConfig = RestcommConfiguration.getInstance().getMutableIdentity();
+        this.iConfig = RestcommConfiguration.getInstance().getIdentity();
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = daoManager.getAccountsDao();
     }
@@ -71,15 +72,17 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
     @Path("/register")
     public Response registerInstance(@FormParam("restcommBaseUrl") String baseUrl, @FormParam("username") String username, @FormParam("password") String password, @FormParam("instanceSecret") String instanceSecret )  {
         // make sure registration/migration through UI is enabled
-        if ( ! imConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui))
+        if ( ! iConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui))
             return Response.status(Status.BAD_REQUEST).build();
         // if it is already registered do nothing
-        if ( ! "init".equals(iConfig.getMode()) )
+        if ( ! "init".equals(imConfig.getMode()) )
             return Response.status(Status.CONFLICT).entity("Instance already registered").build();
         // do the actual migration/registration
-        RestcommIdentityApi api = new RestcommIdentityApi(imConfig.getAuthServerBaseUrl(),username,password, imConfig.getRealm(),null);
-        IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, true,null, iConfig,new String[] {baseUrl});
+        RestcommIdentityApi api = new RestcommIdentityApi(iConfig.getAuthServerBaseUrl(),username,password, iConfig.getRealm(),null);
+        IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, true,null, imConfig,new String[] {baseUrl});
         migrationTool.migrate();
+        imConfig = RestcommConfiguration.getInstance().reloadMutableIdentity();
+        KeycloakContext.init(iConfig, imConfig);
         // build response
         MutableIdentityConfigurationSet newConfig = RestcommConfiguration.getInstance().getMutableIdentity();
         IdentityInstanceEntity instanceEntity = new IdentityInstanceEntity();
