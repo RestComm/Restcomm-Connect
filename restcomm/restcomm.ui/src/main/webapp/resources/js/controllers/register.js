@@ -36,7 +36,7 @@ var rcMod = angular.module('rcApp');
         $scope.register = function (instance) {
         	InstanceService.registerInstance(instance).then(
 			function () {
-				$window.location.reload();
+				$window.location.replace("/");
 			}, function () {
 				Notifications.error("Instance registration failed");
 			});
