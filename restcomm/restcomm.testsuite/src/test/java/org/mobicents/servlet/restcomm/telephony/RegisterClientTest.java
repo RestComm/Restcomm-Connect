@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-	
+
 package org.mobicents.servlet.restcomm.telephony;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
@@ -25,13 +25,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 
-import javax.sip.Dialog;
-import javax.sip.InvalidArgumentException;
-import javax.sip.RequestEvent;
-import javax.sip.SipException;
+import javax.sip.*;
 import javax.sip.address.SipURI;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
@@ -53,30 +51,32 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mobicents.servlet.restcomm.http.CreateCallsTest;
 import org.mobicents.servlet.restcomm.http.CreateClientsTool;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.mobicents.servlet.restcomm.tools.MonitoringServiceTool;
 
 /**
- * Client registration Test. 
+ * Client registration Test.
  * Maria client is using two sip clients to register
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
 public class RegisterClientTest {
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
-    
-    private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
-        53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
-        48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
-        13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
-        86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
+
+    private static final byte[] bytes = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
+            53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
+            48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
+            13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
+            86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10};
     private static final String body = new String(bytes);
-    
+
     @ArquillianResource
     private Deployer deployer;
     @ArquillianResource
@@ -98,14 +98,14 @@ public class RegisterClientTest {
     private String mariaContact2 = "sip:maria@127.0.1.1:5093";
 
     private String mariaRestcommContact = "sip:maria@127.0.0.1:5080";
-    
+
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
     private String georgeContact = "sip:george@127.0.0.1:5091";
     private String georgeRestcommClientSid;
-    
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -155,6 +155,8 @@ public class RegisterClientTest {
         if (mariaPhone2 != null) {
             mariaPhone2.dispose();
         }
+
+        Thread.sleep(2000);
     }
 
     @Test
@@ -175,13 +177,37 @@ public class RegisterClientTest {
         assertTrue(mariaPhone.unregister(mariaContact, 0));
         assertTrue(mariaPhone2.unregister(mariaContact2, 0));
     }
-    
+
+    @Test
+    public void testRegisterClientAndRemoveItAfterNoResponseToOptions() throws ParseException, InterruptedException, SipException, InvalidArgumentException, IOException {
+        assertNotNull(georgeRestcommClientSid);
+        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 3600, 3600));
+
+        Credential c = new Credential("127.0.0.1", "george", "1234");
+        georgePhone.addUpdateCredential(c);
+
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid,adminAuthToken)==1);
+
+        Thread.sleep(1000);
+        georgePhone.listenRequestMessage();
+        RequestEvent reqEvent = georgePhone.waitRequest(65000);
+        assertTrue(reqEvent != null);
+        assertTrue(reqEvent.getRequest().getMethod().equals(Request.OPTIONS));
+
+        Thread.sleep(40000);
+
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid,adminAuthToken)==0);
+
+    }
+
+
     @Test
     public void testGeorgeCallMaria() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(georgeRestcommClientSid);
-        
+
         SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 
         assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 3600, 3600));
@@ -193,21 +219,21 @@ public class RegisterClientTest {
 
         Credential c = new Credential("127.0.0.1", "george", "1234");
         georgePhone.addUpdateCredential(c);
-        
+
         Credential c2 = new Credential("127.0.0.1", "maria", "1234");
         mariaPhone.addUpdateCredential(c2);
 
         Credential c3 = new Credential("127.0.0.1", "maria", "1234");
         mariaPhone2.addUpdateCredential(c3);
-        
+
         Thread.sleep(1000);
 
         final SipCall mariaCall_1 = mariaPhone.createSipCall();
         mariaCall_1.listenForIncomingCall();
-        
+
         final SipCall mariaCall_2 = mariaPhone2.createSipCall();
         mariaCall_2.listenForIncomingCall();
-        
+
         // Alice initiates a call to Maria
         final SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.initiateOutgoingCall(georgeContact, mariaRestcommContact, null, body, "application", "sdp", null, null);
@@ -223,10 +249,10 @@ public class RegisterClientTest {
         String receivedBody = new String(mariaCall_2.getLastReceivedRequest().getRawContent());
         assertTrue(mariaCall_2.sendIncomingCallResponse(Response.OK, "OK-Maria-2", 3600, receivedBody, "application", "sdp", null,
                 null));
-        
+
         assertTrue(!mariaCall_1.waitForIncomingCall(3000));
 
-                
+
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         int georgeResponse = georgeCall.getLastReceivedResponse().getStatusCode();
         assertTrue(georgeResponse == Response.TRYING || georgeResponse == Response.RINGING);
@@ -244,7 +270,7 @@ public class RegisterClientTest {
         assertTrue(georgeCall.sendInviteOkAck());
         assertTrue(georgeCall.getDialog().equals(georgeDialog));
         assertTrue(georgeCall.getDialog().equals(georgeDialog));
-        
+
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
 //        Thread.sleep(3000);
@@ -252,15 +278,15 @@ public class RegisterClientTest {
 //
 //        assertTrue(mariaCall_2.waitForDisconnect(5 * 1000));
 //        assertTrue(mariaCall_2.respondToDisconnect());
-        
+
         //Check CDR
         JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
         assertTrue(cdrsArray.size() == 1);
-        
+
     }
-    
+
     @Deployment(name = "RegisterClientTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");

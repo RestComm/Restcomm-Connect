@@ -28,7 +28,9 @@ import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.toHex;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -85,7 +87,8 @@ public final class UserAgentManager extends UntypedActor {
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
         this.storage = storage;
-        getContext().setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
+        int pingInterval = runtime.getInt("ping-interval", 60);
+        getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
     }
 
     private void clean() {
@@ -156,7 +159,35 @@ public final class UserAgentManager extends UntypedActor {
                 }
             }
         } else if (message instanceof SipServletResponse) {
-            pong(message);
+            SipServletResponse response = (SipServletResponse) message;
+            if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
+                removeRegistration(response);
+            } else {
+                pong(message);
+            }
+        }
+    }
+
+    private void removeRegistration(final SipServletResponse response) {
+        String user = ((SipURI)response.getTo().getURI()).getUser();
+        String host = ((SipURI)response.getTo().getURI()).getHost();
+        String port = String.valueOf(((SipURI)response.getTo().getURI()).getPort());
+        logger.debug("Error response for the OPTIONS to: "+response.getFrom().toString()+" will remove registration");
+        final RegistrationsDao regDao = storage.getRegistrationsDao();
+        List<Registration> registrations = regDao.getRegistrations(user);
+        if (registrations != null) {
+            Iterator<Registration> iter = registrations.iterator();
+            while (iter.hasNext()) {
+                Registration reg = iter.next();
+                String locationToRemove = "sip:" + user + "@" + host + ":" + port;
+
+                if (reg.getAddressOfRecord().equalsIgnoreCase(locationToRemove)) {
+                    logger.info("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
+                    regDao.removeRegistration(reg);
+                    monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
+                }
+
+            }
         }
     }
 

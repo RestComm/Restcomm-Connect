@@ -122,7 +122,7 @@ public class DialActionTest {
     private SipPhone georgePhone;
     private String georgeContact = "sip:+131313@127.0.0.1:5070";
 
-    private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5080";
+    private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5080"; // Application: dial-client-entry_wActionUrl.xml
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -225,6 +225,54 @@ public class DialActionTest {
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
+        String dialCallSid = params[9].split("=")[1];
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+        assertNotNull(cdr);
+    }
+    
+    @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
+    public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
+        
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                    .withStatus(200)));
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.listenForDisconnect();
+
+        assertTrue(bobCall.waitForDisconnect(40 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        try {
+            Thread.sleep(10 * 1000);
+        } catch (final InterruptedException exception) {
+            exception.printStackTrace();
+        }
+
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=failed"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=0"));
+        assertTrue(requestBody.contains("CallStatus=completed"));
         String dialCallSid = params[9].split("=")[1];
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
