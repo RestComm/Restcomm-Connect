@@ -261,9 +261,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     private void identityMigration(RestcommConfiguration config, DaoManager daos, KeycloakContext keycloakContext ) {
         IdentityConfigurationSet identityConfig = config.getIdentity();
-        if (identityConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup)) {
-            MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
-
+        MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
+        if (identityConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(mutableIdentityConfig.getMode()) ) {
             RestcommIdentityApi api = new RestcommIdentityApi(identityConfig.getAuthServerBaseUrl(), identityConfig.getUsername(), identityConfig.getPassword(), identityConfig.getRealm(), null);
             IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityConfig.getInviteExistingUsers(), identityConfig.getAdminAccountSid(), mutableIdentityConfig, identityConfig.getRedirectUris());
             migrationTool.migrate();
