@@ -254,6 +254,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
         transitions.add(new Transition(this.updatingMediaSession, this.failed));
         transitions.add(new Transition(this.stopping, this.completed));
+        transitions.add(new Transition(this.stopping, this.failed));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
@@ -1294,11 +1295,12 @@ public final class Call extends UntypedActor {
 //                }
 
                 // XXX shouldnt it move to failingBusy IF dialing ????
-                if (is(dialing)) {
-                    break;
-                } else {
-                    fsm.transition(message, failingBusy);
-                }
+//                if (is(dialing)) {
+//                    break;
+//                } else {
+//                    fsm.transition(message, failingBusy);
+//                }
+                fsm.transition(message, failingBusy);
                 break;
             }
             case SipServletResponse.SC_UNAUTHORIZED:
