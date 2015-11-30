@@ -326,39 +326,21 @@ public final class SmsInterpreter extends UntypedActor {
     @Override
     public void onReceive(final Object message) throws Exception {
 
-        logger.info("Inside SmsIntepreter Onreceive Class " + message.getClass());
-
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringLastSmsRequest);
-
-            logger.info("Inside SmsIntepreter StartInterpreter.class.equals ");
-
         } else if (SmsSessionRequest.class.equals(klass)) {
-            logger.info("Inside SmsIntepreter SmsSessionRequest.class.equals");
-
             customRequestHeaderMap = ((SmsSessionRequest)message).headers();
             fsm.transition(message, downloadingRcml);
         } else if (DownloaderResponse.class.equals(klass)) {
-            logger.info("Inside SmsIntepreter DownloaderResponse.class.equals");
-
             final DownloaderResponse response = (DownloaderResponse) message;
             if (response.succeeded()) {
-
-                logger.info("Inside SmsIntepreter DownloaderResponse response RCML success");
-
                 final HttpResponseDescriptor descriptor = response.get();
                 if (HttpStatus.SC_OK == descriptor.getStatusCode()) {
-
-                    logger.info("Inside SmsIntepreter HttpStatus.SC_OK");
-
                     fsm.transition(message, ready);
                 } else {
                     if (downloadingRcml.equals(state)) {
-
-                        logger.info("Inside SmsIntepreter downloadingRcml downloadingFallbackRcml");
-
                         if (fallbackUrl != null) {
                             fsm.transition(message, downloadingFallbackRcml);
                         }
@@ -613,6 +595,9 @@ public final class SmsInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+
+            logger.error("Ready : " + message.getClass().getName() );
+
             final UntypedActorContext context = getContext();
             final State state = fsm.state();
             // Make sure we create a new parser if necessary.
@@ -730,6 +715,9 @@ public final class SmsInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
+
+            logger.error("SendingSms : " + message.getClass().getName() );
+
             final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
             final ActorRef session = response.get();
             final NotificationsDao notifications = storage.getNotificationsDao();

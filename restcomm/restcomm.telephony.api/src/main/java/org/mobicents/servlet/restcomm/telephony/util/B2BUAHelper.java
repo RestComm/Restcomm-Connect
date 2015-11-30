@@ -83,6 +83,7 @@
      public static boolean redirectToB2BUA(final SipServletRequest request, final Client client, Client toClient,
              DaoManager storage, SipFactory sipFactory, final boolean patchForNat) throws IOException {
          request.getSession().setAttribute("lastRequest", request);
+
          if (logger.isInfoEnabled()) {
              logger.info("B2BUA (p2p proxy): Got request:\n" + request.getMethod());
              logger.info(String.format("B2BUA: Proxying a session between %s and %s", client.getLogin(), toClient.getLogin()));
@@ -371,6 +372,7 @@
      }
 
      public static SipSession getLinkedSession(SipServletMessage message) {
+
          SipSession sipSession = null;
          if (message.getSession().isValid()) {
              sipSession = (SipSession) message.getSession().getAttribute(B2BUA_LINKED_SESSION);
@@ -505,7 +507,7 @@
 
          // Update CallDetailRecord
          if (message instanceof SipServletResponse) {
-             request = (SipServletRequest) getLinkedSession((SipServletResponse) message).getAttribute(B2BUA_LAST_REQUEST);
+             request = (SipServletRequest) getLinkedSession(message).getAttribute(B2BUA_LAST_REQUEST);
          } else if (message instanceof SipServletRequest) {
              request = (SipServletRequest) message;
          }

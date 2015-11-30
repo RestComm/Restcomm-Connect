@@ -3,8 +3,8 @@ package org.mobicents.servlet.restcomm.smpp;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipURI;
@@ -13,13 +13,14 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
-import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.Application;
-import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.CreateSmppSession;
+import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.DestroySmppSession;
+import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppServiceResponse;
 import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppStartInterpreter;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
@@ -27,6 +28,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -41,90 +43,33 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
     final ApplicationsDao applications = storage.getApplicationsDao();
     private final ActorSystem system = SmppInitConfigurationDetails.getSystem();
     private final Configuration configuration = SmppInitConfigurationDetails.getConfiguration();
-    private boolean useTo = true;
     private final SipFactory sipFactory = SmppInitConfigurationDetails.getSipFactory();
     private final ActorRef monitoringService = (ActorRef) SmppInitConfigurationDetails.getServletContext().getAttribute(MonitoringService.class.getName());
-    private final List<SipURI>  SipUriList =  (List<SipURI>) SmppInitConfigurationDetails.getServletContext().getAttribute(SipServlet.OUTBOUND_INTERFACES);
-    private ConcurrentHashMap<String, String> customRequestHeaderMap = new ConcurrentHashMap<String, String>();
-
+    private final ServletContext servletContext = SmppInitConfigurationDetails.getServletContext() ;
 
 
     private void HandleInboundMessages(final SmppInboundMessageEntity request ) throws IOException {
         final ActorRef self = self();
 
-        String from = request.getSmppFrom();
         String to = request.getSmppTo();
-        String body = request.getSmppContent();
-        String phone = to;
-
-
-        final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(to);
-
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-        //IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
         IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
         if (number == null) {
-
             logger.error("There is no matching Restcomm registered number to handle inbound SMPP number : " + to );
             //number = numbers.getIncomingPhoneNumber(to);
             return;
         }
-
-
         if (number.getSmsUrl() == null){
             logger.error("A matching Registered Restcomm number is found, but no SMS URL App is attached. " );
             return;
         }
+
         URI appUri = number.getSmsUrl();
-
-
 
         if (appUri != null){
             //final String toUser = CallControlHelper.getUserSipId(request, useTo);
             if( redirectToHostedSmsApp(self,request, accounts, applications,to  )){
-
                 logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
-                /**
-                // if(appUri != null && number != null){
-                logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
-
-                logger.info("from : " + from);
-                logger.info("to : " + to);
-
-                ActorRef session = session();
-                // Create an SMS detail record.
-                final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
-                final SmsMessage.Builder builder = SmsMessage.builder();
-                builder.setSid(sid);
-                builder.setAccountSid(number.getAccountSid());
-                builder.setApiVersion(number.getApiVersion());
-                builder.setRecipient(to);
-                builder.setSender(from);
-                builder.setBody(body);
-                builder.setDirection(Direction.INBOUND);
-                builder.setStatus(Status.RECEIVED);
-                builder.setPrice(new BigDecimal("0.00"));
-
-                // TODO implement currency property to be read from Configuration
-                builder.setPriceUnit(Currency.getInstance("USD"));
-                final StringBuilder buffer = new StringBuilder();
-                buffer.append("/").append(number.getApiVersion()).append("/Accounts/");
-                buffer.append(number.getAccountSid().toString()).append("/SMS/Messages/");
-                buffer.append(sid.toString());
-                final URI uri = URI.create(buffer.toString());
-                logger.info("URI : " + uri);
-                builder.setUri(uri);
-                final SmsMessage record = builder.build();
-                final SmsMessagesDao messages = storage.getSmsMessagesDao();
-                messages.addSmsMessage(record); //store message in DB
-                //Store the sms record in the smppsessionhandler.
-                session.tell(new SmppSessionObjects().new SmppSessionAttribute("record", record), self());
-
-                // Send the SMS.
-                final SmppSessionObjects.SmppSessionRequest sms = new SmppSessionObjects().new SmppSessionRequest(from, to, body , null);
-                monitoringService.tell(new TextMessage(from, to, TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
-                session.tell(sms, self());**/
             }
             else {
                 logger.error("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + number );
@@ -137,7 +82,6 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
             final ApplicationsDao applications, String id) throws IOException {
         boolean isFoundHostedApp = false;
 
-        String from = request.getSmppFrom();
         String to = request.getSmppTo();
         String phone = to;
 
@@ -190,17 +134,37 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
 
             }
         } catch (Exception e) {
-            logger.error("There was an error when trying to process inbound SMPP Message. There is no locally hosted Restcomm app for the number :" + e);
+            logger.error("Error processing inbound SMPP Message. There is no locally hosted Restcomm app for the number :" + e);
 
         }
         return isFoundHostedApp;
     }
 
-    /*
+
+    @Override
+    public void onReceive(Object request) throws Exception {
+
+        final UntypedActorContext context = getContext();
+        final ActorRef sender = sender();
+        final ActorRef self = self();
+        if( request instanceof SmppInboundMessageEntity){
+            HandleInboundMessages((SmppInboundMessageEntity) request);
+        }else if (request instanceof CreateSmppSession) {
+            final ActorRef session = session();
+            final SmppServiceResponse<ActorRef> response = new  SmppSessionObjects().new SmppServiceResponse<ActorRef>(session);
+            sender.tell(response, self);
+        }else if (request instanceof DestroySmppSession ) {
+            final DestroySmppSession message = (DestroySmppSession) request;
+            final ActorRef session = message.session();
+            context.stop(session);
+        }
+    }
+
+
     @SuppressWarnings("unchecked")
     private SipURI outboundInterface() {
         SipURI result = null;
-        final List<SipURI> uris = SipUriList;
+        final List<SipURI> uris = (List<SipURI>) servletContext.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
             final String transport = uri.getTransportParam();
             if ("udp".equalsIgnoreCase(transport)) {
@@ -208,15 +172,6 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
             }
         }
         return result;
-    }**/
-
-    @Override
-    public void onReceive(Object request) throws Exception {
-        if( request instanceof SmppInboundMessageEntity){
-            // SipServletRequest convertedRequest = smppToSipConverter((SmppInboundMessageEntity) request);
-            HandleInboundMessages((SmppInboundMessageEntity) request);
-
-        }
     }
 
     private ActorRef session() {
@@ -225,8 +180,9 @@ public class SmppHandlerInboundForwarder extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new SmppSessionHandler();
-                //return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService);
+                Configuration smsConfiguration = configuration.subset("sms-aggregator");
+                //return new SmppSessionHandler();
+                return new SmppSessionHandler(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService);
             }
         }));
     }
