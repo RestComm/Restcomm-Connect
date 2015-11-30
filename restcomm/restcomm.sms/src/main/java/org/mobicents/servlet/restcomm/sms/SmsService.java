@@ -57,8 +57,6 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.smpp.SmppClientOpsThread;
-import org.mobicents.servlet.restcomm.smpp.SmppHandlerProcessMessages;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionHandler;
 import org.mobicents.servlet.restcomm.telephony.TextMessage;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
@@ -130,6 +128,9 @@ public final class SmsService extends UntypedActor {
 
 
     private void message(final Object message) throws IOException {
+
+        logger.error("Sms SERVICE MESSAGE: " + message.getClass().getName() );
+
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
 
@@ -146,35 +147,20 @@ public final class SmsService extends UntypedActor {
         final ApplicationsDao applications = storage.getApplicationsDao();
         final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
 
-
+        /**
         //************************SIP Request Send to SMPP Endpoint**************************************
 
         //If SMPP is activated  send all SMS through the SMPP connection else
         //go through normal SIP SMS aggregator
+        //if the Destination/To is not a Restcomm client, use SMPP
 
 
-        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
-            logger.info("SMPP session is available and connected, outbound message will be forwarded ");
-            try {
-                final SipURI sipUri = (SipURI) request.getTo().getURI() ;
-                final String to = sipUri.getUser();
-                final String toUser = CallControlHelper.getUserSipId(request, useTo);
 
-                if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
-                    logger.info("Restcomm Hosted Application is found for the number : " + to);
-                    final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
-                    messageAccepted.send();
-                    return;
-                }else{
-                    logger.warning("There is no Restcomm Hosted Application for the Number : " + to);
-                }
-            }catch (final Exception exception) {
-                // Log the exception.
-                logger.error("There was an error sending this SMS to SMPP endpoint : " + exception);
-            }
+        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null ){
+            logger.info("SMPP session is available and connected, outbound message will be forwarded -- client:  " + client);
+            SendOutboundSMPPMessages(client, request, smppSession, accounts, applications, self);
+        }**/
 
-            return;
-        }
 
         // Make sure we force clients to authenticate.
         if (client != null) {
@@ -193,7 +179,14 @@ public final class SmsService extends UntypedActor {
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
             // Tell the sender we received the message okay.
             logger.info("Message to :" + toUser + " matched to one of the hosted applications");
+
+            //this is used to send a reply back to SIP client when a Restcomm App forwards inbound sms to a Restcomm client ex. Alice
+            final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
+            messageAccepted.send();
+
             monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
+
+            return;
 
         }
         if (client != null) {
@@ -205,7 +198,7 @@ public final class SmsService extends UntypedActor {
                 // to the b2bua
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     // if all goes well with proxying the SIP MESSAGE on to the target client
-                    // then we can end further processing of this request
+                    // then we can end further processing of this request and send response to sender
                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
                             + toClient.getLogin());
                     monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
@@ -384,49 +377,31 @@ public final class SmsService extends UntypedActor {
             final String method = request.getMethod();
             if ("MESSAGE".equalsIgnoreCase(method)) {
                 response(message);
+
             }
         }
     }
 
     private void response(final Object message) throws Exception {
-        //Intercept normal SMS response if SMPP is activated and forward to SmppSessionHandler
-        final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
-
-        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
-            logger.info("SMPP session is available and connected, outbound message will be forwarded ");
-
-            final ActorRef self = self();
-            final SipServletResponse response = (SipServletResponse) message;
-            // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
-            if (B2BUAHelper.isB2BUASession(response)) {
-                B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
-                return;
-            }
-            final SipApplicationSession application = response.getApplicationSession();
-            final ActorRef session = (ActorRef) application.getAttribute(SmppSessionHandler.class.getName());
-            session.tell(response, self);
-            final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
-            if (origRequest != null && origRequest.getSession().isValid()) {
-                origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
-            }
-
-            return;
-
-        }
 
         final ActorRef self = self();
         final SipServletResponse response = (SipServletResponse) message;
+
         // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
         if (B2BUAHelper.isB2BUASession(response)) {
             B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
             return;
         }
         final SipApplicationSession application = response.getApplicationSession();
-        final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
-        session.tell(response, self);
-        final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
-        if (origRequest != null && origRequest.getSession().isValid()) {
-            origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+
+        //handle SIP application session and make sure it has not being invalidated
+        if(!application.getInvalidateWhenReady() && application.isValid()){
+            final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
+            session.tell(response, self);
+            final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
+            if (origRequest != null && origRequest.getSession().isValid()) {
+                origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+            }
         }
     }
 
@@ -525,6 +500,32 @@ public final class SmsService extends UntypedActor {
         return builder.build();
     }
 
+    /**
+    private void SendOutboundSMPPMessages(Client client, SipServletRequest request,
+            SmppSession smppSession, AccountsDao accounts, ApplicationsDao applications , ActorRef self  ){
+
+        try {
+            final SipURI sipUri = (SipURI) request.getTo().getURI() ;
+            final String to = sipUri.getUser();
+            final String toUser = CallControlHelper.getUserSipId(request, useTo);
+
+            if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
+                logger.info("Restcomm Hosted Application is found for the number : " + to);
+                final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
+                messageAccepted.send();
+                return;
+            }else{
+                logger.warning("There is no Restcomm Hosted Application for the Number : " + to);
+            }
+        }catch (final Exception exception) {
+            // Log the exception.
+            logger.error("There was an error sending this SMS to SMPP endpoint : " + exception);
+        }
+
+        return;
+    }
+
+
 
     private ActorRef sendOutboundSmppMessages() {
         return system.actorOf(new Props(new UntypedActorFactory() {
@@ -535,6 +536,6 @@ public final class SmsService extends UntypedActor {
                 return new  SmppHandlerProcessMessages(); //.sendSmsFromRestcommToSmpp();
             }
         }));
-    }
+    }**/
 
 }

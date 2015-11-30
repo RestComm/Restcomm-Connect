@@ -176,4 +176,26 @@ public class SmppSessionObjects {
         }
 
     }
+
+    @Immutable
+    public final class CreateSmppSession {
+        public CreateSmppSession() {
+            super();
+        }
+    }
+
+    @Immutable
+    public final class DestroySmppSession {
+        private final ActorRef session;
+
+        public DestroySmppSession(final ActorRef session) {
+            super();
+            this.session = session;
+        }
+
+        public ActorRef session() {
+            return session;
+        }
+    }
+
 }

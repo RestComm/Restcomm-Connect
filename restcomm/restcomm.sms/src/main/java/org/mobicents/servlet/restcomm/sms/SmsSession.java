@@ -153,34 +153,24 @@ public final class SmsSession extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
-
-        logger.info("Inside the SMS session class name: " + message.getClass());
-
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
         if (Observe.class.equals(klass)) {
-            logger.info("Inside the SMS session Observe.class.equals ");
             observe(message);
         } else if (StopObserving.class.equals(klass)) {
-            logger.info("Inside the SMS session StopObserving.class.equals ");
             stopObserving(message);
         } else if (GetLastSmsRequest.class.equals(klass)) {
-            logger.info("Inside the SMS session GetLastSmsRequest.class.equals");
             sender.tell(last, self);
         } else if (SmsSessionAttribute.class.equals(klass)) {
-            logger.info("Inside the SMS session SmsSessionAttribute.class.equals");
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
         } else if (SmsSessionRequest.class.equals(klass)) {
-            logger.info("Inside the SMS session SmsSessionRequest.class.equals");
             customHttpHeaderMap = ((SmsSessionRequest) message).headers();
             outbound(message);
         } else if (message instanceof SipServletRequest) {
-            logger.info("Inside the SMS session  instanceof SipServletRequest");
             inbound(message);
         } else if (message instanceof SipServletResponse) {
-            logger.info("Inside the SMS session instanceof SipServletResponse");
             response(message);
         }
     }
@@ -228,24 +218,27 @@ public final class SmsSession extends UntypedActor {
 
         //******************************SMPP*******************************************
 
-        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
-            logger.info("SMPP session is available and connected, outbound message will be forwarded ");
-            try {
+        //if the Destination/To is not a Restcomm client, use SMPP
 
-                final String smppFrom = from ; //fromUri.getUser();
-                final String smppTo = to ; //sipUri.getUser();
-                final String smppContent = body; //request.getContent().toString();
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
-                ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
-                sendOutboundMessage.tell(sms, null);
+        if(to == null) {
+            if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
+                logger.info("SMPP session is available and connected, outbound message will be forwarded TO :  " + to );
+                try {
 
-            }catch (final Exception exception) {
-                // Log the exception.
-                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
-            }
+                    final String smppFrom = from ; //fromUri.getUser();
+                    final String smppTo = to ; //sipUri.getUser();
+                    final String smppContent = body; //request.getContent().toString();
+                    final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
+                    ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
+                    sendOutboundMessage.tell(sms, null);
 
-            return;
-        }
+                }catch (final Exception exception) {
+                    // Log the exception.
+                    logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
+                }
+
+                return;
+            }}
 
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
