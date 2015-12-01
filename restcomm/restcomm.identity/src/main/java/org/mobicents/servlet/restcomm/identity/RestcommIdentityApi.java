@@ -23,11 +23,11 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.keycloak.OAuth2Constants;
+import org.keycloak.common.util.KeycloakUriBuilder;
 import org.keycloak.constants.ServiceUrlConstants;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.util.JsonSerialization;
-import org.keycloak.util.KeycloakUriBuilder;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
@@ -228,7 +228,7 @@ public class RestcommIdentityApi {
                 return createdInstance;
             } else {
                 //logger.error("Error creating instance for user '" + username + "'");
-                throw new RestcommIdentityApiException(Outcome.fromHttpStatus(status));
+                throw new RestcommIdentityApiException("Error creating instance. Identity proxy responsed with: " + status, Outcome.fromHttpStatus(status));
             }
         } catch ( IOException e) {
             throw new RestcommIdentityApiException(Outcome.INTERNAL_ERROR);
@@ -305,6 +305,11 @@ public class RestcommIdentityApi {
 
         public RestcommIdentityApiException(Outcome outcome) {
             super();
+            this.outcome = outcome;
+        }
+
+        public RestcommIdentityApiException(String message, Outcome outcome) {
+            super(message);
             this.outcome = outcome;
         }
 

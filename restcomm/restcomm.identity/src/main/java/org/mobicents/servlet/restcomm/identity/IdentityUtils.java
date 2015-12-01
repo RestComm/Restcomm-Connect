@@ -5,9 +5,9 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 import org.keycloak.RSATokenVerifier;
-import org.keycloak.VerificationException;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
+import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.mobicents.servlet.restcomm.identity.configuration.AdapterConfigEntity;

@@ -6,10 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import org.apache.log4j.Logger;
-import org.keycloak.adapters.HttpFacade.Request;
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
+import org.keycloak.adapters.spi.HttpFacade;
 import org.mobicents.servlet.restcomm.rvd.configuration.RvdConfigurator;
 import org.mobicents.servlet.restcomm.rvd.configuration.RvdConfiguratorBuilder;
 
@@ -27,7 +27,7 @@ public class RvdKeycloakConfigResolver implements KeycloakConfigResolver {
     long lastModified = 0; // any valid modification time will be greater than this
 
     @Override
-    public KeycloakDeployment resolve(Request request) {
+    public KeycloakDeployment resolve(HttpFacade.Request request) {
         RvdConfigurator configurator = RvdConfiguratorBuilder.get();
 
         String configFilepath = configurator.getRestcommContextRootPath() + RVD_ADAPTER_FILEPATH;
@@ -54,4 +54,5 @@ public class RvdKeycloakConfigResolver implements KeycloakConfigResolver {
         KeycloakDeployment deployment = KeycloakDeploymentBuilder.build(is);
         return deployment;
     }
+
 }

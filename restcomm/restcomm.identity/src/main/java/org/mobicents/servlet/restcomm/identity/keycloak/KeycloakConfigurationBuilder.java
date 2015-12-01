@@ -59,7 +59,7 @@ public class KeycloakConfigurationBuilder {
         config.setCors(true);
         config.setUseResourceRoleMappings(true);
 
-        Map<String,String> credentials = new HashMap<String,String>();
+        Map<String,Object> credentials = new HashMap<String,Object>();
         credentials.put("secret", clientSecret);
         config.setCredentials(credentials);
 
@@ -95,7 +95,7 @@ public class KeycloakConfigurationBuilder {
         config.setCors(true);
         config.setUseResourceRoleMappings(true);
 
-        Map<String,String> credentials = new HashMap<String,String>();
+        Map<String,Object> credentials = new HashMap<String,Object>();
         credentials.put("secret", clientSecret);
         config.setCredentials(credentials);
 
