@@ -114,7 +114,7 @@
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
 		<aws.sdk.version>1.9.24</aws.sdk.version>
-		<keycloak-adapter.version>1.4.0.Final</keycloak-adapter.version>
+		<keycloak-adapter.version>1.6.1.Final</keycloak-adapter.version>
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->

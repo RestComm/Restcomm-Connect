@@ -5,8 +5,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
 import org.keycloak.RSATokenVerifier;
-import org.keycloak.VerificationException;
 import org.keycloak.adapters.KeycloakDeployment;
+import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.rvd.configuration.RvdConfigurator;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;

@@ -70,13 +70,21 @@ public class IdentityMigrationTool {
     public void migrate() {
         report("---------- MIGRATION START ----------");
         report("Using auth server at " + identityApi.getAuthServerBaseUrl());
-        registerInstance(redirectUris); // TODO - replace hardcoded values with real stuff
+        if ( registerInstance(redirectUris) == false ) {
+            report("Migration FAILED!!!");
+            return;
+        }
         migrateUsers();
         linkAdministratorAccount();
         updateConfiguration();
         report("---------- MIGRATION END ----------");
     }
 
+    /**
+     * Registers an instance to an authorization server. The keycloak Clients are created.
+     * @param redirectUris
+     * @return true if successfull, false otherwise
+     */
     boolean registerInstance(String[] redirectUris) {
         report("--- Registration phase ---");
         try {
