@@ -8,6 +8,7 @@ public class IdentityConfigurationSet extends ConfigurationSet {
     private static Logger logger = Logger.getLogger(IdentityConfigurationSet.class);
 
     // identity connectivity keys
+    public static final String HEADLESS_KEY = "identity.headless";
     public static final String AUTH_SERVER_BASE_URL_KEY = "identity.auth-server-base-url";
     public static final String REALM_KEY_KEY = "identity.realm-public-key";
     // migration/registration-specific keys
@@ -19,6 +20,7 @@ public class IdentityConfigurationSet extends ConfigurationSet {
     public static final String METHOD_KEY = "identity.migration.method";
 
     // identity connectivity variables
+    private final Boolean headless;
     private final String authServerBaseUrl;
     private final String realm;
     private final String realmkey;
@@ -31,6 +33,7 @@ public class IdentityConfigurationSet extends ConfigurationSet {
     private MigrationMethod method;
 
     // default values
+    public static final Boolean HEADLESS_DEFAULT = false;
     public static final String AUTH_SERVER_BASE_URL_DEFAULT = "https://identity.restcomm.com";
     public static final Boolean INVITE_EXISTING_USERS_DEFAULT = false;
     public static final String REALM_DEFAULT = "restcomm";
@@ -41,10 +44,33 @@ public class IdentityConfigurationSet extends ConfigurationSet {
     // other static stuff to keep them all in a single place
     public static final String IDENTITY_PROXY_CLIENT_NAME = "restcomm-identity-rest";
     public static final String IDENTITY_PROXY_CONTEXT_NAME = "restcomm-identity";
-    private static final String ADMINISTRATOR_ROLE = "Administrator";
+    public static final String ADMINISTRATOR_ROLE = "Administrator";
 
     public IdentityConfigurationSet(ConfigurationSource source) {
         super(source,null);
+        // headless option
+        String headlessString = source.getProperty(HEADLESS_KEY);
+        if (StringUtils.isEmpty(headlessString))
+            this.headless = HEADLESS_DEFAULT;
+        else
+        try {
+            this.headless = Boolean.parseBoolean(headlessString);
+        } catch (Exception e) {
+            throw new RuntimeException("Error initializing '" + HEADLESS_KEY + "' configuration option",e);
+        }
+        if (this.headless) {
+            // disable all other identity options
+            this.authServerBaseUrl = null;
+            this.realm = null;
+            this.realmkey = null;
+            this.username = null;
+            this.password = null;
+            this.inviteExistingUsers = null;
+            this.adminAccountSid = null;
+            this.redirectUris = null;
+
+            return;
+        }
         // authServerBaseUrl option
         String authServerBaseUrl = source.getProperty(AUTH_SERVER_BASE_URL_KEY);
         if (StringUtils.isEmpty(authServerBaseUrl))
@@ -93,6 +119,8 @@ public class IdentityConfigurationSet extends ConfigurationSet {
 
         this.reloaded();
     }
+
+    public Boolean getHeadless() { return headless; }
 
     public String getAuthServerBaseUrl() {
         return authServerBaseUrl;

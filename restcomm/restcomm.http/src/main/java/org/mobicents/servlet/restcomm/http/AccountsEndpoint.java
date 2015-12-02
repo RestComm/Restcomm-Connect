@@ -59,7 +59,6 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
-import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
@@ -72,7 +71,6 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
     protected Configuration configuration;
     protected MutableIdentityConfigurationSet mutableIdentityConfiguration;
     protected IdentityConfigurationSet identityConfiguration;
-    protected KeycloakContext keycloakContext;
     protected Gson gson;
     protected XStream xstream;
 
@@ -87,7 +85,6 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         super.init(configuration);
         mutableIdentityConfiguration = RestcommConfiguration.getInstance().getMutableIdentity();
         identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
-        keycloakContext = KeycloakContext.getInstance();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);

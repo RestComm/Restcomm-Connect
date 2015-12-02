@@ -62,8 +62,10 @@ public class KeycloakContext {
     }
 
     public static void init(IdentityConfigurationSet config, MutableIdentityConfigurationSet mutableConfig) {
-        KeycloakContext instance = new KeycloakContext(config.getRealm(), config.getRealmkey(), config.getAuthServerBaseUrl() + "/auth", mutableConfig.getInstanceId(), mutableConfig.getRestcommClientSecret());
-        setInstance(instance);
+        if (config.getHeadless())
+            setInstance(null);
+        else
+            setInstance(new KeycloakContext(config.getRealm(), config.getRealmkey(), config.getAuthServerBaseUrl() + "/auth", mutableConfig.getInstanceId(), mutableConfig.getRestcommClientSecret()));
     }
 
     private static void setInstance(KeycloakContext inst) {
