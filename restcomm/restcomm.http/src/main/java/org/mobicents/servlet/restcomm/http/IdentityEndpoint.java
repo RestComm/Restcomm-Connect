@@ -71,6 +71,9 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
     @POST
     @Path("/register")
     public Response registerInstance(@FormParam("restcommBaseUrl") String baseUrl, @FormParam("username") String username, @FormParam("password") String password, @FormParam("instanceSecret") String instanceSecret )  {
+        // abort in case restcomm runs headless
+        if ( iConfig.getHeadless() )
+            return Response.status(Status.NOT_FOUND).build();
         // make sure registration/migration through UI is enabled
         if ( ! iConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui))
             return Response.status(Status.BAD_REQUEST).build();

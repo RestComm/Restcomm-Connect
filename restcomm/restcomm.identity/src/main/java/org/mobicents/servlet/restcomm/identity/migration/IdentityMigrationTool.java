@@ -23,6 +23,8 @@ package org.mobicents.servlet.restcomm.identity.migration;
 import java.util.List;
 import java.util.UUID;
 
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sources.MutableConfigurationSource;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -52,6 +54,22 @@ public class IdentityMigrationTool {
     private String instanceId;
     private String clientSecret;
     private String[] redirectUris;
+
+    /*
+        Wrapper function for identity-oriented bootstraper logic
+     */
+    public static void onBootstrap(RestcommConfiguration config, AccountsDao accountsDao) {
+        IdentityConfigurationSet identityConfig = config.getIdentity();
+        if ( ! identityConfig.getHeadless() ) {
+            MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
+            if (identityConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(mutableIdentityConfig.getMode())) {
+                RestcommIdentityApi api = new RestcommIdentityApi(identityConfig.getAuthServerBaseUrl(), identityConfig.getUsername(), identityConfig.getPassword(), identityConfig.getRealm(), null);
+                IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, identityConfig.getInviteExistingUsers(), identityConfig.getAdminAccountSid(), mutableIdentityConfig, identityConfig.getRedirectUris());
+                migrationTool.migrate();
+                config.reloadMutableIdentity();
+            }
+        }
+    }
 
     public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting, String adminAccountSid, MutableIdentityConfigurationSet identityConfig, String[] redirectUris) {
         super();

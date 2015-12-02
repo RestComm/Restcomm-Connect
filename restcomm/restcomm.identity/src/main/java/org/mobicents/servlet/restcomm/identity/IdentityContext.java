@@ -26,14 +26,18 @@ public class IdentityContext {
     final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
 
     public IdentityContext(KeycloakContext keycloakContext, HttpServletRequest request, AccountsDao accountsDao) {
-        final String tokenString = extractOauthTokenString(request);
-        if ( ! StringUtils.isEmpty(tokenString) ) {
-            this.oauthToken = verifyToken(tokenString, keycloakContext);
-            this.oauthTokenString = tokenString;
-        }
-        else {
-            this.oauthToken = null;
-            this.oauthTokenString = null;
+        if (keycloakContext == null) {
+            oauthTokenString = null;
+            oauthToken = null;
+        } else {
+            final String tokenString = extractOauthTokenString(request);
+            if (!StringUtils.isEmpty(tokenString)) {
+                this.oauthToken = verifyToken(tokenString, keycloakContext);
+                this.oauthTokenString = tokenString;
+            } else {
+                this.oauthToken = null;
+                this.oauthTokenString = null;
+            }
         }
         this.accountKey = extractAccountKey(request, accountsDao);
         //updateEffectiveAccount(accountsDao);

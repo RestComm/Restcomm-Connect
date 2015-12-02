@@ -31,7 +31,6 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.http.RestcommRoles;
-import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.configuration.RvdConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
 import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
@@ -259,17 +258,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return config;
     }
 
-    private void identityMigration(RestcommConfiguration config, DaoManager daos, KeycloakContext keycloakContext ) {
-        IdentityConfigurationSet identityConfig = config.getIdentity();
-        MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
-        if (identityConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(mutableIdentityConfig.getMode()) ) {
-            RestcommIdentityApi api = new RestcommIdentityApi(identityConfig.getAuthServerBaseUrl(), identityConfig.getUsername(), identityConfig.getPassword(), identityConfig.getRealm(), null);
-            IdentityMigrationTool migrationTool = new IdentityMigrationTool(daos.getAccountsDao(), api, identityConfig.getInviteExistingUsers(), identityConfig.getAdminAccountSid(), mutableIdentityConfig, identityConfig.getRedirectUris());
-            migrationTool.migrate();
-            config.reloadMutableIdentity();
-        }
-    }
-
     /**
      * Create keycloak context, a singleton that holds the KeycloakDeployment structures.
      */
@@ -318,10 +306,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
             RestcommConfiguration restcommConfig = initRestcommConfiguration(xml, storage, context);
+            if (restcommConfig.getIdentity().getHeadless())
+                logger.info("Restcomm operating in HEADLESS mode. Both Administration Console and Visual Designer are disabled. Use REST API to access Restcomm services.");
             // Create keylcoak context
             KeycloakContext.init(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity());
             // Identity migration. Register instance to auth server and migrate users.
-            identityMigration(RestcommConfiguration.getInstance(), storage, KeycloakContext.getInstance());
+            IdentityMigrationTool.onBootstrap(restcommConfig, storage.getAccountsDao());
             // Reload keycloak context after migration
             KeycloakContext.init(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity());
             // Create directory of shiro based restcomm roles

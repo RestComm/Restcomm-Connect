@@ -27,6 +27,7 @@ import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.representations.AccessToken;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -126,7 +127,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         throw new AuthorizationException();
     }
 
-    // check if the user with the roles in accessToken can access has the following permissions (on the API)
     /**
      * Checks if the a user with roles 'roleNames' is allowed to perform actions in 'neededPermissionString'
      * @param neededPermissionString
@@ -134,6 +134,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @return
      */
     private AuthOutcome secureApi(String neededPermissionString, Set<String> roleNames) {
+        // if this is an administrator ask no more questions
+        if ( roleNames.contains(IdentityConfigurationSet.ADMINISTRATOR_ROLE))
+            return AuthOutcome.OK;
+
         // normalize the permission string
         neededPermissionString = "domain:" + neededPermissionString;
 
