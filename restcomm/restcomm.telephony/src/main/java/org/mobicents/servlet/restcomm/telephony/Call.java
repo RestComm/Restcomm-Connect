@@ -199,7 +199,7 @@ public final class Call extends UntypedActor {
         this.failingBusy = new State("failing busy", new FailingBusy(source), null);
         this.busy = new State("busy", new Busy(source), null);
         this.notFound = new State("not found", new NotFound(source), null);
-        this.canceling = new State("canceling", new Canceling(source), null);
+        this.canceling = new State("canceling", new Canceling(source));
         this.canceled = new State("canceled", new Canceled(source), null);
         this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
         this.noAnswer = new State("no answer", new NoAnswer(source), null);
