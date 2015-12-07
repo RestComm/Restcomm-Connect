@@ -247,6 +247,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         RestcommConfiguration config = RestcommConfiguration.createOnce();
         ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
         config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
+        logger.info("Initializing Restcomm Identity...");
         IdentityConfigurationSet identityConfig = new IdentityConfigurationSet(apacheSource);
         config.addConfigurationSet("identity", identityConfig);
         DatabaseConfigurationSource dbSource = new DatabaseConfigurationSource(daoManager.getConfigurationDao());
@@ -254,6 +255,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         MutableIdentityConfigurationSet identityDbConfig = new MutableIdentityConfigurationSet(dbSource);
         identityDbConfig.registerUpdateListener(rvdListener);
         config.addConfigurationSet("mutable-identity", identityDbConfig);
+
+        if (identityConfig.getHeadless())
+            logger.warn("Restcomm is operating in HEADLESS mode. Both Administration Console and Visual Designer are disabled. Use REST API to access Restcomm services.");
+        if (!"init".equals(identityDbConfig.getMode()) && identityDbConfig.getInstanceId() != null)
+            logger.info("Restcomm Identity configured using auth server " + identityConfig.getAuthServerBaseUrl() + ". Identity instance ID: " + identityDbConfig.getInstanceId() );
+        if ("init".equals(identityDbConfig.getMode()))
+            logger.warn( "Restcomm identity is not configured! Administration Console and RVD won't be available.");
 
         return config;
     }
@@ -306,8 +314,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
             RestcommConfiguration restcommConfig = initRestcommConfiguration(xml, storage, context);
-            if (restcommConfig.getIdentity().getHeadless())
-                logger.info("Restcomm operating in HEADLESS mode. Both Administration Console and Visual Designer are disabled. Use REST API to access Restcomm services.");
             // Create keylcoak context
             KeycloakContext.init(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity());
             // Identity migration. Register instance to auth server and migrate users.

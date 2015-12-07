@@ -75,7 +75,7 @@ public class RestcommRoles {
                     if (permissions.size() > 0 ) {
                         final SimpleRole role = new SimpleRole(name);
                         for (String permissionString: permissions) {
-                            logger.info("loading permission " + permissionString + " into " + name + " role");
+                            //logger.info("loading permission " + permissionString + " into " + name + " role");
                             final Permission permission = new DomainPermission(permissionString);
                             role.add(permission);
                         }
