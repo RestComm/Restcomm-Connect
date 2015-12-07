@@ -233,10 +233,10 @@ public class RvdController extends RestService {
         // ...
         // use the existing application for RCML if none has been given
         if (RvdUtils.isEmpty(rcmlUrl)) {
-            URIBuilder uriBuilder = new URIBuilder();
-            uriBuilder.setHost(request.getLocalAddr());
-            uriBuilder.setPort(request.getLocalPort());
-            uriBuilder.setScheme(request.getScheme());
+            URIBuilder uriBuilder = new URIBuilder(restcommBaseUri);
+            //uriBuilder.setHost(request.getLocalAddr());
+            //uriBuilder.setPort(request.getLocalPort());
+            //uriBuilder.setScheme(request.getScheme());
             uriBuilder.setPath("/restcomm-rvd/services/apps/" + projectName + "/controller");
             try {
                 rcmlUrl = uriBuilder.build().toString();
