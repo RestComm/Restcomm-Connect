@@ -52,7 +52,6 @@ public class RvdConfiguration {
     public static final String RESTCOMM_HEADER_PREFIX_DIAL = "DialSipHeader_"; // another prefix
 
     private String workspaceBasePath;
-    private String externalServiceBase; // use this when relative urls (starting with /) are specified in ExternalService steps
     private RvdConfig rvdConfig;  // the configuration settings from rvd.xml
     private RestcommConfig restcommConfig;
 
@@ -170,14 +169,6 @@ public class RvdConfiguration {
         return RAS_APPLICATION_VERSION;
     }
 
-    public String getExternalServiceBase() {
-        return externalServiceBase;
-    }
-
-    public void setExternalServiceBase(String externalServiceBase) {
-        this.externalServiceBase = externalServiceBase;
-    }
-
     public String getEffectiveRestcommIp(HttpServletRequest request) {
         String ipFromXml = rvdConfig.getRestcommPublicIp();
 
@@ -194,21 +185,6 @@ public class RvdConfiguration {
     public String getEffectiveRestcommPort(HttpServletRequest request) {
         int port = request.getLocalPort();
         return "" + port;
-    }
-
-    /**
-     * Returns the IP rvd listens to for internal use. This address can be used by restcomm to access applications.
-     * A request object is required to get it. Even when this request comes from a browser, this function should report
-     * the correct IP.
-     * @param request
-     * @return
-     */
-    public String getRvdInternalIp(HttpServletRequest request) {
-        return request.getLocalAddr();
-    }
-
-    public int getRvdInternalPort(HttpServletRequest request) {
-        return request.getLocalPort();
     }
 
     public static Set<String> getRestcommParameterNames() {
