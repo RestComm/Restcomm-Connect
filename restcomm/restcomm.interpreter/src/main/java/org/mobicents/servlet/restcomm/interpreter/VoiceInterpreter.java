@@ -1152,13 +1152,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 final String type = response.getContentType();
                 if (type != null) {
-                    if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
-                        parser = parser(response.getContentAsString());
-                    } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
-                        parser = parser("<Play>" + request.getUri() + "</Play>");
-                    } else if (type.contains("text/plain")) {
-                        parser = parser("<Say>" + response.getContentAsString() + "</Say>");
-                    }
+                        if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
+                            parser = parser(response.getContentAsString());
+                        } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
+                            parser = parser("<Play>" + request.getUri() + "</Play>");
+                        } else if (type.contains("text/plain")) {
+                            parser = parser("<Say>" + response.getContentAsString() + "</Say>");
+                        }
                 } else {
                     if (call != null) {
                         call.tell(new Hangup(), null);

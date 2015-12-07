@@ -44,6 +44,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
 public final class Parser extends UntypedActor {
     private final Tag document;
     private final Iterator<Tag> iterator;
+    private final String text;
 
     private Tag current;
 
@@ -64,7 +65,8 @@ public final class Parser extends UntypedActor {
             }
             iterator = document.iterator();
         } catch (final XMLStreamException exception) {
-            throw new IOException(exception);
+            getContext().sender().tell(new ParserFailed(exception, ), null);
+//            throw new IOException(exception);
         } finally {
             if (stream != null) {
                 try {
@@ -77,6 +79,7 @@ public final class Parser extends UntypedActor {
     }
 
     public Parser(final String text) throws IOException {
+        this.text = text;
         this(new StringReader(text.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")));
     }
 
