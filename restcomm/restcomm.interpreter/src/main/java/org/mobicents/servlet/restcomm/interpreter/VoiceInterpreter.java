@@ -2250,7 +2250,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         private ActorRef buildSubVoiceInterpreter(Tag child) throws MalformedURLException, URISyntaxException {
-            URI url = new URL(child.attribute("url").value()).toURI();
+//            URI url = new URL(child.attribute("url").value()).toURI();
+            URI url = UriUtils.resolve(new URI(child.attribute("url").value()));
             String method;
             if (child.hasAttribute("method")) {
                 method = child.attribute("method").value().toUpperCase();
