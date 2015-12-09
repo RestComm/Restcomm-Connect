@@ -17,4 +17,6 @@
   ~  along with this program.  If not, see <http://www.gnu.org/licenses/>
   -->
 
-<Response></Response>
+<Response>
+    <Say>Hi bob. Someone wants to talk to you</Say>
+</Response>
