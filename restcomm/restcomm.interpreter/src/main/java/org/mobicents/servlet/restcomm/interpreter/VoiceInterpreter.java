@@ -2283,7 +2283,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
                 Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
+                Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
 
                 if (!End.class.equals(object.getClass())) {
                     fsm.transition(message, hangingUp);
