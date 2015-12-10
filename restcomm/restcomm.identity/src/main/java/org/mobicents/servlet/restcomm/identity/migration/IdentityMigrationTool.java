@@ -96,6 +96,7 @@ public class IdentityMigrationTool {
         linkAdministratorAccount();
         updateConfiguration();
         report("---------- MIGRATION END ----------");
+        logger.info("Using auth server at: " + identityApi.getAuthServerBaseUrl() + ". Instance ID: " + instanceId);
     }
 
     /**

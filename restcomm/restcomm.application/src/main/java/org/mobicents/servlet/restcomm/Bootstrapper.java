@@ -261,7 +261,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         if (!"init".equals(identityDbConfig.getMode()) && identityDbConfig.getInstanceId() != null)
             logger.info("Restcomm Identity configured using auth server " + identityConfig.getAuthServerBaseUrl() + ". Identity instance ID: " + identityDbConfig.getInstanceId() );
         if ("init".equals(identityDbConfig.getMode()))
-            logger.warn( "Restcomm identity is not configured! Administration Console and RVD won't be available.");
+            logger.warn( "Restcomm identity is not configured. Need to run identity migration.");
 
         return config;
     }
