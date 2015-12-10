@@ -299,15 +299,14 @@
     <touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy"/>
 
     <!-- Add environment variables to standalone configuration script -->
-    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">
-      export APPSERVER_PLATFORM='TELESTAX' export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties
-    </echo>
+    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">export APPSERVER_PLATFORM='TELESTAX'</echo>
+    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties</echo>    
 
     <!-- Copy Dialogic Config file -->
     <copy failonerror="true" file="${configuration.directory}/dlgc_JSR309.properties" toDir="${release.as7.dir}/standalone/configuration"/>
 
     <!-- Copy Dialogic JSR 309 connector -->
-    <copy failonerror="true" file="${configuration.directory}/dlgmsc-4.2.133.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+    <copy failonerror="true" file="${configuration.directory}/dlgmsc-5.0-alpha.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
     <copy failonerror="true" file="${configuration.directory}/dlgcsmiltypes-4.1.429.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
     <copy failonerror="true" file="${configuration.directory}/msmltypes-4.1.429.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
 
