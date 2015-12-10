@@ -251,16 +251,19 @@
     <copy failonerror="true" file="${configuration.directory}/dlgc_JSR309.properties" toDir="${release.tomcat.dir}/conf"/>
 
     <!-- Copy Dialogic JSR 309 connector -->
-    <copy failonerror="true" file="${configuration.directory}/dlgmsc-4.2.133.jar" toDir="${release.tomcat.dir}/webapps/restcomm/WEB-INF/lib"/>
+    <copy failonerror="true" file="${configuration.directory}/dlgmsc-5.0-alpha.jar" toDir="${release.tomcat.dir}/webapps/restcomm/WEB-INF/lib"/>
     <copy failonerror="true" file="${configuration.directory}/dlgcsmiltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm/WEB-INF/lib"/>
     <copy failonerror="true" file="${configuration.directory}/msmltypes-4.1.429.jar" toDir="${release.tomcat.dir}/webapps/restcomm/WEB-INF/lib"/>
 
     <touch file="${release.tomcat.dir}/bin/setenv.sh"/>
 
     <echo append="true" file="${release.tomcat.dir}/bin/setenv.sh">
-      export APPSERVER_PLATFORM='TELESTAX' export DLG_PROPERTY_FILE=$CATALINA_HOME/conf/dlgc_JSR309.properties
+    export APPSERVER_PLATFORM='TELESTAX' export DLG_PROPERTY_FILE=$CATALINA_HOME/conf/dlgc_JSR309.properties
     </echo>
-
+    <echo append="true" file="${release.tomcat.dir}/bin/setenv.sh">
+    export DLG_PROPERTY_FILE=$CATALINA_HOME/conf/dlgc_JSR309.properties
+    </echo>
+    
     <chmod dir="${release.tomcat.dir}/bin" includes="**/*.sh" perm="ugo+rx"/>
 
     <!-- Replace webrtc.war with Olympus.war -->
@@ -299,8 +302,12 @@
     <touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy"/>
 
     <!-- Add environment variables to standalone configuration script -->
-    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">export APPSERVER_PLATFORM='TELESTAX'</echo>
-    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties</echo>    
+    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">
+    export APPSERVER_PLATFORM='TELESTAX'
+    </echo>
+    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">
+    export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties
+    </echo>    
 
     <!-- Copy Dialogic Config file -->
     <copy failonerror="true" file="${configuration.directory}/dlgc_JSR309.properties" toDir="${release.as7.dir}/standalone/configuration"/>
