@@ -36,6 +36,9 @@ import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdent
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
+
+import javax.servlet.ServletContext;
 
 /**
  *
@@ -58,7 +61,7 @@ public class IdentityMigrationTool {
     /*
         Wrapper function for identity-oriented bootstraper logic
      */
-    public static void onBootstrap(RestcommConfiguration config, AccountsDao accountsDao) {
+    public static void onBootstrap(RestcommConfiguration config, AccountsDao accountsDao, ServletContext servletContext) {
         IdentityConfigurationSet identityConfig = config.getIdentity();
         if ( ! identityConfig.getHeadless() ) {
             MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
@@ -67,6 +70,10 @@ public class IdentityMigrationTool {
                 IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, identityConfig.getInviteExistingUsers(), identityConfig.getAdminAccountSid(), mutableIdentityConfig, identityConfig.getRedirectUris());
                 migrationTool.migrate();
                 config.reloadMutableIdentity();
+                // Reset identity context after migration
+                IdentityContext oldContext = (IdentityContext) servletContext.getAttribute(IdentityContext.class.getName());
+                IdentityContext identityContext = new IdentityContext(config.getIdentity(),config.getMutableIdentity(), oldContext.getRestcommRoles());
+                servletContext.setAttribute(IdentityContext.class.getName(), identityContext);
             }
         }
     }

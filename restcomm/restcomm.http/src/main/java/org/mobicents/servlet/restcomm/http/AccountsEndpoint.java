@@ -56,7 +56,7 @@ import org.mobicents.servlet.restcomm.exceptions.ConstraintViolationException;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
-import org.mobicents.servlet.restcomm.identity.IdentityContext;
+import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 import org.mobicents.servlet.restcomm.util.StringUtils;
@@ -200,7 +200,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
             return status(UNAUTHORIZED).build();
         }
         // Prevent removal of Logged account
-        if (operatedSid.equalsIgnoreCase(identityContext.getEffectiveAccount().getSid().toString()))
+        if (operatedSid.equalsIgnoreCase(userIdentityContext.getEffectiveAccount().getSid().toString()))
             return status(BAD_REQUEST).build();
 
         if (accountsDao.getAccount(sidToBeRemoved) == null)
@@ -217,7 +217,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Account account = identityContext.getEffectiveAccount(); // uses either oauth token or APIKey specified account
+        final Account account = userIdentityContext.getEffectiveAccount(); // uses either oauth token or APIKey specified account
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
@@ -254,7 +254,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
             return status(UNAUTHORIZED).build();
         }
 
-        final Account parentAccount = identityContext.getEffectiveAccount();
+        final Account parentAccount = userIdentityContext.getEffectiveAccount();
         if ( parentAccount == null )
             return status(NOT_FOUND).build();
         Account account = null; // the newly created account
@@ -273,7 +273,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         account = account.setRole(childRole);
 
         // assign a random authToken for the account
-        account = account.setAuthToken(IdentityContext.generateApiKey());
+        account = account.setAuthToken(UserIdentityContext.generateApiKey());
 
         // store restcomm account
         // note that email_address should be empty since it is ignored in createFrom()
@@ -345,7 +345,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
         if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
-            RestcommIdentityApi api = new RestcommIdentityApi(identityContext, RestcommConfiguration.getInstance().getIdentity(), RestcommConfiguration.getInstance().getMutableIdentity());
+            RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext, RestcommConfiguration.getInstance().getIdentity(), RestcommConfiguration.getInstance().getMutableIdentity());
             if ( ! api.inviteUser(username) ) // assign roles
                 return Outcome.NOT_FOUND;
             restcommAccount = restcommAccount.setEmailAddress(username);
@@ -383,7 +383,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
     protected Response assignApikey(Account restcommAccount) {
         if ( ! org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getAuthToken()) )
             return Response.status(CONFLICT).build();
-        String key = IdentityContext.generateApiKey();
+        String key = UserIdentityContext.generateApiKey();
         restcommAccount = restcommAccount.setAuthToken(key);
         accountsDao.updateAccount(restcommAccount);
         return Response.ok().build();
@@ -393,7 +393,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
         UserEntity user = new UserEntity(username,null, friendlyName, null, tempPassword);
-        RestcommIdentityApi api = new RestcommIdentityApi(identityContext,identityConfiguration,mutableIdentityConfiguration );
+        RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext,identityConfiguration,mutableIdentityConfiguration );
         return api.createUser(user);
     }
 

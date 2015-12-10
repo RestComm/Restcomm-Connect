@@ -11,28 +11,28 @@ import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
+import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
 
 /**
  * A per-request security context providing access to Oauth tokens or Account API Keys.
  * @author "Tsakiridis Orestis"
  *
  */
-public class IdentityContext {
+public class UserIdentityContext {
 
     final String oauthTokenString;
     final AccessToken oauthToken;
     final AccountKey accountKey;
     final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
 
-    public IdentityContext(KeycloakContext keycloakContext, HttpServletRequest request, AccountsDao accountsDao) {
-        if (keycloakContext == null) {
+    public UserIdentityContext(IdentityContext identityContext, HttpServletRequest request, AccountsDao accountsDao) {
+        if (identityContext == null) {
             oauthTokenString = null;
             oauthToken = null;
         } else {
             final String tokenString = extractOauthTokenString(request);
             if (!StringUtils.isEmpty(tokenString)) {
-                this.oauthToken = verifyToken(tokenString, keycloakContext);
+                this.oauthToken = verifyToken(tokenString, identityContext);
                 this.oauthTokenString = tokenString;
             } else {
                 this.oauthToken = null;
@@ -63,8 +63,8 @@ public class IdentityContext {
         return null;
     }
 
-    private AccessToken verifyToken(String tokenString, KeycloakContext keycloakContext ) {
-        return IdentityUtils.verifyToken(tokenString, keycloakContext.getDeployment());
+    private AccessToken verifyToken(String tokenString, IdentityContext identityContext) {
+        return IdentityUtils.verifyToken(tokenString, identityContext.getDeployment());
     }
 
     private AccountKey extractAccountKey(HttpServletRequest request, AccountsDao dao) {
