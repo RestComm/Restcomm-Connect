@@ -2,7 +2,7 @@ package org.mobicents.servlet.restcomm.configuration.sets;
 
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
-public class CustomConfigurationSet extends ConfigurationSet {
+public class CustomConfigurationSet extends ConfigurationSetImpl {
     
     public static final String PROPERTY1_KEY = "property1";
     private String property1;

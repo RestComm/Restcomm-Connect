@@ -24,8 +24,9 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.configuration.DatabaseConfigurationSource;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
@@ -248,11 +249,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
         config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
         logger.info("Initializing Restcomm Identity...");
-        IdentityConfigurationSet identityConfig = new IdentityConfigurationSet(apacheSource);
+        IdentityConfigurationSetImpl identityConfig = new IdentityConfigurationSetImpl(apacheSource);
         config.addConfigurationSet("identity", identityConfig);
         DatabaseConfigurationSource dbSource = new DatabaseConfigurationSource(daoManager.getConfigurationDao());
         RvdConfigurationUpdateListener rvdListener = new RvdConfigurationUpdateListener(serevletContext,identityConfig);
-        MutableIdentityConfigurationSet identityDbConfig = new MutableIdentityConfigurationSet(dbSource);
+        MutableIdentityConfigurationSet identityDbConfig = new MutableIdentityConfigurationSetImpl(dbSource);
         identityDbConfig.registerUpdateListener(rvdListener);
         config.addConfigurationSet("mutable-identity", identityDbConfig);
 

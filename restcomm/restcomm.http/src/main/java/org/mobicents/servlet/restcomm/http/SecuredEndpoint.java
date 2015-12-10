@@ -28,6 +28,7 @@ import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -133,7 +134,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     private AuthOutcome secureApi(String neededPermissionString, Set<String> roleNames) {
         // if this is an administrator ask no more questions
-        if ( roleNames.contains(IdentityConfigurationSet.ADMINISTRATOR_ROLE))
+        if ( roleNames.contains(IdentityConfigurationSetImpl.ADMINISTRATOR_ROLE))
             return AuthOutcome.OK;
 
         // normalize the permission string
@@ -197,7 +198,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             return AuthOutcome.FAILED;
 
         Set<String> roleNames = accountKey.getRoles();
-        if ( !roleNames.contains(identityConfiguration.getAdministratorRole()) && secureApi(permission, roleNames) == AuthOutcome.FAILED )
+        if ( !roleNames.contains(IdentityConfigurationSet.ADMINISTRATOR_ROLE) && secureApi(permission, roleNames) == AuthOutcome.FAILED )
             return AuthOutcome.FAILED;
         // check if the logged user has access to the account that is operated upon
         if ( secureAccount(accountKey.getAccount(), account) == AuthOutcome.FAILED )

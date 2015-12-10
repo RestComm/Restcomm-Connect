@@ -1,70 +1,15 @@
-/*
- * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2014, Telestax Inc and individual contributors
- * by the @authors tag.
- *
- * This program is free software: you can redistribute it and/or modify
- * under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation; either version 3 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- *
- */
 package org.mobicents.servlet.restcomm.configuration.sets;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.mobicents.servlet.restcomm.configuration.ConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
+import java.util.List;
+
 /**
- * A logical group of configuration options. It encapsulates storage, initialization
- * and validation operations. Extend it to add new groups.
- *
- * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
- *
+ * Created by nando on 12/10/15.
  */
-public abstract class ConfigurationSet {
-    protected final ConfigurationSource source;
-    protected List<ConfigurationUpdateListener> updateListeners;
-
-    protected ConfigurationSet(ConfigurationSource source, List<ConfigurationUpdateListener> listeners) {
-        super();
-        this.source = source;
-        if (listeners != null)
-            this.updateListeners = listeners;
-        else
-            this.updateListeners = new ArrayList<ConfigurationUpdateListener>();
-    }
-
-    protected ConfigurationSet(ConfigurationSource source) {
-        this(source, null);
-    }
-
-    public ConfigurationSource getSource() {
-        return source;
-    }
-
-    public void registerUpdateListener(ConfigurationUpdateListener listener) {
-        updateListeners.add(listener);
-        listener.configurationUpdated(this); // first run of the listener right after it's registered
-    }
-
-    private void notifyUpdateListeners() {
-        for (ConfigurationUpdateListener listener : updateListeners) {
-            listener.configurationUpdated(this);
-        }
-    }
-
-    protected void reloaded() {
-        notifyUpdateListeners();
-    }
+public interface ConfigurationSet {
+    ConfigurationSource getSource();
+    void registerUpdateListener(ConfigurationUpdateListener listener);
+    List<ConfigurationUpdateListener> getUpdateListeners();
 }
