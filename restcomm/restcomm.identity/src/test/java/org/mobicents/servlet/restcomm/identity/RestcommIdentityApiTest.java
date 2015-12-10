@@ -11,9 +11,9 @@ import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 
 public class RestcommIdentityApiTest {
 
-    static String authServerBaseUrl = "http://192.168.1.3:8080"; //"https://identity.restcomm.com";
-    static String username = "otsakir@gmail.com";  //"test_user";
-    static String password = "password";
+    static String authServerBaseUrl = "http://192.168.1.40:8080"; //"https://identity.restcomm.com";
+    static String username = "administrator@company.com";  //"test_user";
+    static String password = "RestComm";
     static String realm = "restcomm";
 
     static RestcommIdentityApi api;
