@@ -13,9 +13,9 @@ import static org.junit.Assert.*;
 
 public class IdentityMigrationToolTest {
 
-    private static String authServerBaseUrl = "http://192.168.1.3:8080"; //"https://identity.restcomm.com";
-    private static String username = "otsakir@gmail.com"; //"test_user";
-    private static String password = "password";
+    private static String authServerBaseUrl = "http://192.168.1.40:8080"; //"https://identity.restcomm.com";
+    private static String username = "administrator@company.com"; //"test_user";
+    private static String password = "RestComm";
     private static String realm = "restcomm";
 
     static RestcommIdentityApi api;
