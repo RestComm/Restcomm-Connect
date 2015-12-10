@@ -50,6 +50,7 @@ import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
 import javax.media.mscontrol.mediagroup.signals.SignalDetector;
 import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 import javax.media.mscontrol.mixer.MediaMixer;
+import javax.media.mscontrol.networkconnection.CodecPolicy;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.networkconnection.SdpPortManager;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
@@ -121,6 +122,8 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
+    private static final String[] CODEC_POLICY_AUDIO = new String[] {"audio"};
+    
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
@@ -841,6 +844,10 @@ public class Jsr309CallController extends MediaServerController {
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
+                CodecPolicy codecPolicy = new CodecPolicy();
+                codecPolicy.setMediaTypeCapabilities(CODEC_POLICY_AUDIO);
+
+                networkConnection.getSdpPortManager().setCodecPolicy(codecPolicy);
                 networkConnection.getSdpPortManager().addListener(sdpListener);
                 if (callOutbound) {
                     networkConnection.getSdpPortManager().generateSdpOffer();
