@@ -27,8 +27,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
@@ -75,7 +76,7 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
         if ( iConfig.getHeadless() )
             return Response.status(Status.NOT_FOUND).build();
         // make sure registration/migration through UI is enabled
-        if ( ! iConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui))
+        if ( ! iConfig.getMethod().equals(IdentityConfigurationSetImpl.MigrationMethod.ui))
             return Response.status(Status.BAD_REQUEST).build();
         // if it is already registered do nothing
         if ( ! "init".equals(imConfig.getMode()) )

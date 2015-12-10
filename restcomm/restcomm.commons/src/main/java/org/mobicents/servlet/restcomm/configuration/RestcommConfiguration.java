@@ -20,13 +20,16 @@
 
 package org.mobicents.servlet.restcomm.configuration;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.mobicents.servlet.restcomm.configuration.sets.ConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSetImpl;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * Singleton like class that provides access to ConfigurationSets.
@@ -81,7 +84,7 @@ public class RestcommConfiguration {
 
     public MutableIdentityConfigurationSet reloadMutableIdentity() {
         MutableIdentityConfigurationSet oldSet = getMutableIdentity();
-        MutableIdentityConfigurationSet newSet = new MutableIdentityConfigurationSet(oldSet);
+        MutableIdentityConfigurationSet newSet = new MutableIdentityConfigurationSetImpl(oldSet);
         sets.put("mutable-identity", newSet);
         return newSet;
     }

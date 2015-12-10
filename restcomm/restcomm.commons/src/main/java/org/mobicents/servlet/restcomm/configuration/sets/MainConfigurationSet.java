@@ -36,7 +36,7 @@ import org.apache.commons.lang.StringUtils;
  *
  */
 @Immutable
-public class MainConfigurationSet extends ConfigurationSet {
+public class MainConfigurationSet extends ConfigurationSetImpl {
 
     public static final String SSL_MODE_KEY = "http-client.ssl-mode";
     private static final SslMode SSL_MODE_DEFAULT = SslMode.strict;
