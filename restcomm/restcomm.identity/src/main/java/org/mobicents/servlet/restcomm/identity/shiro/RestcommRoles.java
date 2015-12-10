@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.http;
+package org.mobicents.servlet.restcomm.identity.shiro;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.DomainPermission;
@@ -35,11 +34,11 @@ import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 public class RestcommRoles {
-    private Logger logger = Logger.getLogger(RestcommRoles.class);
+    //private Logger logger = Logger.getLogger(RestcommRoles.class);
     private volatile Map<String, SimpleRole> roles;
 
-    public RestcommRoles() {
-        getRole("Developer");
+    public RestcommRoles(Configuration configuration) {
+        loadSecurityRoles(configuration);
     }
 
     public SimpleRole getRole(final String role) {

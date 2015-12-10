@@ -32,7 +32,7 @@ import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSe
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
-import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakContext;
+import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 
 import com.google.gson.Gson;
@@ -85,7 +85,10 @@ public class IdentityEndpoint extends AccountsCommonEndpoint {
         IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, true,null, imConfig,new String[] {baseUrl});
         migrationTool.migrate();
         imConfig = RestcommConfiguration.getInstance().reloadMutableIdentity();
-        KeycloakContext.init(iConfig, imConfig);
+        // update identity context
+        IdentityContext oldIdentityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
+        IdentityContext newIdentityContext = new IdentityContext(iConfig, imConfig, oldIdentityContext.getRestcommRoles());
+        context.setAttribute(IdentityContext.class.getName(), newIdentityContext);
         // build response
         MutableIdentityConfigurationSet newConfig = RestcommConfiguration.getInstance().getMutableIdentity();
         IdentityInstanceEntity instanceEntity = new IdentityInstanceEntity();
