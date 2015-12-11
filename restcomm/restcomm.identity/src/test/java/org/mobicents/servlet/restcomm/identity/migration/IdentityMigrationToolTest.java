@@ -21,6 +21,7 @@ public class IdentityMigrationToolTest {
     private static String realm = "restcomm";
 
     static RestcommIdentityApi api;
+    static String mainInstanceId;
 
     public IdentityMigrationToolTest() {
         // TODO Auto-generated constructor stub
@@ -30,8 +31,8 @@ public class IdentityMigrationToolTest {
     public static void setup() throws RestcommIdentityApiException {
         // create api
         api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm, null);
-        String instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
-        api.bindInstance(instanceId);
+        mainInstanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
+        api.bindInstance(mainInstanceId);
 
     }
 
@@ -115,7 +116,7 @@ public class IdentityMigrationToolTest {
         IdentityMigrationTool migrationTool = new IdentityMigrationTool(dao, api, false, sid.toString(), mutableIdentityConfig, new String [] {"http://localhost:8080"} );
         migrationTool.migrate();
 
-        api.dropInstance(mutableIdentityConfig.getInstanceId());
+        api.dropInstance(migrationTool.getInstanceId());
         for (Account account : dao.getAccounts()) {
             if ( ! sid.toString().equals(account.getSid().toString()) ) {
                 api.dropUser(account.getEmailAddress());
@@ -125,7 +126,7 @@ public class IdentityMigrationToolTest {
 
     @AfterClass
     public static void shutdown() {
-        assertEquals("Error removing instance " + api.getBoundInstanceId(), Outcome.OK, api.dropInstance(api.getBoundInstanceId()));
+        assertEquals("Error removing instance " + api.getBoundInstanceId(), Outcome.OK, api.dropInstance(mainInstanceId));
     }
 
 }
