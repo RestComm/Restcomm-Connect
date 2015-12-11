@@ -216,4 +216,7 @@ public class IdentityMigrationTool {
         return UUID.randomUUID().toString();
     }
 
+    public String getInstanceId() {
+        return instanceId;
+    }
 }
