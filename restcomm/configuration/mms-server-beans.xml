@@ -9,11 +9,11 @@
 
     <!-- EDF scheduler -->
     <bean name="Scheduler" class="org.mobicents.media.server.scheduler.PriorityQueueScheduler">
-        <property name="clock"><inject bean="SystemClock"/></property>        
-    </bean>    
+        <property name="clock"><inject bean="SystemClock"/></property>
+    </bean>
 
     <bean name="ServiceScheduler" class="org.mobicents.media.server.scheduler.ServiceScheduler"/>
-    
+
     <!-- Network interfaces definition -->
     <bean name="localhost" class="org.mobicents.media.server.io.network.UdpManager">
         <constructor>
@@ -57,6 +57,8 @@
                 <value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Decoder</value>
                 <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Encoder</value>
                 <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Decoder</value>
+								<value>org.mobicents.media.server.impl.dsp.audio.g729.alaw.Encoder</value>
+								<value>org.mobicents.media.server.impl.dsp.audio.g729.alaw.Decoder</value>
                 <value>org.mobicents.media.server.impl.dsp.audio.gsm.Encoder</value>
                 <value>org.mobicents.media.server.impl.dsp.audio.gsm.Decoder</value>
             </list>
@@ -80,7 +82,7 @@
         <property name="defaultRemoteConnections">10</property>
 	<property name="dtmfDetectorDbi">0</property>
     </bean>
-    
+
     <!-- MGCP Controller definition -->
     <bean name="MGCP" class ="org.mobicents.media.server.mgcp.controller.Controller">
         <property name="udpInterface"><inject bean="localhost"/></property>
@@ -89,8 +91,8 @@
         <property name="server"><inject bean="MediaServer"/></property>
         <property name="configuration">mgcp-conf.xml</property>
 	<property name="poolSize">25</property>
-    </bean>    
-    
+    </bean>
+
     <!-- Media Server -->
     <bean name="MediaServer" class="org.mobicents.media.core.Server">
         <property name="clock"><inject bean="SystemClock"/></property>
@@ -101,7 +103,7 @@
         <incallback method="addInstaller"/>
         <uncallback method="removeInstaller"/>
     </bean>
-    
+
     <!-- Endpoints -->
 <!--
     <bean name="Announcement" class="org.mobicents.media.core.endpoints.VirtualEndpointInstaller">
@@ -143,5 +145,5 @@
         <property name="initialSize">15</property>
         <property name="isALaw">true</property>
     </bean>-->
-	
+
 </deployment>
