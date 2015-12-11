@@ -110,7 +110,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     }
 
     RCommAccounts.update({accountSid:$scope.account.sid}, $.param(params), function() { // success
-      if($scope.account.sid = SessionService.get('sid')) {
+      if($scope.account.sid === SessionService.get('sid')) {
         SessionService.set('logged_user', $scope.account.friendly_name);
       }
       $scope.showAlert('success', 'Profile Updated Successfully.');
