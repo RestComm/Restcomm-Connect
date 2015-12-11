@@ -10,25 +10,35 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
 public class MockAccountsDao implements AccountsDao {
 
-    public List<Account> accounts;
+    public List<Account> accounts = new ArrayList<Account>();
     
     public MockAccountsDao() {
         // TODO Auto-generated constructor stub
     }
 
     @Override
-    public void addAccount(Account arg0) {
-        throw new UnsupportedOperationException();
+    public void addAccount(Account account) {
+        accounts.add(account);
     }
 
     @Override
-    public Account getAccount(Sid arg0) {
-        throw new UnsupportedOperationException();
+    public Account getAccount(Sid sid) {
+        for (Account account : accounts) {
+            if (sid.equals(account.getSid()))
+                return account;
+        }
+        return null;
     }
 
     @Override
-    public Account getAccount(String arg0) {
-        throw new UnsupportedOperationException();
+    public Account getAccount(String name) {
+        for (Account account: accounts) {
+            if (name.equals(account.getEmailAddress()))
+                return account;
+            if (name.equals(account.getSid().toString()))
+                return account;
+        }
+        return null;
     }
 
     @Override
@@ -40,11 +50,6 @@ public class MockAccountsDao implements AccountsDao {
 
     @Override
     public List<Account> getAccounts() {
-        List<Account> accounts = new ArrayList<Account>();
-        accounts.add(buildTestAccount(null, "account1@company.com", "Account1", "account1", null));
-        accounts.add(buildTestAccount(null, "account2@company.com", "Account2", "account2", null));
-        accounts.add(buildTestAccount(null, "account3@company.com", "Account3", "account3", null));
-
         return accounts;
     }
 
@@ -68,8 +73,14 @@ public class MockAccountsDao implements AccountsDao {
     }
 
     @Override
-    public void updateAccount(Account arg0) {
-        throw new UnsupportedOperationException();
+    public void updateAccount(Account account) {
+        for (int i = 0; i < accounts.size(); i++) {
+            Account anyaccount = accounts.get(i);
+            if (account.getSid().equals(anyaccount.getSid())) {
+                accounts.set(i, account);
+                return;
+            }
+        }
     }
 
 }

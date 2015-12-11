@@ -78,13 +78,13 @@ public class IdentityMigrationTool {
         }
     }
 
-    public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting, String adminAccountSid, MutableIdentityConfigurationSet identityConfig, String[] redirectUris) {
+    public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting, String adminAccountSid, MutableIdentityConfigurationSet mutableIdentityConfig, String[] redirectUris) {
         super();
         this.accountsDao = dao;
         this.identityApi = identityApi;
         this.inviteExistingUsers = inviteExisting;
         this.adminAccountSid = adminAccountSid;
-        this.mutableIdentityConfiguration = identityConfig;
+        this.mutableIdentityConfiguration = mutableIdentityConfig;
         this.redirectUris = redirectUris;
     }
 
@@ -145,6 +145,12 @@ public class IdentityMigrationTool {
         }
 
         Account adminAccount = accountsDao.getAccount(adminAccountSid);
+        if (adminAccount == null) {
+            String message = "FAILED to link migration user '" + identityApi.getUsername() + "' to local administration account. No account with sid '" + adminAccountSid + "' found.";
+            report(message);
+            logger.error(message);
+            return false;
+        }
         adminAccount = adminAccount.setEmailAddress(identityApi.getUsername());
         accountsDao.updateAccount(adminAccount);
         report("User '" + identityApi.getUsername() + "' was granted administrator access to instance '" + identityApi.getBoundInstanceId() + "'");
