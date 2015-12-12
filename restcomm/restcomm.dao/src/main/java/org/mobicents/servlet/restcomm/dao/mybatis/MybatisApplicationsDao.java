@@ -143,8 +143,9 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         final URI uri = readUri(map.get("uri"));
         final URI rcmlUrl = readUri(map.get("rcml_url"));
         final Application.Kind kind = readApplicationKind(map.get("kind"));
+        final Sid projectSid = readSid(map.get("project_sid"));
         return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-                uri, rcmlUrl, kind);
+                uri, rcmlUrl, kind, projectSid);
     }
 
     private Map<String, Object> toMap(final Application application) {
@@ -159,6 +160,7 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         map.put("uri", writeUri(application.getUri()));
         map.put("rcml_url", writeUri(application.getRcmlUrl()));
         map.put("kind", writeApplicationKind(application.getKind()));
+        map.put("project_sid", writeSid(application.getProjectSid()));
         return map;
     }
 }
