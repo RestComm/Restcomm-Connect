@@ -27,6 +27,10 @@
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{account_sid};
   </select>
   
+  <select id="getAllIncomingPhoneNumbers" resultType="hashmap">
+  	SELECT * FROM "restcomm_incoming_phone_numbers";
+  </select>
+  
   <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{accountSid}
     <if test="friendlyName != null">

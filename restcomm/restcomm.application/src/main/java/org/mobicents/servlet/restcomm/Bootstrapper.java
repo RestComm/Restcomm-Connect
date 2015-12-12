@@ -305,6 +305,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
+            //Replicate RVD Projects as database entities
+            try {
+                RvdProjectsMigrator rvdProjectMigrator = new RvdProjectsMigrator(context, xml);
+            } catch (Exception exception) {
+                logger.error("RVD Porjects migration failed during initialization: ", exception);
+            }
+
             //Last, print Version and send PING if needed
             Version.printVersion();
             GenerateInstanceId generateInstanceId = new GenerateInstanceId(context);
