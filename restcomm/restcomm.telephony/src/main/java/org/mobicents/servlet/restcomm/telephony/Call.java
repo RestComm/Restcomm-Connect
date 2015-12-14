@@ -939,18 +939,20 @@ public final class Call extends UntypedActor {
                 SipSession session = response.getSession();
 
                 final SipServletRequest originalInvite = response.getRequest();
-                final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
-                if ((SipURI) session.getAttribute("realInetUri") == null) {
+                if (!ack.getHeaders("Route").hasNext()) {
+                    final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                    if ((SipURI) session.getAttribute("realInetUri") == null) {
 //                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
-                  session.setAttribute("realInetUri", realInetUri);
-              }
-                final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                        session.setAttribute("realInetUri", realInetUri);
+                    }
+                    final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
 
-                if (realInetUri != null
-                        && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
-                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                            + " as a request uri of the ACK");
-                    ack.setRequestURI(realInetUri);
+                    if (realInetUri != null
+                            && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
+                        logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                                + " as a request uri of the ACK");
+                        ack.setRequestURI(realInetUri);
+                    }
                 }
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
