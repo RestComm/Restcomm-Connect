@@ -37,8 +37,10 @@ import javax.servlet.sip.SipURI;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.entities.Client;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
@@ -218,27 +220,34 @@ public final class SmsSession extends UntypedActor {
 
         //******************************SMPP*******************************************
 
-        //if the Destination/To is not a Restcomm client, use SMPP
 
-        if(to == null) {
-            if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
-                logger.info("SMPP session is available and connected, outbound message will be forwarded TO :  " + to );
-                try {
+        // Handle the SMS message.
+        SmsSessionRequest smmpRequest = (SmsSessionRequest) message;
+        final String smppDestination = smmpRequest.to();
+        // Try to find an application defined for the phone number.
+        final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(smppDestination);
+        if (number == null) {
+            logger.info("Destination is not a local Restcomm number, therefore, sending through SMPP :  " + to );
+        }
 
-                    final String smppFrom = from ; //fromUri.getUser();
-                    final String smppTo = to ; //sipUri.getUser();
-                    final String smppContent = body; //request.getContent().toString();
-                    final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
-                    ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
-                    sendOutboundMessage.tell(sms, null);
+        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null && number == null ){
+            logger.info("SMPP session is available and connected, outbound message will be forwarded TO :  " + to );
+            try {
+                final String smppFrom = from ; //fromUri.getUser();
+                final String smppTo = to ; //sipUri.getUser();
+                final String smppContent = body; //request.getContent().toString();
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
+                ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
+                sendOutboundMessage.tell(sms, null);
 
-                }catch (final Exception exception) {
-                    // Log the exception.
-                    logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
-                }
+            }catch (final Exception exception) {
+                // Log the exception.
+                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
+            }
 
-                return;
-            }}
+            return;
+        }
 
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();

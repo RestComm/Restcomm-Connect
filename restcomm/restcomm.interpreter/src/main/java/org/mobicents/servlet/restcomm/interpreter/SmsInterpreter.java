@@ -595,9 +595,6 @@ public final class SmsInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-
-            logger.error("Ready : " + message.getClass().getName() );
-
             final UntypedActorContext context = getContext();
             final State state = fsm.state();
             // Make sure we create a new parser if necessary.
@@ -715,8 +712,6 @@ public final class SmsInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-
-            logger.error("SendingSms : " + message.getClass().getName() );
 
             final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
             final ActorRef session = response.get();

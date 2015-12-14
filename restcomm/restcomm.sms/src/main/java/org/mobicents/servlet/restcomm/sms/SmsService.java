@@ -56,7 +56,6 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
-import org.mobicents.servlet.restcomm.smpp.SmppClientOpsThread;
 import org.mobicents.servlet.restcomm.telephony.TextMessage;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
@@ -71,7 +70,6 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
-import com.cloudhopper.smpp.SmppSession;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.telestax.servlet.MonitoringService;
@@ -140,7 +138,7 @@ public final class SmsService extends UntypedActor {
         final Client client = clients.getClient(fromUser);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
-        final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
+        //final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
 
         /**
         //************************SIP Request Send to SMPP Endpoint**************************************
@@ -149,11 +147,32 @@ public final class SmsService extends UntypedActor {
         //go through normal SIP SMS aggregator
         //if the Destination/To is not a Restcomm client, use SMPP
 
+        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
 
+            final String toUser = CallControlHelper.getUserSipId(request, useTo);
+            Client toClient = clients.getClient(toUser);
+            // Handle the SMS message.
+            final SipURI uri = (SipURI) request.getRequestURI();
+            final String to = uri.getUser();
+            // Format the destination to an E.164 phone number.
+            //final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+            String phone = to;
 
-        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null ){
-            logger.info("SMPP session is available and connected, outbound message will be forwarded -- client:  " + client);
-            SendOutboundSMPPMessages(client, request, smppSession, accounts, applications, self);
+            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
+            IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
+
+            // check if the destination SMS is NOT for a local Restcomm client, then, send using SMPP
+            if(toClient == null ){
+                logger.info("SMPP session is available and connected, outbound message will be forwarded -- client:  " + client);
+                final String smppFrom = request.getFrom().toString();
+                final String smppTo = request.getTo().toString();
+                final String smppContent = request.getContent().toString();
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
+                ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
+                sendOutboundMessage.tell(sms, null);
+                //SendOutboundSMPPMessages(client, request, smppSession, accounts, applications, self);
+
+            }
         }**/
 
 
@@ -498,42 +517,6 @@ public final class SmsService extends UntypedActor {
         return builder.build();
     }
 
-    /**
-    private void SendOutboundSMPPMessages(Client client, SipServletRequest request,
-            SmppSession smppSession, AccountsDao accounts, ApplicationsDao applications , ActorRef self  ){
 
-        try {
-            final SipURI sipUri = (SipURI) request.getTo().getURI() ;
-            final String to = sipUri.getUser();
-            final String toUser = CallControlHelper.getUserSipId(request, useTo);
-
-            if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
-                logger.info("Restcomm Hosted Application is found for the number : " + to);
-                final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
-                messageAccepted.send();
-                return;
-            }else{
-                logger.warning("There is no Restcomm Hosted Application for the Number : " + to);
-            }
-        }catch (final Exception exception) {
-            // Log the exception.
-            logger.error("There was an error sending this SMS to SMPP endpoint : " + exception);
-        }
-
-        return;
-    }
-
-
-
-    private ActorRef sendOutboundSmppMessages() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new  SmppHandlerProcessMessages(); //.sendSmsFromRestcommToSmpp();
-            }
-        }));
-    }**/
 
 }
