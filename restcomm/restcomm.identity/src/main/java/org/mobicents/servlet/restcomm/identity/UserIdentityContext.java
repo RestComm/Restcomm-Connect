@@ -10,7 +10,6 @@ import org.apache.commons.lang.StringUtils;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
-import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
 
 /**
@@ -76,11 +75,10 @@ public class UserIdentityContext {
                 String credentials = new String(Base64.decodeBase64(base64Credentials), Charset.forName("UTF-8"));
                 // credentials = username:password
                 final String[] values = credentials.split(":",2);
-                if (values.length >= 2)
-                    if ( Sid.valid(values[0]) ) {
-                        AccountKey accountKey = new AccountKey(values[0], values[1], dao);
-                        return accountKey;
-                    }
+                if (values.length >= 2) {
+                    AccountKey accountKey = new AccountKey(values[0], values[1], dao);
+                    return accountKey;
+                }
 
             }
         }
