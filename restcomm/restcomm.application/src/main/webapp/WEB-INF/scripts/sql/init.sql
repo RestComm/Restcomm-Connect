@@ -100,7 +100,8 @@ CREATE TABLE "restcomm_applications" (
 "voice_caller_id_lookup" BOOLEAN NOT NULL,
 "uri" LONGVARCHAR NOT NULL,
 "rcml_url" LONGVARCHAR,
-"kind" VARCHAR(5)
+"kind" VARCHAR(5),
+"project_sid" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_call_detail_records" (
