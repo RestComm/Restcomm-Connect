@@ -383,14 +383,8 @@ public class DialTest {
         assertTrue(bobCall.waitOutgoingCallResponse(10000));
         // wait for 404 Not Found
         assertTrue(bobCall.waitOutgoingCallResponse(10000));
-        ArrayList<SipResponse> responses = bobCall.getAllReceivedResponses();
-        for (SipResponse sipResponse : responses) {
-            logger.info("response received : " + sipResponse.getStatusCode());
-            if (sipResponse.getStatusCode() == Response.NOT_FOUND) {
-                return;
-            }
-        }
-        assertTrue("we didn't get a 404 as we should have", false);
+        SipResponse lastResponse = bobCall.getLastReceivedResponse();
+        assertTrue(lastResponse.getStatusCode() == 503);
     }
 
     @Test
@@ -568,11 +562,9 @@ public class DialTest {
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
-
+        aliceCall.listenForDisconnect();
         // hangup.
         bobCall.disconnect();
-
-        aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
         try {
@@ -587,13 +579,16 @@ public class DialTest {
         cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
-        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-2)).get("duration").getAsInt() == 3);
-        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-2)).get("ring_duration").getAsInt() == 5);
-        assertTrue(((JsonObject)cdrsArray.get(cdrsArray.size()-1)).get("duration").getAsInt() == 8);
         if (((JsonObject)cdrsArray.get(initialCdrSize)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
             assertTrue(((JsonObject)cdrsArray.get(initialCdrSize)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(initialCdrSize+1)).get("parent_call_sid").getAsString()));
+            int inboundDuration = ((JsonObject)cdrsArray.get(initialCdrSize)).get("duration").getAsInt();
+            assertTrue(inboundDuration==8);
         } else {
             assertTrue(((JsonObject)cdrsArray.get(initialCdrSize+1)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(initialCdrSize)).get("parent_call_sid").getAsString()));
+            int outboundDuration = ((JsonObject)cdrsArray.get(initialCdrSize+1)).get("duration").getAsInt();
+            int outboundRingDuration = ((JsonObject)cdrsArray.get(initialCdrSize+1)).get("ring_duration").getAsInt();
+            assertTrue(outboundDuration==3);
+            assertTrue(outboundRingDuration==5);
         }
         assertTrue((cdrsArray.size() - initialCdrSize) == 2);
     }
