@@ -84,4 +84,50 @@
 		</dependency>		
 		
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.bazaarvoice.maven.plugins</groupId>
+				<artifactId>process-exec-maven-plugin</artifactId>
+				<version>0.7</version>
+				<executions>
+					<!--Start process-->
+					<execution>
+						<id>start-jar</id>
+						<phase>pre-integration-test</phase>
+						<goals><goal>start</goal></goals>
+						<configuration>
+							<workingDir>app</workingDir>
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>/home/nando/Downloads/keycloak-server-service-1.0.0.Alpha6-20151210.185045-1-swarm.jar</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!--Stop Process-->
+					<execution>
+						<id>stop-jar-process</id>
+						<phase>post-integration-test</phase>
+						<goals><goal>stop-all</goal></goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.19</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
 </project>
