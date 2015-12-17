@@ -190,7 +190,7 @@
 	"externalServiceStepFixedRadio": "fixed",
 	"externalServiceStepDynamicRadio": "dynamic",
 	"externalServiceStepMappedRadio": "mapped",
-	"externalServiceStepDynamicWarning": "Warning! <strong>dynamic</strong> routing is an obsolete feature and will be removed from future versions of RVD. Please use <strong>mapped</strong> routing instead",
+	"externalServiceStepDynamicWarning": "Note: <strong>dynamic</strong> routing has been deprecated. Please use <strong>mapped</strong> routing instead. <a href='http://docs.telestax.com' target='_blank'>How to convert ?</a>",
 	"externalServiceStepAddMappingButton": "Add mapping",
 	"externalServiceStepValueLabel": "Value",
 	"externalServiceStepContinueToLabel": "Continue to",
