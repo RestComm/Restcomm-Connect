@@ -227,7 +227,9 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.ringing, this.noAnswer));
         transitions.add(new Transition(this.ringing, this.initializing));
         transitions.add(new Transition(this.ringing, this.updatingMediaSession));
+        transitions.add(new Transition(this.ringing, this.completed));
         transitions.add(new Transition(this.ringing, this.stopping));
+        transitions.add(new Transition(this.ringing, this.failed));
         transitions.add(new Transition(this.initializing, this.canceling));
         transitions.add(new Transition(this.initializing, this.dialing));
         transitions.add(new Transition(this.initializing, this.failed));
@@ -380,6 +382,8 @@ public final class Call extends UntypedActor {
             onDial((Dial) message, self, sender);
         } else if (Reject.class.equals(klass)) {
             onReject((Reject) message, self, sender);
+        } else if (CallFail.class.equals(klass)) {
+            fsm.transition(message, failed);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
@@ -851,7 +855,10 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
-                invite.createResponse(503, "Problem to setup services").send();
+                SipServletResponse resp = invite.createResponse(503, "Problem to setup services");
+                String reason = ((CallFail)message).getReason();
+                resp.addHeader("Reason", reason);
+                resp.send();
             }
 
             // Explicitly invalidate the application session.

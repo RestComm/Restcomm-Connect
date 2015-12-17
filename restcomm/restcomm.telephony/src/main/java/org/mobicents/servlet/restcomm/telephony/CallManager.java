@@ -520,7 +520,11 @@ public final class CallManager extends UntypedActor {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                 }
                 builder.setMethod(number.getVoiceMethod());
-                builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                URI uri = number.getVoiceFallbackUrl();
+                if (uri != null)
+                    builder.setFallbackUrl(UriUtils.resolve(uri));
+                else
+                    builder.setFallbackUrl(null);
                 builder.setFallbackMethod(number.getVoiceFallbackMethod());
                 builder.setStatusCallback(number.getStatusCallback());
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
@@ -581,7 +585,11 @@ public final class CallManager extends UntypedActor {
                 builder.setUrl(url);
             }
             builder.setMethod(client.getVoiceMethod());
-            builder.setFallbackUrl(client.getVoiceFallbackUrl());
+            URI uri = client.getVoiceFallbackUrl();
+            if (uri != null)
+                builder.setFallbackUrl(UriUtils.resolve(uri));
+            else
+                builder.setFallbackUrl(null);
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
