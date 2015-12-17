@@ -227,7 +227,9 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.ringing, this.noAnswer));
         transitions.add(new Transition(this.ringing, this.initializing));
         transitions.add(new Transition(this.ringing, this.updatingMediaSession));
+        transitions.add(new Transition(this.ringing, this.completed));
         transitions.add(new Transition(this.ringing, this.stopping));
+        transitions.add(new Transition(this.ringing, this.failed));
         transitions.add(new Transition(this.initializing, this.canceling));
         transitions.add(new Transition(this.initializing, this.dialing));
         transitions.add(new Transition(this.initializing, this.failed));
@@ -380,6 +382,8 @@ public final class Call extends UntypedActor {
             onDial((Dial) message, self, sender);
         } else if (Reject.class.equals(klass)) {
             onReject((Reject) message, self, sender);
+        } else if (CallFail.class.equals(klass)) {
+            fsm.transition(message, failed);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
@@ -851,7 +855,10 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
-                invite.createResponse(503, "Problem to setup services").send();
+                SipServletResponse resp = invite.createResponse(503, "Problem to setup services");
+                String reason = ((CallFail)message).getReason();
+                resp.addHeader("Reason", reason);
+                resp.send();
             }
 
             // Explicitly invalidate the application session.
@@ -935,18 +942,20 @@ public final class Call extends UntypedActor {
                 SipSession session = response.getSession();
 
                 final SipServletRequest originalInvite = response.getRequest();
-                final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
-                if ((SipURI) session.getAttribute("realInetUri") == null) {
+                if (!ack.getHeaders("Route").hasNext()) {
+                    final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                    if ((SipURI) session.getAttribute("realInetUri") == null) {
 //                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));
-                  session.setAttribute("realInetUri", realInetUri);
-              }
-                final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                        session.setAttribute("realInetUri", realInetUri);
+                    }
+                    final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
 
-                if (realInetUri != null
-                        && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
-                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                            + " as a request uri of the ACK");
-                    ack.setRequestURI(realInetUri);
+                    if (realInetUri != null
+                            && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
+                        logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                                + " as a request uri of the ACK");
+                        ack.setRequestURI(realInetUri);
+                    }
                 }
                 ack.send();
                 logger.info("Just sent out ACK : " + ack.toString());
