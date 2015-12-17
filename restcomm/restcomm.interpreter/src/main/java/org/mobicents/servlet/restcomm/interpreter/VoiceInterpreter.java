@@ -655,7 +655,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
                 fsm.transition(message, notFound);
             } else {
-                    call.tell(new CallFail(), self);
+                    call.tell(new CallFail(response.error()), self);
                     fsm.transition(message, finished);
                 }
         } else if (DiskCacheResponse.class.equals(klass)) {
