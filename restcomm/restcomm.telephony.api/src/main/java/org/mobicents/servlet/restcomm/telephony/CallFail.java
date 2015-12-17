@@ -26,7 +26,12 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CallFail {
-    public CallFail() {
+    private final String reason;
+    public CallFail(final String reason) {
         super();
+        this.reason = reason;
+    }
+    public String getReason() {
+        return reason;
     }
 }

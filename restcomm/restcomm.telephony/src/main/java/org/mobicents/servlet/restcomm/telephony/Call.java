@@ -855,7 +855,10 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
-                invite.createResponse(503, "Problem to setup services").send();
+                SipServletResponse resp = invite.createResponse(503, "Problem to setup services");
+                String reason = ((CallFail)message).getReason();
+                resp.addHeader("Reason", reason);
+                resp.send();
             }
 
             // Explicitly invalidate the application session.
