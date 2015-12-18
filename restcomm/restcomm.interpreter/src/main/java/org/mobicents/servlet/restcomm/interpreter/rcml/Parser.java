@@ -42,9 +42,9 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class Parser extends UntypedActor {
-    private final Tag document;
-    private final Iterator<Tag> iterator;
-    private final String text;
+    private Tag document;
+    private Iterator<Tag> iterator;
+    private String xml;
 
     private Tag current;
 
@@ -65,7 +65,7 @@ public final class Parser extends UntypedActor {
             }
             iterator = document.iterator();
         } catch (final XMLStreamException exception) {
-            getContext().sender().tell(new ParserFailed(exception, ), null);
+            getContext().sender().tell(new ParserFailed(exception,xml), null);
 //            throw new IOException(exception);
         } finally {
             if (stream != null) {
@@ -78,9 +78,9 @@ public final class Parser extends UntypedActor {
         }
     }
 
-    public Parser(final String text) throws IOException {
-        this.text = text;
-        this(new StringReader(text.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")));
+    public Parser(final String xml) throws IOException {
+        this(new StringReader(xml.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")));
+        this.xml = xml;
     }
 
     private void end(final Stack<Tag.Builder> builders, final XMLStreamReader stream) {
