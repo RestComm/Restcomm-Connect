@@ -20,11 +20,9 @@
 				</div>
 
 				<ul class="nav navbar-nav navbar-right">
-<!--
 					<li>
 						<button ng-click="showGraph = !showGraph" class="btn navbar-link navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram <i ng-show="showGraph" class="fa fa-check"></i></button>
 					</li>
- -->
 					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">{{'designerWebTriggerLink' | translate}}</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{'designerExportLink' | translate}} <b class="caret"></b></a>
@@ -52,14 +50,6 @@
 		</div>
 
 		<div class="graph-wrap">
-			<!--
-			<div class="row" ng-if="showGraph">
-				<div class="col-md-12" style="margin: 5px;">
-					<button class="btn btn-sm btn-success pull-right" ng-click="drawGraph()"><i class="fa fa-refresh"></i> Refresh</button>
-					<button class="btn btn-sm btn-default pull-right" style="margin-right: 5px;" ng-click="makeFullScreen('paperContainer')"><i class="fa fa-arrows-alt"></i> Full Screen</button>
-				</div>
-			</div>
-			-->
 			<div class="row" ng-if="showGraph">
 				<div class="col-md-12">
 					<div class="graph" >
@@ -155,19 +145,6 @@
 			<div class="col-md-10">
 				<div class="editor">
 					<div class="panel-body editor">
-						<div class="row" ng-if="showGraph">
-							<div class="col-md-12" style="margin: 5px;">
-								<!--<button class="btn btn-sm btn-default pull-left"><i class="fa fa-file-image-o"></i> Export Image</button>-->
-								<button class="btn btn-sm btn-success pull-right" ng-click="drawGraph()"><i class="fa fa-refresh"></i> Refresh</button>
-								<button class="btn btn-sm btn-default pull-right" style="margin-right: 5px;" ng-click="makeFullScreen('paperContainer')"><i class="fa fa-arrows-alt"></i> Full Screen</button>
-							</div>
-						</div>
-						<div class="row" id="paperContainer" ng-if="showGraph">
-							<div class="col-md-12" style="margin: 5px;">
-								<div class="text-center" style="overflow: scroll;" id="paper" ng-init="drawGraph()"></div>
-							</div>
-							<hr>
-						</div>
 						<div class="row" id="es">
 							<div class="col-md-8 form-group">
 								<ul class="top-menu nav nav-pills">
@@ -217,9 +194,6 @@
 								</ul>
 							</div>
 
-							<div class="col-md-3">
-								<button class="btn btn-default" ng-click="showGraph = !showGraph"><i class="fa fa-code-fork"></i> <span ng-hide="showGraph">Show</span><span ng-show="showGraph">Hide</span> Diagram</button>
-							</div>
 <!--
 							<div class="col-md-3">
 								<div class="input-group">
