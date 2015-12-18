@@ -250,6 +250,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.leaving, this.stopping));
         transitions.add(new Transition(this.leaving, this.failed));
         transitions.add(new Transition(this.canceling, this.canceled));
+        transitions.add(new Transition(this.canceling, this.completed));
         transitions.add(new Transition(this.failingBusy, this.busy));
         transitions.add(new Transition(this.failingNoAnswer, this.noAnswer));
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
@@ -696,11 +697,15 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            external = CallStateChanged.State.CANCELED;
-            final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            //A no-answer call will be cancelled and will arrive here. In that case don't change the external case
+            //since no-answer is a final state and we need to keep it so observer knows how the call ended
+//            if (!external.equals(CallStateChanged.State.NO_ANSWER)) {
+                external = CallStateChanged.State.CANCELED;
+                final CallStateChanged event = new CallStateChanged(external);
+                for (final ActorRef observer : observers) {
+                    observer.tell(event, source);
+                }
+//            }
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
@@ -1073,8 +1078,11 @@ public final class Call extends UntypedActor {
                 invite.getApplicationSession().invalidate();
             }
 
-            // Notify the observers.
-            external = CallStateChanged.State.COMPLETED;
+            //In the case of canceled that reach the completed method, don't change the external state
+            if (!external.equals(CallStateChanged.State.CANCELED)) {
+                // Notify the observers.
+                external = CallStateChanged.State.COMPLETED;
+            }
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
