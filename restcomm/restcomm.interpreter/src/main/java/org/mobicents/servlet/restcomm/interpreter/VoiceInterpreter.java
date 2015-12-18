@@ -597,7 +597,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (state != finishDialing)
                     fsm.transition(message, finishDialing);
             } else if (CallStateChanged.State.CANCELED == event.state()) {
-                callManager.tell(new DestroyCall(sender), self());
+//                callManager.tell(new DestroyCall(sender), self());
+                fsm.transition(message, finished);
             }
         } else if (CallManagerResponse.class.equals(klass)) {
             final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>) message;
@@ -656,7 +657,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, notFound);
             } else {
                     call.tell(new CallFail(response.error()), self);
-                    fsm.transition(message, finished);
+//                    fsm.transition(message, finished);
                 }
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
