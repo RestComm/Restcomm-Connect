@@ -24,8 +24,8 @@ package org.mobicents.servlet.restcomm.interpreter.rcml;
  */
 public class ParserFailed {
 
-    final private Exception exception;
-    final private String xml;
+    private final Exception exception;
+    private final String xml;
 
     public ParserFailed(final Exception exception, final String xml) {
         this.exception = exception;
