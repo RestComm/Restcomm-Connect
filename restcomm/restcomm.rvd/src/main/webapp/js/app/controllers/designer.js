@@ -589,7 +589,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			lnk.label(0, {
 				position: 0.5,
 				attrs: {
-					rect: { fill: '#EEE' },
+					rect: { fill: '#FFF' },
 					text: { fill: '#333', text: linkLabel, 'font-size': 10, 'font-family': 'Monaco', 'font-weight': 'bold' }
 				}
 			});
