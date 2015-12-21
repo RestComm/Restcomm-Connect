@@ -1220,6 +1220,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
+        logger.debug("Got CANCEL for Call, from: "+from+" to: "+to+" state: "+fsm.state());
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             fsm.transition(message, canceling);
         }
@@ -1365,6 +1366,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
+        logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state());
         if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
             if (!receivedBye) {
                 // Send BYE to client if RestComm took initiative to hangup the call

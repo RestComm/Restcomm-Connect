@@ -922,7 +922,7 @@ public class DialTest {
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
@@ -993,7 +993,7 @@ public class DialTest {
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
@@ -1083,7 +1083,7 @@ public class DialTest {
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
