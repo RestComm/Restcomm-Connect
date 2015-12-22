@@ -72,10 +72,10 @@ public class IdentityMigrationToolTest {
         api.createUser(userEntity);
         // try to migrate over him
         Account existingAccount = dao.buildTestAccount(null,  "existing@company.com", "existing user", "password", null);
-        assertFalse("Existing user shouldn't be migrated as the 'inviteExistingUsers' policy is false.", migrationTool.migrateAccount(existingAccount));
+        assertFalse("Existing user shouldn't have been migrated as the 'inviteExistingUsers' policy is false.", migrationTool.migrateAccount(existingAccount));
         // create migration tool with 'inviteExisting' == true
         migrationTool = new IdentityMigrationTool(dao, api, true);
-        assertTrue("Existing user shouldn't be migrated as the 'inviteExistingUsers' policy is false.", migrationTool.migrateAccount(existingAccount));
+        assertTrue("Existing user failed migration although 'inviteExistingUsers' policy is true.", migrationTool.migrateAccount(existingAccount));
         // remove user
         api.dropUser("existing@company.com");
     }
