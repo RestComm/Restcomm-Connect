@@ -617,7 +617,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                if (state != finishDialing)
 //                    fsm.transition(message, finishDialing);
             } else if (CallStateChanged.State.CANCELED == event.state()) {
-                if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging) {
+                if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging ) {
                     return;
                 } else {
                     fsm.transition(message, finished);
@@ -1175,13 +1175,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (type != null) {
                     if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
                         parser = parser(response.getContentAsString());
-                        logger.debug("Parser created for response: "+response.getContentAsString());
+                        logger.info("Parser created for response: "+response.getContentAsString());
                     } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
                         parser = parser("<Play>" + request.getUri() + "</Play>");
-                        logger.debug("Parser created for response: "+response.getContentAsString());
+                        logger.info("Parser created for response: "+response.getContentAsString());
                     } else if (type.contains("text/plain")) {
                         parser = parser("<Say>" + response.getContentAsString() + "</Say>");
-                        logger.debug("Parser created for response: "+response.getContentAsString());
+                        logger.info("Parser created for response: "+response.getContentAsString());
                     }
                 } else {
                     if (call != null) {
@@ -1197,10 +1197,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             if (parser != null) {
-                logger.debug("Parser is not null, response: "+response.getContentAsString());
+                logger.info("Parser is not null, response: "+response.getContentAsString());
                 parser.tell(next, source);
             } else {
-                logger.debug("Parser is null");
+                logger.info("Parser is null");
             }
         }
     }
@@ -1535,7 +1535,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (isForking) {
                 dialBranches.remove(outboundCall);
                 for (final ActorRef branch : dialBranches) {
-                    branch.tell(new Cancel(), source);
+                    branch.tell(new Cancel(), null);
                     // Race condition here. Correct way is to ask Call to Cancel and when done Call will notify Observer with
                     // CallStateChanged.Cancelled then
                     // ask CallManager to destroy the call.
@@ -1768,23 +1768,50 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
                 if (message instanceof ReceiveTimeout) {
-                    logger.info("Received timeout, will cancel calls");
+                    logger.info("Received timeout, will cancel calls, state: "+state);
+                    //The forking timeout reached, we have to cancel all dial branches
+                    final UntypedActorContext context = getContext();
+                    context.setReceiveTimeout(Duration.Undefined());
+
+                    Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
+                    while (dialBranchesIterator.hasNext()) {
+                        ActorRef branch = dialBranchesIterator.next();
+                        if (attribute != null) {
+                            executeDialAction(message, branch);
+                        }
+                        branch.tell(new Cancel(), source);
+                        logger.info("Canceled branch: "+branch.path());
+                    }
+                    if (dialBranches.size() > 0) {
+                        dialBranches = null;
+                    }
+                    call.tell(new StopMediaGroup(), null);
+                    if (attribute == null) {
+                        final GetNextVerb next = GetNextVerb.instance();
+                        parser.tell(next, source);
+                    }
+                    dialChildren = null;
+                    outboundCall = null;
+                    callback();
+                    return;
                 }
                 if (message instanceof CallStateChanged) {
                     logger.info("call state changed. New call state: " + ((CallStateChanged) message).state());
                 }
                 if (forking.equals(state)) {
-                    if (sender != call) {
+                    if (sender != call ) {
                         ActorRef branch = dialBranches.remove(dialBranches.indexOf(sender));
                         if (attribute != null) {
                             executeDialAction(message, sender);
                         }
+                        logger.info("Will cancel branch: "+branch.toString());
                         branch.tell(new Cancel(), source);
                         if (dialBranches.size() > 0) {
                             return;
                         }
                     } else {
                         //Initial call wants to finish dialing
+                        logger.info("Sender == call: "+sender.equals(call));
                         final UntypedActorContext context = getContext();
                         context.setReceiveTimeout(Duration.Undefined());
 
@@ -2144,6 +2171,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
+            logger.info("At Finished state, state: "+fsm.state());
             final Class<?> klass = message.getClass();
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;

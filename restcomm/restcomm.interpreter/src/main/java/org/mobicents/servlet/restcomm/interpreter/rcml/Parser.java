@@ -159,12 +159,13 @@ public final class Parser extends UntypedActor {
         final ActorRef sender = sender();
         if (GetNextVerb.class.equals(klass)) {
             final Tag verb = next();
-            logger.debug("Parser, next verb: "+verb.toString());
             if (verb != null) {
                 sender.tell(verb, self);
+                logger.debug("Parser, next verb: "+verb.toString());
             } else {
                 final End end = End.instance();
                 sender.tell(end, sender);
+                logger.debug("Parser, next verb: "+end.toString());
             }
         }
     }

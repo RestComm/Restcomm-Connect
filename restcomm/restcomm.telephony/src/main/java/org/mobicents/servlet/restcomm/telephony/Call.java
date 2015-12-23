@@ -1067,7 +1067,7 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Completing Call");
+            logger.info("Completing Call from: "+from+" to: "+to+" direction: "+direction);
 
             // Explicitly invalidate the application session.
             if (invite.getSession().isValid()) {
@@ -1220,7 +1220,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
-        logger.debug("Got CANCEL for Call, from: "+from+" to: "+to+" state: "+fsm.state());
+        logger.info("Got CANCEL for Call, from: "+from+" to: "+to+" state: "+fsm.state());
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             fsm.transition(message, canceling);
         }
