@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.interpreter.rcml;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class Parser extends UntypedActor {
+    private static Logger logger = Logger.getLogger(Parser.class);
     private Tag document;
     private Iterator<Tag> iterator;
     private String xml;
@@ -80,6 +82,7 @@ public final class Parser extends UntypedActor {
 
     public Parser(final String xml) throws IOException {
         this(new StringReader(xml.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")));
+        logger.debug("About to create new Parser for xml: "+xml);
         this.xml = xml;
     }
 
@@ -156,6 +159,7 @@ public final class Parser extends UntypedActor {
         final ActorRef sender = sender();
         if (GetNextVerb.class.equals(klass)) {
             final Tag verb = next();
+            logger.debug("Parser, next verb: "+verb.toString());
             if (verb != null) {
                 sender.tell(verb, self);
             } else {

@@ -711,7 +711,7 @@ public class CallLifecycleTest {
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.BUSY_HERE, "George-Busy Here", 3600));
         assertTrue(georgeCall.waitForAck(5000));
-        
+
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
@@ -835,16 +835,16 @@ public class CallLifecycleTest {
 //        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 //        assertTrue(bobCall.sendInviteOkAck());
 
-        Thread.sleep(10000);
+        Thread.sleep(2000);
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         logger.info("LiveCalls: "+liveCalls);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(liveCalls==0);
+        assertTrue(liveCallsArraySize==0);
 
-        Thread.sleep(2000);
+        Thread.sleep(10000);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
