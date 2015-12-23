@@ -87,29 +87,64 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>com.bazaarvoice.maven.plugins</groupId>
-				<artifactId>process-exec-maven-plugin</artifactId>
-				<version>0.7</version>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version>
 				<executions>
-					<!--Start process-->
 					<execution>
-						<id>start-jar</id>
+						<id>start-third-parties</id>
 						<phase>pre-integration-test</phase>
-						<goals><goal>start</goal></goals>
 						<configuration>
-							<workingDir>app</workingDir>
-							<arguments>
-								<argument>java</argument>
-								<argument>-jar</argument>
-								<argument>/home/nando/Downloads/keycloak-server-service-1.0.0.Alpha6-20151210.185045-1-swarm.jar</argument>
-							</arguments>
+							<target>
+								<exec executable="./standalone.sh"
+									  dir="${basedir}/../../release/keycloak/bin/"
+									  spawn="true">
+									<arg value="-b"/>
+									<arg value="127.0.0.1"/>
+									<arg value="-Djboss.http.port=8081"/>
+									<arg value="-Djboss.https.port=8444"/>
+									<arg value="-Djboss.management.http.port=9980"/>
+									<arg value="-Djboss.management.https.port=9983"/>
+									<arg value="-Djboss.ajp.port=8010"/>
+								</exec>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>wait-keycloak-to-start</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<echo message="WAITING FOR KEYCLOAK TO START" />
+								<!--<sleep seconds="60"/> -->
+								<waitfor maxwait="2" maxwaitunit="minute" checkevery="1000">
+									<http url="http://127.0.0.1:8081/auth"/>
+								</waitfor>
+							</target>
 						</configuration>
 					</execution>
-					<!--Stop Process-->
+
 					<execution>
-						<id>stop-jar-process</id>
+						<id>stop-third-parties</id>
 						<phase>post-integration-test</phase>
-						<goals><goal>stop-all</goal></goals>
+						<configuration>
+							<tasks>
+								<echo message="STOPPING KEYCLOAK" />
+								<exec executable="./jboss-cli.sh"
+									  dir="${basedir}/../../release/keycloak/bin/"
+									  spawn="false">
+									<arg value='--commands=connect localhost:9980,shutdown'/>
+								</exec>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
