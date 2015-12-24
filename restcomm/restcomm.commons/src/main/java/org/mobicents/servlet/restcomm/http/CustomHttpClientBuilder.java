@@ -59,6 +59,14 @@ public class CustomHttpClientBuilder {
             return buildAllowallClient();
     }
 
+    /**
+     * Builds the default http client without taking into account system configuration
+     * @return The newly created http client
+     */
+    public static HttpClient buildDefault() {
+        return new DefaultHttpClient();
+    }
+
     private static HttpClient buildAllowallClient() {
         HttpConnectorList httpConnectorList = UriUtils.getHttpConnectorList();
         HttpClient httpClient = new DefaultHttpClient();
