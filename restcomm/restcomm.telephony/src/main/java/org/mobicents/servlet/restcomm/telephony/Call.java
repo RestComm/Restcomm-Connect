@@ -709,6 +709,7 @@ public final class Call extends UntypedActor {
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
+                logger.info("Going to update CDR to CANCEL, call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction);
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1067,7 +1068,7 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Completing Call from: "+from+" to: "+to+" direction: "+direction);
+            logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
 
             // Explicitly invalidate the application session.
             if (invite.getSession().isValid()) {
@@ -1087,6 +1088,8 @@ public final class Call extends UntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+
+            logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {

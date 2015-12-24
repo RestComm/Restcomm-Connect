@@ -445,30 +445,24 @@ public class DialForkTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        // Start a new thread for George
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
-                assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
-                assertTrue(georgeCall.sendIncomingCallResponse(486, "Busy Here-George", 3600));
-                assertTrue(georgeCall.waitForAck(50 * 1000));
-            }
-        }).start();
 
-        // Start a new thread for Alice
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-                assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
-                assertTrue(aliceCall.sendIncomingCallResponse(486, "Busy Here-Alice", 3600));
-                assertTrue(aliceCall.waitForAck(50 * 1000));
-            }
-        }).start();
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Alice", 600));
 
         assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
-        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique-1", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying-Henrique", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
+
+        assertTrue(georgeCall.sendIncomingCallResponse(486, "Busy Here-George", 3600));
+        assertTrue(georgeCall.waitForAck(50 * 1000));
+
+        assertTrue(aliceCall.sendIncomingCallResponse(486, "Busy Here-Alice", 3600));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
+
         String receivedBody = new String(henriqueCall.getLastReceivedRequest().getRawContent());
         assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique", 3600, receivedBody, "application", "sdp",
                 null, null));
@@ -510,6 +504,7 @@ public class DialForkTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
+        logger.info("%%%% CallSID: "+callSid+" Status : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
@@ -633,13 +628,16 @@ public class DialForkTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
+    private String dialForkWithTimeout = "<Response><Dial timeout=\"2\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:5092</Sip><Number>+131313</Number></Dial></Response>";
+
+    @Test
     public synchronized void testDialForkNoAnswer() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialFork)));
+                        .withBody(dialForkWithTimeout)));
 
         // Register Alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -692,15 +690,12 @@ public class DialForkTest {
         assertTrue(henriqueCall.sendIncomingCallResponse(100, "Trying-Henrique", 600));
         assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
 
-        //No one will answer the call and RCML will move to the next verb to call Fotini
-
+        //No one will answer the call and Bob will receive disconnect
         assertTrue(georgeCall.listenForCancel());
         assertTrue(aliceCall.listenForCancel());
         assertTrue(henriqueCall.listenForCancel());
 
         assertTrue(bobCall.listenForDisconnect());
-
-        Thread.sleep(1000);
 
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
@@ -712,10 +707,10 @@ public class DialForkTest {
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
+
         assertTrue(bobCall.waitForDisconnect(50 * 1000));
         assertTrue(bobCall.respondToDisconnect());
-
-        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -738,6 +733,7 @@ public class DialForkTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
+        logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("no-answer"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
