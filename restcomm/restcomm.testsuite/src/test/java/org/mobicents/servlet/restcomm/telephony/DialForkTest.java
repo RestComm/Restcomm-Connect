@@ -360,10 +360,10 @@ public class DialForkTest {
 
         Thread.sleep(2000);
 
-//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-//        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-//        assertTrue(liveCalls == 1);
-//        assertTrue(liveCallsArraySize == 1);
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls == 1);
+        assertTrue(liveCallsArraySize == 1);
 
         aliceCall.listenForDisconnect();
 
