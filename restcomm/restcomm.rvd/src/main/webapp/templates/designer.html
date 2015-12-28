@@ -20,11 +20,9 @@
 				</div>
 
 				<ul class="nav navbar-nav navbar-right">
-<!-- 				
 					<li>
 						<button ng-click="showGraph = !showGraph" class="btn navbar-link navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram <i ng-show="showGraph" class="fa fa-check"></i></button>
-					</li>	
- -->									
+					</li>
 					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">{{'designerWebTriggerLink' | translate}}</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{'designerExportLink' | translate}} <b class="caret"></b></a>
@@ -50,16 +48,8 @@
 
 		<div class='row rvd-submenu'>
 		</div>
-		
+
 		<div class="graph-wrap">
-			<!--
-			<div class="row" ng-if="showGraph">
-				<div class="col-md-12" style="margin: 5px;">
-					<button class="btn btn-sm btn-success pull-right" ng-click="drawGraph()"><i class="fa fa-refresh"></i> Refresh</button>
-					<button class="btn btn-sm btn-default pull-right" style="margin-right: 5px;" ng-click="makeFullScreen('paperContainer')"><i class="fa fa-arrows-alt"></i> Full Screen</button>
-				</div>
-			</div>
-			-->
 			<div class="row" ng-if="showGraph">
 				<div class="col-md-12">
 					<div class="graph" >
@@ -67,14 +57,14 @@
 								<div class="graph-controls form-group">
 									<button ng-click="makeFullScreen('paperContainer')" class="btn" title="Make fullscreen"><i class="fa fa-arrows-alt"></i></button>
 									<button ng-click="drawGraph()" class="btn" title="Refresh"><i class="fa fa-refresh"></i></button>
-									
+
 								</div>
 								<!--<div class="text-center" style="overflow: scroll;" id="paper" ng-init="drawGraph()"></div>-->
 								<div id="paperContainer" >
 									<div class="text-center" id="paper" style="overflow: scroll;" ng-init="drawGraph()"></div>
 								</div>
 							</div>
-							
+
 					</div>
 					<hr>
 				</div>
@@ -206,11 +196,6 @@
 
 <!--
 							<div class="col-md-3">
-								<button class="btn btn-default" ng-click="showGraph = !showGraph"><i class="fa fa-code-fork"></i> <span ng-hide="showGraph">Show</span><span ng-show="showGraph">Hide</span> Diagram</button>
-							</div>
--->							
-<!--
-							<div class="col-md-3">
 								<div class="input-group">
 									<span class="input-group-addon"><i class="fa fa-search" title="{{'designerInputSearchLabelTitle' | translate}}"></i></span>
 									<input class="form-control" ng-model="searchToken" ng-change="showNodesDropdown=true;" ng-blur="showNodesDropdown=false;" title="{{'designerInputSearchRegexTitle' | translate}}" placeholder="{{'designerInputSearchPlaceholder' | translate}}">
@@ -229,7 +214,7 @@
 								<div class="help-block" style="margin-top: 0px;"><small><i>{{'designerInputSearchHelp' | translate}}</i></small></div>
 							</div>
 -->
-						
+
 						</div>
 
 						<ul class="nav nav-tabs">
