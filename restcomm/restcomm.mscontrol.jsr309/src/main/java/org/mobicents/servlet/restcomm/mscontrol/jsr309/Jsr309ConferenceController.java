@@ -381,7 +381,7 @@ public class Jsr309ConferenceController extends MediaServerController {
 
                 // Set number of ports for the available participants and possible media group
                 Parameters mixerParams = mediaSession.createParameters();
-                mixerParams.put(MediaMixer.MAX_PORTS, 10);
+                mixerParams.put(MediaMixer.MAX_PORTS, 900);
 
                 // Create the conference room also
                 mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
