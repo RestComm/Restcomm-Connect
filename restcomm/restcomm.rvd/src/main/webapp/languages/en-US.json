@@ -353,8 +353,9 @@
 	"playStepUrlFileError1": "Type a valid .wav resource URL",
 	"playStepUrlFileError2": "Please select a file from the list",
 	"playStepLoopTooltip": "How many times the file audio resource will be played. Default is '1'. '0' will loop until the call is hang up.",
-	"playStepLoopLabel": "Loop",
+	"playStepLoopLabel": "Repeat # times",
 	"playStepLoopPlaceholder": "1",
+	"playStepLoopNeverendingWarning": "announcement will keep repeating infinitely!",
 
 	"projectLogAppLogLabel": "Application log",
 	"projectLogReloadLabel": "Reload",
@@ -413,8 +414,9 @@
 	"sayStepTextValidationError": "The phrase text is missing",
 	"sayStepLanguageLabel": "Language",
 	"sayStepLoopTooltip": "How many times the text will be repeated. Default is '1'. '0' will loop until the call is hang up.",
-	"sayStepLoopLabel": "Loop",
+	"sayStepLoopLabel": "Repeat # times",
 	"sayStepLoopInputPlaceholder": "1",
+	"sayStepLoopNeverendingWarning": "announcement will keep repeating infinitely!",
 
 	"smsStepSmsTextLabel": "SMS text",
 	"smsStepSmsTextLabelPopover": "Type the SMS message to send. Use RVD variables like '$variablename'",
