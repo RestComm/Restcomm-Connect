@@ -1806,7 +1806,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (dialBranches.size() > 0) {
                         dialBranches = null;
                     }
-                    call.tell(new StopMediaGroup(), null);
+//                    call.tell(new StopMediaGroup(), null);
                     if (attribute == null) {
                         final GetNextVerb next = GetNextVerb.instance();
                         parser.tell(next, source);
@@ -1817,21 +1817,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
                 if (message instanceof CallStateChanged) {
-                    if ((((CallStateChanged) message).state().equals(CallStateChanged.State.BUSY) || ((CallStateChanged) message).state().equals(CallStateChanged.State.BUSY))) {
-
-                        if (dialBranches.contains(sender)) {
-//                            logger.info("call state changed. New call state: " + ((CallStateChanged) message).state() + "Sender in the dialBranches: " + dialBranches.contains(sender));
-//                            ActorRef branch = dialBranches.remove(dialBranches.indexOf(sender));
-//                            if (attribute != null) {
-//                                executeDialAction(message, sender);
-//                            }
-//                            logger.info("Will cancel branch: " + branch.toString());
-//                            branch.tell(new Cancel(), source);
-//                            if (dialBranches.size() > 0) {
-//                                return;
-//                            }
-                        }
-                    }
                     if (forking.equals(state)) {
                         //Initial call wants to finish dialing
                         logger.info("Sender == call: " + sender.equals(call));
