@@ -1,6 +1,5 @@
 
 <div gather-step class="step step-gather panel panel-rvdstep step-{{step.name}}">
-	{{step}}
 	<div class="panel-heading">
 		<step-heading></step-heading>		</div>
 	<div class="panel-body" ng-hide='step.iface.isCollapsed'>
@@ -122,7 +121,7 @@
 							</div>
 							<div ng-show="!!step.numDigits && (!!step.validation.userPattern || !!step.validation.regexPattern)" class="validation-warning row">
 								<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"><i class="fa fa-warning step-warning-icon"></i></div>
-								<div class="col-lg-10 col-md-10 com-sm-10 col-xs-10"> value may conflict with <strong>Number of digits</strong></div>
+								<div class="col-lg-10 col-md-10 com-sm-10 col-xs-10"> <span translate="gatherStepNumberOfDigitsConflictWarning"></span></div>
 							</div>
 						</div>
 
@@ -181,7 +180,7 @@
 					</div>
 					<div ng-show="!!step.numDigits && (!!step.validation.userPattern || !!step.validation.regexPattern)" class="validation-warning row">
 						<div class="col-lg-1 col-md-1 col-sm-1 col-xs-1"><i class="fa fa-warning step-warning-icon"></i></div>
-						<div class="col-lg-10 col-md-10 com-sm-10 col-xs-10"> value may conflict with <strong>Validation pattern</strong></div>
+						<div class="col-lg-10 col-md-10 com-sm-10 col-xs-10"> <span translate="gatherStepValidationConflictWarning"></span> </div>
 					</div>
 				</div>
 				<!--
