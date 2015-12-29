@@ -98,13 +98,14 @@ public class MonitoringService extends UntypedActor{
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
-        logger.info("Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass());
+        logger.info("MonitoringService Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self.isTerminated());
 
         if (InstanceId.class.equals(klass)) {
             onGotInstanceId((InstanceId) message, self, sender);
         } else if (Observing.class.equals(klass)) {
             onStartObserve((Observing) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
+            logger.info("Received stop observing");
             onStopObserving((StopObserving) message, self, sender);
         } else if (CallResponse.class.equals(klass)) {
             onCallResponse((CallResponse<CallInfo>)message, self, sender);
@@ -266,5 +267,11 @@ public class MonitoringService extends UntypedActor{
 
         MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap);
         sender.tell(callInfoList, self);
+    }
+
+    @Override
+    public void postStop() {
+        logger.info("Monitoring Service at postStop()");
+        super.postStop();
     }
 }

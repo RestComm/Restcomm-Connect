@@ -640,7 +640,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging) {
                     return;
                 } else {
-                    fsm.transition(message, finished);
+                    if (sender == call) {
+                        //Move to finished state only if the call actor send the Cancel.
+                        fsm.transition(message, finished);
+                    } else {
+                        //Do nothing, this is a Cancel from a dial branch previously canceled
+                        //TODO: Remove the call actor from DialBranches here.
+                        return;
+                    }
                 }
             }
         } else if (CallManagerResponse.class.equals(klass)) {
@@ -693,7 +700,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         + ", statusCode " + response.get().getStatusCode());
             }
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-                fsm.transition(message, ready);
+                if (dialBranches == null) {
+                    fsm.transition(message, ready);
+                } else {
+                    return;
+                }
             } else if (downloadingRcml.equals(state) && fallbackUrl != null) {
                 fsm.transition(message, downloadingFallbackRcml);
             } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
@@ -766,7 +777,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 invalidVerb(verb);
             }
         } else if (End.class.equals(klass)) {
-            fsm.transition(message, hangingUp);
+            if (callState.equals(CallStateChanged.State.COMPLETED)) {
+                fsm.transition(message, finished);
+            } else {
+                fsm.transition(message, hangingUp);
+            }
         } else if (StartGathering.class.equals(klass)) {
             fsm.transition(message, gathering);
         } else if (MediaGroupResponse.class.equals(klass)) {
@@ -1789,7 +1804,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if ((message instanceof ReceiveTimeout) || (message instanceof CallStateChanged)) {
                 logger.info("FinishDialing, current state: " + state);
                 if (message instanceof ReceiveTimeout) {
-                    logger.info("Received timeout, will cancel branches, state: " + state);
+                    logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                     //The forking timeout reached, we have to cancel all dial branches
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
@@ -1808,8 +1823,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
 //                    call.tell(new StopMediaGroup(), null);
                     if (attribute == null) {
+                        logger.info("Will ask for the next verb from parser");
                         final GetNextVerb next = GetNextVerb.instance();
                         parser.tell(next, source);
+                    } else {
+                        executeDialAction(message,null);
                     }
                     dialChildren = null;
                     outboundCall = null;
@@ -1834,7 +1852,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         if (dialBranches.size() > 0) {
                             dialBranches = null;
                         }
-                        call.tell(new StopMediaGroup(), null);
+//                        call.tell(new StopMediaGroup(), null);
                         if (attribute == null) {
                             final GetNextVerb next = GetNextVerb.instance();
                             parser.tell(next, source);
@@ -2185,6 +2203,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;
                 callState = event.state();
+            }
                 if (callRecord != null) {
                     callRecord = callRecord.setStatus(callState.toString());
                     final DateTime end = DateTime.now();
@@ -2195,7 +2214,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     records.updateCallDetailRecord(callRecord);
                 }
                 callback(true);
-            }
 
             // XXX review bridge cleanup!!
 
@@ -2269,6 +2287,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             postCleanup();
         }
     }
+
 
     @Override
     public void postStop() {
