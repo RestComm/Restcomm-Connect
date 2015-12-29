@@ -1175,6 +1175,7 @@ public final class Call extends UntypedActor {
             while (observerIter.hasNext()) {
                 ActorRef observerNext = observerIter.next();
                 observerNext.tell(stopObservingMessage, self);
+                logger.info("%%%Sent stop observing for call, from: "+from+" to: "+to+" direction: "+direction+" to observer: "+observerNext.path()+" observer is terminated: "+observerNext.isTerminated());
 //                this.observers.remove(observerNext);
             }
             this.observers.clear();

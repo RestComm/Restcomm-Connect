@@ -161,10 +161,9 @@ public class DialForkTest {
         if (fotiniSipStack != null) {
             fotiniSipStack.dispose();
         }
-
+        Thread.sleep(3000);
         wireMockRule.resetRequests();
-
-        Thread.sleep(10000);
+        Thread.sleep(2000);
     }
 
     private String dialFork = "<Response><Dial><Client>alice</Client><Sip>sip:henrique@127.0.0.1:5092</Sip><Number>+131313</Number></Dial></Response>";
@@ -555,52 +554,40 @@ public class DialForkTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        // Start a new thread for George
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
-                assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
-                assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-                SipTransaction cancelTransaction = georgeCall.waitForCancel(30000);
-                assertNotNull(cancelTransaction);
-                georgeCall.respondToCancel(cancelTransaction, 200, "OK-2-Cancel-George", 3600);
-            }
-        }).start();
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
 
-        // Start a new thread for Alice
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
-                assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
-                assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
-                SipTransaction cancelTransaction = aliceCall.waitForCancel(30000);
-                assertNotNull(cancelTransaction);
-                aliceCall.respondToCancel(cancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
-            }
-        }).start();
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
-                assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying-Henrique-1", 3600));
-                assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique-1", 3600));
-                SipTransaction cancelTransaction = henriqueCall.waitForCancel(30000);
-                assertNotNull(cancelTransaction);
-                henriqueCall.respondToCancel(cancelTransaction, 200, "OK-2-Cancel-Henrique", 3600);
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying-Henrique", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
 
-            }
-        }).start();
+        georgeCall.listenForCancel();
+        aliceCall.listenForCancel();
+        henriqueCall.listenForCancel();
 
         Thread.sleep(1000);
         bobCall.disconnect();
 
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(30000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30000);
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(30000);
+
+        assertNotNull(georgeCancelTransaction);
+        assertNotNull(aliceCancelTransaction);
+        assertNotNull(henriqueCancelTransaction);
+
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK-2-Cancel-Henrique", 3600);
+
         alicePhone.unregister(aliceContact, 3600);
 
-        //Wait to cancel all calls
-        Thread.sleep(5000);
+        Thread.sleep(10000);
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -623,7 +610,8 @@ public class DialForkTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
-        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
+        logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
@@ -734,7 +722,7 @@ public class DialForkTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
-        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("no-answer"));
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
