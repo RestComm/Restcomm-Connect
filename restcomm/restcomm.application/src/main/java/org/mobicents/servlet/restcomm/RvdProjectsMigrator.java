@@ -35,49 +35,60 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 
 /**
- * The goal of this class is to generate an Application entity inside the
- * database for each RVD project located inside its workspace.
- * Also, apply the new naming convention on project directories inside
- * the workspace, based on a new {@link org.mobicents.servlet.restcomm.entities.Sid.Type.PROJECT}
- * generated to each entry.
+ * The goal of this class is to generate an Application entity inside the database for each RVD project located inside its
+ * workspace. Also, apply the new naming convention on project directories inside the workspace, based on a new
+ * {@link org.mobicents.servlet.restcomm.entities.Sid.Type.PROJECT} generated to each entry.
  *
  * @author guilherme.jansen@telestax.com
  */
 public class RvdProjectsMigrator {
 
     private static final Logger logger = Logger.getLogger(RvdProjectsMigrator.class);
-    private static final String separator = "--------------------------------------\n";
+    private static final String separator = "--------------------------------------";
     private RvdProjectsMigrationHelper migrationHelper;
     private List<String> projectNames;
     private boolean migrationSucceeded;
     private Integer errorCode;
     private String logPath;
 
+    private int projectsProcessed;
+    private int projectsSuccess;
+    private int projectsError;
+    private int updatedDids;
+    private int updatedClients;
 
     public RvdProjectsMigrator(ServletContext servletContext, Configuration configuration) throws Exception {
         this.migrationHelper = new RvdProjectsMigrationHelper(servletContext, configuration);
         this.migrationSucceeded = true;
         this.logPath = servletContext.getRealPath("/") + "../../../"; // Equivalent to RESTCOMM_HOME
+        this.errorCode = 0;
+        this.projectsProcessed = 0;
+        this.projectsSuccess = 0;
+        this.projectsError = 0;
+        this.updatedDids = 0;
+        this.updatedClients = 0;
     }
 
     public void executeMigration() throws Exception {
+        String beginning = getTimeStamp();
         // Ensure the migration needs to be executed
-        if (!migrationHelper.isMigrationEnabled() || migrationHelper.isMigrationSucceeded()) {
+        if (!migrationHelper.isMigrationEnabled() || migrationHelper.isMigrationExecuted()) {
+            storeNewMessage("Workspace migration skipped in " + beginning, true, true, true, false);
+            storeNewMessage(separator, false, true, false, false);
             return;
         }
-        String beginning = getTimeStamp();
-        logger.info("Starting workspace migration at " + beginning);
-        storeLogMessage(separator + "Starting workspace migration at " + beginning + "\n" + separator);
-        storeNewNotification("Starting workspace migration at " + beginning);
-        try{
+        storeNewMessage("Starting workspace migration at " + beginning, true, true, true, false);
+        storeNewMessage(separator, false, true, false, false);
+        try {
             loadProjectsList();
         } catch (RvdProjectsMigrationException e) {
             migrationSucceeded = false;
             errorCode = e.getErrorCode();
+            storeNewMessage(e.getMessage(), true, true, false, true);
             try {
                 storeMigrationStatus();
             } catch (Exception x) {
-                logger.error("Error while storing workspace status", x);
+                storeNewMessage("[ERROR-CODE:2] Error while storing workspace status" + x.getMessage(), true, true, false, true);
             }
             throw e;
         }
@@ -85,36 +96,34 @@ public class RvdProjectsMigrator {
             try {
                 // Rename Project
                 String projectSid = migrateNamingConvention(projectName);
-                storeLogMessage("Project '" + projectName + "' renamed to '" + projectSid + "'");
 
                 // Generate Application entity
                 generateApplicationEntity(projectSid, projectName);
-                storeLogMessage("Project '" + projectName + "' synchronized with Application '"
-                        + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'");
 
                 // Update IncomingPhoneNumbers
                 updateIncomingPhoneNumbers(projectSid, projectName);
-                storeLogMessage("IncomingPhoneNumbers updated with Application '"
-                        + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'");
 
                 // Update Clients
                 updateClients(projectSid, projectName);
-                storeLogMessage("Clients updated with Application '"
-                        + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'");
+
+                projectsSuccess++;
             } catch (RvdProjectsMigrationException e) {
-                logger.error("Error while migrating project " + projectName, e);
                 migrationSucceeded = false;
-                if (errorCode == null) { // Keep the first error only
+                if (errorCode == 0) { // Keep the first error only
                     errorCode = e.getErrorCode();
                 }
-                storeLogMessage(e.getMessage());
+                projectsError++;
+                storeNewMessage("Error while migrating project '" + projectName + "' " + e.getMessage(), false, true, false,
+                        true);
             }
-            storeLogMessage("\n" + separator);
+            projectsProcessed++;
+            storeNewMessage(separator, false, true, false, false);
         }
         try {
             storeMigrationStatus();
         } catch (Exception e) {
-            logger.error("Error while storing workspace status", e);
+            storeNewMessage("[ERROR-CODE:2] Error while storing workspace status " + e, true, true, false, true);
+            throw e;
         }
     }
 
@@ -122,28 +131,65 @@ public class RvdProjectsMigrator {
         this.projectNames = migrationHelper.listProjects();
     }
 
-    private String migrateNamingConvention(String projectName) throws RvdProjectsMigrationException {
+    private String migrateNamingConvention(String projectName) throws RvdProjectsMigrationException, URISyntaxException {
         if (!migrationHelper.projectUsesNewNamingConvention(projectName)) {
             // Change to new name standard
             String projectSid = migrationHelper.renameProjectUsingNewConvention(projectName);
+            migrationHelper.loadProjectState(projectSid);
+            storeNewMessage("Project '" + projectName + "' renamed to '" + projectSid + "'", false, true, false, false);
             return projectSid;
         } else {
             // Once using new name standard, load project state to proceed with migration
+            storeNewMessage("Project " + projectName + " already using new naming convention. Skipped", false, true, false,
+                    false);
             migrationHelper.loadProjectState(projectName);
             return projectName;
         }
     }
 
-    private void generateApplicationEntity(String projectSid, String projectName) throws RvdProjectsMigrationException {
-        migrationHelper.createOrUpdateApplicationEntity(projectSid, projectName);
+    private void generateApplicationEntity(String projectSid, String projectName) throws RvdProjectsMigrationException,
+            URISyntaxException {
+        boolean createdOrUpdated = migrationHelper.createOrUpdateApplicationEntity(projectSid, projectName);
+        if (createdOrUpdated) {
+            storeNewMessage(
+                    "Project '" + projectName + "' synchronized with Application '"
+                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'", false, true, false, false);
+        } else {
+            storeNewMessage(
+                    "Project '" + projectName + "' previously synchronized with Application '"
+                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'. Skipped", false, true, false,
+                    false);
+        }
     }
 
-    private void updateIncomingPhoneNumbers(String projectSid, String projectName) throws RvdProjectsMigrationException {
-        migrationHelper.updateIncomingPhoneNumbers(projectSid, projectName);
+    private void updateIncomingPhoneNumbers(String projectSid, String projectName) throws RvdProjectsMigrationException,
+            URISyntaxException {
+        int amountUpdated = migrationHelper.updateIncomingPhoneNumbers(projectSid);
+        if (amountUpdated > 0) {
+            storeNewMessage(
+                    "Updated " + amountUpdated + " IncomingPhoneNumbers with Application '"
+                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'", false, true, false, false);
+            updatedDids += amountUpdated;
+        } else {
+            storeNewMessage(
+                    "No IncomingPhoneNumbers found to update with Application '"
+                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'. Skipped", false, true, false,
+                    false);
+        }
     }
 
-    private void updateClients(String projectSid, String projectName) throws RvdProjectsMigrationException {
-        migrationHelper.updateClients(projectSid, projectName);
+    private void updateClients(String projectSid, String projectName) throws RvdProjectsMigrationException, URISyntaxException {
+        int amountUpdated = migrationHelper.updateClients(projectSid);
+        if (amountUpdated > 0) {
+            storeNewMessage(
+                    "Updated " + amountUpdated + " Clients with Application '"
+                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'", false, true, false, false);
+            updatedClients += amountUpdated;
+        } else {
+            storeNewMessage(
+                    "No Clients found to update with Application '" + migrationHelper.getApplicationSidByProjectSid(projectSid)
+                            + "'. Skipped", false, true, false, false);
+        }
     }
 
     private void storeMigrationStatus() throws RvdProjectsMigrationException, URISyntaxException {
@@ -151,18 +197,52 @@ public class RvdProjectsMigrator {
         String end = getTimeStamp();
         if (!migrationSucceeded) {
             String message = "Workspace migration finished with errors at ";
-            logger.error(message + end);
-            storeLogMessage(message + end + "\n" + separator);
-            storeNewNotification(message + end);
+            message += ". Status: " + projectsProcessed + " Projects processed (";
+            message += projectsSuccess + " with success and " + projectsError + " with error), ";
+            message += updatedDids + " IncomingPhoneNumbers and " + updatedClients + " Clients updated";
+            storeNewMessage(message, true, true, true, true);
+            storeNewMessage(separator, false, true, false, false);
+            sendEmailNotification(message);
         } else {
             String message = "Workspace migration finished with success at " + end;
-            logger.info(message + end);
-            storeLogMessage(message + end + "\n" + separator);
-            storeNewNotification(message + end);
+            message += ". Status: " + projectsProcessed + " Projects processed (";
+            message += projectsSuccess + " with success and " + projectsError + " with error), ";
+            message += updatedDids + " IncomingPhoneNumbers and " + updatedClients + " Clients updated";
+            storeNewMessage(message, true, true, true, false);
+            storeNewMessage(separator, false, true, false, false);
+            sendEmailNotification(message);
         }
     }
 
-    private void storeLogMessage(String message) throws RvdProjectsMigrationException {
+    private void storeNewMessage(String message, boolean asServerLog, boolean asMigrationLog, boolean asNotification,
+            boolean error) throws RvdProjectsMigrationException, URISyntaxException {
+        // Write to server log
+        if (asServerLog) {
+            if (error) {
+                logger.error(message);
+            } else {
+                logger.info(message);
+            }
+        }
+        // Write to migration log, but use server log if embedded migration
+        if (asMigrationLog) {
+            if (!migrationHelper.isEmbeddedMigration()) {
+                storeLogMessage(message);
+            } else if (!asServerLog) { // Prevent duplicated messages
+                if (error) {
+                    logger.error(message);
+                } else {
+                    logger.info(message);
+                }
+            }
+        }
+        // Create new notification
+        if (asNotification) {
+            storeNewNotification(message);
+        }
+    }
+
+    private void storeLogMessage(String message) throws RvdProjectsMigrationException, URISyntaxException {
         try {
             String pathName = logPath + "workspace-migration.log";
             File file = new File(pathName);
@@ -170,13 +250,12 @@ public class RvdProjectsMigrator {
                 file.createNewFile();
             }
             FileWriter fw = new FileWriter(file, true);
-            fw.write(message);
+            fw.write(message + "\n");
             fw.close();
         } catch (Exception e) {
-            throw new RvdProjectsMigrationException(
-                    "[ERROR-CODE:10] Error while writing to file RESTCOMM_HOME/workspace-migration.log");
+            storeNewMessage("[ERROR-CODE:3] Error while writing to file RESTCOMM_HOME/workspace-migration.log", true, false,
+                    false, true);
         }
-        logger.error("Error while writing to file RESTCOMM_HOME/workspace-migration.log");
     }
 
     private String getTimeStamp() {
@@ -186,8 +265,18 @@ public class RvdProjectsMigrator {
     }
 
     private void storeNewNotification(String message) throws URISyntaxException {
-        migrationHelper.addNotification(message, errorCode);
+        migrationHelper.addNotification(message, migrationSucceeded, new Integer(errorCode));
     }
 
+    private void sendEmailNotification(String message) throws RvdProjectsMigrationException, URISyntaxException {
+        try {
+            migrationHelper.sendEmailNotification(message, migrationSucceeded);
+        } catch (RvdProjectsMigrationException e) {
+            storeNewMessage("[ERROR-CODE:4] Workspace migration email notification skipped due to invalid configuration", true,
+                    true, false,
+                    true);
+            storeNewMessage(separator, false, true, false, false);
+        }
+    }
 
 }

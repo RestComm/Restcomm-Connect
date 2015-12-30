@@ -109,7 +109,8 @@ api_version VARCHAR(10) NOT NULL,
 voice_caller_id_lookup BOOLEAN NOT NULL,
 uri MEDIUMTEXT NOT NULL,
 rcml_url MEDIUMTEXT,
-kind VARCHAR(5)
+kind VARCHAR(5),
+project_sid VARCHAR(34)
 );
 
 CREATE TABLE restcomm_call_detail_records (

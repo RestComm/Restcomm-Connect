@@ -48,8 +48,8 @@ public abstract class CreateEmailInterpreter extends UntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
-        EmailRequest request = (EmailRequest)message;
         if (EmailRequest.class.equals(klass)) {
+            EmailRequest request = (EmailRequest) message;
             sender.tell(send(request.getObject()), self);
         }
     }

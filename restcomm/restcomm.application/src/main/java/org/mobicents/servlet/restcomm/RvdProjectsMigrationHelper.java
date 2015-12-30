@@ -24,7 +24,6 @@ package org.mobicents.servlet.restcomm;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -50,6 +49,10 @@ import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
+import org.mobicents.servlet.restcomm.email.EmailRequest;
+import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
+import org.mobicents.servlet.restcomm.email.api.EmailService;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
@@ -58,16 +61,21 @@ import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActorFactory;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.thoughtworks.xstream.XStream;
 
 /**
- * This class was designed to be used with exclusivity by
- * {@link org.mobicents.servlet.restcomm.RvdProjectsMigrator}, once that Restcomm should not interact
- * with RVD's workspace as a typical operation given that the migration
- * process forms a very specific scenario.
+ * This class was designed to be used with exclusivity by {@link org.mobicents.servlet.restcomm.RvdProjectsMigrator}, once that
+ * Restcomm should not interact with RVD's workspace as a typical operation given that the migration process forms a very
+ * specific scenario.
  *
  * @author guilherme.jansen@telestax.com
  */
@@ -78,11 +86,15 @@ public class RvdProjectsMigrationHelper {
     private static final String PROTO_DIRECTORY_PREFIX = "_proto";
     private static final Pattern RVD_PROJECT_URL = Pattern.compile("^\\/restcomm-rvd.*\\/(.*)\\/controller$");
     private static final String ACCOUNT_NOTIFICATIONS_SID = "ACae6e420f425248d6a26948c17a9e2acf";
+    private static final String EMBEDDED_DIRECTORY_NAME = "workspace-migration";
+
+    private boolean embeddedMigration = false; // If restcomm-rvd context is not found, search for internal structure
 
     private Configuration configuration;
     private String workspacePath;
     private StateHeader currentStateHeader;
-    private HashMap<String, String> projectsApplications;
+    private HashMap<String, String> projectApplicationSid;
+    private HashMap<String, String> projectApplicationName;
     private final ApplicationsDao applicationDao;
     private final AccountsDao accountsDao;
     private final IncomingPhoneNumbersDao didsDao;
@@ -90,38 +102,58 @@ public class RvdProjectsMigrationHelper {
     private final NotificationsDao notificationsDao;
     private List<IncomingPhoneNumber> dids;
     private List<Client> clients;
+    private ActorSystem system;
+    private ActorRef emailService;
 
-    public RvdProjectsMigrationHelper(ServletContext servletContext, Configuration configuration) throws FileNotFoundException {
+    public RvdProjectsMigrationHelper(ServletContext servletContext, Configuration configuration) throws Exception {
         defineWorkspacePath(servletContext);
         this.configuration = configuration;
         final DaoManager storage = (DaoManager) servletContext.getAttribute(DaoManager.class.getName());
-        this.projectsApplications = new HashMap<String, String>();
+        this.projectApplicationSid = new HashMap<String, String>();
+        this.projectApplicationName = new HashMap<String, String>();
         this.applicationDao = storage.getApplicationsDao();
         this.accountsDao = storage.getAccountsDao();
         this.didsDao = storage.getIncomingPhoneNumbersDao();
         this.clientsDao = storage.getClientsDao();
         this.notificationsDao = storage.getNotificationsDao();
+        this.system = ActorSystem.create();
     }
 
-    private void defineWorkspacePath(ServletContext servletContext) throws FileNotFoundException {
+    private void defineWorkspacePath(ServletContext servletContext) throws Exception {
         // Obtain RVD context root path
         String contextRootPath = servletContext.getRealPath("/");
         String contextPathRvd = contextRootPath + "../" + CONTEXT_NAME_RVD + "/";
 
-        // Load RVD configuration and check workspace path
-        FileInputStream input = new FileInputStream(contextPathRvd + "WEB-INF/rvd.xml");
-        XStream xstream = new XStream();
-        xstream.alias("rvd", RvdConfig.class);
-        RvdConfig rvdConfig = (RvdConfig) xstream.fromXML(input);
-        String workspaceBasePath = contextPathRvd + WORKSPACE_DIRECTORY_NAME;
-        if (rvdConfig.getWorkspaceLocation() != null && !"".equals(rvdConfig.getWorkspaceLocation())) {
-            if (rvdConfig.getWorkspaceLocation().startsWith("/"))
-                workspaceBasePath = rvdConfig.getWorkspaceLocation(); // this is an absolute path
-            else
-                workspaceBasePath = contextPathRvd + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked under
-                                                                                       // RVD context
+        // Check RVD context to try embedded mode if necessary
+        File rvd = new File(contextPathRvd);
+        if (rvd.exists()) {
+            // Load RVD configuration and check workspace path
+            FileInputStream input = new FileInputStream(contextPathRvd + "WEB-INF/rvd.xml");
+            XStream xstream = new XStream();
+            xstream.alias("rvd", RvdConfig.class);
+            RvdConfig rvdConfig = (RvdConfig) xstream.fromXML(input);
+            String workspaceBasePath = contextPathRvd + WORKSPACE_DIRECTORY_NAME;
+            if (rvdConfig.getWorkspaceLocation() != null && !"".equals(rvdConfig.getWorkspaceLocation())) {
+                if (rvdConfig.getWorkspaceLocation().startsWith("/"))
+                    workspaceBasePath = rvdConfig.getWorkspaceLocation(); // this is an absolute path
+                else
+                    workspaceBasePath = contextPathRvd + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked
+                                                                                           // under
+                // RVD context
+            }
+            this.workspacePath = workspaceBasePath;
+        } else {
+            // Try to set embedded migration
+            String dir = contextRootPath + EMBEDDED_DIRECTORY_NAME + File.separator + WORKSPACE_DIRECTORY_NAME + File.separator;
+            File embedded = new File(dir);
+            if (embedded.exists()) {
+                this.workspacePath = dir;
+                this.embeddedMigration = true;
+            } else {
+                throw new Exception("Error while searching for the workspace location. Aborting migration.");
+            }
         }
-        this.workspacePath = workspaceBasePath;
+
     }
 
     public List<String> listProjects() throws RvdProjectsMigrationException {
@@ -160,11 +192,9 @@ public class RvdProjectsMigrationHelper {
         Sid projectSid = Sid.generate(Sid.Type.PROJECT);
         try {
             renameProject(projectName, projectSid.toString());
-        } catch (Exception e) {
-            throw new RvdProjectsMigrationException("[ERROR-CODE:2] Error while renaming the project '" + projectName
-                    + "' to '"
-                    + projectSid.toString() + "'"
- + e.getMessage(), 2);
+        } catch (IOException e) {
+            throw new RvdProjectsMigrationException("[ERROR-CODE:5] Error while renaming the project '" + projectName
+                    + "' to '" + projectSid.toString() + "'" + e.getMessage(), 5);
         }
         return projectSid.toString();
     }
@@ -190,9 +220,9 @@ public class RvdProjectsMigrationHelper {
             }
             Gson gson = new Gson();
             currentStateHeader = gson.fromJson(headerElement, StateHeader.class);
-        } catch (Exception e) {
-            throw new RvdProjectsMigrationException("[ERROR-CODE:3] Error loading state file from project '" + projectName
-                    + "' " + e.getMessage(), 3);
+        } catch (IOException e) {
+            throw new RvdProjectsMigrationException("[ERROR-CODE:6] Error loading state file from project '" + projectName
+                    + "' " + e.getMessage(), 6);
         }
     }
 
@@ -200,50 +230,63 @@ public class RvdProjectsMigrationHelper {
         return Sid.pattern.matcher(projectName).matches();
     }
 
-    public void createOrUpdateApplicationEntity(String projectSid, String projectName) throws RvdProjectsMigrationException {
+    public boolean createOrUpdateApplicationEntity(String projectSid, String projectName) throws RvdProjectsMigrationException {
         Application app = null;
         try {
             app = applicationDao.getApplication(projectName);
+            if (app == null) {
+                app = applicationDao.getApplicationByProjectSid(new Sid(projectSid));
+            }
             if (app != null && app.getProjectSid() == null) {
                 // Update application
                 app = app.setRcmlUrl(URI.create("/restcomm-rvd/services/apps/" + projectSid + "/controller"));
                 app = app.setProjectSid(new Sid(projectSid));
                 applicationDao.updateApplication(app);
-                projectsApplications.put(projectSid, app.getSid().toString());
+                projectApplicationSid.put(projectSid, app.getSid().toString());
+                projectApplicationName.put(projectSid, app.getFriendlyName());
+                return true;
             } else if (app == null) {
                 // Create new application
                 Account account = accountsDao.getAccount(currentStateHeader.getOwner());
                 if (account == null) {
-                    throw new Exception("Error locating the owner account for project \"" + projectSid + "\"");
+                    throw new RvdProjectsMigrationException("Error locating the owner account for project \"" + projectSid
+                            + "\"");
                 }
                 final Application.Builder builder = Application.builder();
                 final Sid sid = Sid.generate(Sid.Type.APPLICATION);
                 builder.setSid(sid);
                 builder.setFriendlyName(projectName);
-                builder.setAccountSid(account.getAccountSid());
-                builder.setApiVersion(configuration.getString("api-version"));
+                builder.setAccountSid(account.getSid());
+                builder.setApiVersion(configuration.subset("runtime-settings").getString("api-version"));
                 builder.setHasVoiceCallerIdLookup(false);
-                String rootUri = configuration.getString("root-uri");
+                String rootUri = configuration.subset("runtime-settings").getString("root-uri");
                 rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
                 final StringBuilder buffer = new StringBuilder();
-                buffer.append(rootUri).append(configuration.getString("api-version")).append("/Accounts/")
-                        .append(account.toString()).append("/Applications/").append(sid.toString());
+                buffer.append(rootUri).append(configuration.subset("runtime-settings").getString("api-version"))
+                        .append("/Accounts/").append(account.getSid().toString()).append("/Applications/")
+                        .append(sid.toString());
                 builder.setUri(URI.create(buffer.toString()));
                 builder.setRcmlUrl(URI.create("/restcomm-rvd/services/apps/" + projectSid + "/controller"));
                 builder.setKind(Application.Kind.getValueOf(currentStateHeader.getProjectKind()));
                 builder.setProjectSid(new Sid(projectSid));
                 app = builder.build();
                 applicationDao.addApplication(app);
-                projectsApplications.put(projectSid, app.getSid().toString());
+                projectApplicationSid.put(projectSid, app.getSid().toString());
+                projectApplicationName.put(projectSid, projectName);
+                return true;
+            } else {
+                projectApplicationSid.put(projectSid, app.getSid().toString());
+                projectApplicationName.put(projectSid, app.getFriendlyName());
+                return false;
             }
-        } catch (Exception e) {
+        } catch (RvdProjectsMigrationException e) {
             String suffix = app != null ? "with the application '" + app.getSid().toString() + "' " : "";
-            throw new RvdProjectsMigrationException("[ERROR-CODE:4] Error while synchronizing the project '" + projectSid
-                    + "' " + suffix + e.getMessage(), 4);
+            throw new RvdProjectsMigrationException("[ERROR-CODE:7] Error while synchronizing the project '" + projectSid
+                    + "' " + suffix + e.getMessage(), 7);
         }
     }
 
-    public void updateIncomingPhoneNumbers(String projectSid, String projectName) throws RvdProjectsMigrationException {
+    public int updateIncomingPhoneNumbers(String projectSid) throws RvdProjectsMigrationException {
         try {
 
             if (dids == null) {
@@ -251,18 +294,19 @@ public class RvdProjectsMigrationHelper {
             }
         } catch (Exception e) {
             throw new RvdProjectsMigrationException(
-                    "[ERROR-CODE:5] Error while loading the IncomingPhoneNumbers list for updates with project '"
-                    + projectSid
-                            + "' " + e.getMessage(), 5);
+                    "[ERROR-CODE:8] Error while loading IncomingPhoneNumbers list for updates with project '" + projectSid
+                            + "' " + e.getMessage(), 8);
         }
-        for (int i = 0; i < dids.size(); i++) {
-            IncomingPhoneNumber did = dids.get(i);
-            try {
-                Application.Kind kind = Application.Kind.getValueOf(currentStateHeader.getProjectKind());
-                switch (kind) {
-                    case SMS:
-                        if (hasUrlReference(did.getSmsUrl().toString(), projectName)) {
-                            Sid smsApplicationSid = new Sid(String.valueOf(projectsApplications.get(projectSid)));
+        Application.Kind kind = Application.Kind.getValueOf(currentStateHeader.getProjectKind());
+        IncomingPhoneNumber did = null;
+        int amountUpdated = 0;
+        try {
+            switch (kind) {
+                case SMS:
+                    for (int i = 0; i < dids.size(); i++) {
+                        did = dids.get(i);
+                        if (hasUrlReference(did.getSmsUrl(), projectApplicationName.get(projectSid))) {
+                            Sid smsApplicationSid = new Sid(String.valueOf(projectApplicationSid.get(projectSid)));
                             IncomingPhoneNumber updateSmsDid = new IncomingPhoneNumber(did.getSid(), did.getDateCreated(),
                                     did.getDateUpdated(), did.getFriendlyName(), did.getAccountSid(), did.getPhoneNumber(),
                                     did.getCost(), did.getApiVersion(), did.hasVoiceCallerIdLookup(), did.getVoiceUrl(),
@@ -274,11 +318,15 @@ public class RvdProjectsMigrationHelper {
                                     did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateSmsDid);
                             dids.set(i, updateSmsDid);
+                            amountUpdated++;
                         }
-                        break;
-                    case USSD:
-                        if (hasUrlReference(did.getUssdUrl().toString(), projectName)) {
-                            Sid ussdApplicationSid = new Sid(String.valueOf(projectsApplications.get(projectSid)));
+                    }
+                    break;
+                case USSD:
+                    for (int i = 0; i < dids.size(); i++) {
+                        did = dids.get(i);
+                        if (hasUrlReference(did.getUssdUrl(), projectApplicationName.get(projectSid))) {
+                            Sid ussdApplicationSid = new Sid(String.valueOf(projectApplicationSid.get(projectSid)));
                             IncomingPhoneNumber updateUssdDid = new IncomingPhoneNumber(did.getSid(), did.getDateCreated(),
                                     did.getDateUpdated(), did.getFriendlyName(), did.getAccountSid(), did.getPhoneNumber(),
                                     did.getCost(), did.getApiVersion(), did.hasVoiceCallerIdLookup(), did.getVoiceUrl(),
@@ -290,11 +338,15 @@ public class RvdProjectsMigrationHelper {
                                     did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateUssdDid);
                             dids.set(i, updateUssdDid);
+                            amountUpdated++;
                         }
-                        break;
-                    case VOICE:
-                        if (hasUrlReference(did.getVoiceUrl().toString(), projectName)) {
-                            Sid voiceApplicationSid = new Sid(String.valueOf(projectsApplications.get(projectSid)));
+                    }
+                    break;
+                case VOICE:
+                    for (int i = 0; i < dids.size(); i++) {
+                        did = dids.get(i);
+                        if (hasUrlReference(did.getVoiceUrl(), projectApplicationName.get(projectSid))) {
+                            Sid voiceApplicationSid = new Sid(String.valueOf(projectApplicationSid.get(projectSid)));
                             IncomingPhoneNumber updateVoiceDid = new IncomingPhoneNumber(did.getSid(), did.getDateCreated(),
                                     did.getDateUpdated(), did.getFriendlyName(), did.getAccountSid(), did.getPhoneNumber(),
                                     did.getCost(), did.getApiVersion(), did.hasVoiceCallerIdLookup(), null, null,
@@ -306,22 +358,24 @@ public class RvdProjectsMigrationHelper {
                                     did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateVoiceDid);
                             dids.set(i, updateVoiceDid);
+                            amountUpdated++;
                         }
-                        break;
-                    default:
-                        break;
-                }
-            } catch (Exception e) {
-                throw new RvdProjectsMigrationException("[ERROR-CODE:6] Error while updating IncomingPhoneNumber '"
-                        + did.getSid().toString() + "' with the Application '" + projectsApplications.get(projectSid) + "' "
-                        + e.getMessage(), 6);
+                    }
+                    break;
+                default:
+                    break;
             }
+        } catch (UnsupportedEncodingException e) {
+            throw new RvdProjectsMigrationException("[ERROR-CODE:9] Error while updating IncomingPhoneNumber '"
+                    + did.getSid().toString() + "' with the Application '" + projectApplicationSid.get(projectSid) + "' "
+                    + e.getMessage(), 9);
         }
+        return amountUpdated;
     }
 
-    private boolean hasUrlReference(String url, String projectName) throws UnsupportedEncodingException {
-        if (url != null && !url.isEmpty()) {
-            Matcher m = RVD_PROJECT_URL.matcher(url);
+    private boolean hasUrlReference(URI url, String projectName) throws UnsupportedEncodingException {
+        if (url != null && !url.toString().isEmpty()) {
+            Matcher m = RVD_PROJECT_URL.matcher(url.toString());
             if (m.find()) {
                 String result = m.group(1);
                 result = URLDecoder.decode(result, "UTF-8");
@@ -331,7 +385,7 @@ public class RvdProjectsMigrationHelper {
         return false;
     }
 
-    public void updateClients(String projectSid, String projectName) throws RvdProjectsMigrationException {
+    public int updateClients(String projectSid) throws RvdProjectsMigrationException {
         try {
             if (clients == null) {
                 clients = clientsDao.getAllClients();
@@ -339,47 +393,51 @@ public class RvdProjectsMigrationHelper {
 
         } catch (Exception e) {
             throw new RvdProjectsMigrationException(
-                    "[ERROR-CODE:7] Error while loading the Clients list for updates with project '" + projectSid
-                    + "'. "
-                            + e.getMessage(), 7);
+                    "[ERROR-CODE:10] Error while loading the Clients list for updates with project '" + projectSid + "'. "
+                            + e.getMessage(), 10);
         }
-        for (int i = 0; i < clients.size(); i++) {
-            Client client = clients.get(i);
-            try {
-                Application.Kind kind = Application.Kind.getValueOf(currentStateHeader.getProjectKind());
-                if (kind == Application.Kind.VOICE) {
-                    if (hasUrlReference(client.getVoiceUrl().toString(), projectName)) {
-                        Sid voiceApplicationSid = new Sid(String.valueOf(projectsApplications.get(projectSid)));
+        Application.Kind kind = Application.Kind.getValueOf(currentStateHeader.getProjectKind());
+        Client client = null;
+        int amountUpdated = 0;
+        try {
+            if (kind == Application.Kind.VOICE) {
+                for (int i = 0; i < clients.size(); i++) {
+                    client = clients.get(i);
+                    if (hasUrlReference(client.getVoiceUrl(), projectApplicationName.get(projectSid))) {
+                        Sid voiceApplicationSid = new Sid(String.valueOf(projectApplicationSid.get(projectSid)));
                         client = client.setVoiceApplicationSid(voiceApplicationSid);
                         client = client.setVoiceMethod(null);
                         client = client.setVoiceUrl(null);
                         clientsDao.updateClient(client);
                         clients.set(i, client);
+                        amountUpdated++;
                     }
                 }
-            } catch (Exception e) {
-                throw new RvdProjectsMigrationException("[ERROR-CODE:8] Error while updating Client '"
-                        + client.getSid().toString() + "' with the Application '" + projectsApplications.get(projectSid) + "' "
-                        + e.getMessage(), 8);
             }
+        } catch (Exception e) {
+            throw new RvdProjectsMigrationException("[ERROR-CODE:11] Error while updating Client '"
+                    + client.getSid().toString() + "' with the Application '" + projectApplicationSid.get(projectSid) + "' "
+                    + e.getMessage(), 11);
         }
+        return amountUpdated;
     }
 
     public void storeWorkspaceStatus(boolean migrationSucceeded) throws RvdProjectsMigrationException {
         String pathName = workspacePath + File.separator + ".workspaceStatus";
         File file = new File(pathName);
         Gson gson = new Gson();
-        WorkspaceStatus ws = new WorkspaceStatus(migrationSucceeded);
+        String version = Version.getVersion();
+        WorkspaceStatus ws = new WorkspaceStatus(migrationSucceeded, version);
         String data = gson.toJson(ws);
         try {
             FileUtils.writeStringToFile(file, data, "UTF-8");
         } catch (IOException e) {
-            throw new RvdProjectsMigrationException("[ERROR-CODE:9] Error creating file in storage: " + file + e.getMessage(),
-                    9);
+            throw new RvdProjectsMigrationException("[ERROR-CODE:12] Error creating file in storage: " + file + e.getMessage(),
+                    12);
         }
     }
 
-    public boolean isMigrationSucceeded() {
+    public boolean isMigrationExecuted() {
         String pathName = workspacePath + File.separator + ".workspaceStatus";
         File file = new File(pathName);
         if (!file.exists()) {
@@ -396,24 +454,28 @@ public class RvdProjectsMigrationHelper {
         if (element != null) {
             Gson gson = new Gson();
             WorkspaceStatus ws = gson.fromJson(element, WorkspaceStatus.class);
-            return ws.getNamingMigrationSucceeded();
-        } else {
-            return false;
+            String currentVersion = Version.getVersion();
+            return ws.getVersionLastRun().equals(currentVersion);
         }
+        return false;
     }
 
-    public void addNotification(String message, Integer level) throws URISyntaxException {
+    public void addNotification(String message, boolean error, Integer errorCode) throws URISyntaxException {
         Notification.Builder builder = Notification.builder();
         Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
         builder.setSid(sid);
         builder.setAccountSid(new Sid(ACCOUNT_NOTIFICATIONS_SID));
-        builder.setApiVersion(configuration.getString("api-version"));
-        builder.setLog(level);
+        builder.setApiVersion(configuration.subset("runtime-settings").getString("api-version"));
+        builder.setLog(error ? new Integer(1) : new Integer(0));
+        builder.setErrorCode(errorCode);
         builder.setMoreInfo(new URI("http://docs.telestax.com/restcomm-pages/"));
         builder.setMessageText(message);
         builder.setMessageDate(DateTime.now());
+        builder.setRequestUrl(new URI(""));
+        builder.setRequestMethod("");
+        builder.setRequestVariables("");
         StringBuilder buffer = new StringBuilder();
-        buffer.append("/").append(configuration.getString("api-version")).append("/Accounts/");
+        buffer.append("/").append(configuration.subset("runtime-settings").getString("api-version")).append("/Accounts/");
         buffer.append(ACCOUNT_NOTIFICATIONS_SID).append("/Notifications/");
         buffer.append(sid.toString());
         final URI uri = URI.create(buffer.toString());
@@ -424,29 +486,76 @@ public class RvdProjectsMigrationHelper {
     }
 
     public boolean isMigrationEnabled() {
-        Boolean value = new Boolean(configuration.getString("rvd-workspace-migration-enabled"));
+        Boolean value = new Boolean(configuration.subset("runtime-settings").getString("rvd-workspace-migration-enabled"));
         return value;
     }
 
     public String getApplicationSidByProjectSid(String projectSid) {
-        return projectsApplications.get(projectSid);
+        return projectApplicationSid.get(projectSid);
+    }
+
+    public void sendEmailNotification(String message, boolean migrationSucceeded) throws RvdProjectsMigrationException {
+        String host = configuration.subset("smtp-notify").getString("host");
+        String username = configuration.subset("smtp-notify").getString("user");
+        String password = configuration.subset("smtp-notify").getString("password");
+        String defaultEmailAddress = configuration.subset("smtp-notify").getString("defaultEmailAddress");
+        if (host == null || username == null || password == null || defaultEmailAddress == null || host.isEmpty()
+                || username.isEmpty() || password.isEmpty() || defaultEmailAddress.isEmpty()) {
+            throw new RvdProjectsMigrationException("Skipping email notification due to invalid configuration");
+        }
+        if (emailService == null) {
+            emailService = emailService(configuration.subset("smtp-notify"));
+        }
+
+        String subject = "Restcomm - RVD Projects migration";
+        String body = message;
+        if (!migrationSucceeded) {
+            body += ". Please, visit http://docs.telestax.com/restcomm-pages/ for more information on how to troubleshoot workspace migration issues.";
+        }
+
+        final Mail emailMsg = new Mail(username + "@" + host, defaultEmailAddress, subject, body);
+        emailService.tell(new EmailRequest(emailMsg), emailService);
+
+    }
+
+    private ActorRef emailService(final Configuration configuration) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Actor create() throws Exception {
+                final CreateEmailService builder = new EmailService();
+                builder.CreateEmailSession(configuration);
+                return builder.build();
+            }
+        }));
+    }
+
+    public boolean isEmbeddedMigration() {
+        return this.embeddedMigration;
     }
 
     private class WorkspaceStatus {
 
         boolean namingMigrationSucceeded;
+        String versionLastRun;
 
         public WorkspaceStatus() {
 
         }
 
-        public WorkspaceStatus(boolean namingMigrationSucceeded) {
+        public WorkspaceStatus(boolean namingMigrationSucceeded, String versionLastRun) {
             super();
             this.namingMigrationSucceeded = namingMigrationSucceeded;
+            this.versionLastRun = versionLastRun;
         }
 
         public boolean getNamingMigrationSucceeded() {
             return namingMigrationSucceeded;
+        }
+
+        public String getVersionLastRun() {
+            return versionLastRun;
         }
 
     }
