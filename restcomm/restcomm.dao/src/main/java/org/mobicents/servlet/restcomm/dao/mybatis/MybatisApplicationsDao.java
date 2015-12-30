@@ -70,6 +70,11 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         return getApplication(namespace + "getApplicationByFriendlyName", friendlyName);
     }
 
+    @Override
+    public Application getApplicationByProjectSid(final Sid projectSid) {
+        return getApplication(namespace + "getApplicationByProjectSid", projectSid.toString());
+    }
+
     private Application getApplication(final String selector, final String parameter) {
         final SqlSession session = sessions.openSession();
         try {

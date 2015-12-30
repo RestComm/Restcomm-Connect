@@ -19,6 +19,10 @@
     SELECT * FROM "restcomm_applications" WHERE "friendly_name"=#{friendly_name};
   </select>
   
+  <select id="getApplicationByProjectSid" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_applications" WHERE "project_sid"=#{project_sid};
+  </select>
+  
   <select id="getApplications" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_applications" WHERE "account_sid"=#{account_sid} or "account_sid" is null;
   </select>

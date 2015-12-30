@@ -308,6 +308,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             //Replicate RVD Projects as database entities
             try {
                 RvdProjectsMigrator rvdProjectMigrator = new RvdProjectsMigrator(context, xml);
+                rvdProjectMigrator.executeMigration();
             } catch (Exception exception) {
                 logger.error("RVD Porjects migration failed during initialization: ", exception);
             }
