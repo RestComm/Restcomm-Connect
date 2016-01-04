@@ -23,6 +23,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 import static javax.ws.rs.core.MediaType.*;
 
@@ -30,6 +31,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.MediaType;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -73,6 +75,20 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
         return updateCall(accountSid, sid, data, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    @Path("/{callSid}/Recordings.json")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRecordingsByCallJson(@PathParam("accountSid") String accountSid, @PathParam("callSid") String callSid) {
+        return getRecordingsByCall(accountSid, callSid, MediaType.APPLICATION_JSON_TYPE);
+    }
+
+    @GET
+    @Path("/{callSid}/Recordings")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response getRecordingsByCallXml(@PathParam("accountSid") String accountSid, @PathParam("callSid") String callSid) {
+        return getRecordingsByCall(accountSid, callSid, MediaType.APPLICATION_XML_TYPE);
     }
 
 }
