@@ -49,15 +49,20 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 //import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Recording;
+import org.mobicents.servlet.restcomm.entities.RecordingList;
 import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordConverter;
 import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordListConverter;
+import org.mobicents.servlet.restcomm.http.converter.RecordingListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
@@ -98,6 +103,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     private GsonBuilder builder;
     private XStream xstream;
     private CallDetailRecordListConverter listConverter;
+    private AccountsDao accountsDao;
+    private RecordingsDao recordingsDao;
 
     private boolean normalizePhoneNumbers;
 
@@ -111,6 +118,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        accountsDao = daos.getAccountsDao();
+        recordingsDao = daos.getRecordingsDao();
         super.init(configuration);
         CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
         listConverter = new CallDetailRecordListConverter(configuration);
@@ -122,6 +131,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
+        xstream.registerConverter(new RecordingListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
 
@@ -201,7 +211,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         try {
             filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
                     parentCallSid, limit, offset);
-        } catch ( ParseException e) {
+        } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
 
@@ -349,7 +359,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                         }
                     }
                 } else {
-                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " +managerResponse.error()).build();
+                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " + managerResponse.error()).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();
@@ -361,7 +371,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
     @SuppressWarnings("unchecked")
     protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+                                  final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Modify:Calls");
@@ -438,8 +448,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                 if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(answer.getClass())) {
                     //This means that the call is not associated with a outbound call. Probably because its already joined to a conference room
                     outboundCall = null;
-                } else if (answer instanceof  ActorRef){
-                    outboundCall = (ActorRef)answer;
+                } else if (answer instanceof ActorRef) {
+                    outboundCall = (ActorRef) answer;
                 }
 
                 final String version = getApiVersion(data);
@@ -484,4 +494,24 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             throw new NullPointerException("Url can not be null.");
         }
     }
+
+    protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+
+        final List<Recording> recordings = recordingsDao.getRecordingsByCall(new Sid(callSid));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(recordings), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+
+    }
+
 }
