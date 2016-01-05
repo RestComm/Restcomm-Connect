@@ -61,6 +61,15 @@ public class RestcommCallsTool {
         return accountsUrl;
     }
 
+    private String getCallRecordingsUrl(String deploymentUrl, String username, String callSid, Boolean json) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+
+        String url = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls/" + callSid + "/Recordings" + ((json) ? ".json" : "");
+        return url;
+    }
+
     public JsonArray getRecordings(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -226,4 +235,18 @@ public class RestcommCallsTool {
         return jsonObject;
     }
 
+    public JsonArray getCallRecordings(String deploymentUrl, String username, String authToken, String callWithRecordingsSid) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+
+        String url = getCallRecordingsUrl(deploymentUrl, username, callWithRecordingsSid, true);
+
+        WebResource webResource = jerseyClient.resource(url);
+
+        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        JsonParser parser = new JsonParser();
+        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+
+        return jsonArray;
+    }
 }

@@ -17,6 +17,10 @@
     SELECT * FROM "restcomm_recordings" WHERE "call_sid"=#{call_sid};
   </select>
   
+  <select id="getRecordingsByCall" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_recordings" WHERE "call_sid"=#{call_sid};
+  </select>  
+  
   <select id="getRecordings" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_recordings" WHERE "account_sid"=#{account_sid};
   </select>
