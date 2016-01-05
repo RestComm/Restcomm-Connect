@@ -100,26 +100,30 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
             data.putSingle("Subject", subject.substring(0, 60));
         }
 
-        final String cc = data.getFirst("CC");
-        data.remove("CC");
-        try {
-            data.putSingle("CC", validateEmails(cc));
-        } catch (final InvalidEmailException exception) {
-            throw new IllegalArgumentException(exception);
+        if (data.containsKey("CC")) {
+            final String cc = data.getFirst("CC");
+            data.remove("CC");
+            try {
+                data.putSingle("CC", validateEmails(cc));
+            } catch (final InvalidEmailException exception) {
+                throw new IllegalArgumentException(exception);
+            }
         }
 
-        final String bcc = data.getFirst("CC");
-        data.remove("BCC");
-        try {
-            data.putSingle("BCC", validateEmails(bcc));
-        } catch (final InvalidEmailException exception) {
-            throw new IllegalArgumentException(exception);
+        if (data.containsKey("BCC")) {
+            final String bcc = data.getFirst("CC");
+            data.remove("BCC");
+            try {
+                data.putSingle("BCC", validateEmails(bcc));
+            } catch (final InvalidEmailException exception) {
+                throw new IllegalArgumentException(exception);
+            }
         }
 
     }
 
     @SuppressWarnings("unchecked")
-    protected Response putEmailMessage(final String accountSid, final MultivaluedMap<String, String> data) {
+    protected Response putEmailMessage(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages"); //need to fix for Emails.
             secureLevelControl(accountsDao, accountSid, null);
@@ -136,13 +140,13 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         final String recipient = data.getFirst("To");
         final String body = data.getFirst("Body");
         final String subject = data.getFirst("Subject");
-        final String cc = data.getFirst("CC");
-        final String bcc = data.getFirst("BCC");
+        final String cc = data.containsKey("CC")?data.getFirst("CC"):" ";
+        final String bcc = data.containsKey("BCC")?data.getFirst("BCC"):" ";
 
         try {
 
             // Send the email.
-            emailMsg = new Mail(sender, recipient, subject, body ,cc,bcc, DateTime.now(),accountSid);
+                 emailMsg = new Mail(sender, recipient, subject, body ,cc,bcc, DateTime.now(),accountSid);
             if (mailerService == null){
                 mailerService = session(confemail);
             }
@@ -203,6 +207,7 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         return emails;
     }
 
+
     private ActorRef session(final Configuration configuration) {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
@@ -254,8 +259,10 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
     }
 
     private static class InvalidEmailException extends Exception {
+        //Parameterless Constructor
         public InvalidEmailException() {}
 
+        //Constructor that accepts a message
         public InvalidEmailException(String message) {
             super(message);
         }
