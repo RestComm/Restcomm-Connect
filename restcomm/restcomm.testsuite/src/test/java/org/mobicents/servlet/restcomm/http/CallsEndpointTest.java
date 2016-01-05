@@ -208,7 +208,7 @@ public class CallsEndpointTest {
         String callWithoutRecordings = "CAfd82074503754b80aa8555199dfcc703";
         callRecordings = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, callWithoutRecordings );
-        assertEquals("Call recordings size() should be 0", 1, callRecordings.size());
+        assertEquals("Call recordings size() should be 0", 0, callRecordings.size());
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
