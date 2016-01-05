@@ -32,6 +32,7 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -82,6 +83,7 @@ import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 /**
  * @author gvagenas@telestax.com
@@ -199,6 +201,11 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
         String uri = runtime.getString("cache-uri");
         if (!uri.endsWith("/")) {
             uri = uri + "/";
+        }
+        try {
+            uri = UriUtils.resolve(new URI(uri)).toString();
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException while trying to resolve Cache URI: "+e);
         }
         uri = uri + accountId.toString();
         this.cache = cache(path, uri);

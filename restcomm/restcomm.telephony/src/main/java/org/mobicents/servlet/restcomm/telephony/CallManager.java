@@ -520,7 +520,11 @@ public final class CallManager extends UntypedActor {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                 }
                 builder.setMethod(number.getVoiceMethod());
-                builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                URI uri = number.getVoiceFallbackUrl();
+                if (uri != null)
+                    builder.setFallbackUrl(UriUtils.resolve(uri));
+                else
+                    builder.setFallbackUrl(null);
                 builder.setFallbackMethod(number.getVoiceFallbackMethod());
                 builder.setStatusCallback(number.getStatusCallback());
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
@@ -581,7 +585,11 @@ public final class CallManager extends UntypedActor {
                 builder.setUrl(url);
             }
             builder.setMethod(client.getVoiceMethod());
-            builder.setFallbackUrl(client.getVoiceFallbackUrl());
+            URI uri = client.getVoiceFallbackUrl();
+            if (uri != null)
+                builder.setFallbackUrl(UriUtils.resolve(uri));
+            else
+                builder.setFallbackUrl(null);
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
@@ -790,7 +798,7 @@ public final class CallManager extends UntypedActor {
 
         // Ask first call leg to execute with the new Interpreter
         final ActorRef interpreter = builder.build();
-        system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), interpreter,
+        system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
                 new StartInterpreter(request.call()), system.dispatcher());
         // interpreter.tell(new StartInterpreter(request.call()), self);
         logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
@@ -801,7 +809,7 @@ public final class CallManager extends UntypedActor {
                 final ActorRef relatedInterpreter = builder.build();
                 logger.info("About to redirect related Call :" + relatedCall.path()
                         + " with 200ms delay to related interpreter: " + relatedInterpreter.path());
-                system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), relatedInterpreter,
+                system.scheduler().scheduleOnce(Duration.create(1000, TimeUnit.MILLISECONDS), relatedInterpreter,
                         new StartInterpreter(relatedCall), system.dispatcher());
                 logger.info("New Intepreter for Second call leg: " + relatedInterpreter.path() + " started");
             } else {

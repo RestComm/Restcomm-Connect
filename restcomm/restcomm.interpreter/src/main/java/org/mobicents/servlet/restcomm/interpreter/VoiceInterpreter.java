@@ -119,6 +119,7 @@ import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartBridge;
 import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
+import org.mobicents.servlet.restcomm.telephony.CallFail;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
@@ -243,6 +244,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(downloadingFallbackRcml, ready));
         transitions.add(new Transition(downloadingFallbackRcml, hangingUp));
         transitions.add(new Transition(downloadingFallbackRcml, finished));
+        transitions.add(new Transition(downloadingFallbackRcml, notFound));
         transitions.add(new Transition(ready, initializingCall));
         transitions.add(new Transition(ready, faxing));
         transitions.add(new Transition(ready, sendingEmail));
@@ -648,19 +650,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
                 fsm.transition(message, ready);
+            } else if(downloadingRcml.equals(state) && fallbackUrl != null ) {
+                    fsm.transition(message, downloadingFallbackRcml);
             } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
                 fsm.transition(message, notFound);
             } else {
-                if (downloadingRcml.equals(state)) {
-                    if (fallbackUrl != null) {
-                        fsm.transition(message, downloadingFallbackRcml);
-                    } else {
-                        fsm.transition(message, finished);
-                    }
-                } else {
+                    call.tell(new CallFail(response.error()), self);
                     fsm.transition(message, finished);
                 }
-            }
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
@@ -2250,7 +2247,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         private ActorRef buildSubVoiceInterpreter(Tag child) throws MalformedURLException, URISyntaxException {
-            URI url = new URL(child.attribute("url").value()).toURI();
+//            URI url = new URL(child.attribute("url").value()).toURI();
+            URI url = null;
+            if (request != null) {
+                final URI base = request.getUri();
+                url = UriUtils.resolve(base, new URI(child.attribute("url").value()));
+            } else {
+                url = UriUtils.resolve(new URI(child.attribute("url").value()));
+            }
             String method;
             if (child.hasAttribute("method")) {
                 method = child.attribute("method").value().toUpperCase();
@@ -2282,7 +2286,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
                 Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
+                Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
 
                 if (!End.class.equals(object.getClass())) {
                     fsm.transition(message, hangingUp);
