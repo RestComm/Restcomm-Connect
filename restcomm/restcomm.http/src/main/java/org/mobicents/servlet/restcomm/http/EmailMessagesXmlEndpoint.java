@@ -39,6 +39,6 @@ public final class EmailMessagesXmlEndpoint extends EmailMessagesEndpoint {
 
     @POST
     public Response putEmailMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putEmailMessage(accountSid, data);
+        return putEmailMessage(accountSid, data, APPLICATION_XML_TYPE);
     }
 }
