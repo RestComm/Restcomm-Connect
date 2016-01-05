@@ -7,6 +7,8 @@ import java.io.File;
 /**
  * A class to encapsulate all startup tasks for workspace initialization for example create the @users directory
  * if it does not exist.
+ *
+ * @author Orestis Tsakiridis
  */
 public class WorkspaceBootstrapper {
 
