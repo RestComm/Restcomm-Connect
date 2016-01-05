@@ -384,7 +384,7 @@ public class Jsr309ConferenceController extends MediaServerController {
                 mixerParams.put(MediaMixer.MAX_PORTS, 900);
 
                 // Create the conference room also
-                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
                 mediaMixer.addListener(mixerAllocationListener);
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
