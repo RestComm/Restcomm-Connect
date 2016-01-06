@@ -20,10 +20,10 @@
 
 package org.mobicents.servlet.restcomm.rvd.bootstrap;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.Assert;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.TestUtils;
 
 import java.io.File;
 import java.util.Random;
@@ -44,10 +44,8 @@ public class WorkspaceBootstrapperTest {
     @Test
     public void userDirIsCreated() {
         // create workspace dir
-        Random ran = new Random();
-        String workspaceLocation = tempDirLocation + "/workspace" + ran.nextInt(10000);
-        File workspaceDir = new File(workspaceLocation);
-        workspaceDir.mkdir();
+        File workspaceDir = TestUtils.createTempWorkspace();
+        String workspaceLocation = workspaceDir.getPath();
         // assert @users dir is created
         WorkspaceBootstrapper wb = new WorkspaceBootstrapper(workspaceLocation);
         wb.run();
@@ -55,7 +53,7 @@ public class WorkspaceBootstrapperTest {
         File usersDir = new File(userDirLocation);
         Assert.assertTrue("Users directory '" + userDirLocation + "' was not created on workspace bootstrapping.", usersDir.exists() );
 
-        FileUtils.deleteQuietly(workspaceDir);
+        TestUtils.removeTempWorkspace(workspaceLocation);
     }
 
 }
