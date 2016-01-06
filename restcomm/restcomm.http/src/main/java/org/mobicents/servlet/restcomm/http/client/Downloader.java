@@ -115,7 +115,7 @@ public final class Downloader extends UntypedActor {
     private HttpResponseDescriptor validateXML (final HttpResponseDescriptor descriptor) throws XMLStreamException {
         try {
             // parse an XML document into a DOM tree
-            String xml =  descriptor.getContentAsString();
+            String xml =  descriptor.getContentAsString().trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1");
             DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             parser.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
             return descriptor;
