@@ -947,6 +947,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
         parameters.add(new BasicNameValuePair("CallSid", callSid));
+        if (outboundCallInfo != null) {
+            final String outboundCallSid = outboundCallInfo.sid().toString();
+            parameters.add(new BasicNameValuePair("OutboundCallSid", outboundCallSid));
+        }
         final String accountSid = accountId.toString();
         parameters.add(new BasicNameValuePair("AccountSid", accountSid));
         final String from = e164(callInfo.from());
