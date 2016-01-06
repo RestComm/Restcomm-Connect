@@ -178,8 +178,8 @@ public class CallLifecycleTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
+        Thread.sleep(2000);
         wireMockRule.resetRequests();
-
         Thread.sleep(2000);
     }
 
@@ -608,7 +608,7 @@ public class CallLifecycleTest {
         JsonObject jsonObj = cdr.getAsJsonObject();
         String status = jsonObj.get("status").getAsString();
         logger.info("Status: "+status);
-        assertTrue(status.equalsIgnoreCase("canceled"));
+        assertTrue(status.equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
@@ -807,6 +807,9 @@ public class CallLifecycleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
@@ -826,16 +829,7 @@ public class CallLifecycleTest {
         assertNotNull(cancelTransaction);
         bobCall.waitForCancelResponse(cancelTransaction,5000);
 
-//        if (response == Response.TRYING) {
-//            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-//            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-//        }
-//
-//        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-//        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-//        assertTrue(bobCall.sendInviteOkAck());
-
-        Thread.sleep(2000);
+        Thread.sleep(10000);
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         logger.info("LiveCalls: "+liveCalls);

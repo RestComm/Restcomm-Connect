@@ -573,7 +573,7 @@ public class DialTest {
             exception.printStackTrace();
         }
 
-        Thread.sleep(3000);
+        Thread.sleep(6000);
 
         //Check CDR
         cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
