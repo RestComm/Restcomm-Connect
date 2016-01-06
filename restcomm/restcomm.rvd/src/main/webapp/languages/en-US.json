@@ -311,6 +311,8 @@
 	"gatherStepFinishPlaceholder": "#*123...",
 	"gatherStepNumberDigitsLabel": "Number of digits",
 	"gatherStepNumberDigitsPlaceholder": "123",
+	"gatherStepNumberOfDigitsConflictWarning": "value may conflict with <strong>Number of digits</strong>",
+	"gatherStepValidationConflictWarning": "value may conflict with <strong>Validation pattern</strong>",
 
 	"homeStartLabel": "Start a new project",
 	"homeVoiceLabel": "Voice",
