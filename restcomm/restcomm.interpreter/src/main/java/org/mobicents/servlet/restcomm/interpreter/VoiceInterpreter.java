@@ -1866,9 +1866,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         outboundCall.tell(new Hangup(), source);
                     } else {
                         logger.info("FinishDialing, State: " + state);
-                        logger.info("State is not FORKING and not Bridged");
-                        logger.info("Sender is initial call: " + sender.equals(call));
-                        logger.info("Sender in the dialBranches: " + dialBranches.contains(sender));
                     }
                 }
             }
