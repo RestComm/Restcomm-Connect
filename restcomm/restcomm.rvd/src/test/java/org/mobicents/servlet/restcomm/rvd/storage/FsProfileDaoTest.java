@@ -20,8 +20,69 @@
 
 package org.mobicents.servlet.restcomm.rvd.storage;
 
+import com.google.gson.Gson;
+import org.codehaus.plexus.util.FileUtils;
+import org.junit.Test;
+import org.junit.Assert;
+import org.mobicents.servlet.restcomm.rvd.TestUtils;
+import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
+
+import java.io.File;
+import java.io.IOException;
+
 /**
  * @author Orestis Tsakiridis
  */
 public class FsProfileDaoTest {
+
+    @Test
+    public void userProfileFileIsSavedAndValid() throws IOException {
+        File workspaceDir = TestUtils.createTempWorkspace();
+        try {
+            ModelMarshaler marshaler = new ModelMarshaler();
+            WorkspaceStorage storage = new WorkspaceStorage(workspaceDir.getPath(), marshaler);
+
+            ProfileDao profileDao = new FsProfileDao(storage);
+
+            UserProfile profile = new UserProfile();
+            profile.setUsername("orestis.tsakiridis@telestax.com");
+            profile.setToken("a very secret token");
+
+            profileDao.saveUserProfile("orestis.tsakiridis@telestax.com", profile);
+            File profileFile = new File(workspaceDir.getPath() + "/@users/orestis.tsakiridis@telestax.com");
+            Assert.assertTrue("User profile file was not created", profileFile.exists());
+
+            String data = FileUtils.fileRead(profileFile, "UTF-8");
+            Gson gson = new Gson();
+            UserProfile profile2 = gson.fromJson(data, UserProfile.class);
+            Assert.assertEquals("Username was not stored properly in the profile", "orestis.tsakiridis@telestax.com", profile2.getUsername());
+            Assert.assertEquals("Password/token was not stored properly in the profile", "a very secret token", profile2.getToken());
+        } finally {
+            TestUtils.removeTempWorkspace(workspaceDir.getPath());
+        }
+    }
+
+    @Test
+    public void userProfileIsLoadedCorrectly() throws IOException {
+        File workspaceDir = TestUtils.createTempWorkspace();
+        File usersDir = TestUtils.createUsersDirectory(workspaceDir.getPath());
+        try {
+            ModelMarshaler marshaler = new ModelMarshaler();
+            WorkspaceStorage storage = new WorkspaceStorage(workspaceDir.getPath(), marshaler);
+
+            File profileFile = new File(workspaceDir.getPath() + "/@users/orestis.tsakiridis@telestax.com");
+            profileFile.createNewFile();
+            String userProfileData = "{\"username\":\"orestis.tsakiridis@telestax.com\",\"token\":\"a very secret token\"}";
+            FileUtils.fileWrite(profileFile, "UTF-8", userProfileData);
+
+            ProfileDao profileDao = new FsProfileDao(storage);
+            UserProfile profile = profileDao.loadUserProfile("orestis.tsakiridis@telestax.com");
+
+            Assert.assertEquals("Username was not proper loaded from user profile", "orestis.tsakiridis@telestax.com", profile.getUsername() );
+            Assert.assertEquals("Token/password wnas not properly loaded from user profile", "a very secret token", profile.getToken() );
+        } finally {
+            TestUtils.removeTempWorkspace(workspaceDir.getPath());
+        }
+    }
 }

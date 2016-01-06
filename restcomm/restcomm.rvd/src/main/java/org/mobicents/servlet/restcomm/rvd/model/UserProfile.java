@@ -31,10 +31,6 @@ public class UserProfile {
     private String username;
     private String token; // This is the password. It may be changed into an oauth token in the future
 
-    public UserProfile(String username) {
-        this.username = username;
-    }
-
     public UserProfile() {
     }
 
