@@ -98,7 +98,7 @@ public class IdentityTestTool {
         String token = getToken();
 
         Client jerseyClient = Client.create();
-        WebResource webResource = jerseyClient.resource(authServerBaseUrl + "/auth/admin/realms/restcomm-test");
+        WebResource webResource = jerseyClient.resource(authServerBaseUrl + "/auth/admin/realms/restcomm");
         webResource.header("Authorization", "Bearer " + token).delete();
     }
 
