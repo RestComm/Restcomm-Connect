@@ -83,7 +83,7 @@ public final class SmsSession extends UntypedActor {
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
 
-
+    private final String getExternalIP = SmsInitConfigurationDetails.getConfiguration().subset("runtime-settings").getString("external-ip");
     private final Configuration config = SmsInitConfigurationDetails.getConfiguration().subset("smpp");
     private final String smppActivated = config.getString("[@activateSmppConnection]");
     private final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
@@ -251,7 +251,8 @@ public final class SmsSession extends UntypedActor {
 
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
-        buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
+        //buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
+        buffer.append("sip:").append(from).append("@").append(getExternalIP + ":" + transport.getPort());
         final String sender = buffer.toString();
         buffer = new StringBuilder();
         if (toClient != null && toClientRegistration != null) {
