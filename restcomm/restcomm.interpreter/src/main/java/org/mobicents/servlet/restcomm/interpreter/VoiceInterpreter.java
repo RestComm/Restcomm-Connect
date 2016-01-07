@@ -79,6 +79,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -188,6 +189,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ActorRef sender;
     private boolean liveCallModification = false;
     private boolean recordingCall = true;
+    protected boolean isParserFailed = false;
 
     // Call bridging
     private final ActorRef bridgeManager;
@@ -642,7 +644,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         fsm.transition(message, finished);
                     } else {
                         //Do nothing, this is a Cancel from a dial branch previously canceled
-                        //TODO: Remove the call actor from DialBranches here.
                         return;
                     }
                 }
@@ -731,6 +732,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, hangingUp);
                 }
             }
+        } else if (ParserFailed.class.equals(klass)) {
+          logger.info("ParserFailed received. Will stop the call");
+            isParserFailed = true;
+            fsm.transition(message, hangingUp);
         } else if (Tag.class.equals(klass)) {
             // final Tag verb = (Tag) message;
             verb = (Tag) message;
@@ -774,7 +779,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (callState.equals(CallStateChanged.State.COMPLETED)) {
                 fsm.transition(message, finished);
             } else {
-                fsm.transition(message, hangingUp);
+                if (!isParserFailed) {
+                    logger.info("End tag received will move to hangup the call");
+                    fsm.transition(message, hangingUp);
+                } else {
+                    logger.info("End tag received but parser failed earlier so hangup would have been already sent to the call");
+                }
+
             }
         } else if (StartGathering.class.equals(klass)) {
             fsm.transition(message, gathering);
@@ -1174,7 +1185,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
+        public void execute(final Object message) throws IOException {
             final UntypedActorContext context = getContext();
             final State state = fsm.state();
             if (initializingCall.equals(state)) {
@@ -1206,16 +1217,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 final String type = response.getContentType();
                 if (type != null) {
-                    if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
-                        parser = parser(response.getContentAsString());
-                        logger.info("Parser created for response: " + response.getContentAsString());
-                    } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
-                        parser = parser("<Play>" + request.getUri() + "</Play>");
-                        logger.info("Parser created for response: " + response.getContentAsString());
-                    } else if (type.contains("text/plain")) {
-                        parser = parser("<Say>" + response.getContentAsString() + "</Say>");
-                        logger.info("Parser created for response: " + response.getContentAsString());
-                    }
+                        if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
+                            parser = parser(response.getContentAsString());
+                        } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
+                            parser = parser("<Play>" + request.getUri() + "</Play>");
+                        } else if (type.contains("text/plain")) {
+                            parser = parser("<Say>" + response.getContentAsString() + "</Say>");
+                        }
                 } else {
                     if (call != null) {
                         call.tell(new Hangup(), null);
@@ -1230,7 +1238,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             if (parser != null) {
-                logger.info("Parser is not null, response: " + response.getContentAsString());
                 parser.tell(next, source);
             } else {
                 logger.info("Parser is null");
@@ -1635,7 +1642,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
-        if (!dialActionExecuted) {
+        if (!dialActionExecuted && verb != null) {
             logger.info("Proceeding to execute Dial Action attribute");
             this.dialActionExecuted = true;
             final List<NameValuePair> parameters = parameters();
@@ -1788,6 +1795,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     return;
                 }
             }
+        } else if (verb == null) {
+            logger.info("Dial action didn't executed because verb is null");
         }
     }
 
