@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Say step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["say"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"phrase": {"type": "string", "minLength":1},
+		"voice": {"type": "string"},
+		"language": {"type": "string"},
+		"loop": {"type": "integer"}
+	},
+	"required": ["name","kind","label","title","phrase"]
+}
+
