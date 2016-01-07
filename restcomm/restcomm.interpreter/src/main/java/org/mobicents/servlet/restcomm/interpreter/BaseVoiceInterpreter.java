@@ -590,13 +590,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                Parser parser = null;
-                try {
-                    parser = new Parser(xml);
-                } catch (IOException e) {
-                    logger.error("There was a problem during creation of parser for xml: \n"+xml+"\n"+"Exception is: "+e);
-                }
-                return parser;
+                return new Parser(xml);
             }
         }));
     }

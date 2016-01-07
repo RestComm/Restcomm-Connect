@@ -16,8 +16,6 @@ public class ClientNounConverter implements Converter {
     @Override
     public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
         RcmlClientNoun step = (RcmlClientNoun) value;
-        if (step.getUrl() != null)
-            writer.addAttribute("url", step.getUrl());
         writer.setValue(step.getDestination());
     }
 

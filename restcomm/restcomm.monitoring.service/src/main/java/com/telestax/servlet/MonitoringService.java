@@ -144,7 +144,7 @@ public class MonitoringService extends UntypedActor{
     }
 
     /**
-     * @param userRegistration
+     * @param message
      * @param self
      * @param sender
      */

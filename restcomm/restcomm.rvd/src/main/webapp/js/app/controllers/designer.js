@@ -589,7 +589,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			lnk.label(0, {
 				position: 0.5,
 				attrs: {
-					rect: { fill: '#FFF' },
+					rect: { fill: '#EEE' },
 					text: { fill: '#333', text: linkLabel, 'font-size': 10, 'font-family': 'Monaco', 'font-weight': 'bold' }
 				}
 			});
@@ -600,7 +600,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			// from the module name retrieve all the module (node) details
 			var node = nodeRegistry.getNode(name);
 			var label = node.label;
-
+			
 			var maxLineLength = _.max(label.split('\n'), function(l) { return l.length; }).length;
 
 			// Compute width/height of the rectangle based on the number

@@ -168,8 +168,7 @@ public final class DiskCache extends UntypedActor {
                         }
                     }
                 }
-                URI result = URI.create(this.uri+ hash + "." + extension);
-                return result;
+                return URI.create(this.uri + hash + "." + extension);
             }
         } else {
             // This is a check cache request

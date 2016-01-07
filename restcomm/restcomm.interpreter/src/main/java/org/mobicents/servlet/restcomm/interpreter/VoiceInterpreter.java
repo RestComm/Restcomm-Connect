@@ -2250,14 +2250,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         private ActorRef buildSubVoiceInterpreter(Tag child) throws MalformedURLException, URISyntaxException {
-//            URI url = new URL(child.attribute("url").value()).toURI();
-            URI url = null;
-            if (request != null) {
-                final URI base = request.getUri();
-                url = UriUtils.resolve(base, new URI(child.attribute("url").value()));
-            } else {
-                url = UriUtils.resolve(new URI(child.attribute("url").value()));
-            }
+            URI url = new URL(child.attribute("url").value()).toURI();
             String method;
             if (child.hasAttribute("method")) {
                 method = child.attribute("method").value().toUpperCase();
@@ -2289,7 +2282,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
                 Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
+                Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
 
                 if (!End.class.equals(object.getClass())) {
                     fsm.transition(message, hangingUp);
