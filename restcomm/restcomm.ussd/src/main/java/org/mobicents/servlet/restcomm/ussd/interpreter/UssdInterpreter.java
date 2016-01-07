@@ -71,6 +71,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.telephony.Answer;
@@ -320,7 +321,7 @@ public class UssdInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(xml);
+                return new Parser(xml, self());
             }
         }));
     }
@@ -519,6 +520,9 @@ public class UssdInterpreter extends UntypedActor {
                     fsm.transition(message, finished);
                 }
             }
+        } else if (ParserFailed.class.equals(klass)) {
+            logger.info("ParserFailed received. Will stop the call");
+            fsm.transition(message, cancelling);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
             if (ussdLanguage.equals(verb.name())) {
