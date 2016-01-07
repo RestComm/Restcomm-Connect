@@ -769,10 +769,12 @@ public class CallLifecycleTest {
         }
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.SERVICE_UNAVAILABLE, bobCall.getLastReceivedResponse().getStatusCode());
+        assertEquals(Response.SERVER_INTERNAL_ERROR, bobCall.getLastReceivedResponse().getStatusCode());
+        String reason = bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString();
+        assertTrue(bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString().contains("Problem_to_parse_downloaded_RCML"));
 
 
-        Thread.sleep(2000);
+        Thread.sleep(5000);
 
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
@@ -793,12 +795,12 @@ public class CallLifecycleTest {
         }
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
-        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("failed"));
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    @Test
+    @Test //TODO Fails when the whole test class runs but Passes when run individually
     public void testDialCancelBeforeDialingClientAlice() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
