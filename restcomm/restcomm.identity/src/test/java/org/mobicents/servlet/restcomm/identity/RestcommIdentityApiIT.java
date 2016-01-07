@@ -23,27 +23,18 @@ public class RestcommIdentityApiIT {
     static RestcommIdentityApi api;
     static String instanceId;
 
-    private IdentityTestTool tool;
+    private static IdentityTestTool tool;
 
-    public RestcommIdentityApiIT() {
-        tool = new IdentityTestTool();
-    }
+    public RestcommIdentityApiIT() {}
 
-    @Test
-    public void fooTest() throws IOException {
-        //InputStream inputStream = getClass().getResourceAsStream("default-realm.json");
-        //String data = IOUtils.toString(inputStream,"UTF-8");
-        //System.out.println("data: " + data);
-        tool.importRealm("default-realm.json");
-        tool.dropRealm("restcomm-test");
-    }
-
-    /*
     @BeforeClass
-    public static void createInstance() throws RestcommIdentityApiException {
+    public static void createInstance() throws RestcommIdentityApiException, IOException {
+        tool = new IdentityTestTool();
+        tool.importRealm("simple-identity-instance-realm.json");
         api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm, null);
-        instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
-        api.bindInstance(instanceId);
+        //api = new RestcommIdentityApi("http://192.168.1.40:8080/auth", "administrator@company.com", "RestComm", realm, null);
+       instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
+       api.bindInstance(instanceId);
     }
 
     @Test
@@ -56,12 +47,12 @@ public class RestcommIdentityApiIT {
 
     @AfterClass
     public static void removeInstance() throws RestcommIdentityApiException {
-        if (instanceId != null) {
+        tool.dropRealm(realm);
+        /*if (instanceId != null) {
             Outcome outcome = api.dropInstance(instanceId);
             assertEquals("Error removing instance", Outcome.OK, outcome);
-        }
+        }*/
     }
-    */
 
 
 }

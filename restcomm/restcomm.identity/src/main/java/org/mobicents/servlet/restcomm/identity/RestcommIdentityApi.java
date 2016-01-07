@@ -249,7 +249,7 @@ public class RestcommIdentityApi {
                 return createdInstance;
             } else {
                 //logger.error("Error creating instance for user '" + username + "'");
-                throw new RestcommIdentityApiException("Error creating instance. Identity proxy responsed with: " + status, Outcome.fromHttpStatus(status));
+                throw new RestcommIdentityApiException("Error creating instance. Identity proxy responded with: " + status, Outcome.fromHttpStatus(status));
             }
         } catch ( IOException e) {
             throw new RestcommIdentityApiException(Outcome.INTERNAL_ERROR);
