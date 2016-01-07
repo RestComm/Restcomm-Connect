@@ -113,15 +113,18 @@ public final class Downloader extends UntypedActor {
     }
 
     private HttpResponseDescriptor validateXML (final HttpResponseDescriptor descriptor) throws XMLStreamException {
-        try {
-            // parse an XML document into a DOM tree
-            String xml =  descriptor.getContentAsString().trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1");
-            DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            parser.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
-            return descriptor;
-        } catch (final Exception e) {
-            throw new XMLStreamException("Error parsing the RCML:" + e);
+        if (descriptor.getContentLength() > 0) {
+            try {
+                // parse an XML document into a DOM tree
+                String xml = descriptor.getContentAsString().trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1");
+                DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                parser.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
+                return descriptor;
+            } catch (final Exception e) {
+                throw new XMLStreamException("Error parsing the RCML:" + e);
+            }
         }
+        return descriptor;
     }
 
     @Override
