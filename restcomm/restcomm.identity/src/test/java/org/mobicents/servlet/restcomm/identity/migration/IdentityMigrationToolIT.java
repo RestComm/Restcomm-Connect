@@ -13,7 +13,7 @@ import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 
 import static org.junit.Assert.*;
 
-public class IdentityMigrationToolTest {
+public class IdentityMigrationToolIT {
 
     private static String authServerBaseUrl = "http://192.168.1.40:8080";
     private static String username = "administrator@company.com";
@@ -23,7 +23,7 @@ public class IdentityMigrationToolTest {
     static RestcommIdentityApi api;
     static String mainInstanceId;
 
-    public IdentityMigrationToolTest() {
+    public IdentityMigrationToolIT() {
         // TODO Auto-generated constructor stub
     }
 
@@ -40,13 +40,16 @@ public class IdentityMigrationToolTest {
     public void migrateSingleAccount() {
         // test exception if the email is missing
         MockAccountsDao dao = new MockAccountsDao();
-        Account account = dao.buildTestAccount(null,  "account1@company.com", "account1", "auth_token1", null);
+        Account account = dao.buildTestAccount(null,  "account2@company.com", "account2", "auth_token2", null);
         IdentityMigrationTool migrationTool = new IdentityMigrationTool(dao, api, false);
 
-        assertTrue(migrationTool.migrateAccount(account));
-        assertNotNull( api.retrieveTokenString("account1@company.com", "auth_token1") );
+        //System.out.println("migrationTool:"  + migrationTool);
+        boolean result = migrationTool.migrateAccount(account);
+        //System.out.println("migrateAccount(): " + result);
+        assertTrue(result);
+        assertNotNull( api.retrieveTokenString("account2@company.com", "auth_token2") );
 
-        api.dropUser("account1@company.com");
+        api.dropUser("account2@company.com");
     }
 
     @Test
@@ -98,7 +101,7 @@ public class IdentityMigrationToolTest {
         MockAccountsDao dao = new MockAccountsDao();
         Sid sid = Sid.generate(Sid.Type.ACCOUNT);
         // create an admin account with no email to test linking
-        dao.addAccount(dao.buildTestAccount(sid, null, "account1", "auth_token1", null));
+        dao.addAccount(dao.buildTestAccount(sid, null, "account4", "auth_token4", null));
         IdentityMigrationTool migrationTool = new IdentityMigrationTool(dao, api, false, "missing-SID", null, null );
 
         assertFalse("Admin account linking should have failed since the account does not exist.", migrationTool.linkAdministratorAccount());
@@ -107,11 +110,11 @@ public class IdentityMigrationToolTest {
 
     }
 
-    @Test
-    public void testMigrate() {
+    //@Test
+    /*public void testMigrate() {
         MockAccountsDao dao = new MockAccountsDao();
         Sid sid = Sid.generate(Sid.Type.ACCOUNT);
-        dao.addAccount(dao.buildTestAccount(sid, null, "account1", "auth_token1", null));
+        dao.addAccount(dao.buildTestAccount(sid, null, "account3", "auth_token3", null));
         MutableIdentityConfigurationSet mutableIdentityConfig = new MockMutableIdentityConfigurationSet("init", null, null, true);
         IdentityMigrationTool migrationTool = new IdentityMigrationTool(dao, api, false, sid.toString(), mutableIdentityConfig, new String [] {"http://localhost:8080"} );
         migrationTool.migrate();
@@ -122,7 +125,7 @@ public class IdentityMigrationToolTest {
                 api.dropUser(account.getEmailAddress());
             }
         }
-    }
+    }*/
 
     @AfterClass
     public static void shutdown() {

@@ -209,6 +209,7 @@ public class IdentityMigrationTool {
     }
 
     private void report(String message) {
+        //System.out.println( message );
         logger.info(message);
     }
 

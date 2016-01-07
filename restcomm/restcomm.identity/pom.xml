@@ -1,3 +1,4 @@
+<!--suppress MavenModelInspection -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -84,17 +85,32 @@
 		</dependency>		
 		
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>skip-keycloak-launch</id>
+			<activation>
+				<property>
+					<name>skipTests</name>
+				</property>
+			</activation>
+			<properties>
+				<skip-keycloak-launch>true</skip-keycloak-launch>
+			</properties>
+		</profile>
+	</profiles>
 	<build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.6</version>
+				<version>1.7</version>
 				<executions>
 					<execution>
-						<id>start-third-parties</id>
+						<id>start-keycloak</id>
 						<phase>pre-integration-test</phase>
 						<configuration>
+							<!--<skip>${skip-keycloak-launch}</skip>-->
 							<target>
+								<!--<echo message="STARTING KEYCLOAK ${basedir}/../../release/keycloak/bin/"/>-->
 								<exec executable="./standalone.sh"
 									  dir="${basedir}/../../release/keycloak/bin/"
 									  spawn="true">
@@ -106,6 +122,7 @@
 									<arg value="-Djboss.management.https.port=9983"/>
 									<arg value="-Djboss.ajp.port=8010"/>
 								</exec>
+
 							</target>
 						</configuration>
 						<goals>
@@ -119,6 +136,7 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
+							<!--<skip>${skip-keycloak-launch}</skip>-->
 							<target>
 								<echo message="WAITING FOR KEYCLOAK TO START" />
 								<!--<sleep seconds="60"/> -->
@@ -130,17 +148,18 @@
 					</execution>
 
 					<execution>
-						<id>stop-third-parties</id>
+						<id>stop-keycloak</id>
 						<phase>post-integration-test</phase>
 						<configuration>
-							<tasks>
-								<echo message="STOPPING KEYCLOAK" />
+							<!--<skip>${skip-keycloak-launch}</skip>-->
+							<target>
+								<!--<echo message="STOPPING KEYCLOAK" />-->
 								<exec executable="./jboss-cli.sh"
 									  dir="${basedir}/../../release/keycloak/bin/"
 									  spawn="false">
 									<arg value='--commands=connect localhost:9980,shutdown'/>
 								</exec>
-							</tasks>
+							</target>
 						</configuration>
 						<goals>
 							<goal>run</goal>
@@ -161,6 +180,17 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.17</version>
+				<configuration>
+					<excludes>
+						<exclude>**/*IT.java</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 
 		</plugins>

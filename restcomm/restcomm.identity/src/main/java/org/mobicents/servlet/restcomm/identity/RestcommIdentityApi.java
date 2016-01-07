@@ -282,6 +282,11 @@ public class RestcommIdentityApi {
         }
     }
 
+
+
+
+
+
     private CloseableHttpClient buildHttpClient() {
         // TODO - use a proper certificate on identity.restcomm.com instead of a self-signed one
         SSLContextBuilder builder = new SSLContextBuilder();
