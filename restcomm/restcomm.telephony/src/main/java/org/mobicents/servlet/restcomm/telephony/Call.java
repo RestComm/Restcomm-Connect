@@ -1568,6 +1568,13 @@ public final class Call extends UntypedActor {
 
     private void onLeft(Left message, ActorRef self, ActorRef sender) throws Exception {
         if (is(leaving)) {
+            if (conferencing) {
+                // Let conference know the call exited the room
+                this.conferencing = false;
+                this.conference.tell(new Left(), self);
+                this.conference = null;
+            }
+
             // After leaving let the Interpreter know the Call is ready.
             fsm.transition(message, inProgress);
         }
