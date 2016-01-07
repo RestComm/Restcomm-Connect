@@ -110,18 +110,22 @@ public final class Parser extends UntypedActor {
     }
 
     private Tag next() {
-        while (iterator.hasNext()) {
-            final Tag tag = iterator.next();
-            if (isVerb(tag)) {
-                if (current != null && current.hasChildren()) {
-                    final List<Tag> children = current.children();
-                    if (children.contains(tag)) {
-                        continue;
+        if (iterator != null) {
+            while (iterator.hasNext()) {
+                final Tag tag = iterator.next();
+                if (isVerb(tag)) {
+                    if (current != null && current.hasChildren()) {
+                        final List<Tag> children = current.children();
+                        if (children.contains(tag)) {
+                            continue;
+                        }
                     }
+                    current = tag;
+                    return current;
                 }
-                current = tag;
-                return current;
             }
+        } else {
+            logger.info("iterator is null");
         }
         return null;
     }
