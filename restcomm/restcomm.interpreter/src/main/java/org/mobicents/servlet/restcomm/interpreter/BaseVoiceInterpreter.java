@@ -83,6 +83,7 @@ import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
@@ -585,14 +586,14 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef parser(final String xml) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+            return context.actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new Parser(xml);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws IOException {
+                    return new Parser(xml, self());
+                }
+            }));
     }
 
     void postCleanup() {
@@ -1185,7 +1186,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 verb = (Tag) message;
             }
             // Hang up the call.
-            call.tell(new Hangup(), source);
+            if (ParserFailed.class.equals(klass)) {
+                call.tell(new Hangup("Problem_to_parse_downloaded_RCML"), source);
+            } else {
+                call.tell(new Hangup(), source);
+            }
         }
     }
 
