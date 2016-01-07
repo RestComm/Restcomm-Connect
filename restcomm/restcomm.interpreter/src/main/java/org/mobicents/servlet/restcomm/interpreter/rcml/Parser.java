@@ -47,15 +47,19 @@ public final class Parser extends UntypedActor {
     private Tag document;
     private Iterator<Tag> iterator;
     private String xml;
+    private ActorRef sender;
 
     private Tag current;
 
-    public Parser(final InputStream input) throws IOException {
-        this(new InputStreamReader(input));
+    public Parser(final InputStream input, final String xml, final ActorRef sender) throws IOException {
+        this(new InputStreamReader(input), xml, sender);
     }
 
-    public Parser(final Reader reader) throws IOException {
+    public Parser(final Reader reader, final String xml, final ActorRef sender) throws IOException {
         super();
+        logger.debug("About to create new Parser for xml: "+xml);
+        this.xml = xml;
+        this.sender = sender;
         final XMLInputFactory inputs = XMLInputFactory.newInstance();
         inputs.setProperty("javax.xml.stream.isCoalescing", true);
         XMLStreamReader stream = null;
@@ -67,8 +71,8 @@ public final class Parser extends UntypedActor {
             }
             iterator = document.iterator();
         } catch (final XMLStreamException exception) {
-            getContext().sender().tell(new ParserFailed(exception,xml), null);
-//            throw new IOException(exception);
+            logger.info("There was an error parsing the RCML for xml: "+xml+" excpetion: ", exception);
+            sender.tell(new ParserFailed(exception,xml), null);
         } finally {
             if (stream != null) {
                 try {
@@ -80,10 +84,8 @@ public final class Parser extends UntypedActor {
         }
     }
 
-    public Parser(final String xml) throws IOException {
-        this(new StringReader(xml.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")));
-        logger.debug("About to create new Parser for xml: "+xml);
-        this.xml = xml;
+    public Parser(final String xml, final ActorRef sender) throws IOException {
+        this(new StringReader(xml.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")), xml, sender);
     }
 
     private void end(final Stack<Tag.Builder> builders, final XMLStreamReader stream) {
