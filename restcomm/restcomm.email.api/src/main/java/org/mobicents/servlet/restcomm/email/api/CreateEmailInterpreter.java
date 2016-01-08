@@ -28,6 +28,12 @@ import akka.event.LoggingAdapter;
 import org.mobicents.servlet.restcomm.email.EmailRequest;
 import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.patterns.Observing;
+import org.mobicents.servlet.restcomm.patterns.StopObserving;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
@@ -37,10 +43,30 @@ public abstract class CreateEmailInterpreter extends UntypedActor {
     final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Email client session.
     final Session session;
+    private final List<ActorRef> observers;
 
     public CreateEmailInterpreter(final Session session) { //Constructor for Email-service
         super();
         this.session = session;
+        this.observers = new ArrayList<ActorRef>();
+    }
+
+    private void observe(final Object message) {
+        final ActorRef self = self();
+        final Observe request = (Observe) message;
+        final ActorRef observer = request.observer();
+        if (observer != null) {
+            observers.add(observer);
+            observer.tell(new Observing(self), self);
+        }
+    }
+
+    private void stopObserving(final Object message) {
+        final StopObserving request = (StopObserving) message;
+        final ActorRef observer = request.observer();
+        if (observer != null) {
+            observers.remove(observer);
+        }
     }
 
     @Override
@@ -48,8 +74,13 @@ public abstract class CreateEmailInterpreter extends UntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
-        EmailRequest request = (EmailRequest)message;
-        if (EmailRequest.class.equals(klass)) {
+
+        if (Observe.class.equals(klass)) {
+            observe(message);
+        } else if (StopObserving.class.equals(klass)) {
+            stopObserving(message);
+        }else if (EmailRequest.class.equals(klass)) {
+            EmailRequest request = (EmailRequest)message;
             sender.tell(send(request.getObject()), self);
         }
     }
