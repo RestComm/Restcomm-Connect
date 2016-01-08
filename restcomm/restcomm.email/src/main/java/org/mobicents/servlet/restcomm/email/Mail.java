@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.email;
 
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
@@ -32,6 +33,8 @@ public final class Mail {
     private final String bcc;
     private final String subject;
     private final String body;
+    private final DateTime dateSent;
+    private final String accountSid;
 
     public Mail(final String from, final String to, final String subject, final String body) {
         super();
@@ -41,6 +44,8 @@ public final class Mail {
         this.bcc = "";
         this.subject = subject;
         this.body = body;
+        this.dateSent = DateTime.now();
+        this.accountSid = "";
     }
 
     public Mail(final String from, final String to, final String subject, final String body,final String cc,final String bcc) {
@@ -51,6 +56,20 @@ public final class Mail {
         this.bcc = bcc;
         this.subject = subject;
         this.body = body;
+        this.dateSent = DateTime.now();
+        this.accountSid = "";
+    }
+
+    public Mail(final String from, final String to, final String subject, final String body,final String cc,final String bcc, final DateTime dateSent ,final String accountSid) {
+        super();
+        this.from = from;
+        this.to = to;
+        this.cc = cc;
+        this.bcc = bcc;
+        this.subject = subject;
+        this.body = body;
+        this.dateSent = dateSent;
+        this.accountSid = accountSid;
     }
 
     public String from() {
@@ -75,5 +94,13 @@ public final class Mail {
 
     public String body() {
         return body;
+    }
+
+    public String accountSid() {
+        return accountSid;
+    }
+
+    public DateTime dateSent() {
+        return dateSent;
     }
 }
