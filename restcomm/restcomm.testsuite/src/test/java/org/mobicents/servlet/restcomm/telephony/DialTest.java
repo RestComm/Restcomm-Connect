@@ -1258,9 +1258,12 @@ public class DialTest {
 
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        final SipRequest lastRequest = georgeCall.getLastReceivedRequest();
+        String receivedBody = new String(lastRequest.getRawContent());
         assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
                 null, null));
+        // the number dialed uses a callerId of "+13055872294", which is what George should receive
+        assertEquals("Contact: \"+13055872294\" <sip:+13055872294@127.0.0.1:5080>", georgeCall.getLastReceivedRequest().getMessage().getHeader("Contact"));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
