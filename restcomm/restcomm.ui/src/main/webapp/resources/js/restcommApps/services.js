@@ -11,17 +11,61 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	}
 	// fetch apps from remote site
 	function fetchLocalApps(deferred) {
-		//var deferred = $q.defer();
+		var restcommApps;
 		$http({
 			method:"GET",
-			url:"/restcomm-rvd/services/ras/apps"
-		}).success(function (data) {
-			console.log("Received apps from RVD");
-			//localApps = data.payload;
-			deferred.resolve(data.payload);
-		}).error(function () {
-			console.log("Error receiving apps from RVD");
-			deferred.reject("error");
+			url:"/restcomm/2012-04-24/Accounts/"+AuthService.getAccountSid()+"/Applications.json"
+		}).success(function(data){
+			console.log("Received apps from Restcomm");
+			restcommApps = data;
+			var projectSids = [];
+			for (var i in restcommApps) {
+				var currentApp = restcommApps[i];
+				var projectSid = currentApp.project_sid;
+				if(projectSid){
+					projectSids.push(projectSid);
+				}
+			}
+			$http({
+				method:"POST",
+				url:"/restcomm-rvd/services/ras/apps/metadata",
+				data: {
+					type: "string",
+					payload: {
+						projectSids: projectSids
+						}
+					}
+			}).success(function(data){
+				console.log("Received apps from RVD");
+				var rvdProjects = data.payload;
+				var localApps = [];
+				for (var i=0; i<restcommApps.length; i++) {
+					var hasProject = false;
+					for (var j=0; j<rvdProjects.length; j++) {
+						if(restcommApps[i].project_sid == rvdProjects[j].projectName){
+							hasProject = true;						
+							rvdProjects[j].projectName = restcommApps[i].friendly_name;
+							rvdProjects[j].startUrl = restcommApps[i].rcml_url;
+						}
+					}
+					if(!hasProject){
+						var app = {};
+						app.projectName = restcommApps[i].friendly_name;
+						app.wasImported = false;
+						app.hasPackaging = false;
+						app.hasBootstrap = false;
+						app.startUrl = restcommApps[i].rcml_url;
+						rvdProjects.push(app);
+					}
+				}
+				deferred.resolve(rvdProjects);
+			}).error(function(){
+				console.log("Error receiving apps from RVD");
+				deferred.reject("error");
+			})
+		}).error(function(){
+			console.log("Error receiving apps from Restcomm");
+			deffered.reject("error");
 		});
 	}
 	// returns "a promise to return local apps"

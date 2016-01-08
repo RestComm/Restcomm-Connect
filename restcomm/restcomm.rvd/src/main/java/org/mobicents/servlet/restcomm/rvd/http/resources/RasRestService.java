@@ -237,6 +237,36 @@ public class RasRestService extends RestService {
 
     }
 
+    @RvdAuth
+    @POST
+    @Path("apps/metadata")
+    public Response listRappsByProjectSid(@Context HttpServletRequest request) throws RvdException {
+        String projectSids = null;
+        try {
+            projectSids = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            throw new RvdException("Internal error while retrieving project Sids", e);
+        }
+        Principal loggedUser = securityContext.getUserPrincipal();
+        List<ProjectItem> items;
+        List<String> projectNames = new ArrayList<String>();
+        try {
+            items = projectService.getAvailableProjectsByOwner(loggedUser.getName());
+            for (ProjectItem project : items) {
+                if (projectSids.contains(project.getName())) {
+                    projectNames.add(project.getName());
+                }
+            }
+            List<RappItem> rapps = FsProjectStorage.listRapps(projectNames, workspaceStorage, projectService);
+            return buildOkResponse(rapps);
+        } catch (StorageException e) {
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+        } catch (ProjectException e) {
+            return buildErrorResponse(Status.OK, RvdResponse.Status.ERROR, e);
+        }
+
+    }
+
     /**
      * Create a new application by uploading a ras package
      * @param projectNameOverride - NOT IMPLEMENTED - if specified, the project should be named like this. Otherwise a best effort is made so
