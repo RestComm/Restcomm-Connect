@@ -40,12 +40,16 @@ import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceEr
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
+import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
-import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
+import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
+import org.mobicents.servlet.restcomm.rvd.model.client.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
+import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -184,67 +188,64 @@ public class RvdController extends RestService {
         }
     }
 
-    // **********************************
-    // *** Call control functionality ***
-    // **********************************
+    // Web Trigger -----
 
     private RestcommCreateCallResponse executeAction(String projectName, HttpServletRequest request, String toParam,
             String fromParam, String accessToken, UriInfo ui) throws StorageException, CallControlException {
 
-        logger.info( "WebTrigger: Application '" + projectName + "' initiated. URL: " + ui.getRequestUri().toString());
+        logger.info( "WebTrigger: Application '" + projectName + "' initiated. User request URL: " + ui.getRequestUri().toString());
         if (rvdContext.getProjectSettings().getLogging())
             rvdContext.getProjectLogger().log("WebTrigger incoming request: " + ui.getRequestUri().toString(),false).tag("app", projectName).tag("WebTrigger").done();
 
-        // Load CC info from project
+        // load CC/WebTrigger project info
         CallControlInfo info = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
-
         // If an access token is present in the project make sure it matches the one in the url
         if (info.accessToken != null) {
             if (!info.accessToken.equals(accessToken))
                 throw new UnauthorizedCallControlAccess("Web Trigger token authentication failed for '" + projectName + "'")
                         .setRemoteIP(request.getRemoteAddr());
         }
-
-        // Load configuration from Restcomm
+        // find the owner of the project
+        StateHeader projectHeader = FsProjectStorage.loadStateHeader(projectName,workspaceStorage);
+        String owner = projectHeader.getOwner();
+        if (RvdUtils.isEmpty(owner))
+            throw new CallControlException("Project '" + projectName + "' has no owner and can't be started using WebTrigger.");
+        // load user profile
+        ProfileDao profileDao = new FsProfileDao(workspaceStorage);
+        UserProfile profile = profileDao.loadUserProfile(owner);
+        if (profile == null)
+            throw new CallControlException("No user profile found for user '" + owner + "'. Web trigger cannot be used for project belonging to this user.");
+        // load rvd settings from workspace
+        WorkspaceSettings workspaceSettings;
+        try {
+            workspaceSettings = workspaceStorage.loadEntity(".settings", "", WorkspaceSettings.class);
+        } catch (StorageEntityNotFound e) {
+            workspaceSettings = null;
+        }
+        // guess restcomm location
         URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
-        //ApiServerConfig apiServerConfig = getApiServerConfig(servletContext.getRealPath(File.separator));
-        logger.debug("WebTrigger restcomm client: using restcomm at " + restcommBaseUri);
+        // initialize a restcomm client object various information sources
+        RestcommClient restcommClient;
+        try {
+            restcommClient = new RestcommClient(workspaceSettings, profile, restcommBaseUri);
+        } catch (RestcommClient.RestcommClientInitializationException e) {
+            throw new CallControlException("WebTrigger: Cannot initialize client object for contacting restcomm",e);
+        }
 
-        // Load rvd settings
-        SettingsModel settingsModel = SettingsModel.createDefault();
-        if (workspaceStorage.entityExists(".settings", ""))
-            settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
-
-        // Setup required values depending on existing setup
-        String apiHost = settingsModel.getApiServerHost();
-        if (RvdUtils.isEmpty(apiHost))
-            apiHost = restcommBaseUri.getHost();
-
-        Integer apiPort = settingsModel.getApiServerRestPort();
-        if (apiPort == null)
-            apiPort = restcommBaseUri.getPort();
-
-        String apiUsername = settingsModel.getApiServerUsername();
-
-        String apiPassword = settingsModel.getApiServerPass();
+        logger.debug("WebTrigger: reaching restcomm at '" + restcommClient.getProtocol() + "://" +  restcommClient.getHost() + ":" + restcommClient.getPort() + "'");
 
         String rcmlUrl = info.lanes.get(0).startPoint.rcmlUrl;
-        // try to create a valid URI from it if only the application name has been given
-        // ...
         // use the existing application for RCML if none has been given
         if (RvdUtils.isEmpty(rcmlUrl)) {
             URIBuilder uriBuilder = new URIBuilder(restcommBaseUri);
-            //uriBuilder.setHost(request.getLocalAddr());
-            //uriBuilder.setPort(request.getLocalPort());
-            //uriBuilder.setScheme(request.getScheme());
             uriBuilder.setPath("/restcomm-rvd/services/apps/" + projectName + "/controller");
             try {
                 rcmlUrl = uriBuilder.build().toString();
             } catch (URISyntaxException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                throw new CallControlException("URI parsing error while generating the rcml url", e);
             }
         }
+
         // Add user supplied params to rcmlUrl
         try {
             URIBuilder uriBuilder = new URIBuilder(rcmlUrl);
@@ -261,23 +262,22 @@ public class RvdController extends RestService {
             throw new CallControlException("Error copying user supplied parameters to rcml url", e);
         }
 
+        logger.debug("WebTrigger: rcmlUrl: " + rcmlUrl);
+
+        // to
         String to = toParam;
         if (RvdUtils.isEmpty(to))
             to = info.lanes.get(0).startPoint.to;
 
-        // set 'from' using url, web trigger conf or default value.
+        // from - use url, web trigger conf or default value.
         String from = fromParam;
         if (RvdUtils.isEmpty(from))
             from = info.lanes.get(0).startPoint.from;
         if (RvdUtils.isEmpty(from))
             from = projectName;
 
-        if (RvdUtils.isEmpty(apiHost) || apiPort == null)
-            // return Response.status(Status.INTERNAL_SERVER_ERROR).type(selectedMediaType).build();
-            throw new CallControlInvalidConfigurationException("Could not determine restcomm host/port .");
         if (RvdUtils.isEmpty(rcmlUrl))
             throw new CallControlInvalidConfigurationException("Could not determine application RCML url.");
-
         if (RvdUtils.isEmpty(from) || RvdUtils.isEmpty(to))
             throw new CallControlBadRequestException(
                     "Either <i>from</i> or <i>to</i> value is missing. Make sure they are both passed as query parameters or are defined in the Web Trigger configuration.")
@@ -285,13 +285,11 @@ public class RvdController extends RestService {
 
         try {
             // Find the account sid for the apiUsername
-            RestcommClient client = new RestcommClient(restcommBaseUri.getScheme(), apiHost, apiPort, apiUsername, apiPassword);
-            RestcommAccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + apiUsername).done(
+            RestcommAccountInfoResponse accountResponse = restcommClient.get("/restcomm/2012-04-24/Accounts.json/" + restcommClient.getUsername()).done(
                     marshaler.getGson(), RestcommAccountInfoResponse.class);
             String accountSid = accountResponse.getSid();
-
             // Create the call
-            RestcommCreateCallResponse response = client.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
+            RestcommCreateCallResponse response = restcommClient.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
                     .addParam("From", from).addParam("To", to).addParam("Url", rcmlUrl)
                     .done(marshaler.getGson(), RestcommCreateCallResponse.class);
 

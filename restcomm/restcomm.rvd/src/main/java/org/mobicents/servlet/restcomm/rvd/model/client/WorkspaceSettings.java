@@ -21,7 +21,7 @@
 package org.mobicents.servlet.restcomm.rvd.model.client;
 
 /**
- * Created by nando on 1/8/16.
+ * @author Orestis Tsakiridis
  */
 public class WorkspaceSettings {
     private String apiServerHost;
