@@ -19,26 +19,28 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@Path("/Accounts/{accountSid}/Email/Messages")
+@Path("/Accounts/{accountSid}/Email/Messages.json")
 @ThreadSafe
-public final class EmailMessagesXmlEndpoint extends EmailMessagesEndpoint {
-    public EmailMessagesXmlEndpoint() {
+public final class EmailMessagesJsonEndpoint extends EmailMessagesEndpoint {
+    public EmailMessagesJsonEndpoint() {
         super();
     }
 
     @POST
     public Response putEmailMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putEmailMessage(accountSid, data, MediaType.APPLICATION_XML_TYPE);
+        return putEmailMessage(accountSid, data, APPLICATION_JSON_TYPE);
     }
 }
