@@ -120,7 +120,7 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         }
 
         if (data.containsKey("BCC")) {
-            final String bcc = data.getFirst("CC");
+            final String bcc = data.getFirst("BCC");
             data.remove("BCC");
             try {
                 data.putSingle("BCC", validateEmails(bcc));
