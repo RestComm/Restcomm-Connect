@@ -30,6 +30,8 @@ package org.mobicents.servlet.restcomm.rvd.model;
 public class UserProfile {
     private String username;
     private String token; // This is the password. It may be changed into an oauth token in the future
+    private String restcommHost;
+    private Integer restcommPort;
 
     public UserProfile() {
     }
@@ -48,5 +50,21 @@ public class UserProfile {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getRestcommHost() {
+        return restcommHost;
+    }
+
+    public void setRestcommHost(String restcommHost) {
+        this.restcommHost = restcommHost;
+    }
+
+    public Integer getRestcommPort() {
+        return restcommPort;
+    }
+
+    public void setRestcommPort(Integer restcommPort) {
+        this.restcommPort = restcommPort;
     }
 }

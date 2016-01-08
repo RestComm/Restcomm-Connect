@@ -17,6 +17,9 @@ public class SettingsModel {
         return settingsModel;
     }
 
+    public SettingsModel() {
+    }
+
     public SettingsModel(String apiServerHost, Integer apiServerRestPort) {
         super();
         this.apiServerHost = apiServerHost;
