@@ -17,24 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.email;
-
-
-import org.mobicents.servlet.restcomm.patterns.StandardResponse;
+package org.mobicents.servlet.restcomm.api;
 
 /**
  * @author liblefty@gmail.com (Lefteris Banos)
  */
-public class EmailResponse<T> extends StandardResponse <T> {
-    public EmailResponse(final T object) {
-        super(object);
+public class EmailRequest {
+    private final Mail emailmsg;
+
+    public  EmailRequest(Mail object){
+        super();
+        this.emailmsg=object;
     }
 
-    public EmailResponse(final Throwable cause) {
-        super(cause);
+    public Mail getObject(){
+        return this.emailmsg;
     }
 
-    public EmailResponse(final Throwable cause, final String message) {
-        super(cause, message);
-    }
 }

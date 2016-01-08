@@ -24,7 +24,7 @@ import java.lang.reflect.Type;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 

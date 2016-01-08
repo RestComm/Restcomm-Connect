@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.email;
+package org.mobicents.servlet.restcomm.api;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
