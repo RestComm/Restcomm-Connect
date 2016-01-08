@@ -9,16 +9,19 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
+
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
@@ -28,7 +31,9 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.email.EmailRequest;
 import org.mobicents.servlet.restcomm.email.EmailResponse;
 import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.http.converter.EmailMessageConverter;
+import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
 import org.mobicents.servlet.restcomm.email.api.EmailService;
@@ -49,6 +54,7 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
     protected Gson gson;
     protected AccountsDao accountsDao;
     ActorRef mailerService = null;
+    protected XStream xstream;
 
     // Send the email.
     protected Mail emailMsg;
@@ -71,6 +77,10 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         builder.registerTypeAdapter(Mail.class, converter);
         builder.setPrettyPrinting();
         gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
     private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
@@ -125,7 +135,7 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
     @SuppressWarnings("unchecked")
     protected Response putEmailMessage(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages"); //need to fix for Emails.
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:EmailMessages"); //need to fix for Emails.
             secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
@@ -146,14 +156,22 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         try {
 
             // Send the email.
-                 emailMsg = new Mail(sender, recipient, subject, body ,cc,bcc, DateTime.now(),accountSid);
+            emailMsg = new Mail(sender, recipient, subject, body ,cc,bcc, DateTime.now(),accountSid);
             if (mailerService == null){
                 mailerService = session(confemail);
             }
 
             final ActorRef observer = observer();
             mailerService.tell(new Observe(observer), observer);
-            return ok(gson.toJson(emailMsg), APPLICATION_JSON).build();
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(emailMsg), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(emailMsg);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
+            }
+
         } catch (final Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
