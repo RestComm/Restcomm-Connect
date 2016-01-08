@@ -63,7 +63,7 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.email.EmailResponse;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;

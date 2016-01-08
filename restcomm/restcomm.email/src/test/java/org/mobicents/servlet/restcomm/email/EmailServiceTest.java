@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.email.api;
+package org.mobicents.servlet.restcomm.email;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
@@ -37,13 +37,11 @@ import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
+import org.mobicents.servlet.restcomm.api.Mail;
 import scala.concurrent.duration.FiniteDuration;
 
-import org.mobicents.servlet.restcomm.email.EmailResponse;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.Mail;
-
-import com.icegreen.greenmail.user.UserException;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetupTest;
 
@@ -85,9 +83,7 @@ public final class EmailServiceTest {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
