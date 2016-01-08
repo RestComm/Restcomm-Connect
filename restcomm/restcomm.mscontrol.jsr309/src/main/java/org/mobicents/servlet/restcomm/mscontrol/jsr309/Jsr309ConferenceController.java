@@ -375,6 +375,7 @@ public class Jsr309ConferenceController extends MediaServerController {
 
                 // Create the media group with recording capabilities
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
+                mediaGroup.getPlayer().addListener(playerListener);
 
                 // Set default conference video resolution to 720p
                 // mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
