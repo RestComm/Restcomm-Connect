@@ -41,7 +41,7 @@
         </label>
         <span class="col-md-9 pull-right">
             <rc-endpoint-url method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" apps="localApps"></rc-endpoint-url>
-            
+
         </span>
     </fieldset>
     <br>
@@ -84,7 +84,9 @@
     </fieldset>
 </div-->
 <div class="">
-    <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)">Save Changes</button>
-    <a href="#/numbers/clients" class="btn">Close</a>
-    <button class="btn btn-danger pull-right" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
+    <span class="pull-right">
+        <a href="#/numbers/clients" class="btn btn-default">Close</a>
+        <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)">Save Changes</button>
+    </span>
+    <button class="btn btn-danger" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
 </div>
