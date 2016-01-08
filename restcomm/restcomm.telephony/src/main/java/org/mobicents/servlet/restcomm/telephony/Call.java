@@ -49,6 +49,7 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 import javax.sip.header.RecordRouteHeader;
+import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -62,6 +63,9 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.fsm.TransitionFailedException;
+import org.mobicents.servlet.restcomm.fsm.TransitionNotFoundException;
+import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
@@ -250,6 +254,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.leaving, this.stopping));
         transitions.add(new Transition(this.leaving, this.failed));
         transitions.add(new Transition(this.canceling, this.canceled));
+        transitions.add(new Transition(this.canceling, this.completed));
         transitions.add(new Transition(this.failingBusy, this.busy));
         transitions.add(new Transition(this.failingNoAnswer, this.noAnswer));
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
@@ -696,14 +701,19 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            external = CallStateChanged.State.CANCELED;
-            final CallStateChanged event = new CallStateChanged(external);
-            for (final ActorRef observer : observers) {
-                observer.tell(event, source);
-            }
+            //A no-answer call will be cancelled and will arrive here. In that case don't change the external case
+            //since no-answer is a final state and we need to keep it so observer knows how the call ended
+//            if (!external.equals(CallStateChanged.State.NO_ANSWER)) {
+                external = CallStateChanged.State.CANCELED;
+                final CallStateChanged event = new CallStateChanged(external);
+                for (final ActorRef observer : observers) {
+                    observer.tell(event, source);
+                }
+//            }
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
+                logger.info("Going to update CDR to CANCEL, call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction);
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
@@ -1062,7 +1072,7 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Completing Call");
+            logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
 
             // Explicitly invalidate the application session.
             if (invite.getSession().isValid()) {
@@ -1073,12 +1083,17 @@ public final class Call extends UntypedActor {
                 invite.getApplicationSession().invalidate();
             }
 
-            // Notify the observers.
-            external = CallStateChanged.State.COMPLETED;
+            //In the case of canceled that reach the completed method, don't change the external state
+            if (!external.equals(CallStateChanged.State.CANCELED)) {
+                // Notify the observers.
+                external = CallStateChanged.State.COMPLETED;
+            }
             final CallStateChanged event = new CallStateChanged(external);
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
+
+            logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
 
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
@@ -1164,6 +1179,7 @@ public final class Call extends UntypedActor {
             while (observerIter.hasNext()) {
                 ActorRef observerNext = observerIter.next();
                 observerNext.tell(stopObservingMessage, self);
+                logger.info("Sent stop observing for call, from: "+from+" to: "+to+" direction: "+direction+" to observer: "+observerNext.path()+" observer is terminated: "+observerNext.isTerminated());
 //                this.observers.remove(observerNext);
             }
             this.observers.clear();
@@ -1212,6 +1228,7 @@ public final class Call extends UntypedActor {
     }
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
+        logger.info("Got CANCEL for Call, from: "+from+" to: "+to+" state: "+fsm.state());
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             fsm.transition(message, canceling);
         }
@@ -1357,10 +1374,11 @@ public final class Call extends UntypedActor {
     }
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
+        logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state());
         if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
             if (!receivedBye) {
                 // Send BYE to client if RestComm took initiative to hangup the call
-                sendBye();
+                sendBye(message);
             }
 
             // Stop recording if necessary
@@ -1375,68 +1393,81 @@ public final class Call extends UntypedActor {
         }
     }
 
-    private void sendBye() throws IOException {
+    private void sendBye(Hangup hangup) throws IOException, TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
         final SipSession session = invite.getSession();
-        final SipServletRequest bye = session.createRequest("BYE");
-
-        SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
-        InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
-
-        // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
-        // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
-        // Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
-        // Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
-        // Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
-        // Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
-        // Accept: application/sdp
-        // Allow: INVITE,ACK,CANCEL,BYE
-        // Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
-        // Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
-        // Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
-        // Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
-        // Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
-        // From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
-        // To: <sip:12055305520@192.168.6.219>
-        // Call-ID: 587241765_133360558@192.168.16.114
-        // CSeq: 393447729 INVITE
-        // Max-Forwards: 67
-        // Contact: <sip:+1302109762259@192.168.16.114:5060>
-        // Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
-        // Supported: replaces
-        // Content-Disposition: session;handling=required
-        // Content-Type: application/sdp
-        // Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
-        // X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
-        // X-Sip-Balancer-InitialRemotePort: 5060
-        // Route: <sip:10.13.169.214:5080;transport=udp;lr>
-        // Content-Length: 340
-
-        invite.getHeaders(RecordRouteHeader.NAME);
-
-        ListIterator<String> recordRouteList = bye.getHeaders(RecordRouteHeader.NAME);
-
-        if (invite.getHeader("X-Sip-Balancer") != null) {
-            logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
-            recordRouteList.next();
-            recordRouteList.remove();
-            recordRouteList.next();
-            recordRouteList.remove();
-        }
-        if (recordRouteList.hasNext()) {
-            logger.info("Record Route is set, wont change the Request URI");
-        } else {
-            logger.info("Checking RURI, realInetUri: "+realInetUri+" byeRURI: "+byeRURI);
-            logger.debug("byeRURI.isSiteLocalAddress(): "+byeRURI.isSiteLocalAddress());
-            logger.debug("byeRURI.isAnyLocalAddress(): "+byeRURI.isAnyLocalAddress());
-            logger.debug("byeRURI.isLoopbackAddress(): "+byeRURI.isLoopbackAddress());
-            if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
-                logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                + " as a request uri of the BYE request");
-                bye.setRequestURI(realInetUri);
+        String sessionState = session.getState().name();
+        if (sessionState == SipSession.State.INITIAL.name() || sessionState == SipSession.State.EARLY.name()) {
+            final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
+            if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
+                resp.addHeader("Reason",hangup.getMessage());
             }
+            resp.send();
+            fsm.transition(hangup, completed);
+            return;
+        } else {
+            final SipServletRequest bye = session.createRequest("BYE");
+            if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
+                bye.addHeader("Reason",hangup.getMessage());
+            }
+            SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
+            InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());
+
+            // INVITE sip:+12055305520@107.21.247.251 SIP/2.0
+            // Record-Route: <sip:10.154.28.245:5065;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+            // Record-Route: <sip:10.154.28.245:5060;transport=udp;lr;node_host=10.13.169.214;node_port=5080;version=0>
+            // Record-Route: <sip:67.231.8.195;lr=on;ftag=gK0043eb81>
+            // Record-Route: <sip:67.231.4.204;r2=on;lr=on;ftag=gK0043eb81>
+            // Record-Route: <sip:192.168.6.219;r2=on;lr=on;ftag=gK0043eb81>
+            // Accept: application/sdp
+            // Allow: INVITE,ACK,CANCEL,BYE
+            // Via: SIP/2.0/UDP 10.154.28.245:5065;branch=z9hG4bK1cdb.193075b2.058724zsd_0
+            // Via: SIP/2.0/UDP 10.154.28.245:5060;branch=z9hG4bK1cdb.193075b2.058724_0
+            // Via: SIP/2.0/UDP 67.231.8.195;branch=z9hG4bK1cdb.193075b2.0
+            // Via: SIP/2.0/UDP 67.231.4.204;branch=z9hG4bK1cdb.f9127375.0
+            // Via: SIP/2.0/UDP 192.168.16.114:5060;branch=z9hG4bK00B6ff7ff87ed50497f
+            // From: <sip:+1302109762259@192.168.16.114>;tag=gK0043eb81
+            // To: <sip:12055305520@192.168.6.219>
+            // Call-ID: 587241765_133360558@192.168.16.114
+            // CSeq: 393447729 INVITE
+            // Max-Forwards: 67
+            // Contact: <sip:+1302109762259@192.168.16.114:5060>
+            // Diversion: <sip:+112055305520@192.168.16.114:5060>;privacy=off;screen=no; reason=unknown; counter=1
+            // Supported: replaces
+            // Content-Disposition: session;handling=required
+            // Content-Type: application/sdp
+            // Remote-Party-ID: <sip:+1302109762259@192.168.16.114:5060>;privacy=off;screen=no
+            // X-Sip-Balancer-InitialRemoteAddr: 67.231.8.195
+            // X-Sip-Balancer-InitialRemotePort: 5060
+            // Route: <sip:10.13.169.214:5080;transport=udp;lr>
+            // Content-Length: 340
+
+            invite.getHeaders(RecordRouteHeader.NAME);
+
+            ListIterator<String> recordRouteList = bye.getHeaders(RecordRouteHeader.NAME);
+
+            if (invite.getHeader("X-Sip-Balancer") != null) {
+                logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
+                recordRouteList.next();
+                recordRouteList.remove();
+                recordRouteList.next();
+                recordRouteList.remove();
+            }
+            if (recordRouteList.hasNext()) {
+                logger.info("Record Route is set, wont change the Request URI");
+            } else {
+                logger.info("Checking RURI, realInetUri: " + realInetUri + " byeRURI: " + byeRURI);
+                logger.debug("byeRURI.isSiteLocalAddress(): " + byeRURI.isSiteLocalAddress());
+                logger.debug("byeRURI.isAnyLocalAddress(): " + byeRURI.isAnyLocalAddress());
+                logger.debug("byeRURI.isLoopbackAddress(): " + byeRURI.isLoopbackAddress());
+                if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                            + " as a request uri of the BYE request");
+                    bye.setRequestURI(realInetUri);
+                }
+            }
+            logger.info("Will sent out BYE to: " + bye.getRequestURI());
+            bye.send();
         }
-        logger.info("Will sent out BYE to: "+bye.getRequestURI());
-        bye.send();
     }
 
     private void onNotFound(org.mobicents.servlet.restcomm.telephony.NotFound message, ActorRef self, ActorRef sender)

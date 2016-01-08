@@ -17,26 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+package org.mobicents.servlet.restcomm.interpreter.rcml;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * Created by gvagenas on 02/12/15.
  */
-@Immutable
-public final class Hangup {
-    private String message;
+public class ParserFailed {
 
-    public Hangup() {
-        super();
+    private final Exception exception;
+    private final String xml;
+
+    public ParserFailed(final Exception exception, final String xml) {
+        this.exception = exception;
+        this.xml = xml;
     }
 
-    public Hangup(final String message) {
-        this.message = message;
+    public Exception getException() {
+        return exception;
     }
 
-    public String getMessage() {
-        return message;
+    public String getXml() {
+        return xml;
     }
 }

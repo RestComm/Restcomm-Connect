@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.gson.stream.JsonReader;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 
@@ -87,7 +88,7 @@ public class RestcommCallsTool {
         try {
             jsonArray = parser.parse(response).getAsJsonArray();
         } catch (Exception e) {
-            logger.info("Exception during getRecordings: "+e);
+            logger.info("Exception during getRecordings for url: "+url+" exception: "+e);
             logger.info("Response object: "+response);
         }
         return jsonArray;
@@ -126,9 +127,18 @@ public class RestcommCallsTool {
         JsonParser parser = new JsonParser();
 
         if (json) {
-
-            JsonObject jsonObject = parser.parse(response).getAsJsonObject();
-
+            JsonObject jsonObject = null;
+            try {
+                JsonElement jsonElement = parser.parse(response);
+                if (jsonElement.isJsonObject()) {
+                    jsonObject = jsonElement.getAsJsonObject();
+                } else {
+                    logger.info("JsonElement: " + jsonElement.toString());
+                }
+            } catch (Exception e) {
+                logger.info("Exception during JSON response parsing, exception: "+e);
+                logger.info("JSON response: "+response);
+            }
             return jsonObject;
         } else {
             XStream xstream = new XStream();

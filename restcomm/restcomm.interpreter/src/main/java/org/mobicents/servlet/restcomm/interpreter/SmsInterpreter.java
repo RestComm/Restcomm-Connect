@@ -69,6 +69,7 @@ import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
@@ -365,6 +366,9 @@ public final class SmsInterpreter extends UntypedActor {
                     }
                 }
             }
+        }  else if (ParserFailed.class.equals(klass)) {
+            logger.info("ParserFailed received. Will stop the call");
+            fsm.transition(message, finished);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
             if (redirect.equals(verb.name())) {
@@ -439,7 +443,7 @@ public final class SmsInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(xml);
+                return new Parser(xml, self());
             }
         }));
     }

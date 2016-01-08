@@ -573,7 +573,7 @@ public class DialTest {
             exception.printStackTrace();
         }
 
-        Thread.sleep(3000);
+        Thread.sleep(6000);
 
         //Check CDR
         cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
@@ -922,7 +922,7 @@ public class DialTest {
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
@@ -993,7 +993,7 @@ public class DialTest {
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
@@ -1083,7 +1083,7 @@ public class DialTest {
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
@@ -1258,9 +1258,13 @@ public class DialTest {
 
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        final SipRequest lastRequest = georgeCall.getLastReceivedRequest();
+        String receivedBody = new String(lastRequest.getRawContent());
         assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
                 null, null));
+        // the number dialed uses a callerId of "+13055872294", which is what George should receive
+        String contactHeader = georgeCall.getLastReceivedRequest().getMessage().getHeader("Contact").toString().replaceAll("\r\n","");
+        assertTrue(contactHeader.equalsIgnoreCase("Contact: \"+13055872294\" <sip:+13055872294@127.0.0.1:5080>"));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -1367,10 +1371,17 @@ public class DialTest {
         Thread.sleep(1000);
     }
 
+    final String dialNumberNoCallerId = "<Response><Dial><Number url=\"http://127.0.0.1:8080/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
 //Test for Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
 //Bob callerId should pass to the call created by Dial Number
 @Test
 public synchronized void testDialNumberGeorgePassInitialCallerId() throws InterruptedException, ParseException {
+    stubFor(get(urlPathEqualTo("/1111"))
+            .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(dialNumberNoCallerId)));
+
     deployer.deploy("DialTest");
 
     // Prepare George phone to receive call
@@ -1380,7 +1391,7 @@ public synchronized void testDialNumberGeorgePassInitialCallerId() throws Interr
 
     // Create outgoing call with first phone
     final SipCall bobCall = bobPhone.createSipCall();
-    bobCall.initiateOutgoingCall(bobContact, dialNumber, null, body, "application", "sdp", null, null);
+    bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
     assertLastOperationSuccess(bobCall);
     assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
     final int response = bobCall.getLastReceivedResponse().getStatusCode();

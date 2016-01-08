@@ -41,6 +41,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
@@ -68,6 +69,7 @@ import scala.concurrent.duration.Duration;
  *
  */
 public class SupervisorEndpoint extends AbstractEndpoint{
+    private static Logger logger = Logger.getLogger(SupervisorEndpoint.class);
 
     @Context
     protected ServletContext context;
@@ -149,6 +151,7 @@ public class SupervisorEndpoint extends AbstractEndpoint{
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
                Response response = ok(gson.toJson(monitoringServiceResponse), APPLICATION_JSON).build();
+                logger.debug("Supervisor endpoint response: "+gson.toJson(monitoringServiceResponse));
                 return response;
             } else {
                 return null;
