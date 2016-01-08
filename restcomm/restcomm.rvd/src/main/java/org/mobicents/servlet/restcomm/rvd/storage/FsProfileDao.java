@@ -21,6 +21,7 @@
 package org.mobicents.servlet.restcomm.rvd.storage;
 
 import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 
 /**
@@ -46,11 +47,18 @@ public class FsProfileDao implements ProfileDao {
         }
     }
 
+    /**
+     * Loads and returns the profile for the user.
+     * @param username
+     * @return user profile or null if it does not exist
+     */
     @Override
     public UserProfile loadUserProfile(String username) {
         try {
             UserProfile profile = workspaceStorage.loadEntity(username, "@users", UserProfile.class);
             return profile;
+        } catch (StorageEntityNotFound e) {
+            return null;
         } catch (StorageException e) {
             throw new RuntimeException("Error loading profile for user '" + username +"'",e);
         }

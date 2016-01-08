@@ -85,4 +85,21 @@ public class FsProfileDaoTest {
             TestUtils.removeTempWorkspace(workspaceDir.getPath());
         }
     }
+
+    @Test
+    public void nullIsReturnedIfProfileDoesNotExist() {
+        File workspaceDir = TestUtils.createTempWorkspace();
+        File usersDir = TestUtils.createUsersDirectory(workspaceDir.getPath());
+        try {
+            ModelMarshaler marshaler = new ModelMarshaler();
+            WorkspaceStorage storage = new WorkspaceStorage(workspaceDir.getPath(), marshaler);
+
+            ProfileDao profileDao = new FsProfileDao(storage);
+            UserProfile profile = profileDao.loadUserProfile("non-existing-profile");
+
+            Assert.assertNull("Null should be returned if the user profile does not exists.", profile);
+        } finally {
+            TestUtils.removeTempWorkspace(workspaceDir.getPath());
+        }
+    }
 }
