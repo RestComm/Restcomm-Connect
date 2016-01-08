@@ -39,8 +39,8 @@ import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.messages.JoinBridge;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
@@ -284,7 +284,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         // Tell call to join conference by passing reference to the media mixer
-        final JoinBridge join = new JoinBridge(this.cnfEndpoint, message.getConnectionMode());
+        final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode());
         message.getCall().tell(join, sender);
     }
 
