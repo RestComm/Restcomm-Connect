@@ -24,6 +24,8 @@ import org.apache.commons.io.FileUtils;
 import org.mobicents.servlet.restcomm.rvd.bootstrap.WorkspaceBootstrapper;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Random;
 
 /**
@@ -51,4 +53,23 @@ public class TestUtils {
         usersDir.mkdir();
         return usersDir;
     }
+
+    public static RvdConfiguration initRvdConfiguration(String contextToUse) {
+        URL url = TestUtils.class.getResource("contexts/" + contextToUse + "/restcomm-rvd.war");
+        File rvdRoot = null;
+        try {
+            rvdRoot = new File(url.toURI());
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        RvdConfiguration.createOnce(rvdRoot.getPath() + "/");
+        return RvdConfiguration.getInstance();
+    }
+
+    public static RvdConfiguration initRvdConfiguration() {
+        return initRvdConfiguration("default");
+    }
+
+
+
 }

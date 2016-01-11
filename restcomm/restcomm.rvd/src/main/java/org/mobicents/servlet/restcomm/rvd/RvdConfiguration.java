@@ -75,8 +75,23 @@ public class RvdConfiguration {
         }
     }
 
+    public static RvdConfiguration createOnce(String contextRootPath) {
+        synchronized (RvdConfiguration.class) {
+            if ( instance == null ) {
+                instance = new RvdConfiguration(contextRootPath);
+            }
+            return instance;
+        }
+    }
+
     private RvdConfiguration(ServletContext servletContext) {
         contextRootPath = servletContext.getRealPath("/");
+        logger.info("contextRootPath: " + contextRootPath);
+        load();
+    }
+
+    private RvdConfiguration(String contextRootPath) {
+        this.contextRootPath = contextRootPath;
         logger.info("contextRootPath: " + contextRootPath);
         load();
     }

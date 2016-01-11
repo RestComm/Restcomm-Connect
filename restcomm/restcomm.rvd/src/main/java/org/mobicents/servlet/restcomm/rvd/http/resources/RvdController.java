@@ -44,7 +44,7 @@ import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
-import org.mobicents.servlet.restcomm.rvd.model.client.WorkspaceSettings;
+import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
@@ -224,7 +224,7 @@ public class RvdController extends RestService {
         }
         // guess restcomm location
         URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
-        // initialize a restcomm client object various information sources
+        // initialize a restcomm client object using various information sources
         RestcommClient restcommClient;
         try {
             restcommClient = new RestcommClient(workspaceSettings, profile, restcommBaseUri);

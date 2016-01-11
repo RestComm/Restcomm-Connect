@@ -45,7 +45,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
 import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
-import org.mobicents.servlet.restcomm.rvd.model.client.WorkspaceSettings;
+import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
@@ -202,7 +202,7 @@ public class RestcommClient {
                     throw new UnsupportedOperationException("Only GET, POST and DELETE methods are supported");
 
             } catch (IOException e) {
-                throw new RestcommClientException("Error building URL from this path: " + path, e);
+                throw new RestcommClientException("Error contacting: " + path, e);
             } catch (URISyntaxException e) {
                 throw new RestcommClientException("Error building URL from this path: " + path, e);
             }
@@ -250,7 +250,7 @@ public class RestcommClient {
      * @param fallbackRestcommBaseUri
      * @throws RestcommClientInitializationException
      */
-    public RestcommClient (WorkspaceSettings workspaceSettings, UserProfile profile, URI fallbackRestcommBaseUri) throws RestcommClientInitializationException {
+    public RestcommClient (WorkspaceSettings workspaceSettings, UserProfile profile, URI fallbackRestcommBaseUri, String usernameOverride, String passwordOverride) throws RestcommClientInitializationException {
         // initialize host
         String apiHost = null;
         if (workspaceSettings != null) {
@@ -258,7 +258,7 @@ public class RestcommClient {
                 apiHost = workspaceSettings.getApiServerHost();
         }
         if (apiHost == null) {
-            if ( ! RvdUtils.isEmpty(profile.getRestcommHost()) )
+            if ( profile != null && ! RvdUtils.isEmpty(profile.getRestcommHost()) )
                 apiHost = profile.getRestcommHost();
         }
         if (apiHost == null) {
@@ -269,7 +269,7 @@ public class RestcommClient {
         if (workspaceSettings != null && workspaceSettings.getApiServerRestPort() != null) {
             apiPort = workspaceSettings.getApiServerRestPort();
         }
-        if (apiPort == null && profile.getRestcommPort() != null) {
+        if (apiPort == null && (profile != null ) && profile.getRestcommPort() != null) {
             apiPort = profile.getRestcommPort();
         }
         if (apiPort == null) {
@@ -277,11 +277,21 @@ public class RestcommClient {
         }
         if (RvdUtils.isEmpty(apiHost) || apiPort == null)
             throw new RestcommClientInitializationException("Could not determine restcomm host/port .");
-
-        // initialize username
-        String apiUsername = profile.getUsername();
-        //initialize password
-        String apiPassword = profile.getToken();
+        // credentials initialization
+        String apiUsername = null;
+        String apiPassword = null;
+        if (profile != null) {
+            // initialize username
+            apiUsername = profile.getUsername();
+            //initialize password
+            apiPassword = profile.getToken();
+        }
+        if (usernameOverride != null) {
+            apiUsername = usernameOverride;
+            apiPassword = passwordOverride;
+        }
+        if (RvdUtils.isEmpty(apiUsername))
+            throw new RestcommClientInitializationException("Restcomm client could not determine the user for accessing Restcomm");
 
         this.host = apiHost;
         this.port = apiPort;
@@ -289,6 +299,10 @@ public class RestcommClient {
         this.username = apiUsername;
         this.password = apiPassword;
         apacheClient = CustomHttpClientBuilder.buildHttpClient();
+    }
+
+    public RestcommClient (WorkspaceSettings workspaceSettings, UserProfile profile, URI fallbackRestcommBaseUri) throws RestcommClientInitializationException {
+        this(workspaceSettings,profile,fallbackRestcommBaseUri,null,null);
     }
 
     public String getProtocol() {

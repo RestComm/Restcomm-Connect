@@ -32,14 +32,18 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationApiNotSynchedException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationsApiSyncException;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
-import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
+import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
+import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommApplicationResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient.RestcommClientException;
 import org.mobicents.servlet.restcomm.rvd.security.Ticket;
 import org.mobicents.servlet.restcomm.rvd.security.TicketRepository;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
+import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 /**
@@ -94,36 +98,30 @@ public class ProjectApplicationsApi {
     private void accessApi(final String ticketId, final HashMap<String, String> params, final AccessApiAction action)
             throws ApplicationsApiSyncException {
         try {
-            URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
-
-            // Load rvd settings
-            SettingsModel settingsModel = SettingsModel.createDefault();
-            if (workspaceStorage.entityExists(".settings", ""))
-                settingsModel = workspaceStorage.loadEntity(".settings", "", SettingsModel.class);
-
-            // Setup required values depending on existing setup
-            String apiHost = settingsModel.getApiServerHost();
-            if (RvdUtils.isEmpty(apiHost))
-                apiHost = restcommBaseUri.getHost();
-
-            Integer apiPort = settingsModel.getApiServerRestPort();
-            if (apiPort == null)
-                apiPort = restcommBaseUri.getPort();
-
+            // get ticket from repository and username
             Ticket ticket = TicketRepository.getInstance().findTicket(ticketId);
             String authenticationToken = ticket.getAuthenticationToken();
             String username = TicketRepository.getInstance().findTicket(ticketId).getUserId();
-
-            if (RvdUtils.isEmpty(apiHost) || apiPort == null)
-                throw new ApplicationsApiSyncException("Could not determine restcomm host/port.");
-
+            // Load user profile if available. We will need it in the logic for determining the restcomm host/port.
+            ProfileDao profileDao = new FsProfileDao(workspaceStorage);
+            UserProfile profile = profileDao.loadUserProfile(username);
+            // load rvd settings from workspace
+            WorkspaceSettings workspaceSettings;
+            try {
+                workspaceSettings = workspaceStorage.loadEntity(".settings", "", WorkspaceSettings.class);
+            } catch (StorageEntityNotFound e) {
+                workspaceSettings = null;
+            }
+            // guess restcomm location
+            URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
+            // initialize a restcomm client object using various information sources
             if (RvdUtils.isEmpty(authenticationToken))
                 throw new ApplicationsApiSyncException("Could not determine credentials to access API.");
-
             if (RvdUtils.isEmpty(username))
                 throw new ApplicationsApiSyncException("Could not determine account to create new Application.");
 
-            RestcommClient client = new RestcommClient(restcommBaseUri.getScheme(), apiHost, apiPort, username, authenticationToken);
+            // create the client using the encapsulated logic in the constructor
+            RestcommClient client = new RestcommClient(workspaceSettings,profile,restcommBaseUri,username,authenticationToken);
             client.setAuthenticationTokenAsPassword(ticket.getCookieBased());
 
             // Find the account sid for the apiUsername
@@ -211,7 +209,7 @@ public class ProjectApplicationsApi {
                     break;
             }
         } catch (AccessApiException e) {
-            if (e.getStatusCode() == 409) {
+            if (e.getStatusCode() != null && e.getStatusCode() == 409) {
                 throw new ApplicationAlreadyExists();
             } else {
                 throw new ApplicationsApiSyncException(e.getMessage(), e).setStatusCode(e.getStatusCode());
