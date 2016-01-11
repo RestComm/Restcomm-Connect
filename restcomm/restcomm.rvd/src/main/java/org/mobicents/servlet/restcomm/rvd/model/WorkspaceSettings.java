@@ -18,16 +18,16 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd.model.client;
+package org.mobicents.servlet.restcomm.rvd.model;
 
 /**
+ * A representation class for the workspace/.settings configuration file
+ *
  * @author Orestis Tsakiridis
  */
 public class WorkspaceSettings {
     private String apiServerHost;
     private Integer apiServerRestPort; // null values should be allowed too
-    //private String apiServerUsername;
-    //private String apiServerPass;
 
     public String getApiServerHost() {
         return apiServerHost;
