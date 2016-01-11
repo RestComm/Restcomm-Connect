@@ -41,6 +41,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
+import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
@@ -161,6 +162,7 @@ public final class MmsConferenceController extends MediaServerController {
      * EVENTS
      */
     @Override
+    @SuppressWarnings("unchecked")
     public void onReceive(Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final ActorRef sender = sender();
@@ -194,6 +196,8 @@ public final class MmsConferenceController extends MediaServerController {
             onStartRecording((StartRecording) message, self, sender);
         } else if (StopRecording.class.equals(klass)) {
             onStopRecording((StopRecording) message, self, sender);
+        } else if(MediaGroupResponse.class.equals(klass)) {
+            onMediaGroupResponse((MediaGroupResponse<String>) message, self, sender);
         }
     }
 
@@ -291,7 +295,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (is(active) && !playing) {
             this.playing = Boolean.TRUE;
-            this.mediaGroup.tell(message, sender);
+            this.mediaGroup.tell(message, self);
         }
     }
 
@@ -314,6 +318,12 @@ public final class MmsConferenceController extends MediaServerController {
         if (is(active) && recording) {
             this.recording = Boolean.FALSE;
             mediaGroup.tell(new Stop(), null);
+        }
+    }
+
+    private void onMediaGroupResponse(MediaGroupResponse<String> message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(active) && this.playing) {
+            this.playing = Boolean.FALSE;
         }
     }
 
