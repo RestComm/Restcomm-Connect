@@ -2266,10 +2266,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
                     conference.tell(stop, super.source);
-                } else {
-                    // Otherwise simply remove the call from it
-                    final RemoveParticipant removeParticipant = new RemoveParticipant(call);
-                    conference.tell(removeParticipant, super.source);
                 }
             }
 
