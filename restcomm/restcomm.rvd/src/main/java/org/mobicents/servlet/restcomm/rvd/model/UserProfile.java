@@ -32,6 +32,7 @@ public class UserProfile {
     private String token; // This is the password. It may be changed into an oauth token in the future
     private String restcommHost;
     private Integer restcommPort;
+    private HttpScheme restcommScheme;
 
     public UserProfile() {
     }
@@ -66,5 +67,13 @@ public class UserProfile {
 
     public void setRestcommPort(Integer restcommPort) {
         this.restcommPort = restcommPort;
+    }
+
+    public HttpScheme getRestcommScheme() {
+        return restcommScheme;
+    }
+
+    public void setRestcommScheme(HttpScheme restcommScheme) {
+        this.restcommScheme = restcommScheme;
     }
 }

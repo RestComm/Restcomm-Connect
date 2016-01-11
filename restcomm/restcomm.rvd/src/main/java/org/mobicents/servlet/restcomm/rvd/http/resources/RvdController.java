@@ -48,12 +48,8 @@ import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
-import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
+import org.mobicents.servlet.restcomm.rvd.storage.*;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
-import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist;
@@ -216,12 +212,8 @@ public class RvdController extends RestService {
         if (profile == null)
             throw new CallControlException("No user profile found for user '" + owner + "'. Web trigger cannot be used for project belonging to this user.");
         // load rvd settings from workspace
-        WorkspaceSettings workspaceSettings;
-        try {
-            workspaceSettings = workspaceStorage.loadEntity(".settings", "", WorkspaceSettings.class);
-        } catch (StorageEntityNotFound e) {
-            workspaceSettings = null;
-        }
+        WorkspaceSettingsDao workspaceSettingsDao = new FsWorkspaceSettingsDao(workspaceStorage);
+        WorkspaceSettings workspaceSettings = workspaceSettingsDao.loadWorkspaceSettings();
         // guess restcomm location
         URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
         // initialize a restcomm client object using various information sources
