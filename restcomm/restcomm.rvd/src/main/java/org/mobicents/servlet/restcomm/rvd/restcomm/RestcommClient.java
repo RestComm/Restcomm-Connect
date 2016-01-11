@@ -44,6 +44,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
 import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.model.HttpScheme;
 import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
 import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
@@ -275,6 +276,17 @@ public class RestcommClient {
         if (apiPort == null) {
             apiPort = fallbackRestcommBaseUri.getPort();
         }
+        // initialize scheme
+        HttpScheme apiScheme = null;
+        if (workspaceSettings != null && workspaceSettings.getApiServerScheme() != null )
+            apiScheme = workspaceSettings.getApiServerScheme();
+        if (apiScheme == null && (profile != null ) && profile.getRestcommScheme() != null )
+            apiScheme = profile.getRestcommScheme();
+        if (apiScheme == null)
+            apiScheme = HttpScheme.valueOf(fallbackRestcommBaseUri.getScheme());
+        if (apiScheme == null)
+            apiScheme = HttpScheme.http; // default to 'http'
+
         if (RvdUtils.isEmpty(apiHost) || apiPort == null)
             throw new RestcommClientInitializationException("Could not determine restcomm host/port .");
         // credentials initialization
@@ -295,7 +307,7 @@ public class RestcommClient {
 
         this.host = apiHost;
         this.port = apiPort;
-        this.protocol = "http"; // TODO replace hardcoded value with a propely initialized one !!
+        this.protocol = apiScheme.toString();
         this.username = apiUsername;
         this.password = apiPassword;
         apacheClient = CustomHttpClientBuilder.buildHttpClient();

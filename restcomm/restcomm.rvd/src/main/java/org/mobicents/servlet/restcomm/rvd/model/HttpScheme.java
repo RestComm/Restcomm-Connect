@@ -21,36 +21,9 @@
 package org.mobicents.servlet.restcomm.rvd.model;
 
 /**
- * A representation class for the workspace/.settings configuration file
- *
+ * A pretty basic enum to help codecs properly validate scheme values
  * @author Orestis Tsakiridis
  */
-public class WorkspaceSettings {
-    private String apiServerHost;
-    private Integer apiServerRestPort; // null values should be allowed too
-    private HttpScheme apiServerScheme;
-
-    public String getApiServerHost() {
-        return apiServerHost;
-    }
-
-    public void setApiServerHost(String apiServerHost) {
-        this.apiServerHost = apiServerHost;
-    }
-
-    public Integer getApiServerRestPort() {
-        return apiServerRestPort;
-    }
-
-    public void setApiServerRestPort(Integer apiServerRestPort) {
-        this.apiServerRestPort = apiServerRestPort;
-    }
-
-    public HttpScheme getApiServerScheme() {
-        return apiServerScheme;
-    }
-
-    public void setApiServerScheme(HttpScheme apiServerScheme) {
-        this.apiServerScheme = apiServerScheme;
-    }
+public enum HttpScheme {
+    http, https
 }
