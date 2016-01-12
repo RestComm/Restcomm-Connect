@@ -1311,31 +1311,30 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             String callerId = null;
 
             // Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
-            final boolean useInitialFromAsCallerId = configuration.subset("runtime-settings").getBoolean(
-                    "from-address-to-proxied-calls");
-            if (useInitialFromAsCallerId)
-                callerId = callInfo.from();
+            final boolean useInitialFromAsCallerId = configuration.subset("runtime-settings").getBoolean("from-address-to-proxied-calls");
 
-            if (callerId == null) {
-                Attribute attribute = verb.attribute("callerId");
-                if (attribute != null) {
-                    callerId = attribute.value();
-                    if (callerId != null && !callerId.isEmpty()) {
-                        callerId = e164(callerId);
-                        if (callerId == null) {
-                            callerId = verb.attribute("callerId").value();
-                            final NotificationsDao notifications = storage.getNotificationsDao();
-                            final Notification notification = notification(ERROR_NOTIFICATION, 13214, callerId
-                                    + " is an invalid callerId.");
-                            notifications.addNotification(notification);
-                            sendMail(notification);
-                            final StopInterpreter stop = new StopInterpreter();
-                            source.tell(stop, source);
-                            return null;
-                        }
+            Attribute attribute = verb.attribute("callerId");
+            if (attribute != null) {
+                callerId = attribute.value();
+                if (callerId != null && !callerId.isEmpty()) {
+                    callerId = e164(callerId);
+                    if (callerId == null) {
+                        callerId = verb.attribute("callerId").value();
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(ERROR_NOTIFICATION, 13214, callerId
+                                + " is an invalid callerId.");
+                        notifications.addNotification(notification);
+                        sendMail(notification);
+                        final StopInterpreter stop = new StopInterpreter();
+                        source.tell(stop, source);
+                        return null;
                     }
                 }
             }
+
+            if (callerId == null && useInitialFromAsCallerId)
+                callerId = callInfo.from();
+
             return callerId;
         }
 

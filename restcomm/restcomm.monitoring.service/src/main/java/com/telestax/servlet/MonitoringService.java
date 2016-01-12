@@ -206,22 +206,30 @@ public class MonitoringService extends UntypedActor{
      */
     private void onCallStateChanged(CallStateChanged message, ActorRef self, ActorRef sender) {
         String senderPath = sender.path().name();
-        CallStateChanged.State callState = message.state();
-        callStateMap.put(senderPath, callState);
-        CallInfo callInfo = callDetailsMap.get(senderPath);
-        callInfo.setState(callState);
-        if (callState.equals(CallStateChanged.State.FAILED)) {
-            failedCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.COMPLETED)) {
-            completedCalls.incrementAndGet();
-        } else if(callState.equals(CallStateChanged.State.BUSY)) {
-            busyCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.CANCELED)) {
-            canceledCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.NO_ANSWER)) {
-            noAnswerCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.NOT_FOUND)) {
-            notFoundCalls.incrementAndGet();
+        if (senderPath != null && message != null && callStateMap != null && callDetailsMap != null) {
+            CallStateChanged.State callState = message.state();
+            callStateMap.put(senderPath, callState);
+            CallInfo callInfo = callDetailsMap.get(senderPath);
+            if (callInfo != null) {
+                callInfo.setState(callState);
+                if (callState.equals(CallStateChanged.State.FAILED)) {
+                    failedCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.COMPLETED)) {
+                    completedCalls.incrementAndGet();
+                } else if(callState.equals(CallStateChanged.State.BUSY)) {
+                    busyCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.CANCELED)) {
+                    canceledCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.NO_ANSWER)) {
+                    noAnswerCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.NOT_FOUND)) {
+                    notFoundCalls.incrementAndGet();
+                }
+            } else {
+                logger.info("CallInfo was not in the store for Call: "+senderPath);
+            }
+        } else {
+            logger.error("MonitoringService, SenderPath or storage is null.");
         }
     }
 
