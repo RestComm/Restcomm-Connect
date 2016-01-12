@@ -20,8 +20,6 @@
 
 package org.mobicents.servlet.restcomm.rvd.storage;
 
-import org.mobicents.servlet.restcomm.rvd.bootstrap.WorkspaceBootstrapper;
-import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
 import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
