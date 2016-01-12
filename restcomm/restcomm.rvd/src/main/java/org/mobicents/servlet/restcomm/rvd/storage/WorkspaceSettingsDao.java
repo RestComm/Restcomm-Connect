@@ -1,6 +1,6 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2014, Telestax Inc and individual contributors
+ * Copyright 2016, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,17 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.email.api;
 
+package org.mobicents.servlet.restcomm.rvd.storage;
 
-import org.apache.commons.configuration.Configuration;
-import akka.actor.Actor;
+import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
+
 /**
- * @author liblefty@gmail.com (Lefteris Banos)
+ * @author Orestis Tsakiridis
  */
-public interface CreateEmailService {
-
-     void CreateEmailSession(final Configuration config);
-     String getUser();
-     Actor build();
+public interface WorkspaceSettingsDao {
+    WorkspaceSettings loadWorkspaceSettings();
+    void saveWorkspaceSettings(WorkspaceSettings workspaceSettings);
 }

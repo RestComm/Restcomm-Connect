@@ -17,10 +17,9 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.email.EmailService;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
@@ -308,10 +307,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                EMAIL_SENDER=builder.getUser();
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
