@@ -296,6 +296,18 @@
 			<artifactId>mss-arquillian-mediaserver-extension</artifactId>
 			<version>${mss.arquillian.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.icegreen</groupId>
+			<artifactId>greenmail</artifactId>
+			<version>1.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.email.api</artifactId>
+			<version>7.5.0-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
