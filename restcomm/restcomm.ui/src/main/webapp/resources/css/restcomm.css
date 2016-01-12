@@ -179,9 +179,7 @@ ul#rightMenu > li i {
 }
 
 .details-header {
-    margin-top: 0;
-    padding: 5px;
-    border-bottom: 2px solid #DDD;
+    margin-top: -10px;
 }
 
 /* Messages Logs classes ---------------------------------------------------- */
@@ -232,7 +230,7 @@ ul#rightMenu > li i {
 /* app list filter buttons */
 .btn.btn-default.filter.active:focus {
 	background-color: #ebebeb;
-	border-color: #adadad;
+	border-color: #adadad;	
 }
 .btn.btn-default.filter:focus {
 	background-color: #fff;
@@ -295,7 +293,7 @@ ul#rightMenu > li i {
 	width: 100px;
 	height: 100px;
 	margin: 0 auto;
-
+	
 }
 
 .rapp-title-cell {
