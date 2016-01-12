@@ -17,21 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.email;
+package org.mobicents.servlet.restcomm.http;
+
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
- * @author liblefty@gmail.com (Lefteris Banos)
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class EmailRequest {
-    private final Mail emailmsg;
-
-    public  EmailRequest(Mail object){
+@Path("/Accounts/{accountSid}/Email/Messages.json")
+@ThreadSafe
+public final class EmailMessagesJsonEndpoint extends EmailMessagesEndpoint {
+    public EmailMessagesJsonEndpoint() {
         super();
-        this.emailmsg=object;
     }
 
-    public Mail getObject(){
-        return this.emailmsg;
+    @POST
+    public Response putEmailMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putEmailMessage(accountSid, data, APPLICATION_JSON_TYPE);
     }
-
 }

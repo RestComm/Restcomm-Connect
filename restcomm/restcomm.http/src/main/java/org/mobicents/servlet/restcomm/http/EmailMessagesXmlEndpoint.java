@@ -17,17 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.email.api;
+package org.mobicents.servlet.restcomm.http;
 
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
-import org.apache.commons.configuration.Configuration;
-import akka.actor.Actor;
 /**
- * @author liblefty@gmail.com (Lefteris Banos)
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public interface CreateEmailService {
+@Path("/Accounts/{accountSid}/Email/Messages")
+@ThreadSafe
+public final class EmailMessagesXmlEndpoint extends EmailMessagesEndpoint {
+    public EmailMessagesXmlEndpoint() {
+        super();
+    }
 
-     void CreateEmailSession(final Configuration config);
-     String getUser();
-     Actor build();
+    @POST
+    public Response putEmailMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return putEmailMessage(accountSid, data, MediaType.APPLICATION_XML_TYPE);
+    }
 }
