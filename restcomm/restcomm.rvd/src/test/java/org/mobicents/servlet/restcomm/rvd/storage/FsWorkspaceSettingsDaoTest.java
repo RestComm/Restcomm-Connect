@@ -25,8 +25,8 @@ import org.codehaus.plexus.util.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.rvd.TestUtils;
+import org.mobicents.servlet.restcomm.rvd.model.HttpScheme;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
-import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
 import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 
 import java.io.File;
@@ -52,7 +52,7 @@ public class FsWorkspaceSettingsDaoTest {
 
             Assert.assertEquals("localhost",settings.getApiServerHost());
             Assert.assertEquals(new Integer(8080),settings.getApiServerRestPort());
-            Assert.assertEquals(WorkspaceSettings.HttpScheme.http, settings.getApiServerScheme());
+            Assert.assertEquals(HttpScheme.http, settings.getApiServerScheme());
         } finally {
             TestUtils.removeTempWorkspace(workspaceDir.getPath());
         }
@@ -92,7 +92,7 @@ public class FsWorkspaceSettingsDaoTest {
             WorkspaceSettings settings = new WorkspaceSettings();
             settings.setApiServerHost("127.0.0.1");
             settings.setApiServerRestPort(9090);
-            settings.setApiServerScheme(WorkspaceSettings.HttpScheme.http);
+            settings.setApiServerScheme(HttpScheme.http);
 
             settingsDao.saveWorkspaceSettings(settings);
             File settingsFile = new File(workspaceDir.getPath() + "/.settings");
@@ -103,7 +103,7 @@ public class FsWorkspaceSettingsDaoTest {
             WorkspaceSettings settings2 = gson.fromJson(data, WorkspaceSettings.class);
             Assert.assertEquals("Host was not stored properly in the workspace settings", "127.0.0.1", settings2.getApiServerHost());
             Assert.assertEquals("Port was not stored properly in the workspace settings", new Integer(9090), settings2.getApiServerRestPort());
-            Assert.assertEquals(WorkspaceSettings.HttpScheme.http,settings2.getApiServerScheme());
+            Assert.assertEquals(HttpScheme.http,settings2.getApiServerScheme());
         } finally {
             TestUtils.removeTempWorkspace(workspaceDir.getPath());
         }

@@ -40,8 +40,11 @@ import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient.RestcommClientException;
 import org.mobicents.servlet.restcomm.rvd.security.Ticket;
 import org.mobicents.servlet.restcomm.rvd.security.TicketRepository;
-import org.mobicents.servlet.restcomm.rvd.storage.*;
-import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
+import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
+import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
+import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceSettingsDao;
+import org.mobicents.servlet.restcomm.rvd.storage.FsWorkspaceSettingsDao;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 /**
