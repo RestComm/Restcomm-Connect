@@ -300,10 +300,12 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		.then( function () { return designerService.buildProject($scope.projectName) } )
 		.then(
 			function () {
+			    $scope.drawGraph();
 				notifications.put({type:"success", message:"Project saved"});
 				console.log("Project saved and built");
 			},
 			function (reason) {
+			    $scope.drawGraph();
 				if ( reason.exception.className == 'ValidationException' ) {
 					console.log("Validation error");
 					notifications.put({type:"warning", message:"Project saved with validation errors"});
