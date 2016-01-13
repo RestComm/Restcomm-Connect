@@ -1310,7 +1310,8 @@ public final class Call extends UntypedActor {
                 break;
             }
             case SipServletResponse.SC_BUSY_HERE:
-            case SipServletResponse.SC_BUSY_EVERYWHERE: {
+            case SipServletResponse.SC_BUSY_EVERYWHERE:
+            case SipServletResponse.SC_DECLINE: {
                 sendCallInfoToObservers();
 
                 //Important. If state is DIALING, then do nothing about the BUSY. If not DIALING state move to failingBusy
