@@ -181,12 +181,12 @@ public class IdentityMigrationTool {
             report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + ") FAILED: account has no email address and won't be migrated.");
         else {
             String password = account.getAuthToken(); // use auth_token as password for the user. Other options?
-            UserEntity user = new UserEntity(account.getEmailAddress(), account.getEmailAddress(), account.getFriendlyName(), null, password );
+            UserEntity user = new UserEntity(account.getEmailAddress(), account.getFriendlyName(), null, password );
             Outcome outcome = identityApi.createUser(user);
             if ( outcome == Outcome.CONFLICT ) {
                 // the user is already there. Check the policy and act accordingly
                 if (this.inviteExistingUsers) {
-                    if ( ! identityApi.inviteUser(account.getEmailAddress()) )
+                    if ( ! (identityApi.inviteUser(account.getEmailAddress()) == Outcome.OK))
                         report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + " - " + account.getEmailAddress() + ") FAILED: invitation to existing user failed.");
                     else {
                         report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + " - " + account.getEmailAddress() + ") OK (invited)");
@@ -196,7 +196,7 @@ public class IdentityMigrationTool {
                     report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + " - " + account.getEmailAddress() + ") FAILED: user already exists and policy does not allow invitations");
             } else
             if (outcome == Outcome.OK) {
-                if (!identityApi.inviteUser(account.getEmailAddress()))
+                if (! (identityApi.inviteUser(account.getEmailAddress()) == Outcome.OK))
                     report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + " - " + account.getEmailAddress() + ") failed: new user was created but invitation failed" );
                 else {
                     report("Migrating account " + account.getSid().toString() + " (" + account.getFriendlyName() + " - " + account.getEmailAddress() + ") OK (created)");

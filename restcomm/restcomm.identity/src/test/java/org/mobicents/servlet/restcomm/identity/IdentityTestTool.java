@@ -20,6 +20,8 @@
 
 package org.mobicents.servlet.restcomm.identity;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -27,7 +29,9 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.NotImplementedException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -68,7 +72,7 @@ public class IdentityTestTool {
         this.adminPassword = MASTER_ADMIN_PASSWORD;
     }
 
-    private String getToken() {
+    public String getToken() {
         if (this.token == null) {
             Client jerseyClient = Client.create();
             jerseyClient.addFilter(new HTTPBasicAuthFilter(KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET));
@@ -106,6 +110,30 @@ public class IdentityTestTool {
         Client jerseyClient = Client.create();
         WebResource webResource = jerseyClient.resource(authServerBaseUrl + "/auth/admin/realms/restcomm");
         webResource.header("Authorization", "Bearer " + token).delete();
+    }
+
+    /**
+     * Check if a role is inside the mappings.
+     *
+     * @param element
+     * @param role
+     * @param type This should be "realm" or "client".
+     * @return
+     */
+    public static boolean roleMappingsContainRole(JsonElement element, String role, String instanceId, String type) {
+        if ("client".equals(type)) {
+            JsonElement mappingsElement = element.getAsJsonObject().get("clientMappings").getAsJsonObject().get(instanceId + "-restcomm-rest").getAsJsonObject().get("mappings").getAsJsonArray();
+            Assert.assertNotNull(mappingsElement);
+            JsonArray mappingsArray = mappingsElement.getAsJsonArray();
+            Assert.assertTrue(mappingsArray.size() > 0);
+            boolean developerRoleFound = false;
+            for (int i = 0; i < mappingsArray.size(); i++) {
+                if (role.equals(mappingsArray.get(i).getAsJsonObject().get("name").getAsString()))
+                    return true;
+            }
+            return false;
+        }
+        throw new NotImplementedException();
     }
 
 }

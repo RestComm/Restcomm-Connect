@@ -155,7 +155,7 @@ public class RestcommIdentityApi {
      * @param username
      * @return
      */
-    public boolean inviteUser(String username) {
+    public Outcome inviteUser(String username) {
         if (this.identityInstanceId == null)
             throw new IllegalStateException("No identity instance id is set");
 
@@ -167,9 +167,9 @@ public class RestcommIdentityApi {
             HttpResponse response = client.execute(request);
             if (response.getStatusLine().getStatusCode() >= 300) {
                 logger.error("Error inviting user '" + username + "' to instance '" + this.identityInstanceId + "' - " + response.getStatusLine().toString());
-                return false;
+                return Outcome.FAILED;
             } else
-                return true;
+                return Outcome.OK;
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         } finally {
@@ -309,7 +309,8 @@ public class RestcommIdentityApi {
         String password;
         //List<String> memberOf; // instanceIds of restcomm instances User is a member of
 
-        public UserEntity(String username, String email, String firstname, String lastname, String password) {
+        // keep this constructor disabled until we figure out how to treat the email param (currently the identity-proxy does not save it)
+        private UserEntity(String username, String email, String firstname, String lastname, String password) {
             super();
             this.username = username;
             this.email = email;
@@ -317,6 +318,14 @@ public class RestcommIdentityApi {
             this.lastname = lastname;
             this.password = password;
         }
+
+        public UserEntity(String username, String firstname, String lastname, String password) {
+            this.username = username;
+            this.firstname = firstname;
+            this.lastname = lastname;
+            this.password = password;
+        }
+
         public UserEntity() {
             super();
         }
