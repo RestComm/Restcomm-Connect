@@ -47,16 +47,6 @@
   ],
   "clients": [
     {
-      "clientId": "ttttt",
-      "enabled": true,
-      "adminUrl": "/customer-portal",
-      "baseUrl": "/customer-portal",
-      "redirectUris": [
-        "/customer-portal/*"
-      ],
-      "secret": "password"
-    },
-    {
       "clientId" : "unregistered-restcomm",
       "surrogateAuthRequired" : false,
       "enabled" : true,

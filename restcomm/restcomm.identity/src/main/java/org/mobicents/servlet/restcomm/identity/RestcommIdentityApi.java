@@ -149,7 +149,7 @@ public class RestcommIdentityApi {
     }
 
     /**
-     * Grants user 'username' access to this instance. Default instance-specific roles are assigned.
+     * Grants user access to this instance. In keycloak terms,  instance-specific roles are assigned.
      * Currently logged user token is used to access restcomm-identity proxy.
      *
      * @param username

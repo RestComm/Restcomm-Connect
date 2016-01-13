@@ -35,6 +35,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
+ * Utility class that handles setup/teardown of a keycloak instance.
+ *
+ * Requirements:
+ *      - admin account in master realm
+ *      - existence of an app/client with Direct Grants enabled
+ *
  * @author Orestis Tsakiridis
  */
 public class IdentityTestTool {
@@ -76,7 +82,7 @@ public class IdentityTestTool {
             JsonParser parser = new JsonParser();
             JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
             String token = jsonResponse.getAsJsonPrimitive("access_token").getAsString();
-            System.out.println("Using oauth token: " + token);
+            //System.out.println("Using oauth token: " + token);
 
             this.token = token;
         }
