@@ -71,7 +71,7 @@ public class IdentityMigrationToolIT {
         // create migration tool with 'inviteExisting' == false
         IdentityMigrationTool migrationTool = new IdentityMigrationTool(dao, api, false);
         // create user
-        UserEntity userEntity = new UserEntity("existing@company.com","existing@company.com","existing user",null,"password");
+        UserEntity userEntity = new UserEntity("existing@company.com","existing user",null,"password");
         api.createUser(userEntity);
         // try to migrate over him
         Account existingAccount = dao.buildTestAccount(null,  "existing@company.com", "existing user", "password", null);
