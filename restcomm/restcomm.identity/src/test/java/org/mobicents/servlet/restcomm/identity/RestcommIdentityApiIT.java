@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.identity;
 
 import static org.junit.Assert.*;
 
+import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -16,7 +17,7 @@ import java.io.InputStream;
 public class RestcommIdentityApiIT {
 
     static String authServerBaseUrl = IdentityTestTool.AUTH_SERVER_BASE_URL;
-    static String username = "administrator@company.com";  //"test_user";
+    static String username = "administrator@company.com";
     static String password = "RestComm";
     static String realm = "restcomm";
 
@@ -32,11 +33,24 @@ public class RestcommIdentityApiIT {
         tool = new IdentityTestTool();
         tool.importRealm("simple-identity-instance-realm.json");
         api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm, null);
-        //api = new RestcommIdentityApi("http://192.168.1.40:8080/auth", "administrator@company.com", "RestComm", realm, null);
-       instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
-       api.bindInstance(instanceId);
+        instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
+        Assert.assertNotNull("Error creating identity instance", instanceId);
+        api.bindInstance(instanceId);
+        Assert.assertEquals(instanceId, api.getBoundInstanceId());
     }
 
+    @Test void retrieveToken() {
+        RestcommIdentityApi api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm, null);
+        Assert.assertNotNull("Error retrieving token for user '" + username +"'", api.getTokenString());
+    }
+
+    /*
+    @Test
+    public void userIsCreated() {
+        UserEntity user = new UserEntity("user1@gmail.com", "user1@gmail.com","first1", "last1", "pass1" );
+        Assert.assertEquals(api.createUser(user));
+    }
+*/
     @Test
     public void testCreateAndInviteUser() {
         UserEntity user = new UserEntity("test_invited_user",null, "Test Invited User", null, "invited_password");
@@ -48,10 +62,6 @@ public class RestcommIdentityApiIT {
     @AfterClass
     public static void removeInstance() throws RestcommIdentityApiException {
         tool.dropRealm(realm);
-        /*if (instanceId != null) {
-            Outcome outcome = api.dropInstance(instanceId);
-            assertEquals("Error removing instance", Outcome.OK, outcome);
-        }*/
     }
 
 
