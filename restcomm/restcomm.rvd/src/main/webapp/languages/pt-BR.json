@@ -63,9 +63,6 @@
 
 	"designerSettingsModalSettingLabel": "Propriedades",
 	"designerSettingsModalRestcommAPILabel": "API Restcomm",
-	"designerSettingsModalOverrideDefaultLabel": "Sobrescreva o host padrão e a porta quando contactar o Servidor API Restcomm. Deixe em branco caso o RVD esteja na mesma máquina que o Restcomm.",
-	"designerSettingsModalHostInput": "Host",
-	"designerSettingsModalPortInput": "Porta",
 	"designerSettingsModalCredencialsLabel1": "Credenciais para acessar a Restcomm API. Deve ser informado caso",
 	"designerSettingsModalCredencialsLabel2": "Gatilho Web",
 	"designerSettingsModalCredencialsLabel3": "esteja ativo.",
