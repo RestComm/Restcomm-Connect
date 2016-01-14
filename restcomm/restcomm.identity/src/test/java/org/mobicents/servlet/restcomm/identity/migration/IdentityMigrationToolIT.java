@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.identity.migration;
 
+import junit.framework.Assert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -7,33 +8,42 @@ import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigur
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.identity.IdentityTestTool;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdentityApiException;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
+
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
 public class IdentityMigrationToolIT {
 
-    private static String authServerBaseUrl = "http://192.168.1.40:8080";
-    private static String username = "administrator@company.com";
-    private static String password = "RestComm";
-    private static String realm = "restcomm";
+    static String authServerBaseUrl = IdentityTestTool.AUTH_SERVER_BASE_URL;
+    static String username = "administrator@company.com";
+    static String password = "RestComm";
+    static String realm = "restcomm";
 
     static RestcommIdentityApi api;
-    static String mainInstanceId;
+    //static String mainInstanceId;
+    static IdentityTestTool tool;
+
 
     public IdentityMigrationToolIT() {
         // TODO Auto-generated constructor stub
     }
 
     @BeforeClass
-    public static void setup() throws RestcommIdentityApiException {
+    public static void setup() throws RestcommIdentityApiException, IOException {
+        // create realm
+        tool = new IdentityTestTool();
+        tool.importRealm("simple-identity-instance-realm.json");
         // create api
         api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm, null);
-        mainInstanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
-        api.bindInstance(mainInstanceId);
-
+        // create instance
+        String instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
+        Assert.assertNotNull("Error creating identity instance", instanceId);
+        api.bindInstance(instanceId);
     }
 
     @Test
@@ -129,7 +139,8 @@ public class IdentityMigrationToolIT {
 
     @AfterClass
     public static void shutdown() {
-        assertEquals("Error removing instance " + api.getBoundInstanceId(), Outcome.OK, api.dropInstance(mainInstanceId));
+        tool.dropRealm(realm);
+        //assertEquals("Error removing instance " + api.getBoundInstanceId(), Outcome.OK, api.dropInstance(mainInstanceId));
     }
 
 }
