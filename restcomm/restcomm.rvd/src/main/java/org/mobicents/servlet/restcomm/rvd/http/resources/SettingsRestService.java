@@ -78,7 +78,7 @@ public class SettingsRestService extends RestService {
 
     @RvdAuth
     @POST
-    public Response setSettings(@Context HttpServletRequest request) {
+    public Response setProfile(@Context HttpServletRequest request) {
         try {
             // Create a settings model from the request
             String data;
@@ -92,9 +92,6 @@ public class SettingsRestService extends RestService {
                 profile = new UserProfile();
             profile.setUsername(settingsForm.getApiServerUsername());
             profile.setToken(settingsForm.getApiServerPass());
-            profile.setRestcommHost(settingsForm.getApiServerHost());
-            profile.setRestcommPort(settingsForm.getApiServerRestPort());
-            profile.setRestcommScheme(settingsForm.getApiServerScheme());
             profileDao.saveUserProfile(loggedUsername, profile);
             return Response.ok().build();
         } catch (IOException e) {
@@ -109,7 +106,7 @@ public class SettingsRestService extends RestService {
     @RvdAuth
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getSettings() {
+    public Response getProfile() {
         // load user profile
         ProfileDao profileDao = new FsProfileDao(workspaceStorage);
         String loggedUsername = securityContext.getUserPrincipal().getName();
@@ -119,9 +116,6 @@ public class SettingsRestService extends RestService {
         if (profile != null) {
             settingsForm.setApiServerUsername(profile.getUsername());
             settingsForm.setApiServerPass(profile.getToken());
-            settingsForm.setApiServerHost(profile.getRestcommHost());
-            settingsForm.setApiServerRestPort(profile.getRestcommPort());
-            settingsForm.setApiServerScheme(profile.getRestcommScheme());
         }
 
         // build a response

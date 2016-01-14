@@ -44,7 +44,6 @@ import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlAction;
 import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
-import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
@@ -52,8 +51,6 @@ import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
-import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceSettingsDao;
-import org.mobicents.servlet.restcomm.rvd.storage.FsWorkspaceSettingsDao;
 import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
@@ -217,20 +214,17 @@ public class RvdController extends RestService {
         UserProfile profile = profileDao.loadUserProfile(owner);
         if (profile == null)
             throw new CallControlException("No user profile found for user '" + owner + "'. Web trigger cannot be used for project belonging to this user.");
-        // load rvd settings from workspace
-        WorkspaceSettingsDao workspaceSettingsDao = new FsWorkspaceSettingsDao(workspaceStorage);
-        WorkspaceSettings workspaceSettings = workspaceSettingsDao.loadWorkspaceSettings();
         // guess restcomm location
         URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
         // initialize a restcomm client object using various information sources
         RestcommClient restcommClient;
         try {
-            restcommClient = new RestcommClient(workspaceSettings, profile, restcommBaseUri);
+            restcommClient = new RestcommClient(restcommBaseUri, profile.getUsername(), profile.getToken());
         } catch (RestcommClient.RestcommClientInitializationException e) {
-            throw new CallControlException("WebTrigger: Cannot initialize client object for contacting restcomm",e);
+            throw new CallControlException("WebTrigger",e);
         }
 
-        logger.debug("WebTrigger: reaching restcomm at '" + restcommClient.getProtocol() + "://" +  restcommClient.getHost() + ":" + restcommClient.getPort() + "'");
+        logger.debug("WebTrigger: reaching restcomm at '" + restcommBaseUri + "'");
 
         String rcmlUrl = info.lanes.get(0).startPoint.rcmlUrl;
         // use the existing application for RCML if none has been given
@@ -321,7 +315,7 @@ public class RvdController extends RestService {
             int httpStatus = 500;
             if (e.getStatusCode() != null)
                 httpStatus = e.getStatusCode();
-            return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "failure", e.getMessage(), httpStatus);
+            return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "failure", "", httpStatus);
         } catch (StorageEntityNotFound e) {
             logger.error("", e);
             return Response.status(Status.NOT_FOUND).build(); // for case when the cc file does not exist

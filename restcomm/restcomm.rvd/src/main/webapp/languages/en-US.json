@@ -70,9 +70,6 @@
 
 	"designerSettingsModalSettingLabel": "Settings",
 	"designerSettingsModalRestcommAPILabel": "Restcomm API",
-	"designerSettingsModalOverrideDefaultLabel": "Override default host and port when contacting Restcomm API Server. Leave blank if RVD is on the same machine as Restcomm.",
-	"designerSettingsModalHostInput": "Host",
-	"designerSettingsModalPortInput": "Port",
 	"designerSettingsModalCredencialsLabel1": "Credentials for accessing Restcomm API. You should provide these if",
 	"designerSettingsModalCredencialsLabel2": "Web Trigger",
 	"designerSettingsModalCredencialsLabel3": "is enabled.",

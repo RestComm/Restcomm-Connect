@@ -6,19 +6,6 @@
 	<p class="lead">{{'designerSettingsModalRestcommAPILabel' | translate}}</p>
 
 	<form name="settingsForm" novalidate>
-		<div class="help-block">{{'designerSettingsModalOverrideDefaultLabel' | translate}}</div>
-		<div class="row form-group">
-			<div class="col-md-8 input-group">
-				<span class="input-group-addon">{{'designerSettingsModalHostInput' | translate}}</span>
-				<rvd-dropdown model="settings.apiServerScheme" options="[{'key':'&nbsp;','value':null},{'key':'HTTP','value':'http'},{'key':'HTTPS','value':'https'}]"></rvd-dropdown>
-				<input ng-model="settings.apiServerHost" type="text" class="form-control">
-			</div>
-			<div class="col-md-4 input-group">
-				<span class="input-group-addon">{{'designerSettingsModalPortInput' | translate}}</span>
-				<input ng-model="settings.apiServerRestPort" ng-pattern="/^[0-9]*$/" type="number" class="form-control">
-			</div>
-		</div>
-
 		<div class="help-block">{{'designerSettingsModalCredencialsLabel1' | translate}} <i>{{'designerSettingsModalCredencialsLabel2' | translate}}</i> {{'designerSettingsModalCredencialsLabel3' | translate}}</div>
 		<div class="row form-group">
 			<div class="col-md-6 input-group">

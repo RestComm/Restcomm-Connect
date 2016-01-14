@@ -44,9 +44,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
 import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
-import org.mobicents.servlet.restcomm.rvd.model.HttpScheme;
-import org.mobicents.servlet.restcomm.rvd.model.UserProfile;
-import org.mobicents.servlet.restcomm.rvd.model.WorkspaceSettings;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
@@ -56,9 +53,7 @@ import com.google.gson.Gson;
  */
 public class RestcommClient {
 
-    private final String protocol;
-    private final String host;
-    private final Integer port;
+    private final URI restcommBaseUrl;
     private final String username;
     private final String password;
     private boolean authenticationTokenAsPassword = false;
@@ -122,11 +117,7 @@ public class RestcommClient {
         }
 
         public <T> T done(Gson gson, Class<T> resultClass) throws AccessApiException {
-            // Build the uri for the call made to Restcomm
-            URIBuilder uriBuilder = new URIBuilder();
-            uriBuilder.setHost(client.host);
-            uriBuilder.setPort(client.port);
-            uriBuilder.setScheme(client.protocol);
+            URIBuilder uriBuilder = new URIBuilder(client.getRestcommBaseUrl());
             uriBuilder.setPath(path);
 
             try {
@@ -220,113 +211,18 @@ public class RestcommClient {
 
     }
 
-    public RestcommClient(String protocol, String host, int port, String username, String password) {
-        // TODO Auto-generated constructor stub
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        apacheClient = CustomHttpClientBuilder.buildHttpClient();
-    }
-
-
     /**
-     *   Creates and initializes a RestcommClient combining information from various sources. Try to use this
-     *   constructor for contacting restcomm to have logic in a single place.
-     *
-     *   Algorithm for initializing properties for accessing restcomm REST API, namely host, port,
-     *   username and password.
-     *
-     *   For restcomm host & port:
-     *    1. Try using the workspace .settings file. If host,port is found use it.
-     *    2. Otherwise, check the user profile.
-     *    3. If all this fails, use RestcommBaseUri (connector information)
-     *
-     *   For user credentials:
-     *    1. Use the user profile
-     *
-     * @param workspaceSettings
-     * @param profile
      * @param fallbackRestcommBaseUri
      * @throws RestcommClientInitializationException
      */
-    public RestcommClient (WorkspaceSettings workspaceSettings, UserProfile profile, URI fallbackRestcommBaseUri, String usernameOverride, String passwordOverride) throws RestcommClientInitializationException {
-        // initialize host
-        String apiHost = null;
-        if (workspaceSettings != null) {
-            if ( ! RvdUtils.isEmpty(workspaceSettings.getApiServerHost()) )
-                apiHost = workspaceSettings.getApiServerHost();
-        }
-        if (apiHost == null) {
-            if ( profile != null && ! RvdUtils.isEmpty(profile.getRestcommHost()) )
-                apiHost = profile.getRestcommHost();
-        }
-        if (apiHost == null) {
-            apiHost = fallbackRestcommBaseUri.getHost();
-        }
-        // initialize port
-        Integer apiPort = null;
-        if (workspaceSettings != null && workspaceSettings.getApiServerRestPort() != null) {
-            apiPort = workspaceSettings.getApiServerRestPort();
-        }
-        if (apiPort == null && (profile != null ) && profile.getRestcommPort() != null) {
-            apiPort = profile.getRestcommPort();
-        }
-        if (apiPort == null) {
-            apiPort = fallbackRestcommBaseUri.getPort();
-        }
-        // initialize scheme
-        HttpScheme apiScheme = null;
-        if (workspaceSettings != null && workspaceSettings.getApiServerScheme() != null )
-            apiScheme = workspaceSettings.getApiServerScheme();
-        if (apiScheme == null && (profile != null ) && profile.getRestcommScheme() != null )
-            apiScheme = profile.getRestcommScheme();
-        if (apiScheme == null)
-            apiScheme = HttpScheme.valueOf(fallbackRestcommBaseUri.getScheme());
-        if (apiScheme == null)
-            apiScheme = HttpScheme.http; // default to 'http'
-
-        if (RvdUtils.isEmpty(apiHost) || apiPort == null)
-            throw new RestcommClientInitializationException("Could not determine restcomm host/port .");
-        // credentials initialization
-        String apiUsername = null;
-        String apiPassword = null;
-        if (profile != null) {
-            // initialize username
-            apiUsername = profile.getUsername();
-            //initialize password
-            apiPassword = profile.getToken();
-        }
-        if (usernameOverride != null) {
-            apiUsername = usernameOverride;
-            apiPassword = passwordOverride;
-        }
-        if (RvdUtils.isEmpty(apiUsername))
+    public RestcommClient (URI fallbackRestcommBaseUri, String usernameOverride, String passwordOverride) throws RestcommClientInitializationException {
+        if (RvdUtils.isEmpty(usernameOverride))
             throw new RestcommClientInitializationException("Restcomm client could not determine the user for accessing Restcomm");
 
-        this.host = apiHost;
-        this.port = apiPort;
-        this.protocol = apiScheme.toString();
-        this.username = apiUsername;
-        this.password = apiPassword;
+        this.restcommBaseUrl = fallbackRestcommBaseUri;
+        this.username = usernameOverride;
+        this.password = passwordOverride;
         apacheClient = CustomHttpClientBuilder.buildHttpClient();
-    }
-
-    public RestcommClient (WorkspaceSettings workspaceSettings, UserProfile profile, URI fallbackRestcommBaseUri) throws RestcommClientInitializationException {
-        this(workspaceSettings,profile,fallbackRestcommBaseUri,null,null);
-    }
-
-    public String getProtocol() {
-        return protocol;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public Integer getPort() {
-        return port;
     }
 
     public String getUsername() {
@@ -336,6 +232,8 @@ public class RestcommClient {
     public String getPassword() {
         return password;
     }
+
+    public URI getRestcommBaseUrl() { return restcommBaseUrl; }
 
     public Request get(String path) {
         return new Request(this, "GET", path);
@@ -352,7 +250,5 @@ public class RestcommClient {
     public void setAuthenticationTokenAsPassword(boolean b) {
         this.authenticationTokenAsPassword = b;
     }
-
-
 
 }

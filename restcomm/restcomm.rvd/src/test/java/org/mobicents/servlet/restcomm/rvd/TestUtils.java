@@ -29,6 +29,9 @@ import java.net.URL;
 import java.util.Random;
 
 /**
+ * Helper class for testing rvd. Contains workspace management functions
+ * and RvdConfiguration simulation.
+ *
  * @author Orestis Tsakiridis
  */
 public class TestUtils {
@@ -69,7 +72,5 @@ public class TestUtils {
     public static RvdConfiguration initRvdConfiguration() {
         return initRvdConfiguration("default");
     }
-
-
 
 }
