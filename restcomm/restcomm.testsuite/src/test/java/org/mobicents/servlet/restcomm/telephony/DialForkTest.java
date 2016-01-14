@@ -569,7 +569,7 @@ public class DialForkTest {
         assertTrue(georgeCall.sendIncomingCallResponse(Response.DECLINE, "Busy Here-George", 3600));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
-        assertTrue(aliceCall.sendIncomingCallResponse(486, "Busy Here-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.DECLINE, "Busy Here-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
