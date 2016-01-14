@@ -1236,10 +1236,11 @@ public final class Call extends UntypedActor {
     }
 
     private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
+        getContext().setReceiveTimeout(Duration.Undefined());
         if (is(ringing)) {
             fsm.transition(message, failingNoAnswer);
         } else {
-            logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+            logger.info("Call : "+self().path()+" isTerminated(): "+self().isTerminated()+" timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
                     + " Direction: " + direction + " From: " + from + " To: " + to);
         }
     }
