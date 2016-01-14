@@ -366,7 +366,7 @@ public final class Call extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         final State state = fsm.state();
-        logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString());
+        logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString()+" direction: "+direction);
         logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
                 + sender.path().toString());
 
