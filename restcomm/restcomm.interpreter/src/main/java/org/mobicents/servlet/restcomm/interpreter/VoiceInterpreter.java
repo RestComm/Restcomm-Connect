@@ -590,6 +590,33 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         if (!dialActionExecuted) {
                             fsm.transition(message, finishDialing);
                         }
+                    } else if (finishDialing.equals(state)) {
+                        Attribute attribute = null;
+                        if (verb != null) {
+                            attribute = verb.attribute("action");
+                        }
+                        if (dialBranches != null && dialBranches.contains(sender)) {
+                            logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + state);
+                            dialBranches.remove(sender);
+                            if (attribute != null) {
+                                executeDialAction(message, sender);
+                            }
+                            sender.tell(new Cancel(), self());
+                            if (dialBranches.size() > 0) {
+                                //Wait to check the response from the other branches
+                                return;
+                            } else {
+                                //Since there are no more branches, ask for the next RCML
+                                if (attribute == null) {
+                                    final GetNextVerb next = GetNextVerb.instance();
+                                    parser.tell(next, self());
+                                }
+                                dialChildren = null;
+                                outboundCall = null;
+                                callback();
+                                return;
+                            }
+                        }
                     } else {
                         if (!finishDialing.equals(state))
                             fsm.transition(message, finished);
@@ -1846,32 +1873,58 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (message instanceof CallStateChanged) {
-                if (forking.equals(state) && sender.equals(call)) {
-                    //Initial call wants to finish dialing
-                    logger.info("Sender == call: " + sender.equals(call));
-                    final UntypedActorContext context = getContext();
-                    context.setReceiveTimeout(Duration.Undefined());
+                logger.info("CallStateChanged state: "+((CallStateChanged)message).state().toString()+" ,sender: "+sender().path());
+                if (forking.equals(state) || finishDialing.equals(state)) {
+                    if (sender.equals(call)) {
+                        //Initial call wants to finish dialing
+                        logger.info("Sender == call: " + sender.equals(call));
+                        final UntypedActorContext context = getContext();
+                        context.setReceiveTimeout(Duration.Undefined());
 
-                    Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
-                    while (dialBranchesIterator.hasNext()) {
-                        ActorRef branch = dialBranchesIterator.next();
-                        if (attribute != null) {
-                            executeDialAction(message, branch);
+                        Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
+                        while (dialBranchesIterator.hasNext()) {
+                            ActorRef branch = dialBranchesIterator.next();
+                            if (attribute != null) {
+                                executeDialAction(message, branch);
+                            }
+                            branch.tell(new Cancel(), source);
                         }
-                        branch.tell(new Cancel(), source);
+                        if (dialBranches.size() > 0) {
+                            dialBranches = null;
+                        }
+                        //Since initial call wants to finish dialling there is no point to check form RCML next
+//                        if (attribute == null) {
+//                            final GetNextVerb next = GetNextVerb.instance();
+//                            parser.tell(next, source);
+//                        }
+                        //Instead move the FSM to finished
+                        dialChildren = null;
+                        outboundCall = null;
+                        callback();
+                        fsm.transition(message, finished);
+                        return;
+                    } else if (dialBranches.contains(sender)) {
+                        logger.info("Dial branch new call state: "+((CallStateChanged)message).state().toString()+" call path: "+sender().path()+" VI state: "+state);
+                        dialBranches.remove(sender);
+                        if (attribute != null) {
+                            executeDialAction(message, sender);
+                        }
+                        sender.tell(new Cancel(), source);
+                        if (dialBranches.size() > 0) {
+                            //Wait to check the response from the other branches
+                            return;
+                        } else {
+                            //Since there are no more branches, ask for the next RCML
+                            if (attribute == null) {
+                                final GetNextVerb next = GetNextVerb.instance();
+                                parser.tell(next, source);
+                            }
+                            dialChildren = null;
+                            outboundCall = null;
+                            callback();
+                            return;
+                        }
                     }
-                    if (dialBranches.size() > 0) {
-                        dialBranches = null;
-                    }
-//                        call.tell(new StopMediaGroup(), null);
-                    if (attribute == null) {
-                        final GetNextVerb next = GetNextVerb.instance();
-                        parser.tell(next, source);
-                    }
-                    dialChildren = null;
-                    outboundCall = null;
-                    callback();
-                    return;
                 } else if (bridged.equals(state)) {
                     logger.info("finishDialing state=bridged, will hangup outboundCall");
                     outboundCall.tell(new Hangup(), source);
