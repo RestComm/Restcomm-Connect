@@ -112,7 +112,7 @@
 							<target>
 								<!--<echo message="STARTING KEYCLOAK ${basedir}/../../release/keycloak/bin/"/>-->
 								<exec executable="./standalone.sh"
-									  dir="${basedir}/../../release/keycloak/bin/"
+									  dir="${basedir}/../../keycloak/bin/"
 									  spawn="true">
 									<arg value="-b"/>
 									<arg value="127.0.0.1"/>
@@ -155,7 +155,7 @@
 							<target>
 								<!--<echo message="STOPPING KEYCLOAK" />-->
 								<exec executable="./jboss-cli.sh"
-									  dir="${basedir}/../../release/keycloak/bin/"
+									  dir="${basedir}/../../keycloak/bin/"
 									  spawn="false">
 									<arg value='--commands=connect localhost:9980,shutdown'/>
 								</exec>
