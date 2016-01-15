@@ -10,15 +10,26 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 
 	
 	$scope.refreshProjectList = function() {
-		$http({url: 'services/projects',
-				method: "GET"
-		})
-		.success(function (data, status, headers, config) {
-			$scope.projectList = data;
-			for ( var i=0; i < $scope.projectList.length; i ++)
-				$scope.projectList[i].viewMode = 'view';
-		})
-		.error(function (data, status, headers, config) {
+
+		$http({
+			url: '/restcomm/2012-04-24/Accounts/' + $scope.authInfo.username + '/Applications.json',
+			method: 'GET'
+		}).success(function (data, status, headers, config) {
+			var projectList = [];
+			for ( var i=0; i < data.length; i ++){
+				if(data[i].project_sid){
+					var project = {};
+					project.name = data[i].friendly_name;
+					project.startUrl = data[i].rcml_url;
+					project.kind = data[i].kind;
+					project.projectSid = data[i].project_sid;
+					project.viewMode = 'view';
+					projectList.push(project);	
+				}
+				
+			}
+			$scope.projectList = projectList;
+		}).error(function (data, status, headers, config) {
 			if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
 		});

@@ -377,15 +377,15 @@ public class ProjectRestService extends RestService {
 
     @GET
     @RvdAuth
-    @Path("{name}/archive")
-    public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist,
-            UnsupportedEncodingException, EncoderException {
-        logger.debug("downloading raw archive for project " + projectName);
-        assertProjectAvailable(projectName);
+    @Path("{projectSid}/archive")
+    public Response downloadArchive(@PathParam("projectSid") String projectSid, @QueryParam("projectName") String projectName)
+            throws StorageException, ProjectDoesNotExist, UnsupportedEncodingException, EncoderException {
+        logger.debug("downloading raw archive for project " + projectSid);
+        assertProjectAvailable(projectSid);
 
         InputStream archiveStream;
         try {
-            archiveStream = projectService.archiveProject(projectName);
+            archiveStream = projectService.archiveProject(projectSid);
             String dispositionHeader = "attachment; filename*=UTF-8''" + RvdUtils.myUrlEncode(projectName + ".zip");
             return Response.ok(archiveStream, "application/zip").header("Content-Disposition", dispositionHeader).build();
 
