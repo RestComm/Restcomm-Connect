@@ -196,13 +196,13 @@ public class RasRestService extends RestService {
     @GET
     @RvdAuth
     @Path("/packaging/download")
-    public Response downloadPackage(@QueryParam("name") String projectName) {
-        logger.debug("downloading app zip for project " + projectName);
+    public Response downloadPackage(@QueryParam("projectName") String projectName, @QueryParam("projectSid") String projectSid) {
+        logger.debug("downloading app zip for project " + projectSid);
 
         try {
-            if (FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
+            if (FsPackagingStorage.hasPackaging(projectSid, workspaceStorage)) {
                 //Validator validator = new RappConfigValidator();
-                InputStream zipStream = FsPackagingStorage.getRappBinary(projectName, workspaceStorage);
+                InputStream zipStream = FsPackagingStorage.getRappBinary(projectSid, workspaceStorage);
                 return Response.ok(zipStream, "application/zip").header("Content-Disposition", "attachment; filename*=UTF-8''" + RvdUtils.myUrlEncode(projectName + ".ras.zip")).build();
             } else {
                 return null;

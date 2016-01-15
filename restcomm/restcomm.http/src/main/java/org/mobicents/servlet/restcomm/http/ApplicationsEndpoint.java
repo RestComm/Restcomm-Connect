@@ -51,6 +51,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.ApplicationList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -126,8 +127,9 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getApplication(final String accountSid, final String sid, final MediaType responseType) {
+        Account account;
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
+            secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -147,7 +149,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControlApplications(accountSid, application);
+                secureLevelControlApplications(account.getSid().toString(), application);
             } catch (AuthorizationException e) {
                 return status(UNAUTHORIZED).build();
             }
@@ -163,13 +165,14 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getApplications(final String accountSid, final MediaType responseType) {
+        Account account;
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
-            secureLevelControlApplications(accountSid, null);
+            secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
+            secureLevelControlApplications(account.getSid().toString(), null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final List<Application> applications = dao.getApplications(new Sid(accountSid));
+        final List<Application> applications = dao.getApplications(account.getSid());
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -182,9 +185,10 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
 
     public Response putApplication(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        Account account;
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Applications");
-            secureLevelControlApplications(accountSid, null);
+            secure(account = accountsDao.getAccount(accountSid), "RestComm:Create:Applications");
+            secureLevelControlApplications(account.getSid().toString(), null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -198,7 +202,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (application == null) {
             application = createFrom(new Sid(accountSid), data);
             dao.addApplication(application);
-        } else if (!application.getAccountSid().toString().equals(accountSid)) {
+        } else if (!application.getAccountSid().toString().equals(account.getSid().toString())) {
             return status(CONFLICT)
                     .entity("A application with the same name was already created by another account. Please, choose a different name and try again.")
                     .build();
@@ -222,8 +226,9 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
 
     protected Response updateApplication(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        Account account;
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Applications");
+            secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -232,7 +237,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControlApplications(accountSid, application);
+                secureLevelControlApplications(account.getSid().toString(), application);
             } catch (AuthorizationException e) {
                 return status(UNAUTHORIZED).build();
             }

@@ -4,9 +4,9 @@
 				<small>{{'formPackingLabel' | translate}}</small>  
 				<i class="fa fa-archive pull-right"></i>  
 				<small  class="pull-right packaging-menu"> 
-					 <a class="rvd-clickable" href='#/designer/{{projectName}}'><i class="fa fa-pencil" title="{{'formKeepEditingTitle' | translate}}"></i></a>&nbsp;
-					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='saveRappClicked(projectName,rapp,submitPermitted)'><i class="fa fa-save" title="{{(submitPermitted ? 'formSaveTitle' : 'formSaveCompleteRequiredHint') | translate}}"></i></a>&nbsp;  
-					 <a ng-show="!isNewRapp" class="rvd-clickable" ng-disabled="true" ng-click='preparePackage(projectName)'><i class="fa fa-download" title="{{'formDownloadTitle' | translate}}"></i></a> 
+					 <a class="rvd-clickable" href='#/designer/{{projectSid}}={{projectName}}'><i class="fa fa-pencil" title="{{'formKeepEditingTitle' | translate}}"></i></a>&nbsp;
+					 <a ng-class="{'rvd-grey':!submitPermitted, 'rvd-clickable':submitPermitted}" ng-click='saveRappClicked(projectSid,rapp,submitPermitted)'><i class="fa fa-save" title="{{(submitPermitted ? 'formSaveTitle' : 'formSaveCompleteRequiredHint') | translate}}"></i></a>&nbsp;  
+					 <a ng-show="!isNewRapp" class="rvd-clickable" ng-disabled="true" ng-click='preparePackage(projectSid, projectName)'><i class="fa fa-download" title="{{'formDownloadTitle' | translate}}"></i></a> 
 					 <i ng-show="isNewRapp" class="fa fa-download" title="{{'formDownloadNewTitle' | translate}}"></i>
 				</small>
 			</h1>
