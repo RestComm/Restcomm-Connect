@@ -128,7 +128,8 @@ public class RasService {
      * @return The name (some sort of identifier) of the new project created
      * @throws RvdException
      */
-    public String importAppToWorkspace( InputStream packageZipStream, String loggedUser, ProjectService projectService ) throws RvdException {
+    public String importAppToWorkspace(String projectSid, InputStream packageZipStream, String loggedUser,
+            ProjectService projectService) throws RvdException {
         File tempDir = RvdUtils.createTempDir();
         logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
         Unzipper unzipper = new Unzipper(tempDir);
@@ -167,12 +168,12 @@ public class RasService {
 
         // create a project placeholder with the application name specified in the package. This should be a default. The user should be able to override it
         String newProjectName = FsProjectStorage.getAvailableProjectName(info.getName(), workspaceStorage);
-        FsProjectStorage.createProjectSlot(newProjectName, workspaceStorage);
+        FsProjectStorage.createProjectSlot(projectSid, workspaceStorage);
 
         // add project state
         ProjectState projectState = workspaceStorage.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
         projectState.getHeader().setOwner( RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
-        FsProjectStorage.storeProject(true, projectState, newProjectName,workspaceStorage);
+        FsProjectStorage.storeProject(true, projectState, projectSid, workspaceStorage);
         //projectStorage.storeProject(newProjectName, projectState, true);
 
         // and wav files one-by-one (if any)
@@ -180,13 +181,13 @@ public class RasService {
         if ( wavDir.exists() ) {
             File[] wavFiles = wavDir.listFiles();
             for ( File wavFile : wavFiles ) {
-                FsProjectStorage.storeWav(newProjectName, wavFile.getName(), wavFile, workspaceStorage);
+                FsProjectStorage.storeWav(projectSid, wavFile.getName(), wavFile, workspaceStorage);
             }
         }
 
         // Store rapp for later usage
         Rapp rapp = new Rapp(info, config);
-        FsProjectStorage.storeRapp(rapp, newProjectName, workspaceStorage);
+        FsProjectStorage.storeRapp(rapp, projectSid, workspaceStorage);
 
         // now remove temporary directory
         try {

@@ -108,6 +108,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 				installedOnlineApps.push(app); // keep these separately and add it to the end of the appList later
 			else
 				appList.push(app);
+			app.projectSid = localApp.projectSid;
 		}
 		
 		// go through remote apps
