@@ -7,6 +7,19 @@
 
 USE restcomm;
 
+-- backup applications
+CREATE TABLE restcomm_applications_migrationbkp LIKE restcomm_applications;
+INSERT restcomm_applications_migrationbkp SELECT * FROM restcomm_applications;
+
+-- backup incoming phone numbers
+CREATE TABLE restcomm_incoming_phone_numbers_migrationbkp LIKE restcomm_incoming_phone_numbers;
+INSERT restcomm_incoming_phone_numbers_migrationbkp SELECT * FROM restcomm_incoming_phone_numbers;
+
+-- backup clients
+CREATE TABLE restcomm_clients_migrationbkp LIKE restcomm_clients;
+INSERT restcomm_clients_migrationbkp SELECT * FROM restcomm_clients;
+
+-- applying new applications structure
 SELECT IFNULL(column_name, '') INTO @colName
 FROM information_schema.columns 
 WHERE table_name = 'restcomm_applications'
