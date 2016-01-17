@@ -94,23 +94,23 @@ public class RasRestService extends RestService {
     }
 
     /**
-     * Returns application package information. If there is no packaging data
-     * for this project yet it returns 404/NOT_FOUND. If the project does not even
-     * exist it returns 500/INTERNAL_SERVER_ERROR
-     * @param projectName
+     * Returns application package information. If there is no packaging data for this project yet it returns 404/NOT_FOUND. If
+     * the project does not even exist it returns 500/INTERNAL_SERVER_ERROR
+     *
+     * @param projectSid
      * @return
      */
     @RvdAuth
     @GET
     @Path("/packaging/app")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAppConfig(@QueryParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
-        logger.debug("retrieving app package for project " + projectName);
+    public Response getAppConfig(@QueryParam("projectSid") String projectSid) throws StorageException, ProjectDoesNotExist {
+        logger.debug("retrieving app package for project " + projectSid);
 
-        if (! FsPackagingStorage.hasPackaging(projectName, workspaceStorage) )
+        if (!FsPackagingStorage.hasPackaging(projectSid, workspaceStorage))
             return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
 
-        Rapp rapp = rasService.getApp(projectName);
+        Rapp rapp = rasService.getApp(projectSid);
         Gson gson = new Gson();
 
         return Response.ok().entity(gson.toJson(rapp)).build();
@@ -120,24 +120,24 @@ public class RasRestService extends RestService {
     /**
      * Creates or updates an app
      * @param request
-     * @param projectName
+     * @param projectSid
      * @return
      */
     @RvdAuth
     @POST
     @Path("/packaging/app/save")
-    public Response saveApp(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
-        logger.info("saving restcomm app '" + projectName + "'");
+    public Response saveApp(@Context HttpServletRequest request, @QueryParam("projectSid") String projectSid) {
+        logger.info("saving restcomm app '" + projectSid + "'");
         try {
             String rappData;
             rappData = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
 
             Gson gson = new Gson();
             Rapp rapp = gson.fromJson(rappData, Rapp.class);
-            if ( !FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
-                rasService.createApp(rapp, projectName);
+            if ( !FsPackagingStorage.hasPackaging(projectSid, workspaceStorage) ) {
+                rasService.createApp(rapp, projectSid);
             } else {
-                rasService.saveApp(rapp, projectName);
+                rasService.saveApp(rapp, projectSid);
             }
             return buildOkResponse();
 
@@ -160,12 +160,12 @@ public class RasRestService extends RestService {
     @RvdAuth
     @Path("/packaging/app/prepare")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response preparePackage(@QueryParam("name") String projectName) {
-        logger.debug("preparig app zip for project " + projectName);
+    public Response preparePackage(@QueryParam("projectSid") String projectSid) {
+        logger.debug("preparig app zip for project " + projectSid);
 
         try {
-            if (FsPackagingStorage.hasPackaging(projectName, workspaceStorage) ) {
-                RvdProject project = projectService.load(projectName);
+            if (FsPackagingStorage.hasPackaging(projectSid, workspaceStorage) ) {
+                RvdProject project = projectService.load(projectSid);
                 project.getState().getHeader().setOwner(null); //  no owner should in the exported project
                 rasService.createZipPackage(project);
                 return buildErrorResponse(Status.OK, RvdResponse.Status.OK, null);
@@ -180,17 +180,18 @@ public class RasRestService extends RestService {
 
     /**
      * Returns info about a zipped package (binary) including if it is available or not
-     * @param projectName
+     *
+     * @param projectSid
      * @return
      */
     @GET
     @RvdAuth
     @Path("/packaging/binary/info")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getBinaryStatus(@QueryParam("name") String projectName) {
-        logger.debug("getting binary info for project " + projectName);
+    public Response getBinaryStatus(@QueryParam("projectSid") String projectSid) {
+        logger.debug("getting binary info for project " + projectSid);
 
-        RappBinaryInfo binaryInfo = rasService.getBinaryInfo(projectName);
+        RappBinaryInfo binaryInfo = rasService.getBinaryInfo(projectSid);
         return buildOkResponse(binaryInfo);
     }
 
@@ -302,21 +303,23 @@ public class RasRestService extends RestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files). They will be ignored
                     if (item.getName() != null) {
                         //projectService.addWavToProject(projectName, item.getName(), item.openStream());
-                        String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser.getName(), projectService);
-                        ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
-
                         ProjectSid projectSid = ProjectSid.generate();
+                        String effectiveProjectName = rasService.importAppToWorkspace(projectSid.toString(), item.openStream(),
+                                loggedUser.getName(), projectService);
+                        ProjectState projectState = FsProjectStorage.loadProject(projectSid.toString(), workspaceStorage);
+
                         ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
                         applicationsApi.createApplication(projectSid.toString(), loggedUser.getTicketId(),
                                 effectiveProjectName, projectState.getHeader().getProjectKind());
                         try {
-                            buildService.buildProject(effectiveProjectName, projectState);
+                            buildService.buildProject(projectSid.toString(), projectState);
                         } catch (Exception e) {
-                            applicationsApi.rollbackCreateApplication(loggedUser.getTicketId(), effectiveProjectName);
+                            applicationsApi.rollbackCreateApplication(loggedUser.getTicketId(), projectSid.toString());
                         }
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);
+                        fileinfo.addProperty("projectSid", projectSid.toString());
 
                     }
                     if (item.getName() == null) {
@@ -352,14 +355,14 @@ public class RasRestService extends RestService {
 
     @RvdAuth
     @GET
-    @Path("apps/{name}/config")
-    public Response getConfig(@PathParam("name") String projectName) {
+    @Path("apps/{projectSid}/config")
+    public Response getConfig(@PathParam("projectSid") String projectSid) {
         //logger.info("getting configuration options for " + projectName);
 
         RappConfig rappConfig;
         // first, try to return the 'Rapp' from the packaging directory
-        if ( FsProjectStorage.hasPackagingInfo(projectName, workspaceStorage) ) {
-            return getConfigFromPackaging(projectName);
+        if (FsProjectStorage.hasPackagingInfo(projectSid, workspaceStorage)) {
+            return getConfigFromPackaging(projectSid);
             /*try {
                 Rapp rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
                 return buildOkResponse(rapp.getConfig());
@@ -369,7 +372,7 @@ public class RasRestService extends RestService {
             }*/
         } else {
             try {
-                rappConfig = rasService.getRappConfig(projectName);
+                rappConfig = rasService.getRappConfig(projectSid);
                 return buildOkResponse(rappConfig);
             } catch (StorageEntityNotFound e) {
                 return buildErrorResponse(Status.OK, RvdResponse.Status.NOT_FOUND, e);
@@ -382,15 +385,15 @@ public class RasRestService extends RestService {
 
     @RvdAuth
     @GET
-    @Path("apps/{name}")
-    public Response getRapp(@PathParam("name") String projectName) throws StorageException {
-        logger.info("getting info for " + projectName);
+    @Path("apps/{projectSid}")
+    public Response getRapp(@PathParam("projectSid") String projectSid) throws StorageException {
+        logger.info("getting info for " + projectSid);
         try {
             Rapp rapp;
-            if ( FsProjectStorage.hasPackagingInfo(projectName, workspaceStorage) )
-                rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
+            if (FsProjectStorage.hasPackagingInfo(projectSid, workspaceStorage))
+                rapp = FsProjectStorage.loadRappFromPackaging(projectSid, workspaceStorage);
             else
-                rapp = FsProjectStorage.loadRapp(projectName, workspaceStorage);
+                rapp = FsProjectStorage.loadRapp(projectSid, workspaceStorage);
             return buildOkResponse(rapp);
         } catch (StorageEntityNotFound e) {
             return Response.status(Status.NOT_FOUND).build();
@@ -399,11 +402,11 @@ public class RasRestService extends RestService {
 
     @RvdAuth
     @GET
-    @Path("apps/{name}/config/dev")
-    public Response getConfigFromPackaging(@PathParam("name") String projectName) {
+    @Path("apps/{projectSid}/config/dev")
+    public Response getConfigFromPackaging(@PathParam("projectSid") String projectSid) {
         //logger.info("getting configuration options for " + projectName);
        try {
-            Rapp rapp = FsProjectStorage.loadRappFromPackaging(projectName, workspaceStorage);
+            Rapp rapp = FsProjectStorage.loadRappFromPackaging(projectSid, workspaceStorage);
             return buildOkResponse(rapp.getConfig());
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);
@@ -415,18 +418,18 @@ public class RasRestService extends RestService {
     /**
      * Sets bootstrap parameters for the application.
      * @param request
-     * @param projectName
+     * @param projectSid
      * @return
      */
     @RvdAuth
     @POST
-    @Path("apps/{name}/bootstrap")
-    public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
+    @Path("apps/{projectSid}/bootstrap")
+    public Response setBootstrap(@Context HttpServletRequest request, @PathParam("projectSid") String projectSid) {
         try {
             String bootstrapInfo;
             bootstrapInfo = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
 
-            FsProjectStorage.storeBootstrapInfo(bootstrapInfo, projectName, workspaceStorage);
+            FsProjectStorage.storeBootstrapInfo(bootstrapInfo, projectSid, workspaceStorage);
             return buildOkResponse();
 
         } catch (StorageException e) {
@@ -438,13 +441,13 @@ public class RasRestService extends RestService {
 
     @RvdAuth
     @GET
-    @Path("apps/{name}/bootstrap")
-    public Response getBootstrap(@PathParam("name") String projectName) {
+    @Path("apps/{projectSid}/bootstrap")
+    public Response getBootstrap(@PathParam("projectSid") String projectSid) {
         try {
-            if ( ! FsProjectStorage.hasBootstrapInfo(projectName, workspaceStorage) )
+            if ( ! FsProjectStorage.hasBootstrapInfo(projectSid, workspaceStorage) )
                 return Response.status(Status.NOT_FOUND).build();
 
-            String bootstrapInfo = FsProjectStorage.loadBootstrapInfo(projectName, workspaceStorage);
+            String bootstrapInfo = FsProjectStorage.loadBootstrapInfo(projectSid, workspaceStorage);
             return Response.ok(bootstrapInfo, MediaType.APPLICATION_JSON).build();
         } catch (StorageException e) {
             logger.error(e,e);

@@ -27,7 +27,7 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 	$scope.saveRapp = function (projectSid,rapp) {
 		var packed = rapp.pack();
 		$http({
-			url: 'services/ras/packaging/app/save?name=' + projectSid,
+			url: 'services/ras/packaging/app/save?projectSid=' + projectSid,
 			method:'POST',
 			data: packed,
 			headers: {'Content-Type': 'application/data'}
@@ -42,7 +42,7 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 	$scope.preparePackage = function (projectSid, projectName) {
 		
 		$http({
-			url: 'services/ras/packaging/app/prepare?name=' + projectSid,
+			url: 'services/ras/packaging/app/prepare?projectSid=' + projectSid,
 			method: 'GET'
 		})
 		.success(function () {
@@ -77,7 +77,7 @@ var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function 
 packagingDownloadCtrl.getBinaryInfo = function ($q, $http, $route) {
 	var deferred = $q.defer();
 	$http({
-		url: 'services/ras/packaging/binary/info?name=' + $route.current.params.projectSid,
+		url: 'services/ras/packaging/binary/info?projectSid=' + $route.current.params.projectSid,
 		method: 'GET'
 	})
 	.success(function (data, status) {
@@ -94,7 +94,7 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 		getRapp : function () {
 			var deferred = $q.defer();
 			$http({
-				url:  'services/ras/packaging/app?name=' + $route.current.params.projectSid,
+				url:  'services/ras/packaging/app?projectSid=' + $route.current.params.projectSid,
 				method: 'GET',
 			})
 			.success(function (data, status, headers, config) {

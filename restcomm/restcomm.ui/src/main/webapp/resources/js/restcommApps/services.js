@@ -46,6 +46,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 							hasProject = true;						
 							rvdProjects[j].projectName = restcommApps[i].friendly_name;
 							rvdProjects[j].startUrl = restcommApps[i].rcml_url;
+							rvdProjects[j].projectSid = restcommApps[i].project_sid;
 						}
 					}
 					if(!hasProject){
@@ -79,7 +80,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	function getAppByUrl(apps, appUrl) {
 		for (var i=0; i < apps.length; i++) {
 			var app = apps[i];
-			var pattern = app.projectName + "/controller";
+			var pattern = app.projectSid + "/controller";
 			var decodedUrl = decodeURIComponent(appUrl);
 			var matches = RegExp(pattern) .exec(decodedUrl);
 			if (matches != null) {
@@ -89,9 +90,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		//return undefined;
 	}	
 	
-	function getAppConfig(appName, mode) {
+	function getAppConfig(projectSid, mode) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/services/ras/apps/' + appName + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
+		$http({url: '/restcomm-rvd/services/ras/apps/' + projectSid + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				defer.resolve(data.payload);
@@ -108,9 +109,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		return defer.promise;
 	}
 	
-	function getApp(appName) {
+	function getApp(projectSid) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/services/ras/apps/' + appName, method: "GET" })
+		$http({url: '/restcomm-rvd/services/ras/apps/' + projectSid, method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				//console.log("succesfull retrieved app config");
@@ -126,9 +127,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		return defer.promise		
 	}
 	
-	function getBoostrapObject(appName) {
+	function getBoostrapObject(projectSid) {
 		var deferred = $q.defer();
-		$http.get('/restcomm-rvd/services/ras/apps/' + appName + '/bootstrap' )
+		$http.get('/restcomm-rvd/services/ras/apps/' + projectSid + '/bootstrap' )
 		.success(function (data, status) {
 			deferred.resolve(data);
 		})
@@ -145,7 +146,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	function notifyIncomingNumberProvisioning(app, phoneNumber) {
 		//if (app.wasImported) {
 			// retrieve app configuration
-			getAppConfig(app.projectName).then(function (appConfig) {
+			getAppConfig(app.projectSid).then(function (appConfig) {
 				//console.log("successfully retrieved configuration for application " + app.projectName);
 				//console.log(appConfig);
 				if (appConfig.provisioningUrl) {
