@@ -52,6 +52,9 @@
     ]]>
   </send>
 
+  <!-- Wait 2 seconds to simulate ringing time -->
+  <pause milliseconds="2000"/>
+
   <send retrans="500">
     <![CDATA[
 
