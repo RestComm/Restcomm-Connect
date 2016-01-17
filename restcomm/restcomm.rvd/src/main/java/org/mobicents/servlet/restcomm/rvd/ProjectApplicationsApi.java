@@ -61,10 +61,12 @@ public class ProjectApplicationsApi {
         this.marshaler = marshaler;
     }
 
-    public void createApplication(final String ticketId, final String friendlyName, final String projectKind)
+    public void createApplication(final String projectSid, final String ticketId, final String friendlyName,
+            final String projectKind)
             throws ApplicationsApiSyncException, UnsupportedEncodingException {
         HashMap<String, String> params = new HashMap<String, String>();
-        String rcmlUrl = "/restcomm-rvd/services/apps/" + RvdUtils.myUrlEncode(friendlyName) + "/controller";
+        String rcmlUrl = "/restcomm-rvd/services/apps/" + projectSid + "/controller";
+        params.put("ProjectSid", projectSid);
         params.put("FriendlyName", friendlyName);
         params.put("Kind", projectKind);
         params.put("RcmlUrl", rcmlUrl);
@@ -76,18 +78,18 @@ public class ProjectApplicationsApi {
         removeApplication(ticketId, friendlyName);
     }
 
-    public void renameApplication(final String ticketId, final String name, final String newName)
+    public void renameApplication(final String ticketId, final String projectSid, final String newName)
             throws ApplicationsApiSyncException {
         HashMap<String, String> params = new HashMap<String, String>();
-        params.put("FriendlyName", name);
+        params.put("ProjectSid", projectSid);
         params.put("NewFriendlyName", newName);
-        params.put("RcmlUrl", "/restcomm-rvd/services/apps/" + RvdUtils.myUrlEncode(newName) + "/controller");
+        params.put("RcmlUrl", "/restcomm-rvd/services/apps/" + projectSid + "/controller");
         accessApi(ticketId, params, AccessApiAction.RENAME);
     }
 
-    public void removeApplication(final String ticketId, final String friendlyName) throws ApplicationsApiSyncException {
+    public void removeApplication(final String ticketId, final String projectSid) throws ApplicationsApiSyncException {
         final HashMap<String, String> params = new HashMap<String, String>();
-        params.put("FriendlyName", friendlyName);
+        params.put("ProjectSid", projectSid);
         accessApi(ticketId, params, AccessApiAction.DELETE);
     }
 
@@ -131,16 +133,15 @@ public class ProjectApplicationsApi {
                     marshaler.getGson(), RestcommAccountInfoResponse.class);
             String accountSid = accountResponse.getSid();
             RestcommApplicationResponse applicationResponse = null;
-            String friendlyName;
+            String projectSid;
 
             switch (action) {
                 case DELETE:
                     // Get application sid
-                    friendlyName = params.get("FriendlyName");
-                    friendlyName = RvdUtils.myUrlEncode(friendlyName);
+                    projectSid = params.get("ProjectSid");
                     try {
                         applicationResponse = client.get(
-                                "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + friendlyName + ".json")
+                                "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + projectSid + ".json")
                                 .done(marshaler.getGson(), RestcommApplicationResponse.class);
                     } catch (RestcommClientException e) {
                         if (e.getStatusCode() == 404) {
@@ -179,17 +180,17 @@ public class ProjectApplicationsApi {
                     if (applicationResponse != null)
                         throw new ApplicationAlreadyExists();
 
-                    // Get application sid
-                    friendlyName = params.get("FriendlyName");
-                    friendlyName = RvdUtils.myUrlEncode(friendlyName);
+                    // Get application sid to check its existence
+                    projectSid = params.get("ProjectSid");
 
                     try {
                     applicationResponse = client.get(
-                            "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + friendlyName + ".json").done(
+                                "/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + projectSid + ".json").done(
                             marshaler.getGson(), RestcommApplicationResponse.class);
                     } catch (RestcommClientException e) {
                         if (e.getStatusCode() == 404)
-                            throw new ApplicationApiNotSynchedException("Cannot sync project '" + friendlyName + "' rename. It seems old and does not have a respective restcomm Application. The issue will be ignored.", e); // ignore the issue if the respective Application entity does not exist (old projects). Will handle project upgrade with https://github.com/Mobicents/RestComm/issues/553
+                            throw new ApplicationApiNotSynchedException("Cannot rename project '" + projectSid
+                                    + "'. The project was not found as restcomm Application.", e);
                         else
                             throw e; // else re-throw
                     }
@@ -204,8 +205,7 @@ public class ProjectApplicationsApi {
                             .post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + applicationSid + ".json")
                             .addParam("FriendlyName", newFriendlyName).addParam("RcmlUrl", rcmlUrl)
                             .done(marshaler.getGson(), RestcommApplicationResponse.class);
-                    friendlyName = applicationResponse.getFriendly_name();
-                    if (!friendlyName.equalsIgnoreCase(newFriendlyName))
+                    if (!applicationResponse.getFriendly_name().equalsIgnoreCase(newFriendlyName))
                         throw new ApplicationsApiSyncException("Fail to change the name through the API.");
                 default:
                     break;

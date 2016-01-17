@@ -2,9 +2,9 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.nio.charset.Charset;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -13,14 +13,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -31,8 +31,8 @@ import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectApplicationsApi;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
 import org.mobicents.servlet.restcomm.rvd.RasService;
-import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingDoesNotExist;
@@ -43,6 +43,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.ras.UnsupportedRasApplicati
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
+import org.mobicents.servlet.restcomm.rvd.model.ProjectSid;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
@@ -304,8 +305,10 @@ public class RasRestService extends RestService {
                         String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser.getName(), projectService);
                         ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
 
+                        ProjectSid projectSid = ProjectSid.generate();
                         ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
-                        applicationsApi.createApplication(loggedUser.getTicketId(), effectiveProjectName, projectState.getHeader().getProjectKind());
+                        applicationsApi.createApplication(projectSid.toString(), loggedUser.getTicketId(),
+                                effectiveProjectName, projectState.getHeader().getProjectKind());
                         try {
                             buildService.buildProject(effectiveProjectName, projectState);
                         } catch (Exception e) {
