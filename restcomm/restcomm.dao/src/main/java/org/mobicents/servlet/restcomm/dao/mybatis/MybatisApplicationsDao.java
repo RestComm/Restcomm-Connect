@@ -62,7 +62,11 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
 
     @Override
     public Application getApplication(final Sid sid) {
-        return getApplication(namespace + "getApplication", sid.toString());
+        Application application = getApplication(namespace + "getApplication", sid.toString());
+        if (application == null) {
+            application = getApplicationByProjectSid(sid);
+        }
+        return application;
     }
 
     @Override

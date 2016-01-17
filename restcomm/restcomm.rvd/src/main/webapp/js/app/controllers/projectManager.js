@@ -41,7 +41,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		})
 		.success(function (data, status, headers, config) {
 			console.log( "project created");
-			$location.path("/designer/" + name);
+			$location.path("/designer/" + data.sid + "=" + name);
 		 })
 		 .error(function (data, status, headers, config) {
 			if (status == 409) {
@@ -63,7 +63,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
+		$http({ method: "PUT", url: 'services/projects/' + projectItem.projectSid + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -79,7 +79,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.deleteProject = function(projectItem, ticket) {
-		$http({ method: "DELETE", url: 'services/projects/' + projectItem.name + "?ticket=" + ticket})
+		$http({ method: "DELETE", url: 'services/projects/' + projectItem.projectSid + "?ticket=" + ticket})
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
