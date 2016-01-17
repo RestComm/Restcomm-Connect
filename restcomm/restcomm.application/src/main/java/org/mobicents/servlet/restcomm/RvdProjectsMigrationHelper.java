@@ -156,6 +156,17 @@ public class RvdProjectsMigrationHelper {
 
     }
 
+    public void backupWorkspace() throws RvdProjectsMigrationException {
+        try {
+            File workspace = new File(this.workspacePath);
+            File workspaceBackup = new File(workspace.getParent() + File.separator + "workspaceBackup-"
+                    + DateTime.now().getMillis());
+            FileUtils.copyDirectoryToDirectory(workspace, workspaceBackup);
+        } catch (IOException e) {
+            throw new RvdProjectsMigrationException("[ERROR-CODE:13] Error while creating backup for RVD workspace", 13);
+        }
+    }
+
     public List<String> listProjects() throws RvdProjectsMigrationException {
         List<String> items = new ArrayList<String>();
         File workspaceDir = new File(workspacePath);

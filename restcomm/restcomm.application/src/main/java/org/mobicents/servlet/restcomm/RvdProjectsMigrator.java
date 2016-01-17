@@ -80,6 +80,9 @@ public class RvdProjectsMigrator {
         storeNewMessage("Starting workspace migration at " + beginning, true, true, true, false);
         storeNewMessage(separator, false, true, false, false);
         try {
+            if (!migrationHelper.isEmbeddedMigration()) {
+                backupWorkspace();
+            }
             loadProjectsList();
         } catch (RvdProjectsMigrationException e) {
             migrationSucceeded = false;
@@ -277,6 +280,10 @@ public class RvdProjectsMigrator {
                     true);
             storeNewMessage(separator, false, true, false, false);
         }
+    }
+
+    private void backupWorkspace() throws RvdProjectsMigrationException {
+        migrationHelper.backupWorkspace();
     }
 
 }
