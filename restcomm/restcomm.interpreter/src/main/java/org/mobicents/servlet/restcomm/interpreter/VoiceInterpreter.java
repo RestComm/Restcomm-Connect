@@ -573,6 +573,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
+                logger.info("VoiceInterpreter received CallStateChanged event: "+event.state());
                 if (bridging.equals(state)) {
                     fsm.transition(message, finishDialing);
                 } else if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
@@ -591,32 +592,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finishDialing);
                         }
                     } else if (finishDialing.equals(state)) {
-                        Attribute attribute = null;
-                        if (verb != null) {
-                            attribute = verb.attribute("action");
-                        }
-                        if (dialBranches != null && dialBranches.contains(sender)) {
-                            logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + state);
-                            dialBranches.remove(sender);
-                            if (attribute != null) {
-                                executeDialAction(message, sender);
-                            }
-                            sender.tell(new Cancel(), self());
-                            if (dialBranches.size() > 0) {
-                                //Wait to check the response from the other branches
-                                return;
-                            } else {
-                                //Since there are no more branches, ask for the next RCML
-                                if (attribute == null) {
-                                    final GetNextVerb next = GetNextVerb.instance();
-                                    parser.tell(next, self());
-                                }
-                                dialChildren = null;
-                                outboundCall = null;
-                                callback();
-                                return;
-                            }
-                        }
+                        removeDialBranch(message, sender);
+                        return;
                     } else {
                         if (!finishDialing.equals(state))
                             fsm.transition(message, finished);
@@ -640,25 +617,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
                 }
-//                if (state == forking) {
-//                    if (sender != call) {
-//                        Attribute attribute = null;
-//                        if (verb != null) {
-//                            attribute = verb.attribute("action");
-//                        }
-//                        dialBranches.remove(sender);
-//                        if (attribute != null) {
-//                            executeDialAction(message, outboundCall);
-//                        }
-//                        if (dialBranches.size() > 0) {
-//                            return;
-//                        } else {
-//                            fsm.transition(message, finishDialing);
-//                        }
-//                    }
-//                } else {
-//                    fsm.transition(message, finishDialing);
-//                }
                 fsm.transition(message, finishDialing);
 //                if (state != finishDialing)
 //                    fsm.transition(message, finishDialing);
@@ -914,6 +872,38 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (GetRelatedCall.class.equals(klass)) {
             onGetRelatedCall((GetRelatedCall) message, self, sender);
+        }
+    }
+
+    private void removeDialBranch(Object message, ActorRef sender) {
+        Attribute attribute = null;
+        if (verb != null) {
+            attribute = verb.attribute("action");
+        }
+        if (dialBranches != null && dialBranches.contains(sender)) {
+            logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + fsm.state());
+            dialBranches.remove(sender);
+//            if (attribute != null) {
+//                executeDialAction(message, sender);
+//            }
+            sender.tell(new Cancel(), self());
+            if (dialBranches.size() > 0) {
+                //Wait to check the response from the other branches
+                return;
+            } else {
+                dialChildren = null;
+//                outboundCall = null;
+                callback();
+                //Since there are no more branches, ask for the next RCML
+                if (attribute == null) {
+                    final GetNextVerb next = GetNextVerb.instance();
+                    parser.tell(next, self());
+                } else {
+                    executeDialAction(message,null);
+                }
+            }
+        } else if (attribute != null) {
+            executeDialAction(message, sender);
         }
     }
 
@@ -1849,9 +1839,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
                 while (dialBranchesIterator.hasNext()) {
                     ActorRef branch = dialBranchesIterator.next();
-                    if (attribute != null) {
-                        executeDialAction(message, branch);
-                    }
+//                    if (attribute != null) {
+//                        executeDialAction(message, branch);
+//                    }
                     branch.tell(new Cancel(), source);
                     logger.info("Canceled branch: " + branch.path());
                 }
@@ -1864,7 +1854,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final GetNextVerb next = GetNextVerb.instance();
                     parser.tell(next, source);
                 } else {
-                    executeDialAction(message,null);
+                    if (outboundCall != null) {
+                        executeDialAction(message,outboundCall);
+                    } else {
+                        executeDialAction(message,null);
+                    }
                 }
                 dialChildren = null;
                 outboundCall = null;
@@ -1884,9 +1878,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
                         while (dialBranchesIterator.hasNext()) {
                             ActorRef branch = dialBranchesIterator.next();
-                            if (attribute != null) {
-                                executeDialAction(message, branch);
-                            }
+//                            if (attribute != null) {
+//                                executeDialAction(message, branch);
+//                            }
                             branch.tell(new Cancel(), source);
                         }
                         if (dialBranches.size() > 0) {
@@ -1903,36 +1897,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         callback();
                         fsm.transition(message, finished);
                         return;
-                    } else if (dialBranches.contains(sender)) {
-                        logger.info("Dial branch new call state: "+((CallStateChanged)message).state().toString()+" call path: "+sender().path()+" VI state: "+state);
-                        dialBranches.remove(sender);
-                        if (attribute != null) {
-                            executeDialAction(message, sender);
-                        }
-                        sender.tell(new Cancel(), source);
-                        if (dialBranches.size() > 0) {
-                            //Wait to check the response from the other branches
-                            return;
-                        } else {
-                            //Since there are no more branches, ask for the next RCML
-                            if (attribute == null) {
-                                final GetNextVerb next = GetNextVerb.instance();
-                                parser.tell(next, source);
-                            }
-                            dialChildren = null;
-                            outboundCall = null;
-                            callback();
-                            return;
-                        }
+                    }
+                    else if (dialBranches != null && dialBranches.contains(sender)) {
+                        removeDialBranch(message, sender);
+                        return;
                     }
                 } else if (bridged.equals(state)) {
                     logger.info("finishDialing state=bridged, will hangup outboundCall");
                     outboundCall.tell(new Hangup(), source);
                 } else {
-                    logger.info("FinishDialing, State: " + state);
-                    logger.info("State is not FORKING and not Bridged");
-                    logger.info("Sender is initial call: " + sender.equals(call));
-                    logger.info("Sender in the dialBranches: " + dialBranches.contains(sender));
+                    logger.debug("FinishDialing, State: " + state);
+                    logger.debug("State is not FORKING and not Bridged");
+                    logger.debug("Sender is initial call: " + sender.equals(call));
+                    logger.debug("Sender in the dialBranches: " + dialBranches.contains(sender));
                 }
             }
 
@@ -2285,18 +2262,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
-            if ((bridge != null) || is(forking) || is(acquiringOutboundCallInfo)) {
+            if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo))) {
                 // Stop the bridge
                 bridge.tell(new StopBridge(), super.source);
                 bridge = null;
-
+            }
                 // Cleanup the outbound call if necessary.
                 // XXX verify if this code is still necessary
                 if (outboundCall != null && !liveCallModification) {
                     outboundCall.tell(new StopObserving(source), null);
                     outboundCall.tell(new Hangup(), null);
                 }
-            }
 
             // If the call is in a conference remove it.
             if (conference != null) {
