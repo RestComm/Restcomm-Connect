@@ -1,22 +1,23 @@
 # External parameters
-KEYCLOAK_DOWNLOAD_URL=http://downloads.jboss.org/keycloak/1.6.1.Final/keycloak-1.6.1.Final.tar.gz
+#KEYCLOAK_DOWNLOAD_URL=http://downloads.jboss.org/keycloak/1.6.1.Final/keycloak-1.6.1.Final.tar.gz
 # KEYCLOAK_ADAPTER_URL=http://downloads.jboss.org/keycloak/1.7.0.Final/adapters/keycloak-oidc/keycloak-wildfly-adapter-dist-1.7.0.Final.tar.gz
-KEYCLOAK_DOWNLOAD_ADAPTER_URL=http://downloads.jboss.org/keycloak/1.6.1.Final/adapters/keycloak-oidc/keycloak-wf9-adapter-dist-1.6.1.Final.tar.gz
+#KEYCLOAK_DOWNLOAD_ADAPTER_URL=http://downloads.jboss.org/keycloak/1.6.1.Final/adapters/keycloak-oidc/keycloak-wf9-adapter-dist-1.6.1.Final.tar.gz
 
 KEYCLOAK_FILE=`echo ${KEYCLOAK_DOWNLOAD_URL} | sed 's_.*/\([^/].*\)$_\1_'`
 KEYCLOAK_DIR=`echo ${KEYCLOAK_DOWNLOAD_URL} | sed 's_.*/\([^/].*\).tar.gz$_\1_'`
 KEYCLOAK_VERSION=`echo ${KEYCLOAK_DIR} | sed 's/keycloak-\(.*\)$/\1/'`
 
 echo "--- setting up keycloak ${KEYCLOAK_VERSION} for testing"
+echo "Startup environment"
+echo "KEYCLOAK_DOWNLOAD_URL: $KEYCLOAK_DOWNLOAD_URL"
+echo "KEYCLOAK_DOWNLOAD_ADAPTER_URL: $KEYCLOAK_DOWNLOAD_ADAPTER_URL"
 
-echo "--- checking for keycloak binary"
-if [ -d ${KEYCLOAK_DIR} ]
+echo "--- downloading keycloak binary"
+wget -N ${KEYCLOAK_DOWNLOAD_URL}
+
+# uncompress if not already there
+if [ ! -d ${KEYCLOAK_DIR} ]
 then
-	echo "--- keycloak already downloaded"
-else
-	rm ${KEYCLOAK_FILE}
-	echo "--- downloading keycloak"
-	wget ${KEYCLOAK_DOWNLOAD_URL}
 	tar zxf ${KEYCLOAK_FILE}
 fi
 
@@ -26,7 +27,7 @@ ln -s ${KEYCLOAK_DIR} keycloak
 
 echo "--- installing keycloak adapter"
 cd ${KEYCLOAK_DIR}
-wget ${KEYCLOAK_DOWNLOAD_ADAPTER_URL}
+wget -N ${KEYCLOAK_DOWNLOAD_ADAPTER_URL}
 KEYCLOAK_ADAPTER_FILE=`echo ${KEYCLOAK_DOWNLOAD_ADAPTER_URL} | sed 's_.*/\([^/].*\)$_\1_'`
 tar zxf ${KEYCLOAK_ADAPTER_FILE}
 echo "--- keycloak adapter installed"
@@ -65,8 +66,8 @@ until [ $KEYCLOAKWAIT_STATUS -eq 200 ]; do
 	KEYCLOAKWAIT_STATUS=$(curl -sL -w "%{http_code}\\n" "http://127.0.0.1:8081/auth/" -o /dev/null)
 	echo Waiting for keycloak to start - status: $KEYCLOAKWAIT_STATUS
 	KEYCLOAKWAIT_COUNT=$(expr $KEYCLOAKWAIT_COUNT + 1)
-	if [ $KEYCLOAKWAIT_COUNT -eq $KEYCLOAKWAIT_MAX ]; then 
-		break; 
+	if [ $KEYCLOAKWAIT_COUNT -eq $KEYCLOAKWAIT_MAX ]; then
+		break;
 	fi
 	sleep 2
 done
@@ -75,11 +76,10 @@ echo "--- keycloak started"
 # deploy proxy identity on keycloak wildfly
 ./keycloak/bin/jboss-cli.sh --commands="connect localhost:9980,deploy restcomm-identity/identity-proxy/target/restcomm-identity.war"
 echo "--- identity proxy deployed"
-	
+
 # do the testing
 # ...
 # ...
 
 #stop keycloak
-./keycloak/bin/jboss-cli.sh --commands="connect localhost:9980,shutdown"
-
+#./keycloak/bin/jboss-cli.sh --commands="connect localhost:9980,shutdown"
