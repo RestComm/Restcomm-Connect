@@ -378,8 +378,7 @@ public final class UserAgentManager extends UntypedActor {
      * @return
      */
     private boolean isWebRTC(String transport, String userAgent) {
-//        return "ws".equals(transport) || "wss".equals(transport) || userAgent.contains("Restcomm");
-        return false;
+        return "ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport) || userAgent.toLowerCase().contains("restcomm");
     }
 
     private String contact(final SipURI uri, final int expires) {

@@ -1,4 +1,15 @@
 ##
+## DOWNLOAD SIPp TOOL
+##
+
+Start by download version 3.4.x of SIPp tool, from official repo
+https://github.com/SIPp/sipp/releases
+
+Read official documentation on how to install SIPp with pcap support
+http://sipp.sourceforge.net/doc/reference.html#Installing+SIPp
+
+
+##
 ## PREPARATIONS
 ##
 To execute load tests, it is recommended that:
@@ -43,8 +54,6 @@ To execute load tests, it is recommended that:
 ##
 ## RESOURCES
 ##
-
-/sipp-3.4 - contains a binary of SIPp binary ready to be used to run the test scenarios.
 
 /resources - contains media resources to be used in test scenarios
    /audio

@@ -203,7 +203,8 @@ public final class Call extends UntypedActor {
         this.failingBusy = new State("failing busy", new FailingBusy(source), null);
         this.busy = new State("busy", new Busy(source), null);
         this.notFound = new State("not found", new NotFound(source), null);
-        this.canceling = new State("canceling", new Canceling(source), null);
+        //This time the --new Canceling(source)-- is an ActionOnState. Overloaded constructor is used here
+        this.canceling = new State("canceling", new Canceling(source));
         this.canceled = new State("canceled", new Canceled(source), null);
         this.failingNoAnswer = new State("failing no answer", new FailingNoAnswer(source), null);
         this.noAnswer = new State("no answer", new NoAnswer(source), null);
@@ -365,7 +366,7 @@ public final class Call extends UntypedActor {
         final ActorRef self = self();
         final ActorRef sender = sender();
         final State state = fsm.state();
-        logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString());
+        logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString()+" direction: "+direction);
         logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
                 + sender.path().toString());
 
@@ -1235,10 +1236,11 @@ public final class Call extends UntypedActor {
     }
 
     private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
+        getContext().setReceiveTimeout(Duration.Undefined());
         if (is(ringing)) {
             fsm.transition(message, failingNoAnswer);
         } else {
-            logger.info("Timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+            logger.info("Call : "+self().path()+" isTerminated(): "+self().isTerminated()+" timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
                     + " Direction: " + direction + " From: " + from + " To: " + to);
         }
     }
@@ -1309,7 +1311,8 @@ public final class Call extends UntypedActor {
                 break;
             }
             case SipServletResponse.SC_BUSY_HERE:
-            case SipServletResponse.SC_BUSY_EVERYWHERE: {
+            case SipServletResponse.SC_BUSY_EVERYWHERE:
+            case SipServletResponse.SC_DECLINE: {
                 sendCallInfoToObservers();
 
                 //Important. If state is DIALING, then do nothing about the BUSY. If not DIALING state move to failingBusy
@@ -1599,6 +1602,13 @@ public final class Call extends UntypedActor {
 
     private void onLeft(Left message, ActorRef self, ActorRef sender) throws Exception {
         if (is(leaving)) {
+            if (conferencing) {
+                // Let conference know the call exited the room
+                this.conferencing = false;
+                this.conference.tell(new Left(), self);
+                this.conference = null;
+            }
+
             // After leaving let the Interpreter know the Call is ready.
             fsm.transition(message, inProgress);
         }

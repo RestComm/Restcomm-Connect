@@ -13,7 +13,7 @@
 	<property location="${workspace.mobicents-restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="646"/>
+  <property name="sipservlets-build" value="650"/>
   <property name="mobicents-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="mobicents-media.version" value="3.0.2.Final"/>
@@ -187,18 +187,10 @@
 
     <!--Copy Rvd ES Demo-->
     <copy failonerror="true" file="${configuration.directory}/RvdExternalServicesDemo.war" tofile="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war"/>
-    <touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy"/>
-
-    <!-- Add environment variables to standalone configuration script -->
-    <echo append="true" file="${release.as7.dir}/bin/standalone.conf">
-      export APPSERVER_PLATFORM='TELESTAX' export DLG_PROPERTY_FILE=${JBOSS_HOME}/standalone/configuration/dlgc_JSR309.properties
-    </echo>
-
-    <!-- Copy Dialogic Config file -->
-    <copy failonerror="true" file="${configuration.directory}/dlgc_JSR309.properties" toDir="${release.as7.dir}/standalone/configuration"/>
+    <touch file="${release.as7.dir}/standalone/deployments/RvdExternalServicesDemo.war.dodeploy"/>  
 
     <!-- Copy Dialogic JSR 309 connector -->
-    <copy failonerror="true" file="${configuration.directory}/dlgmsc-4.2.133.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
+    <copy failonerror="true" file="${configuration.directory}/dlgmsc-5.0-alpha.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
     <copy failonerror="true" file="${configuration.directory}/dlgcsmiltypes-4.1.429.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
     <copy failonerror="true" file="${configuration.directory}/msmltypes-4.1.429.jar" toDir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib"/>
 
