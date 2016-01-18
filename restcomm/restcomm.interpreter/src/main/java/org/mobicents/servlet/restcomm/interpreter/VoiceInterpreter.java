@@ -680,7 +680,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         + ", statusCode " + response.get().getStatusCode());
             }
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-                if (dialBranches == null) {
+                if (dialBranches == null || dialBranches.size()==0) {
+                    logger.info("Downloader response is success, moving to Ready state");
                     fsm.transition(message, ready);
                 } else {
                     return;
@@ -899,7 +900,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final GetNextVerb next = GetNextVerb.instance();
                     parser.tell(next, self());
                 } else {
-                    executeDialAction(message,null);
+                    executeDialAction(message,sender);
                 }
             }
         } else if (attribute != null) {
