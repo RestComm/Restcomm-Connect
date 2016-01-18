@@ -17,7 +17,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-public class IdentityMigrationToolIT {
+public class IdentityMigrationToolTest {
 
     static String authServerBaseUrl = IdentityTestTool.AUTH_SERVER_BASE_URL;
     static String username = "administrator@company.com";
@@ -29,7 +29,7 @@ public class IdentityMigrationToolIT {
     static IdentityTestTool tool;
 
 
-    public IdentityMigrationToolIT() {
+    public IdentityMigrationToolTest() {
         // TODO Auto-generated constructor stub
     }
 
