@@ -1,7 +1,8 @@
 # External parameters
 #KEYCLOAK_DOWNLOAD_URL=http://downloads.jboss.org/keycloak/1.6.1.Final/keycloak-1.6.1.Final.tar.gz
-# KEYCLOAK_ADAPTER_URL=http://downloads.jboss.org/keycloak/1.7.0.Final/adapters/keycloak-oidc/keycloak-wildfly-adapter-dist-1.7.0.Final.tar.gz
 #KEYCLOAK_DOWNLOAD_ADAPTER_URL=http://downloads.jboss.org/keycloak/1.6.1.Final/adapters/keycloak-oidc/keycloak-wf9-adapter-dist-1.6.1.Final.tar.gz
+
+STARTUP_PATH=`pwd`
 
 KEYCLOAK_FILE=`echo ${KEYCLOAK_DOWNLOAD_URL} | sed 's_.*/\([^/].*\)$_\1_'`
 KEYCLOAK_DIR=`echo ${KEYCLOAK_DOWNLOAD_URL} | sed 's_.*/\([^/].*\).tar.gz$_\1_'`
@@ -56,7 +57,7 @@ cd ../..
 
 # start keycloak
 echo "--- starting keycloak..."
-${KEYCLOAK_DIR}/bin/standalone.sh -b 127.0.0.1 -Djboss.management.http.port=9980 -Djboss.management.https.port=9983 -Djboss.ajp.port=8010 -Djboss.http.port=8081 -Djboss.https.port=8444 -Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/home/nando/telestax/src/telscale-restcomm/release/master-realm-for-testing.json -Dkeycloak.migration.strategy=OVERWRITE_EXISTING --server-config standalone-for-identity-proxy.xml &
+${KEYCLOAK_DIR}/bin/standalone.sh -b 127.0.0.1 -Djboss.management.http.port=9980 -Djboss.management.https.port=9983 -Djboss.ajp.port=8010 -Djboss.http.port=8081 -Djboss.https.port=8444 -Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=$STARTUP_PATH/release/master-realm-for-testing.json -Dkeycloak.migration.strategy=OVERWRITE_EXISTING --server-config standalone-for-identity-proxy.xml &
 
 # wait keycloak to start
 KEYCLOAKWAIT_STATUS=000
