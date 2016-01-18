@@ -910,6 +910,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 break;
 
+            case INACTIVE:
+                if(is(bridged)) {
+                    fsm.transition(message, finishDialing);
+                }
+
             case FAILED:
                 if (is(initializingBridge)) {
                     fsm.transition(message, hangingUp);
@@ -1814,7 +1819,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (message instanceof ReceiveTimeout) {
-                logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
+                logger.warning("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -1881,6 +1886,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("Sender is initial call: " + sender.equals(call));
                     logger.info("Sender in the dialBranches: " + dialBranches.contains(sender));
                 }
+            } else if(message instanceof BridgeStateChanged) {
+                logger.info("finishDialing state=bridged, will hangup call AND outboundCall");
+                call.tell(new Hangup(), self());
+                if(outboundCall != null) {
+                    outboundCall.tell(new Hangup(), self());
+                }
             }
 
             if (sender == call) {
@@ -1896,11 +1907,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             // Stop the bridge. Cleanup will be handled by BridgeManager.
-            if (bridge != null) {
-                final StopBridge stopBridge = new StopBridge();
-                bridge.tell(stopBridge, super.source);
-                bridge = null;
-            }
+            // if (bridge != null) {
+            // final StopBridge stopBridge = new StopBridge();
+            // bridge.tell(stopBridge, super.source);
+            // bridge = null;
+            // }
 
             if (attribute != null) {
                 logger.info("Executing Dial Action url");

@@ -36,6 +36,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StartRecording;
@@ -66,6 +67,7 @@ public class Bridge extends UntypedActor {
     private final State bridging;
     private final State halfBridged;
     private final State bridged;
+    private final State evicting;
     private final State stopping;
     private final State failed;
     private final State complete;
@@ -88,14 +90,15 @@ public class Bridge extends UntypedActor {
 
         // States for the FSM
         this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initializing", new Initializing(source), null);
-        this.ready = new State("ready", new Ready(source), null);
-        this.bridging = new State("bridging", new Bridging(source), null);
-        this.halfBridged = new State("half bridged", new HalfBridged(source), null);
-        this.bridged = new State("bridged", new Bridged(source), null);
-        this.stopping = new State("stopping", new Stopping(source), null);
-        this.failed = new State("failed", new Failed(source), null);
-        this.complete = new State("complete", new Complete(source), null);
+        this.initializing = new State("initializing", new Initializing(source));
+        this.ready = new State("ready", new Ready(source));
+        this.bridging = new State("bridging", new Bridging(source));
+        this.halfBridged = new State("half bridged", new HalfBridged(source));
+        this.bridged = new State("bridged", new Bridged(source));
+        this.evicting = new State("evicting", new Evicting(source));
+        this.stopping = new State("stopping", new Stopping(source));
+        this.failed = new State("failed", new Failed(source));
+        this.complete = new State("complete", new Complete(source));
 
         // State transitions
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -105,10 +108,11 @@ public class Bridge extends UntypedActor {
         transitions.add(new Transition(ready, bridging));
         transitions.add(new Transition(ready, stopping));
         transitions.add(new Transition(bridging, halfBridged));
-        transitions.add(new Transition(bridging, stopping));
-        transitions.add(new Transition(halfBridged, stopping));
+        transitions.add(new Transition(bridging, evicting));
+        transitions.add(new Transition(halfBridged, evicting));
         transitions.add(new Transition(halfBridged, bridged));
-        transitions.add(new Transition(bridged, stopping));
+        transitions.add(new Transition(bridged, evicting));
+        transitions.add(new Transition(evicting, stopping));
         transitions.add(new Transition(stopping, failed));
         transitions.add(new Transition(stopping, complete));
 
@@ -161,6 +165,8 @@ public class Bridge extends UntypedActor {
             onStopBridge((StopBridge) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
             onStartRecording((StartRecording) message, self, sender);
+        } else if (Left.class.equals(klass)) {
+            onLeft((Left) message, self, sender);
         }
     }
 
@@ -228,9 +234,25 @@ public class Bridge extends UntypedActor {
         }
     }
 
+    private void onLeft(Left message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(evicting)) {
+            if(sender.equals(inboundCall)) {
+                this.logger.info("Inbound call leg has left the bridge " + self.path());
+                this.inboundCall = null;
+            } else if(sender.equals(outboundCall)) {
+                this.logger.info("Outbound call leg has left the bridge " + self.path());
+                this.outboundCall = null;
+            }
+
+            if (this.inboundCall == null && this.outboundCall == null) {
+                this.fsm.transition(message, stopping);
+            }
+        }
+    }
+
     private void onStopBridge(StopBridge message, ActorRef self, ActorRef sender) throws Exception {
         if (is(ready) || is(bridging) || is(halfBridged) || is(bridged)) {
-            this.fsm.transition(message, stopping);
+            this.fsm.transition(message, evicting);
         }
     }
 
@@ -335,6 +357,21 @@ public class Bridge extends UntypedActor {
 
     }
 
+    private class Evicting extends AbstractAction {
+
+        public Evicting(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Ask both call legs to leave the bridge
+            inboundCall.tell(new Leave(), super.source);
+            outboundCall.tell(new Leave(), super.source);
+        }
+
+    }
+
     private class Stopping extends AbstractAction {
 
         public Stopping(ActorRef source) {
@@ -343,13 +380,6 @@ public class Bridge extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // Disconnect both call legs from the bridge
-            final Leave leave = new Leave();
-            inboundCall.tell(leave, super.source);
-            inboundCall = null;
-            outboundCall.tell(leave, super.source);
-            outboundCall = null;
-
             // Ask the MS Controller to stop
             // This will stop any current media operations and clean media resources
             mscontroller.tell(new Stop(), super.source);

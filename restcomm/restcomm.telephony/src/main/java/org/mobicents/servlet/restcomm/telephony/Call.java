@@ -1282,6 +1282,8 @@ public final class Call extends UntypedActor {
                 // Tell conference to remove the call from participants list
                 // before moving to a stopping state
                 conference.tell(new RemoveParticipant(self), self);
+            } else if(bridge != null) {
+                bridge.tell(new StopBridge(), self);
             } else {
                 // Clean media resources as necessary
                 fsm.transition(message, stopping);
@@ -1604,6 +1606,9 @@ public final class Call extends UntypedActor {
                 this.conferencing = false;
                 this.conference.tell(new Left(), self);
                 this.conference = null;
+            } else if(bridge != null) {
+                this.bridge.tell(new Left(), self);
+                this.bridge = null;
             }
 
             // After leaving let the Interpreter know the Call is ready.
