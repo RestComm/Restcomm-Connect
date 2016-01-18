@@ -41,7 +41,7 @@ import java.io.IOException;
 /**
  * @author Orestis Tsakiridis
  */
-public class RestcommIdentityApiIT {
+public class RestcommIdentityApiTest {
 
     static String authServerBaseUrl = IdentityTestTool.AUTH_SERVER_BASE_URL;
     static String username = "administrator@company.com";
@@ -53,7 +53,7 @@ public class RestcommIdentityApiIT {
 
     private static IdentityTestTool tool;
 
-    public RestcommIdentityApiIT() {}
+    public RestcommIdentityApiTest() {}
 
     @BeforeClass
     public static void createInstance() throws RestcommIdentityApiException, IOException {
