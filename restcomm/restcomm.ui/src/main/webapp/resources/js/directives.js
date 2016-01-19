@@ -69,6 +69,7 @@ rcDirectives.directive('rcEndpointUrl', function() {
     restrict: 'E',
     scope: {
       // id: '@',
+      numberDetailsLoaded: '=', // use this only to determine when the numberDetails object has arrived
       sidVar: '=',
       urlOnlyVar: '=',
       methodVar: '=',
@@ -77,38 +78,49 @@ rcDirectives.directive('rcEndpointUrl', function() {
     },
     controller: function ($scope) {
 		$scope.setApplication = function (app) {
-			//$scope.urlVar = app.startUrl;
-      $scope.appNameVar = app.projectName;
-      $scope.sidVar = app.sid;
-      console.log('app.sid:' + $scope.sidVar);
+            //$scope.urlVar = app.startUrl;
+            $scope.appNameVar = app.projectName;
+            $scope.sidVar = app.sid;
 		};
 		
 		$scope.setMethod = function(method) {
 			$scope.methodVar = method;
 		};
 
-    $scope.setTarget = function(target) {
-      $scope.targetVar = target;
-      $scope.urlVal = '';
-      $scope.appNameVar = '';
-      $scope.sidVar = '';
-    }
-
-    $scope.initTarget = function() {
-      if($scope.sidVar){
-        $scope.targetVar = 'Application';
-        for (var i=0; i<$scope.apps.length; i++) {
-          var app = $scope.apps[i];
-          if(app.sid == $scope.sidVar){
-            $scope.appNameVar = app.projectName;
-            $scope.urlVal = '';
-            break;
-          }
+        $scope.setTarget = function(target) {
+            $scope.targetVar = target;
+            $scope.urlVar = '';
+            $scope.appNameVar = '';
+            $scope.sidVar = '';
         }
-      } else {
-        $scope.targetVar = 'URL';
-      }
-    }
+
+        $scope.initTarget = function() {
+            if($scope.sidVar){
+                $scope.targetVar = 'Application';
+                for (var i=0; i<$scope.apps.length; i++) {
+                  var app = $scope.apps[i];
+                  if(app.sid == $scope.sidVar){
+                    $scope.appNameVar = app.projectName;
+                    $scope.urlVal = '';
+                    break;
+                  }
+                }
+            } else {
+                $scope.targetVar = 'URL';
+            }
+        }
+
+        // initialize control when numberDetails actually arrives.
+        // NOTE: numberDetails is only used to signal when data has arrived and not to carry the actual data
+        var clearWatch = $scope.$watch("numberDetailsLoaded", function (newValue, oldValue) {
+            if ($scope.numberDetailsLoaded) {
+                clearWatch();
+                //console.log("numberDetails finally returned:");
+                $scope.initTarget();
+            }
+        });
+
+        $scope.targetVar = 'URL'; // default value until all data is in place (i.e. numberDetailsLoaded == true)
 	},
     templateUrl: 'templates/rc-endpoint-url.html'/*,
     link: function(scope, element, attrs) {
