@@ -1,11 +1,11 @@
 <div class="input-group">
     <div class="input-group-btn" ng-show="urlOnlyVar == false">
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">{{targetVar}} <span class="caret"></span></button>
-        <ul class="dropdown-menu" ng-init="initTarget()" >
+        <ul class="dropdown-menu">
             <li><a href ng-click="setTarget('URL')"><span class="fa fa-check" ng-show="targetVar === 'URL'"></span> URL</a></li>
             <li><a href ng-click="setTarget('Application')"><span class="fa fa-check" ng-show="targetVar === 'Application'"></span> Application</a></li>
         </ul>
-    </div>    
+    </div>
     <input type="text" class="form-control col-md-10" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="urlVar" ng-show="targetVar === 'URL'"/>
     <input type="text" class="form-control col-md-10" placeholder="Select one Application from the list at the right side" ng-model="appNameVar" ng-show="targetVar === 'Application'" ng-readonly="true"/>
     <div class="input-group-btn" ng-show="targetVar === 'URL'">

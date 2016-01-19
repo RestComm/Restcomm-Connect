@@ -404,7 +404,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setHasVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
+                incomingPhoneNumber.setVoiceApplicationSid(null);
+            else
+                incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
         if (data.containsKey("SmsUrl")) {
             URI uri = getUrl("SmsUrl", data);
@@ -421,7 +424,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         }
         if (data.containsKey("SmsApplicationSid")) {
-            incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("SmsApplicationSid") ) )
+                incomingPhoneNumber.setSmsApplicationSid(null);
+            else
+                incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+
         }
 
         if (data.containsKey("VoiceCapable")) {
