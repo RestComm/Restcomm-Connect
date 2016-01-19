@@ -117,7 +117,7 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
         error(function(data) {
           alert("Failed to update password. Please try again.");
         }
-      );
+      );xxxxx
       return update;
     },
     isLoggedIn: function() {
