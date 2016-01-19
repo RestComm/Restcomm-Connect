@@ -472,6 +472,20 @@ rcServices.factory('RCommApps', function($resource) {
 	  return $resource('/restcomm-rvd/services/projects');
 });
 
+rcServices.factory('RCVersion', function($resource) {
+   return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Version.:format', {
+        accountSid: '@accountSid',
+        format: 'json'
+   },
+        {
+          get: {
+            method: 'GET',
+            url: '/restcomm/2012-04-24/Accounts/:accountSid/Version.:format'
+          }
+        }
+  );
+});
+
 rcServices.factory('RCommAvailableNumbers', function($resource) {
   return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format',
     {
