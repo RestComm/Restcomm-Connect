@@ -59,7 +59,7 @@ Content-Length: 0
 <!-- Wait 5 seconds for the announcements to play -->
 <pause milliseconds="5000"/>
 
-<!-- Wait 2 seconds waiting for doctor from queue -->
+<!-- Wait 2 seconds to simulate ringing -->
 <pause milliseconds="2000"/>
 
 <!-- Simulate sending RTP traffic for one minute -->
