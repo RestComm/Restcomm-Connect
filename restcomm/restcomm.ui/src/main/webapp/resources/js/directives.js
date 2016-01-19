@@ -69,18 +69,46 @@ rcDirectives.directive('rcEndpointUrl', function() {
     restrict: 'E',
     scope: {
       // id: '@',
+      sidVar: '=',
+      urlOnlyVar: '=',
       methodVar: '=',
       urlVar: '=',
-      apps: '='
+      apps: '=',
     },
     controller: function ($scope) {
-		$scope.setUrl = function (app) {
-			$scope.urlVar = app.startUrl;
+		$scope.setApplication = function (app) {
+			//$scope.urlVar = app.startUrl;
+      $scope.appNameVar = app.projectName;
+      $scope.sidVar = app.sid;
+      console.log('app.sid:' + $scope.sidVar);
 		};
 		
 		$scope.setMethod = function(method) {
 			$scope.methodVar = method;
-		}
+		};
+
+    $scope.setTarget = function(target) {
+      $scope.targetVar = target;
+      $scope.urlVal = '';
+      $scope.appNameVar = '';
+      $scope.sidVar = '';
+    }
+
+    $scope.initTarget = function() {
+      if($scope.sidVar){
+        $scope.targetVar = 'Application';
+        for (var i=0; i<$scope.apps.length; i++) {
+          var app = $scope.apps[i];
+          if(app.sid == $scope.sidVar){
+            $scope.appNameVar = app.projectName;
+            $scope.urlVal = '';
+            break;
+          }
+        }
+      } else {
+        $scope.targetVar = 'URL';
+      }
+    }
 	},
     templateUrl: 'templates/rc-endpoint-url.html'/*,
     link: function(scope, element, attrs) {
