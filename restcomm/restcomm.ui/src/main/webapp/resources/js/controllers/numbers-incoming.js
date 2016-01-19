@@ -301,12 +301,14 @@ var createNumberParams = function(number, isSIP) {
 
   // Optional fields
   params["FriendlyName"] = number.friendly_name || number.friendlyName;
+  params["VoiceApplicationSid"] = number.voice_application_sid || number.voiceApplicationSid;
   params["VoiceUrl"] = number.voice_url; // || number.voiceUrl; - return "" as "". It will help the server clear values.
   params["VoiceMethod"] = number.voice_method || number.voiceMethod;
   params["VoiceFallbackUrl"] = number.voice_fallback_url; // || number.voiceFallbackUrl;
   params["VoiceFallbackMethod"] = number.voice_fallback_method || number.voiceFallbackMethod;
   params["StatusCallback"] = number.status_callback; // || number.statusCallback;
   params["StatusCallbackMethod"] = number.status_callback_method || number.statusCallbackMethod;
+  params["SmsApplicationSid"] = number.sms_application_sid || number.smsApplicationSid;
   params["SmsUrl"] = number.sms_url; // || number.smsUrl;
   params["SmsMethod"] = number.sms_method || number.smsMethod;
   params["SmsFallbackUrl"] = number.sms_fallback_url; // || number.smsFallbackUrl;

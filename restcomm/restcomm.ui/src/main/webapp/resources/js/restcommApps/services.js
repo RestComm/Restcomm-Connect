@@ -43,7 +43,8 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 					var hasProject = false;
 					for (var j=0; j<rvdProjects.length; j++) {
 						if(restcommApps[i].project_sid == rvdProjects[j].projectName){
-							hasProject = true;						
+							hasProject = true;
+							rvdProjects[j].sid = restcommApps[i].sid;
 							rvdProjects[j].projectName = restcommApps[i].friendly_name;
 							rvdProjects[j].startUrl = restcommApps[i].rcml_url;
 							rvdProjects[j].projectSid = restcommApps[i].project_sid;
@@ -51,6 +52,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 					}
 					if(!hasProject){
 						var app = {};
+						app.sid = restcommApps[i].sid;
 						app.projectName = restcommApps[i].friendly_name;
 						app.wasImported = false;
 						app.hasPackaging = false;
