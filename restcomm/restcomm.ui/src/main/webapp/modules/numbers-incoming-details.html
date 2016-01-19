@@ -9,7 +9,7 @@
             <h4 class="account-detail-field-name">Voice Request</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url number-details-loaded="numberDetails.$resolved" sid-var="numberDetails.voice_application_sid" url-only-var="false" method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.voice_application_sid" url-only-var="false" method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -18,7 +18,7 @@
             <h4 class="account-detail-field-name">Voice Fallback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url number-details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.voice_fallback_method" url-var="numberDetails.voice_fallback_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.voice_fallback_method" url-var="numberDetails.voice_fallback_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -27,7 +27,7 @@
             <h4 class="account-detail-field-name">Status Callback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url number-details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.status_callback_method" url-var="numberDetails.status_callback"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.status_callback_method" url-var="numberDetails.status_callback"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>
@@ -38,7 +38,7 @@
             <h4 class="account-detail-field-name">SMS Request</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url number-details-loaded="numberDetails.$resolved" sid-var="numberDetails.sms_application_sid" url-only-var="false" method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.sms_application_sid" url-only-var="false" method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -47,7 +47,7 @@
             <h4 class="account-detail-field-name">SMS Fallback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url number-details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.sms_fallback_method" url-var="numberDetails.sms_fallback_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.sms_fallback_method" url-var="numberDetails.sms_fallback_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>

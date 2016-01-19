@@ -69,7 +69,7 @@ rcDirectives.directive('rcEndpointUrl', function() {
     restrict: 'E',
     scope: {
       // id: '@',
-      numberDetailsLoaded: '=', // use this only to determine when the numberDetails object has arrived
+      detailsLoaded: '=', // use this only to determine when the numberDetails object has arrived
       sidVar: '=',
       urlOnlyVar: '=',
       methodVar: '=',
@@ -112,15 +112,15 @@ rcDirectives.directive('rcEndpointUrl', function() {
 
         // initialize control when numberDetails actually arrives.
         // NOTE: numberDetails is only used to signal when data has arrived and not to carry the actual data
-        var clearWatch = $scope.$watch("numberDetailsLoaded", function (newValue, oldValue) {
-            if ($scope.numberDetailsLoaded) {
+        var clearWatch = $scope.$watch("detailsLoaded", function (newValue, oldValue) {
+            if ($scope.detailsLoaded) {
                 clearWatch();
                 //console.log("numberDetails finally returned:");
                 $scope.initTarget();
             }
         });
 
-        $scope.targetVar = 'URL'; // default value until all data is in place (i.e. numberDetailsLoaded == true)
+        $scope.targetVar = 'URL'; // default value until all data is in place (i.e. detailsLoaded == true)
 	},
     templateUrl: 'templates/rc-endpoint-url.html'/*,
     link: function(scope, element, attrs) {
