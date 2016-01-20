@@ -95,7 +95,9 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
     @Override
     public void servletInitialized(SipServletContextEvent event) {
 
+
         if (event.getSipServlet().getClass().equals(SmppServiceProxy.class)) {
+
             //used to persist the servlet context
             //setSmppServletContext(event.getServletContext());
 
@@ -116,6 +118,7 @@ public class SmppServiceProxy extends SipServlet implements SipServletListener {
 
             //Used to get SmsService info to be used for SMPP inbound in SmppHandlerProcessMessages
             new SmppInitConfigurationDetails(system, configuration, factory, storage, context);
+
         }
     }
 

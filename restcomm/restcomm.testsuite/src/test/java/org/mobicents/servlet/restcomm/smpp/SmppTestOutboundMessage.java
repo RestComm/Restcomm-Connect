@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.sms;
+package org.mobicents.servlet.restcomm.smpp;
 
 import static org.junit.Assert.assertTrue;
 
@@ -51,9 +51,10 @@ import org.junit.runner.RunWith;
  *
  */
 @RunWith(Arquillian.class)
-public class SmsOutTest {
 
-    private final static Logger logger = Logger.getLogger(SmsOutTest.class);
+public class SmppTestOutboundMessage {
+
+    private final static Logger logger = Logger.getLogger(SmppTestOutboundMessage.class);
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -68,15 +69,9 @@ public class SmsOutTest {
     @ArquillianResource
     URL deploymentUrl;
 
-    private static SipStackTool tool1;
     private static SipStackTool tool2;
-    private static SipStackTool tool3;
-    private static SipStackTool tool4;
     private static SipStackTool tool5;
-    
-    private SipStack bobSipStack;
-    private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+
     
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
@@ -86,51 +81,28 @@ public class SmsOutTest {
     private SipPhone outboundDestPhone;
     private String outboundDestContact = "sip:9898989@127.0.0.1:5094";
 
-    private SipStack georgeSipStack;
-    private SipPhone georgePhone;
-    private String georgeContact = "sip:george@127.0.0.1:5092";
-    
-    private SipStack fotiniSipStack;
-    private SipPhone fotiniPhone;
-    private String fotiniContact = "sip:fotini@127.0.0.1:5093";
+
     
     @BeforeClass
     public static void beforeClass() throws Exception {
     	
-    	
-        tool1 = new SipStackTool("SmsTest1");
+
         tool2 = new SipStackTool("SmsTest2");
-        tool3 = new SipStackTool("SmsTest3");
-        tool4 = new SipStackTool("SmsTest4");
         tool5 = new SipStackTool("SmsTest5");
     }
     
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
         
         aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
-        
-        georgeSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
-        
-        fotiniSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
-        fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
-        
+ 
         outboundDestSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
         outboundDestPhone = outboundDestSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, outboundDestContact);
     }
     
     @After
     public void after() throws Exception {
-        if (bobPhone != null) {
-            bobPhone.dispose();
-        }
-        if (bobSipStack != null) {
-            bobSipStack.dispose();
-        }
 
         if (aliceSipStack != null) {
             aliceSipStack.dispose();
@@ -145,44 +117,48 @@ public class SmsOutTest {
         if (outboundDestPhone != null) {
             outboundDestPhone.dispose();
         }
-        
-        if (georgeSipStack != null) {
-            georgeSipStack.dispose();
-        }
-        if (georgePhone != null) {
-            georgePhone.dispose();
-        }
-        
-        if (fotiniSipStack != null) {
-            fotiniSipStack.dispose();
-        }
-        if (fotiniPhone != null) {
-            fotiniPhone.dispose();
-        }
+ 
     }
     
     @Test
     public void testSendSmsToInvalidNumber() throws ParseException {
+    	
+        logger.info("************SMPP TEST STARTING*****************");
+       	
+        try {
+            TimeUnit.SECONDS.sleep(90);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
      	
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
         
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        //assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
         
         SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@127.0.0.1:5080", null, null, null, "Test message");
-        assertTrue(aliceCall.waitForAuthorisation(5000));
+
+        aliceCall.waitForAuthorisation(5000);
+        outboundDestCall.waitForMessage(5000);
+        outboundDestCall.sendMessageResponse(404, "Not Found", 3600, null);
+        aliceCall.waitOutgoingMessageResponse(5000);
         
-        assertTrue(outboundDestCall.waitForMessage(5000));
+        //assertTrue(aliceCall.waitForAuthorisation(5000));
         
-        assertTrue(outboundDestCall.sendMessageResponse(404, "Not Found", 3600, null));
+       // assertTrue(outboundDestCall.waitForMessage(5000));
         
-        assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
-        assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 404);
+        //assertTrue(outboundDestCall.sendMessageResponse(404, "Not Found", 3600, null));
+        
+        //assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
+        //assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 404);
+        
+        assertTrue(SmppServerServletListener.TestSmppSessionHandler.getSmppOutBoundMessageReceivedByServer());
     }
     
     @Deployment(name = "SmsTest", managed = true, testable = false)
@@ -200,7 +176,7 @@ public class SmsOutTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("web_for_SmsTest.xml", "web.xml");
-        archive.addAsWebInfResource("restcomm_SmsTest2.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm-smpp.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_SmsTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("send-sms-test.xml");
         archive.addAsWebResource("send-sms-test-greek.xml");
