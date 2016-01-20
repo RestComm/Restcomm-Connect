@@ -29,8 +29,8 @@
                 </td>
                 <td><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login"></i></h5></td>
                 <td>
-                    <span ng-show="{{ sc.voice_url.length > 0  }}"><i class="fa fa-microphone available-feature"></i> <small> {{ sc.voice_url  }}</small></span>
-                    <span class="opacity30" ng-hide="{{ sc.voice_url.length > 0  }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
+                    <span ng-show="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small> {{ sc.voice_url  }} {{ sc.voice_application_sid }}</small></span>
+                    <span class="opacity30" ng-hide="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
                     <br>
                     <span ng-show="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ sc.sms_url  }}</small></span>
                     <span class="opacity30" ng-hide="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>

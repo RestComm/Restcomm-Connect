@@ -31,8 +31,8 @@
                 </td>
                 <td><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
                 <td>
-                    <span ng-show="{{ pn.voice_url.length > 0  }}"><i class="fa fa-microphone available-feature"></i> <small> {{ pn.voice_url  }}</small></span>
-                    <span class="opacity30" ng-hide="{{ pn.voice_url.length > 0  }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
+                    <span ng-show="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small> {{ pn.voice_url }} {{ pn.voice_application_sid }} </small></span>
+                    <span class="opacity30" ng-hide="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
                     <br>
                     <span ng-show="{{ pn.sms_url.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ pn.sms_url  }}</small></span>
                     <span class="opacity30" ng-hide="{{ pn.sms_url.length > 0  }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>

@@ -110,6 +110,11 @@ rcDirectives.directive('rcEndpointUrl', function() {
             }
         }
 
+        $scope.clearSelectedApp = function() {
+            $scope.appNameVar = '';
+            $scope.sidVar = '';
+        }
+
         // initialize control when numberDetails actually arrives.
         // NOTE: numberDetails is only used to signal when data has arrived and not to carry the actual data
         var clearWatch = $scope.$watch("detailsLoaded", function (newValue, oldValue) {
