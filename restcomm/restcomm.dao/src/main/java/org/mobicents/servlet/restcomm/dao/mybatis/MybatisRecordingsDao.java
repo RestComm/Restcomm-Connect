@@ -75,7 +75,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
                 recording = recording.updateFileUri(s3Uri);
             }
         } else {
-            recording = recording.updateFileUri(generateLocalFileUri("/restcomm/recordings/"+ recording.getSid()+".wav"));
+            recording = recording.updateFileUri(generateLocalFileUri("/restcomm/recordings/" + recording.getSid()));
         }
         final SqlSession session = sessions.openSession();
         try {
@@ -103,6 +103,23 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     @Override
     public Recording getRecordingByCall(final Sid callSid) {
         return getRecording(namespace + "getRecordingByCall", callSid);
+    }
+
+    @Override
+    public List<Recording> getRecordingsByCall(Sid callSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRecordingsByCall", callSid.toString());
+            final List<Recording> recordings = new ArrayList<Recording>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    recordings.add(toRecording(result));
+                }
+            }
+            return recordings;
+        } finally {
+            session.close();
+        }
     }
 
     private Recording getRecording(final String selector, final Sid sid) {
@@ -183,7 +200,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         //to create the file_uri on the fly
         String fileUri = (String) map.get("file_uri");
         if (fileUri == null || fileUri.isEmpty()) {
-            fileUri = generateLocalFileUri("/restcomm/recordings/"+ sid+".wav").toString();
+            fileUri = generateLocalFileUri("/restcomm/recordings/" + sid).toString();
         }
         return new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, readUri(fileUri));
     }

@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Pause step",
+	"type": "object",
+	"properties": {
+		"name":{"type": "string"},
+		"kind": {"enum": ["pause"]},
+		"label": {"type": "string"},
+		"title": {"type": "string"},
+		"length": {"type": "integer", "minimum": 1}
+	},
+	"required": ["name","kind","label","title"]
+}

@@ -265,6 +265,7 @@ public final class CallManager extends UntypedActor {
         final DestroyCall request = (DestroyCall) message;
         ActorRef call = request.call();
         if (call != null) {
+            logger.info("About to destroy call: "+request.call().path());
             context.stop(request.call());
         }
     }
@@ -307,6 +308,7 @@ public final class CallManager extends UntypedActor {
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         final String ruri = ((SipURI) request.getRequestURI()).getHost();
         final String toHost = ((SipURI) request.getTo().getURI()).getHost();
+        final String toHostIpAddress = InetAddress.getByName(toHost).getHostAddress();
         final String toPort = String.valueOf(((SipURI) request.getTo().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
                 : String.valueOf(((SipURI) request.getTo().getURI()).getHost());
         final String transport = ((SipURI) request.getTo().getURI()).getTransportParam() == null ? "udp" : ((SipURI) request
@@ -319,13 +321,10 @@ public final class CallManager extends UntypedActor {
         logger.info("mediaExternalIp: " + mediaExternalIp);
         logger.info("proxyIp: " + proxyIp);
 
-        if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have
-            // little control over
-            logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "
-                    + request.getRequestURI().toString());
+        if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
             Client toClient = clients.getClient(toUser);
-            if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to
-                // the b2bua
+            if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
+                logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
                             + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
@@ -364,7 +363,8 @@ public final class CallManager extends UntypedActor {
                     final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
                     final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
                             "outboudproxy-user-at-from-header", true);
-                    if (myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) {
+                    if ((myHostIp.equalsIgnoreCase(toHost) || mediaExternalIp.equalsIgnoreCase(toHost)) ||
+                            (myHostIp.equalsIgnoreCase(toHostIpAddress) || mediaExternalIp.equalsIgnoreCase(toHostIpAddress))) {
                         logger.info("Call to NUMBER.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp
                                 + " toHost: " + toHost + " proxyUri: " + proxyURI);
                         try {
@@ -516,20 +516,19 @@ public final class CallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(application.getVoiceUrl()));
-                    builder.setMethod(application.getVoiceMethod());
-                    builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(application.getVoiceFallbackMethod());
-                    builder.setStatusCallback(application.getStatusCallback());
-                    builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
-                    builder.setMethod(number.getVoiceMethod());
-                    builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                    builder.setStatusCallback(number.getStatusCallback());
-                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 }
+                builder.setMethod(number.getVoiceMethod());
+                URI uri = number.getVoiceFallbackUrl();
+                if (uri != null)
+                    builder.setFallbackUrl(UriUtils.resolve(uri));
+                else
+                    builder.setFallbackUrl(null);
+                builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                builder.setStatusCallback(number.getStatusCallback());
+                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 builder.setMonitoring(monitoring);
                 final ActorRef interpreter = builder.build();
                 final ActorRef call = call();
@@ -581,17 +580,18 @@ public final class CallManager extends UntypedActor {
             final Sid sid = client.getVoiceApplicationSid();
             if (sid != null) {
                 final Application application = applications.getApplication(sid);
-                builder.setUrl(UriUtils.resolve(application.getVoiceUrl()));
-                builder.setMethod(application.getVoiceMethod());
-                builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                builder.setFallbackMethod(application.getVoiceFallbackMethod());
+                builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
             } else {
                 URI url = UriUtils.resolve(clientAppVoiceUril);
                 builder.setUrl(url);
-                builder.setMethod(client.getVoiceMethod());
-                builder.setFallbackUrl(client.getVoiceFallbackUrl());
-                builder.setFallbackMethod(client.getVoiceFallbackMethod());
             }
+            builder.setMethod(client.getVoiceMethod());
+            URI uri = client.getVoiceFallbackUrl();
+            if (uri != null)
+                builder.setFallbackUrl(UriUtils.resolve(uri));
+            else
+                builder.setFallbackUrl(null);
+            builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
             final ActorRef call = call();
@@ -799,7 +799,7 @@ public final class CallManager extends UntypedActor {
 
         // Ask first call leg to execute with the new Interpreter
         final ActorRef interpreter = builder.build();
-        system.scheduler().scheduleOnce(Duration.create(2000, TimeUnit.MILLISECONDS), interpreter,
+        system.scheduler().scheduleOnce(Duration.create(500, TimeUnit.MILLISECONDS), interpreter,
                 new StartInterpreter(request.call()), system.dispatcher());
         // interpreter.tell(new StartInterpreter(request.call()), self);
         logger.info("New Intepreter for first call leg: " + interpreter.path() + " started");
@@ -810,7 +810,7 @@ public final class CallManager extends UntypedActor {
                 final ActorRef relatedInterpreter = builder.build();
                 logger.info("About to redirect related Call :" + relatedCall.path()
                         + " with 200ms delay to related interpreter: " + relatedInterpreter.path());
-                system.scheduler().scheduleOnce(Duration.create(3000, TimeUnit.MILLISECONDS), relatedInterpreter,
+                system.scheduler().scheduleOnce(Duration.create(1000, TimeUnit.MILLISECONDS), relatedInterpreter,
                         new StartInterpreter(relatedCall), system.dispatcher());
                 logger.info("New Intepreter for Second call leg: " + relatedInterpreter.path() + " started");
             } else {
@@ -831,6 +831,8 @@ public final class CallManager extends UntypedActor {
         final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
         SipURI from = null;
         SipURI to = null;
+        boolean webRTC = false;
+
         switch (request.type()) {
             case CLIENT: {
                 SipURI outboundIntf = null;
@@ -854,6 +856,7 @@ public final class CallManager extends UntypedActor {
                 if (registration != null) {
                     final String location = registration.getLocation();
                     to = (SipURI) sipFactory.createURI(location);
+                    webRTC = registration.isWebRTC();
                 } else {
                     String errMsg = "The SIP Client is not registered or does not exist";
                     sendNotification(errMsg, 11008, "error", true);
@@ -925,10 +928,10 @@ public final class CallManager extends UntypedActor {
         InitializeOutbound init;
         if (request.from() != null && !request.from().contains("@") && userAtDisplayedName) {
             init = new InitializeOutbound(request.from(), from, to, proxyUsername, proxyPassword, request.timeout(),
-                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+                    request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);
         } else {
             init = new InitializeOutbound(null, from, to, proxyUsername, proxyPassword, request.timeout(), request.isFromApi(),
-                    runtime.getString("api-version"), request.accountId(), request.type(), storage);
+                    runtime.getString("api-version"), request.accountId(), request.type(), storage, webRTC);
         }
         if (request.parentCallSid() != null) {
             init.setParentCallSid(request.parentCallSid());

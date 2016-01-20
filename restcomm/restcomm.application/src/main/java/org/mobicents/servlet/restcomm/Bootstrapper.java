@@ -329,7 +329,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             try {
                 extensionConfiguration = new XMLConfiguration(extensionConfigurationPath);
             } catch (final ConfigurationException exception) {
-                logger.error(exception);
+//                logger.error(exception);
             }
             ExtensionScanner extensionScanner = new ExtensionScanner(extensionConfiguration);
             extensionScanner.start();

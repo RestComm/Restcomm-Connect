@@ -115,6 +115,38 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
+/*
+	TODO compatibility  check for multitenenancy
+    protected void secure(final Account account, final String permission) throws AuthorizationException {
+        final Subject subject = SecurityUtils.getSubject();
+        if (account != null && account.getSid() != null) {
+            final Sid accountSid = account.getSid();
+            if (account.getStatus().equals(Account.Status.ACTIVE)
+                    && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject
+                            .isPermitted(permission)))) {
+                return;
+            } else {
+                throw new AuthorizationException();
+            }
+        } else {
+            throw new AuthorizationException();
+        }
+    }
+
+    protected void secureLevelControl(AccountsDao accountsDao, String accountSid, String referenceAccountSid) {
+        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
+        if (!sidPrincipal.equals(accountSid)) {
+            Account account = accountsDao.getAccount(new Sid(accountSid));
+            if (!sidPrincipal.equals(String.valueOf(account.getAccountSid()))) {
+                throw new AuthorizationException();
+            } else if (referenceAccountSid != null && !accountSid.equals(referenceAccountSid)) {
+                throw new AuthorizationException();
+            }
+        } else if (referenceAccountSid != null && !sidPrincipal.equals(referenceAccountSid)) {
+            throw new AuthorizationException();
+        }
+    }
+*/
 
     // A general purpose method to test incoming parameters for meaningful data
     protected boolean isEmpty(Object value) {

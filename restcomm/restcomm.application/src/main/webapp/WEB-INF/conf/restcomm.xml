@@ -15,18 +15,18 @@
 		<api-version>2012-04-24</api-version>
 
 		<!-- The location where the audio prompts are located. -->
-		<prompts-uri>http://127.0.0.1:8080/restcomm/audio</prompts-uri>
+		<prompts-uri>/restcomm/audio</prompts-uri>
 
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
-		<cache-uri>http://127.0.0.1:8080/restcomm/cache</cache-uri>
+		<cache-uri>/restcomm/cache</cache-uri>
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
+		<recordings-uri>/restcomm/recordings</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors</error-dictionary-uri>
+		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -45,6 +45,9 @@
 		<!-- If set to true Restcomm will authenticate users and incoming messages 
 			from those users -->
 		<authenticate>true</authenticate>
+
+		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
+		<ping-interval>60</ping-interval>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
@@ -128,6 +131,7 @@
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
+				<permission>RestComm:*:EmailMessages</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>

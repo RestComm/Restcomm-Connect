@@ -94,6 +94,11 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         if (recording == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(recording.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(recording), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -108,6 +113,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     protected Response getRecordings(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -121,4 +127,24 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             return null;
         }
     }
+
+    protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+
+        final List<Recording> recordings = dao.getRecordingsByCall(new Sid(callSid));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(recordings), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
+
+
 }

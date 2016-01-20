@@ -32,6 +32,7 @@ CREATE TABLE "restcomm_available_phone_numbers" (
 "region" VARCHAR(2),
 "postal_code" INT,
 "iso_country" VARCHAR(2) NOT NULL,
+"cost" VARCHAR(10),
 "voice_capable" BOOLEAN, 
 "sms_capable" BOOLEAN, 
 "mms_capable" BOOLEAN,
@@ -66,6 +67,7 @@ CREATE TABLE "restcomm_incoming_phone_numbers" (
 "friendly_name" VARCHAR(64) NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
 "phone_number" VARCHAR(15) NOT NULL,
+"cost" VARCHAR(10),
 "api_version" VARCHAR(10) NOT NULL,
 "voice_caller_id_lookup" BOOLEAN NOT NULL,
 "voice_url" LONGVARCHAR,
@@ -95,19 +97,10 @@ CREATE TABLE "restcomm_applications" (
 "friendly_name" VARCHAR(64) NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
 "api_version" VARCHAR(10) NOT NULL,
-"voice_url" LONGVARCHAR,
-"voice_method" VARCHAR(4),
-"voice_fallback_url" LONGVARCHAR,
-"voice_fallback_method" VARCHAR(4),
-"status_callback" LONGVARCHAR,
-"status_callback_method" VARCHAR(4),
 "voice_caller_id_lookup" BOOLEAN NOT NULL,
-"sms_url" LONGVARCHAR,
-"sms_method" VARCHAR(4),
-"sms_fallback_url" LONGVARCHAR,
-"sms_fallback_method" VARCHAR(4),
-"sms_status_callback" LONGVARCHAR,
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"rcml_url" LONGVARCHAR,
+"kind" VARCHAR(5)
 );
 
 CREATE TABLE "restcomm_call_detail_records" (
@@ -129,7 +122,8 @@ CREATE TABLE "restcomm_call_detail_records" (
 "api_version" VARCHAR(10) NOT NULL,
 "forwarded_from" VARCHAR(15),
 "caller_name" VARCHAR(30),
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"ring_duration" INT
 );
 
 CREATE TABLE "restcomm_clients" (
@@ -160,7 +154,8 @@ CREATE TABLE "restcomm_registrations" (
 "user_name" VARCHAR(64) NOT NULL,
 "user_agent" LONGVARCHAR,
 "ttl" INT NOT NULL,
-"location" LONGVARCHAR NOT NULL
+"location" LONGVARCHAR NOT NULL, 
+"webrtc" BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE "restcomm_short_codes" (

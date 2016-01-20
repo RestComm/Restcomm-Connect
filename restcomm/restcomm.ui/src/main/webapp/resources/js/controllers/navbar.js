@@ -192,8 +192,11 @@ var RegisterAccountModalCtrl = function ($scope, $rootScope, $modalInstance, RCo
           $modalInstance.close();
           $rootScope.$broadcast("sub-account-created", {/*nothing here yet*/});
         },
-        function() { // error
-          Notifications.error('Account creation failed.');
+        function(response) { // error
+        	if (response.status == 409)
+        		Notifications.error("User already exists.");
+        	else
+        		Notifications.error('Required fields are missing.');
         }
       );
   };
