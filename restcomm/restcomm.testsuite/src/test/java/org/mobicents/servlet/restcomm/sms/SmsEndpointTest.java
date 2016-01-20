@@ -25,6 +25,7 @@ import gov.nist.javax.sip.header.SIPHeader;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.sip.message.Request;
 
@@ -79,6 +80,16 @@ public class SmsEndpointTest {
     public void before() throws Exception {
         bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
         bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        
+        logger.info("************BEFORE ******************");
+        
+       try {
+            TimeUnit.SECONDS.sleep(60);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
     }
     
     @After
