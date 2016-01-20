@@ -273,7 +273,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
             result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("VoiceApplicationSid"))) {
+                result = result.setVoiceApplicationSid(null);
+            } else {
+                result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            }
         }
         return result;
     }

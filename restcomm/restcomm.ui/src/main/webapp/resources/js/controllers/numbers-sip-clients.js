@@ -93,10 +93,11 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     if (client.friendly_name) {
       params["FriendlyName"] = client.friendly_name;
     }
-    if (client.voice_url || client.voice_url === "" ) {
-      params["VoiceUrl"] = client.voice_url;
-      params["VoiceMethod"] = client.voice_method;
-    }
+    // Always send, value consistency controlled by actions performed by user
+    params["VoiceApplicationSid"] = client.voice_application_sid;
+    params["VoiceUrl"] = client.voice_url;
+    params["VoiceMethod"] = client.voice_method;
+    
     if (client.voice_fallback_url || client.voice_fallback_url === "") {
       params["VoiceFallbackUrl"] = client.voice_fallback_url;
       params["VoiceFallbackMethod"] = client.voice_fallback_method;
