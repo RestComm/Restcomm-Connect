@@ -226,20 +226,15 @@ public class UssdCallManager extends UntypedActor {
                 final Sid sid = number.getVoiceApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(application.getVoiceUrl()));
-                    builder.setMethod(application.getVoiceMethod());
-                    builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(application.getVoiceFallbackMethod());
-                    builder.setStatusCallback(application.getStatusCallback());
-                    builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
-                    builder.setMethod(number.getVoiceMethod());
-                    builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                    builder.setStatusCallback(number.getStatusCallback());
-                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 }
+                builder.setMethod(number.getVoiceMethod());
+                builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                builder.setStatusCallback(number.getStatusCallback());
+                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 final ActorRef ussdInterpreter = builder.build();
                 final ActorRef ussdCall = ussdCall();
                 ussdCall.tell(request, self);
@@ -286,7 +281,7 @@ public class UssdCallManager extends UntypedActor {
         final ActorRef ussdCall = ussdCall();
         final ActorRef self = self();
         final InitializeOutbound init = new InitializeOutbound(null, from, to, ussdUsername, ussdPassword, request.timeout(),
-                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, false);
         ussdCall.tell(init, self);
         return ussdCall;
     }

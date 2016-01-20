@@ -98,13 +98,14 @@ public class MonitoringService extends UntypedActor{
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
-        logger.info("Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass());
+        logger.info("MonitoringService Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self.isTerminated());
 
         if (InstanceId.class.equals(klass)) {
             onGotInstanceId((InstanceId) message, self, sender);
         } else if (Observing.class.equals(klass)) {
             onStartObserve((Observing) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
+            logger.info("Received stop observing");
             onStopObserving((StopObserving) message, self, sender);
         } else if (CallResponse.class.equals(klass)) {
             onCallResponse((CallResponse<CallInfo>)message, self, sender);
@@ -144,7 +145,7 @@ public class MonitoringService extends UntypedActor{
     }
 
     /**
-     * @param message
+     * @param userRegistration
      * @param self
      * @param sender
      */
@@ -205,22 +206,30 @@ public class MonitoringService extends UntypedActor{
      */
     private void onCallStateChanged(CallStateChanged message, ActorRef self, ActorRef sender) {
         String senderPath = sender.path().name();
-        CallStateChanged.State callState = message.state();
-        callStateMap.put(senderPath, callState);
-        CallInfo callInfo = callDetailsMap.get(senderPath);
-        callInfo.setState(callState);
-        if (callState.equals(CallStateChanged.State.FAILED)) {
-            failedCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.COMPLETED)) {
-            completedCalls.incrementAndGet();
-        } else if(callState.equals(CallStateChanged.State.BUSY)) {
-            busyCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.CANCELED)) {
-            canceledCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.NO_ANSWER)) {
-            noAnswerCalls.incrementAndGet();
-        } else if (callState.equals(CallStateChanged.State.NOT_FOUND)) {
-            notFoundCalls.incrementAndGet();
+        if (senderPath != null && message != null && callStateMap != null && callDetailsMap != null) {
+            CallStateChanged.State callState = message.state();
+            callStateMap.put(senderPath, callState);
+            CallInfo callInfo = callDetailsMap.get(senderPath);
+            if (callInfo != null) {
+                callInfo.setState(callState);
+                if (callState.equals(CallStateChanged.State.FAILED)) {
+                    failedCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.COMPLETED)) {
+                    completedCalls.incrementAndGet();
+                } else if(callState.equals(CallStateChanged.State.BUSY)) {
+                    busyCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.CANCELED)) {
+                    canceledCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.NO_ANSWER)) {
+                    noAnswerCalls.incrementAndGet();
+                } else if (callState.equals(CallStateChanged.State.NOT_FOUND)) {
+                    notFoundCalls.incrementAndGet();
+                }
+            } else {
+                logger.info("CallInfo was not in the store for Call: "+senderPath);
+            }
+        } else {
+            logger.error("MonitoringService, SenderPath or storage is null.");
         }
     }
 
@@ -266,5 +275,11 @@ public class MonitoringService extends UntypedActor{
 
         MonitoringServiceResponse callInfoList = new MonitoringServiceResponse(instanceId, callDetailsList, countersMap);
         sender.tell(callInfoList, self);
+    }
+
+    @Override
+    public void postStop() {
+        logger.info("Monitoring Service at postStop()");
+        super.postStop();
     }
 }

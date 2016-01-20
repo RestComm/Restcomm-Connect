@@ -11,12 +11,12 @@ import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
 import javax.sdp.SessionDescription;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+//import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
  */
-@ThreadSafe
+//@ThreadSafe
 public class SdpUtils {
 
     /**

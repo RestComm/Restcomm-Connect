@@ -148,7 +148,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
             final AvailablePhoneNumber number = new AvailablePhoneNumber(phoneNumber.getFriendlyName(),
                     phoneNumber.getPhoneNumber(), phoneNumber.getLata(), phoneNumber.getRateCenter(),
                     phoneNumber.getLatitude(), phoneNumber.getLongitude(), phoneNumber.getRegion(),
-                    phoneNumber.getPostalCode(), phoneNumber.getIsoCountry(), phoneNumber.isVoiceCapable(),
+                    phoneNumber.getPostalCode(), phoneNumber.getIsoCountry(), phoneNumber.getCost(), phoneNumber.isVoiceCapable(),
                     phoneNumber.isSmsCapable(), phoneNumber.isMmsCapable(), phoneNumber.isFaxCapable());
             availablePhoneNumbers.add(number);
         }

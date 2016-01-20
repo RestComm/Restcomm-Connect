@@ -35,6 +35,7 @@ public final class AvailablePhoneNumber {
     private final String region;
     private final Integer postalCode;
     private final String isoCountry;
+    private final String cost;
 
     // Capabilities
     private final Boolean voiceCapable;
@@ -44,14 +45,14 @@ public final class AvailablePhoneNumber {
 
     public AvailablePhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata,
             final String rateCenter, final Double latitude, final Double longitude, final String region,
-            final Integer postalCode, final String isoCountry) {
-        this(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode, isoCountry, null, null,
+            final Integer postalCode, final String isoCountry, final String cost) {
+        this(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode, isoCountry, cost, null, null,
                 null, null);
     }
 
     public AvailablePhoneNumber(final String friendlyName, final String phoneNumber, final Integer lata,
             final String rateCenter, final Double latitude, final Double longitude, final String region,
-            final Integer postalCode, final String isoCountry, final Boolean voiceCapable, final Boolean smsCapable,
+            final Integer postalCode, final String isoCountry, final String cost, final Boolean voiceCapable, final Boolean smsCapable,
             final Boolean mmsCapable, final Boolean faxCapable) {
         super();
         this.friendlyName = friendlyName;
@@ -63,6 +64,7 @@ public final class AvailablePhoneNumber {
         this.region = region;
         this.postalCode = postalCode;
         this.isoCountry = isoCountry;
+        this.cost = cost;
         this.voiceCapable = voiceCapable;
         this.smsCapable = smsCapable;
         this.mmsCapable = mmsCapable;
@@ -105,6 +107,10 @@ public final class AvailablePhoneNumber {
         return isoCountry;
     }
 
+    public String getCost() {
+        return cost;
+    }
+
     public Boolean isVoiceCapable() {
         return this.voiceCapable;
     }
@@ -123,6 +129,6 @@ public final class AvailablePhoneNumber {
 
     public AvailablePhoneNumber setFriendlyName(final String friendlyName) {
         return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode,
-                isoCountry, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                isoCountry, cost, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 }

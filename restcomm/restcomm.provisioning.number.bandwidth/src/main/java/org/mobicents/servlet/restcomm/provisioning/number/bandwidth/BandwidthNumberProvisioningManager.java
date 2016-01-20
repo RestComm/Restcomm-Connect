@@ -277,14 +277,14 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
                 String name = getFriendlyName(detail.getFullNumber(), "US");
                 final PhoneNumber phoneNumber = new PhoneNumber(name,
                         name, Integer.parseInt(detail.getLATA()), detail.getRateCenter(), null, null,
-                        detail.getState(), null, "US", true, true, false, false, false);
+                        detail.getState(), null, "US", null, true, true, false, false, false);
                 numbers.add(phoneNumber);
             }
         } else if (searchResult.getTelephoneNumberList().size() > 0) {
             for (final String number : searchResult.getTelephoneNumberList()) {
                 String name = getFriendlyName(number, "US");
                 final PhoneNumber phoneNumber = new PhoneNumber(name, name, null, null, null, null,
-                        null, null, "US", true, true, false, false, false);
+                        null, null, "US", null, true, true, false, false, false);
                 numbers.add(phoneNumber);
             }
         }

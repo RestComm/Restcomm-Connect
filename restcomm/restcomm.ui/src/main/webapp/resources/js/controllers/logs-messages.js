@@ -13,6 +13,8 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $mod
   $scope.currentPage = 1; //current page
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
+  $scope.reverse = false;
+  $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
@@ -48,6 +50,24 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $mod
   $scope.messagesLogsList = RCommLogsMessages.query({accountSid: $scope.sid}, function() {
     $scope.noOfPages = Math.ceil($scope.messagesLogsList.length / $scope.entryLimit);
   });
+
+
+$scope.sort = function(item) {
+        if ($scope.predicate == 'date_created') {
+            return new Date(item.date_created);
+        }
+           return  item[$scope.predicate];
+    };
+
+$scope.sortBy = function(field) {
+        if ($scope.predicate != field) {
+            $scope.predicate = field;
+            $scope.reverse = false;
+        } else {
+            $scope.reverse = !$scope.reverse;
+        }
+    };
+
 
 });
 

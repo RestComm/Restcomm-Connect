@@ -1,5 +1,6 @@
-App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
+App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications, authentication) {
 	
+	$scope.authInfo = authentication.getAuthInfo();
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd' && $scope.projectKind != 'sms')
@@ -9,7 +10,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 
 	
 	$scope.refreshProjectList = function() {
-		$http({url: 'api/projects',
+		$http({url: 'services/projects',
 				method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -24,7 +25,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.createNewProject = function(name, kind) {
-		$http({url: 'api/projects/' + name + "/?kind=" + kind,
+		$http({url: 'services/projects/' + name + "/?kind=" + kind,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
@@ -51,7 +52,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'api/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName })
+		$http({ method: "PUT", url: 'services/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName})
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -67,7 +68,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.deleteProject = function(projectItem) {
-		$http({ method: "DELETE", url: 'api/projects/' + projectItem.name })
+		$http({ method: "DELETE", url: 'services/projects/' + projectItem.name})
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
@@ -80,7 +81,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: 'api/projects',
+	        url: 'services/projects',
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));

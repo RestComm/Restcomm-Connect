@@ -71,7 +71,9 @@ public class CallinfoConverter extends AbstractConverter implements JsonSerializ
         writeCallerName(callInfo.fromName(), object);
         writeFrom(callInfo.from(), object);
         writeTo(callInfo.to(), object);
-        writeInviteUri(callInfo.invite().getRequestURI(), object);
+        if (callInfo.invite() != null) {
+            writeInviteUri(callInfo.invite().getRequestURI(), object);
+        }
         if (callInfo.lastResponse() != null)
             writeLastResponseUri(callInfo.lastResponse().getStatus(), object);
         return object;
