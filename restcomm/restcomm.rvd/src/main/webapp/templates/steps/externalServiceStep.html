@@ -166,7 +166,7 @@
 								</span>
 								<span ng-if='step.doRouting' class="input-group-addon">
 									<span>{{'externalServiceStepDynamicRadio' | translate}} &nbsp;</span>
-									<input ng-model='step.nextType' value='responseBased' type="radio">
+									<input ng-model='step.nextType' value='responseBased' type="radio" ng-disabled="true" title="Dynamic routing has been deprecated">
 								</span>								
 								<span ng-if='step.doRouting' class="input-group-addon">
 									<span>{{'externalServiceStepMappedRadio' | translate}} &nbsp;</span>
@@ -176,7 +176,7 @@
 								<!-- this is just a placeholder -->
 								<input ng-hide='step.doRouting' ng-disabled='true' class="form-control height-fix">
 							</div>
-							<div ng-show="step.nextType=='responseBased'" class="form-group validation-warning"><span translate='externalServiceStepDynamicWarning'></span>
+							<div ng-show="step.doRouting" class="form-group validation-warning"><span translate='externalServiceStepDynamicWarning'></span>
 								<a href="http://docs.telestax.com/fix-dynamic-routing-external-services" target="_blank"> Read more...</a>
 							</div>
 							<div>
