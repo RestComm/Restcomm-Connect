@@ -673,7 +673,7 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 		nodeRegistry.clear();
 
 
-		$http({url: 'api/projects/' + name,
+		$http({url: 'services/projects/' + name,
 			method: "GET"
 		})
 		.success(function (data, status, headers, config) {
@@ -748,7 +748,7 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 
 	function getWavList(projectName) {
 		var deferred = $q.defer();
-		$http({url: 'api/projects/'+ projectName + '/wavs' , method: "GET"})
+		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
 		.success(function (data, status, headers, config) {
 			//$scope.wavList = data;
 			deferred.resolve(data);
@@ -763,7 +763,7 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 		var deferred = $q.defer();
 
 		var state = packState(project);
-		$http({url: 'api/projects/'+ projectName,
+		$http({url: 'services/projects/'+ projectName,
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}
@@ -783,7 +783,7 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 	function buildProject(projectName) {
 		var deferred = $q.defer();
 
-		$http({url: 'api/projects/' + projectName + '/build', method: "POST"})
+		$http({url: 'services/projects/' + projectName + '/build', method: "POST"})
 		.success(function (data, status, headers, config) {
 			deferred.resolve('Build successfull');
 		 }).error(function (data, status, headers, config) {
@@ -795,7 +795,7 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 
 	function getBundledWavs() {
 		var deferred = $q.defer();
-		$http({url: 'api/designer/bundledWavs', method: "GET"})
+		$http({url: 'services/designer/bundledWavs', method: "GET"})
 		.success(function (data, status, headers, config) {
 			deferred.resolve(data.payload);
 		 }).error(function (data, status, headers, config) {

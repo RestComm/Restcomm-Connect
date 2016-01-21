@@ -117,10 +117,8 @@ public class ProjectRestService extends SecuredRestService {
             throw new ProjectDoesNotExist("Project " + projectName + " does not exist");
         ProjectState project = FsProjectStorage.loadProject(projectName, workspaceStorage);
         if (project.getHeader().getOwner() != null) {
-            // needs further checking
-            if (securityContext.getUserPrincipal() != null) {
-                String loggedUser = securityContext.getUserPrincipal().getName();
-                if (loggedUser.equals(project.getHeader().getOwner())) {
+            if (identityContext.getLoggedUsername() != null) {
+                if (identityContext.getLoggedUsername().equals(project.getHeader().getOwner())) {
                     this.activeProject = project;
                     return;
                 }
