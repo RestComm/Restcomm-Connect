@@ -25,7 +25,6 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
-import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.client.SettingsModel;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;

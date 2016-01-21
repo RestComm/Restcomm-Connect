@@ -2,7 +2,6 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -35,12 +34,12 @@ import org.mobicents.servlet.restcomm.rvd.RvdContext;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.UnauthorizedException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.InvalidRestcommAppPackage;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.UnsupportedRasApplicationVersion;
-import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem;
@@ -51,7 +50,6 @@ import org.mobicents.servlet.restcomm.rvd.model.packaging.RappBinaryInfo;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappConfig;
 import org.mobicents.servlet.restcomm.rvd.model.project.RvdProject;
 import org.mobicents.servlet.restcomm.rvd.security.RvdUser;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -65,7 +63,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 @Path("ras")
-public class RasRestService extends RestService {
+public class RasRestService extends SecuredRestService {
     static final Logger logger = Logger.getLogger(RasRestService.class.getName());
 
     @Context
@@ -103,7 +101,7 @@ public class RasRestService extends RestService {
     @GET
     @Path("/packaging/app")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAppConfig(@QueryParam("name") String projectName) throws StorageException, ProjectDoesNotExist {
+    public Response getAppConfig(@QueryParam("name") String projectName) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
         secure("Developer");
         logger.debug("retrieving app package for project " + projectName);
 
@@ -125,7 +123,7 @@ public class RasRestService extends RestService {
      */
     @POST
     @Path("/packaging/app/save")
-    public Response saveApp(@Context HttpServletRequest request, @QueryParam("name") String projectName) {
+    public Response saveApp(@Context HttpServletRequest request, @QueryParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         logger.info("saving restcomm app '" + projectName + "'");
         try {
@@ -159,7 +157,7 @@ public class RasRestService extends RestService {
     @GET
     @Path("/packaging/app/prepare")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response preparePackage(@QueryParam("name") String projectName) {
+    public Response preparePackage(@QueryParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         logger.debug("preparig app zip for project " + projectName);
 
@@ -186,7 +184,7 @@ public class RasRestService extends RestService {
     @GET
     @Path("/packaging/binary/info")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getBinaryStatus(@QueryParam("name") String projectName) {
+    public Response getBinaryStatus(@QueryParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         logger.debug("getting binary info for project " + projectName);
 
@@ -196,7 +194,7 @@ public class RasRestService extends RestService {
 
     @GET
     @Path("/packaging/download")
-    public Response downloadPackage(@QueryParam("name") String projectName) {
+    public Response downloadPackage(@QueryParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         logger.debug("downloading app zip for project " + projectName);
 
@@ -218,13 +216,13 @@ public class RasRestService extends RestService {
 
     @GET
     @Path("apps")
-    public Response listRapps(@Context HttpServletRequest request) {
+    public Response listRapps(@Context HttpServletRequest request) throws UnauthorizedException {
         secure("Developer");
         //Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
         List<String> projectNames = new ArrayList<String>();
         try {
-            items = projectService.getAvailableProjectsByOwner(loggedUser.getName());
+            items = projectService.getAvailableProjectsByOwner(identityContext.getLoggedUsername());
             for (ProjectItem project : items) {
                 projectNames.add(project.getName());
             }
@@ -247,7 +245,7 @@ public class RasRestService extends RestService {
      */
     @POST
     @Path("apps")
-    public Response newRasApp(@Context HttpServletRequest request) {
+    public Response newRasApp(@Context HttpServletRequest request) throws UnauthorizedException {
         secure("Developer");
         logger.info("uploading new ras app");
 
@@ -275,12 +273,12 @@ public class RasRestService extends RestService {
                         String effectiveProjectName = rasService.importAppToWorkspace(item.openStream(), loggedUser.getName(), projectService);
                         ProjectState projectState = FsProjectStorage.loadProject(effectiveProjectName,workspaceStorage);
 
-                        ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
-                        applicationsApi.createApplication(loggedUser.getTicketId(), effectiveProjectName, projectState.getHeader().getProjectKind());
+                        ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler,identityContext);
+                        applicationsApi.createApplication( effectiveProjectName, projectState.getHeader().getProjectKind());
                         try {
                             buildService.buildProject(effectiveProjectName, projectState);
                         } catch (Exception e) {
-                            applicationsApi.rollbackCreateApplication(loggedUser.getTicketId(), effectiveProjectName);
+                            applicationsApi.rollbackCreateApplication(effectiveProjectName);
                         }
 
                         fileinfo.addProperty("name", item.getName());
@@ -320,7 +318,7 @@ public class RasRestService extends RestService {
 
     @GET
     @Path("apps/{name}/config")
-    public Response getConfig(@PathParam("name") String projectName) {
+    public Response getConfig(@PathParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         //logger.info("getting configuration options for " + projectName);
 
@@ -350,7 +348,7 @@ public class RasRestService extends RestService {
 
     @GET
     @Path("apps/{name}")
-    public Response getRapp(@PathParam("name") String projectName) throws StorageException {
+    public Response getRapp(@PathParam("name") String projectName) throws StorageException, UnauthorizedException {
         secure("Developer");
         logger.info("getting info for " + projectName);
         try {
@@ -367,7 +365,7 @@ public class RasRestService extends RestService {
 
     @GET
     @Path("apps/{name}/config/dev")
-    public Response getConfigFromPackaging(@PathParam("name") String projectName) {
+    public Response getConfigFromPackaging(@PathParam("name") String projectName) throws UnauthorizedException {
        secure("Developer");
         //logger.info("getting configuration options for " + projectName);
        try {
@@ -388,7 +386,7 @@ public class RasRestService extends RestService {
      */
     @POST
     @Path("apps/{name}/bootstrap")
-    public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) {
+    public Response setBootstrap(@Context HttpServletRequest request, @PathParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         try {
             String bootstrapInfo;
@@ -406,7 +404,7 @@ public class RasRestService extends RestService {
 
     @GET
     @Path("apps/{name}/bootstrap")
-    public Response getBootstrap(@PathParam("name") String projectName) {
+    public Response getBootstrap(@PathParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         try {
             if ( ! FsProjectStorage.hasBootstrapInfo(projectName, workspaceStorage) )

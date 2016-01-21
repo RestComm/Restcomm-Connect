@@ -137,7 +137,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(smsMessage.getAccountSid()));
+               // secureLevelControl(accountsDao, accountSid, String.valueOf(smsMessage.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -155,7 +155,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     protected Response getSmsMessages(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -198,7 +198,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

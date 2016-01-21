@@ -10,11 +10,10 @@ import javax.ws.rs.core.SecurityContext;
 
 import org.apache.log4j.Logger;
 import org.keycloak.KeycloakSecurityContext;
-import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.security.RvdUser;
 
 @Path("/")
-public class RootRestService extends RestService {
+public class RootRestService extends SecuredRestService {
     static final Logger logger = Logger.getLogger(RootRestService.class.getName());
 
     @Context

@@ -31,13 +31,12 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationApiNotSynchedException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ApplicationsApiSyncException;
+import org.mobicents.servlet.restcomm.rvd.keycloak.IdentityContext;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommApplicationResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient.RestcommClientException;
-import org.mobicents.servlet.restcomm.rvd.security.Ticket;
-import org.mobicents.servlet.restcomm.rvd.security.TicketRepository;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
@@ -46,57 +45,54 @@ import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
  */
 public class ProjectApplicationsApi {
 
-    private ServletContext servletContext;
-    private WorkspaceStorage workspaceStorage;
     private ModelMarshaler marshaler;
+    private IdentityContext identityContext;
 
     private enum AccessApiAction {
         CREATE, DELETE, RENAME
     }
 
-    public ProjectApplicationsApi(ServletContext servletContext, WorkspaceStorage workspaceStorage, ModelMarshaler marshaler) {
-        this.servletContext = servletContext;
-        this.workspaceStorage = workspaceStorage;
+    public ProjectApplicationsApi(ServletContext servletContext, WorkspaceStorage workspaceStorage, ModelMarshaler marshaler, IdentityContext identityContext) {
         this.marshaler = marshaler;
+        this.identityContext = identityContext;
     }
 
-    public void createApplication(final String ticketId, final String friendlyName, final String projectKind)
+    public void createApplication(final String friendlyName, final String projectKind)
             throws ApplicationsApiSyncException, UnsupportedEncodingException {
         HashMap<String, String> params = new HashMap<String, String>();
         String rcmlUrl = "/restcomm-rvd/services/apps/" + RvdUtils.myUrlEncode(friendlyName) + "/controller";
         params.put("FriendlyName", friendlyName);
         params.put("Kind", projectKind);
         params.put("RcmlUrl", rcmlUrl);
-        accessApi(ticketId, params, AccessApiAction.CREATE);
+        accessApi(params, AccessApiAction.CREATE);
 
     }
 
-    public void rollbackCreateApplication(final String ticketId, final String friendlyName) throws ApplicationsApiSyncException {
-        removeApplication(ticketId, friendlyName);
+    public void rollbackCreateApplication(final String friendlyName) throws ApplicationsApiSyncException {
+        removeApplication(friendlyName);
     }
 
-    public void renameApplication(final String ticketId, final String name, final String newName)
+    public void renameApplication(final String name, final String newName)
             throws ApplicationsApiSyncException {
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("FriendlyName", name);
         params.put("NewFriendlyName", newName);
         params.put("RcmlUrl", "/restcomm-rvd/services/apps/" + RvdUtils.myUrlEncode(newName) + "/controller");
-        accessApi(ticketId, params, AccessApiAction.RENAME);
+        accessApi(params, AccessApiAction.RENAME);
     }
 
-    public void removeApplication(final String ticketId, final String friendlyName) throws ApplicationsApiSyncException {
+    public void removeApplication(final String friendlyName) throws ApplicationsApiSyncException {
         final HashMap<String, String> params = new HashMap<String, String>();
         params.put("FriendlyName", friendlyName);
-        accessApi(ticketId, params, AccessApiAction.DELETE);
+        accessApi(params, AccessApiAction.DELETE);
     }
 
-    private void accessApi(final String ticketId, final HashMap<String, String> params, final AccessApiAction action)
+    private void accessApi(final HashMap<String, String> params, final AccessApiAction action)
             throws ApplicationsApiSyncException {
         try {
             // get ticket from repository and username
-            Ticket ticket = TicketRepository.getInstance().findTicket(ticketId);
-            String authenticationToken = ticket.getAuthenticationToken();
-            String username = TicketRepository.getInstance().findTicket(ticketId).getUserId();
+            String authenticationToken = identityContext.getOauthTokenString();
+            String username = identityContext.getLoggedUsername();
             // restcomm location
             URI restcommBaseUri = RvdConfiguration.getInstance().getRestcommBaseUri();
 
@@ -106,11 +102,10 @@ public class ProjectApplicationsApi {
                 throw new ApplicationsApiSyncException("Could not determine account to create new Application.");
 
             // create the client
-            RestcommClient client = new RestcommClient(restcommBaseUri,username,authenticationToken);
-            client.setAuthenticationTokenAsPassword(ticket.getCookieBased());
+            RestcommClient client = new RestcommClient(restcommBaseUri,identityContext.getOauthTokenString());
 
             // Find the account sid for the apiUsername
-            RestcommAccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + username).done(
+            RestcommAccountInfoResponse accountResponse = client.get("/restcomm/2012-04-24/Accounts.json/" + identityContext.getLoggedUsername()).done(
                     marshaler.getGson(), RestcommAccountInfoResponse.class);
             String accountSid = accountResponse.getSid();
             RestcommApplicationResponse applicationResponse = null;

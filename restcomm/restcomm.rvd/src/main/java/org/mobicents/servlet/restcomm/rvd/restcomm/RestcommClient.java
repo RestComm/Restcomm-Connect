@@ -54,9 +54,10 @@ import com.google.gson.Gson;
 public class RestcommClient {
 
     private final URI restcommBaseUrl;
-    private final String username;
-    private final String password;
+    private String username;
+    private String password;
     private boolean authenticationTokenAsPassword = false;
+    private String oauthToken;
     CloseableHttpClient apacheClient;
 
     public static class RestcommClientException extends AccessApiException {
@@ -128,7 +129,7 @@ public class RestcommClient {
                         uriBuilder.addParameter(paramNames.get(i), paramValues.get(i));
                     String uri = uriBuilder.build().toString();
                     HttpGet get = new HttpGet(uri);
-                    get.addHeader("Authorization", "Basic " + getAuthenticationToken());
+                    get.addHeader("Authorization", getAuthorizationHeader());
                     apiResponse = client.apacheClient.execute(get);
                     try {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
@@ -151,7 +152,7 @@ public class RestcommClient {
                         values.add(new BasicNameValuePair(paramNames.get(i), paramValues.get(i)));
                     }
                     post.setEntity(new UrlEncodedFormEntity(values));
-                    post.addHeader("Authorization", "Basic " + getAuthenticationToken());
+                    post.addHeader("Authorization", getAuthorizationHeader());
                     apiResponse = client.apacheClient.execute(post);
                     try {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
@@ -174,7 +175,7 @@ public class RestcommClient {
                     for (int i = 0; i < paramNames.size(); i++) {
                         values.add(new BasicNameValuePair(paramNames.get(i), paramValues.get(i)));
                     }
-                    delete.addHeader("Authorization", "Basic " + getAuthenticationToken());
+                    delete.addHeader("Authorization", getAuthorizationHeader());
                     apiResponse = client.apacheClient.execute(delete);
                     try {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
@@ -209,6 +210,14 @@ public class RestcommClient {
             }
         }
 
+        private String getAuthorizationHeader() {
+            if (client.getOauthToken() != null) {
+                return "Bearer " + client.getOauthToken();
+            } else {
+                return "Basic " + getAuthenticationToken();
+            }
+        }
+
     }
 
     /**
@@ -225,6 +234,12 @@ public class RestcommClient {
         apacheClient = CustomHttpClientBuilder.buildHttpClient();
     }
 
+    public RestcommClient (URI fallbackRestcommBaseUri, String oauthToken) throws RestcommClientInitializationException {
+        this.restcommBaseUrl = fallbackRestcommBaseUri;
+        this.oauthToken = oauthToken;
+        apacheClient = CustomHttpClientBuilder.buildHttpClient();
+    }
+
     public String getUsername() {
         return username;
     }
@@ -232,6 +247,8 @@ public class RestcommClient {
     public String getPassword() {
         return password;
     }
+
+    public String getOauthToken() { return oauthToken; }
 
     public URI getRestcommBaseUrl() { return restcommBaseUrl; }
 

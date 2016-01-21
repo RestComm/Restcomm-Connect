@@ -153,7 +153,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+               // secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -174,7 +174,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -275,7 +275,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         final Sid accountId = new Sid(accountSid);
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -394,7 +394,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(callSid));
 
         try {
-            secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
+           // secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

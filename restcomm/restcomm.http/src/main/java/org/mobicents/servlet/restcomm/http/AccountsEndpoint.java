@@ -346,7 +346,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
             return Outcome.BAD_INPUT;
         if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
             RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext, RestcommConfiguration.getInstance().getIdentity(), RestcommConfiguration.getInstance().getMutableIdentity());
-            if ( ! api.inviteUser(username) ) // assign roles
+            if ( api.inviteUser(username) != Outcome.OK ) // assign roles
                 return Outcome.NOT_FOUND;
             restcommAccount = restcommAccount.setEmailAddress(username);
             try {
@@ -392,7 +392,7 @@ public abstract class AccountsEndpoint extends AccountsCommonEndpoint {
     protected Outcome createUser(String username, String friendlyName, String tempPassword) {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
-        UserEntity user = new UserEntity(username,null, friendlyName, null, tempPassword);
+        UserEntity user = new UserEntity(username, friendlyName, null, tempPassword);
         RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext,identityConfiguration,mutableIdentityConfiguration );
         return api.createUser(user);
     }

@@ -68,7 +68,7 @@ import com.thoughtworks.xstream.XStream;
  * @author guilherme.jansen@telestax.com
  */
 @NotThreadSafe
-public class ApplicationsEndpoint extends AbstractEndpoint {
+public class ApplicationsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;

@@ -453,6 +453,12 @@
         <artifactId>aws-java-sdk-s3</artifactId>
         <version>${aws.sdk.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.keycloak</groupId>
+        <artifactId>keycloak-as7-adapter</artifactId>
+        <version>${keycloak-adapter.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
