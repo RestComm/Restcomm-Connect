@@ -31,60 +31,46 @@ import org.apache.log4j.Logger;
 /**
  * @author jderruelle
  * @author pslegr
+ * @author gvagenas
  *
  */
 public class Version {
     private static Logger logger = Logger.getLogger(Version.class);
+    private static VersionEntity versionEntity;
 
     public static void printVersion() {
         if (logger.isInfoEnabled()) {
-            Properties releaseProperties = new Properties();
-            try {
-                InputStream in = Version.class
-                        .getResourceAsStream("release.properties");
-                if (in != null) {
-                    releaseProperties.load(in);
-                    in.close();
-                    String releaseVersion = releaseProperties
-                            .getProperty("release.version");
-                    String releaseName = releaseProperties
-                            .getProperty("release.name");
-                    String releaseDate = releaseProperties
-                            .getProperty("release.date");
-                    String releaseRevision = releaseProperties
-                            .getProperty("release.revision");
-                    String releaseDisclaimer = releaseProperties
-                            .getProperty("release.disclaimer");
-                    if (releaseVersion != null) {
-                        // Follow the EAP Convention
-                        // Release ID: JBoss [EAP] 5.0.1 (build:
-                        // SVNTag=JBPAPP_5_0_1 date=201003301050)
-                        logger.info("Release ID: (" + releaseName
-                                + ") Mobicents Restcomm " + releaseVersion
-                                + " (build: Git Hash=" + releaseRevision
-                                + " date=" + releaseDate + ")");
-                        logger.info(releaseName + " Mobicents Restcomm "
-                                + releaseVersion + " (build: Git Hash="
-                                + releaseRevision + " date=" + releaseDate
-                                + ") Started.");
-                    } else {
-                        logger.warn("Unable to extract the version of Mobicents Restcomm currently running");
-                    }
-                    if (releaseDisclaimer != null) {
-                        logger.info(releaseDisclaimer);
-                    }
-                } else {
-                    logger.warn("Unable to extract the version of Mobicents Restcomm currently running");
-                }
-            } catch (IOException e) {
-                logger.warn(
-                        "Unable to extract the version of Mobicents Restcomm currently running",
-                        e);
+            if (versionEntity == null)
+                versionEntity = generateVersionEntity();
+            String releaseVersion = versionEntity.getVersion();
+            String releaseName = versionEntity.getName();
+            String releaseDate = versionEntity.getDate();
+            String releaseRevision = versionEntity.getRevision();
+            String releaseDisclaimer = versionEntity.getDisclaimer();
+            if (releaseVersion != null) {
+                // Follow the EAP Convention
+                // Release ID: JBoss [EAP] 5.0.1 (build:
+                // SVNTag=JBPAPP_5_0_1 date=201003301050)
+                logger.info("Release ID: (" + releaseName
+                        + ") Restcomm " + releaseVersion
+                        + " (build: Git Hash=" + releaseRevision
+                        + " date=" + releaseDate + ")");
+                logger.info(releaseName + " Mobicents Restcomm "
+                        + releaseVersion + " (build: Git Hash="
+                        + releaseRevision + " date=" + releaseDate
+                        + ") Started.");
+            } else {
+                logger.warn("Unable to extract the version of Mobicents Restcomm currently running");
             }
+            if (releaseDisclaimer != null) {
+                logger.info(releaseDisclaimer);
+            }
+        } else {
+            logger.warn("Unable to extract the version of Mobicents Restcomm currently running");
         }
     }
 
-    public static String getFullVersion() {
+    private static VersionEntity generateVersionEntity() {
         Properties releaseProperties = new Properties();
         try {
             InputStream in = Version.class
@@ -98,64 +84,55 @@ public class Version {
                         .getProperty("release.name");
                 String releaseDate = releaseProperties
                         .getProperty("release.date");
-                if(releaseDate.equals("${maven.build.timestamp}")) {
-                    Date date = new Date();
-                    releaseDate = new SimpleDateFormat("yyyy/MM/dd_HH:mm").format(date);
-                }
                 String releaseRevision = releaseProperties
                         .getProperty("release.revision");
-
-                return "Release ID: (" + releaseName + ") Restcomm "
-                        + releaseVersion + " (build: Git Hash="
-                        + releaseRevision + " date=" + releaseDate + ")";
+                String releaseDisclaimer = releaseProperties
+                        .getProperty("release.disclaimer");
+                versionEntity = new VersionEntity(releaseVersion,releaseRevision,releaseName,releaseDate, releaseDisclaimer);
+            } else {
+                logger.warn("Unable to extract the version of Mobicents Restcomm currently running");
             }
-        } catch (Exception e) {
-            logger.warn(
-                    "Unable to extract the version of Mobicents Sip Servlets currently running",
-                    e);
+        } catch (IOException e) {
+            logger.warn("Unable to extract the version of Mobicents Restcomm currently running",e);
         }
-        return null;
+        return versionEntity;
+    }
+
+    public static VersionEntity getVersionEntity() {
+        if (versionEntity != null) {
+            return versionEntity;
+        } else {
+            return generateVersionEntity();
+        }
+    }
+
+    public static String getFullVersion() {
+        if (versionEntity == null)
+            versionEntity = generateVersionEntity();
+
+        String releaseVersion = versionEntity.getVersion();
+        String releaseName = versionEntity.getName();
+        String releaseDate = versionEntity.getDate();
+        if(releaseDate.equals("${maven.build.timestamp}")) {
+            Date date = new Date();
+            releaseDate = new SimpleDateFormat("yyyy/MM/dd_HH:mm").format(date);
+        }
+        String releaseRevision = versionEntity.getRevision();
+
+        return "Release ID: (" + releaseName + ") Restcomm "
+                + releaseVersion + " (build: Git Hash="
+                + releaseRevision + " date=" + releaseDate + ")";
     }
 
     public static String getVersion() {
-        Properties releaseProperties = new Properties();
-        try {
-            InputStream in = Version.class
-                    .getResourceAsStream("release.properties");
-            if (in != null) {
-                releaseProperties.load(in);
-                in.close();
-                String releaseVersion = releaseProperties
-                        .getProperty("release.version");
-
-                return releaseVersion;
-            }
-        } catch (Exception e) {
-            logger.warn(
-                    "Unable to extract the version of Mobicents Sip Servlets currently running",
-                    e);
-        }
-        return null;
+        if (versionEntity == null)
+            versionEntity = generateVersionEntity();
+        return versionEntity.getVersion();
     }
 
     public static String getRevision() {
-        Properties releaseProperties = new Properties();
-        try {
-            InputStream in = Version.class
-                    .getResourceAsStream("release.properties");
-            if (in != null) {
-                releaseProperties.load(in);
-                in.close();
-                String releaseRevision = releaseProperties
-                        .getProperty("release.revision");
-
-                return releaseRevision;
-            }
-        } catch (Exception e) {
-            logger.warn(
-                    "Unable to extract the version of Mobicents Sip Servlets currently running",
-                    e);
-        }
-        return null;
+        if (versionEntity == null)
+            versionEntity = generateVersionEntity();
+        return versionEntity.getRevision();
     }
 }

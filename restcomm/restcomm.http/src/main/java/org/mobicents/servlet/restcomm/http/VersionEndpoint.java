@@ -20,10 +20,91 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
+import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
+import org.apache.shiro.authz.AuthorizationException;
+import org.mobicents.servlet.restcomm.Version;
+import org.mobicents.servlet.restcomm.VersionEntity;
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.UsageDao;
+import org.mobicents.servlet.restcomm.entities.RestCommResponse;
+import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.converter.VersionConverter;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class VersionEndpoint {
+@ThreadSafe
+public class VersionEndpoint extends AbstractEndpoint {
+    private static Logger logger = Logger.getLogger(VersionEndpoint.class);
+
+    @Context
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected UsageDao dao;
+    protected Gson gson;
+    protected XStream xstream;
+    protected AccountsDao accountsDao;
+
+    @PostConstruct
+    public void init() {
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+        configuration = configuration.subset("runtime-settings");
+        super.init(configuration);
+        dao = storage.getUsageDao();
+        accountsDao = storage.getAccountsDao();
+        final VersionConverter converter = new VersionConverter(configuration);
+        final GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(VersionEntity.class, converter);
+        builder.setPrettyPrinting();
+        gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
+    }
+
+    protected Response getVersion(final String accountSid, final MediaType mediaType) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+
+        VersionEntity versionEntity = Version.getVersionEntity();
+
+        if (versionEntity != null) {
+            if (APPLICATION_XML_TYPE == mediaType) {
+                final RestCommResponse response = new RestCommResponse(versionEntity);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == mediaType) {
+                Response response = ok(gson.toJson(versionEntity), APPLICATION_JSON).build();
+                logger.debug("Supervisor endpoint response: "+gson.toJson(versionEntity));
+                return response;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
 
 }
