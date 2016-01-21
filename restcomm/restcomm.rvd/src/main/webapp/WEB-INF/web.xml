@@ -27,13 +27,4 @@
 		<param-value>false</param-value>
 	</context-param>
 
-	<security-constraint>
-		<web-resource-collection>
-			<web-resource-name>RESTServices</web-resource-name>
-			<url-pattern>/api/projects/*</url-pattern>
-			<url-pattern>/api/designer/*</url-pattern>
-			<url-pattern>/api/apps/*</url-pattern>
-		</web-resource-collection>
-	</security-constraint>
-
 </web-app>

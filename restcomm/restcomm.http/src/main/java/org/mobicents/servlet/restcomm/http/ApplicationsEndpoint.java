@@ -45,7 +45,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -143,11 +142,11 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                secureLevelControlApplications(accountSid, application);
-            } catch (AuthorizationException e) {
-                return status(UNAUTHORIZED).build();
-            }
+//            try {
+//                secureLevelControlApplications(accountSid, application);
+//            } catch (AuthorizationException e) {
+//                return status(UNAUTHORIZED).build();
+//            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(application);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -162,7 +161,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     protected Response getApplications(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
-            secureLevelControlApplications(accountSid, null);
+            //secureLevelControlApplications(accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -181,7 +180,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:Applications");
-            secureLevelControlApplications(accountSid, null);
+            //secureLevelControlApplications(accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -228,11 +227,11 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                secureLevelControlApplications(accountSid, application);
-            } catch (AuthorizationException e) {
-                return status(UNAUTHORIZED).build();
-            }
+//            try {
+//                secureLevelControlApplications(accountSid, application);
+//            } catch (AuthorizationException e) {
+//                return status(UNAUTHORIZED).build();
+//            }
             final Application applicationUpdate = update(application, data);
             dao.updateApplication(applicationUpdate);
             if (APPLICATION_XML_TYPE == responseType) {
@@ -263,6 +262,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         return result;
     }
 
+    /*
     protected boolean secureLevelControlApplications(String accountSid, Application app) {
         String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
         if (!sidPrincipal.equals(String.valueOf(accountSid))) {
@@ -272,4 +272,5 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         }
         return true;
     }
+    */
 }

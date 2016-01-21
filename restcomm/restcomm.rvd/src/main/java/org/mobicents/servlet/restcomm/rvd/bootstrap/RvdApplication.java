@@ -13,13 +13,15 @@ import org.mobicents.servlet.restcomm.rvd.http.resources.DesignerRestService;
 import org.mobicents.servlet.restcomm.rvd.http.resources.ProjectRestService;
 import org.mobicents.servlet.restcomm.rvd.http.resources.RasRestService;
 import org.mobicents.servlet.restcomm.rvd.http.resources.RootRestService;
+import org.mobicents.servlet.restcomm.rvd.http.resources.RvdController;
 
-@ApplicationPath("/api")
+@ApplicationPath("/services")
 public class RvdApplication extends Application {
     public Set<Class<?>> getClasses() {
         Set<Class<?>> s = new HashSet<Class<?>>();
         s.add(DesignerRestService.class);
         s.add(ProjectRestService.class);
+        s.add(RvdController.class);
         s.add(RasRestService.class);
         s.add(RootRestService.class);
         s.add(ProjectDoesNotExistMapper.class);

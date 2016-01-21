@@ -10,6 +10,7 @@ import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
 import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
+import org.mobicents.servlet.restcomm.rvd.configuration.RvdConfiguratorBuilder;
 
 public class RvdInitializationServlet extends HttpServlet {
 
@@ -19,6 +20,7 @@ public class RvdInitializationServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config) ;
         logger.info("Initializing RVD. Project version: " + RvdConfiguration.getRvdProjectVersion());
+        RvdConfiguratorBuilder.createOnce(config.getServletContext());
         RvdConfiguration rvdConfiguration = RvdConfiguration.createOnce(config.getServletContext());
         WorkspaceBootstrapper workspaceBootstrapper = new WorkspaceBootstrapper(rvdConfiguration.getWorkspaceBasePath());
         workspaceBootstrapper.run();

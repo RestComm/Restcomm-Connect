@@ -1,6 +1,5 @@
-App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications, authentication) {
-	
-	$scope.authInfo = authentication.getAuthInfo();
+App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
+
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd' && $scope.projectKind != 'sms')
