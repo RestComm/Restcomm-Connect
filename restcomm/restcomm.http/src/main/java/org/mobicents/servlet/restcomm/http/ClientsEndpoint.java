@@ -125,7 +125,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+               // secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -143,7 +143,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     protected Response getClients(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -180,7 +180,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -223,7 +223,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+              //  secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

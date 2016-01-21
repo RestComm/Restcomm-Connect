@@ -223,7 +223,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
             } catch (AuthorizationException e) {
                 return status(UNAUTHORIZED).build();
             }
@@ -263,7 +263,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -284,7 +284,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -341,7 +341,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
-            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }
@@ -450,7 +450,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
-            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }

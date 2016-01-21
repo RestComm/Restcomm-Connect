@@ -22,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.fileupload.FileItemIterator;
@@ -29,7 +30,6 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.ProjectApplicationsApi;
 import org.mobicents.servlet.restcomm.rvd.ProjectService;
@@ -42,10 +42,9 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.UnauthorizedException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
-import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
-import org.mobicents.servlet.restcomm.rvd.http.SecuredRestService;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
@@ -54,7 +53,6 @@ import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
@@ -97,7 +95,7 @@ public class ProjectRestService extends SecuredRestService {
 
     @PostConstruct
     void init() {
-		super.init();
+        super.init();
         rvdContext = new RvdContext(request, servletContext);
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
@@ -139,7 +137,7 @@ public class ProjectRestService extends SecuredRestService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listProjects(@Context HttpServletRequest request) {
+    public Response listProjects(@Context HttpServletRequest request) throws UnauthorizedException {
         // Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
         try {
@@ -164,22 +162,22 @@ public class ProjectRestService extends SecuredRestService {
     @PUT
     @Path("{name}")
     public Response createProject(@PathParam("name") String name, @QueryParam("kind") String kind,
-            @QueryParam("ticket") String ticket) {
-		secure("Developer");
+            @QueryParam("ticket") String ticket) throws UnauthorizedException {
+        secure("Developer");
         //Principal loggedUser = securityContext.getUserPrincipal();
         ProjectApplicationsApi applicationsApi = null;
 
         logger.info("Creating project " + name);
         try {
-            applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
-            applicationsApi.createApplication(ticket, name, kind);
-            ProjectState projectState = projectService.createProject(name, kind, loggedUser.getName());
+            applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler, identityContext);
+            applicationsApi.createApplication(name, kind);
+            ProjectState projectState = projectService.createProject(name, kind, identityContext.getLoggedUsername());
             BuildService buildService = new BuildService(workspaceStorage);
             buildService.buildProject(name, projectState);
         } catch (ProjectAlreadyExists e) {
             logger.error(e.getMessage(), e);
             try {
-                applicationsApi.rollbackCreateApplication(ticket, name);
+                applicationsApi.rollbackCreateApplication(name);
             } catch (ApplicationsApiSyncException e1) {
                 logger.error(e1.getMessage(), e1);
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -213,7 +211,6 @@ public class ProjectRestService extends SecuredRestService {
      * @throws StorageException
      * @throws ProjectDoesNotExist
      */
-    @RvdAuth
     @GET
     @Path("{name}/info")
     public Response projectInfo(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
@@ -225,8 +222,8 @@ public class ProjectRestService extends SecuredRestService {
 
     @POST
     @Path("{name}")
-    public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) {
-		secure("Developer");
+    public Response updateProject(@Context HttpServletRequest request, @PathParam("name") String projectName) throws UnauthorizedException {
+        secure("Developer");
         if (projectName != null && !projectName.equals("")) {
             logger.info("Saving project " + projectName);
             try {
@@ -263,8 +260,8 @@ public class ProjectRestService extends SecuredRestService {
      */
     @POST
     @Path("{name}/cc")
-    public Response storeCcInfo(@PathParam("name") String projectName, @Context HttpServletRequest request) {
-		secure("Developer");
+    public Response storeCcInfo(@PathParam("name") String projectName, @Context HttpServletRequest request) throws UnauthorizedException {
+        secure("Developer");
         try {
             String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
             CallControlInfo ccInfo = marshaler.toModel(data, CallControlInfo.class);
@@ -285,8 +282,8 @@ public class ProjectRestService extends SecuredRestService {
 
     @GET
     @Path("{name}/cc")
-    public Response getCcInfo(@PathParam("name") String projectName) {
-		secure("Developer");
+    public Response getCcInfo(@PathParam("name") String projectName) throws UnauthorizedException {
+        secure("Developer");
         try {
             CallControlInfo ccInfo = FsCallControlInfoStorage.loadInfo(projectName, workspaceStorage);
             return Response.ok(marshaler.toData(ccInfo), MediaType.APPLICATION_JSON).build();
@@ -302,13 +299,14 @@ public class ProjectRestService extends SecuredRestService {
     @PUT
     @Path("{name}/rename")
     public Response renameProject(@PathParam("name") String projectName, @QueryParam("newName") String projectNewName,
-            @QueryParam("ticket") String ticket) throws StorageException, ProjectDoesNotExist {
+            @QueryParam("ticket") String ticket) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
+        secure("Developer");
         if (!RvdUtils.isEmpty(projectName) && !RvdUtils.isEmpty(projectNewName)) {
             assertProjectAvailable(projectName);
             try {
-                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
+                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler, identityContext);
                 try {
-                    applicationsApi.renameApplication(ticket, projectName, projectNewName);
+                    applicationsApi.renameApplication(projectName, projectNewName);
                 } catch (ApplicationApiNotSynchedException e) {
                     logger.warn(e.getMessage());
                 }
@@ -331,7 +329,7 @@ public class ProjectRestService extends SecuredRestService {
 
     @PUT
     @Path("{name}/upgrade")
-    public Response upgradeProject(@PathParam("name") String projectName) {
+    public Response upgradeProject(@PathParam("name") String projectName) throws UnauthorizedException {
         secure("Developer");
         // TODO IMPORTANT!!! sanitize the project name!!
         if (!RvdUtils.isEmpty(projectName)) {
@@ -358,12 +356,12 @@ public class ProjectRestService extends SecuredRestService {
     @DELETE
     @Path("{name}")
     public Response deleteProject(@PathParam("name") String projectName, @QueryParam("ticket") String ticket)
-            throws ProjectDoesNotExist {
-		secure("Developer");
+            throws ProjectDoesNotExist, UnauthorizedException {
+        secure("Developer");
         if (!RvdUtils.isEmpty(projectName)) {
             try {
-                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
-                applicationsApi.removeApplication(ticket, projectName);
+                ProjectApplicationsApi applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler, identityContext);
+                applicationsApi.removeApplication(projectName);
                 projectService.deleteProject(projectName);
                 return Response.ok().build();
             } catch (StorageException e) {
@@ -380,8 +378,8 @@ public class ProjectRestService extends SecuredRestService {
     @GET
     @Path("{name}/archive")
     public Response downloadArchive(@PathParam("name") String projectName) throws StorageException, ProjectDoesNotExist,
-            UnsupportedEncodingException, EncoderException {
-		secure("Developer");
+            UnsupportedEncodingException, EncoderException, UnauthorizedException {
+        secure("Developer");
         logger.debug("downloading raw archive for project " + projectName);
         assertProjectAvailable(projectName);
 
@@ -399,12 +397,11 @@ public class ProjectRestService extends SecuredRestService {
 
     @POST
     // @Path("{name}/archive")
-    public Response importProjectArchive(@Context HttpServletRequest request, @QueryParam("ticket") String ticket) {
+    public Response importProjectArchive(@Context HttpServletRequest request, @QueryParam("ticket") String ticket) throws UnauthorizedException {
         logger.info("Importing project from raw archive");
         ProjectApplicationsApi applicationsApi = null;
         String projectName = null;
-        //Principal loggedUser = securityContext.getUserPrincipal();
-		secure("Developer");
+        secure("Developer");
 
         try {
             if (request.getHeader("Content-Type") != null
@@ -424,7 +421,7 @@ public class ProjectRestService extends SecuredRestService {
                     // They will be ignored
                     if (item.getName() != null) {
                         String effectiveProjectName = projectService
-                                .importProjectFromArchive(item.openStream(), item.getName(), loggedUser.getName());
+                                .importProjectFromArchive(item.openStream(), item.getName(), identityContext.getLoggedUsername());
                         // buildService.buildProject(effectiveProjectName);
 
                         // Load project kind
@@ -434,8 +431,8 @@ public class ProjectRestService extends SecuredRestService {
                         projectName = effectiveProjectName;
 
                         // Create application
-                        applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
-                        applicationsApi.createApplication(ticket, effectiveProjectName, projectKind);
+                        applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler, identityContext);
+                        applicationsApi.createApplication(effectiveProjectName, projectKind);
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);
@@ -460,7 +457,7 @@ public class ProjectRestService extends SecuredRestService {
             logger.warn(e, e);
             logger.debug(e, e);
             try {
-                applicationsApi.rollbackCreateApplication(ticket, projectName);
+                applicationsApi.rollbackCreateApplication(projectName);
             } catch (ApplicationsApiSyncException e1) {
                 logger.error(e1.getMessage(), e1);
                 return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
@@ -476,8 +473,8 @@ public class ProjectRestService extends SecuredRestService {
     @Path("{name}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response openProject(@PathParam("name") String name, @Context HttpServletRequest request) throws StorageException,
-            ProjectDoesNotExist {
-		secure("Developer");
+            ProjectDoesNotExist, UnauthorizedException {
+        secure("Developer");
         assertProjectAvailable(name);
         return Response.ok().entity(marshaler.toData(activeProject)).build();
         /*
@@ -493,8 +490,8 @@ public class ProjectRestService extends SecuredRestService {
     @POST
     @Path("{name}/wavs")
     public Response uploadWavFile(@PathParam("name") String projectName, @Context HttpServletRequest request)
-            throws StorageException, ProjectDoesNotExist {
-		secure("Developer");
+            throws StorageException, ProjectDoesNotExist, UnauthorizedException {
+        secure("Developer");
         logger.info("running /uploadwav");
         assertProjectAvailable(projectName);
         try {
@@ -541,8 +538,8 @@ public class ProjectRestService extends SecuredRestService {
     @DELETE
     @Path("{name}/wavs")
     public Response removeWavFile(@PathParam("name") String projectName, @QueryParam("filename") String wavname,
-            @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
-		secure("Developer");
+            @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
+        secure("Developer");
         assertProjectAvailable(projectName);
         try {
             projectService.removeWavFromProject(projectName, wavname);
@@ -556,8 +553,8 @@ public class ProjectRestService extends SecuredRestService {
     @GET
     @Path("{name}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listWavs(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
-		secure("Developer");
+    public Response listWavs(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
+        secure("Developer");
         assertProjectAvailable(name);
         List<WavItem> items;
         try {
@@ -598,8 +595,8 @@ public class ProjectRestService extends SecuredRestService {
 
     @POST
     @Path("{name}/build")
-    public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist {
-		secure("Developer");        
+    public Response buildProject(@PathParam("name") String name) throws StorageException, ProjectDoesNotExist, UnauthorizedException {
+        secure("Developer");
         assertProjectAvailable(name);
         BuildService buildService = new BuildService(workspaceStorage);
         try {
@@ -613,7 +610,7 @@ public class ProjectRestService extends SecuredRestService {
 
     @POST
     @Path("{name}/settings")
-    public Response saveProjectSettings(@PathParam("name") String name) {
+    public Response saveProjectSettings(@PathParam("name") String name) throws UnauthorizedException {
         secure("Developer");
         logger.info("saving project settings for " + name);
         String data;
@@ -632,19 +629,18 @@ public class ProjectRestService extends SecuredRestService {
 
     }
 
-    @RvdAuth
     @GET
     @Path("{name}/settings")
-    public Response getProjectSettings(@PathParam("name") String name) {
-        secure("Developer");    
-    try {
-            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(name, workspaceStorage);
-            return Response.ok(marshaler.toData(projectSettings)).build();
-        } catch (StorageEntityNotFound e) {
-            return Response.status(Status.NOT_FOUND).build();
-        } catch (StorageException e) {
-            logger.error(e, e);
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+    public Response getProjectSettings(@PathParam("name") String name) throws UnauthorizedException {
+        secure("Developer");
+        try {
+                ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(name, workspaceStorage);
+                return Response.ok(marshaler.toData(projectSettings)).build();
+            } catch (StorageEntityNotFound e) {
+                return Response.status(Status.NOT_FOUND).build();
+            } catch (StorageException e) {
+                logger.error(e, e);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            }
         }
-    }
 }

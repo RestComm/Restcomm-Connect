@@ -95,7 +95,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -113,7 +113,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

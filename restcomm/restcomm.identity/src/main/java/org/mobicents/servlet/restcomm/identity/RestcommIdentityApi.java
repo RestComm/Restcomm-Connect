@@ -22,24 +22,17 @@ package org.mobicents.servlet.restcomm.identity;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContextBuilder;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.keycloak.OAuth2Constants;
@@ -54,6 +47,7 @@ import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigur
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 
 import com.google.gson.Gson;
+import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
 
 /**
  * All api calls to restcomm-identity proxy are defined here
@@ -116,7 +110,7 @@ public class RestcommIdentityApi {
     }
 
     public String retrieveTokenString(String username, String password) {
-        CloseableHttpClient client = null;
+        HttpClient client = null;
         try {
             client = buildHttpClient();
             HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(IdentityConfigurationSetImpl.getAuthServerUrl(authServerBaseUrl)).path(ServiceUrlConstants.TOKEN_PATH).build(realm));
@@ -139,12 +133,6 @@ public class RestcommIdentityApi {
             return token.getToken();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
@@ -159,7 +147,7 @@ public class RestcommIdentityApi {
         if (this.identityInstanceId == null)
             throw new IllegalStateException("No identity instance id is set");
 
-        CloseableHttpClient client = null;
+        HttpClient client = null;
         try {
             client = buildHttpClient();
             HttpPost request = new HttpPost(IdentityConfigurationSetImpl.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + this.identityInstanceId + "/users/" + username + "/invite");
@@ -172,17 +160,11 @@ public class RestcommIdentityApi {
                 return Outcome.OK;
         } catch (Exception e1) {
             throw new RuntimeException(e1);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
     public Outcome createUser(UserEntity user) {
-        CloseableHttpClient client = null;
+        HttpClient client = null;
         try {
             client = buildHttpClient();
             HttpPost request = new HttpPost(IdentityConfigurationSetImpl.getIdentityProxyUrl(authServerBaseUrl) + "/api/users");
@@ -201,17 +183,11 @@ public class RestcommIdentityApi {
                 return Outcome.OK;
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
     public Outcome dropUser(String username) {
-        CloseableHttpClient client = null;
+        HttpClient client = null;
         try {
             client = buildHttpClient();
             HttpDelete request = new HttpDelete(IdentityConfigurationSetImpl.getIdentityProxyUrl(authServerBaseUrl) + "/api/users/" + username);
@@ -221,17 +197,11 @@ public class RestcommIdentityApi {
             return Outcome.fromHttpStatus(response.getStatusLine().getStatusCode());
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
     public CreateInstanceResponse createInstance(String[] redirectUris, String secret) throws RestcommIdentityApiException {
-        CloseableHttpClient client = null;
+        HttpClient client = null;
         try {
             client = buildHttpClient();
             HttpPost request = new HttpPost(IdentityConfigurationSetImpl.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances");
@@ -253,17 +223,11 @@ public class RestcommIdentityApi {
             }
         } catch ( IOException e) {
             throw new RestcommIdentityApiException(Outcome.INTERNAL_ERROR);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
     public Outcome dropInstance(String instanceId) {
-        CloseableHttpClient client = null;
+        HttpClient client = null;
         try {
             client = buildHttpClient();
             HttpDelete request = new HttpDelete(IdentityConfigurationSetImpl.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances/" + instanceId);
@@ -273,12 +237,6 @@ public class RestcommIdentityApi {
             return Outcome.fromHttpStatus(response.getStatusLine().getStatusCode());
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
@@ -287,18 +245,8 @@ public class RestcommIdentityApi {
 
 
 
-    private CloseableHttpClient buildHttpClient() {
-        // TODO - use a proper certificate on identity.restcomm.com instead of a self-signed one
-        SSLContextBuilder builder = new SSLContextBuilder();
-        SSLConnectionSocketFactory sslsf;
-        try {
-        builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-        sslsf = new SSLConnectionSocketFactory(builder.build(),SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-        } catch ( NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-            throw new RuntimeException(e); // there is not much to do here.
-        }
-        CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-        return httpclient;
+    private HttpClient buildHttpClient() {
+        return CustomHttpClientBuilder.buildDefault();
     }
 
     public static class UserEntity {

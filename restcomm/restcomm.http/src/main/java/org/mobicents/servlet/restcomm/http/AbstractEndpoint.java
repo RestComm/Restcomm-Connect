@@ -116,7 +116,7 @@ public abstract class AbstractEndpoint {
     }
 
 /*
-	TODO compatibility  check for multitenenancy
+    TODO compatibility  check for multitenenancy
     protected void secure(final Account account, final String permission) throws AuthorizationException {
         final Subject subject = SecurityUtils.getSubject();
         if (account != null && account.getSid() != null) {
