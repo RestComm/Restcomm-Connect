@@ -96,7 +96,12 @@ sms_capable BOOLEAN,
 mms_capable BOOLEAN,
 fax_capable BOOLEAN,
 pure_sip BOOLEAN,
-cost VARCHAR(10)
+cost VARCHAR(10).
+ussd_url MEDIUMTEXT,
+ussd_method VARCHAR(4),
+ussd_fallback_url MEDIUMTEXT,
+ussd_fallback_method VARCHAR(4),
+ussd_application_sid VARCHAR(34)
 );
 
 CREATE TABLE restcomm_applications (

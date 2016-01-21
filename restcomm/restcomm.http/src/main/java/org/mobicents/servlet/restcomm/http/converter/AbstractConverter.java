@@ -263,6 +263,70 @@ public abstract class AbstractConverter implements Converter {
         }
     }
 
+    protected void writeUssdFallbackUrl(final URI ussdFallbackUrl, final HierarchicalStreamWriter writer) {
+        if (ussdFallbackUrl != null) {
+            writer.startNode("UssdFallbackUrl");
+            writer.setValue(ussdFallbackUrl.toString());
+            writer.endNode();
+        }
+    }
+
+    protected void writeUssdFallbackUrl(final URI ussdFallbackUrl, final JsonObject object) {
+        if (ussdFallbackUrl != null) {
+            object.addProperty("ussd_fallback_url", ussdFallbackUrl.toString());
+        } else {
+            object.add("ussd_fallback_url", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeUssdFallbackMethod(final String ussdFallbackMethod, final HierarchicalStreamWriter writer) {
+        writer.startNode("UssdFallbackMethod");
+        if (ussdFallbackMethod != null) {
+            writer.setValue(ussdFallbackMethod);
+        }
+        writer.endNode();
+    }
+
+    protected void writeUssdFallbackMethod(final String ussdFallbackMethod, final JsonObject object) {
+        if (ussdFallbackMethod != null) {
+            object.addProperty("ussd_fallback_method", ussdFallbackMethod);
+        } else {
+            object.add("ussd_fallback_method", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeUssdUrl(final URI ussdUrl, final HierarchicalStreamWriter writer) {
+        if (ussdUrl != null) {
+            writer.startNode("UssdUrl");
+            writer.setValue(ussdUrl.toString());
+            writer.endNode();
+        }
+    }
+
+    protected void writeUssdUrl(final URI ussdUrl, final JsonObject object) {
+        if (ussdUrl != null) {
+            object.addProperty("ussd_url", ussdUrl.toString());
+        } else {
+            object.add("ussd_url", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeUssdMethod(final String ussdMethod, final HierarchicalStreamWriter writer) {
+        writer.startNode("UssdMethod");
+        if (ussdMethod != null) {
+            writer.setValue(ussdMethod);
+        }
+        writer.endNode();
+    }
+
+    protected void writeUssdMethod(final String ussdMethod, final JsonObject object) {
+        if (ussdMethod != null) {
+            object.addProperty("ussd_method", ussdMethod);
+        } else {
+            object.add("ussd_method", JsonNull.INSTANCE);
+        }
+    }
+
     protected void writeStatus(final String status, final HierarchicalStreamWriter writer) {
         writer.startNode("Status");
         writer.setValue(status);
