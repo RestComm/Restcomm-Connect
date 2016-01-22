@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mobicents.servlet.restcomm.patterns.Observe;
+import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
@@ -92,6 +93,7 @@ public abstract class GenericEndpoint extends UntypedActor {
         if (observer != null) {
             synchronized (this.observers) {
                 this.observers.add(observer);
+                sender.tell(new Observing(self), self);
             }
         }
     }
