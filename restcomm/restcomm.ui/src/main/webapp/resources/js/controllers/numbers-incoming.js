@@ -76,7 +76,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   //}
 
   // query for available apps
-  $scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
+  $scope.availableApps = RCommApps.query({account:AuthService.getUsername()});
   $scope.localApps = localApps;
 
   //$scope.countries = countries;
