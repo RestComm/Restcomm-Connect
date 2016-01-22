@@ -183,6 +183,13 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
         builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         builder.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+
+        builder.setUssdUrl(getUrl("UssdUrl", data));
+        builder.setUssdMethod(getMethod("UssdMethod", data));
+        builder.setUssdFallbackUrl(getUrl("UssdFallbackUrl", data));
+        builder.setUssdFallbackMethod(getMethod("UssdFallbackMethod",data));
+        builder.setUssdApplicationSid(getSid("UssdApplicationSid",data));
+
         final Configuration configuration = this.configuration.subset("runtime-settings");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");

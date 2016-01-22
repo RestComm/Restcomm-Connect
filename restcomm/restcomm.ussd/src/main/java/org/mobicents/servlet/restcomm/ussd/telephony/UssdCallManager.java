@@ -223,16 +223,17 @@ public class UssdCallManager extends UntypedActor {
                 builder.setVersion(number.getApiVersion());
                 final Account account = accounts.getAccount(number.getAccountSid());
                 builder.setEmailAddress(account.getEmailAddress());
-                final Sid sid = number.getVoiceApplicationSid();
+                final Sid sid = number.getUssdApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
                     builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                 } else {
-                    builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
+                    builder.setUrl(UriUtils.resolve(number.getUssdUrl()));
                 }
-                builder.setMethod(number.getVoiceMethod());
-                builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                builder.setMethod(number.getUssdMethod());
+                if (number.getUssdFallbackUrl() != null)
+                    builder.setFallbackUrl(number.getUssdFallbackUrl());
+                builder.setFallbackMethod(number.getUssdFallbackMethod());
                 builder.setStatusCallback(number.getStatusCallback());
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 final ActorRef ussdInterpreter = builder.build();
