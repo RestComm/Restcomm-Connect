@@ -43,16 +43,15 @@ import javax.servlet.ServletContext;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
+import org.mobicents.servlet.restcomm.email.EmailService;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Client;
@@ -84,6 +83,7 @@ public class RvdProjectsMigrationHelper {
     private static final String CONTEXT_NAME_RVD = "restcomm-rvd.war";
     private static final String WORKSPACE_DIRECTORY_NAME = "workspace";
     private static final String PROTO_DIRECTORY_PREFIX = "_proto";
+    private static final String USERS_DIRECTORY_NAME = "@users";
     private static final Pattern RVD_PROJECT_URL = Pattern.compile("^\\/restcomm-rvd.*\\/(.*)\\/controller$");
     private static final String ACCOUNT_NOTIFICATIONS_SID = "ACae6e420f425248d6a26948c17a9e2acf";
     private static final String EMBEDDED_DIRECTORY_NAME = "workspace-migration";
@@ -174,7 +174,8 @@ public class RvdProjectsMigrationHelper {
             File[] entries = workspaceDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
-                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(PROTO_DIRECTORY_PREFIX))
+                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(PROTO_DIRECTORY_PREFIX)
+                            && !anyfile.getName().equals(USERS_DIRECTORY_NAME))
                         return true;
                     return false;
                 }
@@ -535,9 +536,7 @@ public class RvdProjectsMigrationHelper {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
@@ -573,8 +572,8 @@ public class RvdProjectsMigrationHelper {
 
     private class RvdConfig {
         private String workspaceLocation;
-        private String restcommPublicIp;
         private String sslMode;
+        private String restcommBaseUrl;
 
         public RvdConfig() {
         }
@@ -582,7 +581,6 @@ public class RvdProjectsMigrationHelper {
         public RvdConfig(String workspaceLocation, String restcommPublicIp, String sslMode) {
             super();
             this.workspaceLocation = workspaceLocation;
-            this.restcommPublicIp = restcommPublicIp;
             this.sslMode = sslMode;
         }
 
@@ -590,14 +588,13 @@ public class RvdProjectsMigrationHelper {
             return workspaceLocation;
         }
 
-        public String getRestcommPublicIp() {
-            return restcommPublicIp;
-        }
-
         public String getSslMode() {
             return sslMode;
         }
 
+        public String getRestcommBaseUrl() {
+            return restcommBaseUrl;
+        }
     }
 
     private class StateHeader {

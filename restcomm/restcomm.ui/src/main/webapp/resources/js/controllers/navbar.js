@@ -191,11 +191,13 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
   };
 };
 
-var AboutModalCtrl = function ($scope, $modalInstance, RCommJMX) {
+var AboutModalCtrl = function ($scope, $modalInstance, SessionService, RCommJMX, RCVersion) {
 
   $scope.Math = window.Math;
+  $scope.sid = SessionService.get('sid');
 
   $scope.getData = function() {
+    $scope.version = RCVersion.get({accountSid: $scope.sid});
     $scope.info = RCommJMX.get({path: 'java.lang:type=*'},
       function(data){
         $scope.OS = data.value['java.lang:type=OperatingSystem'];

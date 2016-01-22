@@ -94,7 +94,7 @@ App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal
 		$scope.settings = settings;
 		$scope.rvdSettings = rvdSettings;
 		$scope.defaultSettings = rvdSettings.getDefaultSettings();
-		
+
 		$scope.ok = function () {
 			rvdSettings.saveSettings($scope.settings).then(function () {
 				$modalInstance.close($scope.settings);

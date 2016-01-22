@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.http;
 
+import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -195,6 +196,19 @@ public class CallsEndpointTest {
         assertTrue(filteredCallsUsingMultipleFilters.get("calls").getAsJsonArray().size() > 0);
         assertTrue(allCalls.get("calls").getAsJsonArray().size() > filteredCallsUsingMultipleFilters.get("calls")
                 .getAsJsonArray().size());
+    }
+
+    @Test
+    public void getCallRecordingsList() {
+        String callWithRecordingsSid = "CAfe9ce46f104f4beeb10c83a5dad2be66";
+        JsonArray callRecordings = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, callWithRecordingsSid );
+        assertEquals("Call recordings size() should be 1", 1, callRecordings.size());
+
+        String callWithoutRecordings = "CAfd82074503754b80aa8555199dfcc703";
+        callRecordings = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, callWithoutRecordings );
+        assertEquals("Call recordings size() should be 0", 0, callRecordings.size());
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
