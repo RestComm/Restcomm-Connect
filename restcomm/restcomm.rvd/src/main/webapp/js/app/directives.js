@@ -283,27 +283,39 @@ angular.module('Rvd').directive('ussdModule', [function () {
 	};
 }]);
 
-/*
- * Adds to scope: buttonOptions, selectedOption, addedClasses
- */
-angular.module('Rvd').directive('multibutton', function () {
-	return  {
-		restrict: 'E',
-		scope:true,
-		templateUrl: 'templates/directive/multibutton.html',
-		link: function (scope,element,attrs) {
-			scope.buttonOptions = scope.$eval(attrs.options);
-			if (scope.buttonOptions.length > 0 )
-				scope.selectedOption = scope.buttonOptions[0];
-			else
-				scope.selectedOption = "";
-			
-			scope.addedClasses = attrs.buttonClass;
+angular.module('Rvd').directive('rvdDropdown', function() {
+	return {
+		scope:{
+		    model:'='
 		},
-		controller: function($scope) {
-			$scope.selectOption = function(option) {
-				$scope.selectedOption = option;
-			}
+		replace:true,
+		restrict: 'E',
+		templateUrl: 'templates/directive/rvdDropdown.html',
+		link: function (scope,element,attrs) {
+		    function getOptionByValue(list,value) {
+		        for (var i=0; i<list.length; i++) {
+		            if (list[i].value == value)
+		                return list[i];
+		        }
+		        return null; // not found
+		    }
+		    scope.setActiveOption = function(option) {
+		        scope.selectedOption = option;
+		        scope.model = option.value;
+		    }
+
+		    scope.allOptions = []; //{"key":"null label","value":null}];
+            scope.options = scope.$eval(attrs.options);
+            if (!!scope.options && scope.options.length > 0)
+                scope.allOptions = scope.allOptions.concat(scope.options);
+            else
+                scope.allOptions = [{"key":"null label","value":null}];
+            console.log(scope.allOptions);
+		    var selectedOption = getOptionByValue(scope.allOptions, scope.model);
+		    if (selectedOption == null)
+		        selectedOption = scope.allOptions[0];
+		    scope.setActiveOption(selectedOption);
 		}
 	}
 });
+

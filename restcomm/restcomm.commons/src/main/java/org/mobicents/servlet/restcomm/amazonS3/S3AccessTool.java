@@ -28,6 +28,7 @@ import java.util.Date;
 
 import javax.activation.MimetypesFileTypeMap;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import com.amazonaws.AmazonClientException;
@@ -101,19 +102,25 @@ public class S3AccessTool {
             URL downloadUrl = s3client.generatePresignedUrl(generatePresignedUrlRequestGET);
 
             //Second upload the file to S3
-            while (!file.exists()){}
-            PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(new MimetypesFileTypeMap().getContentType(file));
-            putRequest.setMetadata(metadata);
-            if (reducedRedundancy)
-                putRequest.setStorageClass(StorageClass.ReducedRedundancy);
-            s3client.putObject(putRequest);
+//            while (!file.exists()){}
+            while (!FileUtils.waitFor(file, 30)){}
+            if (file.exists()) {
+                PutObjectRequest putRequest = new PutObjectRequest(bucket.toString(), file.getName(), file);
+                ObjectMetadata metadata = new ObjectMetadata();
+                metadata.setContentType(new MimetypesFileTypeMap().getContentType(file));
+                putRequest.setMetadata(metadata);
+                if (reducedRedundancy)
+                    putRequest.setStorageClass(StorageClass.ReducedRedundancy);
+                s3client.putObject(putRequest);
 
-            if(removeOriginalFile) {
-                removeLocalFile(file);
+                if (removeOriginalFile) {
+                    removeLocalFile(file);
+                }
+                return downloadUrl.toURI();
+            } else {
+                logger.error("Timeout waiting for the recording file: "+file.getAbsolutePath());
+                return null;
             }
-            return downloadUrl.toURI();
          } catch (AmazonServiceException ase) {
             logger.error("Caught an AmazonServiceException");
             logger.error("Error Message:    " + ase.getMessage());

@@ -34,6 +34,8 @@ import static org.junit.Assert.assertTrue;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.sip.address.SipURI;
@@ -41,6 +43,7 @@ import javax.sip.header.Header;
 import javax.sip.message.Response;
 
 import com.google.gson.JsonArray;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -221,13 +224,23 @@ public class DialActionTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=failed"));
+        assertTrue(requestBody.contains("DialCallStatus=null"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
-        String dialCallSid = params[9].split("=")[1];
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertTrue(dialCallSid.equals("null"));
+        //Since ALICE is not registered, CallManager will ask to hangup the call, thus we never have outbound call
+//        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+//        assertNotNull(cdr);
     }
     
     @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
@@ -268,14 +281,25 @@ public class DialActionTest {
         assertTrue(requests.size() == 1);
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
-        assertTrue(requestBody.contains("DialCallStatus=failed"));
+        //DialCallStatus should be null since there was no call made - since Alice is not registered
+        assertTrue(requestBody.contains("DialCallStatus=null"));
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         assertTrue(requestBody.contains("CallStatus=completed"));
-        String dialCallSid = params[9].split("=")[1];
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertTrue(dialCallSid.equals("null"));
+        //Since ALICE is not registered, CallManager will ask to hangup the call, thus we never have outbound call
+//        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+//        assertNotNull(cdr);
     }
 
     @Test
@@ -333,6 +357,8 @@ public class DialActionTest {
             exception.printStackTrace();
         }
 
+        Thread.sleep(3000);
+
         logger.info("About to check the DialAction Requests");
         List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
         assertTrue(requests.size() == 1);
@@ -342,7 +368,16 @@ public class DialActionTest {
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
-        String dialCallSid = params[9].split("=")[1];
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
@@ -411,7 +446,16 @@ public class DialActionTest {
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
-        String dialCallSid = params[9].split("=")[1];
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
@@ -480,7 +524,16 @@ public class DialActionTest {
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
-        String dialCallSid = params[9].split("=")[1];
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
@@ -546,7 +599,16 @@ public class DialActionTest {
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialRingDuration=3"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
-        String dialCallSid = params[9].split("=")[1];
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
@@ -609,7 +671,16 @@ public class DialActionTest {
         assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
-        String dialCallSid = params[9].split("=")[1];
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
@@ -692,7 +763,16 @@ public class DialActionTest {
         assertTrue(requestBody.contains("SipHeader_X-My-Custom-Header=My+Custom+Value"));
         assertTrue(requestBody.contains("SipHeader_X-OtherHeader=Other+Value"));
         assertTrue(requestBody.contains("SipHeader_X-another-header=another+value"));
-        String dialCallSid = params[9].split("=")[1];
+        Iterator iter = Arrays.asList(params).iterator();
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+                break;
+            }
+        }
+        assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
     }
@@ -764,17 +844,32 @@ public class DialActionTest {
         assertTrue(requestBody.contains("DialCallDuration=3"));
         assertTrue(requestBody.contains("DialRingDuration=2"));
 
-        String dialCallSid = params[9].split("=")[1];
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-        JsonArray cdrsArray = cdr.get("calls").getAsJsonArray();
-        if (((JsonObject)cdrsArray.get(0)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
-            assertTrue(((JsonObject)cdrsArray.get(1)).get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
-            assertTrue(((JsonObject)cdrsArray.get(1)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
-        } else {
-            assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
-            assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        Iterator iter = Arrays.asList(params).iterator();
+        String callSid = null;
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("CallSid")) {
+                callSid = param.split("=")[1];
+            } else if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+            }
+
         }
+        assertNotNull(callSid);
+        assertNotNull(dialCallSid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject dialCdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+        assertNotNull(cdr);
+        assertNotNull(dialCdr);
+
+        //INBOUND call has no ring_duration since Restcomm will answer imediatelly an incoming call
+        assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("5")); //Only talk time
+        assertTrue(cdr.get("direction").getAsString().equalsIgnoreCase("inbound"));
+
+        assertTrue(dialCdr.get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
+        assertTrue(dialCdr.get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        assertTrue(dialCdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
     }
 
 
@@ -841,17 +936,32 @@ public class DialActionTest {
         assertTrue(requestBody.contains("DialCallDuration=0"));
         assertTrue(requestBody.contains("DialRingDuration=2"));
 
-        String dialCallSid = params[9].split("=")[1];
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
-        assertNotNull(cdr);
-        JsonArray cdrsArray = cdr.get("calls").getAsJsonArray();
-        if (((JsonObject)cdrsArray.get(0)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
-            assertTrue(((JsonObject)cdrsArray.get(1)).get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
-            assertTrue(((JsonObject)cdrsArray.get(1)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
-        } else {
-            assertTrue(((JsonObject)cdrsArray.get(0)).get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
-            assertTrue(((JsonObject)cdrsArray.get(0)).get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        Iterator iter = Arrays.asList(params).iterator();
+        String callSid = null;
+        String dialCallSid = null;
+        while (iter.hasNext()) {
+            String param = (String) iter.next();
+            if (param.startsWith("CallSid")) {
+                callSid = param.split("=")[1];
+            } else if (param.startsWith("DialCallSid")) {
+                dialCallSid = param.split("=")[1];
+            }
         }
+        assertNotNull(callSid);
+        assertNotNull(dialCallSid);
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject dialCdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
+        assertNotNull(cdr);
+        assertNotNull(dialCdr);
+
+        //Since the outbound call to Alice never got established the duration of the inbound call is not defined
+        //assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
+        //assertTrue(cdr.get("ring_duration").getAsString().equalsIgnoreCase("0"));
+        assertTrue(cdr.get("direction").getAsString().equalsIgnoreCase("inbound"));
+
+        assertTrue(dialCdr.get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
+        assertTrue(dialCdr.get("ring_duration").getAsString().equalsIgnoreCase("2")); //Only Ringing time
+        assertTrue(dialCdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
     }
 
     @Deployment(name = "DialAction", managed = true, testable = false)
