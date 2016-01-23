@@ -454,6 +454,31 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
         }
 
+        if (data.containsKey("UssdUrl")) {
+            URI uri = getUrl("UssdUrl", data);
+            incomingPhoneNumber.setUssdUrl(isEmpty(uri.toString()) ? null : uri);
+        }
+
+        if (data.containsKey("UssdMethod")) {
+            incomingPhoneNumber.setUssdMethod(getMethod("UssdMethod", data));
+        }
+
+        if (data.containsKey("UssdFallbackUrl")) {
+            URI uri = getUrl("UssdFallbackUrl", data);
+            incomingPhoneNumber.setUssdFallbackUrl(isEmpty(uri.toString()) ? null : uri);
+        }
+
+        if (data.containsKey("UssdFallbackMethod")) {
+            incomingPhoneNumber.setUssdFallbackMethod(getMethod("UssdFallbackMethod", data));
+        }
+
+        if (data.containsKey("UssdApplicationSid")) {
+            if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("UssdApplicationSid")))
+                incomingPhoneNumber.setUssdApplicationSid(null);
+            else
+                incomingPhoneNumber.setUssdApplicationSid(getSid("UssdApplicationSid", data));
+        }
+
         incomingPhoneNumber.setDateUpdated(DateTime.now());
         return incomingPhoneNumber;
     }
