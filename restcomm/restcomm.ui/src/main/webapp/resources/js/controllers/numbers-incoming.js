@@ -314,6 +314,11 @@ var createNumberParams = function(number, isSIP) {
   params["SmsFallbackUrl"] = number.sms_fallback_url; // || number.smsFallbackUrl;
   params["SmsFallbackMethod"] = number.sms_fallback_method || number.smsFallbackMethod;
   params["VoiceCallerIdLookup"] = number.voice_caller_id_lookup || number.voiceCallerIdLookup;
+  params["UssdUrl"] = number.ussd_url;
+  params["UssdMethod"] = number.ussd_method;
+  params["UssdFallbackUrl"] = number.ussd_fallback_url;
+  params["UssdFallbackMethod"] = number.ussd_fallback_method;
+  params["UssdApplicationSid"] = number.ussd_application_sid;
   if(isSIP) {
 	  params["isSIP"] = "true";
   }

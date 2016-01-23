@@ -59,7 +59,7 @@
             <h4 class="account-detail-field-name">USSD Request</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url sid-var="numberDetails.ussd_application_sid" url-only-var="false" method-var="numberDetails.ussd_method" url-var="numberDetails.ussd_url"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.ussd_application_sid" url-only-var="false" method-var="numberDetails.ussd_method" url-var="numberDetails.ussd_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
