@@ -867,8 +867,11 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
                 SipServletResponse resp = invite.createResponse(503, "Problem to setup services");
-                String reason = ((CallFail)message).getReason();
-                resp.addHeader("Reason", reason);
+                if (message instanceof CallFail) {
+                    String reason = ((CallFail) message).getReason();
+                    if (reason != null)
+                        resp.addHeader("Reason", reason);
+                }
                 resp.send();
             }
 
