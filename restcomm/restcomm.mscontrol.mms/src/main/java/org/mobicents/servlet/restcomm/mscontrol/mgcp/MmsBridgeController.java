@@ -43,6 +43,8 @@ import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
+import org.mobicents.servlet.restcomm.mgcp.EndpointState;
+import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
@@ -85,7 +87,7 @@ public class MmsBridgeController extends MediaServerController {
     private final State acquiringMediaSession;
     private final State acquiringEndpoint;
     private final State creatingMediaGroup;
-    private final State destroyingMediaGroup;
+    private final State stopping;
     private final State inactive;
     private final State failed;
     private Boolean fail;
@@ -116,9 +118,9 @@ public class MmsBridgeController extends MediaServerController {
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(self), null);
         this.acquiringEndpoint = new State("acquiring endpoint", new AcquiringEndpoint(self), null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(self), null);
-        this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(self), null);
-        this.inactive = new State("inactive", new Inactive(self), null);
-        this.failed = new State("failed", new Failed(self), null);
+        this.stopping = new State("stopping", new Stopping(self));
+        this.inactive = new State("inactive", new Inactive(self));
+        this.failed = new State("failed", new Failed(self));
 
         // Finite State Machine
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -128,10 +130,10 @@ public class MmsBridgeController extends MediaServerController {
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
         transitions.add(new Transition(acquiringEndpoint, inactive));
         transitions.add(new Transition(creatingMediaGroup, active));
-        transitions.add(new Transition(creatingMediaGroup, destroyingMediaGroup));
+        transitions.add(new Transition(creatingMediaGroup, stopping));
         transitions.add(new Transition(creatingMediaGroup, failed));
-        transitions.add(new Transition(active, destroyingMediaGroup));
-        transitions.add(new Transition(destroyingMediaGroup, inactive));
+        transitions.add(new Transition(active, stopping));
+        transitions.add(new Transition(stopping, inactive));
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         this.fail = Boolean.FALSE;
 
@@ -211,7 +213,7 @@ public class MmsBridgeController extends MediaServerController {
 
         logger.info("********** Bridge Controller " + self().path() + " State: \"" + state.toString());
         logger.info("********** Bridge Controller " + self().path() + " Processing: \"" + klass.getName() + " Sender: "
-                + sender.getClass());
+                + sender.path());
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -229,6 +231,8 @@ public class MmsBridgeController extends MediaServerController {
             onMediaGroupStateChanged((MediaGroupStateChanged) message, self, sender);
         } else if (StartRecording.class.equals(klass)) {
             onStartRecording((StartRecording) message, self, sender);
+        }  else if(EndpointStateChanged.class.equals(klass)) {
+            onEndpointStateChanged((EndpointStateChanged) message, self, sender);
         }
     }
 
@@ -266,7 +270,7 @@ public class MmsBridgeController extends MediaServerController {
         if (is(acquiringMediaSession) || is(acquiringEndpoint)) {
             this.fsm.transition(message, inactive);
         } else if (is(creatingMediaGroup) || is(active)) {
-            this.fsm.transition(message, destroyingMediaGroup);
+            this.fsm.transition(message, stopping);
         }
     }
 
@@ -277,6 +281,7 @@ public class MmsBridgeController extends MediaServerController {
             this.fsm.transition(message, acquiringEndpoint);
         } else if (is(acquiringEndpoint)) {
             this.endpoint = (ActorRef) message.get();
+            this.endpoint.tell(new Observe(self), self);
             this.fsm.transition(message, creatingMediaGroup);
         }
     }
@@ -293,24 +298,42 @@ public class MmsBridgeController extends MediaServerController {
                 if (is(creatingMediaGroup)) {
                     this.fail = Boolean.TRUE;
                     fsm.transition(message, failed);
-                } else if (is(destroyingMediaGroup)) {
-                    if (fail) {
-                        this.fsm.transition(message, failed);
-                    } else {
-                        // Save record info in the database
-                        if (recordStarted != null) {
-                            saveRecording();
-                            recordStarted = null;
-                            recordingRequest = null;
-                        }
-                        // Move to inactive state
-                        this.fsm.transition(message, inactive);
+                } else if (is(stopping)) {
+                    // Stop media group actor
+                    this.mediaGroup.tell(new StopObserving(self), self);
+                    context().stop(mediaGroup);
+                    this.mediaGroup = null;
+
+                    // Save record info in the database
+                    if (recordStarted != null) {
+                        saveRecording();
+                        recordStarted = null;
+                        recordingRequest = null;
+                    }
+
+                    // Move to next state
+                    if (this.mediaGroup == null && this.endpoint == null) {
+                        this.fsm.transition(message, fail ? failed : inactive);
                     }
                 }
                 break;
 
             default:
                 break;
+        }
+    }
+
+    private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(stopping)) {
+            if (sender.equals(this.endpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+                this.endpoint.tell(new StopObserving(self), self);
+                context().stop(endpoint);
+                endpoint = null;
+
+                if(this.mediaGroup == null && this.endpoint == null) {
+                    this.fsm.transition(message, inactive);
+                }
+            }
         }
     }
 
@@ -406,6 +429,30 @@ public class MmsBridgeController extends MediaServerController {
         }
     }
 
+    private final class Stopping extends AbstractAction {
+
+        public Stopping(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            // Stop Media Group
+            // Note: Recording will be added to DB after getting response from MG
+            if (recording) {
+                mediaGroup.tell(new Stop(), super.source);
+                recording = Boolean.FALSE;
+            }
+
+            // Destroy Media Group
+            mediaGroup.tell(new StopMediaGroup(), super.source);
+            
+            // Destroy Bridge Endpoint and its connections
+            endpoint.tell(new DestroyEndpoint(), super.source);
+        }
+    }
+
+    @Deprecated
     private final class DestroyingMediaGroup extends AbstractAction {
 
         public DestroyingMediaGroup(final ActorRef source) {

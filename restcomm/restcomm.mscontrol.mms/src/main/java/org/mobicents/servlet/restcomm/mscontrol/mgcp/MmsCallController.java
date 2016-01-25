@@ -1062,7 +1062,6 @@ public class MmsCallController extends MediaServerController {
             if (internalLink != null) {
                 // mediaGateway.tell(new DestroyLink(internalLink), source);
                 context().stop(internalLink);
-                context().stop(internalLinkEndpoint);
                 internalLink = null;
             }
 
