@@ -252,7 +252,6 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
     public void processMgcpResponseEvent(final JainMgcpResponseEvent event) {
         final int id = event.getTransactionHandle();
         final ActorRef listener = responseListeners.remove(id);
-        logger.info("######### Media GW received response to transaction " + id + ", forwarding to actor " + listener.path());
         if (listener != null) {
             listener.tell(event, self());
         }
