@@ -67,6 +67,7 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   } // or registering a new one ?
   else {
     // start optional items collapsed
+    $scope.clientDetails = {};
     $scope.isCollapsed = true;
 
     $scope.closeRegisterSIPClient = function () {
@@ -75,7 +76,7 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   }
 
   // query for available apps
-  $scope.availableApps = RCommApps.query();
+  //$scope.availableApps = RCommApps.query();
 
   var createSIPClientParams = function(client) {
     var params = {};

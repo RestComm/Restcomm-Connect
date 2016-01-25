@@ -25,7 +25,8 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
   };
 
   // add incoming number -----------------------------------------------------
-
+/*
+// no modal is used for number registration any more
   $scope.showRegisterIncomingNumberModal = function () {
     var registerIncomingNumberModal = $modal.open({
       controller: NumberDetailsCtrl,
@@ -43,6 +44,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
       }
     );
   };
+  */
 
   // delete incoming number --------------------------------------------------
 
@@ -76,7 +78,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   //}
 
   // query for available apps
-  $scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
+  //$scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
   $scope.localApps = localApps;
 
   //$scope.countries = countries;
