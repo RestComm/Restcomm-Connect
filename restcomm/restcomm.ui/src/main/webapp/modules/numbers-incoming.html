@@ -34,8 +34,8 @@
                     <span ng-show="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small> {{ pn.voice_url }} {{ pn.voice_application_sid }} </small></span>
                     <span class="opacity30" ng-hide="{{ pn.voice_url.length > 0 || pn.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
                     <br>
-                    <span ng-show="{{ pn.sms_url.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ pn.sms_url  }}</small></span>
-                    <span class="opacity30" ng-hide="{{ pn.sms_url.length > 0  }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>
+                    <span ng-show="{{ pn.sms_url.length > 0 || pn.sms_application_sid.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ pn.sms_url  }} {{ pn.sms_application_sid }}</small></span>
+                    <span class="opacity30" ng-hide="{{ pn.sms_url.length > 0 || pn.sms_application_sid.length > 0 }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>
                     <br>
                     <!--
                     <span ng-show="{{ $index % 4 == 1  }}"><span class="available-feature"><strong>#</strong></span> <small> {{ pn.voice_url.substring(0, pn.voice_url.indexOf("demos/") + 6) }}ussd/ussd-menu.xml </small></span>

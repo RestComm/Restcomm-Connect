@@ -16,7 +16,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 			method:"GET",
 			url:"/restcomm/2012-04-24/Accounts/"+AuthService.getAccountSid()+"/Applications.json"
 		}).success(function(data){
-			console.log("Received apps from Restcomm");
+			//console.log("Received apps from Restcomm");
 			restcommApps = data;
 			var projectSids = [];
 			for (var i in restcommApps) {
