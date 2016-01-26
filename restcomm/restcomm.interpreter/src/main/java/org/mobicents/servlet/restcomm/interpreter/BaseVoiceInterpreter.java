@@ -57,11 +57,10 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.EmailResponse;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
+import org.mobicents.servlet.restcomm.api.Mail;
+import org.mobicents.servlet.restcomm.email.EmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -83,6 +82,7 @@ import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
@@ -522,10 +522,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                EMAIL_SENDER=builder.getUser();
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
@@ -585,20 +582,14 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef parser(final String xml) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+            return context.actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                Parser parser = null;
-                try {
-                    parser = new Parser(xml);
-                } catch (IOException e) {
-                    logger.error("There was a problem during creation of parser for xml: \n"+xml+"\n"+"Exception is: "+e);
+                @Override
+                public UntypedActor create() throws IOException {
+                    return new Parser(xml, self());
                 }
-                return parser;
-            }
-        }));
+            }));
     }
 
     void postCleanup() {
@@ -1191,7 +1182,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 verb = (Tag) message;
             }
             // Hang up the call.
-            call.tell(new Hangup(), source);
+            if (ParserFailed.class.equals(klass)) {
+                call.tell(new Hangup("Problem_to_parse_downloaded_RCML"), source);
+            } else {
+                call.tell(new Hangup(), source);
+            }
         }
     }
 

@@ -1,64 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.telestax.servlet</groupId>
-	<artifactId>restcomm</artifactId>
-	<version>7.5.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>RestComm</name>
-	<description>A unified communications platform for web developers.</description>
-	<url>http://www.restcomm.org</url>
+  <groupId>com.telestax.servlet</groupId>
+  <artifactId>restcomm</artifactId>
+  <version>7.5.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>RestComm</name>
+  <description>A unified communications platform for web developers.</description>
+  <url>http://www.restcomm.org</url>
 
-	<developers>
-		<developer>
-			<id>thomas</id>
-			<name>Thomas Quintana</name>
-			<email>thomas.quintana@telestax.com</email>
-			<organization>TeleStax, Inc.</organization>
-			<organizationUrl>http://www.telestax.com/</organizationUrl>
-			<roles>
-				<role>RestComm Project Lead</role>
-			</roles>
-			<timezone>0</timezone>
-		</developer>
-		<developer>
-			<id>jean.deruelle</id>
-			<name>Jean Deruelle</name>
-			<email>jean.deruelle@telestax.com</email>
-			<organization>TeleStax, Inc</organization>
-			<organizationUrl>http://www.telestax.com/</organizationUrl>
-			<roles>
-				<role>SIP Servlets Project Lead</role>
-			</roles>
-			<timezone>+1</timezone>
-		</developer>
-		<developer>
-			<id>george.vagenas</id>
-			<name>George Vagenas</name>
-			<email>george.vagenas@telestax.com</email>
-			<organization>TeleStax, Inc</organization>
-			<organizationUrl>http://www.telestax.com/</organizationUrl>
-			<roles>
-				<role>SIP Testing Project Lead</role>
-			</roles>
-			<timezone>+1</timezone>
-		</developer>
-	</developers>
-	<licenses>
-		<license>
-			<name>GNU Affero General Public License</name>
-			<url>http://www.gnu.org/licenses/agpl-3.0.html</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+  <developers>
+    <developer>
+      <id>thomas</id>
+      <name>Thomas Quintana</name>
+      <email>thomas.quintana@telestax.com</email>
+      <organization>TeleStax, Inc.</organization>
+      <organizationUrl>http://www.telestax.com/</organizationUrl>
+      <roles>
+        <role>RestComm Project Lead</role>
+      </roles>
+      <timezone>0</timezone>
+    </developer>
+    <developer>
+      <id>jean.deruelle</id>
+      <name>Jean Deruelle</name>
+      <email>jean.deruelle@telestax.com</email>
+      <organization>TeleStax, Inc</organization>
+      <organizationUrl>http://www.telestax.com/</organizationUrl>
+      <roles>
+        <role>SIP Servlets Project Lead</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>george.vagenas</id>
+      <name>George Vagenas</name>
+      <email>george.vagenas@telestax.com</email>
+      <organization>TeleStax, Inc</organization>
+      <organizationUrl>http://www.telestax.com/</organizationUrl>
+      <roles>
+        <role>SIP Testing Project Lead</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>GNU Affero General Public License</name>
+      <url>http://www.gnu.org/licenses/agpl-3.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
-	<scm>
-		<connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
-		<developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
-		<url>https://bitbucket.org/telestax/telscale-restcomm</url>
-		<tag>HEAD</tag>
-	</scm>
+  <scm>
+    <connection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</connection>
+    <developerConnection>scm:git:git@bitbucket.org:telestax/telscale-restcomm.git</developerConnection>
+    <url>https://bitbucket.org/telestax/telscale-restcomm</url>
+    <tag>HEAD</tag>
+  </scm>
 
 	<distributionManagement>
 		<repository>

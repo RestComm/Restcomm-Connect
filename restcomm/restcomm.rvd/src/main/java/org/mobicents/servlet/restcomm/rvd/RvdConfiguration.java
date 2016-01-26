@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -23,6 +22,7 @@ import org.mobicents.servlet.restcomm.rvd.commons.http.SslMode;
 import org.mobicents.servlet.restcomm.rvd.configuration.RestcommConfig;
 import org.mobicents.servlet.restcomm.rvd.http.utils.UriUtils;
 import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
+import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.w3c.dom.Document;
 
 import com.thoughtworks.xstream.XStream;
@@ -34,6 +34,7 @@ public class RvdConfiguration {
     private static final String WORKSPACE_DIRECTORY_NAME = "workspace";
     public static final String PROTO_DIRECTORY_PREFIX = "_proto";
     public static final String REST_SERVICES_PATH = "services"; // the "services" from the /restcomm-rvd/services/apps/... path
+    public static final String USERS_DIRECTORY_NAME = "@users";
 
     public static final String WAVS_DIRECTORY_NAME = "wavs";
     private static final String RVD_PROJECT_VERSION = "1.5"; // version for rvd project syntax
@@ -74,8 +75,23 @@ public class RvdConfiguration {
         }
     }
 
+    public static RvdConfiguration createOnce(String contextRootPath) {
+        synchronized (RvdConfiguration.class) {
+            if ( instance == null ) {
+                instance = new RvdConfiguration(contextRootPath);
+            }
+            return instance;
+        }
+    }
+
     private RvdConfiguration(ServletContext servletContext) {
         contextRootPath = servletContext.getRealPath("/");
+        logger.info("contextRootPath: " + contextRootPath);
+        load();
+    }
+
+    private RvdConfiguration(String contextRootPath) {
+        this.contextRootPath = contextRootPath;
         logger.info("contextRootPath: " + contextRootPath);
         load();
     }
@@ -169,24 +185,6 @@ public class RvdConfiguration {
         return RAS_APPLICATION_VERSION;
     }
 
-    public String getEffectiveRestcommIp(HttpServletRequest request) {
-        String ipFromXml = rvdConfig.getRestcommPublicIp();
-
-        String ip = request.getLocalAddr(); // use request ip as default
-        if ( ipFromXml != null  &&  !"".equals(ipFromXml) ) {
-            ip = ipFromXml;
-        }
-        return ip;
-    }
-
-    // Always returns the destination port in the request. When the configuration/settings scheme clears
-    // out a proper implementation should be done.
-    // TODO
-    public String getEffectiveRestcommPort(HttpServletRequest request) {
-        int port = request.getLocalPort();
-        return "" + port;
-    }
-
     public static Set<String> getRestcommParameterNames() {
         return restcommParameterNames;
     }
@@ -206,13 +204,26 @@ public class RvdConfiguration {
     // this is lazy loaded because HttpConnector enumeration (done in resolve()) fails otherwise
     public URI getRestcommBaseUri() {
         if (this.restcommBaseUri == null) {
-            UriUtils uriUtils = new UriUtils(this);
-            URI restcommBaseUri = null;
-            try {
-                URI uri = new URI("/");
-                restcommBaseUri = uriUtils.resolve(uri);
-            } catch (URISyntaxException e) { /* we should never reach here */ throw new IllegalStateException(); }
-            this.restcommBaseUri = restcommBaseUri;
+            // check rvd.xml override first
+            String rawUrl = rvdConfig.getRestcommBaseUrl();
+            if ( ! RvdUtils.isEmpty(rawUrl) ) {
+                try {
+                    URI uri = new URI(rawUrl);
+                    if ( ! RvdUtils.isEmpty(uri.getScheme()) && !RvdUtils.isEmpty(uri.getHost()) )
+                        this.restcommBaseUri = uri;
+                } catch (URISyntaxException e) { /* do nothing */}
+            }
+            // if no override value in rvd.xml use the automatic way
+            if (this.restcommBaseUri == null) {
+                UriUtils uriUtils = new UriUtils(this);
+                try {
+                    URI uri = new URI("/");
+                    this.restcommBaseUri = uriUtils.resolve(uri);
+                } catch (URISyntaxException e) { /* we should never reach here */
+                    throw new IllegalStateException();
+                }
+            }
+            logger.info("Using Restcomm server at " + this.restcommBaseUri.toString());
         }
         return restcommBaseUri;
     }

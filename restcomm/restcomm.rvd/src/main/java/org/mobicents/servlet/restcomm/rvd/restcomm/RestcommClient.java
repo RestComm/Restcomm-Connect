@@ -1,7 +1,28 @@
+/*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2016, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
+
 package org.mobicents.servlet.restcomm.rvd.restcomm;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -22,17 +43,19 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AccessApiException;
 import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 import com.google.gson.Gson;
 
+/**
+ * @author Orestis Tsakiridis
+ */
 public class RestcommClient {
 
-    private String protocol;
-    private String host;
-    private Integer port;
-    private String username;
-    private String password;
+    private final URI restcommBaseUrl;
+    private final String username;
+    private final String password;
     private boolean authenticationTokenAsPassword = false;
     CloseableHttpClient apacheClient;
 
@@ -46,6 +69,13 @@ public class RestcommClient {
         public RestcommClientException(String message) {
             super(message);
             // TODO Auto-generated constructor stub
+        }
+
+    }
+
+    public static class RestcommClientInitializationException extends RvdException {
+        public RestcommClientInitializationException(String message) {
+            super(message);
         }
 
     }
@@ -87,11 +117,7 @@ public class RestcommClient {
         }
 
         public <T> T done(Gson gson, Class<T> resultClass) throws AccessApiException {
-            // Build the uri for the call made to Restcomm
-            URIBuilder uriBuilder = new URIBuilder();
-            uriBuilder.setHost(client.host);
-            uriBuilder.setPort(client.port);
-            uriBuilder.setScheme(client.protocol);
+            URIBuilder uriBuilder = new URIBuilder(client.getRestcommBaseUrl());
             uriBuilder.setPath(path);
 
             try {
@@ -168,7 +194,7 @@ public class RestcommClient {
                     throw new UnsupportedOperationException("Only GET, POST and DELETE methods are supported");
 
             } catch (IOException e) {
-                throw new RestcommClientException("Error building URL from this path: " + path, e);
+                throw new RestcommClientException("Error contacting: " + path, e);
             } catch (URISyntaxException e) {
                 throw new RestcommClientException("Error building URL from this path: " + path, e);
             }
@@ -185,15 +211,29 @@ public class RestcommClient {
 
     }
 
-    public RestcommClient(String protocol, String host, int port, String username, String password) {
-        // TODO Auto-generated constructor stub
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
+    /**
+     * @param fallbackRestcommBaseUri
+     * @throws RestcommClientInitializationException
+     */
+    public RestcommClient (URI fallbackRestcommBaseUri, String usernameOverride, String passwordOverride) throws RestcommClientInitializationException {
+        if (RvdUtils.isEmpty(usernameOverride))
+            throw new RestcommClientInitializationException("Restcomm client could not determine the user for accessing Restcomm");
+
+        this.restcommBaseUrl = fallbackRestcommBaseUri;
+        this.username = usernameOverride;
+        this.password = passwordOverride;
         apacheClient = CustomHttpClientBuilder.buildHttpClient();
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public URI getRestcommBaseUrl() { return restcommBaseUrl; }
 
     public Request get(String path) {
         return new Request(this, "GET", path);

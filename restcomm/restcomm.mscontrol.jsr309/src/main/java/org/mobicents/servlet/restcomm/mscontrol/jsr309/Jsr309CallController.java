@@ -50,6 +50,7 @@ import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
 import javax.media.mscontrol.mediagroup.signals.SignalDetector;
 import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 import javax.media.mscontrol.mixer.MediaMixer;
+import javax.media.mscontrol.networkconnection.CodecPolicy;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
 import javax.media.mscontrol.networkconnection.SdpPortManager;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
@@ -121,6 +122,8 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
+    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
+
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
@@ -174,13 +177,13 @@ public class Jsr309CallController extends MediaServerController {
         this.recorderListener = new RecorderListener();
 
         // Initialize the states for the FSM
-        this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initializing", new Initializing(source), null);
-        this.active = new State("active", new Active(source), null);
-        this.pending = new State("pending", new Pending(source), null);
-        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
-        this.inactive = new State("inactive", new Inactive(source), null);
-        this.failed = new State("failed", new Failed(source), null);
+        this.uninitialized = new State("uninitialized", null);
+        this.initializing = new State("initializing", new Initializing(source));
+        this.active = new State("active", new Active(source));
+        this.pending = new State("pending", new Pending(source));
+        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source));
+        this.inactive = new State("inactive", new Inactive(source));
+        this.failed = new State("failed", new Failed(source));
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -841,6 +844,10 @@ public class Jsr309CallController extends MediaServerController {
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
+                CodecPolicy codecPolicy = new CodecPolicy();
+                codecPolicy.setMediaTypeCapabilities(CODEC_POLICY_AUDIO);
+
+                networkConnection.getSdpPortManager().setCodecPolicy(codecPolicy);
                 networkConnection.getSdpPortManager().addListener(sdpListener);
                 if (callOutbound) {
                     networkConnection.getSdpPortManager().generateSdpOffer();

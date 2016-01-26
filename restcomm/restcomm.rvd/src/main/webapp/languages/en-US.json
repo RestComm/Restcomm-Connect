@@ -70,9 +70,6 @@
 
 	"designerSettingsModalSettingLabel": "Settings",
 	"designerSettingsModalRestcommAPILabel": "Restcomm API",
-	"designerSettingsModalOverrideDefaultLabel": "Override default host and port when contacting Restcomm API Server. Leave blank if RVD is on the same machine as Restcomm.",
-	"designerSettingsModalHostInput": "Host",
-	"designerSettingsModalPortInput": "Port",
 	"designerSettingsModalCredencialsLabel1": "Credentials for accessing Restcomm API. You should provide these if",
 	"designerSettingsModalCredencialsLabel2": "Web Trigger",
 	"designerSettingsModalCredencialsLabel3": "is enabled.",
@@ -190,7 +187,7 @@
 	"externalServiceStepFixedRadio": "fixed",
 	"externalServiceStepDynamicRadio": "dynamic",
 	"externalServiceStepMappedRadio": "mapped",
-	"externalServiceStepDynamicWarning": "Warning! <strong>dynamic</strong> routing is an obsolete feature and will be removed from future versions of RVD. Please use <strong>mapped</strong> routing instead",
+	"externalServiceStepDynamicWarning": "Note: <strong>dynamic</strong> routing has been deprecated.",
 	"externalServiceStepAddMappingButton": "Add mapping",
 	"externalServiceStepValueLabel": "Value",
 	"externalServiceStepContinueToLabel": "Continue to",
@@ -311,6 +308,8 @@
 	"gatherStepFinishPlaceholder": "#*123...",
 	"gatherStepNumberDigitsLabel": "Number of digits",
 	"gatherStepNumberDigitsPlaceholder": "123",
+	"gatherStepNumberOfDigitsConflictWarning": "value may conflict with <strong>Number of digits</strong>",
+	"gatherStepValidationConflictWarning": "value may conflict with <strong>Validation pattern</strong>",
 
 	"homeStartLabel": "Start a new project",
 	"homeVoiceLabel": "Voice",

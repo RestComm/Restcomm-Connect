@@ -265,6 +265,7 @@ public final class CallManager extends UntypedActor {
         final DestroyCall request = (DestroyCall) message;
         ActorRef call = request.call();
         if (call != null) {
+            logger.info("About to destroy call: "+request.call().path());
             context.stop(request.call());
         }
     }
@@ -520,7 +521,11 @@ public final class CallManager extends UntypedActor {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                 }
                 builder.setMethod(number.getVoiceMethod());
-                builder.setFallbackUrl(number.getVoiceFallbackUrl());
+                URI uri = number.getVoiceFallbackUrl();
+                if (uri != null)
+                    builder.setFallbackUrl(UriUtils.resolve(uri));
+                else
+                    builder.setFallbackUrl(null);
                 builder.setFallbackMethod(number.getVoiceFallbackMethod());
                 builder.setStatusCallback(number.getStatusCallback());
                 builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
@@ -581,7 +586,11 @@ public final class CallManager extends UntypedActor {
                 builder.setUrl(url);
             }
             builder.setMethod(client.getVoiceMethod());
-            builder.setFallbackUrl(client.getVoiceFallbackUrl());
+            URI uri = client.getVoiceFallbackUrl();
+            if (uri != null)
+                builder.setFallbackUrl(UriUtils.resolve(uri));
+            else
+                builder.setFallbackUrl(null);
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
             final ActorRef interpreter = builder.build();
@@ -687,7 +696,12 @@ public final class CallManager extends UntypedActor {
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
         } else {
-            logger.info("Linked Response couldn't be found");
+            logger.info("Linked Response couldn't be found for ACK request");
+            final ActorRef call = (ActorRef) request.getApplicationSession().getAttribute(Call.class.getName());
+            if (call != null) {
+                logger.info("Will send ACK to call actor: "+call.path());
+                call.tell(request, self());
+            }
         }
         // else {
         // SipSession sipSession = request.getSession();

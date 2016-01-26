@@ -8,7 +8,7 @@ The Open Source Cloud Communications Platform
 What is RestComm ?
 ========
 
-Mobicents RestComm is a next generation Cloud Communications Platform. It allows web developers to rapidly build voice, video, WebRTC, USSD, SMS, fax and rich messaging applications. Restcomm opens new revenue streams for service providers by exposing existing SS7 and IMS core network assets to application developers.
+RestComm is a next generation Cloud Communications Platform. It allows web developers to rapidly build voice, video, WebRTC, USSD, SMS, fax and rich messaging applications. Restcomm opens new revenue streams for service providers by exposing existing SS7 and IMS core network assets to application developers.
 
 Restcomm enables apps such as telehealth, group communication, in-game messaging, online experience sharing, interactive customer support and others.
 
@@ -29,15 +29,15 @@ Read the [Online RestComm Documentation](http://docs.telestax.com/restcomm-pages
 
 Want to Contribute ? 
 ========
-[See our Contributors Guide](https://github.com/Mobicents/RestComm/wiki/Contribute-to-RestComm) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/)
+[See our Contributors Guide](https://github.com/RestComm/RestComm/wiki/Contribute-to-RestComm) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/)
 
 Issue Tracking and Roadmap
 ========
-[Issue Tracker](https://github.com/Mobicents/RestComm/issues)
+[Issue Tracker](https://github.com/RestComm/RestComm-Core/issues)
 
 Questions ?
 ========
-Please ask your question on [StackOverflow](http://stackoverflow.com/search?q=restcomm) or the Google [public forum](http://groups.google.com/group/restcomm)
+Please ask your question on [StackOverflow](http://stackoverflow.com/questions/tagged/restcomm) or the Google [public forum](http://groups.google.com/group/restcomm)
 
 License
 ========

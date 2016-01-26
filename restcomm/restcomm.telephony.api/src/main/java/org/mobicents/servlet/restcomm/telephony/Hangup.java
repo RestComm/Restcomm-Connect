@@ -26,7 +26,17 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class Hangup {
+    private String message;
+
     public Hangup() {
         super();
+    }
+
+    public Hangup(final String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
     }
 }
