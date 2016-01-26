@@ -208,6 +208,7 @@ public class DialActionTest {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
         bobCall.listenForDisconnect();
 
         assertTrue(bobCall.waitForDisconnect(40 * 1000));
@@ -265,6 +266,7 @@ public class DialActionTest {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
         bobCall.listenForDisconnect();
 
         assertTrue(bobCall.waitForDisconnect(40 * 1000));

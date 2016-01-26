@@ -696,7 +696,12 @@ public final class CallManager extends UntypedActor {
             // Defaulting the sip application session to 1h
             sipApplicationSession.setExpires(60);
         } else {
-            logger.info("Linked Response couldn't be found");
+            logger.info("Linked Response couldn't be found for ACK request");
+            final ActorRef call = (ActorRef) request.getApplicationSession().getAttribute(Call.class.getName());
+            if (call != null) {
+                logger.info("Will send ACK to call actor: "+call.path());
+                call.tell(request, self());
+            }
         }
         // else {
         // SipSession sipSession = request.getSession();
