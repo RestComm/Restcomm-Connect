@@ -143,7 +143,7 @@ public class RvdProjectsMigrationHelper {
             }
             this.workspacePath = workspaceBasePath;
         } else {
-            // Try to set embedded migration
+            // Try to set embedded migration. For testing only
             String dir = contextRootPath + EMBEDDED_DIRECTORY_NAME + File.separator + WORKSPACE_DIRECTORY_NAME + File.separator;
             File embedded = new File(dir);
             if (embedded.exists()) {
