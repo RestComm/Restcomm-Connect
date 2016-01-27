@@ -29,8 +29,8 @@ import akka.actor.ActorRef;
 public final class ConferenceEndpoint extends GenericEndpoint {
 
     public ConferenceEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent,
-            final String domain) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/cnf/$", domain));
+            final String domain, long timeout) {
+        super(gateway, session, agent, new EndpointIdentifier("mobicents/cnf/$", domain), timeout);
     }
 
 }

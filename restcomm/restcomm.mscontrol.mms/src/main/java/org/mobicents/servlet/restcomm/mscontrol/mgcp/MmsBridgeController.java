@@ -446,7 +446,7 @@ public class MmsBridgeController extends MediaServerController {
 
             // Destroy Media Group
             mediaGroup.tell(new StopMediaGroup(), super.source);
-            
+
             // Destroy Bridge Endpoint and its connections
             endpoint.tell(new DestroyEndpoint(), super.source);
         }

@@ -85,7 +85,7 @@
         crlf="true">
   </recv>
   
-  <pause milliseconds="60000"/>
+  <pause milliseconds="57000"/>
 
   <recv request="BYE">
   </recv>

@@ -62,8 +62,8 @@ public final class IvrEndpoint extends GenericEndpoint {
 
     private final NotifiedEntity agent;
 
-    public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/ivr/$", domain));
+    public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout) {
+        super(gateway, session, agent, new EndpointIdentifier("mobicents/ivr/$", domain), timeout);
         this.agent = agent;
     }
 
