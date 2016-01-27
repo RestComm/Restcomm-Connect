@@ -47,23 +47,23 @@
         <!--<property name="SS7Manager"><inject bean="SS7" /></property>-->
     </bean>
 
-    <!-- Signal processor factory -->
-    <bean name="DSP" class="org.mobicents.media.server.component.DspFactoryImpl">
-        <property name="codecs">
-            <list value-type="java.lang.String">
-                <value>org.mobicents.media.server.impl.dsp.audio.l16.Encoder</value>
-                <value>org.mobicents.media.server.impl.dsp.audio.l16.Decoder</value>
-                <value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Encoder</value>
-                <value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Decoder</value>
-                <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Encoder</value>
-                <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Decoder</value>
-                <!-- <value>org.mobicents.media.server.impl.dsp.audio.g729.alaw.Encoder</value>
-                <value>org.mobicents.media.server.impl.dsp.audio.g729.alaw.Decoder</value> -->
-                <value>org.mobicents.media.server.impl.dsp.audio.gsm.Encoder</value>
-                <value>org.mobicents.media.server.impl.dsp.audio.gsm.Decoder</value>
-            </list>
-        </property>
-    </bean>
+  <!-- Signal processor factory -->
+  <bean class="org.mobicents.media.server.component.DspFactoryImpl" name="DSP">
+    <property name="codecs">
+      <list value-type="java.lang.String">
+        <value>org.mobicents.media.server.impl.dsp.audio.l16.Encoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.l16.Decoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Encoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.g711.alaw.Decoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Encoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.g711.ulaw.Decoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.g729.Encoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.g729.Decoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.gsm.Encoder</value>
+        <value>org.mobicents.media.server.impl.dsp.audio.gsm.Decoder</value>
+      </list>
+    </property>
+  </bean>
 
     <!-- Resources pool definition -->
     <bean name="resourcesPool" class="org.mobicents.media.core.ResourcesPool">
