@@ -513,7 +513,7 @@ public class MmsCallController extends MediaServerController {
                 if (is(initializingInternalLink)) {
                     fsm.transition(message, openingInternalLink);
                 } else if (is(openingInternalLink)) {
-                    fsm.transition(message, closingRemoteConnection);
+                    fsm.transition(message, stopping);
                 } else if (is(closingInternalLink)) {
                     if (remoteConn != null) {
                         fsm.transition(message, active);

@@ -29,6 +29,6 @@ package org.mobicents.servlet.restcomm.mgcp;
  */
 public enum EndpointState {
 
-    DESTROYED;
+    DESTROYED, FAILED;
 
 }

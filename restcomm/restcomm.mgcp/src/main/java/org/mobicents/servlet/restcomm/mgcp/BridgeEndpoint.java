@@ -32,8 +32,8 @@ public final class BridgeEndpoint extends GenericEndpoint {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain));
+    public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout) {
+        super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain), timeout);
     }
 
     @Override

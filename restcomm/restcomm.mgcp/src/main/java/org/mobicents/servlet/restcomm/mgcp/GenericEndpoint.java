@@ -27,13 +27,16 @@ import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
+import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -50,11 +53,12 @@ public abstract class GenericEndpoint extends UntypedActor {
     protected final NotifiedEntity entity;
     protected EndpointIdentifier id;
     protected AtomicBoolean destroying;
+    protected final long timeout;
 
     protected final List<ActorRef> observers;
 
     public GenericEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity entity,
-            final EndpointIdentifier id) {
+            final EndpointIdentifier id, long timeout) {
         super();
         this.gateway = gateway;
         this.session = session;
@@ -62,6 +66,7 @@ public abstract class GenericEndpoint extends UntypedActor {
         this.id = id;
         this.destroying = new AtomicBoolean(false);
         this.observers = new ArrayList<ActorRef>(1);
+        this.timeout = timeout;
     }
 
     @Override
@@ -84,8 +89,9 @@ public abstract class GenericEndpoint extends UntypedActor {
             onDestroyEndpoint((DestroyEndpoint) message, self, sender);
         } else if (message instanceof JainMgcpResponseEvent) {
             onJainMgcpResponseEvent((JainMgcpResponseEvent) message, self, sender);
+        }  else if (ReceiveTimeout.class.equals(klass)) {
+            onReceiveTimeout((ReceiveTimeout) message, self, sender);
         }
-        // TODO Add onReceiveTimeout
     }
 
     protected void onObserve(Observe message, ActorRef self, ActorRef sender) {
@@ -110,7 +116,8 @@ public abstract class GenericEndpoint extends UntypedActor {
             this.destroying.set(true);
             DeleteConnection dlcx = new DeleteConnection(self, this.id);
             this.gateway.tell(dlcx, self);
-            // TODO set timeout period
+            // Make sure we don't wait forever
+            getContext().setReceiveTimeout(Duration.create(timeout, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -122,9 +129,12 @@ public abstract class GenericEndpoint extends UntypedActor {
             } else {
                 logger.error("Could not destroy endpoint " + this.id.toString() + ". Return Code: " + returnCode.toString());
             }
-            // TODO remove timeout period
-            // TODO tell akka to destroy actor
         }
+    }
+
+    protected void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) {
+        logger.error("Timeout received on Endpoint " + this.id.toString());
+        broadcast(new EndpointStateChanged(EndpointState.FAILED));
     }
 
     protected void broadcast(final Object message) {
