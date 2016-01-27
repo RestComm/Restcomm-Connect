@@ -80,7 +80,7 @@ public class RestcommIdentityApi {
         tokenString = userIdentityContext.getOauthTokenString();
         if (tokenString == null)
             throw new IllegalStateException("No oauth token in context.");
-        this.authServerBaseUrl = imConfig.getAuthServerUrl();
+        this.authServerBaseUrl = imConfig.getAuthServerBaseUrl();
         this.identityInstanceId = iConfig.getInstanceId();
         this.realm = imConfig.getRealm();
         AccessToken accessToken = userIdentityContext.getOauthToken();

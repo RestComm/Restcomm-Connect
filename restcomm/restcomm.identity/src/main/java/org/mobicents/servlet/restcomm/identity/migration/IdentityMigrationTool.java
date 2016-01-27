@@ -67,6 +67,11 @@ public class IdentityMigrationTool {
             MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
             if (identityConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(mutableIdentityConfig.getMode())) {
                 RestcommIdentityApi api = new RestcommIdentityApi(identityConfig.getAuthServerBaseUrl(), identityConfig.getUsername(), identityConfig.getPassword(), identityConfig.getRealm(), null);
+                String [] uris = identityConfig.getRedirectUris();
+                if (uris == null) {
+
+                }
+
                 IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, identityConfig.getInviteExistingUsers(), identityConfig.getAdminAccountSid(), mutableIdentityConfig, identityConfig.getRedirectUris());
                 migrationTool.migrate();
                 config.reloadMutableIdentity();
