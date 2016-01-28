@@ -31,10 +31,12 @@ import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationS
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.identity.exceptions.IdentityMigrationException;
+import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
+import org.mobicents.servlet.restcomm.identity.migration.MigrationContext;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.configuration.RvdConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
-import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
@@ -311,7 +313,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity(), new RestcommRoles(xml));
             context.setAttribute(IdentityContext.class.getName(), identityContext);
             // Migrate identity if necessary. Update the context if needed.
-            IdentityMigrationTool.onBootstrap(restcommConfig, storage.getAccountsDao(), context);
+            MigrationContext migrationContext = new MigrationContext(restcommConfig.getIdentity(), restcommConfig.getMutableIdentity(), restcommConfig, context, storage.getAccountsDao());
+            try {
+                IdentityMigrationTool.onBootstrap(migrationContext);
+            } catch (IdentityMigrationException e) {
+                logger.error("Identity registration/migration failed. Your Restcomm instance may not be operational.", e);
+            }
 
             // Create the media gateway.
 

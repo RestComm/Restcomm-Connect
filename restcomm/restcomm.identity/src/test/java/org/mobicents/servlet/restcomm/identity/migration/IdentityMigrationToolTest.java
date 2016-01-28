@@ -4,14 +4,13 @@ import junit.framework.Assert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.IdentityTestTool;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdentityApiException;
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
+import org.mobicents.servlet.restcomm.identity.mocks.MockAccountsDao;
 
 import java.io.IOException;
 
