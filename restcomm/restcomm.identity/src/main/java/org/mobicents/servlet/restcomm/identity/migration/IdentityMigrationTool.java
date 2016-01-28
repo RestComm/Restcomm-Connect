@@ -20,10 +20,11 @@
 
 package org.mobicents.servlet.restcomm.identity.migration;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.UUID;
 
-import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sources.MutableConfigurationSource;
@@ -36,9 +37,10 @@ import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.RestcommIdent
 import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.identity.exceptions.IdentityMigrationException;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
-import javax.servlet.ServletContext;
 
 /**
  *
@@ -61,26 +63,36 @@ public class IdentityMigrationTool {
     /*
         Wrapper function for identity-oriented bootstraper logic
      */
-    public static void onBootstrap(RestcommConfiguration config, AccountsDao accountsDao, ServletContext servletContext) {
-        IdentityConfigurationSet identityConfig = config.getIdentity();
-        if ( ! identityConfig.getHeadless() ) {
-            MutableIdentityConfigurationSet mutableIdentityConfig = config.getMutableIdentity();
-            if (identityConfig.getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(mutableIdentityConfig.getMode())) {
-                RestcommIdentityApi api = new RestcommIdentityApi(identityConfig.getAuthServerBaseUrl(), identityConfig.getUsername(), identityConfig.getPassword(), identityConfig.getRealm(), null);
-                String [] uris = identityConfig.getRedirectUris();
-                if (uris == null) {
+    public static void onBootstrap(MigrationContext migrationContext) throws IdentityMigrationException {
+        if (shouldMigrate(migrationContext, true)) {
+            performMigration(migrationContext);
+        }
+    }
 
+    static void performMigration(MigrationContext migrationContext) throws IdentityMigrationException {
+        RestcommIdentityApi api = new RestcommIdentityApi(migrationContext.getIdentityConfig().getAuthServerBaseUrl(), migrationContext.getIdentityConfig().getUsername(), migrationContext.getIdentityConfig().getPassword(), migrationContext.getIdentityConfig().getRealm(), null);
+        // if no RedirectUris have been defined in configuration, use the values form the container connectors
+        String [] uris = IdentityMigrationTool.determineRedirectUris(migrationContext.getIdentityConfig());
+        if (uris == null)
+            throw new IdentityMigrationException("Could not determine redirect uris");
+        IdentityMigrationTool migrationTool = new IdentityMigrationTool(migrationContext.getAccountsDao(), api, migrationContext.getIdentityConfig().getInviteExistingUsers(), migrationContext.getIdentityConfig().getAdminAccountSid(), migrationContext.getMutableIdentityConfig(), uris);
+        migrationTool.migrate();
+        migrationContext.getRestcommConfiguration().reloadMutableIdentity();
+        // Reset identity context after migration
+        IdentityContext oldContext = (IdentityContext) migrationContext.getServletContext().getAttribute(IdentityContext.class.getName());
+        IdentityContext identityContext = new IdentityContext(migrationContext.getRestcommConfiguration().getIdentity(),migrationContext.getRestcommConfiguration().getMutableIdentity(), oldContext.getRestcommRoles());
+        migrationContext.getServletContext().setAttribute(IdentityContext.class.getName(), identityContext);
+    }
+
+    static boolean shouldMigrate(MigrationContext migrationContext, boolean bootstrapping) {
+        if (bootstrapping) {
+            if ( ! migrationContext.getIdentityConfig().getHeadless() ) {
+                if ( migrationContext.getIdentityConfig().getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(migrationContext.getMutableIdentityConfig().getMode())) {
+                    return true;
                 }
-
-                IdentityMigrationTool migrationTool = new IdentityMigrationTool(accountsDao, api, identityConfig.getInviteExistingUsers(), identityConfig.getAdminAccountSid(), mutableIdentityConfig, identityConfig.getRedirectUris());
-                migrationTool.migrate();
-                config.reloadMutableIdentity();
-                // Reset identity context after migration
-                IdentityContext oldContext = (IdentityContext) servletContext.getAttribute(IdentityContext.class.getName());
-                IdentityContext identityContext = new IdentityContext(config.getIdentity(),config.getMutableIdentity(), oldContext.getRestcommRoles());
-                servletContext.setAttribute(IdentityContext.class.getName(), identityContext);
             }
         }
+        return false;
     }
 
     public IdentityMigrationTool(AccountsDao dao, RestcommIdentityApi identityApi, boolean inviteExisting, String adminAccountSid, MutableIdentityConfigurationSet mutableIdentityConfig, String[] redirectUris) {
@@ -224,5 +236,20 @@ public class IdentityMigrationTool {
 
     public String getInstanceId() {
         return instanceId;
+    }
+
+    private static String[] determineRedirectUris(IdentityConfigurationSet identityConfig) {
+        String [] uris = identityConfig.getRedirectUris();
+        if (uris == null) {
+            try {
+                URI uri = UriUtils.resolve(new URI("/"));
+                String base = uri.getScheme() + "://" + uri.getHost() + (uri.getPort() == -1 ? "" : (":" + uri.getPort()));
+                uris = new String[] {base};
+            } catch (URISyntaxException e) {
+                logger.error("Error parsing <redirectUris/> in restcomm.xml/identity configuration", e);
+                // and return null at the end of the function
+            }
+        }
+        return uris;
     }
 }
