@@ -163,7 +163,7 @@ public final class Call extends UntypedActor {
     private String direction;
     private String forwardedFrom;
     private DateTime created;
-    private DateTime ConUpdated;
+    private DateTime callUpdatedTime;
     private final List<ActorRef> observers;
     private boolean receivedBye;
     private boolean muted;
@@ -303,7 +303,7 @@ public final class Call extends UntypedActor {
     private CallResponse<CallInfo> info() {
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, ConUpdated);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, callUpdatedTime);
         return new CallResponse<CallInfo>(info);
     }
 
@@ -733,6 +733,7 @@ public final class Call extends UntypedActor {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
             }
+            callUpdatedTime = DateTime.now();
             msController.tell(new CloseMediaSession(), source);
         }
     }
@@ -976,7 +977,7 @@ public final class Call extends UntypedActor {
             }
 
             //Set Call created time, only for "Talk time".
-            ConUpdated = DateTime.now();
+            callUpdatedTime = DateTime.now();
 
             //Update CDR for Outbound Call.
             if (recordsDao != null) {
