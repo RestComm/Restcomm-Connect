@@ -602,6 +602,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (forking.equals(state)) {
                     if (sender==call) {
                         //Move to finishDialing to clear the call and cancel all branches
+                        fsm.transition(message, finishDialing);
                     } else if (dialBranches.contains(sender)) {
                         Attribute attribute = null;
                         if (verb != null) {
@@ -614,12 +615,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         branch.tell(new Cancel(), self());
                         if (dialBranches.size() > 0) {
                             return;
+                        } else if (attribute == null) {
+                            fsm.transition(message, finishDialing);
+                        } else  {
+                            return;
                         }
                     }
+                } else {
+                    fsm.transition(message, finishDialing);
                 }
-                fsm.transition(message, finishDialing);
-//                if (state != finishDialing)
-//                    fsm.transition(message, finishDialing);
             } else if (CallStateChanged.State.CANCELED == event.state()) {
                 if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging) {
                     return;
@@ -1711,15 +1715,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             else if (message instanceof ReceiveTimeout) {
                 if (outboundCallInfo != null) {
                     final String dialCallSid = this.outboundCallInfo.sid().toString();
-                    final long dialCallDuration = new Interval(this.outboundCallInfo.dateConUpdated(), DateTime.now()).toDuration()
-                            .getStandardSeconds();
+                    long dialCallDuration;
+                    if (outboundCallInfo.state().toString().equalsIgnoreCase("Completed")) {
+                        dialCallDuration = new Interval(this.outboundCallInfo.dateConUpdated(), DateTime.now()).toDuration()
+                                .getStandardSeconds();
+                    } else {
+                        dialCallDuration = 0L;
+                    }
                     final String recordingUrl = this.recordingUri == null ? null : this.recordingUri.toString();
                     final String publicRecordingUrl = this.publicRecordingUri == null ? null : this.publicRecordingUri.toString();
 
                     parameters.add(new BasicNameValuePair("DialCallSid", dialCallSid));
                     // parameters.add(new BasicNameValuePair("DialCallStatus", dialCallStatus == null ? null : dialCallStatus
                     // .toString()));
-                    parameters.add(new BasicNameValuePair("DialCallStatus", CallStateChanged.State.NO_ANSWER.toString()));
+                    parameters.add(new BasicNameValuePair("DialCallStatus", outboundCallInfo.state().toString()));
                     parameters.add(new BasicNameValuePair("DialCallDuration", String.valueOf(dialCallDuration)));
                     parameters.add(new BasicNameValuePair("RecordingUrl", recordingUrl));
                     parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUrl));
@@ -1837,16 +1846,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
 
-                Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
-                while (dialBranchesIterator.hasNext()) {
-                    ActorRef branch = dialBranchesIterator.next();
-//                    if (attribute != null) {
-//                        executeDialAction(message, branch);
-//                    }
-                    branch.tell(new Cancel(), source);
-                    logger.info("Canceled branch: " + branch.path());
+                if (dialBranches != null) {
+                    Iterator<ActorRef> dialBranchesIterator = dialBranches.iterator();
+                    while (dialBranchesIterator.hasNext()) {
+                        ActorRef branch = dialBranchesIterator.next();
+    //                    if (attribute != null) {
+    //                        executeDialAction(message, branch);
+    //                    }
+                        branch.tell(new Cancel(), source);
+                        logger.info("Canceled branch: " + branch.path());
+                    }
                 }
-                if (dialBranches.size() > 0) {
+                if (dialBranches != null && dialBranches.size() > 0) {
                     dialBranches = null;
                 }
 //                    call.tell(new StopMediaGroup(), null);
