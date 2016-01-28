@@ -13,7 +13,7 @@
 	<property location="${workspace.mobicents-restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="654"/>
+  <property name="sipservlets-build" value="657"/>
   <property name="mobicents-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="mobicents-media.version" value="3.0.2.Final"/>
@@ -29,7 +29,7 @@
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
   <property name="mobicents-sipservlets.as7.distro.version" value="${mobicents-sipservlets-as7.version}-jboss-as-7.2.0.Final"/>
   <property name="mobicents-sipservlets.as7.download.distro.file" value="mss-${mobicents-sipservlets.as7.distro.version}.zip"/>
-  <property name="mobicents-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/MobicentsSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.as7.download.distro.file}"/>
+  <property name="mobicents-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/RestcommSipServlets-Release/${sipservlets-build}/artifact/${mobicents-sipservlets.as7.download.distro.file}"/>
   <property name="mobicents-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${mobicents-sipservlets.as7.download.distro.file}"/>
 
   <property name="mobicents-media.download.distro.file" value="mobicents-media-server.zip"/>
