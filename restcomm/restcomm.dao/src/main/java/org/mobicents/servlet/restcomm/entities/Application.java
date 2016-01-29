@@ -42,11 +42,10 @@ public final class Application {
     private final URI uri;
     private final URI rcmlUrl;
     private final Kind kind;
-    private final Sid projectSid;
 
     public Application(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
             final Sid accountSid, final String apiVersion, final Boolean hasVoiceCallerIdLookup, final URI uri,
-            final URI rcmlUrl, Kind kind, Sid projectSid) {
+            final URI rcmlUrl, Kind kind) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -58,7 +57,6 @@ public final class Application {
         this.uri = uri;
         this.rcmlUrl = rcmlUrl;
         this.kind = kind;
-        this.projectSid = projectSid;
     }
 
     public static Builder builder() {
@@ -105,33 +103,24 @@ public final class Application {
         return kind;
     }
 
-    public Sid getProjectSid() {
-        return projectSid;
-    }
-
     public Application setFriendlyName(final String friendlyName) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-                uri, rcmlUrl, kind, projectSid);
+                uri, rcmlUrl, kind);
     }
 
     public Application setVoiceCallerIdLookup(final boolean hasVoiceCallerIdLookup) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-                uri, rcmlUrl, kind, projectSid);
+                uri, rcmlUrl, kind);
     }
 
     public Application setRcmlUrl(final URI rcmlUrl) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-                uri, rcmlUrl, kind, projectSid);
+                uri, rcmlUrl, kind);
     }
 
     public Application setKind(final Kind kind) {
         return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-                uri, rcmlUrl, kind, projectSid);
-    }
-
-    public Application setProjectSid(final Sid projectSid) {
-        return new Application(sid, dateCreated, DateTime.now(), friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-                uri, rcmlUrl, kind, projectSid);
+                uri, rcmlUrl, kind);
     }
 
     public enum Kind {
@@ -168,7 +157,6 @@ public final class Application {
         private URI uri;
         private URI rcmlUrl;
         private Kind kind;
-        private Sid projectSid;
 
         private Builder() {
             super();
@@ -177,7 +165,7 @@ public final class Application {
         public Application build() {
             final DateTime now = DateTime.now();
             return new Application(sid, now, now, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup, uri, rcmlUrl,
-                    kind, projectSid);
+                    kind);
         }
 
         public void setSid(final Sid sid) {
@@ -212,8 +200,5 @@ public final class Application {
             this.kind = kind;
         }
 
-        public void setProjectSid(final Sid projectSid) {
-            this.projectSid = projectSid;
-        }
     }
 }

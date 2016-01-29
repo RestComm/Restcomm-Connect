@@ -34,8 +34,6 @@ public interface ApplicationsDao {
 
     Application getApplication(String friendlyName);
 
-    Application getApplicationByProjectSid(Sid projectSid);
-
     List<Application> getApplications(Sid accountSid);
 
     void removeApplication(Sid sid);

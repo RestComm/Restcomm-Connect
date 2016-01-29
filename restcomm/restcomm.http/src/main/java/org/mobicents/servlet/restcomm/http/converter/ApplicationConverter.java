@@ -25,7 +25,6 @@ import java.net.URI;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Application;
-import org.mobicents.servlet.restcomm.entities.Sid;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -64,7 +63,6 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeUri(application.getUri(), writer);
         writeRcmlUrl(application.getRcmlUrl(), writer);
         writeKind(application.getKind(), writer);
-        writeProjectSid(application.getProjectSid(), writer);
         writer.endNode();
     }
 
@@ -81,7 +79,6 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         writeUri(application.getUri(), object);
         writeRcmlUrl(application.getRcmlUrl(), object);
         writeKind(application.getKind(), object);
-        writeProjectSid(application.getProjectSid(), object);
         return object;
     }
 
@@ -117,19 +114,4 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
         }
     }
 
-    private void writeProjectSid(final Sid projectSid, final HierarchicalStreamWriter writer) {
-        if (projectSid != null) {
-            writer.startNode("ProjectSid");
-            writer.setValue(projectSid.toString());
-            writer.endNode();
-        }
-    }
-
-    private void writeProjectSid(final Sid projectSid, final JsonObject object) {
-        if (projectSid != null) {
-            object.addProperty("project_sid", projectSid.toString());
-        } else {
-            object.add("project_sid", JsonNull.INSTANCE);
-        }
-    }
 }

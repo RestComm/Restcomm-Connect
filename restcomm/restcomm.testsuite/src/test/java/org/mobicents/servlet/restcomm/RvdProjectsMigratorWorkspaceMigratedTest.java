@@ -23,13 +23,14 @@ package org.mobicents.servlet.restcomm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -69,16 +70,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     private String adminUsername = "administrator@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    private static HashMap<String, String> applicationsProjects;
     private static GreenMail mailServer;
-
-    @BeforeClass
-    public static void before() {
-        applicationsProjects = new HashMap<String, String>();
-        applicationsProjects.put("AP73926e7113fa4d95981aa96b76eca854", "PR7addb947898443329cf50913103f77a2");
-        applicationsProjects.put("AP81cf45088cba4abcac1261385916d582", "PR2cbed2a2a56947cdbeaa8b0af8a6c02d");
-        applicationsProjects.put("APb70c33bf0b6748f09eaec97030af36f3", "PR848500f5221c41e481d454b9e1d03246");
-    }
 
     @AfterClass
     public static void after() {
@@ -93,12 +85,9 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
         for (int i = 0; i < applicationsListJson.size(); i++) {
             JsonObject applicationJson = applicationsListJson.get(i).getAsJsonObject();
             String applicationSid = applicationJson.get("sid").getAsString();
-            String applicationProjectSid = applicationJson.get("project_sid").getAsString();
             String applicationVoiceUrl = applicationJson.get("rcml_url").getAsString();
-            assertTrue(applicationProjectSid != null && !applicationProjectSid.isEmpty());
-            assertTrue(applicationProjectSid.equals(applicationsProjects.get(applicationSid)));
             assertTrue(applicationVoiceUrl != null && !applicationVoiceUrl.isEmpty());
-            assertTrue(applicationVoiceUrl.contains(applicationsProjects.get(applicationSid)));
+            assertTrue(applicationVoiceUrl.contains(applicationSid));
         }
     }
 

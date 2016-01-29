@@ -85,7 +85,7 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
         applicationNames.add("project-4");
         applicationNames.add("rvdCollectVerbDemo");
         applicationNames.add("rvdESDemo");
-        applicationNames.add("PR848500f5221c41e481d454b9e1d03246");
+        applicationNames.add("AP670c33bf0b6748f09eaec97030af36f3");
         didSids = new ArrayList<String>();
         didSids.add("PN46678e5b01d44973bf184f6527bc33f7");
         didSids.add("PN46678e5b01d44973bf184f6527bc33f1");
@@ -112,8 +112,7 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
             for (int i = 0; i < applicationsListJson.size(); i++) {
                 JsonObject applicationJson = applicationsListJson.get(i).getAsJsonObject();
                 String applicationNameJson = applicationJson.get("friendly_name").getAsString();
-                String projectSidJson = applicationJson.get("project_sid").getAsString();
-                if (applicationName.equals(applicationNameJson) && projectSidJson != null && !projectSidJson.isEmpty()) {
+                if (applicationName.equals(applicationNameJson)) {
                     current = true;
                     break;
                 }

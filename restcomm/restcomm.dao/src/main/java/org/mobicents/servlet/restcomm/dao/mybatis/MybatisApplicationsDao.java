@@ -63,20 +63,12 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     @Override
     public Application getApplication(final Sid sid) {
         Application application = getApplication(namespace + "getApplication", sid.toString());
-        if (application == null) {
-            application = getApplicationByProjectSid(sid);
-        }
         return application;
     }
 
     @Override
     public Application getApplication(final String friendlyName) {
         return getApplication(namespace + "getApplicationByFriendlyName", friendlyName);
-    }
-
-    @Override
-    public Application getApplicationByProjectSid(final Sid projectSid) {
-        return getApplication(namespace + "getApplicationByProjectSid", projectSid.toString());
     }
 
     private Application getApplication(final String selector, final String parameter) {
@@ -152,9 +144,8 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         final URI uri = readUri(map.get("uri"));
         final URI rcmlUrl = readUri(map.get("rcml_url"));
         final Application.Kind kind = readApplicationKind(map.get("kind"));
-        final Sid projectSid = readSid(map.get("project_sid"));
         return new Application(sid, dateCreated, dateUpdated, friendlyName, accountSid, apiVersion, hasVoiceCallerIdLookup,
-                uri, rcmlUrl, kind, projectSid);
+                uri, rcmlUrl, kind);
     }
 
     private Map<String, Object> toMap(final Application application) {
@@ -169,7 +160,6 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         map.put("uri", writeUri(application.getUri()));
         map.put("rcml_url", writeUri(application.getRcmlUrl()));
         map.put("kind", writeApplicationKind(application.getKind()));
-        map.put("project_sid", writeSid(application.getProjectSid()));
         return map;
     }
 }

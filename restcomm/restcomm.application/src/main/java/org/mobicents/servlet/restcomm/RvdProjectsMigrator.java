@@ -97,17 +97,23 @@ public class RvdProjectsMigrator {
         }
         for (String projectName : projectNames) {
             try {
-                // Rename Project
-                String projectSid = migrateNamingConvention(projectName);
+                // Load Project State Header
+                migrationHelper.loadProjectState(projectName);
 
-                // Generate Application entity
-                generateApplicationEntity(projectSid, projectName);
+                // Check if this project is already synchronized with a application
+                String applicationSid = searchApplicationSid(projectName);
+
+                // Synchronize with application entity if needed
+                applicationSid = synchronizeApplicationEntity(applicationSid, projectName);
+
+                // Rename Project
+                migrateNamingConvention(projectName, applicationSid);
 
                 // Update IncomingPhoneNumbers
-                updateIncomingPhoneNumbers(projectSid, projectName);
+                updateIncomingPhoneNumbers(applicationSid, projectName);
 
                 // Update Clients
-                updateClients(projectSid, projectName);
+                updateClients(applicationSid, projectName);
 
                 projectsSuccess++;
             } catch (RvdProjectsMigrationException e) {
@@ -134,64 +140,57 @@ public class RvdProjectsMigrator {
         this.projectNames = migrationHelper.listProjects();
     }
 
-    private String migrateNamingConvention(String projectName) throws RvdProjectsMigrationException, URISyntaxException {
-        if (!migrationHelper.projectUsesNewNamingConvention(projectName)) {
-            // Change to new name standard
-            String projectSid = migrationHelper.renameProjectUsingNewConvention(projectName);
-            migrationHelper.loadProjectState(projectSid);
-            storeNewMessage("Project '" + projectName + "' renamed to '" + projectSid + "'", false, true, false, false);
-            return projectSid;
+    private String searchApplicationSid(String projectName) {
+        return migrationHelper.searchApplicationSid(projectName);
+    }
+
+    private String synchronizeApplicationEntity(String applicationSid, String projectName)
+            throws RvdProjectsMigrationException, URISyntaxException {
+        if (!projectName.equals(applicationSid)) {
+            applicationSid = migrationHelper.createOrUpdateApplicationEntity(applicationSid, projectName);
+            storeNewMessage("Project '" + projectName + "' synchronized with Application '" + applicationSid + "'", false,
+                    true, false, false);
         } else {
-            // Once using new name standard, load project state to proceed with migration
+            storeNewMessage("Project '" + projectName + "' previously synchronized with Application '" + applicationSid
+                    + "'. Skipped", false, true, false, false);
+        }
+        return applicationSid;
+    }
+
+    private void migrateNamingConvention(String projectName, String applicationSid) throws RvdProjectsMigrationException,
+            URISyntaxException {
+        if (!projectName.equals(applicationSid)) {
+            migrationHelper.renameProjectUsingNewConvention(projectName, applicationSid);
+            storeNewMessage("Project '" + projectName + "' renamed to '" + applicationSid + "'", false, true, false, false);
+        } else {
             storeNewMessage("Project " + projectName + " already using new naming convention. Skipped", false, true, false,
                     false);
-            migrationHelper.loadProjectState(projectName);
-            return projectName;
         }
     }
 
-    private void generateApplicationEntity(String projectSid, String projectName) throws RvdProjectsMigrationException,
-            URISyntaxException {
-        boolean createdOrUpdated = migrationHelper.createOrUpdateApplicationEntity(projectSid, projectName);
-        if (createdOrUpdated) {
-            storeNewMessage(
-                    "Project '" + projectName + "' synchronized with Application '"
-                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'", false, true, false, false);
-        } else {
-            storeNewMessage(
-                    "Project '" + projectName + "' previously synchronized with Application '"
-                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'. Skipped", false, true, false,
-                    false);
-        }
-    }
 
-    private void updateIncomingPhoneNumbers(String projectSid, String projectName) throws RvdProjectsMigrationException,
+    private void updateIncomingPhoneNumbers(String applicationSid, String projectName) throws RvdProjectsMigrationException,
             URISyntaxException {
-        int amountUpdated = migrationHelper.updateIncomingPhoneNumbers(projectSid);
+        int amountUpdated = migrationHelper.updateIncomingPhoneNumbers(applicationSid, projectName);
         if (amountUpdated > 0) {
-            storeNewMessage(
-                    "Updated " + amountUpdated + " IncomingPhoneNumbers with Application '"
-                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'", false, true, false, false);
+            storeNewMessage("Updated " + amountUpdated + " IncomingPhoneNumbers with Application '" + applicationSid + "'",
+                    false, true, false, false);
             updatedDids += amountUpdated;
         } else {
-            storeNewMessage(
-                    "No IncomingPhoneNumbers found to update with Application '"
-                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'. Skipped", false, true, false,
-                    false);
+            storeNewMessage("No IncomingPhoneNumbers found to update with Application '" + applicationSid + "'. Skipped",
+                    false, true, false, false);
         }
     }
 
-    private void updateClients(String projectSid, String projectName) throws RvdProjectsMigrationException, URISyntaxException {
-        int amountUpdated = migrationHelper.updateClients(projectSid);
+    private void updateClients(String applicationSid, String projectName) throws RvdProjectsMigrationException, URISyntaxException {
+        int amountUpdated = migrationHelper.updateClients(applicationSid, projectName);
         if (amountUpdated > 0) {
-            storeNewMessage(
-                    "Updated " + amountUpdated + " Clients with Application '"
-                            + migrationHelper.getApplicationSidByProjectSid(projectSid) + "'", false, true, false, false);
+            storeNewMessage("Updated " + amountUpdated + " Clients with Application '" + applicationSid + "'", false, true,
+                    false, false);
             updatedClients += amountUpdated;
         } else {
-            storeNewMessage(
-                    "No Clients found to update with Application '" + migrationHelper.getApplicationSidByProjectSid(projectSid)
-                            + "'. Skipped", false, true, false, false);
+            storeNewMessage("No Clients found to update with Application '" + applicationSid + "'. Skipped", false, true,
+                    false, false);
         }
     }
 
@@ -199,7 +198,7 @@ public class RvdProjectsMigrator {
         migrationHelper.storeWorkspaceStatus(migrationSucceeded);
         String end = getTimeStamp();
         if (!migrationSucceeded) {
-            String message = "Workspace migration finished with errors at ";
+            String message = "Workspace migration finished with errors at " + end;
             message += ". Status: " + projectsProcessed + " Projects processed (";
             message += projectsSuccess + " with success and " + projectsError + " with error), ";
             message += updatedDids + " IncomingPhoneNumbers and " + updatedClients + " Clients updated";
