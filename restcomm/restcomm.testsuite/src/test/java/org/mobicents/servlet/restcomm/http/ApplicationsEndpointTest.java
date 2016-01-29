@@ -80,7 +80,7 @@ public class ApplicationsEndpointTest {
     public void testCreateAndGetApplication() throws ParseException, IllegalArgumentException, ClientProtocolException,
             IOException {
         // Define application attributes
-        String friendlyName, voiceCallerIdLookup, rcmlUrl, kind, projectSid;
+        String friendlyName, voiceCallerIdLookup, rcmlUrl, kind;
 
         // Test create application via POST
         MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
@@ -88,7 +88,6 @@ public class ApplicationsEndpointTest {
         applicationParams.add("VoiceCallerIdLookup", voiceCallerIdLookup = "true");
         applicationParams.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test");
         applicationParams.add("Kind", kind = "voice");
-        applicationParams.add("ProjectSid", projectSid = "PR7addb947898443329cf50913103f77a2");
         JsonObject applicationJson = RestcommApplicationsTool.getInstance().createApplication(deploymentUrl.toString(),
                 adminAccountSid, adminUsername, adminAuthToken, applicationParams);
         Sid applicationSid = new Sid(applicationJson.get("sid").getAsString());
@@ -106,7 +105,6 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
-        assertTrue(applicationJson.get("project_sid").getAsString().equals(projectSid));
 
         // Test asserts via GET to a application list
         JsonArray applicationsListJson = RestcommApplicationsTool.getInstance().getApplications(deploymentUrl.toString(),
@@ -120,7 +118,6 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
-        assertTrue(applicationJson.get("project_sid").getAsString().equals(projectSid));
     }
 
     @Test

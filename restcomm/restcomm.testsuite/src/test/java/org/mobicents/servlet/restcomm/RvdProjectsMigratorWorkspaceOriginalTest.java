@@ -95,8 +95,7 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
             for (int i = 0; i < applicationsListJson.size(); i++) {
                 JsonObject applicationJson = applicationsListJson.get(i).getAsJsonObject();
                 String applicationNameJson = applicationJson.get("friendly_name").getAsString();
-                String projectSidJson = applicationJson.get("project_sid").getAsString();
-                if (applicationName.equals(applicationNameJson) && projectSidJson != null && !projectSidJson.isEmpty()) {
+                if (applicationName.equals(applicationNameJson)) {
                     current = true;
                     break;
                 }

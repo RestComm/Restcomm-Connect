@@ -6,9 +6,9 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.ApplicationsDao">
   <insert id="addApplication" parameterType="map">
     INSERT INTO "restcomm_applications" ("sid", "date_created", "date_updated", "friendly_name", "account_sid", "api_version",
-    "voice_caller_id_lookup", "uri", "rcml_url", "kind", "project_sid")
+    "voice_caller_id_lookup", "uri", "rcml_url", "kind")
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{account_sid}, #{api_version}, 
-    #{voice_caller_id_lookup}, #{uri}, #{rcml_url}, #{kind}, #{project_sid});
+    #{voice_caller_id_lookup}, #{uri}, #{rcml_url}, #{kind});
   </insert>
   
   <select id="getApplication" parameterType="string" resultType="hashmap">
@@ -17,10 +17,6 @@
   
   <select id="getApplicationByFriendlyName" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_applications" WHERE "friendly_name"=#{friendly_name};
-  </select>
-  
-  <select id="getApplicationByProjectSid" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_applications" WHERE "project_sid"=#{project_sid};
   </select>
   
   <select id="getApplications" parameterType="string" resultType="hashmap">
@@ -37,7 +33,7 @@
   
   <update id="updateApplication" parameterType="map">
     UPDATE "restcomm_applications" SET "friendly_name"=#{friendly_name}, "date_updated"=#{date_updated}, 
-    "voice_caller_id_lookup"=#{voice_caller_id_lookup}, "rcml_url"=#{rcml_url}, "kind"=#{kind}, 
-    "project_sid"=#{project_sid} WHERE "sid"=#{sid};
+    "voice_caller_id_lookup"=#{voice_caller_id_lookup}, "rcml_url"=#{rcml_url}, "kind"=#{kind} 
+    WHERE "sid"=#{sid};
   </update>
 </mapper>

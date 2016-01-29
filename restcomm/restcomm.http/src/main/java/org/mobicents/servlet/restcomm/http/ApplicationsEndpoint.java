@@ -120,9 +120,6 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (data.containsKey("Kind")) {
             builder.setKind(Application.Kind.getValueOf(data.getFirst("Kind")));
         }
-        if (data.containsKey("ProjectSid")) {
-            builder.setProjectSid(getSid("ProjectSid", data));
-        }
         return builder.build();
     }
 
@@ -267,9 +264,6 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         }
         if (data.containsKey("Kind")) {
             result = result.setKind(Application.Kind.getValueOf(data.getFirst("Kind")));
-        }
-        if (data.containsKey("ProjectSid")) {
-            result = result.setProjectSid(getSid("ProjectSid", data));
         }
         return result;
     }
