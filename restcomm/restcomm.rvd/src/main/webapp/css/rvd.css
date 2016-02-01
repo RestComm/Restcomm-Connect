@@ -43,10 +43,15 @@ label {
 	font-style: italic;
 }
 
-.validation-warning, .error-message {
+.error-message {
 	font-size: 85%;
 	color: #FBA01B;
 	font-style: italic;
+}
+
+.validation-warning {
+	font-size: 85%;
+	color: #EDB859;
 }
 
 

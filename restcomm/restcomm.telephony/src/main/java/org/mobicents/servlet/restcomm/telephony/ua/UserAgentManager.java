@@ -37,9 +37,11 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -168,11 +170,11 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void removeRegistration(final SipServletResponse response) {
-        String user = ((SipURI)response.getTo().getURI()).getUser();
-        String host = ((SipURI)response.getTo().getURI()).getHost();
-        String port = String.valueOf(((SipURI)response.getTo().getURI()).getPort());
-        logger.debug("Error response for the OPTIONS to: "+response.getFrom().toString()+" will remove registration");
+    private void removeRegistration(final SipServletMessage sipServletMessage) {
+        String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
+        String host = ((SipURI)sipServletMessage.getTo().getURI()).getHost();
+        String port = String.valueOf(((SipURI)sipServletMessage.getTo().getURI()).getPort());
+        logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration");
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
         if (registrations != null) {
@@ -221,7 +223,7 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void ping(final String to) throws Exception {
+    private void ping(final String to) throws ServletException {
         final SipApplicationSession application = factory.createApplicationSession();
         String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
         if (toTransport == null) {
@@ -242,7 +244,12 @@ public final class UserAgentManager extends UntypedActor {
         final SipSession session = ping.getSession();
         session.setHandler("UserAgentManager");
         logger.debug("About to send OPTIONS keepalive to: "+to);
-        ping.send();
+        try {
+            ping.send();
+        } catch (IOException e) {
+            logger.warning("There was an exception trying to ping client: "+to+" , will remove registration. Exception: "+e);
+            removeRegistration(ping);
+        }
     }
 
     private void pong(final Object message) {
