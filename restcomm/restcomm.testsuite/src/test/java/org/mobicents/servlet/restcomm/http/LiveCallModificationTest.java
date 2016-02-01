@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -186,8 +188,9 @@ public class LiveCallModificationTest {
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, "canceled", null);
 
-        assertTrue(bobCall.waitForDisconnect(5000));
-        assertTrue(bobCall.respondToDisconnect());
+        SipTransaction transaction = bobCall.waitForCancel(5000);
+        assertNotNull(transaction);
+        bobCall.respondToCancel(transaction, 200, "OK-2-Cancel-Bob", 3600);
 
         georgeCall.dispose();
         bobCall.dispose();
@@ -269,6 +272,71 @@ public class LiveCallModificationTest {
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
 
+    }
+
+    @Test
+    // Redirect a call to a different URL using the Live Call Modification API. Non-regression test for issue:
+    // https://bitbucket.org/telestax/telscale-restcomm/issue/139
+    public void redirectCallInvalidCallSid() throws Exception {
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = bobContact;
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+
+        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+        String callSid = callResult.get("sid").getAsString();
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+
+        assertTrue(bobCall.waitForAck(5000));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        assertTrue(georgeCall.waitForAck(5000));
+
+        Thread.sleep(10000);
+        System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
+        rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+
+        String invalidCallSid = Sid.generate(Sid.Type.CALL).toString();
+
+        callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
+                invalidCallSid, null, rcmlUrl);
+
+        assertNotNull(callResult);
+        String exc = callResult.get("Exception").getAsString();
+        assertTrue(callResult.get("Exception").getAsString().equals("406"));
+
+        georgeCall.listenForDisconnect();
+        assertTrue(bobCall.disconnect());
+
+        assertTrue(georgeCall.waitForDisconnect(10000));
+        assertTrue(georgeCall.respondToDisconnect());
     }
 
     @Deployment(name = "LiveCallModificationTest", managed = true, testable = false)
