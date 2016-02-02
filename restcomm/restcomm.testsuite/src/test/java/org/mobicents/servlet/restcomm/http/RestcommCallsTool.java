@@ -6,6 +6,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.gson.stream.JsonReader;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 
@@ -238,10 +239,18 @@ public class RestcommCallsTool {
         if (rcmlUrl != null)
             params.add("Url", rcmlUrl);
 
-        String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+        JsonObject jsonObject = null;
 
+        try {
+            String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            JsonParser parser = new JsonParser();
+            jsonObject = parser.parse(response).getAsJsonObject();
+        } catch (Exception e) {
+            logger.info("Exception e: "+e);
+            UniformInterfaceException exception = (UniformInterfaceException)e;
+            jsonObject = new JsonObject();
+            jsonObject.addProperty("Exception",exception.getResponse().getStatus());
+        }
         return jsonObject;
     }
 
