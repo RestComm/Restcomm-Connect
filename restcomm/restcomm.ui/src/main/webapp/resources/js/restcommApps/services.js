@@ -18,12 +18,12 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		}).success(function(data){
 			//console.log("Received apps from Restcomm");
 			restcommApps = data;
-			var projectSids = [];
+			var applicationSids = [];
 			for (var i in restcommApps) {
 				var currentApp = restcommApps[i];
-				var projectSid = currentApp.project_sid;
-				if(projectSid){
-					projectSids.push(projectSid);
+				var applicationSid = currentApp.sid;
+				if(applicationSid){
+					applicationSids.push(applicationSid);
 				}
 			}
 			$http({
@@ -32,7 +32,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 				data: {
 					type: "string",
 					payload: {
-						projectSids: projectSids
+						applicationSids: applicationSids
 						}
 					}
 			}).success(function(data){
@@ -42,12 +42,11 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 				for (var i=0; i<restcommApps.length; i++) {
 					var hasProject = false;
 					for (var j=0; j<rvdProjects.length; j++) {
-						if(restcommApps[i].project_sid == rvdProjects[j].projectName){
+						if(restcommApps[i].sid == rvdProjects[j].projectName){
 							hasProject = true;
 							rvdProjects[j].sid = restcommApps[i].sid;
 							rvdProjects[j].projectName = restcommApps[i].friendly_name;
 							rvdProjects[j].startUrl = restcommApps[i].rcml_url;
-							rvdProjects[j].projectSid = restcommApps[i].project_sid;
 						}
 					}
 					if(!hasProject){
@@ -82,7 +81,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	function getAppByUrl(apps, appUrl) {
 		for (var i=0; i < apps.length; i++) {
 			var app = apps[i];
-			var pattern = app.projectSid + "/controller";
+			var pattern = app.sid + "/controller";
 			var decodedUrl = decodeURIComponent(appUrl);
 			var matches = RegExp(pattern) .exec(decodedUrl);
 			if (matches != null) {
@@ -92,9 +91,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		//return undefined;
 	}	
 	
-	function getAppConfig(projectSid, mode) {
+	function getAppConfig(applicationSid, mode) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/services/ras/apps/' + projectSid + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
+		$http({url: '/restcomm-rvd/services/ras/apps/' + applicationSid + '/config' + (mode ? ("/"+mode) : "") , method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				defer.resolve(data.payload);
@@ -111,9 +110,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		return defer.promise;
 	}
 	
-	function getApp(projectSid) {
+	function getApp(applicationSid) {
 		var defer = $q.defer();
-		$http({url: '/restcomm-rvd/services/ras/apps/' + projectSid, method: "GET" })
+		$http({url: '/restcomm-rvd/services/ras/apps/' + applicationSid, method: "GET" })
 		.success(function (data, status, headers, config) {
 			if (data.rvdStatus == "OK") {
 				//console.log("succesfull retrieved app config");
@@ -129,9 +128,9 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 		return defer.promise		
 	}
 	
-	function getBoostrapObject(projectSid) {
+	function getBoostrapObject(applicationSid) {
 		var deferred = $q.defer();
-		$http.get('/restcomm-rvd/services/ras/apps/' + projectSid + '/bootstrap' )
+		$http.get('/restcomm-rvd/services/ras/apps/' + applicationSid + '/bootstrap' )
 		.success(function (data, status) {
 			deferred.resolve(data);
 		})
@@ -148,7 +147,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 	function notifyIncomingNumberProvisioning(app, phoneNumber) {
 		//if (app.wasImported) {
 			// retrieve app configuration
-			getAppConfig(app.projectSid).then(function (appConfig) {
+			getAppConfig(app.sid).then(function (appConfig) {
 				//console.log("successfully retrieved configuration for application " + app.projectName);
 				//console.log(appConfig);
 				if (appConfig.provisioningUrl) {

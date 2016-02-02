@@ -10,25 +10,37 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 
 	
 	$scope.refreshProjectList = function() {
-
+		var restcommApps;
+		var projectList = [];
 		$http({
 			url: '/restcomm/2012-04-24/Accounts/' + $scope.authInfo.username + '/Applications.json',
 			method: 'GET'
 		}).success(function (data, status, headers, config) {
-			var projectList = [];
-			for ( var i=0; i < data.length; i ++){
-				if(data[i].project_sid){
-					var project = {};
-					project.name = data[i].friendly_name;
-					project.startUrl = data[i].rcml_url;
-					project.kind = data[i].kind;
-					project.projectSid = data[i].project_sid;
-					project.viewMode = 'view';
-					projectList.push(project);	
+			restcommApps = data;
+			$http({url: 'services/projects',
+				method: "GET"
+			}).success(function (data, status, headers, config) {
+				for (var i in restcommApps) {
+					var currentApp = restcommApps[i];
+					var applicationSid = currentApp.sid;
+					for ( var i=0; i < data.length; i ++){
+						if(data[i].name === applicationSid){
+							var project = {};
+							project.applicationSid = applicationSid;
+							project.name = currentApp.friendly_name;
+							project.startUrl = currentApp.rcml_url;
+							project.kind = currentApp.kind;
+							project.viewMode = 'view';
+							projectList.push(project);
+							break;
+						}
+					}
 				}
-				
-			}
-			$scope.projectList = projectList;
+				$scope.projectList = projectList;
+			}).error(function (data, status, headers, config) {
+				if (status == 500)
+				notifications.put({type:'danger',message:"Internal server error"});
+			});
 		}).error(function (data, status, headers, config) {
 			if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
@@ -63,7 +75,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/projects/' + projectItem.projectSid + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
+		$http({ method: "PUT", url: 'services/projects/' + projectItem.applicationSid + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -79,7 +91,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.deleteProject = function(projectItem, ticket) {
-		$http({ method: "DELETE", url: 'services/projects/' + projectItem.projectSid + "?ticket=" + ticket})
+		$http({ method: "DELETE", url: 'services/projects/' + projectItem.applicationSid + "?ticket=" + ticket})
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();

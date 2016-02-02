@@ -136,14 +136,14 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 	}
 	
 	// refreshes cachedProjectSettings asynchronously
-	service.refresh = function (projectSid) {
-		var resource = $resource('services/projects/:projectSid/settings');
-		cachedProjectSettings = resource.get({projectSid:projectSid});
+	service.refresh = function (applicationSid) {
+		var resource = $resource('services/projects/:applicationSid/settings');
+		cachedProjectSettings = resource.get({applicationSid:applicationSid});
 	}
 	
-	service.retrieve = function (projectSid) {
+	service.retrieve = function (applicationSid) {
 		var deferred = $q.defer();
-		$http({method:'GET', url:'services/projects/'+projectSid+'/settings'})
+		$http({method:'GET', url:'services/projects/'+applicationSid+'/settings'})
 		.success(function (data,status) {
 			cachedProjectSettings = data;
 			deferred.resolve(cachedProjectSettings);
@@ -159,23 +159,23 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 		return deferred.promise;
 	}
 	
-	service.save = function (projectSid, projectSettings) {
+	service.save = function (applicationSid, projectSettings) {
 		var deferred = $q.defer();
-		$http({method:'POST',url:'services/projects/'+projectSid+'/settings',data:projectSettings})
+		$http({method:'POST',url:'services/projects/'+applicationSid+'/settings',data:projectSettings})
 		.success(function (data,status) {deferred.resolve()})
 		.error(function (data,status) {deferred.reject('ERROR_SAVING_PROJECT_SETTINGS')});
 		return deferred.promise;
 	}
 	
-	function projectSettingsModelCtrl ($scope, projectSettings, projectSettingsService, projectSid, projectName, $modalInstance, notifications) {
+	function projectSettingsModelCtrl ($scope, projectSettings, projectSettingsService, applicationSid, projectName, $modalInstance, notifications) {
 		//console.log("in projectSettingsModelCtrl");
 		$scope.projectSettings = projectSettings;
 		$scope.projectName = projectName;
-		$scope.projectSid = projectSid;
+		$scope.applicationSid = applicationSid;
 		
-		$scope.save = function (projectSid, data) {
+		$scope.save = function (applicationSid, data) {
 			//console.log("saving projectSettings for " + name);
-			service.save(projectSid, data).then(
+			service.save(applicationSid, data).then(
 				function () {$modalInstance.close()}, 
 				function () {notifications.put("Error saving project settings")}
 			);
@@ -191,7 +191,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 		}
 	}
 	
-	service.showModal = function(projectSid, projectName) {
+	service.showModal = function(applicationSid, projectName) {
 		var modalInstance = $modal.open({
 			  templateUrl: 'templates/projectSettingsModal.html',
 			  controller: projectSettingsModelCtrl,
@@ -199,7 +199,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 			  resolve: {
 				projectSettings: function () {
 					var deferred = $q.defer()
-					$http.get("services/projects/"+projectSid+"/settings")
+					$http.get("services/projects/"+applicationSid+"/settings")
 					.then(function (response) {
 						deferred.resolve(response.data);
 					}, function (response) {
@@ -212,12 +212,12 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 					return deferred.promise;
 				},
 				projectName: function () {return projectName;},
-				projectSid: function () {return projectSid;}
+				applicationSid: function () {return applicationSid;}
 			  }
 			});
 
 			modalInstance.result.then(function (projectSettings) {
-				service.refresh(projectSid);
+				service.refresh(applicationSid);
 				console.log(projectSettings);
 			}, function () {});	
 	}
@@ -229,9 +229,9 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', function ($http,$q,$modal) {
 	//console.log("Creating webTriggerService");
 	var service = {};
-	service.retrieve = function (projectSid) {
+	service.retrieve = function (applicationSid) {
 		var deferred = $q.defer();
-		$http({method:'GET', url:'services/projects/'+projectSid+'/cc'})
+		$http({method:'GET', url:'services/projects/'+applicationSid+'/cc'})
 		.success(function (data,status) {deferred.resolve(data)})
 		.error(function (data,status) {
 			if (status == 404)
@@ -242,21 +242,21 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		return deferred.promise;
 	}
 	
-	service.save = function (projectSid, ccInfo) {
+	service.save = function (applicationSid, ccInfo) {
 		var deferred = $q.defer();
-		$http({method:'POST',url:'services/projects/'+projectSid+'/cc',data:ccInfo})
+		$http({method:'POST',url:'services/projects/'+applicationSid+'/cc',data:ccInfo})
 		.success(function (data,status) {deferred.resolve()})
 		.error(function (data,status) {deferred.reject('ERROR_SAVING_PROJECT_CC')});
 		return deferred.promise;
 	}
 	
-	function webTriggerModalCtrl ($scope, ccInfo, projectSid, rvdSettings, $modalInstance, notifications, $location) {
+	function webTriggerModalCtrl ($scope, ccInfo, applicationSid, rvdSettings, $modalInstance, notifications, $location) {
 		console.log("in webTriggerModalCtrl");
 		console.log(rvdSettings);
 				
-		$scope.save = function (projectSid, data) {
+		$scope.save = function (applicationSid, data) {
 			//console.log("saving ccInfo for " + name);
-			service.save(projectSid, data).then(
+			service.save(applicationSid, data).then(
 				function () {$modalInstance.close()}, 
 				function () {notifications.put("Error saving project ccInfo")}
 			);
@@ -270,7 +270,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 				$scope.ccInfo = createCcInfo();
 		}	
 		$scope.getWebTriggerUrl = function () {
-			return $location.protocol() + "://" + $location.host() + ":" +  $location.port() + "/restcomm-rvd/services/apps/" +  projectSid + '/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span>';
+			return $location.protocol() + "://" + $location.host() + ":" +  $location.port() + "/restcomm-rvd/services/apps/" +  applicationSid + '/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span>';
 		};
 		$scope.getRvdHost = function() {
 			return $location.host();
@@ -298,11 +298,11 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		$scope.ccInfo = ccInfo;
 		setWebTriggerStatus($scope.webTriggerEnabled);
 			
-		$scope.projectSid = projectSid;
+		$scope.applicationSid = applicationSid;
 		$scope.rvdSettings = rvdSettings;
 	}
 	
-	service.showModal = function(projectSid) {
+	service.showModal = function(applicationSid) {
 		var modalInstance = $modal.open({
 			  templateUrl: 'templates/webTriggerModal.html',
 			  controller: webTriggerModalCtrl,
@@ -310,7 +310,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 			  resolve: {
 				ccInfo: function () {
 					var deferred = $q.defer()
-					$http.get("services/projects/"+projectSid+"/cc")
+					$http.get("services/projects/"+applicationSid+"/cc")
 					.then(function (response) {
 						deferred.resolve(response.data);
 					}, function (response) {
@@ -322,7 +322,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 					});
 					return deferred.promise;
 				},
-				projectSid: function () {return projectSid;},
+				applicationSid: function () {return applicationSid;},
 				rvdSettings: function (rvdSettings) {
 					return rvdSettings.refresh();
 				}
@@ -342,7 +342,7 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	var service = {};
 	service.retrieve = function () {
 		var deferred = $q.defer();
-		$http({method:'GET', url:'services/apps/'+$routeParams.projectSid+'/log'})
+		$http({method:'GET', url:'services/apps/'+$routeParams.applicationSid+'/log'})
 		.success(function (data,status) {
 			console.log('retrieved log data');
 			deferred.resolve(data);
@@ -354,7 +354,7 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	}
 	service.reset = function () {
 		var deferred = $q.defer();
-		$http({method:'DELETE', url:'services/apps/'+$routeParams.projectSid+'/log'})
+		$http({method:'DELETE', url:'services/apps/'+$routeParams.applicationSid+'/log'})
 		.success(function (data,status) {
 			console.log('reset log data');
 			notifications.put({type:'success',message:$routeParams.projectName+' log reset'});

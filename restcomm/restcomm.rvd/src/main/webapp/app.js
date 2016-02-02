@@ -31,17 +31,17 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 			authInfo: function (authentication) {return authentication.authResolver();}
 		}
 	})
-	.when('/designer/:projectSid=:projectName', {
+	.when('/designer/:applicationSid=:projectName', {
 		templateUrl : 'templates/designer.html',
 		controller : 'designerCtrl',
 		resolve: {
 			authInfo: function (authentication) {return authentication.authResolver();},
 			//projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
-			project: function(designerService, $route) { return designerService.openProject($route.current.params.projectSid); },
+			project: function(designerService, $route) { return designerService.openProject($route.current.params.applicationSid); },
 			bundledWavs: function(designerService) { return designerService.getBundledWavs()}
 		}
 	})
-	.when('/packaging/:projectSid=:projectName', {
+	.when('/packaging/:applicationSid=:projectName', {
 		templateUrl : 'templates/packaging/form.html',
 		controller : 'packagingCtrl',
 		resolve: {
@@ -50,7 +50,7 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 			rvdSettingsResolver: function (rvdSettings) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
 		}
 	})
-	.when('/packaging/:projectSid=:projectName/download', {
+	.when('/packaging/:applicationSid=:projectName/download', {
 		templateUrl : 'templates/packaging/download.html',
 		controller : 'packagingDownloadCtrl',
 		resolve: { 
@@ -69,7 +69,7 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 		templateUrl : 'templates/login.html',
 		controller : 'loginCtrl'
 	})
-	.when('/designer/:projectSid=:projectName/log', {
+	.when('/designer/:applicationSid=:projectName/log', {
 		templateUrl : 'templates/projectLog.html',
 		controller : 'projectLogCtrl'
 	})	
