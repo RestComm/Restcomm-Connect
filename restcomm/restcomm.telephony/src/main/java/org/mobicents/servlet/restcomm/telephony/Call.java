@@ -1417,13 +1417,24 @@ public final class Call extends UntypedActor {
             fsm.transition(hangup, completed);
             return;
         } if (sessionState == SipSession.State.EARLY.name()) {
-            final SipServletRequest cancel = invite.createCancel();
-            if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
-                cancel.addHeader("Reason",hangup.getMessage());
+            if (isOutbound()) {
+                final SipServletRequest cancel = invite.createCancel();
+                if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
+                    cancel.addHeader("Reason",hangup.getMessage());
+                }
+                cancel.send();
+                fsm.transition(hangup, completed);
+                return;
+            } else {
+                final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
+                if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
+                    resp.addHeader("Reason",hangup.getMessage());
+                }
+                resp.send();
+                fsm.transition(hangup, completed);
+                return;
             }
-            cancel.send();
-            fsm.transition(hangup, completed);
-            return;
+
         } else {
             final SipServletRequest bye = session.createRequest("BYE");
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
