@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -51,7 +52,6 @@ import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationEx
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
-import org.mobicents.servlet.restcomm.rvd.model.ProjectSid;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectItem;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
@@ -402,7 +402,7 @@ public class ProjectRestService extends RestService {
     public Response importProjectArchive(@Context HttpServletRequest request, @QueryParam("ticket") String ticket) {
         logger.info("Importing project from raw archive");
         ProjectApplicationsApi applicationsApi = null;
-        String projectName = null;
+        String applicationSid = null;
         Principal loggedUser = securityContext.getUserPrincipal();
 
         try {
@@ -422,24 +422,31 @@ public class ProjectRestService extends RestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files).
                     // They will be ignored
                     if (item.getName() != null) {
-                        ProjectSid projectSid = ProjectSid.generate();
-
-                        projectService.importProjectFromArchive(item.openStream(),
-                                projectSid.toString(), loggedUser.getName());
-                        String effectiveProjectName = FilenameUtils.getBaseName(item.getName());
-                        // buildService.buildProject(effectiveProjectName);
-
-                        // Load project kind
-                        String projectString = FsProjectStorage.loadProjectString(projectSid.toString(), workspaceStorage);
-                        ProjectState state = marshaler.toModel(projectString, ProjectState.class);
-                        String projectKind = state.getHeader().getProjectKind();
-                        projectName = effectiveProjectName;
-
                         // Create application
-                        // TODO Continue refactoring this method to handle the remote application first of all
-                        // and dont forget the exceptions with rollback on the api side.
-                        // applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
-                        // applicationsApi.createApplication(projectSid.toString(), ticket, effectiveProjectName, projectKind);
+                        String tempName = "RvdImport-" + UUID.randomUUID().toString().replace("-", "");
+                        applicationsApi = new ProjectApplicationsApi(servletContext, workspaceStorage, marshaler);
+                        applicationSid = applicationsApi.createApplication(ticket, tempName, "");
+
+                        String effectiveProjectName = null;
+
+                        try {
+                            // Import application
+                            projectService.importProjectFromArchive(item.openStream(), applicationSid, loggedUser.getName());
+                            effectiveProjectName = FilenameUtils.getBaseName(item.getName());
+                            // buildService.buildProject(effectiveProjectName);
+
+                            // Load project kind
+                            String projectString = FsProjectStorage.loadProjectString(applicationSid, workspaceStorage);
+                            ProjectState state = marshaler.toModel(projectString, ProjectState.class);
+                            String projectKind = state.getHeader().getProjectKind();
+
+                            // Update application
+                            applicationsApi.updateApplication(ticket, applicationSid, effectiveProjectName, null, projectKind);
+
+                        } catch (Exception e) {
+                            applicationsApi.rollbackCreateApplication(ticket, applicationSid);
+                            throw e;
+                        }
 
                         fileinfo.addProperty("name", item.getName());
                         fileinfo.addProperty("projectName", effectiveProjectName);
@@ -460,16 +467,16 @@ public class ProjectRestService extends RestService {
             logger.warn(e, e);
             logger.debug(e, e);
             return buildErrorResponse(Status.BAD_REQUEST, RvdResponse.Status.ERROR, e);
-            // } catch (ApplicationAlreadyExists e) {
-            // logger.warn(e, e);
-            // logger.debug(e, e);
-            // try {
-            // applicationsApi.rollbackCreateApplication(ticket, projectName);
-            // } catch (ApplicationsApiSyncException e1) {
-            // logger.error(e1.getMessage(), e1);
-            // return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-            // }
-            // return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
+        } catch (ApplicationAlreadyExists e) {
+            logger.warn(e, e);
+            logger.debug(e, e);
+            try {
+                applicationsApi.rollbackCreateApplication(ticket, applicationSid);
+            } catch (ApplicationsApiSyncException e1) {
+                logger.error(e1.getMessage(), e1);
+                return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
+            }
+            return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
         } catch (Exception e /* TODO - use a more specific type !!! */) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -478,12 +485,12 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @GET
-    @Path("{projectSid}")
+    @Path("{applicationSid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response openProject(@PathParam("projectSid") String projectSid, @Context HttpServletRequest request)
+    public Response openProject(@PathParam("applicationSid") String applicationSid, @Context HttpServletRequest request)
             throws StorageException,
             ProjectDoesNotExist {
-        assertProjectAvailable(projectSid);
+        assertProjectAvailable(applicationSid);
         return Response.ok().entity(marshaler.toData(activeProject)).build();
         /*
          * try { String projectState = projectService.openProject(name); return Response.ok().entity(projectState).build(); }
@@ -497,11 +504,11 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @POST
-    @Path("{projectSid}/wavs")
-    public Response uploadWavFile(@PathParam("projectSid") String projectSid, @Context HttpServletRequest request)
+    @Path("{applicationSid}/wavs")
+    public Response uploadWavFile(@PathParam("applicationSid") String applicationSid, @Context HttpServletRequest request)
             throws StorageException, ProjectDoesNotExist {
         logger.info("running /uploadwav");
-        assertProjectAvailable(projectSid);
+        assertProjectAvailable(applicationSid);
         try {
             if (request.getHeader("Content-Type") != null
                     && request.getHeader("Content-Type").startsWith("multipart/form-data")) {
@@ -519,7 +526,7 @@ public class ProjectRestService extends RestService {
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files).
                     // They will be ignored
                     if (item.getName() != null) {
-                        projectService.addWavToProject(projectSid, item.getName(), item.openStream());
+                        projectService.addWavToProject(applicationSid, item.getName(), item.openStream());
                         fileinfo.addProperty("name", item.getName());
                         // fileinfo.addProperty("size", size(item.openStream()));
                     }
@@ -545,36 +552,36 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @DELETE
-    @Path("{projectSid}/wavs")
-    public Response removeWavFile(@PathParam("projectSid") String projectSid, @QueryParam("filename") String wavname,
+    @Path("{applicationSid}/wavs")
+    public Response removeWavFile(@PathParam("applicationSid") String applicationSid, @QueryParam("filename") String wavname,
             @Context HttpServletRequest request) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(projectSid);
+        assertProjectAvailable(applicationSid);
         try {
-            projectService.removeWavFromProject(projectSid, wavname);
+            projectService.removeWavFromProject(applicationSid, wavname);
             return Response.ok().build();
         } catch (WavItemDoesNotExist e) {
-            logger.warn("Cannot delete " + wavname + " from " + projectSid + " app");
+            logger.warn("Cannot delete " + wavname + " from " + applicationSid + " app");
             return Response.status(Status.NOT_FOUND).build();
         }
     }
 
     @RvdAuth
     @GET
-    @Path("{projectSid}/wavs")
+    @Path("{applicationSid}/wavs")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listWavs(@PathParam("projectSid") String projectSid) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(projectSid);
+    public Response listWavs(@PathParam("applicationSid") String applicationSid) throws StorageException, ProjectDoesNotExist {
+        assertProjectAvailable(applicationSid);
         List<WavItem> items;
         try {
 
-            items = projectService.getWavs(projectSid);
+            items = projectService.getWavs(applicationSid);
             Gson gson = new Gson();
             return Response.ok(gson.toJson(items), MediaType.APPLICATION_JSON).build();
         } catch (BadWorkspaceDirectoryStructure e) {
             logger.error(e.getMessage(), e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         } catch (StorageException e) {
-            logger.error("Error getting wav list for project '" + projectSid + "'", e);
+            logger.error("Error getting wav list for project '" + applicationSid + "'", e);
             return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -584,11 +591,12 @@ public class ProjectRestService extends RestService {
      * parameters
      */
     @GET
-    @Path("{projectSid}/wavs/{filename}.wav")
-    public Response getWavNoQueryParams(@PathParam("projectSid") String projectSid, @PathParam("filename") String filename) {
+    @Path("{applicationSid}/wavs/{filename}.wav")
+    public Response getWavNoQueryParams(@PathParam("applicationSid") String applicationSid,
+            @PathParam("filename") String filename) {
         InputStream wavStream;
         try {
-            wavStream = FsProjectStorage.getWav(projectSid, filename + ".wav", workspaceStorage);
+            wavStream = FsProjectStorage.getWav(applicationSid, filename + ".wav", workspaceStorage);
             return Response.ok(wavStream, "audio/x-wav").header("Content-Disposition", "attachment; filename = " + filename)
                     .build();
         } catch (WavItemDoesNotExist e) {
@@ -603,12 +611,13 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @POST
-    @Path("{projectSid}/build")
-    public Response buildProject(@PathParam("projectSid") String projectSid) throws StorageException, ProjectDoesNotExist {
-        assertProjectAvailable(projectSid);
+    @Path("{applicationSid}/build")
+    public Response buildProject(@PathParam("applicationSid") String applicationSid) throws StorageException,
+            ProjectDoesNotExist {
+        assertProjectAvailable(applicationSid);
         BuildService buildService = new BuildService(workspaceStorage);
         try {
-            buildService.buildProject(projectSid, activeProject);
+            buildService.buildProject(applicationSid, activeProject);
             return Response.ok().build();
         } catch (StorageException e) {
             logger.error(e.getMessage(), e);
@@ -618,14 +627,14 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @POST
-    @Path("{projectSid}/settings")
-    public Response saveProjectSettings(@PathParam("projectSid") String projectSid) {
-        logger.info("saving project settings for " + projectSid);
+    @Path("{applicationSid}/settings")
+    public Response saveProjectSettings(@PathParam("applicationSid") String applicationSid) {
+        logger.info("saving project settings for " + applicationSid);
         String data;
         try {
             data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
             ProjectSettings projectSettings = marshaler.toModel(data, ProjectSettings.class);
-            FsProjectStorage.storeProjectSettings(projectSettings, projectSid, workspaceStorage);
+            FsProjectStorage.storeProjectSettings(projectSettings, applicationSid, workspaceStorage);
             return Response.ok().build();
         } catch (StorageException e) {
             logger.error(e, e);
@@ -639,10 +648,10 @@ public class ProjectRestService extends RestService {
 
     @RvdAuth
     @GET
-    @Path("{projectSid}/settings")
-    public Response getProjectSettings(@PathParam("projectSid") String projectSid) {
+    @Path("{applicationSid}/settings")
+    public Response getProjectSettings(@PathParam("applicationSid") String applicationSid) {
         try {
-            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(projectSid, workspaceStorage);
+            ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(applicationSid, workspaceStorage);
             return Response.ok(marshaler.toData(projectSettings)).build();
         } catch (StorageEntityNotFound e) {
             return Response.status(Status.NOT_FOUND).build();
