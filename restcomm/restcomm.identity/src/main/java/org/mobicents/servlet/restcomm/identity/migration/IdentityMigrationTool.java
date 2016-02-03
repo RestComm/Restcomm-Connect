@@ -21,7 +21,6 @@
 package org.mobicents.servlet.restcomm.identity.migration;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,16 +59,8 @@ public class IdentityMigrationTool {
     private String clientSecret;
     private String[] redirectUris;
 
-    /*
-        Wrapper function for identity-oriented bootstraper logic
-     */
-    public static void onBootstrap(MigrationContext migrationContext) throws IdentityMigrationException {
-        if (shouldMigrate(migrationContext, true)) {
-            performMigration(migrationContext);
-        }
-    }
 
-    static void performMigration(MigrationContext migrationContext) throws IdentityMigrationException {
+    public static void performMigration(MigrationContext migrationContext) throws IdentityMigrationException {
         RestcommIdentityApi api = new RestcommIdentityApi(migrationContext.getIdentityConfig().getAuthServerBaseUrl(), migrationContext.getIdentityConfig().getUsername(), migrationContext.getIdentityConfig().getPassword(), migrationContext.getIdentityConfig().getRealm(), null);
         // if no RedirectUris have been defined in configuration, use the values form the container connectors
         String [] uris = IdentityMigrationTool.determineRedirectUris(migrationContext.getIdentityConfig());
@@ -84,10 +75,23 @@ public class IdentityMigrationTool {
         migrationContext.getServletContext().setAttribute(IdentityContext.class.getName(), identityContext);
     }
 
-    static boolean shouldMigrate(MigrationContext migrationContext, boolean bootstrapping) {
-        if (bootstrapping) {
+    /**
+     * Determines whether migration will be done or not. Relies on several things as headless flag, startup|ui migration method, whether
+     * migration has already been done (identity mode) and whether restcomm is on bootstrap mode or not.
+     *
+     * @param migrationContext
+     * @return
+     */
+    public static boolean shouldMigrate(MigrationContext migrationContext) {
+        if (migrationContext.isBootstrapping()) {
             if ( ! migrationContext.getIdentityConfig().getHeadless() ) {
                 if ( migrationContext.getIdentityConfig().getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(migrationContext.getMutableIdentityConfig().getMode())) {
+                    return true;
+                }
+            }
+        } else {
+            if ( ! migrationContext.getIdentityConfig().getHeadless() ) {
+                if ( migrationContext.getIdentityConfig().getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui) && !"cloud".equals(migrationContext.getMutableIdentityConfig().getMode())) {
                     return true;
                 }
             }
@@ -238,17 +242,24 @@ public class IdentityMigrationTool {
         return instanceId;
     }
 
+    /**
+     * Tries to determine a valid set of redirect uris using the container and configuration.
+     *
+     * @param identityConfig
+     * @return null if redirect uri was found
+     */
     private static String[] determineRedirectUris(IdentityConfigurationSet identityConfig) {
         String [] uris = identityConfig.getRedirectUris();
         if (uris == null) {
+            URI uri;
             try {
-                URI uri = UriUtils.resolve(new URI("/"));
-                String base = uri.getScheme() + "://" + uri.getHost() + (uri.getPort() == -1 ? "" : (":" + uri.getPort()));
-                uris = new String[] {base};
-            } catch (URISyntaxException e) {
-                logger.error("Error parsing <redirectUris/> in restcomm.xml/identity configuration", e);
-                // and return null at the end of the function
+                uri = UriUtils.resolve(new URI("/"));
+            } catch (Exception e) {
+                logger.error("Could not determine identity RedirectUris.", e);
+                return null;
             }
+            String base = uri.getScheme() + "://" + uri.getHost() + (uri.getPort() == -1 ? "" : (":" + uri.getPort()));
+            uris = new String[] {base};
         }
         return uris;
     }

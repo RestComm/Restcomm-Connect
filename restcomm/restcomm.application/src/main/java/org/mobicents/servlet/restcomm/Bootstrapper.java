@@ -312,10 +312,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Initialize identityContext
             IdentityContext identityContext = new IdentityContext(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity(), new RestcommRoles(xml));
             context.setAttribute(IdentityContext.class.getName(), identityContext);
-            // Migrate identity if necessary. Update the context if needed.
-            MigrationContext migrationContext = new MigrationContext(restcommConfig.getIdentity(), restcommConfig.getMutableIdentity(), restcommConfig, context, storage.getAccountsDao());
+            // Migrate identity if necessary.
+            MigrationContext migrationContext = new MigrationContext(restcommConfig.getIdentity(), restcommConfig.getMutableIdentity(), restcommConfig, context, storage.getAccountsDao(), true );
             try {
-                IdentityMigrationTool.onBootstrap(migrationContext);
+                if (IdentityMigrationTool.shouldMigrate(migrationContext)) {
+                    IdentityMigrationTool.performMigration(migrationContext);
+                }
             } catch (IdentityMigrationException e) {
                 logger.error("Identity registration/migration failed. Your Restcomm instance may not be operational.", e);
             }
