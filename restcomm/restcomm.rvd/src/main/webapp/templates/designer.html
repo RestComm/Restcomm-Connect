@@ -222,7 +222,7 @@
 							<li ng-repeat='nodeSummary in getEditedNodeNames()'
 								ng-class="{active:isNodeActive(nodeSummary.name)}">
 								<span ng-click='setActiveNode(nodeSummary.name)' href="#" class='navtab'
-								tooltip='{{nodeSummary.name}}' ng-init="view={editLabel:false,label:getNodeLabel(nodeSummary.name)}"> <span
+								title='{{nodeSummary.name}}' ng-init="view={editLabel:false,label:getNodeLabel(nodeSummary.name)}"> <span
 									ng-show='!view.editLabel'> <!-- <a ng-click='node.iface.editLabel=!node.iface.editLabel'>{{node.label}}</a> -->
 										<a ng-click='onEditNodeLabel(view,nodeSummary.name)' class="rvd-clickable-text">{{getNodeLabel(nodeSummary.name)}}</a>
 										&nbsp;&nbsp;&nbsp;

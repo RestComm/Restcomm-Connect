@@ -183,6 +183,69 @@ public class CallLifecycleTest {
         Thread.sleep(2000);
     }
 
+    @Test //TODO Fails when the whole test class runs but Passes when run individually
+    public void testDialCancelBeforeDialingClientAlice() throws ParseException, InterruptedException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        SipTransaction cancelTransaction = bobCall.sendCancel();
+        assertNotNull(cancelTransaction);
+        bobCall.waitForCancelResponse(cancelTransaction,5000);
+
+        Thread.sleep(10000);
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        logger.info("LiveCalls: "+liveCalls);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls==0);
+        assertTrue(liveCallsArraySize==0);
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        String status = jsonObj.get("status").getAsString();
+        logger.info("Status: "+status);
+        assertTrue(status.equalsIgnoreCase("canceled"));
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
     @Test
@@ -796,69 +859,6 @@ public class CallLifecycleTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-    }
-
-    @Test //TODO Fails when the whole test class runs but Passes when run individually
-    public void testDialCancelBeforeDialingClientAlice() throws ParseException, InterruptedException, MalformedURLException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialAliceRcml)));
-
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
-
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
-        // Prepare second phone to receive call
-        SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.listenForIncomingCall();
-
-        // Create outgoing call with first phone
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCall);
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-        SipTransaction cancelTransaction = bobCall.sendCancel();
-        assertNotNull(cancelTransaction);
-        bobCall.waitForCancelResponse(cancelTransaction,5000);
-
-        Thread.sleep(10000);
-
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        logger.info("LiveCalls: "+liveCalls);
-        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
-
-        Thread.sleep(10000);
-
-        logger.info("About to check the Requests");
-        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
-        assertTrue(requests.size() == 1);
-        //        requests.get(0).g;
-        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
-        List<String> params = Arrays.asList(requestBody.split("&"));
-        String callSid = "";
-        for (String param : params) {
-            if (param.contains("CallSid")) {
-                callSid = param.split("=")[1];
-            }
-        }
-        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
-        JsonObject jsonObj = cdr.getAsJsonObject();
-        String status = jsonObj.get("status").getAsString();
-        logger.info("Status: "+status);
-        assertTrue(status.equalsIgnoreCase("canceled"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
