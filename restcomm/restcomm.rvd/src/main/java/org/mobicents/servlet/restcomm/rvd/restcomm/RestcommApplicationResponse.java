@@ -28,7 +28,6 @@ public class RestcommApplicationResponse {
 
     String sid;
     String friendly_name;
-    String project_sid;
 
     public RestcommApplicationResponse() {
 
@@ -40,10 +39,6 @@ public class RestcommApplicationResponse {
 
     public String getFriendly_name() {
         return friendly_name;
-    }
-
-    public String getProject_sid() {
-        return project_sid;
     }
 
 }

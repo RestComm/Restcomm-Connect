@@ -71,12 +71,12 @@ public class ProjectApplicationsApi {
         params.clear();
         params.put("Sid", applicationSid);
         params.put("RcmlUrl", rcmlUrl);
-        accessApi(ticketId, params, AccessApiAction.UPDATE);
+        updateApplication(ticketId, applicationSid, null, rcmlUrl, null);
         return applicationSid;
     }
 
-    public void rollbackCreateApplication(final String ticketId, final String friendlyName) throws ApplicationsApiSyncException {
-        removeApplication(ticketId, friendlyName);
+    public void rollbackCreateApplication(final String ticketId, final String applicationSid) throws ApplicationsApiSyncException {
+        removeApplication(ticketId, applicationSid);
     }
 
     public void renameApplication(final String ticketId, final String applicationSid, final String newName)
@@ -91,6 +91,22 @@ public class ProjectApplicationsApi {
         final HashMap<String, String> params = new HashMap<String, String>();
         params.put("Sid", applicationSid);
         accessApi(ticketId, params, AccessApiAction.DELETE);
+    }
+
+    public void updateApplication(final String ticketId, final String applicationSid, final String friendlyName,
+            final String rcmlUrl, final String kind) throws ApplicationsApiSyncException {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("Sid", applicationSid);
+        if (friendlyName != null && !friendlyName.isEmpty()) {
+            params.put("FriendlyName", friendlyName);
+        }
+        if (kind != null && !kind.isEmpty()) {
+            params.put("Kind", kind);
+        }
+        if (rcmlUrl != null && !rcmlUrl.isEmpty()) {
+            params.put("RcmlUrl", rcmlUrl);
+        }
+        accessApi(ticketId, params, AccessApiAction.UPDATE);
     }
 
     private String accessApi(final String ticketId, final HashMap<String, String> params, final AccessApiAction action)
@@ -209,8 +225,7 @@ public class ProjectApplicationsApi {
                         throw new ApplicationsApiSyncException("Invalid Application sid obtained from API response.");
                     // Update application
                     client.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Applications/" + applicationSid + ".json")
-                            .addParam("RcmlUrl", params.get("RcmlUrl"))
-                            .done(marshaler.getGson(), RestcommApplicationResponse.class);
+                            .addParams(params).done(marshaler.getGson(), RestcommApplicationResponse.class);
                     return null;
                 default:
                     return null;
