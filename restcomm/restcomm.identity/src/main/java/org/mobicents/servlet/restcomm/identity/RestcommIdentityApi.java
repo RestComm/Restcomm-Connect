@@ -207,7 +207,8 @@ public class RestcommIdentityApi {
             HttpPost request = new HttpPost(IdentityConfigurationSetImpl.getIdentityProxyUrl(authServerBaseUrl) + "/api/instances");
             request.addHeader("Authorization", "Bearer " + tokenString);
             List<NameValuePair> params = new ArrayList<NameValuePair>();
-            params.add(new BasicNameValuePair("prefix",redirectUris[0])); // TODO - make sure all the items of the array (not only the first) are passed and also check the receiving side
+            for ( String redirectUri : redirectUris)
+                params.add(new BasicNameValuePair("prefix",redirectUri));
             params.add(new BasicNameValuePair("secret",secret));
             request.setEntity(new UrlEncodedFormEntity(params));
 

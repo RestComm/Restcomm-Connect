@@ -60,7 +60,7 @@ public class RestcommIdentityApiTest {
         tool = new IdentityTestTool();
         tool.importRealm("simple-identity-instance-realm.json");
         api = new RestcommIdentityApi(authServerBaseUrl, username, password, realm, null);
-        instanceId = api.createInstance(new String[] {"http://localhost"}, "my-secret").instanceId;
+        instanceId = api.createInstance(new String[] {"http://localhost","https://localhost"}, "my-secret").instanceId;
         Assert.assertNotNull("Error creating identity instance", instanceId);
         api.bindInstance(instanceId);
         Assert.assertEquals(instanceId, api.getBoundInstanceId());
