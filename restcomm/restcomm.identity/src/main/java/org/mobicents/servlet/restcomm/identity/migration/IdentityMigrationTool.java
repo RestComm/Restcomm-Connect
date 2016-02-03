@@ -60,38 +60,38 @@ public class IdentityMigrationTool {
     private String[] redirectUris;
 
 
-    public static void performMigration(MigrationContext migrationContext) throws IdentityMigrationException {
-        RestcommIdentityApi api = new RestcommIdentityApi(migrationContext.getIdentityConfig().getAuthServerBaseUrl(), migrationContext.getIdentityConfig().getUsername(), migrationContext.getIdentityConfig().getPassword(), migrationContext.getIdentityConfig().getRealm(), null);
+    public static void performMigration(MigrationInfo migrationInfo) throws IdentityMigrationException {
+        RestcommIdentityApi api = new RestcommIdentityApi(migrationInfo.getIdentityConfig().getAuthServerBaseUrl(), migrationInfo.getIdentityConfig().getUsername(), migrationInfo.getIdentityConfig().getPassword(), migrationInfo.getIdentityConfig().getRealm(), null);
         // if no RedirectUris have been defined in configuration, use the values form the container connectors
-        String [] uris = IdentityMigrationTool.determineRedirectUris(migrationContext.getIdentityConfig());
+        String [] uris = IdentityMigrationTool.determineRedirectUris(migrationInfo.getIdentityConfig());
         if (uris == null)
             throw new IdentityMigrationException("Could not determine redirect uris");
-        IdentityMigrationTool migrationTool = new IdentityMigrationTool(migrationContext.getAccountsDao(), api, migrationContext.getIdentityConfig().getInviteExistingUsers(), migrationContext.getIdentityConfig().getAdminAccountSid(), migrationContext.getMutableIdentityConfig(), uris);
+        IdentityMigrationTool migrationTool = new IdentityMigrationTool(migrationInfo.getAccountsDao(), api, migrationInfo.getIdentityConfig().getInviteExistingUsers(), migrationInfo.getIdentityConfig().getAdminAccountSid(), migrationInfo.getMutableIdentityConfig(), uris);
         migrationTool.migrate();
-        migrationContext.getRestcommConfiguration().reloadMutableIdentity();
+        migrationInfo.getRestcommConfiguration().reloadMutableIdentity();
         // Reset identity context after migration
-        IdentityContext oldContext = (IdentityContext) migrationContext.getServletContext().getAttribute(IdentityContext.class.getName());
-        IdentityContext identityContext = new IdentityContext(migrationContext.getRestcommConfiguration().getIdentity(),migrationContext.getRestcommConfiguration().getMutableIdentity(), oldContext.getRestcommRoles());
-        migrationContext.getServletContext().setAttribute(IdentityContext.class.getName(), identityContext);
+        IdentityContext oldContext = (IdentityContext) migrationInfo.getServletContext().getAttribute(IdentityContext.class.getName());
+        IdentityContext identityContext = new IdentityContext(migrationInfo.getRestcommConfiguration().getIdentity(), migrationInfo.getRestcommConfiguration().getMutableIdentity(), oldContext.getRestcommRoles());
+        migrationInfo.getServletContext().setAttribute(IdentityContext.class.getName(), identityContext);
     }
 
     /**
      * Determines whether migration will be done or not. Relies on several things as headless flag, startup|ui migration method, whether
      * migration has already been done (identity mode) and whether restcomm is on bootstrap mode or not.
      *
-     * @param migrationContext
+     * @param migrationInfo
      * @return
      */
-    public static boolean shouldMigrate(MigrationContext migrationContext) {
-        if (migrationContext.isBootstrapping()) {
-            if ( ! migrationContext.getIdentityConfig().getHeadless() ) {
-                if ( migrationContext.getIdentityConfig().getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(migrationContext.getMutableIdentityConfig().getMode())) {
+    public static boolean shouldMigrate(MigrationInfo migrationInfo) {
+        if (migrationInfo.isBootstrapping()) {
+            if ( ! migrationInfo.getIdentityConfig().getHeadless() ) {
+                if ( migrationInfo.getIdentityConfig().getMethod().equals(IdentityConfigurationSet.MigrationMethod.startup) && !"cloud".equals(migrationInfo.getMutableIdentityConfig().getMode())) {
                     return true;
                 }
             }
         } else {
-            if ( ! migrationContext.getIdentityConfig().getHeadless() ) {
-                if ( migrationContext.getIdentityConfig().getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui) && !"cloud".equals(migrationContext.getMutableIdentityConfig().getMode())) {
+            if ( ! migrationInfo.getIdentityConfig().getHeadless() ) {
+                if ( migrationInfo.getIdentityConfig().getMethod().equals(IdentityConfigurationSet.MigrationMethod.ui) && !"cloud".equals(migrationInfo.getMutableIdentityConfig().getMode())) {
                     return true;
                 }
             }
