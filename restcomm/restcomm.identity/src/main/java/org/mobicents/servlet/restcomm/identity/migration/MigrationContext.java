@@ -38,13 +38,15 @@ public class MigrationContext {
     private final RestcommConfiguration restcommConfiguration;
     private final ServletContext servletContext;
     private final AccountsDao accountsDao;
+    private final boolean bootstrapping;
 
-    public MigrationContext(IdentityConfigurationSet identityConfig, MutableIdentityConfigurationSet mutableIdentityConfig, RestcommConfiguration restcommConfiguration, ServletContext servletContext, AccountsDao accountsDao) {
+    public MigrationContext(IdentityConfigurationSet identityConfig, MutableIdentityConfigurationSet mutableIdentityConfig, RestcommConfiguration restcommConfiguration, ServletContext servletContext, AccountsDao accountsDao, boolean bootstrapping) {
         this.identityConfig = identityConfig;
         this.mutableIdentityConfig = mutableIdentityConfig;
         this.restcommConfiguration = restcommConfiguration;
         this.servletContext = servletContext;
         this.accountsDao = accountsDao;
+        this.bootstrapping = bootstrapping;
     }
 
     public IdentityConfigurationSet getIdentityConfig() {
@@ -66,4 +68,6 @@ public class MigrationContext {
     public AccountsDao getAccountsDao() {
         return accountsDao;
     }
+
+    public boolean isBootstrapping() { return bootstrapping; }
 }
