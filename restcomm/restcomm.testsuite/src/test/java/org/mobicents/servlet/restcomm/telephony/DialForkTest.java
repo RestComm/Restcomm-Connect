@@ -975,6 +975,145 @@ public class DialForkTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
+    @Test
+    public synchronized void testDialForkEveryoneBusyExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialForkWithActionUrl)));
+
+        stubFor(post(urlEqualTo("/test"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(rcmlToReturn)));
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        //Prepare Fotini phone to receive a call
+        final SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
+        assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
+        assertTrue(georgeCall.sendIncomingCallResponse(486, "Busy Here-George", 3600));
+        assertTrue(georgeCall.waitForAck(50 * 1000));
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Alice", 600));
+        assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Alice", 600));
+        assertTrue(aliceCall.sendIncomingCallResponse(486, "Busy Here-Alice", 3600));
+        assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(100, "Trying-Henrique", 600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(486, "Busy Here-Henrique", 3600));
+        assertTrue(henriqueCall.waitForAck(50 * 1000));
+        //No one will answer the call and RCML will move to the next verb to call Fotini
+
+//        assertTrue(georgeCall.listenForCancel());
+//        assertTrue(aliceCall.listenForCancel());
+//        assertTrue(henriqueCall.listenForCancel());
+//
+//        Thread.sleep(1000);
+//
+//        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
+//        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
+//        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
+//        assertNotNull(georgeCancelTransaction);
+//        assertNotNull(aliceCancelTransaction);
+//        assertNotNull(henriqueCancelTransaction);
+//        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
+//        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
+//        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        //Even though no call answered the dial forking the originated call from Bob should be still live
+        assertTrue(liveCalls == 1);
+        assertTrue(liveCallsArraySize == 1);
+
+        //Now Fotini should receive a call
+        assertTrue(fotiniCall.waitForIncomingCall(30 * 1000));
+        assertTrue(fotiniCall.sendIncomingCallResponse(100, "Trying-Fotini", 600));
+        assertTrue(fotiniCall.sendIncomingCallResponse(180, "Ringing-Fotini", 600));
+        String receivedBody = new String(fotiniCall.getLastReceivedRequest().getRawContent());
+        assertTrue(fotiniCall.sendIncomingCallResponse(Response.OK, "OK-Fotini", 3600, receivedBody, "application", "sdp", null, null));
+        assertTrue(fotiniCall.waitForAck(5000));
+        fotiniCall.listenForDisconnect();
+
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+
+        Thread.sleep(2000);
+
+        // hangup.
+        assertTrue(bobCall.disconnect());
+
+        assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+    }
+
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
     @Test //TODO Fails when the whole test class runs but Passes when run individually

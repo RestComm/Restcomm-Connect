@@ -59,6 +59,13 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			if (status == 409) {
 				console.log("project already exists");
 				notifications.put({type:'danger',message:'A Voice, SMS or USSD project  with that name already exists in the workspace (maybe it belongs to another user).'});
+			} else
+			if (status >= 500) {
+				console.log("internal server error: " + status);
+				notifications.put({type:'danger',message:'Internal server error.'});
+			} else {
+				console.log("operation failed: " + status);
+				notifications.put({type:'danger',message:'Could not create project.'});
 			}
 		 });
 	}
@@ -97,7 +104,14 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			$scope.refreshProjectList();
 			projectItem.showConfirmation = false;
 		})
-		.error(function (data, status, headers, config) { console.log("cannot delete project"); });		
+		.error(function (data, status, headers, config) {
+		    console.log("cannot delete project");
+		    if (status >= 500) {
+		        notifications.put({type:'danger',message:'Internal server error.'});
+		    } else {
+		        notifications.put({type:'danger',message:'Could not delete project.'});
+		    }
+		});
 	}
 	
 	$scope.onFileSelect_ImportProject = function($files, ticket) {
