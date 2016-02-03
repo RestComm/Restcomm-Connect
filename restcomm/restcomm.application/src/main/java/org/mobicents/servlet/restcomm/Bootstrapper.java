@@ -33,7 +33,7 @@ import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.identity.exceptions.IdentityMigrationException;
 import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
-import org.mobicents.servlet.restcomm.identity.migration.MigrationContext;
+import org.mobicents.servlet.restcomm.identity.migration.MigrationInfo;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.configuration.RvdConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
@@ -313,10 +313,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity(), new RestcommRoles(xml));
             context.setAttribute(IdentityContext.class.getName(), identityContext);
             // Migrate identity if necessary.
-            MigrationContext migrationContext = new MigrationContext(restcommConfig.getIdentity(), restcommConfig.getMutableIdentity(), restcommConfig, context, storage.getAccountsDao(), true );
+            MigrationInfo migrationInfo = new MigrationInfo(restcommConfig.getIdentity(), restcommConfig.getMutableIdentity(), restcommConfig, context, storage.getAccountsDao(), true );
             try {
-                if (IdentityMigrationTool.shouldMigrate(migrationContext)) {
-                    IdentityMigrationTool.performMigration(migrationContext);
+                if (IdentityMigrationTool.shouldMigrate(migrationInfo)) {
+                    IdentityMigrationTool.performMigration(migrationInfo);
                 }
             } catch (IdentityMigrationException e) {
                 logger.error("Identity registration/migration failed. Your Restcomm instance may not be operational.", e);

@@ -37,8 +37,6 @@ public class IdentityConfigurationSetImpl extends ConfigurationSetImpl implement
     public static final String AUTH_SERVER_BASE_URL_DEFAULT = "https://identity.restcomm.com";
     public static final Boolean INVITE_EXISTING_USERS_DEFAULT = false;
     public static final String REALM_DEFAULT = "restcomm";
-    // TODO replace this default value (or remove it??)
-    public static final String REALM_KEY_DEFAULT = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv";
     public static final MigrationMethod METHOD_DEFAULT = MigrationMethod.ui;
 
     // other static stuff to keep them all in a single place
@@ -103,9 +101,10 @@ public class IdentityConfigurationSetImpl extends ConfigurationSetImpl implement
         this.realm = REALM_DEFAULT;
         // realmKey option
         String realmkey = source.getProperty(REALM_KEY_KEY);
-        if(StringUtils.isEmpty(realmkey))
-            this.realmkey = REALM_KEY_DEFAULT;
-        else {
+        if(StringUtils.isEmpty(realmkey)) {
+            logger.warn("No realm public key found. Identity related operations may fail.");
+            this.realmkey = ""; //
+        } else {
             this.realmkey = realmkey;
         }
 

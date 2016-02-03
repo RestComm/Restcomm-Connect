@@ -32,7 +32,7 @@ import javax.servlet.ServletContext;
  *
  * @author Orestis Tsakiridis
  */
-public class MigrationContext {
+public class MigrationInfo {
     private final IdentityConfigurationSet identityConfig;
     private final MutableIdentityConfigurationSet mutableIdentityConfig;
     private final RestcommConfiguration restcommConfiguration;
@@ -40,7 +40,7 @@ public class MigrationContext {
     private final AccountsDao accountsDao;
     private final boolean bootstrapping;
 
-    public MigrationContext(IdentityConfigurationSet identityConfig, MutableIdentityConfigurationSet mutableIdentityConfig, RestcommConfiguration restcommConfiguration, ServletContext servletContext, AccountsDao accountsDao, boolean bootstrapping) {
+    public MigrationInfo(IdentityConfigurationSet identityConfig, MutableIdentityConfigurationSet mutableIdentityConfig, RestcommConfiguration restcommConfiguration, ServletContext servletContext, AccountsDao accountsDao, boolean bootstrapping) {
         this.identityConfig = identityConfig;
         this.mutableIdentityConfig = mutableIdentityConfig;
         this.restcommConfiguration = restcommConfiguration;
