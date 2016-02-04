@@ -1126,8 +1126,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         builder.setDateCreated(callInfo.dateCreated());
                         builder.setAccountSid(accountId);
                         builder.setTo(callInfo.to());
-                        builder.setCallerName(callInfo.fromName());
-                        builder.setFrom(callInfo.from());
+                        if (callInfo.fromName() != null) {
+                            builder.setCallerName(callInfo.fromName());
+                        } else {
+                            builder.setCallerName("Unknown");
+                        }
+                        if (callInfo.from() != null) {
+                            builder.setFrom(callInfo.from());
+                        } else {
+                            builder.setFrom("Unknown");
+                        }
                         builder.setForwardedFrom(callInfo.forwardedFrom());
                         builder.setPhoneNumberSid(phoneId);
                         builder.setStatus(callState.toString());
