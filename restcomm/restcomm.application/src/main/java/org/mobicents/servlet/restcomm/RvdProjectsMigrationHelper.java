@@ -503,7 +503,7 @@ public class RvdProjectsMigrationHelper {
         String host = configuration.subset("smtp-notify").getString("host");
         String username = configuration.subset("smtp-notify").getString("user");
         String password = configuration.subset("smtp-notify").getString("password");
-        String defaultEmailAddress = configuration.subset("smtp-notify").getString("defaultEmailAddress");
+        String defaultEmailAddress = configuration.subset("smtp-notify").getString("default-email-address");
         if (host == null || username == null || password == null || defaultEmailAddress == null || host.isEmpty()
                 || username.isEmpty() || password.isEmpty() || defaultEmailAddress.isEmpty()) {
             throw new RvdProjectsMigrationException("Skipping email notification due to invalid configuration");
