@@ -42,7 +42,7 @@ import com.google.gson.Gson;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 @Path("/instance")
-public class IdentityEndpoint extends AccountsCommonEndpoint {
+public class IdentityEndpoint extends AccountsEndpointBase {
 
     private MutableIdentityConfigurationSet imConfig;
     private IdentityConfigurationSet iConfig;

@@ -14,9 +14,9 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  *
  */
-public class AccountsCommonEndpoint extends SecuredEndpoint {
+public class AccountsEndpointBase extends SecuredEndpoint {
 
-    public AccountsCommonEndpoint() {
+    public AccountsEndpointBase() {
         // TODO Auto-generated constructor stub
     }
 
