@@ -9,7 +9,7 @@
   <property location="${release.dir}/docs/restcomm" name="restcomm.docs.dir"/>
   <property location="${release.tomcat.dir}/docs/restcomm" name="restcomm.docs.tomcat.dir"/>
   <property location="${release.as7.dir}/docs/restcomm" name="restcomm.docs.as7.dir"/>
-  <property name="olympus.version" value="100ALPHA"/>
+  <property name="olympus.build" value="7"/>
 	<property location="${workspace.mobicents-restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
@@ -39,7 +39,7 @@
   <property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-4.x/${mobicents-media.build}/artifact/bootstrap/target/mms-server.zip"/>
   <property name="mobicents-media.distro.zip.path" value="${checkout.dir}/${mobicents-media.download.distro.file}"/>
 
-  <property name="mobicents-olympus.download.url" value="https://github.com/Mobicents/olympus/releases/download/${olympus.version}/olympus.war"/>
+  <property name="mobicents-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/>
   <property name="mobicents-olympus.path" value="${configuration.directory}/olympus.war"/>
 
   <property name="mobicents-diameter.download.distro.file" value="mobicents-diameter-${mobicents-diameter.version}.zip"/>
