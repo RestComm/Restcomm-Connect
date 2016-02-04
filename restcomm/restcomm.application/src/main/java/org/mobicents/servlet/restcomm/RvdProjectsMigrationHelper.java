@@ -477,7 +477,7 @@ public class RvdProjectsMigrationHelper {
         builder.setApiVersion(configuration.subset("runtime-settings").getString("api-version"));
         builder.setLog(error ? new Integer(1) : new Integer(0));
         builder.setErrorCode(errorCode);
-        builder.setMoreInfo(new URI("http://docs.telestax.com/restcomm-pages/"));
+        builder.setMoreInfo(new URI("http://docs.telestax.com/rvd-workspace-upgrade"));
         builder.setMessageText(message);
         builder.setMessageDate(DateTime.now());
         builder.setRequestUrl(new URI(""));
@@ -515,7 +515,7 @@ public class RvdProjectsMigrationHelper {
         String subject = "Restcomm - RVD Projects migration";
         String body = message;
         if (!migrationSucceeded) {
-            body += ". Please, visit http://docs.telestax.com/restcomm-pages/ for more information on how to troubleshoot workspace migration issues.";
+            body += ". Please, visit http://docs.telestax.com/rvd-workspace-upgrade for more information on how to troubleshoot workspace migration issues.";
         }
 
         final Mail emailMsg = new Mail(username + "@" + host, defaultEmailAddress, subject, body);
