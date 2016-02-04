@@ -219,7 +219,7 @@
 		<port></port>
 		<!-- Default mail address used to report issues related to Restcomm management,
 		mostly associated with bootstrap executions, like workspace migration, etc. -->
-		<defaultEmailAddress></defaultEmailAddress>
+		<default-email-address></default-email-address>
 	</smtp-notify>
 
 	<smtp-service>
