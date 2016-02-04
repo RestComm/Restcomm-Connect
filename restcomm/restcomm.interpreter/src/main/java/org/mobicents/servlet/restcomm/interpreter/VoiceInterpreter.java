@@ -2282,7 +2282,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
-            if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo))) {
+            if ((bridge != null) && (is(forking) || is(acquiringOutboundCallInfo) || is(bridged))) {
                 // Stop the bridge
                 bridge.tell(new StopBridge(), super.source);
                 bridge = null;
