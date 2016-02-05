@@ -45,10 +45,9 @@ public class RestcommAccountsTool {
                 accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
             }
 //        }
-
         return accountsUrl;
     }
-    
+
     public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password, String accountSid, String status) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -70,7 +69,7 @@ public class RestcommAccountsTool {
 
         return jsonResponse;
     }
-    
+
     public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
             String password) {
 

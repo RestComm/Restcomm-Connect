@@ -1,9 +1,12 @@
 package org.mobicents.servlet.restcomm.http;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.URL;
 
+import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -22,6 +25,7 @@ import com.google.gson.JsonObject;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
+* @author <a href="mailto:lyhungthinh@gmail.com">Thinh Ly</a>
  */
 
 @RunWith(Arquillian.class)
@@ -43,12 +47,12 @@ public class AccountsEndpointTest {
     private String newAdminAuthToken = "8e70383c69f7a3b7ea3f71b02f3e9731";
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
-    
+
     @After
     public void after() throws InterruptedException {
         Thread.sleep(1000);
     }
-    
+
     @Test
     public void testGetAccount() {
         // Get Account using admin email address and user email address
@@ -57,7 +61,7 @@ public class AccountsEndpointTest {
         assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
 
     }
-    
+
     @Test
     public void testCreateAccount() {
         RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
@@ -77,11 +81,29 @@ public class AccountsEndpointTest {
     }
 
     @Test
+    public void testCreateAccountCheckClientExisted() throws ClientProtocolException, IOException {
+        String subAccountPassword = "mynewpassword";
+        String subAccountEmail = "lyhungthinh@gmail.com";
+
+        if (!accountUpdated){
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        }
+        JsonObject subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, newAdminAuthToken, subAccountEmail, subAccountPassword);
+
+        JsonObject clientOfAccount = CreateClientsTool.getInstance()
+                                      .getClientOfAccount(deploymentUrl.toString(), subAccountResponse);
+        assertNotNull(clientOfAccount);
+    }
+
+
+    @Test
     public void testGetAccounts() {
         if (!accountUpdated){
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
                     adminUsername, newAdminPassword, adminAccountSid, null);
-        } 
+        }
         // Create account
         RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
                 userEmailAddress, userPassword);
