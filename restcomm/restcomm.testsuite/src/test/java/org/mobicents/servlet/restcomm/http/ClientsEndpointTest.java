@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 
