@@ -94,15 +94,15 @@ public class AccountsEndpointTest {
         String subAccountPassword = "mynewpassword";
         String subAccountEmail = "lyhungthinh@gmail.com";
 
-        if (!accountUpdated) {
+        if (!accountUpdated){
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
                     adminUsername, newAdminPassword, adminAccountSid, null);
         }
         JsonObject subAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
                 adminUsername, newAdminAuthToken, subAccountEmail, subAccountPassword);
 
-        JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
-                subAccountResponse);
+        JsonObject clientOfAccount = CreateClientsTool.getInstance()
+                                      .getClientOfAccount(deploymentUrl.toString(), subAccountResponse);
         assertNotNull(clientOfAccount);
     }
 
@@ -119,10 +119,6 @@ public class AccountsEndpointTest {
                     userEmailAddress, userPassword);
         }
 
-        // Create account
-        RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
-                userEmailAddress, userPassword);
-
         // Get Account using admin email address and user email address
         JsonObject account1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 newAdminAuthToken, userEmailAddress);
@@ -131,7 +127,6 @@ public class AccountsEndpointTest {
                 newAdminAuthToken, account1.get("sid").getAsString());
 
         assertTrue(account1.toString().equals(account2.toString()));
-
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
