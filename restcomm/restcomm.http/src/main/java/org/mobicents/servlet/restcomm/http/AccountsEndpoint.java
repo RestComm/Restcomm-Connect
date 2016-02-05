@@ -19,9 +19,16 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -29,16 +36,10 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.MediaType;
-
-import static javax.ws.rs.core.MediaType.*;
-
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.SecurityUtils;
@@ -47,15 +48,22 @@ import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
+import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -67,6 +75,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     protected AccountsDao dao;
     protected Gson gson;
     protected XStream xstream;
+    ClientsDao clientDao;
 
     public AccountsEndpoint() {
         super();
@@ -79,6 +88,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getAccountsDao();
+        clientDao = storage.getClientsDao();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -186,6 +196,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
 
         dao.removeAccount(sidToBeRemoved);
+
+        //Remove its SIP client account
+        clientDao.removeClients(sidToBeRemoved);
+
         return ok().build();
     }
 
@@ -235,6 +249,23 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                     account = account.setRole(parent.getRole());
                 }
                 dao.addAccount(account);
+
+                // Create default SIP client data
+                MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
+                clientData.add("Login", data.getFirst("EmailAddress"));
+                clientData.add("Password", data.getFirst("Password"));
+                clientData.add("FriendlyName", account.getFriendlyName());
+                clientData.add("AccountSid", account.getSid().toString());
+
+                Client client = clientDao.getClient(clientData.getFirst("Login"));
+                if (client == null) {
+                    client = createClientFrom(account.getSid(), clientData);
+                    clientDao.addClient(client);
+                } else if (!client.getAccountSid().toString().equals(account.getSid().toString())) {
+                    return status(CONFLICT)
+                            .entity("A client with the same name was already created by another account. Please, choose a different name and try again.")
+                            .build();
+                }
             } else {
                 return status(UNAUTHORIZED).build();
             }
@@ -250,6 +281,31 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         } else {
             return null;
         }
+    }
+
+    private Client createClientFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+        final Client.Builder builder = Client.builder();
+        final Sid sid = Sid.generate(Sid.Type.CLIENT);
+        String password = new Md5Hash(data.getFirst("Password")).toString();
+        builder.setSid(sid);
+        builder.setApiVersion(getApiVersion(data));
+        builder.setFriendlyName(data.getFirst("FriendlyName"));
+        builder.setAccountSid(accountSid);
+        builder.setLogin(data.getFirst("Login"));
+        builder.setPassword(password);
+        builder.setStatus(Client.ENABLED);
+        builder.setVoiceUrl(getUrl("VoiceUrl", data));
+        builder.setVoiceMethod(getMethod("VoiceMethod", data));
+        builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
+        builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+        builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        String rootUri = configuration.getString("root-uri");
+        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
+                .append("/Clients/").append(sid.toString());
+        builder.setUri(URI.create(buffer.toString()));
+        return builder.build();
     }
 
     private Account update(final Account account, final MultivaluedMap<String, String> data) {
