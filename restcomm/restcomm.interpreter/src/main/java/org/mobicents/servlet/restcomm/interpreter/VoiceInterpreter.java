@@ -542,6 +542,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
             callState = event.state();
+            logger.info("VoiceInterpreter received CallStateChanged event: "+callState);
             if (CallStateChanged.State.RINGING == event.state()) {
                 if (forking.equals(state)) {
                     outboundCall = sender;
@@ -573,7 +574,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state()) {
-                logger.info("VoiceInterpreter received CallStateChanged event: "+event.state());
                 if (bridging.equals(state)) {
                     fsm.transition(message, finishDialing);
                 } else if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
@@ -618,7 +618,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         } else if (attribute == null) {
                             fsm.transition(message, finishDialing);
                         } else  {
-                            return;
+                            fsm.transition(ReceiveTimeout.getInstance(), finishDialing);
                         }
                     }
                 } else {
@@ -1917,9 +1917,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         callback();
                         fsm.transition(message, finished);
                         return;
-                    }
-                    else if (dialBranches != null && dialBranches.contains(sender)) {
+                    } else if (dialBranches != null && dialBranches.contains(sender)) {
                         removeDialBranch(message, sender);
+                        return;
+                    } else {
+                        // Ask the parser for the next action to take.
+                        final GetNextVerb next = GetNextVerb.instance();
+                        if (parser != null) {
+                            parser.tell(next, source);
+                        }
+
+                        dialChildren = null;
+                        outboundCall = null;
                         return;
                     }
                 } else if (bridged.equals(state)) {
