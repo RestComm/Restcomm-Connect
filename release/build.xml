@@ -50,8 +50,8 @@
     </classpath>
   </taskdef>
 
-  <target depends="clean,get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release"/>
-  <target depends="get-deps,extract-deps,build-mobicents-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release-no-clean"/>
+  <target depends="clean,get-deps,extract-deps,build-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release"/>
+  <target depends="get-deps,extract-deps,build-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release-no-clean"/>
 
   <target name="deploy">
     <ant antfile="${ant.file.restcomm.release}" target="release">
