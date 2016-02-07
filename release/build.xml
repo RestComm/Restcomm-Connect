@@ -142,7 +142,7 @@
       <arg line="${release.build.goals} -Pmobicents"/>
     </exec>
   -->
-    <exec dir="${workspace.mobicents-restcomm.dir}/restcomm.provisioning.number.api" executable="${mvn.executable}" failonerror="true">
+    <exec dir="${workspace.restcomm.dir}/restcomm.provisioning.number.api" executable="${mvn.executable}" failonerror="true">
       <arg line="javadoc:javadoc"/>
     </exec>
   </target>
