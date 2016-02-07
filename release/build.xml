@@ -17,12 +17,12 @@
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="restcomm-media.version" value="3.0.2.Final"/>
-  <property name="restcomm-media.build" value="24"/>
+  <property name="restcomm-media.build" value="33"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
   <property name="restcomm-sipservlets.as7.distro.version" value="${restcomm-sipservlets-as7.version}-jboss-as-7.2.0.Final"/>
-  <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-${mobicents-sipservlets.as7.distro.version}.zip"/>
+  <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-${restcomm-sipservlets.as7.distro.version}.zip"/>
   <property name="restcomm-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/RestcommSipServlets-Release/${sipservlets-build}/artifact/${restcomm-sipservlets.as7.download.distro.file}"/>
   <property name="restcomm-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
 
