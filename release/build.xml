@@ -126,7 +126,7 @@
     <!--unzip src="${mobicents-media.distro.zip.path}" dest="${release.dir}/mobicents-media"/-->
     <unzip dest="${release.as7.dir}/mediaserver" src="${restcomm-media.distro.zip.path}"/>
     <move todir="${release.as7.dir}/mediaserver">
-      <fileset dir="${release.as7.dir}/mediaserver/mms-server"/>
+      <fileset dir="${release.as7.dir}/mediaserver/restcomm-media-server"/>
     </move>
     <copy failonerror="true" file="${configuration.directory}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml"/>
   </target>
