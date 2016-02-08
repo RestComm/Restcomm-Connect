@@ -1848,7 +1848,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 attribute = verb.attribute("action");
             }
 
-            if (message instanceof ReceiveTimeout) {
+            if (message instanceof ReceiveTimeout && dialBranches != null) {
                 logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
