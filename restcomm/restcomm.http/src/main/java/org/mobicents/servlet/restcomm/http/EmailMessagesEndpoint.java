@@ -97,16 +97,11 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         } catch (final InvalidEmailException exception) {
             throw new IllegalArgumentException(exception);
         }
-        final String body = data.getFirst("Body");
-        if (body.getBytes().length > 160) {
-            data.remove("Body");
-            data.putSingle("Body", body.substring(0, 159));
-        }
 
         final String subject = data.getFirst("Subject");
-        if (body.getBytes().length > 60) {
+        if (subject.length() > 160) {
             data.remove("Subject");
-            data.putSingle("Subject", subject.substring(0, 60));
+            data.putSingle("Subject", subject.substring(0, 160));
         }
 
         if (data.containsKey("CC")) {
