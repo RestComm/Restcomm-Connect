@@ -24,12 +24,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.net.URL;
@@ -391,12 +388,21 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
-        final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(callSid));
-
+        CallDetailRecord cdr = null;
         try {
-            secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
+            cdr = dao.getCallDetailRecord(new Sid(callSid));
+
+            if (cdr != null) {
+                try {
+                    secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
+                } catch (final AuthorizationException exception) {
+                    return status(UNAUTHORIZED).build();
+                }
+            } else {
+                return Response.status(NOT_ACCEPTABLE).build();
+            }
+        } catch (Exception e) {
+            return status(BAD_REQUEST).build();
         }
 
         final String url = data.getFirst("Url");
