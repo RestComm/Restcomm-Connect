@@ -99,9 +99,9 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         }
 
         final String subject = data.getFirst("Subject");
-        if (subject.length() > 160) {
+        if (subject.length() > 125) {
             data.remove("Subject");
-            data.putSingle("Subject", subject.substring(0, 160));
+            data.putSingle("Subject", subject.substring(0, 125));
         }
 
         if (data.containsKey("CC")) {
