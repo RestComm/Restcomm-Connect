@@ -113,7 +113,7 @@
   <!--Olympus-->
   <available file="${restcomm-olympus.path}" property="got.olympus"/>
   <target name="get-olympus" unless="got.olympus">
-    <echo>Downloading Restcomm Olympus version: ${olympus.version}</echo>
+    <echo>Downloading Restcomm Olympus version: ${olympus.build}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-olympus.download.url}"/>
     </exec>
