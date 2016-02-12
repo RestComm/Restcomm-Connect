@@ -1408,12 +1408,20 @@ public final class Call extends UntypedActor {
     private void sendBye(Hangup hangup) throws IOException, TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
         final SipSession session = invite.getSession();
         String sessionState = session.getState().name();
-        if (sessionState == SipSession.State.INITIAL.name() || sessionState == SipSession.State.EARLY.name()) {
+        if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
             final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
                 resp.addHeader("Reason",hangup.getMessage());
             }
             resp.send();
+            fsm.transition(hangup, completed);
+            return;
+        } if (sessionState == SipSession.State.EARLY.name()) {
+            final SipServletRequest cancel = invite.createCancel();
+            if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
+                cancel.addHeader("Reason",hangup.getMessage());
+            }
+            cancel.send();
             fsm.transition(hangup, completed);
             return;
         } else {
