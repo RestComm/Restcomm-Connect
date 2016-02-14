@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.mgcp;
 
 import static jain.protocol.ip.mgcp.message.parms.ReturnCode.Transaction_Executed_Normally;
 import jain.protocol.ip.mgcp.JainIPMgcpException;
+import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.NotificationRequest;
 import jain.protocol.ip.mgcp.message.NotificationRequestResponse;
 import jain.protocol.ip.mgcp.message.Notify;
@@ -35,15 +36,12 @@ import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
 import jain.protocol.ip.mgcp.pkg.PackageName;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
@@ -63,12 +61,10 @@ public final class IvrEndpoint extends GenericEndpoint {
     private static final String DEFAULT_REQUEST_ID = "0";
 
     private final NotifiedEntity agent;
-    private final List<ActorRef> observers;
 
-    public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/ivr/$", domain));
+    public IvrEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout) {
+        super(gateway, session, agent, new EndpointIdentifier("mobicents/ivr/$", domain), timeout);
         this.agent = agent;
-        this.observers = new ArrayList<ActorRef>();
     }
 
     private void send(final Object message) {
@@ -108,25 +104,19 @@ public final class IvrEndpoint extends GenericEndpoint {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+
         if (Observe.class.equals(klass)) {
-            final Observe request = (Observe) message;
-            final ActorRef observer = request.observer();
-            if (observer != null) {
-                observers.add(observer);
-                observer.tell(new Observing(self), self);
-            }
+            onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
-            final StopObserving request = (StopObserving) message;
-            final ActorRef observer = request.observer();
-            if (observer != null) {
-                observers.remove(observer);
-            }
+            onStopObserving((StopObserving) message, self, sender);
         } else if (InviteEndpoint.class.equals(klass)) {
             final EndpointCredentials credentials = new EndpointCredentials(id);
             sender.tell(credentials, self);
         } else if (UpdateEndpointId.class.equals(klass)) {
             final UpdateEndpointId request = (UpdateEndpointId) message;
             id = request.id();
+        } else if (DestroyEndpoint.class.equals(klass)) {
+            onDestroyEndpoint((DestroyEndpoint) message, self, sender);
         } else if (Play.class.equals(klass) || PlayCollect.class.equals(klass) || PlayRecord.class.equals(klass)) {
             send(message);
         } else if (StopEndpoint.class.equals(klass)) {
@@ -135,6 +125,8 @@ public final class IvrEndpoint extends GenericEndpoint {
             notification(message);
         } else if (NotificationRequestResponse.class.equals(klass)) {
             response(message);
+        } else if (message instanceof JainMgcpResponseEvent) {
+            onJainMgcpResponseEvent((JainMgcpResponseEvent) message, self, sender);
         }
     }
 
