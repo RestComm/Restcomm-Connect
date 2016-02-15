@@ -34,6 +34,8 @@ import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
+import org.mobicents.servlet.restcomm.mgcp.EndpointState;
+import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
@@ -81,7 +83,7 @@ public final class MmsConferenceController extends MediaServerController {
     private final State acquiringMediaSession;
     private final State acquiringEndpoint;
     private final State creatingMediaGroup;
-    private final State destroyingMediaGroup;
+    private final State stopping;
     private Boolean fail;
 
     // MGCP runtime stuff.
@@ -113,7 +115,7 @@ public final class MmsConferenceController extends MediaServerController {
         this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
         this.acquiringEndpoint = new State("acquiring endpoint", new AcquiringEndpoint(source), null);
         this.creatingMediaGroup = new State("creating media group", new CreatingMediaGroup(source), null);
-        this.destroyingMediaGroup = new State("destroying media group", new DestroyingMediaGroup(source), null);
+        this.stopping = new State("stopping", new Stopping(source), null);
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -123,10 +125,11 @@ public final class MmsConferenceController extends MediaServerController {
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
         transitions.add(new Transition(acquiringEndpoint, inactive));
         transitions.add(new Transition(creatingMediaGroup, active));
-        transitions.add(new Transition(creatingMediaGroup, destroyingMediaGroup));
+        transitions.add(new Transition(creatingMediaGroup, stopping));
         transitions.add(new Transition(creatingMediaGroup, failed));
-        transitions.add(new Transition(active, destroyingMediaGroup));
-        transitions.add(new Transition(destroyingMediaGroup, inactive));
+        transitions.add(new Transition(active, stopping));
+        transitions.add(new Transition(stopping, inactive));
+        transitions.add(new Transition(stopping, failed));
 
         // Finite State Machine
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
@@ -198,6 +201,8 @@ public final class MmsConferenceController extends MediaServerController {
             onStopRecording((StopRecording) message, self, sender);
         } else if(MediaGroupResponse.class.equals(klass)) {
             onMediaGroupResponse((MediaGroupResponse<String>) message, self, sender);
+        } else if(EndpointStateChanged.class.equals(klass)) {
+            onEndpointStateChanged((EndpointStateChanged) message, self, sender);
         }
     }
 
@@ -229,7 +234,7 @@ public final class MmsConferenceController extends MediaServerController {
         if (is(active)) {
             fsm.transition(message, inactive);
         } else {
-            fsm.transition(message, destroyingMediaGroup);
+            fsm.transition(message, stopping);
         }
     }
 
@@ -237,7 +242,7 @@ public final class MmsConferenceController extends MediaServerController {
         if (is(acquiringMediaSession) || is(acquiringEndpoint)) {
             this.fsm.transition(message, inactive);
         } else if (is(creatingMediaGroup) || is(active)) {
-            this.fsm.transition(message, destroyingMediaGroup);
+            this.fsm.transition(message, stopping);
         }
     }
 
@@ -248,6 +253,7 @@ public final class MmsConferenceController extends MediaServerController {
             this.fsm.transition(message, acquiringEndpoint);
         } else if (is(acquiringEndpoint)) {
             this.cnfEndpoint = (ActorRef) message.get();
+            this.cnfEndpoint.tell(new Observe(self), self);
             this.fsm.transition(message, creatingMediaGroup);
         }
     }
@@ -264,11 +270,15 @@ public final class MmsConferenceController extends MediaServerController {
                 if (is(creatingMediaGroup)) {
                     this.fail = Boolean.TRUE;
                     fsm.transition(message, failed);
-                } else if (is(destroyingMediaGroup)) {
-                    if (fail) {
-                        this.fsm.transition(message, failed);
-                    } else {
-                        this.fsm.transition(message, inactive);
+                } else if (is(stopping)) {
+                    // Stop media group actor
+                    this.mediaGroup.tell(new StopObserving(self), self);
+                    context().stop(mediaGroup);
+                    this.mediaGroup = null;
+
+                    // Move to next state
+                    if (this.mediaGroup == null && this.cnfEndpoint == null) {
+                        this.fsm.transition(message, fail ? failed : inactive);
                     }
                 }
                 break;
@@ -324,6 +334,20 @@ public final class MmsConferenceController extends MediaServerController {
     private void onMediaGroupResponse(MediaGroupResponse<String> message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active) && this.playing) {
             this.playing = Boolean.FALSE;
+        }
+    }
+
+    private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(stopping)) {
+            if (sender.equals(this.cnfEndpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+                this.cnfEndpoint.tell(new StopObserving(self), self);
+                context().stop(cnfEndpoint);
+                cnfEndpoint = null;
+
+                if(this.mediaGroup == null && this.cnfEndpoint == null) {
+                    this.fsm.transition(message, inactive);
+                }
+            }
         }
     }
 
@@ -389,6 +413,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     }
 
+    @Deprecated
     private final class DestroyingMediaGroup extends AbstractAction {
 
         public DestroyingMediaGroup(final ActorRef source) {
@@ -410,6 +435,21 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE));
+        }
+    }
+
+    private final class Stopping extends AbstractAction {
+
+        public Stopping(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            // Destroy Media Group
+            mediaGroup.tell(new StopMediaGroup(), super.source);
+            // Destroy Bridge Endpoint and its connections
+            cnfEndpoint.tell(new DestroyEndpoint(), super.source);
         }
     }
 
