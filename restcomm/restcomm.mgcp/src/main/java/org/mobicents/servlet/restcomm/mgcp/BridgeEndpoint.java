@@ -29,17 +29,17 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class BridgeEndpoint extends GenericEndpoint {
+
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain) {
-        super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain));
+
+    public BridgeEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity agent, final String domain, long timeout) {
+        super(gateway, session, agent, new EndpointIdentifier("mobicents/bridge/$", domain), timeout);
     }
 
-    /* (non-Javadoc)
-     * @see akka.actor.UntypedActor#postStop()
-     */
     @Override
     public void postStop() {
         ActorRef sender = this.sender();
-        logger.info("Bridge: "+self().path()+" bridge id: "+this.id+" at postStop, sender: "+sender.path());
+        logger.info("Bridge: " + self().path() + " bridge id: " + this.id + " at postStop, sender: " + sender.path());
     }
+
 }

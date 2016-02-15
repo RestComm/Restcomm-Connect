@@ -108,7 +108,7 @@ public final class MockMediaGateway extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                return new BridgeEndpoint(gateway, session, agent, domain);
+                return new BridgeEndpoint(gateway, session, agent, domain, timeout);
             }
         }));
     }
@@ -122,7 +122,7 @@ public final class MockMediaGateway extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceEndpoint(gateway, session, agent, domain);
+                return new ConferenceEndpoint(gateway, session, agent, domain, timeout);
             }
         }));
     }
@@ -140,7 +140,7 @@ public final class MockMediaGateway extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new IvrEndpoint(gateway, session, agent, domain);
+                return new IvrEndpoint(gateway, session, agent, domain, timeout);
             }
         }));
     }
@@ -168,7 +168,7 @@ public final class MockMediaGateway extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new PacketRelayEndpoint(gateway, session, agent, domain);
+                return new PacketRelayEndpoint(gateway, session, agent, domain, timeout);
             }
         }));
     }
