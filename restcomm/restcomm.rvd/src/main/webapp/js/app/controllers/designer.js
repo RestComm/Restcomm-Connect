@@ -176,7 +176,8 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 											{name:'ca',text: 'Spain Catalan'},
 											{name:'sv',text: 'Swedish'},
 											{name:'th',text: 'Thai'},
-											{name:'tr',text: 'Turkish'}
+											{name:'tr',text: 'Turkish'},
+											{name:'ja',text: 'Japanese'}
 
 										 ];
 	$scope.methods = ['POST', 'GET'];
