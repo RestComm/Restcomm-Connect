@@ -26,7 +26,7 @@
                                     <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
                                     <span class="input-group-addon">{{'externalServiceStepUrlParamValueLabel' | translate}}</span>
                                     <input ng-model='urlParam.value' lookup-target class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
-                                    <variable-lookup variable="urlParam.value" view="input-group"></variable-lookup>
+                                    <variable-lookup variable="urlParam.value" view="input-group" replace="true"></variable-lookup>
                                     <span ng-click='removeUrlParam(step,urlParam)' class="input-group-addon fa fa-times rvd-clickable"></span>
                                 </div>
                             </div>

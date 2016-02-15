@@ -83,18 +83,20 @@ angular.module('Rvd').directive('lookupTarget', [function () {
 		require: "^lookupContext",
 		link: function (scope, element, attrs, ctrls) {
 			scope.$on("inject-variable", function (event, args) {
-				if ( element[0].selectionStart >= 0 ) {
-					var selStart = element[0].selectionStart;
-					var value = scope.$eval(attrs.ngModel) || "";
-					value = value.substring(0,selStart) + "$"+args+ (value.substring(selStart) == "" ? "" : ("" + value.substring(selStart)));
-					// escape single quotes
-					value = value.replace(/'/g,"\\\'");
-					scope.$eval(attrs.ngModel + "='"+value+"'");					
+				if (args.replace) {
+                    scope.$eval(attrs.ngModel + "='"+"$"+args.value+"'");
+				} else {
+                    if ( element[0].selectionStart >= 0 ) {
+                        var selStart = element[0].selectionStart;
+                        var value = scope.$eval(attrs.ngModel) || "";
+                        value = value.substring(0,selStart) + "$"+args.value+ (value.substring(selStart) == "" ? "" : ("" + value.substring(selStart)));
+                        // escape single quotes
+                        value = value.replace(/'/g,"\\\'");
+                        scope.$eval(attrs.ngModel + "='"+value+"'");
+                    }
+                    var selStart = element[0].selectionStart;
+                    var selEnd = element[0].selectionEnd;
 				}
-				var selStart = element[0].selectionStart;
-				var selEnd = element[0].selectionEnd;
-				
-				//console.log("lookupTarget received event");
 			});
 		} 
 	}
@@ -112,7 +114,7 @@ angular.module('Rvd').directive('variableLookup', ['variableRegistry', function 
 			scope.view = attrs.view;
 			scope.variables = variableRegistry.listAll();
 			scope.selectVariable = function (variable) {
-				scope.$emit("variable-name-clicked", variable.name);
+				scope.$emit("variable-name-clicked", {value: variable.name, replace: scope.$eval(attrs.replace)});
 			}
 		} 
 	}
