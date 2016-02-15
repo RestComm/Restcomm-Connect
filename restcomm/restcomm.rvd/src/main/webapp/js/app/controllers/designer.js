@@ -167,6 +167,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 											{name:'de',text: 'German'},
 											{name:'el',text: 'Greek'},
 											{name:'it',text: 'Italian'},
+											{name:'ja',text: 'Japanese'},
 											{name:'nl',text: 'Netherlands-Dutch'},
 											{name:'no',text: 'Norwegian'},
 											{name:'pl',text: 'Polish'},
@@ -177,7 +178,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 											{name:'sv',text: 'Swedish'},
 											{name:'th',text: 'Thai'},
 											{name:'tr',text: 'Turkish'}
-
 										 ];
 	$scope.methods = ['POST', 'GET'];
 
