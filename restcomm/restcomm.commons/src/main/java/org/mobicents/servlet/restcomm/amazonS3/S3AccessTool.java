@@ -78,6 +78,7 @@ public class S3AccessTool {
         AWSCredentials credentials =new BasicAWSCredentials(accessKey, securityKey);
         AmazonS3 s3client = new AmazonS3Client(credentials);
         s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
+        logger.info("S3 Region: "+bucketRegion.toString());
         try {
             StringBuffer bucket = new StringBuffer();
             bucket.append(bucketName);
