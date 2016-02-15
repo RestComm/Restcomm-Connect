@@ -233,6 +233,7 @@
 		<reduced-redundancy>false</reduced-redundancy>
 		<days-to-retain-public-url>180</days-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
+		<bucket-region>true</bucket-region>
 	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer. 
