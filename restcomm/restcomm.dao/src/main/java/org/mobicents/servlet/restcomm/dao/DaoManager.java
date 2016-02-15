@@ -61,4 +61,6 @@ public interface DaoManager extends Configurable, LifeCycle {
     GatewaysDao getGatewaysDao();
 
     InstanceIdDao getInstanceIdDao();
+
+    OrganizationsDao getOrganizationsDao();
 }

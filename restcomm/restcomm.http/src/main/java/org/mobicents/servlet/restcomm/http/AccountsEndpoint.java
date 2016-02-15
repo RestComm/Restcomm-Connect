@@ -117,7 +117,12 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        Sid organizationSid = null;
+        if (data.containsKey("OrganizationSid")) {
+            organizationSid = new Sid(data.getFirst("OrganizationSid"));
+        }
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri,
+                organizationSid);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -268,6 +273,9 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
         if (data.containsKey("Auth_Token")) {
             result = result.setAuthToken(data.getFirst("Auth_Token"));
+        }
+        if (data.containsKey("OrganizationSid")) {
+            result = result.setOrganizationSid(getSid("OrganizationSid", data));
         }
         return result;
     }
