@@ -35,6 +35,10 @@ public final class DestroyEndpoint {
         this.endpoint = endpoint;
     }
 
+    public DestroyEndpoint() {
+        this(null);
+    }
+
     public ActorRef endpoint() {
         return endpoint;
     }
