@@ -32,11 +32,12 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
-import org.mobicents.servlet.restcomm.mgcp.CloseLink;
 import org.mobicents.servlet.restcomm.mgcp.CreateIvrEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.CreateLink;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyLink;
+import org.mobicents.servlet.restcomm.mgcp.EndpointState;
+import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
 import org.mobicents.servlet.restcomm.mgcp.IvrEndpointResponse;
 import org.mobicents.servlet.restcomm.mgcp.LinkStateChanged;
@@ -285,6 +286,8 @@ public class MgcpMediaGroup extends MediaGroup {
             } else if (active.equals(state) || openingLink.equals(state) || updatingLink.equals(state)) {
                 fsm.transition(message, deactivating);
             }
+        } else if (EndpointStateChanged.class.equals(klass)) {
+            onEndpointStateChanged((EndpointStateChanged) message, self(), sender);
         } else if (active.equals(state)) {
             if (Play.class.equals(klass)) {
                 play(message);
@@ -304,6 +307,19 @@ public class MgcpMediaGroup extends MediaGroup {
         } else if (ivrInUse) {
             if (Stop.class.equals(klass)) {
                 stop();
+            }
+        }
+    }
+
+    private boolean is(State state) {
+        return state != null && state.equals(this.fsm.state());
+    }
+
+    private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(deactivating)) {
+            if (sender.equals(this.ivr) && EndpointState.DESTROYED.equals(message.getState())) {
+                this.ivr.tell(new StopObserving(self), self);
+                this.fsm.transition(message, inactive);
             }
         }
     }
@@ -550,10 +566,11 @@ public class MgcpMediaGroup extends MediaGroup {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (link != null)
-                link.tell(new CloseLink(), source);
-            if (internalLink != null)
-                internalLink.tell(new CloseLink(), source);
+            ivr.tell(new DestroyEndpoint(), super.source);
+//            if (link != null)
+//                link.tell(new CloseLink(), source);
+//            if (internalLink != null)
+//                internalLink.tell(new CloseLink(), source);
         }
     }
 
@@ -571,6 +588,16 @@ public class MgcpMediaGroup extends MediaGroup {
             gateway.tell(new DestroyEndpoint(ivr), null);
             getContext().stop(ivr);
             ivr = null;
+        }
+        if(link != null) {
+            logger.info("MediaGroup :" + self().path() + " at postStop, about to stop link :" + link.path());
+            getContext().stop(link);
+            link = null;
+        }
+        if(internalLink != null) {
+            logger.info("MediaGroup :" + self().path() + " at postStop, about to stop internal link :" + internalLink.path());
+            getContext().stop(link);
+            link = null;
         }
     }
 
