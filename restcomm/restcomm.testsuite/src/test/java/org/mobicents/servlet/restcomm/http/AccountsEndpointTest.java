@@ -43,12 +43,13 @@ public class AccountsEndpointTest {
     private String newAdminAuthToken = "8e70383c69f7a3b7ea3f71b02f3e9731";
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
-    
+    private String organizationSid = "OR8dd6563c99ce45a0ac5b3cb61bf1aec9";
+
     @After
     public void after() throws InterruptedException {
         Thread.sleep(1000);
     }
-    
+
     @Test
     public void testGetAccount() {
         // Get Account using admin email address and user email address
@@ -57,14 +58,14 @@ public class AccountsEndpointTest {
         assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
 
     }
-    
+
     @Test
     public void testCreateAccount() {
         RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
                 adminUsername, newAdminPassword, adminAccountSid, null);
         accountUpdated = true;
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+                adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 newAdminAuthToken, userEmailAddress);
 
@@ -74,6 +75,7 @@ public class AccountsEndpointTest {
         assertTrue(createAccountResponse.get("auth_token").equals(getAccountResponse.get("auth_token")));
         String userPasswordHashed = new Md5Hash(userPassword).toString();
         assertTrue(getAccountResponse.get("auth_token").getAsString().equals(userPasswordHashed));
+        assertTrue(getAccountResponse.get("organization_sid").getAsString().equals(organizationSid));
     }
 
     @Test
@@ -81,10 +83,10 @@ public class AccountsEndpointTest {
         if (!accountUpdated){
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
                     adminUsername, newAdminPassword, adminAccountSid, null);
-        } 
+        }
         // Create account
         RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
-                userEmailAddress, userPassword);
+                userEmailAddress, userPassword, organizationSid);
         // Get Account using admin email address and user email address
         JsonObject account1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 newAdminAuthToken, userEmailAddress);

@@ -79,6 +79,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     public void init() {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         dao = storage.getOrganizationsDao();
+        accountsDao = storage.getAccountsDao();
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);

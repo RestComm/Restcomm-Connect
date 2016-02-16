@@ -171,7 +171,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("auth_token", account.getAuthToken());
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
-        map.put("organization_sid", account.getOrganizationSid());
+        map.put("organization_sid", account.getOrganizationSid() != null ? account.getOrganizationSid().toString() : null);
         return map;
     }
 }
