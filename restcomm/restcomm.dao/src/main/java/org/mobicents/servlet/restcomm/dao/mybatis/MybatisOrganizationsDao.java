@@ -42,7 +42,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  */
 @NotThreadSafe
 public class MybatisOrganizationsDao implements OrganizationsDao {
-    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.ClientsDao.";
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.OrganizationsDao.";
     private final SqlSessionFactory sessions;
 
     public MybatisOrganizationsDao(SqlSessionFactory sessions) {
@@ -68,7 +68,7 @@ public class MybatisOrganizationsDao implements OrganizationsDao {
 
     @Override
     public Organization getOrganization(String namespace) {
-        return getOrganization(namespace + "getOrganization", namespace);
+        return getOrganization(this.namespace + "getOrganizationByNamespace", namespace);
     }
 
     private Organization getOrganization(final String selector, final String parameter) {
@@ -142,11 +142,11 @@ public class MybatisOrganizationsDao implements OrganizationsDao {
         map.put("date_created", writeDateTime(organization.getDateCreated()));
         map.put("date_updated", writeDateTime(organization.getDateUpdated()));
         map.put("friendly_name", organization.getFriendlyName());
-        map.put("namespace", organization.getFriendlyName());
+        map.put("namespace", organization.getNamespace());
         map.put("account_sid", writeSid(organization.getAccountSid()));
         map.put("api_version", organization.getApiVersion());
         map.put("uri", writeUri(organization.getUri()));
-        return null;
+        return map;
     }
 
 }
