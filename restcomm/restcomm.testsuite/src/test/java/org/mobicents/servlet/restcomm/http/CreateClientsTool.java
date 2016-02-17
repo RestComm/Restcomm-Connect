@@ -83,12 +83,6 @@ public class CreateClientsTool {
         JsonObject jsonResponse = null;
         String authToken = getAuthorizationToken(account.get("email_address").toString(),
                                                    account.get("auth_token").toString());
-        System.out.println("***************************************************************");
-        System.out.println("*** URL: " + url);
-        System.out.println("Auth Token: " + authToken);
-        System.out.println("Account Auth: " + account.get("auth_token"));
-        System.out.println("Account Sid: " + account.get("sid"));
-        System.out.println("***************************************************************");
 
         try {
             HttpClient httpclient = new DefaultHttpClient();

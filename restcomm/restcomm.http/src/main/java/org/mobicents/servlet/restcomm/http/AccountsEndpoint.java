@@ -252,7 +252,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
                 // Create default SIP client data
                 MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
-                clientData.add("Login", data.getFirst("EmailAddress"));
+                String username = data.getFirst("EmailAddress").split("@")[0];
+                clientData.add("Login", username);
                 clientData.add("Password", data.getFirst("Password"));
                 clientData.add("FriendlyName", account.getFriendlyName());
                 clientData.add("AccountSid", account.getSid().toString());
@@ -261,10 +262,6 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 if (client == null) {
                     client = createClientFrom(account.getSid(), clientData);
                     clientDao.addClient(client);
-                } else if (!client.getAccountSid().toString().equals(account.getSid().toString())) {
-                    return status(CONFLICT)
-                            .entity("A client with the same name was already created by another account. Please, choose a different name and try again.")
-                            .build();
                 }
             } else {
                 return status(UNAUTHORIZED).build();
@@ -292,17 +289,12 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         String password = data.getFirst("Password");
 
         builder.setSid(sid);
-        builder.setApiVersion(getApiVersion(data));
-        builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setAccountSid(accountSid);
+        builder.setApiVersion(getApiVersion(data));
         builder.setLogin(data.getFirst("Login"));
         builder.setPassword(password);
+        builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setStatus(Client.ENABLED);
-        builder.setVoiceUrl(getUrl("VoiceUrl", data));
-        builder.setVoiceMethod(getMethod("VoiceMethod", data));
-        builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
-        builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-        builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
@@ -345,6 +337,22 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
                         || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
                     dao.updateAccount(account);
+
+                    // Update SIP client of the corresponding Account
+                    MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
+                    String username = data.getFirst("EmailAddress").split("@")[0];
+                    Client client = clientDao.getClient(username);
+                    if (client != null) {
+                        //TODO: need to encrypt this password because it's same with Account password.
+                        // Don't implement now. Opened another issue for it.
+                        //String password = new Md5Hash(data.getFirst("Password")).toString();
+                        String password = data.getFirst("Password");
+                        client.setPassword(password);
+                        if (data.containsKey("FriendlyName")) {
+                            client.setFriendlyName(data.getFirst("FriendlyName"));
+                        }
+                        clientDao.updateClient(client);
+                    }
                 } else {
                     return status(UNAUTHORIZED).build();
                 }
