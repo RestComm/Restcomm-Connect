@@ -495,7 +495,7 @@ public class RvdProjectsMigrationHelper {
     }
 
     public boolean isMigrationEnabled() {
-        Boolean value = new Boolean(configuration.subset("runtime-settings").getString("rvd-workspace-migration-enabled"));
+        Boolean value = new Boolean(configuration.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "true"));
         return value;
     }
 
