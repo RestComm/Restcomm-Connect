@@ -47,11 +47,15 @@ public class MainConfigurationSet extends ConfigurationSet {
     private final boolean useHostnameToResolveRelativeUrls;
     private final String hostname;
 
+    public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-or-proxy-for-clients";
+    private final boolean bypassLbForClients;
+
     public MainConfigurationSet(ConfigurationSource source) {
         super(source);
         SslMode sslMode;
         boolean resolveRelativeUrlWithHostname;
         String resolveRelativeUrlHostname;
+        boolean bypassLb = false;
 
         // http-client.ssl-mode
         try {
@@ -70,11 +74,13 @@ public class MainConfigurationSet extends ConfigurationSet {
             resolveRelativeUrlWithHostname = RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT;
             resolveRelativeUrlWithHostname = Boolean.valueOf(source.getProperty(USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY));
             resolveRelativeUrlHostname = source.getProperty("http-client.hostname");
+            bypassLb = Boolean.valueOf(source.getProperty("bypass-lb-or-proxy-for-clients"));
         } catch (Exception e) {
             throw new RuntimeException("Error initializing '" + USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY + "' configuration setting", e);
         }
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
+        bypassLbForClients = bypassLb;
     }
 
     public SslMode getSslMode() {
@@ -88,5 +94,7 @@ public class MainConfigurationSet extends ConfigurationSet {
     public String getHostname() {
         return hostname;
     }
+
+    public boolean getBypassLbForClients() { return bypassLbForClients; }
 
 }
