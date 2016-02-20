@@ -262,3 +262,8 @@ CREATE TABLE "restcomm_gateways" (
 "ttl" INT NOT NULL,
 "uri" LONGVARCHAR NOT NULL
 );
+
+CREATE TABLE "update_scripts" (
+"script" VARCHAR(255) NOT NULL,
+"date_executed" DATETIME NOT NULL
+);
