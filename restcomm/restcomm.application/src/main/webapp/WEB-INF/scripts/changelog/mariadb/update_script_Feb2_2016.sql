@@ -5,7 +5,7 @@
 #To run the script use mysql client:
 #mysql -u yourusername -p yourpassword yourdatabase < sql_update_script.sql
 
-USE restcomm;
+#USE restcomm;
 
 UPDATE restcomm_incoming_phone_numbers SET voice_url = '/restcomm-rvd/services/apps/rvdSayVerbDemo/controller', voice_application_sid = NULL WHERE sid = 'PNc2b81d68a221482ea387b6b4e2cbd9d7';
 UPDATE restcomm_incoming_phone_numbers SET voice_url = '/restcomm-rvd/services/apps/rvdCollectVerbDemo/controller', voice_application_sid = NULL WHERE sid = 'PN46678e5b01d44973bf184f6527bc33f7';

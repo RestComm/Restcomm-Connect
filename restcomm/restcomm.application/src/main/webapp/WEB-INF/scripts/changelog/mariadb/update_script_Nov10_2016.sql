@@ -5,7 +5,7 @@
 #To run the script use mysql client:
 #mysql -u yourusername -p yourpassword yourdatabase < sql_update_script.sql
 
-USE restcomm;
+#USE restcomm;
 
 SELECT IFNULL(column_name, '') INTO @colName
 FROM information_schema.columns 
