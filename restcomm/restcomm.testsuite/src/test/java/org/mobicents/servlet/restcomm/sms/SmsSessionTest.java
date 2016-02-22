@@ -289,6 +289,8 @@ public final class SmsSessionTest {
         replaceHeaders.add(header);
         call.initiateOutgoingMessage(null, to, proxy, new ArrayList<Header>(), replaceHeaders, body);
         assertLastOperationSuccess(call);
+        assertTrue(call.waitOutgoingMessageResponse(5000));
+        assertTrue(call.getLastReceivedResponse().getStatusCode() == 406);
         // Verify if message was properly discarded
         JsonArray array = SmsEndpointTool.getInstance().getSmsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         boolean found = false;
@@ -314,6 +316,8 @@ public final class SmsSessionTest {
         replaceHeaders.add(header);
         call.initiateOutgoingMessage(null, to, proxy, new ArrayList<Header>(), replaceHeaders, body);
         assertLastOperationSuccess(call);
+        assertTrue(call.waitOutgoingMessageResponse(5000));
+        assertTrue(call.getLastReceivedResponse().getStatusCode() == 406);
         // Verify if message was properly discarded
         JsonArray array = SmsEndpointTool.getInstance().getSmsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         boolean found = false;
