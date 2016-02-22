@@ -2045,7 +2045,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (!path.endsWith("/")) {
                         path += "/";
                     }
-                    path += "beep.wav";
+                    String entryAudio = configuration.subset("runtime-settings").getString("conference-entry-audio");
+                    path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
                     URI uri = null;
                     try {
                         uri = UriUtils.resolve(new URI(path));
@@ -2327,7 +2328,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (!path.endsWith("/")) {
                         path += "/";
                     }
-                    path += "beep.wav";
+                    String exitAudio = configuration.subset("runtime-settings").getString("conference-exit-audio");
+                    path += exitAudio == null || exitAudio.equals("") ? "alert.wav" : exitAudio;
                     URI uri = null;
                     try {
                         uri = UriUtils.resolve(new URI(path));
