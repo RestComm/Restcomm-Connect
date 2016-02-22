@@ -82,6 +82,17 @@
 
 	</div>
 
+	<!--
+    workaround for joint.js issue with Chrome 48  see more here:
+    https://github.com/RestComm/RestComm-Core/issues/872
+    https://groups.google.com/forum/#!topic/jointjs/qIKIiJCEClI
+	-->
+	<script type="text/javascript">
+		SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(toElement) {
+				return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
+		};
+	</script>
+
 	<script src="js/lib/jquery-1.11.0.min.js"></script>
 	<script src="js/lib/jquery-ui-1.10.3.custom.js"></script>
 	<script src="js/lib/upload/angular-file-upload-shim.min.js"></script>
