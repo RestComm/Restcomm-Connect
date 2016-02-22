@@ -27,9 +27,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.shiro.crypto.hash.Sha256Hash;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -56,13 +66,13 @@ public final class DiskCache extends UntypedActor {
         }
         // Create the cache path if specified.
         final File path = new File(temp);
-//        if (create) {
-//            path.mkdirs();
-//        }
+        //        if (create) {
+        //            path.mkdirs();
+        //        }
 
         // Make sure the cache path exists and is a directory.
         if (!path.exists() || !path.isDirectory()) {
-//            throw new IllegalArgumentException(location + " is not a valid cache location.");
+            //            throw new IllegalArgumentException(location + " is not a valid cache location.");
             path.mkdirs();
         }
         // Format the cache URI.
@@ -78,7 +88,7 @@ public final class DiskCache extends UntypedActor {
         this(location, uri, false);
     }
 
-    private URI cache(final Object message) throws IOException {
+    private URI cache(final Object message) throws IOException, URISyntaxException {
         final DiskCacheRequest request = (DiskCacheRequest) message;
 
         if (request.hash() == null) {
@@ -91,6 +101,7 @@ public final class DiskCache extends UntypedActor {
                 return URI.create(this.uri + destFile.getName());
 
             } else {
+                //Handle all the rest
                 // This is a request to cache a URI
                 String hash = null;
                 URI uri = null;
@@ -111,7 +122,33 @@ public final class DiskCache extends UntypedActor {
                     InputStream input = null;
                     OutputStream output = null;
                     try {
-                        input = uri.toURL().openStream();
+                        if (request.uri().getScheme().equalsIgnoreCase("https")) {
+                            //Handle the HTTPS URIs
+                            final HttpClient client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
+                            client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
+                            URI result = new URIBuilder()
+                                    .setScheme(uri.getScheme())
+                                    .setHost(uri.getHost())
+                                    .setPort(uri.getPort())
+                                    .setPath(uri.getPath())
+                                    .build();
+
+                            HttpGet httpRequest = new HttpGet(result);
+                            HttpResponse httpResponse = client.execute((HttpUriRequest) httpRequest);
+                            int code = httpResponse.getStatusLine().getStatusCode();
+
+                            if (code >= 400) {
+                                String requestUrl = httpRequest.getRequestLine().getUri();
+                                String errorReason = httpResponse.getStatusLine().getReasonPhrase();
+                                String httpErrorMessage = String.format(
+                                        "Error while fetching http resource: %s \n Http error code: %d \n Http error message: %s", requestUrl,
+                                        code, errorReason);
+                                logger.warning(httpErrorMessage);
+                            }
+                            input = httpResponse.getEntity().getContent();
+                        } else {
+                            input = uri.toURL().openStream();
+                        }
                         output = new FileOutputStream(tmp);
                         final byte[] buffer = new byte[4096];
                         int read = 0;
@@ -131,7 +168,8 @@ public final class DiskCache extends UntypedActor {
                         }
                     }
                 }
-                return URI.create(this.uri + hash + "." + extension);
+                URI result = URI.create(this.uri+ hash + "." + extension);
+                return result;
             }
         } else {
             // This is a check cache request

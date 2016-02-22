@@ -5,6 +5,8 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.gson.stream.JsonReader;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 
@@ -61,6 +63,15 @@ public class RestcommCallsTool {
         return accountsUrl;
     }
 
+    private String getCallRecordingsUrl(String deploymentUrl, String username, String callSid, Boolean json) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+
+        String url = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls/" + callSid + "/Recordings" + ((json) ? ".json" : "");
+        return url;
+    }
+
     public JsonArray getRecordings(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -78,7 +89,7 @@ public class RestcommCallsTool {
         try {
             jsonArray = parser.parse(response).getAsJsonArray();
         } catch (Exception e) {
-            logger.info("Exception during getRecordings: "+e);
+            logger.info("Exception during getRecordings for url: "+url+" exception: "+e);
             logger.info("Response object: "+response);
         }
         return jsonArray;
@@ -117,9 +128,18 @@ public class RestcommCallsTool {
         JsonParser parser = new JsonParser();
 
         if (json) {
-
-            JsonObject jsonObject = parser.parse(response).getAsJsonObject();
-
+            JsonObject jsonObject = null;
+            try {
+                JsonElement jsonElement = parser.parse(response);
+                if (jsonElement.isJsonObject()) {
+                    jsonObject = jsonElement.getAsJsonObject();
+                } else {
+                    logger.info("JsonElement: " + jsonElement.toString());
+                }
+            } catch (Exception e) {
+                logger.info("Exception during JSON response parsing, exception: "+e);
+                logger.info("JSON response: "+response);
+            }
             return jsonObject;
         } else {
             XStream xstream = new XStream();
@@ -135,16 +155,16 @@ public class RestcommCallsTool {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, true);
+        String url = getAccountsUrl(deploymentUrl, username, false);
 
         WebResource webResource = jerseyClient.resource(url);
 
         String response = null;
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        params.add("sid", String.valueOf(sid));
-
-        response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+        webResource = webResource.path(String.valueOf(sid)+".json");
+        logger.info("The URI to sent: "+webResource.getURI());
+        
+        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
 
         JsonParser parser = new JsonParser();
@@ -219,11 +239,33 @@ public class RestcommCallsTool {
         if (rcmlUrl != null)
             params.add("Url", rcmlUrl);
 
-        String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
+        JsonObject jsonObject = null;
 
+        try {
+            String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            JsonParser parser = new JsonParser();
+            jsonObject = parser.parse(response).getAsJsonObject();
+        } catch (Exception e) {
+            logger.info("Exception e: "+e);
+            UniformInterfaceException exception = (UniformInterfaceException)e;
+            jsonObject = new JsonObject();
+            jsonObject.addProperty("Exception",exception.getResponse().getStatus());
+        }
         return jsonObject;
     }
 
+    public JsonArray getCallRecordings(String deploymentUrl, String username, String authToken, String callWithRecordingsSid) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+
+        String url = getCallRecordingsUrl(deploymentUrl, username, callWithRecordingsSid, true);
+
+        WebResource webResource = jerseyClient.resource(url);
+
+        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        JsonParser parser = new JsonParser();
+        JsonArray jsonArray = parser.parse(response).getAsJsonArray();
+
+        return jsonArray;
+    }
 }

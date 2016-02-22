@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+	<Record action="http://127.0.0.1:8090/test" method="POST" finishOnKey="#" maxLength="10" playBeep="true"/>
+</Response>

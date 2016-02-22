@@ -111,7 +111,7 @@ public final class ConnectionTest {
                 ConnectionStateChanged event = expectMsgClass(ConnectionStateChanged.class);
                 assertTrue(ConnectionStateChanged.State.CLOSED == event.state());
                 // Open the connection half way by not passing an sdp.
-                final OpenConnection open = new OpenConnection(ConnectionMode.SendRecv);
+                final OpenConnection open = new OpenConnection(ConnectionMode.SendRecv, false);
                 connection.tell(open, observer);
                 event = expectMsgClass(ConnectionStateChanged.class);
                 assertTrue(ConnectionStateChanged.State.HALF_OPEN == event.state());

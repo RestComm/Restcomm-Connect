@@ -55,7 +55,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
 
   // are we editing details...
   //if($scope.phoneSid === $routeParams.phoneSid) {
@@ -76,14 +76,15 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   //}
 
   // query for available apps
-  $scope.availableApps = RCommApps.query();
+  $scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
   $scope.localApps = localApps;
 
   //$scope.countries = countries;
   $scope.countries = allCountries;
   $scope.providerCountries = providerCountries;
 
-  $scope.areaCodes = RCommAvailableNumbers.getAreaCodes();
+  $scope.areaCodesUS = RCommAvailableNumbers.getAreaCodes({countryCode: 'US'});
+  $scope.areaCodesCA = RCommAvailableNumbers.getAreaCodes({countryCode: 'CA'});
   $scope.selected = undefined;
 
   $scope.registerIncomingNumber = function(number) {
@@ -152,7 +153,8 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
   $scope.countries = allCountries;
   $scope.providerCountries = providerCountries;
 
-  $scope.areaCodes = RCommAvailableNumbers.getAreaCodes();
+  $scope.areaCodesUS = RCommAvailableNumbers.getAreaCodes({countryCode: 'US'});
+  $scope.areaCodesCA = RCommAvailableNumbers.getAreaCodes({countryCode: 'CA'});
   $scope.selected = undefined;
 
   $scope.setProvider = function(isProvider) {
@@ -167,8 +169,9 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
   };
 
   $scope.searching = false;
+  $scope.pageSize = 10;
 
-  $scope.findNumbers = function(areaCode, countryCode) {
+  $scope.findNumbers = function(pageNr) {
     $scope.searching = true;
     $scope.availableNumbers = null;
     var queryParams = {accountSid: $scope.sid, countryCode: $scope.newNumber.countryCode.code};
@@ -177,6 +180,8 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
     angular.forEach($scope.newNumber.capabilities, function(value, key) {
       this[value + 'Enabled'] = 'true';
     }, queryParams);
+    queryParams.RangeSize = $scope.pageSize || 10;
+    queryParams.RangeIndex = $scope.currentPage = pageNr || 1;
     $scope.availableNumbers = RCommAvailableNumbers.query(queryParams);
     $scope.availableNumbers.$promise.then(
       //success
@@ -189,6 +194,15 @@ var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dial
       }
     );
   }
+
+  $scope.nextRange = function() {
+    $scope.findNumbers(++$scope.currentPage);
+  }
+
+  $scope.prevRange = function() {
+    $scope.findNumbers(--$scope.currentPage);
+  }
+
 };
 
 

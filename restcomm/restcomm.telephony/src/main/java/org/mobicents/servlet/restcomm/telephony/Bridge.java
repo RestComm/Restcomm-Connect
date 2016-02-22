@@ -344,11 +344,17 @@ public class Bridge extends UntypedActor {
         @Override
         public void execute(Object message) throws Exception {
             // Disconnect both call legs from the bridge
-            final Leave leave = new Leave();
-            inboundCall.tell(leave, super.source);
-            inboundCall = null;
-            outboundCall.tell(leave, super.source);
-            outboundCall = null;
+            // NOTE: Null-check necessary in case bridge is stopped because
+            // of timeout and bridging process has not taken place.
+            if (inboundCall != null) {
+                inboundCall.tell(new Leave(), super.source);
+                inboundCall = null;
+            }
+
+            if (outboundCall != null) {
+                outboundCall.tell(new Leave(), super.source);
+                outboundCall = null;
+            }
 
             // Ask the MS Controller to stop
             // This will stop any current media operations and clean media resources

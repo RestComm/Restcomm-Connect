@@ -18,16 +18,18 @@ public class RvdInitializationServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config) ;
-        logger.info("Initializing RVD");
-        RvdConfiguration settings = RvdConfiguration.getInstance(config.getServletContext());
-        ModelMarshaler marshaler = new ModelMarshaler();
-        WorkspaceStorage workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);
-        UpgradeService upgradeService = new UpgradeService(workspaceStorage);
+        logger.info("Initializing RVD. Project version: " + RvdConfiguration.getRvdProjectVersion());
+        RvdConfiguration rvdConfiguration = RvdConfiguration.createOnce(config.getServletContext());
+        WorkspaceBootstrapper workspaceBootstrapper = new WorkspaceBootstrapper(rvdConfiguration.getWorkspaceBasePath());
+        workspaceBootstrapper.run();
 
+        ModelMarshaler marshaler = new ModelMarshaler();
+        WorkspaceStorage workspaceStorage = new WorkspaceStorage(rvdConfiguration.getWorkspaceBasePath(), marshaler);
+        UpgradeService upgradeService = new UpgradeService(workspaceStorage);
         try {
             upgradeService.upgradeWorkspace();
         } catch (StorageException e) {
-            logger.error("Error upgrading workspace at " + settings.getWorkspaceBasePath(), e);
+            logger.error("Error upgrading workspace at " + rvdConfiguration.getWorkspaceBasePath(), e);
         }
     }
 

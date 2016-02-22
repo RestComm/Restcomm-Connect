@@ -167,6 +167,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 											{name:'de',text: 'German'},
 											{name:'el',text: 'Greek'},
 											{name:'it',text: 'Italian'},
+											{name:'ja',text: 'Japanese'},
 											{name:'nl',text: 'Netherlands-Dutch'},
 											{name:'no',text: 'Norwegian'},
 											{name:'pl',text: 'Polish'},
@@ -177,7 +178,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 											{name:'sv',text: 'Swedish'},
 											{name:'th',text: 'Thai'},
 											{name:'tr',text: 'Turkish'}
-
 										 ];
 	$scope.methods = ['POST', 'GET'];
 
@@ -300,10 +300,14 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		.then( function () { return designerService.buildProject($scope.projectName) } )
 		.then(
 			function () {
+			    if ($scope.showGraph)
+			        $scope.drawGraph();
 				notifications.put({type:"success", message:"Project saved"});
 				console.log("Project saved and built");
 			},
 			function (reason) {
+			    if ($scope.showGraph)
+			        $scope.drawGraph();
 				if ( reason.exception.className == 'ValidationException' ) {
 					console.log("Validation error");
 					notifications.put({type:"warning", message:"Project saved with validation errors"});
@@ -589,7 +593,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			lnk.label(0, {
 				position: 0.5,
 				attrs: {
-					rect: { fill: '#EEE' },
+					rect: { fill: '#FFF' },
 					text: { fill: '#333', text: linkLabel, 'font-size': 10, 'font-family': 'Monaco', 'font-weight': 'bold' }
 				}
 			});
@@ -600,7 +604,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			// from the module name retrieve all the module (node) details
 			var node = nodeRegistry.getNode(name);
 			var label = node.label;
-			
+
 			var maxLineLength = _.max(label.split('\n'), function(l) { return l.length; }).length;
 
 			// Compute width/height of the rectangle based on the number

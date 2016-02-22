@@ -2,22 +2,10 @@
 	<h3 class="modal-title"><i class="fa fa-cog"></i> {{'designerSettingsModalSettingLabel' | translate}}</h3>
 </div>
 <div class="modal-body">
-	
+
 	<p class="lead">{{'designerSettingsModalRestcommAPILabel' | translate}}</p>
-	
+
 	<form name="settingsForm" novalidate>
-		<div class="help-block">{{'designerSettingsModalOverrideDefaultLabel' | translate}}</div>
-		<div class="row form-group">
-			<div class="col-md-6 input-group">
-				<span class="input-group-addon">{{'designerSettingsModalHostInput' | translate}}</span>
-				<input ng-model="settings.apiServerHost" auto-clear type="text" class="form-control">
-			</div>
-			<div class="col-md-6 input-group">
-				<span class="input-group-addon">{{'designerSettingsModalPortInput' | translate}}</span>
-				<input ng-model="settings.apiServerRestPort" auto-clear ng-pattern="/^[0-9]*$/" type="number" class="form-control">
-			</div>			
-		</div>
-	
 		<div class="help-block">{{'designerSettingsModalCredencialsLabel1' | translate}} <i>{{'designerSettingsModalCredencialsLabel2' | translate}}</i> {{'designerSettingsModalCredencialsLabel3' | translate}}</div>
 		<div class="row form-group">
 			<div class="col-md-6 input-group">
@@ -27,20 +15,10 @@
 			<div class="col-md-6 input-group">
 				<span class="input-group-addon">{{'designerSettingsModalPasswordInput' | translate}}</span>
 				<input ng-model="settings.apiServerPass" type="password" class="form-control">
-			</div>			
+			</div>
 		</div>
-	<!-- 
-		<br/>
-		<p class="lead">Application Store</p>
-		<div class="row form-group">
-			<div class="col-md-12 input-group">
-				<span class="input-group-addon">Domain</span>
-				<input ng-model="settings.appStoreDomain" type="text" class="form-control" placeholder="{{defaultSettings.appStoreDomain}}">
-			</div>		
-		</div>
--->
 		{{watchForm(settingsForm.$valid)}}
-		
+
 	</form>
 </div>
 <div class="modal-footer">

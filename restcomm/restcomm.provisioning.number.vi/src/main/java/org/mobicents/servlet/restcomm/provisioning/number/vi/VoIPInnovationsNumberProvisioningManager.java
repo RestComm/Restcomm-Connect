@@ -158,7 +158,7 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
                                         if(listFilters.getFaxEnabled() == null || (listFilters.getFaxEnabled() != null && listFilters.getFaxEnabled() == tn.t38())) {
                                             // XXX Cannot know whether DID is SMS capable. Need to update to VI API 3.0 - hrosa
                                             final PhoneNumber number = new PhoneNumber(name, phoneNumber, Integer.parseInt(lata.name()),
-                                                    center.name(), null, null, state.name(), null, "US", true, null, null, tn.t38(), null);
+                                                    center.name(), null, null, state.name(), null, "US", null, true, null, null, tn.t38(), null);
                                             numbers.add(number);
                                         }
                                     }

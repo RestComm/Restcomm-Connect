@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Leave;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Left;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -67,6 +68,7 @@ public final class Conference extends UntypedActor {
     private final State initializing;
     private final State waiting;
     private final State running;
+    private final State evicting;
     private final State stopping;
     private final State stopped;
     private final State failed;
@@ -85,12 +87,13 @@ public final class Conference extends UntypedActor {
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initialiing", new Initializing(source), null);
-        this.waiting = new State("waiting", new Waiting(source), null);
-        this.running = new State("running", new Running(source), null);
-        this.stopping = new State("stopping", new Stopping(source), null);
-        this.stopped = new State("stopped", new Stopped(source), null);
-        this.failed = new State("failed", new Failed(source), null);
+        this.initializing = new State("initialiing", new Initializing(source));
+        this.waiting = new State("waiting", new Waiting(source));
+        this.running = new State("running", new Running(source));
+        this.evicting = new State("evicting", new Evicting(source));
+        this.stopping = new State("stopping", new Stopping(source));
+        this.stopped = new State("stopped", new Stopped(source));
+        this.failed = new State("failed", new Failed(source));
 
         // State transitions
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -99,8 +102,9 @@ public final class Conference extends UntypedActor {
         transitions.add(new Transition(initializing, stopping));
         transitions.add(new Transition(initializing, failed));
         transitions.add(new Transition(waiting, running));
-        transitions.add(new Transition(waiting, stopping));
-        transitions.add(new Transition(running, stopping));
+        transitions.add(new Transition(waiting, evicting));
+        transitions.add(new Transition(running, evicting));
+        transitions.add(new Transition(evicting, stopping));
         transitions.add(new Transition(stopping, stopped));
         transitions.add(new Transition(stopping, failed));
 
@@ -159,6 +163,8 @@ public final class Conference extends UntypedActor {
             onAddParticipant((AddParticipant) message, self, sender);
         } else if (RemoveParticipant.class.equals(klass)) {
             onRemoveParticipant((RemoveParticipant) message, self, sender);
+        } else if (Left.class.equals(klass)) {
+            onLeft((Left) message, self, sender);
         } else if (JoinComplete.class.equals(klass)) {
             onJoinComplete((JoinComplete) message, self, sender);
         } else if (MediaServerControllerStateChanged.class.equals(klass)) {
@@ -230,6 +236,24 @@ public final class Conference extends UntypedActor {
         }
     }
 
+    private class Evicting extends AbstractAction {
+
+        public Evicting(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {
+            // Tell every participant to leave the conference room
+            // NOTE: calls list will only be update in the onLeft() event!
+            for (final ActorRef call : calls) {
+                final Leave leave = new Leave();
+                call.tell(leave, super.source);
+            }
+        }
+
+    }
+
     private class Stopping extends AbstractAction {
 
         public Stopping(ActorRef source) {
@@ -238,15 +262,6 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // Tell every call to leave the conference room.
-            if (!calls.isEmpty()) {
-                for (final ActorRef call : calls) {
-                    final Leave leave = new Leave();
-                    call.tell(leave, super.source);
-                }
-                calls.clear();
-            }
-
             // Ask the MS Controller to stop
             // This will stop any current media operations and clean media resources
             mscontroller.tell(new Stop(), super.source);
@@ -327,7 +342,7 @@ public final class Conference extends UntypedActor {
         if (is(initializing)) {
             this.fsm.transition(message, stopped);
         } else if (is(waiting) || is(running)) {
-            this.fsm.transition(message, stopping);
+            this.fsm.transition(message, evicting);
         }
     }
 
@@ -348,13 +363,29 @@ public final class Conference extends UntypedActor {
     private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
         if (isRunning()) {
             final ActorRef call = message.call();
-            if (calls.remove(call)) {
+            logger.info("################################## CONFERENCE CALLS: " + calls.size());
+            if (calls.contains(message.call()) && calls.size() == 1) {
+                // Only participant is leaving the conference
+                // Evict him and stop the conference
+                fsm.transition(message, evicting);
+            } else {
+                // More participants are present in the conference
+                // Kindly ask him to leave and let conference continue
                 final Leave leave = new Leave();
                 call.tell(leave, self);
             }
+        }
+    }
 
-            if (calls.size() == 0) {
-                // If no more participants we should stop it now.
+    private void onLeft(Left message, ActorRef self, ActorRef sender) throws Exception {
+        if (is(running) || is(waiting)) {
+            // Participant successfully left the conference.
+            // Simply update participants list
+            calls.remove(sender);
+        } else if (is(evicting)) {
+            // Another participant has been evicted.
+            // Stop the conference when ALL participants have been evicted
+            if (calls.remove(sender) && calls.isEmpty()) {
                 fsm.transition(message, stopping);
             }
         }
