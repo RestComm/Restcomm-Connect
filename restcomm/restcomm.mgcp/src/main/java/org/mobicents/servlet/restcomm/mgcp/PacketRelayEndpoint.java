@@ -29,7 +29,7 @@ import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
  */
 public final class PacketRelayEndpoint extends GenericEndpoint {
     public PacketRelayEndpoint(final ActorRef gateway, final MediaSession session, final NotifiedEntity entity,
-            final String domain) {
-        super(gateway, session, entity, new EndpointIdentifier("mobicents/relay/$", domain));
+            final String domain, long timeout) {
+        super(gateway, session, entity, new EndpointIdentifier("mobicents/relay/$", domain), timeout);
     }
 }

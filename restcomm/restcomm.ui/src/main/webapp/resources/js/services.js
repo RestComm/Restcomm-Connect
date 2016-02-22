@@ -27,27 +27,36 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     SessionService.set('sid', account.sid);
     SessionService.set(prefix + 'authenticated', true);
     SessionService.set(prefix + 'logged_user', account.friendly_name);
+    SessionService.set(prefix + 'email_address', account.email_address);
+    SessionService.set(prefix + 'auth_token', account.auth_token);
   };
 
-  var passwordUpdated = function() {
+  var passwordUpdated = function(newAuthToken) {
     SessionService.rename('_authenticated', 'authenticated');
     SessionService.rename('_logged_user', 'logged_user');
+    SessionService.rename('_email_address', 'email_address');
+    SessionService.rename('_auth_token', 'auth_token');
+    SessionService.set('auth_token', newAuthToken);
   };
 
   var uncacheSession = function() {
     SessionService.unset('sid');
     SessionService.unset('authenticated');
     SessionService.unset('logged_user');
+    SessionService.unset('email_address');
+    SessionService.unset('auth_token');
     SessionService.unset('_sid');
     SessionService.unset('_authenticated');
     SessionService.unset('_logged_user');
+    SessionService.unset('_email_address');
+    SessionService.unset('_auth_token');
   };
 
 
   return {
     login: function(credentials) {
       // TEMPORARY... FIXME!
-      var apiPath = "http://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
+      var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
 
 
       var login = $http.get(apiPath).
@@ -96,14 +105,14 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     },
     updatePassword: function(credentials, newPassword) {
       // TEMPORARY... FIXME!
-      var apiPath = "http://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts/" + this.getAccountSid() + ".json";
+      var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts/" + this.getAccountSid() + ".json";
       http://127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf.json
         var params = {};
       params["Auth_Token"] = md5.createHash(newPassword);
 
       var update = $http({method: 'PUT', url: apiPath, data: $.param(params), headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).
         success(function(data) {
-          passwordUpdated();
+          passwordUpdated(params["Auth_Token"]);
         }).
         error(function(data) {
           alert("Failed to update password. Please try again.");
@@ -123,7 +132,13 @@ rcServices.service('AuthService', function($http, $location, SessionService, md5
     },
     getWaitingReset: function() {
       return SessionService.get('_authenticated');
-    }
+    },
+    getEmailAddress: function() {
+      return SessionService.get('email_address');
+    },
+    getAuthToken: function() {
+        return SessionService.get('auth_token');
+    }    
   }
 });
 
@@ -454,7 +469,21 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
 });
 
 rcServices.factory('RCommApps', function($resource) {
-	  return $resource('/restcomm-rvd/services/apps');
+	  return $resource('/restcomm-rvd/services/projects');
+});
+
+rcServices.factory('RCVersion', function($resource) {
+   return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Version.:format', {
+        accountSid: '@accountSid',
+        format: 'json'
+   },
+        {
+          get: {
+            method: 'GET',
+            url: '/restcomm/2012-04-24/Accounts/:accountSid/Version.:format'
+          }
+        }
+  );
 });
 
 rcServices.factory('RCommAvailableNumbers', function($resource) {
@@ -473,7 +502,7 @@ rcServices.factory('RCommAvailableNumbers', function($resource) {
       getAreaCodes: {
         method: 'GET',
         isArray: true,
-        url: '/resources/json/area-codes.:format'
+        url: '/resources/json/area-codes-:countryCode.:format'
       },
       getAvailableCountries: {
         method: 'GET',

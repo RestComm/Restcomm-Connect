@@ -60,6 +60,7 @@ public final class DownloaderTest {
     }
 
     @Test
+    @Ignore
     public void testGet() throws URISyntaxException, IOException {
         new JavaTestKit(system) {
             {

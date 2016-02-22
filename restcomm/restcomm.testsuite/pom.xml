@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>restcomm</artifactId>
 		<groupId>com.telestax.servlet</groupId>
-		<version>7.4.0-SNAPSHOT</version>
+		<version>7.6.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -295,6 +295,18 @@
 			<groupId>org.mobicents.arquillian.container</groupId>
 			<artifactId>mss-arquillian-mediaserver-extension</artifactId>
 			<version>${mss.arquillian.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.icegreen</groupId>
+			<artifactId>greenmail</artifactId>
+			<version>1.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.email.api</artifactId>
+			<version>7.6.0-SNAPSHOT</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

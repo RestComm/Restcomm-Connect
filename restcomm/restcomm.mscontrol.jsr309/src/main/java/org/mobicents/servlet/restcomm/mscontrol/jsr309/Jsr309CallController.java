@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.media.mscontrol.EventType;
@@ -48,7 +50,9 @@ import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
 import javax.media.mscontrol.mediagroup.signals.SignalDetector;
 import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
 import javax.media.mscontrol.mixer.MediaMixer;
+import javax.media.mscontrol.networkconnection.CodecPolicy;
 import javax.media.mscontrol.networkconnection.NetworkConnection;
+import javax.media.mscontrol.networkconnection.SdpPortManager;
 import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
 import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -118,6 +122,8 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
+    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
+
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
@@ -137,6 +143,7 @@ public class Jsr309CallController extends MediaServerController {
     private String remoteSdp;
     private String connectionMode;
     private boolean callOutbound;
+    private boolean webrtc;
 
     // Conference runtime stuff
     private ActorRef bridge;
@@ -170,13 +177,13 @@ public class Jsr309CallController extends MediaServerController {
         this.recorderListener = new RecorderListener();
 
         // Initialize the states for the FSM
-        this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initializing", new Initializing(source), null);
-        this.active = new State("active", new Active(source), null);
-        this.pending = new State("pending", new Pending(source), null);
-        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source), null);
-        this.inactive = new State("inactive", new Inactive(source), null);
-        this.failed = new State("failed", new Failed(source), null);
+        this.uninitialized = new State("uninitialized", null);
+        this.initializing = new State("initializing", new Initializing(source));
+        this.active = new State("active", new Active(source));
+        this.pending = new State("pending", new Pending(source));
+        this.updatingMediaSession = new State("updating media session", new UpdatingMediaSession(source));
+        this.inactive = new State("inactive", new Inactive(source));
+        this.failed = new State("failed", new Failed(source));
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -206,6 +213,7 @@ public class Jsr309CallController extends MediaServerController {
         this.localSdp = "";
         this.remoteSdp = "";
         this.callOutbound = false;
+        this.webrtc = false;
         this.connectionMode = "inactive";
         this.recording = Boolean.FALSE;
         this.playing = Boolean.FALSE;
@@ -466,6 +474,7 @@ public class Jsr309CallController extends MediaServerController {
             this.callOutbound = message.isOutbound();
             this.connectionMode = message.getConnectionMode();
             this.remoteSdp = message.getSessionDescription();
+            this.webrtc = message.isWebrtc();
 
             fsm.transition(message, initializing);
         }
@@ -827,6 +836,18 @@ public class Jsr309CallController extends MediaServerController {
 
                 // Create network connection
                 networkConnection = mediaSession.createNetworkConnection(NetworkConnection.BASIC);
+
+                // Distinguish between WebRTC and SIP calls
+                Parameters sdpParameters = mediaSession.createParameters();
+                Map<String, String> configurationData = new HashMap<String, String>();
+                configurationData.put("webrtc", webrtc ? "yes" : "no");
+                sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
+                networkConnection.setParameters(sdpParameters);
+
+                CodecPolicy codecPolicy = new CodecPolicy();
+                codecPolicy.setMediaTypeCapabilities(CODEC_POLICY_AUDIO);
+
+                networkConnection.getSdpPortManager().setCodecPolicy(codecPolicy);
                 networkConnection.getSdpPortManager().addListener(sdpListener);
                 if (callOutbound) {
                     networkConnection.getSdpPortManager().generateSdpOffer();

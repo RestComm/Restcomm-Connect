@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-// Numbers : SIP Clients : List ------------------------------------------------
+// Numbers : RestComm Clients : List ------------------------------------------------
 
 rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, SessionService, RCommClients, RCommApps) {
 
@@ -45,7 +45,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
     );
   };
 
-  // delete sip client -------------------------------------------------------
+  // delete RestComm client -------------------------------------------------------
 
   $scope.confirmClientDelete = function(client) {
     confirmClientDelete(client, $dialog, $scope, RCommClients);
@@ -54,7 +54,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
   $scope.clientsList = RCommClients.query({accountSid:$scope.sid});
 });
 
-// Numbers : SIP Clients : Details (also used for Modal) -----------------------
+// Numbers : RestComm Clients : Details (also used for Modal) -----------------------
 
 var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
 
@@ -123,7 +123,7 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     var params = createSIPClientParams(client);
     RCommClients.register({accountSid: $scope.sid}, $.param(params),
       function() { // success
-        Notifications.success('SIP Client "' + client.login + '" created successfully!');
+        Notifications.success('RestComm Client "' + client.login + '" created successfully!');
         $modalInstance.close();
       },
       function() { // error
@@ -136,7 +136,7 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     var params = createSIPClientParams(client);
     RCommClients.update({accountSid: $scope.sid, clientSid: $scope.clientSid}, $.param(params),
       function() { // success
-        Notifications.success('Client "' + client.login + '" updated successfully!');
+        Notifications.success('RestComm Client "' + client.login + '" updated successfully!');
       },
       function() { // error
         Notifications.error('Failed to update client "' + client.login + '".');
@@ -150,8 +150,8 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
 }
 
 var confirmClientDelete = function(client, $dialog, $scope, RCommClients, $location) {
-  var title = 'Delete SIP Client \'' + client.login + '\'';
-  var msg = 'Are you sure you want to delete SIP Client ' + client.login + ' (' + client.friendly_name +  ') ? This action cannot be undone.';
+  var title = 'Delete RestComm Client \'' + client.login + '\'';
+  var msg = 'Are you sure you want to delete RestComm Client ' + client.login + ' (' + client.friendly_name +  ') ? This action cannot be undone.';
   var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Delete!', cssClass: 'btn-danger'}];
 
   $dialog.messageBox(title, msg, btns)

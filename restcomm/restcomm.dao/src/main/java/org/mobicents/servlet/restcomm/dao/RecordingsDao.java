@@ -32,7 +32,10 @@ public interface RecordingsDao {
 
     Recording getRecording(Sid sid);
 
+    // otsakir: is this really needed?
     Recording getRecordingByCall(Sid callSid);
+
+    List<Recording> getRecordingsByCall(Sid callSid);
 
     List<Recording> getRecordings(Sid accountSid);
 

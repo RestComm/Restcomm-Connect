@@ -191,7 +191,8 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final Boolean mmsCapable = readBoolean(map.get("mms_capable"));
         final Boolean faxCapable = readBoolean(map.get("fax_capable"));
         final Boolean pureSip = readBoolean(map.get("pure_sip"));
-        return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, apiVersion,
+        final String cost = readString(map.get("cost"));
+        return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
                 smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip);
@@ -230,6 +231,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("mms_capable", incomingPhoneNumber.isMmsCapable());
         map.put("fax_capable", incomingPhoneNumber.isFaxCapable());
         map.put("pure_sip", incomingPhoneNumber.isPureSip());
+        map.put("cost", incomingPhoneNumber.getCost());
         return map;
     }
 }

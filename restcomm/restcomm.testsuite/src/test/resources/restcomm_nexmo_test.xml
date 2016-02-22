@@ -46,6 +46,9 @@
 		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
 		<authenticate>true</authenticate>
 
+		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
+		<ping-interval>60</ping-interval>
+
 		<!-- If set to true Restcomm will authenticate users and incoming messages 
 			from those users -->
 		<authenticate>true</authenticate>

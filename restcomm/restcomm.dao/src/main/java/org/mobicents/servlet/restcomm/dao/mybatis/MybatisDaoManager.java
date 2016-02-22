@@ -37,6 +37,7 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
+import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
@@ -74,6 +75,7 @@ public final class MybatisDaoManager implements DaoManager {
     private TranscriptionsDao transcriptionsDao;
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
+    private InstanceIdDao instanceIdDao;
 
     public MybatisDaoManager() {
         super();
@@ -172,6 +174,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public InstanceIdDao getInstanceIdDao() {
+        return instanceIdDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -205,7 +212,8 @@ public final class MybatisDaoManager implements DaoManager {
                 final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
                 final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
                 final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
-                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile);
+                final String bucketRegion = amazonS3Configuration.getString("bucket-region");
+                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile,bucketRegion);
             }
         }
         start(sessions);
@@ -235,5 +243,6 @@ public final class MybatisDaoManager implements DaoManager {
         usageDao = new MybatisUsageDao(sessions);
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
+        instanceIdDao = new MybatisInstanceIdDao(sessions);
     }
 }
