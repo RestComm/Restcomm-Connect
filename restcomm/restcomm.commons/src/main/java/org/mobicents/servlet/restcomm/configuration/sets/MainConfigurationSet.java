@@ -58,9 +58,11 @@ public class MainConfigurationSet extends ConfigurationSet {
         boolean resolveRelativeUrlWithHostname;
         String resolveRelativeUrlHostname;
         boolean bypassLb = false;
+        int timeout = 5000;
 
         try {
-            this.responseTimeout = Integer.parseInt(source.getProperty(HTTP_RESPONSE_TIMEOUT));
+            timeout = Integer.parseInt(source.getProperty(HTTP_RESPONSE_TIMEOUT));
+            this.responseTimeout = timeout;
         } catch (Exception e) {
             throw new RuntimeException("Error initializing '" + HTTP_RESPONSE_TIMEOUT + "' configuration setting", e);
         }
