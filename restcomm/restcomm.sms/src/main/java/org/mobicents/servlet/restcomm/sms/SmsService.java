@@ -123,8 +123,12 @@ public final class SmsService extends UntypedActor {
 
         // ignore composing messages and accept content type including text only
         // https://github.com/Mobicents/RestComm/issues/494
-        if (!request.getContentType().contains("text/plain"))
+        if (!request.getContentType().contains("text/plain")) {
+            SipServletResponse reject = request.createResponse(SipServletResponse.SC_NOT_ACCEPTABLE);
+            reject.addHeader("Reason","Content Type is not text plain");
+            reject.send();
             return;
+        }
 
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
