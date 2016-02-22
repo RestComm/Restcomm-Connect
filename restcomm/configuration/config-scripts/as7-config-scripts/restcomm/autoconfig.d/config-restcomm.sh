@@ -55,6 +55,8 @@ configRestcomm() {
 	if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http://${bind_address}:8080/restcomm/audio<\/prompts-uri>|" \
+			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http://${bind_address}:8080/restcomm/cache<\/cache-uri>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
 			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$bind_address<\/external-ip>|" \
 			-e "s|<external-address>.*<\/external-address>|<external-address>$PUBLIC_IP<\/external-address>|" \
@@ -68,6 +70,8 @@ configRestcomm() {
 		if [ -n "$static_address" ]; then
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http://${bind_address}:8080/restcomm/audio<\/prompts-uri>|" \
+			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http://${bind_address}:8080/restcomm/cache<\/cache-uri>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
 			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
 			-e "s|<external-address>.*<\/external-address>|<external-address>$static_address<\/external-address>|" \
@@ -78,6 +82,8 @@ configRestcomm() {
 		else
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+			-e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http://${bind_address}:8080/restcomm/audio<\/prompts-uri>|" \
+			-e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http://${bind_address}:8080/restcomm/cache<\/cache-uri>|" \
 			-e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
 			-e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
 			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
