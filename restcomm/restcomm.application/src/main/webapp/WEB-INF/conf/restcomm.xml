@@ -17,6 +17,10 @@
 		<!-- The location where the audio prompts are located. -->
 		<prompts-uri>/restcomm/audio</prompts-uri>
 
+		<!-- Conference audio files, these will be played when a participant joins or leaves the conference -->
+		<conference-entry-audio>beep.wav</conference-entry-audio>
+		<conference-exit-audio>alert.wav</conference-exit-audio>
+
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
 		<cache-uri>/restcomm/cache</cache-uri>
