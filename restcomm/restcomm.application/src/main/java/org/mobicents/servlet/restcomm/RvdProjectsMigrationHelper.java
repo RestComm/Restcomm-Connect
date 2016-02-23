@@ -432,11 +432,11 @@ public class RvdProjectsMigrationHelper {
     }
 
     public void storeWorkspaceStatus(boolean migrationSucceeded) throws RvdProjectsMigrationException {
-        String pathName = workspacePath + File.separator + ".workspaceStatus";
+        String pathName = workspacePath + File.separator + ".version";
         File file = new File(pathName);
         Gson gson = new Gson();
-        String version = Version.getVersion();
-        WorkspaceStatus ws = new WorkspaceStatus(migrationSucceeded, version);
+        String version = org.mobicents.servlet.restcomm.Version.getVersion();
+        Version ws = new Version(migrationSucceeded, version);
         String data = gson.toJson(ws);
         try {
             FileUtils.writeStringToFile(file, data, "UTF-8");
@@ -447,7 +447,7 @@ public class RvdProjectsMigrationHelper {
     }
 
     public boolean isMigrationExecuted() {
-        String pathName = workspacePath + File.separator + ".workspaceStatus";
+        String pathName = workspacePath + File.separator + ".version";
         File file = new File(pathName);
         if (!file.exists()) {
             return false;
@@ -462,9 +462,13 @@ public class RvdProjectsMigrationHelper {
         JsonElement element = parser.parse(data).getAsJsonObject();
         if (element != null) {
             Gson gson = new Gson();
-            WorkspaceStatus ws = gson.fromJson(element, WorkspaceStatus.class);
-            String currentVersion = Version.getVersion();
-            return ws.getVersionLastRun().equals(currentVersion);
+            Version workspaceVersion = gson.fromJson(element, Version.class);
+            String restcommVersion = org.mobicents.servlet.restcomm.Version.getVersion();
+            if (!workspaceVersion.getVersion().equals(restcommVersion) && !workspaceVersion.getStatus()) {
+                return false;
+            } else {
+                return true;
+            }
         }
         return false;
     }
@@ -538,27 +542,27 @@ public class RvdProjectsMigrationHelper {
         return this.embeddedMigration;
     }
 
-    private class WorkspaceStatus {
+    private class Version {
 
-        boolean namingMigrationSucceeded;
-        String versionLastRun;
+        boolean status;
+        String version;
 
-        public WorkspaceStatus() {
+        public Version() {
 
         }
 
-        public WorkspaceStatus(boolean namingMigrationSucceeded, String versionLastRun) {
+        public Version(boolean namingMigrationSucceeded, String versionLastRun) {
             super();
-            this.namingMigrationSucceeded = namingMigrationSucceeded;
-            this.versionLastRun = versionLastRun;
+            this.status = namingMigrationSucceeded;
+            this.version = versionLastRun;
         }
 
-        public boolean getNamingMigrationSucceeded() {
-            return namingMigrationSucceeded;
+        public boolean getStatus() {
+            return status;
         }
 
-        public String getVersionLastRun() {
-            return versionLastRun;
+        public String getVersion() {
+            return version;
         }
 
     }

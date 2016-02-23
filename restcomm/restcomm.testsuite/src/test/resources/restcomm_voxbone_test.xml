@@ -17,7 +17,7 @@
 		<!-- Try to run RVD workspace projects migration to apply new naming
 			convention and synchronization with database entities. This execution
 			will occurs max one time per Restcomm version. To force a new run, 
-			remove the file .workspaceStatus inside RVD workspace. -->
+			remove the file .version inside RVD workspace. -->
 		<rvd-workspace-migration-enabled>false</rvd-workspace-migration-enabled>
 
 		<!-- The location where the audio prompts are located. -->
