@@ -62,7 +62,6 @@ public class MainConfigurationSet extends ConfigurationSet {
 
         try {
             timeout = Integer.parseInt(source.getProperty(HTTP_RESPONSE_TIMEOUT));
-            this.responseTimeout = timeout;
         } catch (Exception e) {
             throw new RuntimeException("Error initializing '" + HTTP_RESPONSE_TIMEOUT + "' configuration setting", e);
         }
@@ -87,6 +86,7 @@ public class MainConfigurationSet extends ConfigurationSet {
         } catch (Exception e) {
             throw new RuntimeException("Error initializing '" + USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY + "' configuration setting", e);
         }
+        this.responseTimeout = timeout;
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
         bypassLbForClients = bypassLb;
