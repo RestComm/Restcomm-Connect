@@ -18,11 +18,12 @@ public class CallDetailRecordFilter {
     private final String sender;
     private final String status;
     private final Date startTime;  // to initialize it pass string arguments with  yyyy-MM-dd format
+    private final Date endTime;
     private final String parentCallSid;
     private final Integer limit;
     private final Integer offset;
 
-    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime,
+    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
             String parentCallSid, Integer limit, Integer offset) throws ParseException {
         this.accountSid = accountSid;
 
@@ -45,6 +46,13 @@ public class CallDetailRecordFilter {
             this.startTime = date;
         } else
             this.startTime = null;
+
+        if (endTime != null) {
+            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = parser.parse(endTime);
+            this.endTime = date;
+        } else
+            this.endTime = null;
     }
 
     public String getSid() {
@@ -65,6 +73,10 @@ public class CallDetailRecordFilter {
 
     public Date getStartTime() {
         return startTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
     }
 
     public String getParentCallSid() {

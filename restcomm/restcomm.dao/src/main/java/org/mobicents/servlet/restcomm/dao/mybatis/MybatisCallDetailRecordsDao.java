@@ -141,6 +141,16 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
+    public List<CallDetailRecord> getCallDetailRecordsByEndTime(final DateTime endTime) {
+        return getCallDetailRecords(namespace + "getCallDetailRecordsByEndTime", endTime.toDate());
+    }
+
+    @Override
+    public List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(final DateTime endTime) {
+        return getCallDetailRecords(namespace + "getCallDetailRecordsByStarTimeAndEndTime", endTime.toDate());
+    }
+
+    @Override
     public List<CallDetailRecord> getCallDetailRecordsByParentCall(final Sid parentCallSid) {
         return getCallDetailRecords(namespace + "getCallDetailRecordsByParentCall", parentCallSid.toString());
     }
