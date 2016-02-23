@@ -55,6 +55,7 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
@@ -609,9 +610,11 @@ public final class Call extends UntypedActor {
             session.setHandler("CallManager");
             // Issue: https://telestax.atlassian.net/browse/RESTCOMM-608
             // If this is a call to Restcomm client or SIP URI bypass LB
-            if (type.equals(CreateCall.Type.CLIENT) || type.equals(CreateCall.Type.SIP)) {
-                ((SipSessionExt) session).setBypassLoadBalancer(true);
-                ((SipSessionExt) session).setBypassProxy(true);
+            if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+                if (type.equals(CreateCall.Type.CLIENT) || type.equals(CreateCall.Type.SIP)) {
+                    ((SipSessionExt) session).setBypassLoadBalancer(true);
+                    ((SipSessionExt) session).setBypassProxy(true);
+                }
             }
             String offer = null;
             if (mediaSessionInfo.usesNat()) {

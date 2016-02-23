@@ -28,6 +28,8 @@ import java.util.Date;
 
 import javax.activation.MimetypesFileTypeMap;
 
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
@@ -55,12 +57,13 @@ public class S3AccessTool {
     private String securityKey;
     private String bucketName;
     private String folder;
+    private String bucketRegion;
     private boolean reducedRedundancy;
     private int daysToRetainPublicUrl;
     private boolean removeOriginalFile;
 
     public S3AccessTool(final String accessKey, final String securityKey, final String bucketName, final String folder,
-            final boolean reducedRedundancy, final int daysToRetainPublicUrl, final boolean removeOriginalFile) {
+            final boolean reducedRedundancy, final int daysToRetainPublicUrl, final boolean removeOriginalFile,final String bucketRegion) {
         this.accessKey = accessKey;
         this.securityKey = securityKey;
         this.bucketName = bucketName;
@@ -68,11 +71,14 @@ public class S3AccessTool {
         this.reducedRedundancy = reducedRedundancy;
         this.daysToRetainPublicUrl = daysToRetainPublicUrl;
         this.removeOriginalFile = removeOriginalFile;
+        this.bucketRegion = bucketRegion;
     }
 
     public URI uploadFile(final String fileToUpload) {
-        AWSCredentials credentials = new BasicAWSCredentials(accessKey, securityKey);
+        AWSCredentials credentials =new BasicAWSCredentials(accessKey, securityKey);
         AmazonS3 s3client = new AmazonS3Client(credentials);
+        s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
+        logger.info("S3 Region: "+bucketRegion.toString());
         try {
             StringBuffer bucket = new StringBuffer();
             bucket.append(bucketName);

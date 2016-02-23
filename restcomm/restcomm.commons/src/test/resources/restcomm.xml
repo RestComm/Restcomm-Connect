@@ -66,6 +66,9 @@
 		<!-- Default value: true -->
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
+		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set-->
+		<bypass-lb-for-clients>false</bypass-lb-for-clients>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
@@ -280,6 +283,7 @@
 	
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
+		<response-timeout>5000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.
 			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->
