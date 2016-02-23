@@ -25,6 +25,7 @@ import java.util.Iterator;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -88,6 +89,18 @@ public class SmsEndpointTool {
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 
         return jsonObject;
+    }
+
+    public JsonArray getSmsList(String deploymentUrl, String username, String authToken) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        String url = getAccountsUrl(deploymentUrl, username, true);
+        WebResource webResource = jerseyClient.resource(url);
+        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        JsonParser parser = new JsonParser();
+        JsonArray jsonArray = null;
+        jsonArray = parser.parse(response).getAsJsonArray();
+        return jsonArray;
     }
 
 }

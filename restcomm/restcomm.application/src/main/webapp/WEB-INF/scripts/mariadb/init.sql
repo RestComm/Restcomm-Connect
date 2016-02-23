@@ -279,6 +279,11 @@ ttl INT NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
 
+CREATE TABLE update_scripts (
+script VARCHAR(255) NOT NULL,
+date_executed DATETIME NOT NULL
+);
+
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
 Date("2012-04-24"),
