@@ -190,6 +190,7 @@ public class SmsTest {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
         bobCall.listenForDisconnect();
 
         assertTrue(aliceCall.waitForMessage(5 * 1000));

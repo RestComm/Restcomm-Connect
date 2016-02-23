@@ -60,6 +60,9 @@
 		<!-- Default value: true -->
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
+		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set-->
+		<bypass-lb-for-clients>false</bypass-lb-for-clients>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>

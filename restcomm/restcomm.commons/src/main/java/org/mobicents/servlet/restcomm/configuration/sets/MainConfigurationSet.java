@@ -38,21 +38,34 @@ import org.apache.commons.lang.StringUtils;
 @Immutable
 public class MainConfigurationSet extends ConfigurationSet {
 
-    public static final String SSL_MODE_KEY = "http-client.ssl-mode";
+    private static final String SSL_MODE_KEY = "http-client.ssl-mode";
+    private static final String HTTP_RESPONSE_TIMEOUT = "http-client.response-timeout";
     private static final SslMode SSL_MODE_DEFAULT = SslMode.strict;
     private final SslMode sslMode;
-    public static final String USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY = "http-client.use-hostname-to-resolve-relative-url";
-    public static final String HOSTNAME_TO_USE_FOR_RELATIVE_URLS_KEY = "http-client.hostname";
+    private final int responseTimeout;
+    private static final String USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY = "http-client.use-hostname-to-resolve-relative-url";
+    private static final String HOSTNAME_TO_USE_FOR_RELATIVE_URLS_KEY = "http-client.hostname";
     private static final boolean RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT = true;
     private final boolean useHostnameToResolveRelativeUrls;
     private final String hostname;
+
+    public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-or-proxy-for-clients";
+    private final boolean bypassLbForClients;
 
     public MainConfigurationSet(ConfigurationSource source) {
         super(source);
         SslMode sslMode;
         boolean resolveRelativeUrlWithHostname;
         String resolveRelativeUrlHostname;
+        boolean bypassLb = false;
+        int timeout = 5000;
 
+        try {
+            timeout = Integer.parseInt(source.getProperty(HTTP_RESPONSE_TIMEOUT));
+            this.responseTimeout = timeout;
+        } catch (Exception e) {
+            throw new RuntimeException("Error initializing '" + HTTP_RESPONSE_TIMEOUT + "' configuration setting", e);
+        }
         // http-client.ssl-mode
         try {
             sslMode = SSL_MODE_DEFAULT;
@@ -60,7 +73,7 @@ public class MainConfigurationSet extends ConfigurationSet {
             if ( ! StringUtils.isEmpty(sslModeRaw) )
                 sslMode = SslMode.valueOf(sslModeRaw);
         } catch (Exception e) {
-            throw new RuntimeException("Error initializing '" + SSL_MODE_KEY + "' configuration setting", e);
+            throw new RuntimeException("Error initializing '" + SSL_MODE_KEY  + "' configuration setting", e);
         }
         this.sslMode = sslMode;
 
@@ -70,15 +83,21 @@ public class MainConfigurationSet extends ConfigurationSet {
             resolveRelativeUrlWithHostname = RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT;
             resolveRelativeUrlWithHostname = Boolean.valueOf(source.getProperty(USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY));
             resolveRelativeUrlHostname = source.getProperty("http-client.hostname");
+            bypassLb = Boolean.valueOf(source.getProperty("bypass-lb-or-proxy-for-clients"));
         } catch (Exception e) {
             throw new RuntimeException("Error initializing '" + USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY + "' configuration setting", e);
         }
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
+        bypassLbForClients = bypassLb;
     }
 
     public SslMode getSslMode() {
         return sslMode;
+    }
+
+    public int getResponseTimeout() {
+        return responseTimeout;
     }
 
     public boolean isUseHostnameToResolveRelativeUrls() {
@@ -88,5 +107,7 @@ public class MainConfigurationSet extends ConfigurationSet {
     public String getHostname() {
         return hostname;
     }
+
+    public boolean getBypassLbForClients() { return bypassLbForClients; }
 
 }
