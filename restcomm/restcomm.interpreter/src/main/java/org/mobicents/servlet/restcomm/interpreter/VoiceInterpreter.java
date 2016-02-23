@@ -2045,7 +2045,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (!path.endsWith("/")) {
                         path += "/";
                     }
-                    path += "beep.wav";
+                    String entryAudio = configuration.subset("runtime-settings").getString("conference-entry-audio");
+                    path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
                     URI uri = null;
                     try {
                         uri = UriUtils.resolve(new URI(path));
@@ -2319,6 +2320,31 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 // Stop Observing the conference
                 conference.tell(new StopObserving(super.source), null);
+
+                // Play beep when participant leave the conference.
+                // Do not play beep if this was the last participant to leave the conference, because there is no one to listen to the beep.
+                if(conferenceInfo.participants() != null && conferenceInfo.participants().size() !=0 ){
+                    String path = configuration.subset("runtime-settings").getString("prompts-uri");
+                    if (!path.endsWith("/")) {
+                        path += "/";
+                    }
+                    String exitAudio = configuration.subset("runtime-settings").getString("conference-exit-audio");
+                    path += exitAudio == null || exitAudio.equals("") ? "alert.wav" : exitAudio;
+                    URI uri = null;
+                    try {
+                        uri = UriUtils.resolve(new URI(path));
+                    } catch (final Exception exception) {
+                        final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        notifications.addNotification(notification);
+                        sendMail(notification);
+                        final StopInterpreter stop = new StopInterpreter();
+                        source.tell(stop, source);
+                        return;
+                    }
+                    final Play play = new Play(uri, 1);
+                    conference.tell(play, source);
+                }
 
                 if (endOnExit) {
                     // Stop the conference if endConferenceOnExit is true
