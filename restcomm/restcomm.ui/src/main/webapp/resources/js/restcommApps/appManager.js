@@ -83,6 +83,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 		for (var i=0; i<localApps.length; i++) {
 			var localApp = localApps[i];
 			var app = {};
+			app.sid = localApp.sid;
 			app.title = localApp.projectName;
 			app.projectName = localApp.projectName;
 			app.isLocal = true;

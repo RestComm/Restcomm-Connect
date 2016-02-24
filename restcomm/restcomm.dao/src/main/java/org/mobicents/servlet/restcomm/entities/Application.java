@@ -199,5 +199,6 @@ public final class Application {
         public void setKind(final Kind kind) {
             this.kind = kind;
         }
+
     }
 }

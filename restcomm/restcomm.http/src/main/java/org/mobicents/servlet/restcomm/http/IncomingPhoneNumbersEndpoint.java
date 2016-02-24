@@ -183,6 +183,13 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
         builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         builder.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+
+        builder.setUssdUrl(getUrl("UssdUrl", data));
+        builder.setUssdMethod(getMethod("UssdMethod", data));
+        builder.setUssdFallbackUrl(getUrl("UssdFallbackUrl", data));
+        builder.setUssdFallbackMethod(getMethod("UssdFallbackMethod",data));
+        builder.setUssdApplicationSid(getSid("UssdApplicationSid",data));
+
         final Configuration configuration = this.configuration.subset("runtime-settings");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
@@ -404,7 +411,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setHasVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
+                incomingPhoneNumber.setVoiceApplicationSid(null);
+            else
+                incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
         if (data.containsKey("SmsUrl")) {
             URI uri = getUrl("SmsUrl", data);
@@ -421,7 +431,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         }
         if (data.containsKey("SmsApplicationSid")) {
-            incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("SmsApplicationSid") ) )
+                incomingPhoneNumber.setSmsApplicationSid(null);
+            else
+                incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+
         }
 
         if (data.containsKey("VoiceCapable")) {
@@ -438,6 +452,31 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
         if (data.containsKey("FaxCapable")) {
             incomingPhoneNumber.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
+        }
+
+        if (data.containsKey("UssdUrl")) {
+            URI uri = getUrl("UssdUrl", data);
+            incomingPhoneNumber.setUssdUrl(isEmpty(uri.toString()) ? null : uri);
+        }
+
+        if (data.containsKey("UssdMethod")) {
+            incomingPhoneNumber.setUssdMethod(getMethod("UssdMethod", data));
+        }
+
+        if (data.containsKey("UssdFallbackUrl")) {
+            URI uri = getUrl("UssdFallbackUrl", data);
+            incomingPhoneNumber.setUssdFallbackUrl(isEmpty(uri.toString()) ? null : uri);
+        }
+
+        if (data.containsKey("UssdFallbackMethod")) {
+            incomingPhoneNumber.setUssdFallbackMethod(getMethod("UssdFallbackMethod", data));
+        }
+
+        if (data.containsKey("UssdApplicationSid")) {
+            if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("UssdApplicationSid")))
+                incomingPhoneNumber.setUssdApplicationSid(null);
+            else
+                incomingPhoneNumber.setUssdApplicationSid(getSid("UssdApplicationSid", data));
         }
 
         incomingPhoneNumber.setDateUpdated(DateTime.now());

@@ -23,6 +23,10 @@
     SELECT * FROM restcomm_clients WHERE account_sid=#{account_sid};
   </select>
   
+  <select id="getAllClients" resultType="hashmap">
+  	SELECT * FROM restcomm_clients;
+  </select>
+  
   <delete id="removeClient" parameterType="string">
     DELETE FROM restcomm_clients WHERE sid=#{sid};
   </delete>
