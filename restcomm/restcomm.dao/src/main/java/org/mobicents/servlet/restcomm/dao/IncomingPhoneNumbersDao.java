@@ -45,4 +45,6 @@ public interface IncomingPhoneNumbersDao {
     void removeIncomingPhoneNumbers(Sid accountSid);
 
     void updateIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
+
+    List<IncomingPhoneNumber> getAllIncomingPhoneNumbers();
 }

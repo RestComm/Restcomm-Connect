@@ -37,11 +37,10 @@
     <h3 class="text-muted details-header">Voice</h3>
     <fieldset>
         <label class="pull-left" for="voice-url">
-            <h4 class="account-detail-field-name">Voice Request URL</h4>
+            <h4 class="account-detail-field-name">Voice Request</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" apps="localApps"></rc-endpoint-url>
-            
+            <rc-endpoint-url details-loaded="clientDetails.$resolved" method-var="clientDetails.voice_method" url-var="clientDetails.voice_url" sid-var="clientDetails.voice_application_sid" apps="localApps" url-only-var="false"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>

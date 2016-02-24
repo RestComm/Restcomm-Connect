@@ -104,7 +104,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         builder.setVoiceMethod(getMethod("VoiceMethod", data));
         builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
         builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-        builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        // skip null/empty VoiceApplicationSid's (i.e. leave null)
+        if (data.containsKey("VoiceApplicationSid")) {
+            if ( ! org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
+                builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        }
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
@@ -273,7 +277,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
             result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("VoiceApplicationSid"))) {
+                result = result.setVoiceApplicationSid(null);
+            } else {
+                result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            }
         }
         return result;
     }
