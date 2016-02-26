@@ -113,4 +113,5 @@ public final class ApplicationConverter extends AbstractConverter implements Jso
             object.add("kind", JsonNull.INSTANCE);
         }
     }
+
 }
