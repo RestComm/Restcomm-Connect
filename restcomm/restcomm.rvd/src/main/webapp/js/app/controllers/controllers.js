@@ -50,6 +50,7 @@ App.controller('homeCtrl', function ($scope, authInfo) {
 angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'projectLogService', 'notifications', function ($scope, $routeParams, projectLogService, notifications) {
 	//console.log('in projectLogCtrl');
 	$scope.projectName = $routeParams.projectName;
+	$scope.applicationSid = $routeParams.applicationSid;
 	$scope.logData = '';
 	
 	function retrieveLog() {
@@ -72,7 +73,7 @@ angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$routeParams', 'p
 	}
 	$scope.resetLog = resetLog;
 	
-	retrieveLog($scope.projectName);
+	retrieveLog($scope.applicationSid);
 }]);
 
 App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal','$q', '$http', function ($scope, authentication, $location, $modal, $q, $http) {
@@ -147,7 +148,7 @@ App.controller('translateController', function($translate, $scope) {
 
 angular.module('Rvd').controller('wavManagerController', function ($rootScope, $scope, $http, $upload) {
 	$scope.deleteWav = function (wavItem) {
-		$http({url: 'services/projects/' + $scope.projectName + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
+		$http({url: 'services/projects/' + $scope.applicationSid + '/wavs?filename=' + wavItem.filename, method: "DELETE"})
 		.success(function (data, status, headers, config) {
 			console.log("Deleted " + wavItem.filename);
 			throwRemoveWavEvent(wavItem.filename);
@@ -163,7 +164,7 @@ angular.module('Rvd').controller('wavManagerController', function ($rootScope, $
 		    for (var i = 0; i < $files.length; i++) {
 		      var file = $files[i];
 		      $scope.upload = $upload.upload({
-		        url: 'services/projects/' + $scope.projectName + '/wavs',
+		        url: 'services/projects/' + $scope.applicationSid + '/wavs',
 		        file: file,
 		      }).success(function(data, status, headers, config) {
 		        // file is uploaded successfully

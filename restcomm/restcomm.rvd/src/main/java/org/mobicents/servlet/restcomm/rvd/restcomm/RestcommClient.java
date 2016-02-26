@@ -233,7 +233,9 @@ public class RestcommClient {
         return password;
     }
 
-    public URI getRestcommBaseUrl() { return restcommBaseUrl; }
+    public URI getRestcommBaseUrl() {
+        return restcommBaseUrl;
+    }
 
     public Request get(String path) {
         return new Request(this, "GET", path);

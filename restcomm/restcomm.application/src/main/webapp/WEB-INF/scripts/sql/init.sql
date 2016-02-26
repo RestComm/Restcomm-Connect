@@ -87,7 +87,13 @@ CREATE TABLE "restcomm_incoming_phone_numbers" (
 "sms_capable" BOOLEAN, 
 "mms_capable" BOOLEAN,
 "fax_capable" BOOLEAN,
-"pure_sip" BOOLEAN
+"pure_sip" BOOLEAN,
+"cost" VARCHAR(10),
+"ussd_url" MEDIUMTEXT,
+"ussd_method" VARCHAR(4),
+"ussd_fallback_url" MEDIUMTEXT,
+"ussd_fallback_method" VARCHAR(4),
+"ussd_application_sid" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_applications" (
@@ -181,7 +187,7 @@ CREATE TABLE "restcomm_sms_messages" (
 "account_sid" VARCHAR(34) NOT NULL,
 "sender" VARCHAR(15) NOT NULL,
 "recipient" VARCHAR(64) NOT NULL,
-"body" VARCHAR(160) NOT NULL,
+"body" VARCHAR(999) NOT NULL,
 "status" VARCHAR(20) NOT NULL,
 "direction" VARCHAR(14) NOT NULL,
 "price" VARCHAR(8) NOT NULL,
