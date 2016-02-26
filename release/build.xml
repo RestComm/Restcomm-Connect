@@ -16,7 +16,7 @@
   <property name="sipservlets-build" value="668"/>
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-  <property name="restcomm-media.version" value="3.0.2.Final"/>
+  <property name="restcomm-media.version" value="4.0.1"/>
   <property name="restcomm-media.build" value="33"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
@@ -102,7 +102,7 @@
   <!--Media-->
   <available file="${restcomm-media.distro.zip.path}" property="got.restcomm-media"/>
   <target name="get-restcomm-media" unless="got.restcomm-media">
-    <echo>Downloading Restcomm Media version: ${restcomm-media.version}</echo>
+    <echo>Downloading Restcomm Media version: ${restcomm-media.version}.${restcomm-media.build}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-media.download.url}"/>
     </exec>
@@ -207,6 +207,10 @@
     <copy failonerror="true" file="${configuration.directory}/olympus.war" tofile="${release.as7.dir}/standalone/deployments/olympus.war"/>
     <touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy"/>
   </target>
+
+  <!-- Replace old MGCP driver with the new one from RMS -->
+  <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/mgcp-driver*.jar"/>
+  <copy failonerror="true" file="${release.as7.dir}/mediaserver/lib/mgcp-driver*.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/"/>
 
   <target name="copy-docs">
     <!--docs-->
