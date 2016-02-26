@@ -347,6 +347,18 @@ configMediaServerManager() {
 	fi
 }
 
+configMediaServerMSaddress() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+	if [ -n "$MS_ADDRESS" ]; then
+		sed -e  "s|<remote-address>.*<\/remote-address>|<remote-address>$MS_ADDRESS<\/remote-address>|" $FILE > $FILE.bak
+		mv $FILE.bak $FILE
+		echo "Updated MSaddress"
+	fi
+}
+
+
+
 # MAIN
 echo 'Configuring RestComm...'
 #configJavaOpts
@@ -360,4 +372,5 @@ configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
 configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$PUBLIC_IP"
+configMediaServerMSaddress "$BIND_ADDRESS"
 echo 'Configured RestComm!'
