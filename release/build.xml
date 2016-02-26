@@ -208,7 +208,6 @@
     <touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy"/>
 
     <!-- Replace old MGCP driver with the new one from RMS -->
-    <!-- <delete failonerror="true" file="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/mgcp-driver*"/> -->
     <delete failonerror="true">
       <fileset dir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" includes="mgcp-driver*"/>
     </delete>
