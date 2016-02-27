@@ -16,8 +16,8 @@
   <property name="sipservlets-build" value="668"/>
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-  <property name="restcomm-media.version" value="4.0.1"/>
-  <property name="restcomm-media.build" value="33"/>
+  <property name="restcomm-media.version" value="4.1.0"/>
+  <property name="restcomm-media.build" value="40"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
@@ -206,11 +206,17 @@
     <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/webrtc.war"/>
     <copy failonerror="true" file="${configuration.directory}/olympus.war" tofile="${release.as7.dir}/standalone/deployments/olympus.war"/>
     <touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy"/>
-  </target>
 
-  <!-- Replace old MGCP driver with the new one from RMS -->
-  <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/mgcp-driver*.jar"/>
-  <copy failonerror="true" file="${release.as7.dir}/mediaserver/lib/mgcp-driver*.jar" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/"/>
+    <!-- Replace old MGCP driver with the new one from RMS -->
+    <delete failonerror="true">
+      <fileset dir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" includes="mgcp-driver*"/>
+    </delete>
+    <copy failonerror="true" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/">
+      <fileset dir="${release.as7.dir}/mediaserver/lib/">
+         <include name="mgcp-driver-*"/>
+      </fileset>
+    </copy>
+  </target>
 
   <target name="copy-docs">
     <!--docs-->
