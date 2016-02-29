@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.http;
 
+import java.io.StringReader;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -40,13 +41,11 @@ public class RestcommCallsTool {
     }
 
     private String getAccountsUrl(String deploymentUrl, String username, Boolean json) {
-        if (accountsUrl == null) {
-            if (deploymentUrl.endsWith("/")) {
-                deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-            }
-
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls" + ((json) ? ".json" : "");
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
+
+        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls" + ((json) ? ".json" : "");
 
         return accountsUrl;
     }
