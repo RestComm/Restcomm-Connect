@@ -688,6 +688,73 @@ public class DialActionTest {
     }
 
     @Test
+    public void testDialActionHangupWithLCM() throws Exception {
+
+        stubFor(post(urlPathMatching("/DialAction.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-Call-Sid").toString().split(":")[1].trim();
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCall.listenForDisconnect();
+
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        aliceCall.listenForCancel();
+
+        logger.info("About to execute LCM to hangup the call");
+        RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid,"completed", null);
+
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+
+//        logger.info("&&&&&&&&&&&&&&&&&&&&&& Alice about to listen for CANCEL");
+//        SipTransaction sipTransaction = aliceCall.waitForCancel(50 * 1000);
+//        assertNotNull(sipTransaction);
+//        aliceCall.respondToCancel(sipTransaction,200,"Alice-OK-To-Cancel",3600);
+//        aliceCall.respondToCancel(sipTransaction,487,"Alice-Request-Terminated",3600);
+
+        Thread.sleep(10 * 1000);
+
+        logger.info("About to check the DialAction Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/DialAction.*")));
+        assertTrue(requests.size() == 1);
+        String requestBody = requests.get(0).getBodyAsString();
+        String[] params = requestBody.split("&");
+        assertTrue(requestBody.contains("DialCallStatus=null"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
+        assertTrue(requestBody.contains("From=bob"));
+        assertTrue(requestBody.contains("DialCallDuration=0"));
+        assertTrue(requestBody.contains("CallStatus=completed"));
+        Iterator iter = Arrays.asList(params).iterator();
+    }
+
+    @Test
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
         
         stubFor(post(urlPathMatching("/DialAction.*"))

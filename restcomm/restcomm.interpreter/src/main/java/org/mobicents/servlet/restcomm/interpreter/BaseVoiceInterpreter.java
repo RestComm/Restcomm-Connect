@@ -597,6 +597,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final UntypedActorContext context = getContext();
             context.stop(self());
         }
+        if (downloader != null && !downloader.isTerminated()) {
+            getContext().stop(downloader);
+        }
     }
 
     void sendMail(final Notification notification) {

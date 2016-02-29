@@ -1680,7 +1680,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (call != null) {
                 try {
-                    logger.info("Trying to get outboundCall Info");
+                    logger.info("Trying to get inbound call Info");
                     final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
                     Future<Object> future = (Future<Object>) ask(call, new GetCallInfo(), expires);
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
@@ -2373,7 +2373,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context.stop(mailerNotify);
             if (mailerService != null)
                 context.stop(mailerService);
-            context.stop(downloader);
             context.stop(asrService);
             context.stop(faxService);
             context.stop(cache);

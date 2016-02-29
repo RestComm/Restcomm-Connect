@@ -200,4 +200,10 @@ public final class Downloader extends UntypedActor {
         }
         return builder.build();
     }
+
+    @Override
+    public void postStop() {
+        logger.debug("Downloader at post stop");
+        super.postStop();
+    }
 }
