@@ -63,13 +63,19 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeAccountSid(final Sid accountSid, final HierarchicalStreamWriter writer) {
-        writer.startNode("AccountSid");
-        writer.setValue(accountSid.toString());
-        writer.endNode();
+        if (accountSid != null) {
+            writer.startNode("AccountSid");
+            writer.setValue(accountSid.toString());
+            writer.endNode();
+        }
     }
 
     protected void writeAccountSid(final Sid accountSid, final JsonObject object) {
-        object.addProperty("account_sid", accountSid.toString());
+        if (accountSid != null) {
+            object.addProperty("account_sid", accountSid.toString());
+        } else {
+            object.add("account_sid", JsonNull.INSTANCE);
+        }
     }
 
     protected void writeApiVersion(final String apiVersion, final HierarchicalStreamWriter writer) {
@@ -102,7 +108,8 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeDateCreated(final DateTime dateCreated, final JsonObject object) {
-        object.addProperty("date_created", new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateCreated.toDate()));
+        object.addProperty("date_created",
+                new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateCreated.toDate()));
     }
 
     protected void writeDateUpdated(final DateTime dateUpdated, final HierarchicalStreamWriter writer) {
@@ -112,7 +119,8 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeDateUpdated(final DateTime dateUpdated, final JsonObject object) {
-        object.addProperty("date_updated", new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateUpdated.toDate()));
+        object.addProperty("date_updated",
+                new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateUpdated.toDate()));
     }
 
     protected void writeDuration(final double duration, final HierarchicalStreamWriter writer) {
@@ -192,13 +200,11 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeSmsFallbackUrl(final URI smsFallbackUrl, final HierarchicalStreamWriter writer) {
-        writer.startNode("SmsFallbackUrl");
         if (smsFallbackUrl != null) {
+            writer.startNode("SmsFallbackUrl");
             writer.setValue(smsFallbackUrl.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     protected void writeSmsFallbackUrl(final URI smsFallbackUrl, final JsonObject object) {
@@ -226,13 +232,11 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeSmsUrl(final URI smsUrl, final HierarchicalStreamWriter writer) {
-        writer.startNode("SmsUrl");
         if (smsUrl != null) {
+            writer.startNode("SmsUrl");
             writer.setValue(smsUrl.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     protected void writeSmsUrl(final URI smsUrl, final JsonObject object) {
@@ -259,6 +263,70 @@ public abstract class AbstractConverter implements Converter {
         }
     }
 
+    protected void writeUssdFallbackUrl(final URI ussdFallbackUrl, final HierarchicalStreamWriter writer) {
+        if (ussdFallbackUrl != null) {
+            writer.startNode("UssdFallbackUrl");
+            writer.setValue(ussdFallbackUrl.toString());
+            writer.endNode();
+        }
+    }
+
+    protected void writeUssdFallbackUrl(final URI ussdFallbackUrl, final JsonObject object) {
+        if (ussdFallbackUrl != null) {
+            object.addProperty("ussd_fallback_url", ussdFallbackUrl.toString());
+        } else {
+            object.add("ussd_fallback_url", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeUssdFallbackMethod(final String ussdFallbackMethod, final HierarchicalStreamWriter writer) {
+        writer.startNode("UssdFallbackMethod");
+        if (ussdFallbackMethod != null) {
+            writer.setValue(ussdFallbackMethod);
+        }
+        writer.endNode();
+    }
+
+    protected void writeUssdFallbackMethod(final String ussdFallbackMethod, final JsonObject object) {
+        if (ussdFallbackMethod != null) {
+            object.addProperty("ussd_fallback_method", ussdFallbackMethod);
+        } else {
+            object.add("ussd_fallback_method", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeUssdUrl(final URI ussdUrl, final HierarchicalStreamWriter writer) {
+        if (ussdUrl != null) {
+            writer.startNode("UssdUrl");
+            writer.setValue(ussdUrl.toString());
+            writer.endNode();
+        }
+    }
+
+    protected void writeUssdUrl(final URI ussdUrl, final JsonObject object) {
+        if (ussdUrl != null) {
+            object.addProperty("ussd_url", ussdUrl.toString());
+        } else {
+            object.add("ussd_url", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeUssdMethod(final String ussdMethod, final HierarchicalStreamWriter writer) {
+        writer.startNode("UssdMethod");
+        if (ussdMethod != null) {
+            writer.setValue(ussdMethod);
+        }
+        writer.endNode();
+    }
+
+    protected void writeUssdMethod(final String ussdMethod, final JsonObject object) {
+        if (ussdMethod != null) {
+            object.addProperty("ussd_method", ussdMethod);
+        } else {
+            object.add("ussd_method", JsonNull.INSTANCE);
+        }
+    }
+
     protected void writeStatus(final String status, final HierarchicalStreamWriter writer) {
         writer.startNode("Status");
         writer.setValue(status);
@@ -270,13 +338,11 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeStatusCallback(final URI statusCallback, final HierarchicalStreamWriter writer) {
-        writer.startNode("StatusCallback");
         if (statusCallback != null) {
+            writer.startNode("StatusCallback");
             writer.setValue(statusCallback.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     protected void writeStatusCallback(final URI statusCallback, final JsonObject object) {
@@ -358,13 +424,11 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeVoiceApplicationSid(final Sid voiceApplicationSid, final HierarchicalStreamWriter writer) {
-        writer.startNode("VoiceApplicationSid");
         if (voiceApplicationSid != null) {
+            writer.startNode("VoiceApplicationSid");
             writer.setValue(voiceApplicationSid.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     protected void writeVoiceApplicationSid(final Sid voiceApplicationSid, final JsonObject object) {
@@ -402,13 +466,11 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeVoiceFallbackUrl(final URI voiceFallbackUri, final HierarchicalStreamWriter writer) {
-        writer.startNode("VoiceFallbackUrl");
         if (voiceFallbackUri != null) {
+            writer.startNode("VoiceFallbackUrl");
             writer.setValue(voiceFallbackUri.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     protected void writeVoiceFallbackUrl(final URI voiceFallbackUri, final JsonObject object) {
@@ -436,13 +498,11 @@ public abstract class AbstractConverter implements Converter {
     }
 
     protected void writeVoiceUrl(final URI voiceUrl, final HierarchicalStreamWriter writer) {
-        writer.startNode("VoiceUrl");
         if (voiceUrl != null) {
+            writer.startNode("VoiceUrl");
             writer.setValue(voiceUrl.toString());
-        } else {
-            writer.setValue(null);
+            writer.endNode();
         }
-        writer.endNode();
     }
 
     protected void writeVoiceUrl(final URI voiceUrl, final JsonObject object) {

@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,11 +57,10 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.EmailResponse;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
+import org.mobicents.servlet.restcomm.api.Mail;
+import org.mobicents.servlet.restcomm.email.EmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -82,6 +82,7 @@ import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
@@ -521,10 +522,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                EMAIL_SENDER=builder.getUser();
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
@@ -538,7 +536,12 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
-        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        try {
+            base = UriUtils.resolve(new URI(base)).toString();
+        } catch (URISyntaxException e) {
+            logger.error("URISyntaxException when trying to resolve Error-Dictionary URI: "+e);
+        }
         StringBuilder buffer = new StringBuilder();
         buffer.append(base);
         if (!base.endsWith("/")) {
@@ -579,20 +582,23 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 
     ActorRef parser(final String xml) {
         final UntypedActorContext context = getContext();
-        return context.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
+            return context.actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
 
-            @Override
-            public UntypedActor create() throws Exception {
-                return new Parser(xml);
-            }
-        }));
+                @Override
+                public UntypedActor create() throws IOException {
+                    return new Parser(xml, self());
+                }
+            }));
     }
 
     void postCleanup() {
         if (smsSessions.isEmpty() && outstandingAsrRequests == 0) {
             final UntypedActorContext context = getContext();
             context.stop(self());
+        }
+        if (downloader != null && !downloader.isTerminated()) {
+            getContext().stop(downloader);
         }
     }
 
@@ -869,7 +875,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             path += "reject.wav";
             URI uri = null;
             try {
-                uri = URI.create(path);
+                uri = UriUtils.resolve(new URI(path));
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1179,7 +1185,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 verb = (Tag) message;
             }
             // Hang up the call.
-            call.tell(new Hangup(), source);
+            if (ParserFailed.class.equals(klass)) {
+                call.tell(new Hangup("Problem_to_parse_downloaded_RCML"), source);
+            } else {
+                call.tell(new Hangup(), source);
+            }
         }
     }
 
@@ -1398,7 +1408,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             path += "/";
                         }
                         path += "one-second-silence.wav";
-                        final URI uri = URI.create(path);
+                        final URI uri = UriUtils.resolve(new URI(path));
                         for (int counter = 0; counter < length; counter++) {
                             gatherPrompts.add(uri);
                         }
@@ -1631,7 +1641,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             path += recordingSid.toString() + ".wav";
             httpRecordingUri += recordingSid.toString() + ".wav";
             recordingUri = URI.create(path);
-            publicRecordingUri = URI.create(httpRecordingUri);
+            try {
+                publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+            } catch (URISyntaxException e) {
+                logger.error("URISyntaxException when trying to resolve Recording URI: "+e);
+            }
             Record record = null;
             if (playBeep) {
                 final List<URI> prompts = new ArrayList<URI>(1);
@@ -1641,7 +1655,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
                 path += "beep.wav";
                 try {
-                    prompts.add(URI.create(path));
+                    prompts.add(UriUtils.resolve(new URI(path)));
                 } catch (final Exception exception) {
                     final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                     notifications.addNotification(notification);
@@ -1802,8 +1816,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     boolean amazonS3Enabled = configuration.subset("amazon-s3").getBoolean("enabled");
                     if (amazonS3Enabled) {
                         //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
-                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getUri().toURL().toString()));
-                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getUri().toURL().toString()));
+                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getFileUri().toURL().toString()));
+                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getFileUri().toURL().toString()));
                     } else {
                         // Redirect to the action url.
                         String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
@@ -1811,7 +1825,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                             httpRecordingUri += "/";
                         }
                         httpRecordingUri += recordingSid.toString() + ".wav";
-                        URI publicRecordingUri = URI.create(httpRecordingUri);
+                        URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
                         parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
                         parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                     }
@@ -1820,15 +1834,19 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, null);
+                        downloader.tell(request, self());
+                        // A little clean up.
+                        recordingSid = null;
+                        recordingUri = null;
+                        return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         downloader.tell(request, null);
+                        // A little clean up.
+                        recordingSid = null;
+                        recordingUri = null;
                     }
-                    // A little clean up.
-                    recordingSid = null;
-                    recordingUri = null;
 //                    final StopInterpreter stop = new StopInterpreter();
 //                    source.tell(stop, source);
                 }

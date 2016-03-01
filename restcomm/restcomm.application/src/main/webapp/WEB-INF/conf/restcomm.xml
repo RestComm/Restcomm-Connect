@@ -13,20 +13,30 @@
 	<runtime-settings>
 		<!-- The API version that will be used. -->
 		<api-version>2012-04-24</api-version>
+		
+		<!-- Try to run RVD workspace projects migration to apply new naming
+			convention and synchronization with database entities. This execution
+			will occurs max one time per Restcomm version. To force a new run, 
+			remove the file .version inside RVD workspace. -->
+		<rvd-workspace-migration-enabled>true</rvd-workspace-migration-enabled>
 
 		<!-- The location where the audio prompts are located. -->
-		<prompts-uri>http://127.0.0.1:8080/restcomm/audio</prompts-uri>
+		<prompts-uri>/restcomm/audio</prompts-uri>
+
+		<!-- Conference audio files, these will be played when a participant joins or leaves the conference -->
+		<conference-entry-audio>beep.wav</conference-entry-audio>
+		<conference-exit-audio>alert.wav</conference-exit-audio>
 
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
-		<cache-uri>http://127.0.0.1:8080/restcomm/cache</cache-uri>
+		<cache-uri>/restcomm/cache</cache-uri>
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings</recordings-uri>
+		<recordings-uri>/restcomm/recordings</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors</error-dictionary-uri>
+		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful 
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -46,6 +56,9 @@
 			from those users -->
 		<authenticate>true</authenticate>
 
+		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
+		<ping-interval>60</ping-interval>
+
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
 		<normalize-numbers-for-outbound-calls>false</normalize-numbers-for-outbound-calls>
@@ -59,6 +72,10 @@
 			for B2BUA sessions with the discovered external IP Address of the peer -->
 		<!-- Default value: true -->
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
+
+		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set.
+		     Default valur false so call are routed through LB-->
+		<bypass-lb-for-clients>false</bypass-lb-for-clients>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -128,6 +145,7 @@
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
+				<permission>RestComm:*:EmailMessages</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>
@@ -207,12 +225,17 @@
 		<host></host>
 		<user></user>
 		<password></password>
+		<port></port>
+		<!-- Default mail address used to report issues related to Restcomm management,
+		mostly associated with bootstrap executions, like workspace migration, etc. -->
+		<default-email-address></default-email-address>
 	</smtp-notify>
 
 	<smtp-service>
 		<host></host>
 		<user></user>
 		<password></password>
+		<port></port>
 	</smtp-service>
 
 	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
@@ -230,6 +253,7 @@
 		<reduced-redundancy>false</reduced-redundancy>
 		<days-to-retain-public-url>180</days-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
+		<bucket-region>us-east-1</bucket-region>
 	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer. 
@@ -272,6 +296,7 @@
 	
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
+		<response-timeout>5000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.
 			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->

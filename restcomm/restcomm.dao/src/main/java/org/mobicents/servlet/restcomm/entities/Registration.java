@@ -39,16 +39,18 @@ public final class Registration implements Comparable<Registration> {
     private final int timeToLive;
     private final String location;
     private final String userAgent;
+    private final boolean webrtc;
 
     public Registration(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String addressOfRecord,
-            final String displayName, final String userName, final String userAgent, final int timeToLive, final String location) {
+            final String displayName, final String userName, final String userAgent, final int timeToLive,
+            final String location, final boolean webRTC) {
         this(sid, dateCreated, dateUpdated, DateTime.now().plusSeconds(timeToLive), addressOfRecord, displayName, userName,
-                userAgent, timeToLive, location);
+                userAgent, timeToLive, location, webRTC);
     }
 
     public Registration(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateExpires,
             final String addressOfRecord, final String displayName, final String userName, final String userAgent,
-            final int timeToLive, final String location) {
+            final int timeToLive, final String location, final boolean webRTC) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -60,6 +62,7 @@ public final class Registration implements Comparable<Registration> {
         this.location = location;
         this.userAgent = userAgent;
         this.timeToLive = timeToLive;
+        this.webrtc = webRTC;
     }
 
     public Sid getSid() {
@@ -102,10 +105,14 @@ public final class Registration implements Comparable<Registration> {
         return timeToLive;
     }
 
+    public boolean isWebRTC() {
+        return webrtc;
+    }
+
     public Registration setTimeToLive(final int timeToLive) {
         final DateTime now = DateTime.now();
         return new Registration(sid, dateCreated, now, now.plusSeconds(timeToLive), addressOfRecord, displayName, userName,
-                userAgent, timeToLive, location);
+                userAgent, timeToLive, location, webrtc);
     }
 
     @Override

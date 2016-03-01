@@ -82,6 +82,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
         writeCallerName(cdr.getCallerName(), writer);
         writeUri(cdr.getUri(), writer);
         writeSubResources(cdr, writer);
+        writeRingDuration(cdr.getRingDuration(), writer);
         writer.endNode();
     }
 
@@ -115,6 +116,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
         writeForwardedFrom(cdr.getForwardedFrom(), object);
         writeCallerName(cdr.getCallerName(), object);
         writeUri(cdr.getUri(), object);
+        writeRingDuration(cdr.getRingDuration(), object);
         writeSubResources(cdr, object);
         return object;
     }
@@ -163,6 +165,18 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
 
     private void writeDuration(final Integer duration, final JsonObject object) {
         object.addProperty("duration", duration);
+    }
+
+    private void writeRingDuration(final Integer ringDuration, final HierarchicalStreamWriter writer) {
+        writer.startNode("Ring_duration");
+        if (ringDuration != null) {
+            writer.setValue(ringDuration.toString());
+        }
+        writer.endNode();
+    }
+
+    private void writeRingDuration(final Integer ringDuration, final JsonObject object) {
+        object.addProperty("ring_duration", ringDuration);
     }
 
     private void writeForwardedFrom(final String forwardedFrom, final HierarchicalStreamWriter writer) {

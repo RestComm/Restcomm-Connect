@@ -73,6 +73,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setApiVersion("2012-04-24");
         builder.setHasVoiceCallerIdLookup(false);
         builder.setVoiceUrl(url);
+        builder.setCost("0.50");
         builder.setVoiceMethod(method);
         builder.setVoiceFallbackUrl(url);
         builder.setVoiceFallbackMethod(method);
@@ -125,6 +126,7 @@ public class IncomingPhoneNumbersDaoTest {
         number.setStatusCallbackMethod(method);
         number.setVoiceApplicationSid(application);
         number.setSmsUrl(url);
+        number.setCost("0.50");
         number.setSmsMethod(method);
         number.setSmsFallbackUrl(url);
         number.setSmsFallbackMethod(method);

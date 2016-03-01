@@ -25,8 +25,8 @@ import java.util.Currency;
 import java.util.Date;
 
 import org.joda.time.DateTime;
-
 import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -135,6 +135,14 @@ public final class DaoUtils {
         }
     }
 
+    public static Application.Kind readApplicationKind(final Object object) {
+        if (object != null) {
+            return Application.Kind.getValueOf((String) object);
+        } else {
+            return null;
+        }
+    }
+
     public static String writeAccountStatus(final Account.Status status) {
         return status.toString();
     }
@@ -178,6 +186,14 @@ public final class DaoUtils {
     public static String writeCurrency(final Currency currency) {
         if (currency != null) {
             return currency.getCurrencyCode();
+        } else {
+            return null;
+        }
+    }
+
+    public static String writeApplicationKind(Application.Kind kind) {
+        if (kind != null) {
+            return kind.toString();
         } else {
             return null;
         }

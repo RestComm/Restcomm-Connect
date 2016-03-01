@@ -104,7 +104,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         builder.setVoiceMethod(getMethod("VoiceMethod", data));
         builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
         builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-        builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        // skip null/empty VoiceApplicationSid's (i.e. leave null)
+        if (data.containsKey("VoiceApplicationSid")) {
+            if ( ! org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
+                builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        }
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
@@ -124,6 +128,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(client);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -138,6 +147,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     protected Response getClients(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -174,6 +184,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -188,6 +199,10 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         if (client == null) {
             client = createFrom(new Sid(accountSid), data);
             dao.addClient(client);
+        } else if (!client.getAccountSid().toString().equals(accountSid)) {
+            return status(CONFLICT)
+                    .entity("A client with the same name was already created by another account. Please, choose a different name and try again.")
+                    .build();
         }
 
         if (APPLICATION_XML_TYPE == responseType) {
@@ -211,6 +226,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             dao.updateClient(update(client, data));
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(client);
@@ -257,7 +277,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
             result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("VoiceApplicationSid"))) {
+                result = result.setVoiceApplicationSid(null);
+            } else {
+                result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            }
         }
         return result;
     }

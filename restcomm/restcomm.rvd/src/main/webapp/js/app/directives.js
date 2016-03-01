@@ -83,16 +83,20 @@ angular.module('Rvd').directive('lookupTarget', [function () {
 		require: "^lookupContext",
 		link: function (scope, element, attrs, ctrls) {
 			scope.$on("inject-variable", function (event, args) {
-				if ( element[0].selectionStart >= 0 ) {
-					var selStart = element[0].selectionStart;
-					var value = scope.$eval(attrs.ngModel) || "";
-					value = value.substring(0,selStart) + "$"+args+ (value.substring(selStart) == "" ? "" : ("" + value.substring(selStart)));
-					scope.$eval(attrs.ngModel + "='"+value+"'");
+				if (args.replace) {
+                    scope.$eval(attrs.ngModel + "='"+"$"+args.value+"'");
+				} else {
+                    if ( element[0].selectionStart >= 0 ) {
+                        var selStart = element[0].selectionStart;
+                        var value = scope.$eval(attrs.ngModel) || "";
+                        value = value.substring(0,selStart) + "$"+args.value+ (value.substring(selStart) == "" ? "" : ("" + value.substring(selStart)));
+                        // escape single quotes
+                        value = value.replace(/'/g,"\\\'");
+                        scope.$eval(attrs.ngModel + "='"+value+"'");
+                    }
+                    var selStart = element[0].selectionStart;
+                    var selEnd = element[0].selectionEnd;
 				}
-				var selStart = element[0].selectionStart;
-				var selEnd = element[0].selectionEnd;
-				
-				//console.log("lookupTarget received event");
 			});
 		} 
 	}
@@ -110,7 +114,7 @@ angular.module('Rvd').directive('variableLookup', ['variableRegistry', function 
 			scope.view = attrs.view;
 			scope.variables = variableRegistry.listAll();
 			scope.selectVariable = function (variable) {
-				scope.$emit("variable-name-clicked", variable.name);
+				scope.$emit("variable-name-clicked", {value: variable.name, replace: scope.$eval(attrs.replace)});
 			}
 		} 
 	}
@@ -120,7 +124,7 @@ angular.module('Rvd').directive('variableLookup', ['variableRegistry', function 
 //use it this way: <input type="text" ng-focus="isFocused" ng-focus-lost="loseFocus()">
 //for more information: http://stackoverflow.com/questions/14859266/input-autofocus-attribute/14859639#14859639 
 
-angular.module('ng').directive('ngFocus', function($timeout) {
+angular.module('Rvd').directive('ngFocus', function($timeout) {
  return {
      link: function ( scope, element, attrs ) {
          scope.$watch( attrs.ngFocus, function ( val ) {
@@ -281,27 +285,39 @@ angular.module('Rvd').directive('ussdModule', [function () {
 	};
 }]);
 
-/*
- * Adds to scope: buttonOptions, selectedOption, addedClasses
- */
-angular.module('Rvd').directive('multibutton', function () {
-	return  {
-		restrict: 'E',
-		scope:true,
-		templateUrl: 'templates/directive/multibutton.html',
-		link: function (scope,element,attrs) {
-			scope.buttonOptions = scope.$eval(attrs.options);
-			if (scope.buttonOptions.length > 0 )
-				scope.selectedOption = scope.buttonOptions[0];
-			else
-				scope.selectedOption = "";
-			
-			scope.addedClasses = attrs.buttonClass;
+angular.module('Rvd').directive('rvdDropdown', function() {
+	return {
+		scope:{
+		    model:'='
 		},
-		controller: function($scope) {
-			$scope.selectOption = function(option) {
-				$scope.selectedOption = option;
-			}
+		replace:true,
+		restrict: 'E',
+		templateUrl: 'templates/directive/rvdDropdown.html',
+		link: function (scope,element,attrs) {
+		    function getOptionByValue(list,value) {
+		        for (var i=0; i<list.length; i++) {
+		            if (list[i].value == value)
+		                return list[i];
+		        }
+		        return null; // not found
+		    }
+		    scope.setActiveOption = function(option) {
+		        scope.selectedOption = option;
+		        scope.model = option.value;
+		    }
+
+		    scope.allOptions = []; //{"key":"null label","value":null}];
+            scope.options = scope.$eval(attrs.options);
+            if (!!scope.options && scope.options.length > 0)
+                scope.allOptions = scope.allOptions.concat(scope.options);
+            else
+                scope.allOptions = [{"key":"null label","value":null}];
+            console.log(scope.allOptions);
+		    var selectedOption = getOptionByValue(scope.allOptions, scope.model);
+		    if (selectedOption == null)
+		        selectedOption = scope.allOptions[0];
+		    scope.setActiveOption(selectedOption);
 		}
 	}
 });
+

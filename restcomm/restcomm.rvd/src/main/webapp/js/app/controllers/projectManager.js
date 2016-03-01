@@ -1,5 +1,6 @@
-App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications) {
+App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications, authentication) {
 	
+	$scope.authInfo = authentication.getAuthInfo();
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
 	$scope.projectKind = $routeParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd' && $scope.projectKind != 'sms')
@@ -9,32 +10,62 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 
 	
 	$scope.refreshProjectList = function() {
-		$http({url: 'services/projects',
+		var restcommApps;
+		var projectList = [];
+		$http({
+			url: '/restcomm/2012-04-24/Accounts/' + $scope.authInfo.username + '/Applications.json',
+			method: 'GET'
+		}).success(function (data, status, headers, config) {
+			restcommApps = data;
+			$http({url: 'services/projects',
 				method: "GET"
-		})
-		.success(function (data, status, headers, config) {
-			$scope.projectList = data;
-			for ( var i=0; i < $scope.projectList.length; i ++)
-				$scope.projectList[i].viewMode = 'view';
-		})
-		.error(function (data, status, headers, config) {
+			}).success(function (data, status, headers, config) {
+				for (var i in restcommApps) {
+					var currentApp = restcommApps[i];
+					var applicationSid = currentApp.sid;
+					for ( var i=0; i < data.length; i ++){
+						if(data[i].name === applicationSid){
+							var project = {};
+							project.applicationSid = applicationSid;
+							project.name = currentApp.friendly_name;
+							project.startUrl = currentApp.rcml_url;
+							project.kind = currentApp.kind;
+							project.viewMode = 'view';
+							projectList.push(project);
+							break;
+						}
+					}
+				}
+				$scope.projectList = projectList;
+			}).error(function (data, status, headers, config) {
+				if (status == 500)
+				notifications.put({type:'danger',message:"Internal server error"});
+			});
+		}).error(function (data, status, headers, config) {
 			if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
 		});
 	}
 	
-	$scope.createNewProject = function(name, kind) {
-		$http({url: 'services/projects/' + name + "/?kind=" + kind,
+	$scope.createNewProject = function(name, kind, ticket) {
+		$http({url: 'services/projects/' + name + "/?kind=" + kind + "&ticket=" + ticket,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
 			console.log( "project created");
-			$location.path("/designer/" + name);
+			$location.path("/designer/" + data.sid + "=" + name);
 		 })
 		 .error(function (data, status, headers, config) {
 			if (status == 409) {
 				console.log("project already exists");
 				notifications.put({type:'danger',message:'A Voice, SMS or USSD project  with that name already exists in the workspace (maybe it belongs to another user).'});
+			} else
+			if (status >= 500) {
+				console.log("internal server error: " + status);
+				notifications.put({type:'danger',message:'Internal server error.'});
+			} else {
+				console.log("operation failed: " + status);
+				notifications.put({type:'danger',message:'Could not create project.'});
 			}
 		 });
 	}
@@ -46,12 +77,12 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		projectItem.errorMessage = "";
 	}
 	
-	$scope.applyNewProjectName = function(projectItem) {
+	$scope.applyNewProjectName = function(projectItem, ticket) {
 		if ( projectItem.name == projectItem.newProjectName ) {
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName })
+		$http({ method: "PUT", url: 'services/projects/' + projectItem.applicationSid + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -66,21 +97,28 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			});
 	}
 	
-	$scope.deleteProject = function(projectItem) {
-		$http({ method: "DELETE", url: 'services/projects/' + projectItem.name })
+	$scope.deleteProject = function(projectItem, ticket) {
+		$http({ method: "DELETE", url: 'services/projects/' + projectItem.applicationSid + "?ticket=" + ticket})
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
 			projectItem.showConfirmation = false;
 		})
-		.error(function (data, status, headers, config) { console.log("cannot delete project"); });		
+		.error(function (data, status, headers, config) {
+		    console.log("cannot delete project");
+		    if (status >= 500) {
+		        notifications.put({type:'danger',message:'Internal server error.'});
+		    } else {
+		        notifications.put({type:'danger',message:'Could not delete project.'});
+		    }
+		});
 	}
 	
-	$scope.onFileSelect_ImportProject = function($files) {
+	$scope.onFileSelect_ImportProject = function($files, ticket) {
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: 'services/projects',
+	        url: 'services/projects?ticket=' + ticket,
 	        file: file,
 	      }).progress(function(evt) {
 	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));

@@ -36,6 +36,8 @@ public interface ClientsDao {
 
     List<Client> getClients(Sid accountSid);
 
+    List<Client> getAllClients();
+
     void removeClient(Sid sid);
 
     void removeClients(Sid accountSid);
