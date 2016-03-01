@@ -312,9 +312,9 @@ Editing a phone number can be done by clicking on the number, the screenshot bel
 
 
 <section>
-<title>SIP Clients</title>
+<title>RestComm Clients</title>
 <para>
-SIP Client is a feature that allows you to create a Restcomm profile that can be used for P2P or B2BUA calls. This will be empty until you create a new client. You can create a new client by clicking on the Resgister SIP Clent button.
+RestComm Client is a feature that allows you to create a Restcomm profile that can be used for P2P or B2BUA calls. This will be empty until you create a new client. You can create a new client by clicking on the Resgister RestComm Client button.
 </para>
 
 <mediaobject>
@@ -323,7 +323,7 @@ SIP Client is a feature that allows you to create a Restcomm profile that can be
 	</imageobject>
 </mediaobject>
 <table frame='all'>
-			<title>SIP Clients</title>
+			<title>RestComm Clients</title>
 			<tgroup cols='2' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' />
 				<colspec colname='c2' />

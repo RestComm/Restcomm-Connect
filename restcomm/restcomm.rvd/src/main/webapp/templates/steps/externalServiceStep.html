@@ -26,7 +26,7 @@
                                     <input ng-model='urlParam.name' class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
                                     <span class="input-group-addon">{{'externalServiceStepUrlParamValueLabel' | translate}}</span>
                                     <input ng-model='urlParam.value' lookup-target class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" required></input>
-                                    <variable-lookup variable="urlParam.value" view="input-group"></variable-lookup>
+                                    <variable-lookup variable="urlParam.value" view="input-group" replace="true"></variable-lookup>
                                     <span ng-click='removeUrlParam(step,urlParam)' class="input-group-addon fa fa-times rvd-clickable"></span>
                                 </div>
                             </div>
@@ -166,7 +166,7 @@
 								</span>
 								<span ng-if='step.doRouting' class="input-group-addon">
 									<span>{{'externalServiceStepDynamicRadio' | translate}} &nbsp;</span>
-									<input ng-model='step.nextType' value='responseBased' type="radio">
+									<input ng-model='step.nextType' value='responseBased' type="radio" ng-disabled="true" title="Dynamic routing has been deprecated">
 								</span>								
 								<span ng-if='step.doRouting' class="input-group-addon">
 									<span>{{'externalServiceStepMappedRadio' | translate}} &nbsp;</span>
@@ -176,7 +176,9 @@
 								<!-- this is just a placeholder -->
 								<input ng-hide='step.doRouting' ng-disabled='true' class="form-control height-fix">
 							</div>
-							<div ng-show="step.nextType=='responseBased'" class="form-group validation-warning"><span translate='externalServiceStepDynamicWarning'></span></div>
+							<div ng-show="step.doRouting" class="form-group validation-warning"><span translate='externalServiceStepDynamicWarning'></span>
+								<a href="http://docs.telestax.com/fix-dynamic-routing-external-services" target="_blank"> Read more...</a>
+							</div>
 							<div>
 								<div class="form-group">
 									<button ng-show="step.nextType=='mapped'" ng-click="step.addRouteMapping()" type="button" class="btn btn-primary btn-sm"><span>{{'externalServiceStepAddMappingButton' | translate}}</span></button>

@@ -1059,6 +1059,14 @@ This demo uses the External Services to Restcomm to an external program for more
 							<entry>prompts-uri</entry>
 							<entry>The location where the audio prompts are located.</entry>
 						</row>
+						<row>	
+							<entry>conference-entry-audio</entry>
+							<entry>This audio will be played when a participant joins the conference</entry>
+						</row>
+						<row>
+							<entry>conference-exit-audio</entry>
+							<entry>This audio will be played when a participant leaves the conference</entry>
+						</row>
 						<row>
 							<entry>cache-path</entry>
 							<entry>The local path the cache folder.</entry>

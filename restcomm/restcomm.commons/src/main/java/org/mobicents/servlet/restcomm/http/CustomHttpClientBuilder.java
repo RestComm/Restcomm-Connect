@@ -34,6 +34,9 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.mobicents.servlet.restcomm.HttpConnector;
 import org.mobicents.servlet.restcomm.HttpConnectorList;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
@@ -53,15 +56,18 @@ public class CustomHttpClientBuilder {
 
     public static HttpClient build(MainConfigurationSet config) {
         SslMode mode = config.getSslMode();
+        HttpParams httpParameters = new BasicHttpParams();
+        int timeoutConnection = config.getResponseTimeout();
+        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
         if ( mode == SslMode.strict )
-            return new DefaultHttpClient();
+            return new DefaultHttpClient(httpParameters);
         else
-            return buildAllowallClient();
+            return buildAllowallClient(httpParameters);
     }
 
-    private static HttpClient buildAllowallClient() {
+    private static HttpClient buildAllowallClient(HttpParams httpParameters) {
         HttpConnectorList httpConnectorList = UriUtils.getHttpConnectorList();
-        HttpClient httpClient = new DefaultHttpClient();
+        HttpClient httpClient = new DefaultHttpClient(httpParameters);
         //Enable SSL only if we have HTTPS connector
         List<HttpConnector> connectors = httpConnectorList.getConnectors();
         Iterator<HttpConnector> iterator = connectors.iterator();

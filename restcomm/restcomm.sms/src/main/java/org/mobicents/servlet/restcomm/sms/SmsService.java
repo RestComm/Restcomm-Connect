@@ -132,6 +132,15 @@ public final class SmsService extends UntypedActor {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
 
+        // ignore composing messages and accept content type including text only
+        // https://github.com/Mobicents/RestComm/issues/494
+        if (!request.getContentType().contains("text/plain")) {
+            SipServletResponse reject = request.createResponse(SipServletResponse.SC_NOT_ACCEPTABLE);
+            reject.addHeader("Reason","Content Type is not text plain");
+            reject.send();
+            return;
+        }
+
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
         final ClientsDao clients = storage.getClientsDao();
@@ -308,18 +317,15 @@ public final class SmsService extends UntypedActor {
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(application.getSmsUrl()));
-                        builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(application.getSmsFallbackUrl()));
-                        builder.setFallbackMethod(application.getSmsFallbackMethod());
+                        builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                     } else {
                         builder.setUrl(UriUtils.resolve(appUri));
-                        builder.setMethod(number.getSmsMethod());
-                        URI appFallbackUrl = number.getSmsFallbackUrl();
-                        if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
-                            builder.setFallbackMethod(number.getSmsFallbackMethod());
-                        }
+                    }
+                    builder.setMethod(number.getSmsMethod());
+                    URI appFallbackUrl = number.getSmsFallbackUrl();
+                    if (appFallbackUrl != null) {
+                        builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
                     interpreter = builder.build();
                 }

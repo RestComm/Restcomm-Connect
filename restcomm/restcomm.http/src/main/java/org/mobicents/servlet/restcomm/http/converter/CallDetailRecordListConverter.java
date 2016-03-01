@@ -70,7 +70,7 @@ public final class CallDetailRecordListConverter extends AbstractConverter imple
         writer.addAttribute("firstpageuri", getFirstPageUri());
         writer.addAttribute("previouspageuri", getPreviousPageUri());
         writer.addAttribute("nextpageuri", getNextPageUri(list));
-        writer.addAttribute("lastpageuri=", getLastPageUri());
+        writer.addAttribute("lastpageuri", getLastPageUri());
 
         for (final CallDetailRecord cdr : list.getCallDetailRecords()) {
             context.convertAnother(cdr);

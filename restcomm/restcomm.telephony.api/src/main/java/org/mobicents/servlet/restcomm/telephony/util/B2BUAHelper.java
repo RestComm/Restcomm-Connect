@@ -44,6 +44,7 @@
  import org.apache.log4j.Logger;
  import org.joda.time.DateTime;
  import org.mobicents.javax.servlet.sip.SipSessionExt;
+ import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
  import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
  import org.mobicents.servlet.restcomm.dao.DaoManager;
  import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
@@ -145,8 +146,10 @@
                  request.createResponse(100).send();
                  // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                  request.getSession().setAttribute("toInetUri", to);
-                 ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
-                 ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+                     ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
+                     ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 }
                  outRequest.send();
                  outRequest.getSession().setAttribute("fromInetUri", from);
 
@@ -263,8 +266,10 @@
              // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
              request.getSession().setAttribute("toInetUri", to);
              if (callToSipUri) {
-                 ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
-                 ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+                     ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
+                     ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 }
              }
              outRequest.send();
              Address originalFromAddress = request.getFrom();

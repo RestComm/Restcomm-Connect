@@ -291,7 +291,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             try {
                 extensionConfiguration = new XMLConfiguration(extensionConfigurationPath);
             } catch (final ConfigurationException exception) {
-                logger.error(exception);
+//                logger.error(exception);
             }
             ExtensionScanner extensionScanner = new ExtensionScanner(extensionConfiguration);
             extensionScanner.start();
@@ -304,6 +304,17 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.error("ServletException during initialization: ", exception);
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
+
+            Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "true"));
+            if (rvdMigrationEnabled) {
+                //Replicate RVD Projects as database entities
+                try {
+                    RvdProjectsMigrator rvdProjectMigrator = new RvdProjectsMigrator(context, xml);
+                    rvdProjectMigrator.executeMigration();
+                } catch (Exception exception) {
+                    logger.error("RVD Porjects migration failed during initialization: ", exception);
+                }
+            }
 
             //Last, print Version and send PING if needed
             Version.printVersion();

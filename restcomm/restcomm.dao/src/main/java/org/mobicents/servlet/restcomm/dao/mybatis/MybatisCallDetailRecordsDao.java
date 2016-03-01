@@ -141,6 +141,16 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
+    public List<CallDetailRecord> getCallDetailRecordsByEndTime(final DateTime endTime) {
+        return getCallDetailRecords(namespace + "getCallDetailRecordsByEndTime", endTime.toDate());
+    }
+
+    @Override
+    public List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(final DateTime endTime) {
+        return getCallDetailRecords(namespace + "getCallDetailRecordsByStarTimeAndEndTime", endTime.toDate());
+    }
+
+    @Override
     public List<CallDetailRecord> getCallDetailRecordsByParentCall(final Sid parentCallSid) {
         return getCallDetailRecords(namespace + "getCallDetailRecordsByParentCall", parentCallSid.toString());
     }
@@ -205,6 +215,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final DateTime startTime = readDateTime(map.get("start_time"));
         final DateTime endTime = readDateTime(map.get("end_time"));
         final Integer duration = readInteger(map.get("duration"));
+        final Integer ringDuration = readInteger(map.get("ring_duration"));
         final BigDecimal price = readBigDecimal(map.get("price"));
         final Currency priceUnit = readCurrency(map.get("price_unit"));
         final String direction = readString(map.get("direction"));
@@ -216,7 +227,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final String callPath = readString(map.get("call_path"));
         return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
                 startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName,
-                uri, callPath);
+                uri, callPath, ringDuration);
     }
 
     private Map<String, Object> toMap(final CallDetailRecord cdr) {
@@ -233,6 +244,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         map.put("start_time", writeDateTime(cdr.getStartTime()));
         map.put("end_time", writeDateTime(cdr.getEndTime()));
         map.put("duration", cdr.getDuration());
+        map.put("ring_duration", cdr.getRingDuration());
         map.put("price", writeBigDecimal(cdr.getPrice()));
         map.put("direction", cdr.getDirection());
         map.put("answered_by", cdr.getAnsweredBy());

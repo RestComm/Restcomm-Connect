@@ -109,7 +109,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		r = new RegExp("^([^#]+/)[^/#]*#");
 		m = r.exec(document.baseURI);
 		if ( m != null )
-			return m[1] + "services/apps/" + $scope.projectName + "/controller";
+			return m[1] + "services/apps/" + $scope.applicationSid + "/controller";
 		return '';
 	}
 	$scope.addGatherMapping = function( gatherStep ) {
@@ -167,6 +167,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 											{name:'de',text: 'German'},
 											{name:'el',text: 'Greek'},
 											{name:'it',text: 'Italian'},
+											{name:'ja',text: 'Japanese'},
 											{name:'nl',text: 'Netherlands-Dutch'},
 											{name:'no',text: 'Norwegian'},
 											{name:'pl',text: 'Polish'},
@@ -177,7 +178,6 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 											{name:'sv',text: 'Swedish'},
 											{name:'th',text: 'Thai'},
 											{name:'tr',text: 'Turkish'}
-
 										 ];
 	$scope.methods = ['POST', 'GET'];
 
@@ -187,6 +187,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	// State variables
 	$scope.projectError = null; // SET when opening a project fails
 	$scope.projectName = $routeParams.projectName;
+	$scope.applicationSid = $routeParams.applicationSid;
 
 	//$scope.nodes = [];
 	//$scope.activeNode = 0 	// contains the currently active node for all kinds
@@ -200,7 +201,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	$scope.nullValue = null;
 	$scope.rejectOptions = [{caption:"busy", value:"busy"}, {caption:"rejected", value:"rejected"}];
 
-	projectSettingsService.refresh($scope.projectName);
+	projectSettingsService.refresh($scope.applicationSid);
 
 	/*
 	 * When targets change, broadcast an events so that all <select syncModel/>
@@ -216,7 +217,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 
 	$scope.refreshWavList = function() {
-		designerService.getWavList($scope.projectName).then(function (wavList) {
+		designerService.getWavList($scope.applicationSid).then(function (wavList) {
 			$scope.project.wavList = wavList;
 		});
 
@@ -296,14 +297,18 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		var nodes = nodeRegistry.getNodes();
 		$scope.saveSpinnerShown = true;
 		$scope.clearStepWarnings();
-		designerService.saveProject($scope.projectName, $scope.project)
-		.then( function () { return designerService.buildProject($scope.projectName) } )
+		designerService.saveProject($scope.applicationSid, $scope.project)
+		.then( function () { return designerService.buildProject($scope.applicationSid) } )
 		.then(
 			function () {
+			    if ($scope.showGraph)
+			        $scope.drawGraph();
 				notifications.put({type:"success", message:"Project saved"});
 				console.log("Project saved and built");
 			},
 			function (reason) {
+			    if ($scope.showGraph)
+			        $scope.drawGraph();
 				if ( reason.exception.className == 'ValidationException' ) {
 					console.log("Validation error");
 					notifications.put({type:"warning", message:"Project saved with validation errors"});
@@ -451,14 +456,14 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 	}
 	*/
 	// Web Trigger
-	$scope.showWebTrigger = function (projectName) {
-		webTriggerService.showModal(projectName);
+	$scope.showWebTrigger = function (applicationSid) {
+		webTriggerService.showModal(applicationSid);
 	}
 
 
 	// Application logging
-	$scope.showProjectSettings = function (projectName) {
-		projectSettingsService.showModal(projectName);
+	$scope.showProjectSettings = function (applicationSid, projectName) {
+		projectSettingsService.showModal(applicationSid, projectName);
 	}
 
 	// Run the following after all initialization are complete
@@ -589,7 +594,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			lnk.label(0, {
 				position: 0.5,
 				attrs: {
-					rect: { fill: '#EEE' },
+					rect: { fill: '#FFF' },
 					text: { fill: '#333', text: linkLabel, 'font-size': 10, 'font-family': 'Monaco', 'font-weight': 'bold' }
 				}
 			});
@@ -600,7 +605,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 			// from the module name retrieve all the module (node) details
 			var node = nodeRegistry.getNode(name);
 			var label = node.label;
-			
+
 			var maxLineLength = _.max(label.split('\n'), function(l) { return l.length; }).length;
 
 			// Compute width/height of the rectangle based on the number
@@ -742,9 +747,9 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 		return state;
 	}
 
-	function getWavList(projectName) {
+	function getWavList(applicationSid) {
 		var deferred = $q.defer();
-		$http({url: 'services/projects/'+ projectName + '/wavs' , method: "GET"})
+		$http({url: 'services/projects/'+ applicationSid + '/wavs' , method: "GET"})
 		.success(function (data, status, headers, config) {
 			//$scope.wavList = data;
 			deferred.resolve(data);
@@ -755,11 +760,11 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 		return deferred.promise;
 	}
 
-	function saveProject(projectName,project) {
+	function saveProject(applicationSid,project) {
 		var deferred = $q.defer();
 
 		var state = packState(project);
-		$http({url: 'services/projects/'+ projectName,
+		$http({url: 'services/projects/'+ applicationSid,
 				method: "POST",
 				data: state,
 				headers: {'Content-Type': 'application/data'}
@@ -776,10 +781,10 @@ angular.module('Rvd').service('designerService', ['stepRegistry', '$q', '$http',
 		return deferred.promise;
 	}
 
-	function buildProject(projectName) {
+	function buildProject(applicationSid) {
 		var deferred = $q.defer();
 
-		$http({url: 'services/projects/' + projectName + '/build', method: "POST"})
+		$http({url: 'services/projects/' + applicationSid + '/build', method: "POST"})
 		.success(function (data, status, headers, config) {
 			deferred.resolve('Build successfull');
 		 }).error(function (data, status, headers, config) {

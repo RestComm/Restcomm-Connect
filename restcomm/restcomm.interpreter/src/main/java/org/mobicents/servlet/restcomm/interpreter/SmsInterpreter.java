@@ -19,9 +19,9 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -37,22 +37,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.EmailResponse;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
+import org.mobicents.servlet.restcomm.email.EmailService;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
@@ -69,6 +68,7 @@ import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
@@ -80,12 +80,14 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 
-import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.Actor;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
@@ -100,8 +102,7 @@ public final class SmsInterpreter extends UntypedActor {
     private static final int WARNING_NOTIFICATION = 1;
     static String EMAIL_SENDER;
     // Logger
-    private static final Logger logger = Logger.getLogger(SmsInterpreter.class);
-    // private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // States for the FSM.
     private final State uninitialized;
     private final State acquiringLastSmsRequest;
@@ -243,10 +244,7 @@ public final class SmsInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                EMAIL_SENDER=builder.getUser();
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
@@ -325,7 +323,6 @@ public final class SmsInterpreter extends UntypedActor {
     @SuppressWarnings("unchecked")
     @Override
     public void onReceive(final Object message) throws Exception {
-
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
         if (StartInterpreter.class.equals(klass)) {
@@ -365,6 +362,9 @@ public final class SmsInterpreter extends UntypedActor {
                     }
                 }
             }
+        }  else if (ParserFailed.class.equals(klass)) {
+            logger.info("ParserFailed received. Will stop the call");
+            fsm.transition(message, finished);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
             if (redirect.equals(verb.name())) {
@@ -439,7 +439,7 @@ public final class SmsInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(xml);
+                return new Parser(xml, self());
             }
         }));
     }
@@ -606,19 +606,19 @@ public final class SmsInterpreter extends UntypedActor {
                     parser = null;
                 }
                 try{
-                    final String type = response.getContentType();
-                    final String content = response.getContentAsString();
-                    if ((type != null && content != null) && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
-                        parser = parser(content);
-                    } else {
-                        logger.info("DownloaderResponse getContentType is null: "+response);
-                        final NotificationsDao notifications = storage.getNotificationsDao();
-                        final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
-                        notifications.addNotification(notification);
-                        final StopInterpreter stop = new StopInterpreter();
-                        source.tell(stop, source);
-                        return;
-                    }
+                final String type = response.getContentType();
+                final String content = response.getContentAsString();
+                if ((type != null && content != null) && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
+                    parser = parser(content);
+                } else {
+                    logger.info("DownloaderResponse getContentType is null: "+response);
+                    final NotificationsDao notifications = storage.getNotificationsDao();
+                    final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
+                    notifications.addNotification(notification);
+                    final StopInterpreter stop = new StopInterpreter();
+                    source.tell(stop, source);
+                    return;
+                }
                 } catch (Exception e) {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
@@ -712,7 +712,6 @@ public final class SmsInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-
             final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
             final ActorRef session = response.get();
             final NotificationsDao notifications = storage.getNotificationsDao();

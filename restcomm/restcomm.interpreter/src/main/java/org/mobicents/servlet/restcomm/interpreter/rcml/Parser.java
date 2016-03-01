@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.interpreter.rcml;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,17 +43,23 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.*;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public final class Parser extends UntypedActor {
-    private final Tag document;
-    private final Iterator<Tag> iterator;
+    private static Logger logger = Logger.getLogger(Parser.class);
+    private Tag document;
+    private Iterator<Tag> iterator;
+    private String xml;
+    private ActorRef sender;
 
     private Tag current;
 
-    public Parser(final InputStream input) throws IOException {
-        this(new InputStreamReader(input));
+    public Parser(final InputStream input, final String xml, final ActorRef sender) throws IOException {
+        this(new InputStreamReader(input), xml, sender);
     }
 
-    public Parser(final Reader reader) throws IOException {
+    public Parser(final Reader reader, final String xml, final ActorRef sender) throws IOException {
         super();
+        logger.debug("About to create new Parser for xml: "+xml);
+        this.xml = xml;
+        this.sender = sender;
         final XMLInputFactory inputs = XMLInputFactory.newInstance();
         inputs.setProperty("javax.xml.stream.isCoalescing", true);
         XMLStreamReader stream = null;
@@ -64,7 +71,8 @@ public final class Parser extends UntypedActor {
             }
             iterator = document.iterator();
         } catch (final XMLStreamException exception) {
-            throw new IOException(exception);
+            logger.info("There was an error parsing the RCML for xml: "+xml+" excpetion: ", exception);
+            sender.tell(new ParserFailed(exception,xml), null);
         } finally {
             if (stream != null) {
                 try {
@@ -76,8 +84,8 @@ public final class Parser extends UntypedActor {
         }
     }
 
-    public Parser(final String text) throws IOException {
-        this(new StringReader(text.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")));
+    public Parser(final String xml, final ActorRef sender) throws IOException {
+        this(new StringReader(xml.trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1")), xml, sender);
     }
 
     private void end(final Stack<Tag.Builder> builders, final XMLStreamReader stream) {
@@ -104,18 +112,22 @@ public final class Parser extends UntypedActor {
     }
 
     private Tag next() {
-        while (iterator.hasNext()) {
-            final Tag tag = iterator.next();
-            if (isVerb(tag)) {
-                if (current != null && current.hasChildren()) {
-                    final List<Tag> children = current.children();
-                    if (children.contains(tag)) {
-                        continue;
+        if (iterator != null) {
+            while (iterator.hasNext()) {
+                final Tag tag = iterator.next();
+                if (isVerb(tag)) {
+                    if (current != null && current.hasChildren()) {
+                        final List<Tag> children = current.children();
+                        if (children.contains(tag)) {
+                            continue;
+                        }
                     }
+                    current = tag;
+                    return current;
                 }
-                current = tag;
-                return current;
             }
+        } else {
+            logger.info("iterator is null");
         }
         return null;
     }
@@ -155,9 +167,11 @@ public final class Parser extends UntypedActor {
             final Tag verb = next();
             if (verb != null) {
                 sender.tell(verb, self);
+                logger.debug("Parser, next verb: "+verb.toString());
             } else {
                 final End end = End.instance();
                 sender.tell(end, sender);
+                logger.debug("Parser, next verb: "+end.toString());
             }
         }
     }

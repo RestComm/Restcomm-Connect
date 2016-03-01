@@ -407,8 +407,6 @@ public class Interpreter {
      * If the step is executable (like ExternalService) it is executed
      * @param step
      * @return String The module name to continue rendering with
-     * @throws IOException
-     * @throws ClientProtocolException
      */
     private String processStep(Step step) throws InterpreterException {
         if (step.getClass().equals(ExternalServiceStep.class)) {
@@ -577,7 +575,6 @@ public class Interpreter {
     /**
      * Converts a file resource to a recorded wav file into an http resource accessible over HTTP. The path generated path for the wav files is hardcoded to /restcomm/recordings
      * @param fileResource
-     * @param interpreter
      * @return
      */
     public String convertRecordingFileResourceHttp(String fileResource, HttpServletRequest request) throws URISyntaxException {
@@ -598,9 +595,7 @@ public class Interpreter {
             int filenameBeforeStartPos = fileResource.lastIndexOf('/');
             if ( filenameBeforeStartPos != -1 ) {
                 wavFilename = fileResource.substring(filenameBeforeStartPos+1);
-                String hostname = rvdSettings.getEffectiveRestcommIp(request);
-                //URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getServerName()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
-                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(hostname).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
+                URIBuilder httpUriBuilder = new URIBuilder().setScheme(request.getScheme()).setHost(request.getLocalAddr()).setPort(request.getServerPort()).setPath("/restcomm/recordings/" + wavFilename);
                 httpResource = httpUriBuilder.build().toString();
             }
         }

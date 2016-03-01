@@ -83,6 +83,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 		for (var i=0; i<localApps.length; i++) {
 			var localApp = localApps[i];
 			var app = {};
+			app.sid = localApp.sid;
 			app.title = localApp.projectName;
 			app.projectName = localApp.projectName;
 			app.isLocal = true;
@@ -118,7 +119,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 			app.description = onlineApp.info.excerpt;
 			app.wasImported = false;
 			app.hasPackaging = false;
-			app.appId = onlineApp.info.appId;
+			app.appId = onlineApp.info.id;
 			app.isOnline = true;
 			app.isLocal = false;
 			app.onlineApp = onlineApp;
@@ -131,7 +132,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 			var foundLocal = false;
 			for (var k=0; k<installedOnlineApps.length; k++) {
 				var processedApp = installedOnlineApps[k];
-				if ( processedApp.isOnline && processedApp.appId == onlineApp.info.appId ) {
+				if ( processedApp.isOnline && processedApp.appId == onlineApp.info.id) {
 					// This is an installed online app. Override its properties from online data and push into appList in the right position.
 					processedApp.title = app.title;
 					processedApp.description = app.description;
@@ -159,7 +160,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	function getOnlineApp (appId, onlineApps) {
 		if ( appId )
 			for ( var i=0; i<onlineApps.length; i++ ) {
-				if ( onlineApps[i].info.appId == appId )
+				if ( onlineApps[i].info.id == appId )
 					return onlineApps[i];
 			}
 		// return undefined
@@ -266,7 +267,7 @@ rappManagerCtrl.getProducts = function ($q, $http, rappManagerConfig) {
 	$http({
 		method:"GET", 
 		//url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token + "&cacheInvalidator=" + new Date().getTime()
-		url:"http://" + rappManagerConfig.rasHost + "/edd-api/products/?key=" + rappManagerConfig.rasApiKey + "&token=" + rappManagerConfig.rasToken + "&cacheInvalidator=" + new Date().getTime()
+		url:"https://" + rappManagerConfig.rasHost + "/edd-api/products/?number=30&key=" + rappManagerConfig.rasApiKey + "&token=" + rappManagerConfig.rasToken + "&cacheInvalidator=" + new Date().getTime()
 	}).success(function (data) {
 		console.log("succesfully retrieved " + data.products.length + " products from AppStore");
 		deferred.resolve(data.products);

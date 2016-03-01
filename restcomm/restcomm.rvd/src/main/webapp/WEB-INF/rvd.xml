@@ -1,34 +1,25 @@
 <rvd>
-	<!--  A path to the projects' workspace. Both absolute and relative paths are supported. Relative paths
-	are related RVD web application context. Namely $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/.
-	This option is required.
+	<!--
+		A path to the projects' workspace. Both absolute and relative paths are supported. Relative paths
+		are related RVD web application context. Namely $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/.
 
-		Absolute path example:
-			/home/otsakir/Restcomm/standalone/deployments/restcomm-rvd.war/workspace 
-		
-		Relative path example:
-			workspace
+		Example:
+			Absolute path example:
+				/home/otsakir/Restcomm/standalone/deployments/restcomm-rvd.war/workspace
+
+			Relative path example:
+				workspace
+
+		Required: yes
 	-->
 	<workspaceLocation>workspace</workspaceLocation>
-	
-	<!-- Use a fixed ip address on the URL resources generated such as links to recorded .wav files etc. If not defined,
-		the destination ip of the request made by Restcomm to the RVD controller will be used. 
-	 -->
-	<!-- 
-	<restcommPublicIp>192.168.0.53</restcommPublicIp>
-	-->
 
 	<!--
-		Control whether outgoing https requests verify peer site certificate or not. Two modes of operation are supported:
+		Override automatic restcomm address resolution.
 
-		'strict' : 	Requests will verify the server certificate and fail in case of an error. 
-		'allowall': 	Requests will not verify the server certificate thus allowing contacting servers with certificates 
-				that are not signed by a well-known CA or self-signed certificates. It's better to avoid 
-				this mode in production environments.
-				
-		By default 'allowall' mode is used.
+		Example:
+			<restcommBaseUrl>http://192.168.0.2:8080</restcommBaseUrl>
 	-->
-	<!-- 
-	<sslMode>allowall</sslMode> 
-	-->
+	<restcommBaseUrl></restcommBaseUrl>
+
 </rvd>
