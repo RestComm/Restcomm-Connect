@@ -26,6 +26,7 @@ import org.mobicents.servlet.restcomm.rvd.security.AuthenticationService;
 import org.mobicents.servlet.restcomm.rvd.security.SecurityUtils;
 import org.mobicents.servlet.restcomm.rvd.security.Ticket;
 import org.mobicents.servlet.restcomm.rvd.security.TicketRepository;
+import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityException;
 
 import com.google.gson.Gson;
@@ -122,6 +123,11 @@ public class LoginRestService extends RestService {
         return Response.ok().cookie( SecurityUtils.createTicketCookie(null) ).build();
     }
 
-
+    @GET
+    @RvdAuth
+    @Path("keepalive")
+    public Response keepalive() {
+        return Response.ok().build();
+    }
 
 }
