@@ -87,11 +87,12 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 
 }]);
 
-App.config(function(IdleProvider, KeepaliveProvider) {
+App.config(function(IdleProvider, KeepaliveProvider, TitleProvider) {
     // configure Idle settings
-    IdleProvider.idle(10); // in seconds
-    IdleProvider.timeout(5); // in seconds
-    KeepaliveProvider.interval(2); // in seconds
+    IdleProvider.idle(3600); // one hour
+    IdleProvider.timeout(15); // in seconds
+    KeepaliveProvider.interval(300); // 300 sec - every five minutes
+    TitleProvider.enabled(false); // it is enabled by default
 })
 .run(function(Idle){
     // start watching when the app runs. also starts the Keepalive service by default.

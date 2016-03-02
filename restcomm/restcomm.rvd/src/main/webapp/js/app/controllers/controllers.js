@@ -1,4 +1,4 @@
-App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle) {
+App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle, keepAliveResource, authentication, notifications) {
 	$rootScope.$on("$routeChangeError", function(event, current, previous, rejection) {
         //console.log('on $routeChangeError');
         if ( rejection == "AUTHENTICATION_ERROR" ) {
@@ -18,35 +18,38 @@ App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle) {
     	$rootScope.rvdError = undefined;
 	});
 
-	/* ngIdle configuration  */
+	// --- ngIdle configuration
+
     $scope.events = [];
-
+    // the user appears to have gone idle
     $scope.$on('IdleStart', function() {
-        console.log("on IdleStart");
-            // the user appears to have gone idle
     });
-
+    // follows after the IdleStart event, but includes a countdown until the user is considered timed out
+    // the countdown arg is the number of seconds remaining until then.
+    // you can change the title or display a warning dialog from here.
+    // you can let them resume their session by calling Idle.watch()
     $scope.$on('IdleWarn', function(e, countdown) {
-        console.log("on IdleWarn");
-            // follows after the IdleStart event, but includes a countdown until the user is considered timed out
-            // the countdown arg is the number of seconds remaining until then.
-            // you can change the title or display a warning dialog from here.
-            // you can let them resume their session by calling Idle.watch()
+        if (countdown == 10)
+            notifications.put({type:"warning", message:"You appear idle. Your session will soon expire!"});
     });
-
+    // the user has timed out (meaning idleDuration + timeout has passed without any activity)
+    // this is where you'd log them
     $scope.$on('IdleTimeout', function() {
-        console.log("on IdleTimeout");
-            // the user has timed out (meaning idleDuration + timeout has passed without any activity)
-            // this is where you'd log them
+        authentication.doLogout();
+        notifications.put({type:"danger", message:"Your session has expired!", timeout:0});
     });
-
+    // the user has come back from AFK and is doing stuff. if you are warning them, you can use this to hide the dialog
     $scope.$on('IdleEnd', function() {
-        console.log("on IdleEnd");
-            // the user has come back from AFK and is doing stuff. if you are warning them, you can use this to hide the dialog
     });
-
     $scope.$on('Keepalive', function() {
-            console.log("Keeping alive!");
+        keepAliveResource.get(null, function (response) {
+            // do nothing
+        }, function (response) {
+            if (response.status == 401) {
+                console.log("User not logged in. No more keepalives will be sent.");
+                Idle.unwatch();
+            }
+        });
     });
 });
 
@@ -56,6 +59,7 @@ var loginCtrl = angular.module('Rvd')
 	authentication.clearTicket();
 
 	$scope.doLogin = function (username, password) {
+	    notifications.clear();
 		authentication.doLogin(username,password).then(function () {
 			$location.path("/home");
 		}, function () {
@@ -112,12 +116,7 @@ App.controller('mainMenuCtrl', ['$scope', 'authentication', '$location', '$modal
 	//$scope.username = authentication.getTicket(); //"Testuser@test.com";
 
 	function logout() {
-		console.log("logging out");
-		authentication.doLogout().then(function () {
-			$location.path("/login");
-		}, function () {
-			$location.path("/login");
-		});
+		authentication.doLogout();
 	}
 	$scope.logout = logout;
 
