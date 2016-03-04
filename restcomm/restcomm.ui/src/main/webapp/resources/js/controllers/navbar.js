@@ -110,7 +110,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
     }
 
     RCommAccounts.update({accountSid:$scope.account.sid}, $.param(params), function() { // success
-      if($scope.account.sid = SessionService.get('sid')) {
+      if($scope.account.sid === SessionService.get('sid')) {
         SessionService.set('logged_user', $scope.account.friendly_name);
       }
       $scope.showAlert('success', 'Profile Updated Successfully.');
@@ -173,8 +173,11 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
           Notifications.success('Account "' + account.friendlyName + '" created successfully!');
           $modalInstance.close();
         },
-        function() { // error
-          Notifications.error('Required fields are missing.');
+        function(response) { // error
+        	if (response.status == 409)
+        		Notifications.error("User already exists.");
+        	else
+        		Notifications.error('Required fields are missing.');
         }
       );
     }
@@ -188,11 +191,13 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
   };
 };
 
-var AboutModalCtrl = function ($scope, $modalInstance, RCommJMX) {
+var AboutModalCtrl = function ($scope, $modalInstance, SessionService, RCommJMX, RCVersion) {
 
   $scope.Math = window.Math;
+  $scope.sid = SessionService.get('sid');
 
   $scope.getData = function() {
+    $scope.version = RCVersion.get({accountSid: $scope.sid});
     $scope.info = RCommJMX.get({path: 'java.lang:type=*'},
       function(data){
         $scope.OS = data.value['java.lang:type=OperatingSystem'];

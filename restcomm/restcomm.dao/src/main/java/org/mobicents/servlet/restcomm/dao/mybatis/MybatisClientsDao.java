@@ -107,6 +107,23 @@ public final class MybatisClientsDao implements ClientsDao {
     }
 
     @Override
+    public List<Client> getAllClients() {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAllClients");
+            final List<Client> clients = new ArrayList<Client>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    clients.add(toClient(result));
+                }
+            }
+            return clients;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void removeClient(final Sid sid) {
         removeClients(namespace + "removeClient", sid);
     }

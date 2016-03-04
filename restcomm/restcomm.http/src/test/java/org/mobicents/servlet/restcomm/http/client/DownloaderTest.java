@@ -60,6 +60,7 @@ public final class DownloaderTest {
     }
 
     @Test
+    @Ignore
     public void testGet() throws URISyntaxException, IOException {
         new JavaTestKit(system) {
             {
@@ -97,7 +98,8 @@ public final class DownloaderTest {
         };
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testNotFound() throws URISyntaxException, IOException {
         new JavaTestKit(system) {
             {

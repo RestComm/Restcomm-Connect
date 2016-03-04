@@ -1,0 +1,10 @@
+<div class="input-group-btn">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        {{selectedOption ? selectedOption.key : ""}}
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        <li  ng-repeat="option in allOptions"><a ng-click="setActiveOption(option)">{{option.key}}</a></li>
+    </ul>
+</div>
+

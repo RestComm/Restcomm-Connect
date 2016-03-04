@@ -7,9 +7,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.text.ParseException;
+import java.util.Date;
 
 import javax.sip.Dialog;
+import javax.sip.InvalidArgumentException;
+import javax.sip.SipException;
 import javax.sip.address.SipURI;
+import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.cafesip.sipunit.Credential;
@@ -190,6 +194,7 @@ public class ClientsDialTest {
         Thread.sleep(1000);
 
         // Maria initiates a call to Dimitri
+        long startTime = System.currentTimeMillis();
         final SipCall mariaCall = mariaPhone.createSipCall();
         mariaCall.initiateOutgoingCall(mariaContact, dimitriContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
@@ -235,13 +240,19 @@ public class ClientsDialTest {
 
         assertTrue(dimitriCall.waitForAck(3000));
         
+        //Talk time ~ 3sec
         Thread.sleep(3000);
         dimitriCall.listenForDisconnect();
         assertTrue(mariaCall.disconnect());
 
         assertTrue(dimitriCall.waitForDisconnect(5 * 1000));
         assertTrue(dimitriCall.respondToDisconnect());
-
+        long endTime   = System.currentTimeMillis();
+        
+        double totalTime = (endTime - startTime)/1000.0;
+        assertTrue(3.0 <= totalTime);
+        assertTrue(totalTime <= 4.0);
+        
         Thread.sleep(3000);
 
         //Check CDR
@@ -310,7 +321,51 @@ public class ClientsDialTest {
         //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
         //        assertTrue(georgeCall.respondToDisconnect());
     }
+    
+    @Test
+    public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
+        String invalidNumber = "+123456789";
+        SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:5070");
+        
+        assertNotNull(mariaRestcommClientSid);
+        assertNotNull(dimitriRestcommClientSid);
 
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 14400, 3600));
+        Thread.sleep(3000);
+
+        Credential c = new Credential("127.0.0.1", "maria", "1234");
+        mariaPhone.addUpdateCredential(c);
+
+        Thread.sleep(1000);
+
+        // Maria initiates a call to invalid number
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+invalidNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
+
+        final SipCall georgeCall = outboundProxy.createSipCall();
+        georgeCall.listenForIncomingCall();
+        
+        georgeCall.waitForIncomingCall(5 * 1000);
+        georgeCall.sendIncomingCallResponse(Response.NOT_FOUND, "Not-Found George", 3600);
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.NOT_FOUND);
+
+        Dialog mariaDialog = null;
+
+        if (responseMaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.NOT_FOUND, mariaCall.getLastReceivedResponse().getStatusCode());
+            mariaDialog = mariaCall.getDialog();
+        }
+
+        outboundProxy.dispose();
+    }
+    
     @Test
     public void testClientDialOutPstnCancelBefore200() throws ParseException, InterruptedException {
 

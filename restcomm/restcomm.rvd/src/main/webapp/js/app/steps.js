@@ -239,6 +239,7 @@ angular.module('Rvd')
 	function ClientNounModel() {
 		this.dialType = 'client';
 		this.destination = '';
+		this.beforeConnectModule = undefined;
 	}
 	ClientNounModel.prototype = new rvdModel();
 	ClientNounModel.prototype.contructor = ClientNounModel;
@@ -524,6 +525,8 @@ angular.module('Rvd')
 		this.text = '';
 		this.to = undefined;
 		this.from = undefined;
+		this.cc = undefined;
+  		this.bcc = undefined;
 		this.subject = undefined;
 		this.statusCallback = undefined;
 		this.next = null;

@@ -24,12 +24,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.net.URL;
@@ -49,16 +46,22 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 //import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Recording;
+import org.mobicents.servlet.restcomm.entities.RecordingList;
 import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordConverter;
 import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordListConverter;
+import org.mobicents.servlet.restcomm.http.converter.RecordingListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.converter.RecordingConverter;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
@@ -66,7 +69,6 @@ import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.GetCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
-import org.mobicents.servlet.restcomm.telephony.GetOutboundCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
 
@@ -98,6 +100,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     private GsonBuilder builder;
     private XStream xstream;
     private CallDetailRecordListConverter listConverter;
+    private AccountsDao accountsDao;
+    private RecordingsDao recordingsDao;
 
     private boolean normalizePhoneNumbers;
 
@@ -111,17 +115,23 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        accountsDao = daos.getAccountsDao();
+        recordingsDao = daos.getRecordingsDao();
         super.init(configuration);
         CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
         listConverter = new CallDetailRecordListConverter(configuration);
+        final RecordingConverter recordingConverter = new RecordingConverter(configuration);
         builder = new GsonBuilder();
         builder.registerTypeAdapter(CallDetailRecord.class, converter);
         builder.registerTypeAdapter(CallDetailRecordList.class, listConverter);
+        builder.registerTypeAdapter(Recording.class, recordingConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
+        xstream.registerConverter(recordingConverter);
+        xstream.registerConverter(new RecordingListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
 
@@ -139,6 +149,11 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -156,6 +171,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+            secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -167,6 +183,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         String sender = info.getQueryParameters().getFirst("From");
         String status = info.getQueryParameters().getFirst("Status");
         String startTime = info.getQueryParameters().getFirst("StartTime");
+        String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
 
         if (pageSize == null) {
@@ -185,7 +202,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         CallDetailRecordFilter filterForTotal;
         try {
-            filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
+            filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
                     parentCallSid, null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -199,9 +216,9 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         CallDetailRecordFilter filter;
         try {
-            filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime,
+            filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
                     parentCallSid, limit, offset);
-        } catch ( ParseException e) {
+        } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
 
@@ -256,6 +273,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         final Sid accountId = new Sid(accountSid);
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
+            secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -276,13 +294,13 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         try {
             if (to.contains("@")) {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
-                        accountId);
+                        accountId, null);
             } else if (to.startsWith("client")) {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
-                        accountId);
+                        accountId, null);
             } else {
                 create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
-                        accountId);
+                        accountId, null);
             }
             create.setCreateCDR(false);
             if (callManager == null)
@@ -349,7 +367,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                         }
                     }
                 } else {
-                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " +managerResponse.error()).build();
+                    return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " + managerResponse.error()).build();
                 }
             }
             return status(INTERNAL_SERVER_ERROR).build();
@@ -360,8 +378,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
     @SuppressWarnings("unchecked")
-    protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+    protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Modify:Calls");
@@ -372,7 +389,22 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
-        final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(callSid));
+        CallDetailRecord cdr = null;
+        try {
+            cdr = dao.getCallDetailRecord(new Sid(callSid));
+
+            if (cdr != null) {
+                try {
+                    secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
+                } catch (final AuthorizationException exception) {
+                    return status(UNAUTHORIZED).build();
+                }
+            } else {
+                return Response.status(NOT_ACCEPTABLE).build();
+            }
+        } catch (Exception e) {
+            return status(BAD_REQUEST).build();
+        }
 
         final String url = data.getFirst("Url");
         String method = data.getFirst("Method");
@@ -386,7 +418,6 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         String callPath = null;
         final ActorRef call;
-        ActorRef outboundCall = null;
         final CallInfo callInfo;
 
         try {
@@ -433,15 +464,6 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         if (url != null && call != null) {
             try {
-                Future<Object> future = (Future<Object>) ask(call, new GetOutboundCall(), expires);
-                Object answer = (Object) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(answer.getClass())) {
-                    //This means that the call is not associated with a outbound call. Probably because its already joined to a conference room
-                    outboundCall = null;
-                } else if (answer instanceof  ActorRef){
-                    outboundCall = (ActorRef)answer;
-                }
-
                 final String version = getApiVersion(data);
                 final URI uri = (new URL(url)).toURI();
 
@@ -451,7 +473,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
                 statusCallbackMethod = (statusCallbackMethod == null) ? "POST" : statusCallbackMethod;
 
                 final UpdateCallScript update = new UpdateCallScript(call, accountSid, version, uri, method, fallbackUri,
-                        fallBackMethod, callbackUri, statusCallbackMethod, moveConnectedCallLeg, outboundCall);
+                        fallBackMethod, callbackUri, statusCallbackMethod, moveConnectedCallLeg);
                 callManager.tell(update, null);
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
@@ -484,4 +506,24 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             throw new NullPointerException("Url can not be null.");
         }
     }
+
+    protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+
+        final List<Recording> recordings = recordingsDao.getRecordingsByCall(new Sid(callSid));
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(recordings), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+
+    }
+
 }

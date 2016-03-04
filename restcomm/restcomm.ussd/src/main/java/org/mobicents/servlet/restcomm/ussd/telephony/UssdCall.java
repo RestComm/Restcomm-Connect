@@ -128,7 +128,7 @@ public class UssdCall extends UntypedActor  {
     private CallDetailRecord outgoingCallRecord;
     private ActorRef ussdInterpreter;
 
-    public UssdCall(final SipFactory factory, final ActorRef gateway) {
+    public UssdCall(final SipFactory factory) {
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -199,7 +199,8 @@ public class UssdCall extends UntypedActor  {
             to = (SipURI) invite.getTo().getURI();
         final String from = this.from.getUser();
         final String to = this.to.getUser();
-        final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, invite, lastResponse);
+        final CallInfo info = new CallInfo(id, external, type, direction, created, null, name, from, to, invite, lastResponse,
+                false, null);
         return new CallResponse<CallInfo>(info);
     }
 

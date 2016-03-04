@@ -148,6 +148,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         builder.setSid(sid);
         builder.setAccountSid(accountSid);
         String phoneNumber = data.getFirst("PhoneNumber");
+        String cost = data.getFirst("Cost");
         builder.setPhoneNumber(phoneNumber);
         builder.setFriendlyName(getFriendlyName(phoneNumber, data));
         if (data.containsKey("VoiceCapable")) {
@@ -182,6 +183,13 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         builder.setSmsFallbackUrl(getUrl("SmsFallbackUrl", data));
         builder.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         builder.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+
+        builder.setUssdUrl(getUrl("UssdUrl", data));
+        builder.setUssdMethod(getMethod("UssdMethod", data));
+        builder.setUssdFallbackUrl(getUrl("UssdFallbackUrl", data));
+        builder.setUssdFallbackMethod(getMethod("UssdFallbackMethod",data));
+        builder.setUssdApplicationSid(getSid("UssdApplicationSid",data));
+
         final Configuration configuration = this.configuration.subset("runtime-settings");
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
@@ -223,6 +231,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         if (incomingPhoneNumber == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            } catch (AuthorizationException e) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -259,6 +272,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -279,6 +293,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -334,6 +349,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        try {
+            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+        } catch (AuthorizationException e) {
+            return status(UNAUTHORIZED).build();
+        }
         boolean updated = true;
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
             updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
@@ -391,7 +411,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setHasVoiceCallerIdLookup(getHasVoiceCallerIdLookup(data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
+                incomingPhoneNumber.setVoiceApplicationSid(null);
+            else
+                incomingPhoneNumber.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
         }
         if (data.containsKey("SmsUrl")) {
             URI uri = getUrl("SmsUrl", data);
@@ -408,7 +431,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setSmsFallbackMethod(getMethod("SmsFallbackMethod", data));
         }
         if (data.containsKey("SmsApplicationSid")) {
-            incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+            if ( org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("SmsApplicationSid") ) )
+                incomingPhoneNumber.setSmsApplicationSid(null);
+            else
+                incomingPhoneNumber.setSmsApplicationSid(getSid("SmsApplicationSid", data));
+
         }
 
         if (data.containsKey("VoiceCapable")) {
@@ -427,6 +454,31 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             incomingPhoneNumber.setFaxCapable(Boolean.parseBoolean(data.getFirst("FaxCapable")));
         }
 
+        if (data.containsKey("UssdUrl")) {
+            URI uri = getUrl("UssdUrl", data);
+            incomingPhoneNumber.setUssdUrl(isEmpty(uri.toString()) ? null : uri);
+        }
+
+        if (data.containsKey("UssdMethod")) {
+            incomingPhoneNumber.setUssdMethod(getMethod("UssdMethod", data));
+        }
+
+        if (data.containsKey("UssdFallbackUrl")) {
+            URI uri = getUrl("UssdFallbackUrl", data);
+            incomingPhoneNumber.setUssdFallbackUrl(isEmpty(uri.toString()) ? null : uri);
+        }
+
+        if (data.containsKey("UssdFallbackMethod")) {
+            incomingPhoneNumber.setUssdFallbackMethod(getMethod("UssdFallbackMethod", data));
+        }
+
+        if (data.containsKey("UssdApplicationSid")) {
+            if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("UssdApplicationSid")))
+                incomingPhoneNumber.setUssdApplicationSid(null);
+            else
+                incomingPhoneNumber.setUssdApplicationSid(getSid("UssdApplicationSid", data));
+        }
+
         incomingPhoneNumber.setDateUpdated(DateTime.now());
         return incomingPhoneNumber;
     }
@@ -438,6 +490,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
+        try {
+            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+        } catch (AuthorizationException e) {
+            return status(UNAUTHORIZED).build();
+        }
         if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
             phoneNumberProvisioningManager.cancelNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber));
         }
@@ -455,6 +512,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         return new org.mobicents.servlet.restcomm.provisioning.number.api.PhoneNumber(
                 incomingPhoneNumber.getFriendlyName(),
                 incomingPhoneNumber.getPhoneNumber(),
+                null,
                 null,
                 null,
                 null,

@@ -1,3 +1,23 @@
+/*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2016, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
+
 package org.mobicents.servlet.restcomm.rvd.storage;
 
 import java.io.File;
@@ -7,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,11 +68,11 @@ import com.google.gson.JsonParser;
 import org.mobicents.servlet.restcomm.rvd.model.ProjectSettings;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem;
 
+/**
+ * @author Orestis Tsakiridis
+ */
 public class FsProjectStorage {
     static final Logger logger = Logger.getLogger(FsProjectStorage.class.getName());
-
-    //private FsStorageBase storageBase;
-
 
     public static List<String> listProjectNames(WorkspaceStorage workspaceStorage) throws BadWorkspaceDirectoryStructure {
         List<String> items = new ArrayList<String>();
@@ -62,7 +83,7 @@ public class FsProjectStorage {
             File[] entries = workspaceDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File anyfile) {
-                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(RvdConfiguration.PROTO_DIRECTORY_PREFIX))
+                    if (anyfile.isDirectory() && !anyfile.getName().startsWith(RvdConfiguration.PROTO_DIRECTORY_PREFIX) && !anyfile.getName().equals("@users") )
                         return true;
                     return false;
                 }
@@ -87,45 +108,6 @@ public class FsProjectStorage {
         return items;
     }
 
-    /**
-     * Create a packaging directory inside the project if it does not exist
-     * @param projectName
-     * @return a File pointing to the newlly created or existing directory
-     * @throws StorageException
-     */
-    /*
-    private File createPackagingDir(String projectName) throws StorageException {
-        String packagingPath = storageBase.getProjectBasePath(projectName) + File.separator + RvdConfiguration.PACKAGING_DIRECTORY_NAME;
-        File packageDir = new File(packagingPath);
-        if (!(packageDir.exists() && packageDir.isDirectory())) {
-            if (! packageDir.mkdir() ) {
-                throw new StorageException("Error creating packaging directory. Bad directory structure");
-            }
-        }
-        return packageDir;
-    }*/
-
-    /**
-     * Returns an InputStream to the wav specified or throws an error if not found. DON'T FORGET TO CLOSE the
-     * input stream after using. It is actually a FileInputStream.
-     */
-    /*
-    @Override
-    public InputStream getWav(String projectName, String filename) throws StorageException {
-        String wavpath = storageBase.getProjectBasePath(projectName) + File.separator + RvdConfiguration.WAVS_DIRECTORY_NAME + File.separator + filename;
-        File wavfile = new File(wavpath);
-        if ( wavfile.exists() )
-            try {
-                return new FileInputStream(wavfile);
-            } catch (FileNotFoundException e) {
-                throw new StorageException("Error reading wav: " + filename, e);
-            }
-        else
-            throw new WavItemDoesNotExist("Wav file does not exist - " + filename );
-
-    }
-    */
-
     public static InputStream getWav(String projectName, String filename, WorkspaceStorage workspaceStorage) throws StorageException {
         try {
             return workspaceStorage.loadStream(RvdConfiguration.WAVS_DIRECTORY_NAME + File.separator + filename, projectName);
@@ -133,19 +115,6 @@ public class FsProjectStorage {
             throw new WavItemDoesNotExist("Wav file does not exist - " + filename, e);
         }
     }
-/*
-    @Override
-    public void createProjectSlot(String projectName) throws StorageException {
-        if ( projectExists(projectName) )
-            throw new ProjectAlreadyExists("Project '" + projectName + "' already exists");
-
-        String projectPath = storageBase.getWorkspaceBasePath()  +  File.separator + projectName;
-        File projectDirectory = new File(projectPath);
-        if ( !projectDirectory.mkdir() )
-            throw new StorageException("Cannot create project directory. Don't know why - " + projectDirectory );
-
-    }
-*/
 
     public static String loadBootstrapInfo(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
         return workspaceStorage.loadEntityString("bootstrap", projectName);
@@ -170,16 +139,6 @@ public class FsProjectStorage {
     public static Rapp loadRappFromPackaging(String projectName, WorkspaceStorage workspaceStorage) throws StorageException {
         return workspaceStorage.loadEntity("rapp", projectName+"/packaging", Rapp.class);
     }
-
-    /**
-     * Is this projoct a ras application. Checks for the existence "ras" directory
-     * @param projectName
-     * @return
-     */
-   /* public boolean isRasApp(String projectName) {
-        if ( storage.getPro)
-    }
-    */
 
     /**
      * Creates a list of rapp info objects out of a set of projects
@@ -539,7 +498,7 @@ public class FsProjectStorage {
         FileOutputStream stateFile_os;
         try {
             stateFile_os = new FileOutputStream(storage.rootPath + File.separator + projectName + File.separator + "state");
-            IOUtils.write(newState, stateFile_os);
+            IOUtils.write(newState, stateFile_os, Charset.forName("UTF-8"));
             stateFile_os.close();
         } catch (FileNotFoundException e) {
             throw new StorageException("Error updating state file for project '" + projectName + "'", e);

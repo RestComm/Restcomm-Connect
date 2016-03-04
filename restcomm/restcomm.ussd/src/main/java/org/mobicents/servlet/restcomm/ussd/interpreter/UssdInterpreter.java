@@ -50,10 +50,9 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.email.EmailService;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -71,6 +70,7 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.telephony.Answer;
@@ -229,7 +229,6 @@ public class UssdInterpreter extends UntypedActor {
         this.configuration = configuration;
 
         this.storage = storage;
-        this.mailerNotify = mailer(configuration.subset("smtp-notify"));
         final Configuration runtime = configuration.subset("runtime-settings");
         String path = runtime.getString("cache-path");
         if (!path.endsWith("/")) {
@@ -294,10 +293,7 @@ public class UssdInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService  builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                EMAIL_SENDER=builder.getUser();
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
@@ -321,7 +317,7 @@ public class UssdInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(xml);
+                return new Parser(xml, self());
             }
         }));
     }
@@ -418,6 +414,9 @@ public class UssdInterpreter extends UntypedActor {
         buffer.append("<strong>").append("Response Body: ").append("</strong></br>");
         buffer.append(notification.getResponseBody()).append("</br>");
         final Mail emailMsg = new Mail(EMAIL_SENDER,emailAddress,EMAIL_SUBJECT, buffer.toString());
+        if (mailerNotify == null){
+            mailerNotify = mailer(configuration.subset("smtp-notify"));
+        }
         mailerNotify.tell(new EmailRequest(emailMsg), self());
     }
 
@@ -517,6 +516,9 @@ public class UssdInterpreter extends UntypedActor {
                     fsm.transition(message, finished);
                 }
             }
+        } else if (ParserFailed.class.equals(klass)) {
+            logger.info("ParserFailed received. Will stop the call");
+            fsm.transition(message, cancelling);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
             if (ussdLanguage.equals(verb.name())) {
@@ -699,7 +701,7 @@ public class UssdInterpreter extends UntypedActor {
                 } else if (type.contains("text/plain")) {
                     parser = parser("<UssdMessage>" + response.getContentAsString() + "</UssdMessage>");
                 } else {
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -863,7 +865,7 @@ public class UssdInterpreter extends UntypedActor {
                             + " is an invalid URI.");
                     notifications.addNotification(notification);
                     sendMail(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }

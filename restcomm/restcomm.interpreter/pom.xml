@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.4.0-SNAPSHOT</version>
+		<version>7.6.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm.interpreter</artifactId>
@@ -123,6 +123,13 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.telephony.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.api</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

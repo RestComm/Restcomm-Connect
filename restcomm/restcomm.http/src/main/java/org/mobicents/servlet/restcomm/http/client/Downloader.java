@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.http.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -32,6 +33,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -39,12 +41,18 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.stream.XMLStreamException;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -59,13 +67,13 @@ public final class Downloader extends UntypedActor {
     }
 
     public HttpResponseDescriptor fetch(final HttpRequestDescriptor descriptor) throws IllegalArgumentException, IOException,
-            URISyntaxException {
+            URISyntaxException, XMLStreamException {
         int code = -1;
         HttpRequest request = null;
         HttpResponse response = null;
         HttpRequestDescriptor temp = descriptor;
         do {
-            final DefaultHttpClient client = new DefaultHttpClient();
+            final HttpClient client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
             client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
 //            client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
             request = request(temp);
@@ -92,7 +100,7 @@ public final class Downloader extends UntypedActor {
                     code, errorReason);
             logger.warning(httpErrorMessage);
         }
-        return response(request, response);
+        return  validateXML(response(request, response));
     }
 
     private boolean isRedirect(final int code) {
@@ -104,6 +112,21 @@ public final class Downloader extends UntypedActor {
         return (code >= 400);
     }
 
+    private HttpResponseDescriptor validateXML (final HttpResponseDescriptor descriptor) throws XMLStreamException {
+        if (descriptor.getContentLength() > 0) {
+            try {
+                // parse an XML document into a DOM tree
+                String xml = descriptor.getContentAsString().trim().replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1");
+                DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                parser.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("utf-8"))));
+                return descriptor;
+            } catch (final Exception e) {
+                throw new XMLStreamException("Error parsing the RCML:" + e);
+            }
+        }
+        return descriptor;
+    }
+
     @Override
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
@@ -111,12 +134,13 @@ public final class Downloader extends UntypedActor {
         final ActorRef sender = sender();
         if (HttpRequestDescriptor.class.equals(klass)) {
             final HttpRequestDescriptor request = (HttpRequestDescriptor) message;
+            logger.debug("New HttpRequestDescriptor, method: "+request.getMethod()+" URI: "+request.getUri()+" parameters: "+request.getParametersAsString());
             DownloaderResponse response = null;
             try {
                 response = new DownloaderResponse(fetch(request));
             } catch (final Exception exception) {
                 logger.info("Exception while trying to download RCML, exception: "+exception);
-                response = new DownloaderResponse(exception);
+                response = new DownloaderResponse(exception, "Exception while trying to download RCML");
             }
             if (sender != null) {
                 sender.tell(response, self);
@@ -175,5 +199,11 @@ public final class Downloader extends UntypedActor {
             builder.setIsChunked(entity.isChunked());
         }
         return builder.build();
+    }
+
+    @Override
+    public void postStop() {
+        logger.debug("Downloader at post stop");
+        super.postStop();
     }
 }

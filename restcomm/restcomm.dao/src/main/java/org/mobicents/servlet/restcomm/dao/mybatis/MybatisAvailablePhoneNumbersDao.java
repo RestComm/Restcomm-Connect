@@ -153,8 +153,9 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
         final Boolean smsCapable = readBoolean(map.get("sms_capable"));
         final Boolean mmsCapable = readBoolean(map.get("mms_capable"));
         final Boolean faxCapable = readBoolean(map.get("fax_capable"));
+        final String cost = readString(map.get("cost"));
         return new AvailablePhoneNumber(friendlyName, phoneNumber, lata, rateCenter, latitude, longitude, region, postalCode,
-                isoCountry, voiceCapable, smsCapable, mmsCapable, faxCapable);
+                isoCountry, cost, voiceCapable, smsCapable, mmsCapable, faxCapable);
     }
 
     private Map<String, Object> toMap(final AvailablePhoneNumber availablePhoneNumber) {
@@ -172,6 +173,7 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
         map.put("sms_capable", availablePhoneNumber.isSmsCapable());
         map.put("mms_capable", availablePhoneNumber.isMmsCapable());
         map.put("fax_capable", availablePhoneNumber.isFaxCapable());
+        map.put("cost", availablePhoneNumber.getCost());
         return map;
     }
 }

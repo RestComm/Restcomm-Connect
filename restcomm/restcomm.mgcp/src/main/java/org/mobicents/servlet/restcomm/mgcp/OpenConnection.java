@@ -31,15 +31,21 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 public final class OpenConnection {
     private final ConnectionDescriptor descriptor;
     private final ConnectionMode mode;
+    private final boolean webrtc;
 
-    public OpenConnection(final ConnectionDescriptor descriptor, final ConnectionMode mode) {
+    public OpenConnection(final ConnectionDescriptor descriptor, final ConnectionMode mode, final boolean webrtc) {
         super();
         this.descriptor = descriptor;
         this.mode = mode;
+        this.webrtc = webrtc;
     }
 
-    public OpenConnection(final ConnectionMode mode) {
-        this(null, mode);
+    public OpenConnection(final ConnectionDescriptor descriptor, final ConnectionMode mode) {
+        this(descriptor, mode, false);
+    }
+
+    public OpenConnection(final ConnectionMode mode, final boolean webrtc) {
+        this(null, mode, webrtc);
     }
 
     public ConnectionDescriptor descriptor() {
@@ -49,4 +55,9 @@ public final class OpenConnection {
     public ConnectionMode mode() {
         return mode;
     }
+
+    public boolean isWebrtc() {
+        return webrtc;
+    }
+
 }

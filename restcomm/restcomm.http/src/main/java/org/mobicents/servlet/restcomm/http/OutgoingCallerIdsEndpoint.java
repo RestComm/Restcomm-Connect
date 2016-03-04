@@ -129,6 +129,11 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -143,6 +148,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     protected Response getCallerIds(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -161,6 +167,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
             final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds");
+            secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -192,6 +199,11 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
         } else {
+            try {
+                secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
             if (data.containsKey("FriendlyName")) {
                 final String friendlyName = data.getFirst("FriendlyName");
                 outgoingCallerId = outgoingCallerId.setFriendlyName(friendlyName);

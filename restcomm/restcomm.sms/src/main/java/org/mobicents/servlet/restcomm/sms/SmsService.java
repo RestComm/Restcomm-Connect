@@ -56,6 +56,7 @@ import org.mobicents.servlet.restcomm.entities.SmsMessage.Direction;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.interpreter.SmsInterpreterBuilder;
 import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.telephony.TextMessage;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
 import org.mobicents.servlet.restcomm.telephony.util.PresenceControlHelper;
@@ -72,6 +73,7 @@ import akka.event.LoggingAdapter;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.telestax.servlet.MonitoringService;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -90,9 +92,14 @@ public final class SmsService extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
 
+    private final ActorRef monitoringService;
+
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo = true;
+
+    //Control whether Restcomm will patch SDP for B2BUA calls
+    private boolean patchForNatB2BUASessions;
 
     public SmsService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
@@ -105,13 +112,24 @@ public final class SmsService extends UntypedActor {
         this.sipFactory = factory;
         this.storage = storage;
         this.servletContext = servletContext;
+        monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
+        patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
     }
 
     private void message(final Object message) throws IOException {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
+
+        // ignore composing messages and accept content type including text only
+        // https://github.com/Mobicents/RestComm/issues/494
+        if (!request.getContentType().contains("text/plain")) {
+            SipServletResponse reject = request.createResponse(SipServletResponse.SC_NOT_ACCEPTABLE);
+            reject.addHeader("Reason","Content Type is not text plain");
+            reject.send();
+            return;
+        }
 
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
@@ -137,6 +155,7 @@ public final class SmsService extends UntypedActor {
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
             // Tell the sender we received the message okay.
             logger.info("Message to :" + toUser + " matched to one of the hosted applications");
+            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
             final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
             messageAccepted.send();
             return;
@@ -148,11 +167,13 @@ public final class SmsService extends UntypedActor {
             Client toClient = clients.getClient(toUser);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
                 // to the b2bua
-                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory)) {
+                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     // if all goes well with proxying the SIP MESSAGE on to the target client
                     // then we can end further processing of this request
                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
                             + toClient.getLogin());
+                    monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request
+                            .getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
                     // Update presence info
                     PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
                     return;
@@ -189,6 +210,7 @@ public final class SmsService extends UntypedActor {
             // Send the SMS.
             final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),
                     null);
+            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
             session.tell(sms, self());
                 // Update presence info
                 PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
@@ -199,6 +221,7 @@ public final class SmsService extends UntypedActor {
             // We didn't find anyway to handle the SMS.
             String errMsg = "Restcomm cannot process this SMS because the destination number cannot be found. To: "+toUser;
             sendNotification(errMsg, 11005, "error", true);
+            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.NOT_FOUND), self);
         }
     }
 
@@ -247,18 +270,15 @@ public final class SmsService extends UntypedActor {
                     final Sid sid = number.getSmsApplicationSid();
                     if (sid != null) {
                         final Application application = applications.getApplication(sid);
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsUrl()));
-                        builder.setMethod(application.getSmsMethod());
-                        builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getSmsFallbackUrl()));
-                        builder.setFallbackMethod(application.getSmsFallbackMethod());
+                        builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                     } else {
-                        builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, appUri));
-                        builder.setMethod(number.getSmsMethod());
-                        URI appFallbackUrl = number.getSmsFallbackUrl();
-                        if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getSmsFallbackUrl()));
-                            builder.setFallbackMethod(number.getSmsFallbackMethod());
-                        }
+                        builder.setUrl(UriUtils.resolve(appUri));
+                    }
+                    builder.setMethod(number.getSmsMethod());
+                    URI appFallbackUrl = number.getSmsFallbackUrl();
+                    if (appFallbackUrl != null) {
+                        builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
                     interpreter = builder.build();
                 }
@@ -342,12 +362,16 @@ public final class SmsService extends UntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
         // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
         if (B2BUAHelper.isB2BUASession(response)) {
-            B2BUAHelper.forwardResponse(response);
+            B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
             return;
         }
         final SipApplicationSession application = response.getApplicationSession();
         final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
         session.tell(response, self);
+        final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
+        if (origRequest != null && origRequest.getSession().isValid()) {
+            origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -370,7 +394,7 @@ public final class SmsService extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 Configuration smsConfiguration = configuration.subset("sms-aggregator");
-                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage);
+                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService);
             }
         }));
     }

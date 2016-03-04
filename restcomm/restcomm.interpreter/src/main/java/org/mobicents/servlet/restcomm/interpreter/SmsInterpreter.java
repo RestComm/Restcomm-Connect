@@ -48,11 +48,10 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.EmailResponse;
-import org.mobicents.servlet.restcomm.email.Mail;
+import org.mobicents.servlet.restcomm.email.EmailService;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
@@ -69,6 +68,7 @@ import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
+import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
@@ -122,7 +122,7 @@ public final class SmsInterpreter extends UntypedActor {
     private final Map<Sid, ActorRef> sessions;
     private Sid initialSessionSid;
     private ActorRef initialSession;
-    private final ActorRef mailerService;
+    private ActorRef mailerService;
     private SmsSessionRequest initialSessionRequest;
     // HTTP Stuff.
     private final ActorRef downloader;
@@ -223,7 +223,6 @@ public final class SmsInterpreter extends UntypedActor {
         this.fallbackMethod = fallbackMethod;
         this.sessions = new HashMap<Sid, ActorRef>();
         this.normalizeNumber = runtime.getBoolean("normalize-numbers-for-outbound-calls");
-        mailerService = mailer(configuration.subset("smtp-service"));
     }
 
     private ActorRef downloader() {
@@ -245,10 +244,7 @@ public final class SmsInterpreter extends UntypedActor {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                EMAIL_SENDER=builder.getUser();
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
@@ -366,6 +362,9 @@ public final class SmsInterpreter extends UntypedActor {
                     }
                 }
             }
+        }  else if (ParserFailed.class.equals(klass)) {
+            logger.info("ParserFailed received. Will stop the call");
+            fsm.transition(message, finished);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
             if (redirect.equals(verb.name())) {
@@ -440,7 +439,7 @@ public final class SmsInterpreter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(xml);
+                return new Parser(xml, self());
             }
         }));
     }
@@ -476,7 +475,7 @@ public final class SmsInterpreter extends UntypedActor {
             // Try to stop the interpreter.
             final State state = fsm.state();
             if (waitingForSmsResponses.equals(state)) {
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 self.tell(stop, self);
             }
         }
@@ -616,7 +615,7 @@ public final class SmsInterpreter extends UntypedActor {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -624,7 +623,7 @@ public final class SmsInterpreter extends UntypedActor {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -674,7 +673,7 @@ public final class SmsInterpreter extends UntypedActor {
                 } catch (final Exception exception) {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, text + " is an invalid URI.");
                     notifications.addNotification(notification);
-                    final StopInterpreter stop = StopInterpreter.instance();
+                    final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -729,7 +728,7 @@ public final class SmsInterpreter extends UntypedActor {
                                 + " is an invalid 'from' phone number.");
                         notifications.addNotification(notification);
                         service.tell(new DestroySmsSession(session), source);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -767,7 +766,7 @@ public final class SmsInterpreter extends UntypedActor {
                 final Notification notification = notification(ERROR_NOTIFICATION, 14103, body + " is an invalid SMS body.");
                 notifications.addNotification(notification);
                 service.tell(new DestroySmsSession(session), source);
-                final StopInterpreter stop = StopInterpreter.instance();
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             } else {
@@ -786,7 +785,7 @@ public final class SmsInterpreter extends UntypedActor {
                                     + " is an invalid URI.");
                             notifications.addNotification(notification);
                             service.tell(new DestroySmsSession(session), source);
-                            final StopInterpreter stop = StopInterpreter.instance();
+                            final StopInterpreter stop = new StopInterpreter();
                             source.tell(stop, source);
                             return;
                         }
@@ -837,7 +836,7 @@ public final class SmsInterpreter extends UntypedActor {
                         final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
-                        final StopInterpreter stop = StopInterpreter.instance();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -927,6 +926,20 @@ public final class SmsInterpreter extends UntypedActor {
                 return;
             }
 
+            // Parse "cc".
+            String cc="";
+            attribute = verb.attribute("cc");
+            if (attribute != null) {
+                cc = attribute.value();
+            }
+
+            // Parse "bcc".
+            String bcc="";
+            attribute = verb.attribute("bcc");
+            if (attribute != null) {
+                bcc = attribute.value();
+            }
+
             // Parse "subject"
             String subject;
             attribute = verb.attribute("subject");
@@ -937,7 +950,10 @@ public final class SmsInterpreter extends UntypedActor {
             }
 
             // Send the email.
-            final Mail emailMsg = new Mail(from, to, subject, verb.text());
+            final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
+            if (mailerService == null){
+                mailerService = mailer(configuration.subset("smtp-service"));
+            }
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
     }

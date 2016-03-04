@@ -31,6 +31,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 
 import akka.actor.ActorRef;
@@ -45,6 +46,7 @@ import akka.actor.UntypedActorFactory;
  */
 public final class UserAgentManagerProxy extends SipServlet implements SipServletListener{
     private static final long serialVersionUID = 1L;
+    private static Logger logger = Logger.getLogger(UserAgentManagerProxy.class);
 
     private ActorSystem system;
     private ActorRef manager;
@@ -67,12 +69,23 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
         manager.tell(request, null);
     }
 
+//    @Override
+//    protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
+//        manager.tell(response, null);
+//    }
+
     @Override
-    protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
+    protected void doSuccessResponse(final SipServletResponse response) throws ServletException, IOException {
         manager.tell(response, null);
     }
 
-//    @Override
+    @Override
+    protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
+        logger.debug("Error response: \n"+response.toString()+"\n");
+        manager.tell(response, null);
+    }
+
+    //    @Override
 //    public void init(final ServletConfig config) throws ServletException {
 //        configuration.setProperty(ServletConfig.class.getName(), config);
 //    }

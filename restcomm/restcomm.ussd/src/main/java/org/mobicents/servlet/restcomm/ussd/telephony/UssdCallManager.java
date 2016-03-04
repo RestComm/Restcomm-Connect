@@ -75,7 +75,6 @@ public class UssdCallManager extends UntypedActor {
     private final ActorSystem system;
     private final Configuration configuration;
     private final ServletContext context;
-    private final ActorRef gateway;
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private CreateCall createCallRequest;
@@ -99,13 +98,12 @@ public class UssdCallManager extends UntypedActor {
      * @param factory
      * @param storage
      */
-    public UssdCallManager(Configuration configuration, ServletContext context, ActorSystem system, ActorRef gateway,
+    public UssdCallManager(Configuration configuration, ServletContext context, ActorSystem system,
             ActorRef conferences, ActorRef sms, SipFactory factory, DaoManager storage) {
         super();
         this.system = system;
         this.configuration = configuration;
         this.context = context;
-        this.gateway = gateway;
         this.sipFactory = factory;
         this.storage = storage;
         final Configuration runtime = configuration.subset("runtime-settings");
@@ -121,7 +119,7 @@ public class UssdCallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new UssdCall(sipFactory, gateway);
+                return new UssdCall(sipFactory);
             }
         }));
     }
@@ -225,23 +223,19 @@ public class UssdCallManager extends UntypedActor {
                 builder.setVersion(number.getApiVersion());
                 final Account account = accounts.getAccount(number.getAccountSid());
                 builder.setEmailAddress(account.getEmailAddress());
-                final Sid sid = number.getVoiceApplicationSid();
+                final Sid sid = number.getUssdApplicationSid();
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
-                    builder.setMethod(application.getVoiceMethod());
-                    builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(application.getVoiceFallbackMethod());
-                    builder.setStatusCallback(application.getStatusCallback());
-                    builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
+                    builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
                 } else {
-                    builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
-                    builder.setMethod(number.getVoiceMethod());
-                    builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                    builder.setStatusCallback(number.getStatusCallback());
-                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                    builder.setUrl(UriUtils.resolve(number.getUssdUrl()));
                 }
+                builder.setMethod(number.getUssdMethod());
+                if (number.getUssdFallbackUrl() != null)
+                    builder.setFallbackUrl(number.getUssdFallbackUrl());
+                builder.setFallbackMethod(number.getUssdFallbackMethod());
+                builder.setStatusCallback(number.getStatusCallback());
+                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                 final ActorRef ussdInterpreter = builder.build();
                 final ActorRef ussdCall = ussdCall();
                 ussdCall.tell(request, self);
@@ -288,7 +282,7 @@ public class UssdCallManager extends UntypedActor {
         final ActorRef ussdCall = ussdCall();
         final ActorRef self = self();
         final InitializeOutbound init = new InitializeOutbound(null, from, to, ussdUsername, ussdPassword, request.timeout(),
-                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage);
+                request.isFromApi(), runtime.getString("api-version"), request.accountId(), request.type(), storage, false);
         ussdCall.tell(init, self);
         return ussdCall;
     }

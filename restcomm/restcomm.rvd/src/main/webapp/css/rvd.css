@@ -43,10 +43,15 @@ label {
 	font-style: italic;
 }
 
-.validation-warning, .error-message {
+.error-message {
 	font-size: 85%;
-	color: #FFA500;
+	color: #FBA01B;
 	font-style: italic;
+}
+
+.validation-warning {
+	font-size: 85%;
+	color: #EDB859;
 }
 
 
@@ -375,6 +380,16 @@ li.verb {
 .col-centered{
     float: none;
     margin: 0 auto;
+}
+
+/* used in rvdDropdown control (at least) */
+.input-group-btn:not(:first-child) > .btn {
+	border-top-right-radius: 0px;
+	border-bottom-right-radius: 0px;
+}
+.input-group-btn:not(:last-child) > .btn {
+	border-top-left-radius: 0px;
+	border-bottom-left-radius: 0px;
 }
 
 /*

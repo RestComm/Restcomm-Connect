@@ -65,7 +65,7 @@ public final class ParserTest {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(input);
+                return new Parser(input, null, null);
             }
         }));
     }
@@ -76,7 +76,7 @@ public final class ParserTest {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(input);
+                return new Parser(input, null);
             }
         }));
     }

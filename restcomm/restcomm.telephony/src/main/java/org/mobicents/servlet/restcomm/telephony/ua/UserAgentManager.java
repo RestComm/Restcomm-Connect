@@ -28,16 +28,20 @@ import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.toHex;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
@@ -52,14 +56,17 @@ import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.telephony.util.PresenceControlHelper;
+import org.mobicents.servlet.restcomm.telephony.UserRegistration;
 import org.mobicents.servlet.restcomm.util.DigestAuthentication;
 
-import scala.concurrent.duration.Duration;
-import akka.actor.ActorContext;
+import com.telestax.servlet.MonitoringService;
+
+import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -71,17 +78,20 @@ public final class UserAgentManager extends UntypedActor {
     private final SipFactory factory;
     private final DaoManager storage;
     private final ServletContext servletContext;
+    private ActorRef monitoringService;
 
-    public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage, final ServletContext servletContext) {
+    public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
+            final ServletContext servletContext) {
         super();
-//        this.configuration = configuration;
+        // this.configuration = configuration;
         this.servletContext = servletContext;
+        monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
         this.storage = storage;
-        final ActorContext context = context();
-        context.setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
+        int pingInterval = runtime.getInt("ping-interval", 60);
+        getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
     }
 
     private void clean() {
@@ -90,7 +100,9 @@ public final class UserAgentManager extends UntypedActor {
         for (final Registration result : results) {
             final DateTime expires = result.getDateExpires();
             if (expires.isBeforeNow() || expires.isEqualNow()) {
+                logger.info("Registration: "+result.getAddressOfRecord()+" expired and will remove it now");
                 registrations.removeRegistration(result);
+                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             }
         }
     }
@@ -150,7 +162,35 @@ public final class UserAgentManager extends UntypedActor {
                 }
             }
         } else if (message instanceof SipServletResponse) {
-            pong(message);
+            SipServletResponse response = (SipServletResponse) message;
+            if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
+                removeRegistration(response);
+            } else {
+                pong(message);
+            }
+        }
+    }
+
+    private void removeRegistration(final SipServletMessage sipServletMessage) {
+        String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
+        String host = ((SipURI)sipServletMessage.getTo().getURI()).getHost();
+        String port = String.valueOf(((SipURI)sipServletMessage.getTo().getURI()).getPort());
+        logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration");
+        final RegistrationsDao regDao = storage.getRegistrationsDao();
+        List<Registration> registrations = regDao.getRegistrations(user);
+        if (registrations != null) {
+            Iterator<Registration> iter = registrations.iterator();
+            while (iter.hasNext()) {
+                Registration reg = iter.next();
+                String locationToRemove = "sip:" + user + "@" + host + ":" + port;
+
+                if (reg.getAddressOfRecord().equalsIgnoreCase(locationToRemove)) {
+                    logger.info("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
+                    regDao.removeRegistration(reg);
+                    monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
+                }
+
+            }
         }
     }
 
@@ -184,11 +224,11 @@ public final class UserAgentManager extends UntypedActor {
         }
     }
 
-    private void ping(final String to) throws Exception {
+    private void ping(final String to) throws ServletException {
         final SipApplicationSession application = factory.createApplicationSession();
         String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
-        if(toTransport == null) {
-            //RESTCOMM-301 NPE in RestComm Ping
+        if (toTransport == null) {
+            // RESTCOMM-301 NPE in RestComm Ping
             toTransport = "udp";
         }
         if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
@@ -204,17 +244,20 @@ public final class UserAgentManager extends UntypedActor {
         ping.setRequestURI(uri);
         final SipSession session = ping.getSession();
         session.setHandler("UserAgentManager");
-        ping.send();
+        logger.debug("About to send OPTIONS keepalive to: "+to);
+        try {
+            ping.send();
+        } catch (IOException e) {
+            logger.warning("There was an exception trying to ping client: "+to+" , will remove registration. Exception: "+e);
+            removeRegistration(ping);
+        }
     }
 
     private void pong(final Object message) {
         final SipServletResponse response = (SipServletResponse) message;
-        // if(response.getSession().isValid()) {
-        // response.getSession().invalidate();
-        // }
-        if (response.getApplicationSession().isValid()) {
-            response.getApplicationSession().invalidate();
-        }
+            if (response.getApplicationSession().isValid()) {
+                response.getApplicationSession().invalidate();
+            }
     }
 
     private SipURI outboundInterface(String toTransport) {
@@ -265,7 +308,7 @@ public final class UserAgentManager extends UntypedActor {
             logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
             patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
         } else {
-            logger.info("Patching URI: "+uri.toString()+" with IP: "+ip+" and PORT: "+port+" for USER: "+user);
+            logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
             patch(uri, ip, port);
         }
 
@@ -290,24 +333,27 @@ public final class UserAgentManager extends UntypedActor {
         if (ua == null)
             ua = "GenericUA";
 
-        final Registration registration = new Registration(sid, now, now, aor, name, user, ua, ttl, address);
+        boolean webRTC = isWebRTC(transport, ua);
+
+        final Registration registration = new Registration(sid, now, now, aor, name, user, ua, ttl, address, webRTC);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
             // Remove Registration if ttl=0
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
+            monitoringService.tell(new UserRegistration(user, address, false), self());
             logger.info("The user agent manager unregistered " + user + " at address "+address);
         } else {
-
+            monitoringService.tell(new UserRegistration(user, address, true), self());
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
-                logger.info("The user agent manager updated " + user + " at address "+address);
+                logger.info("The user agent manager updated " + user + " at address " + address);
             } else {
                 // Add registration since it doesn't exists on the DB
                 registrations.addRegistration(registration);
-                logger.info("The user agent manager registered " + user + " at address "+address);
+                logger.info("The user agent manager registered " + user + " at address " + address);
             }
             response.setHeader("Contact", contact(uri, ttl));
         }
@@ -322,8 +368,27 @@ public final class UserAgentManager extends UntypedActor {
         if (request.getApplicationSession().isValid()) {
             try {
                 request.getApplicationSession().invalidate();
-            } catch (IllegalStateException exception) {}
+            } catch (IllegalStateException exception) {
+            }
         }
+    }
+
+    /**
+     * Checks whether the client is WebRTC or not.
+     *
+     * <p>
+     * A client is considered WebRTC if one of the following statements is true:<br>
+     * 1. The chosen transport is WebSockets (transport=ws).<br>
+     * 2. The chosen transport is WebSockets Secured (transport=wss).<br>
+     * 3. The User-Agent corresponds to one of TeleStax mobile clients.
+     * </p>
+     *
+     * @param transport
+     * @param userAgent
+     * @return
+     */
+    private boolean isWebRTC(String transport, String userAgent) {
+        return "ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport) || userAgent.toLowerCase().contains("restcomm");
     }
 
     private String contact(final SipURI uri, final int expires) {

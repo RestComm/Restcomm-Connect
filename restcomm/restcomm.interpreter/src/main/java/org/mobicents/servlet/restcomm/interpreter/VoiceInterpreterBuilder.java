@@ -34,6 +34,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author gvagenas@gmail.com (George Vagenas)
  */
 public final class VoiceInterpreterBuilder {
     private final ActorSystem system;
@@ -41,6 +42,7 @@ public final class VoiceInterpreterBuilder {
     private DaoManager storage;
     private ActorRef calls;
     private ActorRef conferences;
+    private ActorRef bridges;
     private ActorRef sms;
     private Sid account;
     private Sid phone;
@@ -52,6 +54,7 @@ public final class VoiceInterpreterBuilder {
     private URI statusCallback;
     private String statusCallbackMethod;
     private String emailAddress;
+    private ActorRef monitoring;
 
     /**
      * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -68,7 +71,7 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, sms, storage);
+                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring);
             }
         }));
     }
@@ -87,6 +90,10 @@ public final class VoiceInterpreterBuilder {
 
     public void setConferenceManager(final ActorRef conferences) {
         this.conferences = conferences;
+    }
+
+    public void setBridgeManager(final ActorRef bridges) {
+        this.bridges = bridges;
     }
 
     public void setSmsService(final ActorRef sms) {
@@ -131,5 +138,9 @@ public final class VoiceInterpreterBuilder {
 
     public void setVersion(final String version) {
         this.version = version;
+    }
+
+    public void setMonitoring(ActorRef monitoring) {
+        this.monitoring = monitoring;
     }
 }

@@ -37,6 +37,7 @@ import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -288,7 +289,7 @@ public class ProjectService {
     public void updateProject(HttpServletRequest request, String projectName, ProjectState existingProject) throws RvdException {
         String stateData = null;
         try {
-            stateData = IOUtils.toString(request.getInputStream());
+            stateData = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
         } catch (IOException e) {
             throw new RvdException("Internal error while retrieving raw project",e);
         }
@@ -328,7 +329,7 @@ public class ProjectService {
         return FsProjectStorage.archiveProject(projectName,workspaceStorage);
     }
 
-    public String importProjectFromArchive(InputStream archiveStream, String archiveFilename) throws StorageException {
+    public String importProjectFromArchive(InputStream archiveStream, String archiveFilename, String owner) throws StorageException {
         File archiveFile = new File(archiveFilename);
         String projectName = FilenameUtils.getBaseName(archiveFile.getName());
 
@@ -347,10 +348,11 @@ public class ProjectService {
         //FsStorageBase storageBase = new FsStorageBase(tempProjectDir.getParent(), rvdContext.getMarshaler());
         //ProjectState state = storageBase.loadModelFromFile(tempProjectDir.getPath() + File.separator + "state", ProjectState.class);
 
-        // CAUTION! make sure that the temp workspace thing works!
-        // Create a temporary workspace storage
+        // Create a temporary workspace storage. Also, set owner user to currently logged user.
         WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
         ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getName(), tempStorage);
+        state.getHeader().setOwner(owner);
+        FsProjectStorage.storeProject(false, state, tempProjectDir.getName(), tempStorage);
 
 
         // TODO Make these an atomic action!

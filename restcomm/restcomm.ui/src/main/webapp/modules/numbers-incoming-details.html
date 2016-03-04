@@ -6,10 +6,10 @@
     <h3 class="text-muted details-header">Voice</h3>
     <fieldset>
         <label class="pull-left" for="voice-url">
-            <h4 class="account-detail-field-name">Voice Request URL</h4>
+            <h4 class="account-detail-field-name">Voice Request</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.voice_application_sid" url-only-var="false" method-var="numberDetails.voice_method" url-var="numberDetails.voice_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -18,7 +18,7 @@
             <h4 class="account-detail-field-name">Voice Fallback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.voice_fallback_method" url-var="numberDetails.voice_fallback_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.voice_fallback_method" url-var="numberDetails.voice_fallback_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -27,7 +27,7 @@
             <h4 class="account-detail-field-name">Status Callback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.status_callback_method" url-var="numberDetails.status_callback"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.status_callback_method" url-var="numberDetails.status_callback"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>
@@ -35,10 +35,10 @@
     <h3 class="text-muted details-header">SMS</h3>
     <fieldset>
         <label class="pull-left" for="sms-url">
-            <h4 class="account-detail-field-name">SMS Request URL</h4>
+            <h4 class="account-detail-field-name">SMS Request</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.sms_application_sid" url-only-var="false" method-var="numberDetails.sms_method" url-var="numberDetails.sms_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -47,18 +47,19 @@
             <h4 class="account-detail-field-name">SMS Fallback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.sms_fallback_method" url-var="numberDetails.sms_fallback_url" apps="localApps"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="" url-only-var="true" method-var="numberDetails.sms_fallback_method" url-var="numberDetails.sms_fallback_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>
+
 <div class="well well-sm">
     <h3 class="text-muted details-header">USSD</h3>
     <fieldset>
         <label class="pull-left" for="ussd-url">
-            <h4 class="account-detail-field-name">USSD Request URL</h4>
+            <h4 class="account-detail-field-name">USSD Request</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.ussd_method" url-var="numberDetails.ussd_url"></rc-endpoint-url>
+            <rc-endpoint-url details-loaded="numberDetails.$resolved" sid-var="numberDetails.ussd_application_sid" url-only-var="false" method-var="numberDetails.ussd_method" url-var="numberDetails.ussd_url" apps="localApps"></rc-endpoint-url>
         </span>
     </fieldset>
     <br>
@@ -67,10 +68,11 @@
             <h4 class="account-detail-field-name">USSD Fallback URL</h4>
         </label>
         <span class="col-md-9 pull-right">
-            <rc-endpoint-url method-var="numberDetails.ussd_fallback_method" url-var="numberDetails.ussd_fallback_url"></rc-endpoint-url>
+            <rc-endpoint-url sid-var="" url-only-var="true" method-var="numberDetails.ussd_fallback_method" url-var="numberDetails.ussd_fallback_url"></rc-endpoint-url>
         </span>
     </fieldset>
 </div>
+
 <div class="well well-sm">
     <h3 class="text-muted details-header">MISC</h3>
     <fieldset>

@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd.http.resources;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -40,7 +41,7 @@ public class LoginRestService extends RestService {
 
     @PostConstruct
     void init() {
-        rvdSettings = rvdSettings.getInstance(servletContext);
+        rvdSettings = rvdSettings.getInstance();
     }
 
     /*
@@ -82,10 +83,10 @@ public class LoginRestService extends RestService {
     public Response postLogin(@Context HttpServletRequest request) throws IOException { // TODO make sure IOException is handled properly!
         //logger.debug("Running login");
 
-        String data = IOUtils.toString(request.getInputStream());
+        String data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
         Gson gson = new Gson();
         LoginForm credentials = gson.fromJson(data,LoginForm.class);
-        AuthenticationService authService = new AuthenticationService(rvdSettings, request);
+        AuthenticationService authService = new AuthenticationService();
 
         try {
             if ( authService.authenticate(credentials.getUsername(), credentials.getPassword()) ) {
@@ -94,6 +95,8 @@ public class LoginRestService extends RestService {
                 // if authentication succeeds create a ticket for this user and return its id
                 TicketRepository tickets = TicketRepository.getInstance();
                 Ticket ticket = new Ticket(credentials.getUsername());
+                ticket.setAuthenticationToken(authService.getAuthenticationToken()); // used for API access
+                ticket.setCookieBased(true);
                 tickets.putTicket( ticket );
 
                 //return Response.ok().cookie( new NewCookie(RvdConfiguration.TICKET_COOKIE_NAME, ticket.getTicketId(), "/restcomm-rvd/services", null, null,3600, false ) ).build();

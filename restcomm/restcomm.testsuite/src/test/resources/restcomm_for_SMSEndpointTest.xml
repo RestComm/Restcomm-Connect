@@ -13,6 +13,12 @@
 	<runtime-settings>
 		<!-- The API version that will be used. -->
 		<api-version>2012-04-24</api-version>
+		
+		<!-- Try to run RVD workspace projects migration to apply new naming
+			convention and synchronization with database entities. This execution
+			will occurs max one time per Restcomm version. To force a new run, 
+			remove the file .version inside RVD workspace. -->
+		<rvd-workspace-migration-enabled>false</rvd-workspace-migration-enabled>
 
 		<!-- The location where the audio prompts are located. -->
 		<prompts-uri>http://127.0.0.1:8080/restcomm/audio</prompts-uri>
@@ -47,6 +53,9 @@
 		<!-- If set to true Restcomm will authenticate users and incoming messages 
 			from those users -->
 		<authenticate>true</authenticate>
+
+		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
+		<ping-interval>60</ping-interval>
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
@@ -140,12 +149,17 @@
 		<host></host>
 		<user></user>
 		<password></password>
+		<port></port>
+		<!-- Default mail address used to report issues related to Restcomm management,
+		mostly associated with bootstrap executions, like workspace migration, etc. -->
+		<default-email-address></default-email-address>
 	</smtp-notify>
 
 	<smtp-service>
 		<host> </host>
 		<user></user>
 		<password></password>
+		<port></port>
 	</smtp-service>
 
 	<dao-manager
@@ -192,6 +206,20 @@
 			<!-- <external-address></external-address> -->
 		</mgcp-server>
 	</media-server-manager>
+
+	<!-- Adjust http client behaviour for outgoing requests -->
+	<http-client>
+		<response-timeout>5000</response-timeout>
+		<!-- Control peer certificate verification for https connections. Two modes are supported:
+			'allowall' : Disables peer certificate verification. Use it when testing.
+			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->
+		<ssl-mode>strict</ssl-mode>
+		<!-- Control whether relative URL should be resolved using hostname instead of IP Address.
+		If for any reason hostname resolution fails, IP Address will be used -->
+		<use-hostname-to-resolve-relative-url>true</use-hostname-to-resolve-relative-url>
+		<!-- Optionally provide the hostname to be used, otherwise Java will try to get the hostname of the machine JVM is running -->
+		<hostname></hostname>
+	</http-client>
 
 	<!-- The SMS aggregator is responsible for the handling of SMS messages 
 		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator 

@@ -21,6 +21,8 @@ package org.mobicents.servlet.restcomm.sms;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.sip.SipServletRequest;
+
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
@@ -31,15 +33,21 @@ public final class SmsSessionRequest {
     private final String from;
     private final String to;
     private final String body;
+    private final SipServletRequest origRequest;
     private final ConcurrentHashMap<String, String> customHeaders;
 
     //TODO need to check which is using the SmsSessionRequest and modify accordingly to include or not the custom headers
-    public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
+    public SmsSessionRequest(final String from, final String to, final String body, final SipServletRequest origRequest, final ConcurrentHashMap<String, String> customHeaders) {
         super();
         this.from = from;
         this.to = to;
+        this.origRequest = origRequest;
         this.body = body;
         this.customHeaders = customHeaders;
+    }
+
+    public SmsSessionRequest(final String from, final String to, final String body, final ConcurrentHashMap<String, String> customHeaders) {
+        this(from, to, body, null, customHeaders);
     }
 
     public String from() {
@@ -52,6 +60,10 @@ public final class SmsSessionRequest {
 
     public String body() {
         return body;
+    }
+
+    public SipServletRequest getOrigRequest() {
+        return origRequest;
     }
 
     public ConcurrentHashMap<String, String> headers() {

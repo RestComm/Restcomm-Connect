@@ -31,11 +31,11 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  */
 @Immutable
 public final class InitializeOutbound {
-    //The displayed name of the original user
+    // The displayed name of the original user
     private final String name;
-    //From SipURI
+    // From SipURI
     private final SipURI from;
-    //To SipURI
+    // To SipURI
     private final SipURI to;
     private final String username;
     private final String password;
@@ -45,10 +45,12 @@ public final class InitializeOutbound {
     private final Sid accountId;
     private final CreateCall.Type type;
     private final DaoManager daoManager;
+    private Sid parentCallSid;
+    private final boolean webrtc;
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion, final Sid accountId,
-            final CreateCall.Type type, final DaoManager daoManager) {
+            final CreateCall.Type type, final DaoManager daoManager, final boolean webrtc) {
         super();
         this.name = name;
         this.from = from;
@@ -61,6 +63,7 @@ public final class InitializeOutbound {
         this.accountId = accountId;
         this.type = type;
         this.daoManager = daoManager;
+        this.webrtc = webrtc;
     }
 
     public String name() {
@@ -106,4 +109,17 @@ public final class InitializeOutbound {
     public DaoManager getDaoManager() {
         return daoManager;
     }
+
+    public Sid getParentCallSid() {
+        return parentCallSid;
+    }
+
+    public void setParentCallSid(Sid parentCallSid) {
+        this.parentCallSid = parentCallSid;
+    }
+
+    public boolean isWebrtc() {
+        return webrtc;
+    }
+
 }

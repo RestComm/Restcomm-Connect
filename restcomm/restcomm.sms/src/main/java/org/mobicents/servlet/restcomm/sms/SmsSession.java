@@ -43,6 +43,7 @@ import org.mobicents.servlet.restcomm.entities.Registration;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.telephony.TextMessage;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -73,8 +74,10 @@ public final class SmsSession extends UntypedActor {
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
 
+    private final ActorRef monitoringService;
+
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-            final DaoManager storage) {
+            final DaoManager storage, final ActorRef monitoringService) {
         super();
         this.configuration = configuration;
         this.factory = factory;
@@ -82,6 +85,7 @@ public final class SmsSession extends UntypedActor {
         this.transport = transport;
         this.attributes = new HashMap<String, Object>();
         this.storage = storage;
+        this.monitoringService = monitoringService;
     }
 
     private void inbound(final Object message) throws IOException {
@@ -187,6 +191,7 @@ public final class SmsSession extends UntypedActor {
             return;
         }
 
+        monitoringService.tell(new TextMessage(from, to, TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
         final Client toClient = clients.getClient(to);
         Registration toClientRegistration = null;
@@ -212,6 +217,9 @@ public final class SmsSession extends UntypedActor {
         final String recipient = buffer.toString();
         try {
             application.setAttribute(SmsSession.class.getName(), self);
+            if (last.getOrigRequest() != null) {
+                application.setAttribute(SipServletRequest.class.getName(), last.getOrigRequest());
+            }
             final SipServletRequest sms = factory.createRequest(application, "MESSAGE", sender, recipient);
             final SipURI uri = (SipURI) factory.createURI(recipient);
             sms.pushRoute(uri);

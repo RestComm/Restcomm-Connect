@@ -12,9 +12,9 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 		return $scope.rapp.config.optionExists(name);
 	}
 	
-	$scope.saveRappClicked = function (projectName,rapp, submitPermitted) {
+	$scope.saveRappClicked = function (applicationSid,rapp, submitPermitted) {
 		if (submitPermitted)
-			$scope.saveRapp(projectName,rapp);
+			$scope.saveRapp(applicationSid,rapp);
 		else {
 			$translate('formSaveReguiredNotification')
 			.then(function (translatedValue) {
@@ -24,10 +24,10 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 		}
 	}
 	
-	$scope.saveRapp = function (projectName,rapp) {
+	$scope.saveRapp = function (applicationSid,rapp) {
 		var packed = rapp.pack();
 		$http({
-			url: 'services/ras/packaging/app/save?name=' + projectName,
+			url: 'services/ras/packaging/app/save?applicationSid=' + applicationSid,
 			method:'POST',
 			data: packed,
 			headers: {'Content-Type': 'application/data'}
@@ -39,15 +39,15 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 		});
 	}
 	
-	$scope.preparePackage = function (projectName) {
+	$scope.preparePackage = function (applicationSid, projectName) {
 		
 		$http({
-			url: 'services/ras/packaging/app/prepare?name=' + projectName,
+			url: 'services/ras/packaging/app/prepare?applicationSid=' + applicationSid,
 			method: 'GET'
 		})
 		.success(function () {
 			console.log("Package is ready for download");
-			$location.path("/packaging/" + projectName + "/download");
+			$location.path("/packaging/" + applicationSid + "=" + projectName + "/download");
 		});
 	}
 	
@@ -57,6 +57,7 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 	
 	// initialization stuff
 	$scope.projectName = $routeParams.projectName;
+	$scope.applicationSid = $routeParams.applicationSid;
 	$scope.rapp = rappWrap.rapp;
 	$scope.isNewRapp = !rappWrap.exists;
 	//if ( !rappWrap.exists ) {
@@ -70,12 +71,13 @@ var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function 
 	$scope.test = binaryInfo;
 	$scope.binaryInfo = binaryInfo;
 	$scope.projectName = $routeParams.projectName;
+	$scope.applicationSid = $routeParams.applicationSid;
 });
 
 packagingDownloadCtrl.getBinaryInfo = function ($q, $http, $route) {
 	var deferred = $q.defer();
 	$http({
-		url: 'services/ras/packaging/binary/info?name=' + $route.current.params.projectName,
+		url: 'services/ras/packaging/binary/info?applicationSid=' + $route.current.params.applicationSid,
 		method: 'GET'
 	})
 	.success(function (data, status) {
@@ -92,7 +94,7 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 		getRapp : function () {
 			var deferred = $q.defer();
 			$http({
-				url:  'services/ras/packaging/app?name=' + $route.current.params.projectName,
+				url:  'services/ras/packaging/app?applicationSid=' + $route.current.params.applicationSid,
 				method: 'GET',
 			})
 			.success(function (data, status, headers, config) {

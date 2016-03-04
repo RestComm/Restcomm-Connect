@@ -39,9 +39,10 @@ public final class Recording {
     private final Double duration;
     private final String apiVersion;
     private URI uri;
+    private URI fileUri;
 
     public Recording(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
-            final Sid callSid, final Double duration, final String apiVersion, final URI uri) {
+            final Sid callSid, final Double duration, final String apiVersion, final URI uri, final URI fileUri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -51,6 +52,7 @@ public final class Recording {
         this.duration = duration;
         this.apiVersion = apiVersion;
         this.uri = uri;
+        this.fileUri = fileUri;
     }
 
     public static Builder builder() {
@@ -94,6 +96,15 @@ public final class Recording {
         return this;
     }
 
+    public URI getFileUri() {
+        return fileUri;
+    }
+
+    public Recording updateFileUri(URI newFileUri) {
+        this.fileUri = newFileUri;
+        return this;
+    }
+
     @NotThreadSafe
     public static final class Builder {
         private Sid sid;
@@ -102,6 +113,7 @@ public final class Recording {
         private Double duration;
         private String apiVersion;
         private URI uri;
+        private URI fileUri;
 
         private Builder() {
             super();
@@ -109,7 +121,7 @@ public final class Recording {
 
         public Recording build() {
             final DateTime now = DateTime.now();
-            return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri);
+            return new Recording(sid, now, now, accountSid, callSid, duration, apiVersion, uri, fileUri);
         }
 
         public void setSid(final Sid sid) {
@@ -134,6 +146,10 @@ public final class Recording {
 
         public void setUri(final URI uri) {
             this.uri = uri;
+        }
+
+        public void setFileUri(final URI uri) {
+            this.fileUri = fileUri;
         }
     }
 }
