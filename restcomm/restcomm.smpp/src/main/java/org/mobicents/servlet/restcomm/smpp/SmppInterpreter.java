@@ -26,14 +26,13 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
-import org.mobicents.servlet.restcomm.email.EmailRequest;
-import org.mobicents.servlet.restcomm.email.EmailResponse;
-import org.mobicents.servlet.restcomm.email.Mail;
-import org.mobicents.servlet.restcomm.email.api.CreateEmailService;
-import org.mobicents.servlet.restcomm.email.api.EmailService;
+import org.mobicents.servlet.restcomm.email.EmailService;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
@@ -222,10 +221,7 @@ public class SmppInterpreter extends UntypedActor  {
 
             @Override
             public Actor create() throws Exception {
-                final CreateEmailService builder = new EmailService();
-                builder.CreateEmailSession(configuration);
-                EMAIL_SENDER=builder.getUser();
-                return builder.build();
+                return new EmailService(configuration);
             }
         }));
     }
@@ -419,7 +415,7 @@ public class SmppInterpreter extends UntypedActor  {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Parser(xml);
+                return new Parser(xml, self());
             }
         }));
     }
