@@ -10,13 +10,14 @@ var App = angular.module('Rvd', [
 	'pascalprecht.translate',
 	'ngSanitize',
 	'ngResource',
-	'ngCookies'
+	'ngCookies',
+	'ngIdle'
 ]);
 
 var rvdMod = App;
 
 App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $translateProvider) {
-	
+
 	$routeProvider.when('/project-manager/:projectKind', {
 		templateUrl : 'templates/projectManager.html',
 		controller : 'projectManagerCtrl',
@@ -53,11 +54,11 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 	.when('/packaging/:applicationSid=:projectName/download', {
 		templateUrl : 'templates/packaging/download.html',
 		controller : 'packagingDownloadCtrl',
-		resolve: { 
+		resolve: {
 			binaryInfo: packagingDownloadCtrl.getBinaryInfo,
 			authInfo: function (authentication) {return authentication.authResolver();}
 		}
-	})	
+	})
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
 		controller : 'upgradeCtrl',
@@ -72,19 +73,31 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 	.when('/designer/:applicationSid=:projectName/log', {
 		templateUrl : 'templates/projectLog.html',
 		controller : 'projectLogCtrl'
-	})	
+	})
 	.otherwise({
 		redirectTo : '/home'
 	});
-	
+
 	$translateProvider.useStaticFilesLoader({
   		prefix: '/restcomm-rvd/languages/',
   		suffix: '.json'
 	});
 	$translateProvider.useCookieStorage();
 	$translateProvider.preferredLanguage('en-US');
-	
+
 }]);
+
+App.config(function(IdleProvider, KeepaliveProvider, TitleProvider) {
+    // configure Idle settings
+    IdleProvider.idle(3600); // one hour
+    IdleProvider.timeout(15); // in seconds
+    KeepaliveProvider.interval(300); // 300 sec - every five minutes
+    TitleProvider.enabled(false); // it is enabled by default
+})
+.run(function(Idle){
+    // start watching when the app runs. also starts the Keepalive service by default.
+    Idle.watch();
+});
 
 App.factory( 'dragService', [function () {
 	var dragInfo;
@@ -98,7 +111,7 @@ App.factory( 'dragService', [function () {
 				dragInfo = { id : dragId, model : model };
 			else
 				dragInfo = { id : dragId, class : model };
-				
+
 			return dragId;
 		},
 		popDrag:  function () {
@@ -109,19 +122,19 @@ App.factory( 'dragService', [function () {
 			}
 		},
 		dragActive: function () {
-			return pDragActive; 
+			return pDragActive;
 		}
-		
+
 	};
 	return serviceInstance;
 }]);
 
 /*
 App.factory('protos', function () {
-	var protoInstance = { 
+	var protoInstance = {
 		nodes: {
 				voice: {kind:'voice', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
-				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},		
+				ussd: {kind:'ussd', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
 				sms: {kind:'sms', name:'module', label:'Untitled module', steps:[], iface:{edited:false,editLabel:false}},
 		},
 	};
@@ -137,7 +150,7 @@ App.filter('excludeNode', function() {
             if (item.name !== exclude_named) {
                 result.push(item);
             }
-        });                
+        });
         return result;
     }
 });

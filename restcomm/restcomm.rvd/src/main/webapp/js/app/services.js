@@ -6,15 +6,25 @@ angular.module('Rvd')
 	
 	notifications.put = function (notif) {
 		notifications.data.push(notif);
-		
-		$timeout(function () { 
-			if (notifications.data.indexOf(notif) != -1)
-				notifications.data.splice(notifications.data.indexOf(notif),1); 
-		}, 3000);
+
+		var timeout = 3000;
+		if (typeof notif.timeout !== "undefined" )
+		    timeout = notif.timeout;
+
+        if (timeout > 0) {
+            $timeout(function () {
+                if (notifications.data.indexOf(notif) != -1)
+                    notifications.data.splice(notifications.data.indexOf(notif),1);
+            }, timeout);
+		}
 	}
 	
 	notifications.remove = function (removedIndex) {
 		notifications.data.splice(removedIndex, 1);
+	}
+
+	notifications.clear = function () {
+	    notifications.data = [];
 	}
 	
 	return notifications;
@@ -46,7 +56,7 @@ angular.module('Rvd').service('projectModules', [function () {
 }]);
 */
 
-angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', function ($http, $cookies, $q) {
+angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', '$location', 'Idle', function ($http, $cookies, $q, $location, Idle) {
 	//console.log("Creating authentication service");
 	var serviceInstance = {};
 	var authInfo = {};
@@ -67,6 +77,7 @@ angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', func
 		.success ( function () {
 			console.log("login successful");
 			deferred.resolve();
+			Idle.watch(); // start watching for idleness if not already doing it
 		})
 		.error( function (data, status) {
 			console.log("error logging in");
@@ -78,14 +89,17 @@ angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', func
 	
 	function doLogout() {
 		var deferred = $q.defer();
+		Idle.unwatch(); // stop checking for idleness
 		$http({	url:'services/auth/logout', method:'GET'})
 		.success ( function () {
 			console.log("logged out");
 			deferred.resolve();
+			$location.path("/login");
 		})
 		.error( function (data, status) {
 			console.log("error logging out");
 			deferred.reject(data);
+			$location.path("/login");
 		});		
 		return deferred.promise;
 	}
@@ -695,4 +709,9 @@ angular.module('Rvd').factory('stepService', [function() {
 	
 	return stepService;
 }]);
+
+/* Service that pings RVD to keep the ticket fresh */
+angular.module('Rvd').factory('keepAliveResource', function($resource) {
+    return $resource('services/auth/keepalive');
+});
 
