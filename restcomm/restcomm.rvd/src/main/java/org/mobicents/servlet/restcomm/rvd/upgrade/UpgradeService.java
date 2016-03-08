@@ -171,9 +171,9 @@ public class UpgradeService {
             }
         }
         if ( failedCount > 0 )
-            logger.info("" + failedCount + " RVD projects failed upgrade");
+            logger.info(Integer.toString(failedCount) + " RVD projects failed upgrade");
         if ( upgradedCount > 0 )
-            logger.info("" + upgradedCount + " RVD projects upgraded");
+            logger.info(Integer.toString(upgradedCount) + " RVD projects upgraded");
         if ( projectNames.size() > 0 && failedCount == 0)
             logger.info("--- All RVD projects are up to date");
         //if ( upgradedCount  0 && projectNames.size() > 0 )

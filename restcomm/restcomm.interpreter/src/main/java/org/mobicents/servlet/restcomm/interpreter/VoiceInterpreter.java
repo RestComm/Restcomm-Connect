@@ -1009,7 +1009,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         || (statusCode >= 200 && statusCode < 300 && "BYE".equalsIgnoreCase(method))) {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
-                    parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
+                    parameters.add(new BasicNameValuePair("DialSipResponseCode", Integer.toString(statusCode)));
                     processCustomHeaders(lastResponse, "DialSipHeader_", parameters);
                 }
             }

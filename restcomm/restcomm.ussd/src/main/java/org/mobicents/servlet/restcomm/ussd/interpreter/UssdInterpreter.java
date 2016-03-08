@@ -364,7 +364,7 @@ public class UssdInterpreter extends UntypedActor {
                         || (statusCode >= 200 && statusCode < 300 && "BYE".equalsIgnoreCase(method))) {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
-                    parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
+                    parameters.add(new BasicNameValuePair("DialSipResponseCode", Integer.toString(statusCode)));
                     Iterator<String> headerIt = lastResponse.getHeaderNames();
                     while (headerIt.hasNext()) {
                         String headerName = headerIt.next();

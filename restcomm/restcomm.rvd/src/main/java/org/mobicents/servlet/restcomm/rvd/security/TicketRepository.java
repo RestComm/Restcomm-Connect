@@ -65,7 +65,7 @@ public class TicketRepository {
             logger.debug("Removing stale RVD tickets at " + currentDate);
             lastRemovalCheckTime = currentDate; // reset interval
             int removedCount = runStaleTicketRemovalJob(currentDate);
-            logger.debug("" + removedCount + " tickets removed." + tickets.size() + " tickets still in TicketRepository");
+            logger.debug(Integer.toString(removedCount) + " tickets removed." + tickets.size() + " tickets still in TicketRepository");
         }
 
     }
