@@ -84,7 +84,7 @@ public class ProjectLogger {
 
     public void done() {
         Date date = new Date();
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("[" + date.toString() + "]");
         for ( String tag : tags ) {
             if (tag == null)

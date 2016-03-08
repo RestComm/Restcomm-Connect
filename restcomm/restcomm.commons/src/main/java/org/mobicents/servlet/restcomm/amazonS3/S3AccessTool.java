@@ -80,7 +80,7 @@ public class S3AccessTool {
         s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
         logger.info("S3 Region: "+bucketRegion.toString());
         try {
-            StringBuffer bucket = new StringBuffer();
+            StringBuilder bucket = new StringBuilder();
             bucket.append(bucketName);
             if (folder != null && !folder.isEmpty())
                 bucket.append("/").append(folder);

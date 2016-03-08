@@ -450,7 +450,7 @@ public class Interpreter {
         // System.out.printf( "found variable %s at %d\n", v.variableName, v.position );
         // }
 
-        StringBuffer buffer = new StringBuffer(sourceText);
+        StringBuilder buffer = new StringBuilder(sourceText);
         Collections.reverse(variablesInText);
         for (VariableInText v : variablesInText) {
             String replaceValue = "";
