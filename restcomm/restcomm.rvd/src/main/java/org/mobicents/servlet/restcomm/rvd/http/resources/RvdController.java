@@ -94,7 +94,7 @@ public class RvdController extends RestService {
             // logging rcml response, if configured
             // make sure logging is enabled before allowing access to sensitive log information
             ProjectSettings projectSettings = rvdContext.getProjectSettings();
-            if (projectSettings.getLogging() == true && (projectSettings.getLoggingRCML() != null && projectSettings.getLoggingRCML() == true) ){
+            if (projectSettings.getLogging() && (projectSettings.getLoggingRCML() != null && projectSettings.getLoggingRCML()) ){
                 interpreter.getProjectLogger().log( rcmlResponse, false).tag("app", appname).tag("RCML").done();
             }
 
@@ -367,7 +367,7 @@ public class RvdController extends RestService {
 
             // make sure logging is enabled before allowing access to sensitive log information
             ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appName, workspaceStorage);
-            if (projectSettings == null || projectSettings.getLogging() == false)
+            if (projectSettings == null || !projectSettings.getLogging())
                 return Response.status(Status.NOT_FOUND).build();
 
             InputStream logStream;
@@ -400,7 +400,7 @@ public class RvdController extends RestService {
 
             // make sure logging is enabled before allowing access to sensitive log information
             ProjectSettings projectSettings = FsProjectStorage.loadProjectSettings(appName, workspaceStorage);
-            if (projectSettings == null || projectSettings.getLogging() == false)
+            if (projectSettings == null || !projectSettings.getLogging())
                 return Response.status(Status.NOT_FOUND).build();
 
             rvdContext.getProjectLogger().reset();
