@@ -80,7 +80,7 @@ public final class UsageConverter extends AbstractConverter implements JsonSeria
   private void writeDescription(final String description, final HierarchicalStreamWriter writer) {
     writer.startNode("Description");
     if (description != null) {
-      writer.setValue(description.toString());
+      writer.setValue(description);
     }
     writer.endNode();
   }
@@ -152,7 +152,7 @@ public final class UsageConverter extends AbstractConverter implements JsonSeria
   private void writeCountUnit(final String countUnit, final HierarchicalStreamWriter writer) {
     writer.startNode("CountUnit");
     if (countUnit != null) {
-      writer.setValue(countUnit.toString());
+      writer.setValue(countUnit);
     }
     writer.endNode();
   }
@@ -164,7 +164,7 @@ public final class UsageConverter extends AbstractConverter implements JsonSeria
   private void writePriceUnit(final String priceUnit, final HierarchicalStreamWriter writer) {
     writer.startNode("PriceUnit");
     if (priceUnit != null) {
-      writer.setValue(priceUnit.toString());
+      writer.setValue(priceUnit);
     }
     writer.endNode();
   }

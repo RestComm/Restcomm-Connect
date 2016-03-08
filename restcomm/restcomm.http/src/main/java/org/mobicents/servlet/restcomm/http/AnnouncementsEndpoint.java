@@ -123,12 +123,12 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
         if (!path.endsWith("/")) {
             path = path + "/";
         }
-        path = path + accountId.toString();
+        path = path + accountId;
         String uri = runtime.getString("cache-uri");
         if (!uri.endsWith("/")) {
             uri = uri + "/";
         }
-        uri = uri + accountId.toString();
+        uri = uri + accountId;
         this.cache = cache(path, uri);
     }
 

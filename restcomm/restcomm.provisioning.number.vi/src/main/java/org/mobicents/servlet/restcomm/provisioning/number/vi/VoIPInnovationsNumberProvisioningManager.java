@@ -191,8 +191,8 @@ public class VoIPInnovationsNumberProvisioningManager implements PhoneNumberProv
             searchPattern = filterPattern.toString();
         }
         if ((areaCode == null || !areaCode.isEmpty() || areaCode.length() < 3) &&
-                (searchPattern != null && !searchPattern.toString().isEmpty() && searchPattern.toString().length() >= 5)) {
-            areaCode = searchPattern.toString().substring(2, 5);
+                (searchPattern != null && !searchPattern.isEmpty() && searchPattern.length() >= 5)) {
+            areaCode = searchPattern.substring(2, 5);
             if(logger.isDebugEnabled()) {
                 logger.debug("areaCode derived from searchPattern " + searchPattern);
             }

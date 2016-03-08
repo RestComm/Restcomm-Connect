@@ -188,7 +188,7 @@ public final class CallManager extends UntypedActor {
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         SipURI outboundIntf = outboundInterface("udp");
         if (outboundIntf != null) {
-            myHostIp = ((SipURI) outboundIntf).getHost().toString();
+            myHostIp = ((SipURI) outboundIntf).getHost();
         } else {
             String errMsg = "SipURI outboundIntf is null";
             sendNotification(errMsg, 14001, "error", false);
