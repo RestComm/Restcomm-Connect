@@ -613,7 +613,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         ActorRef branch = dialBranches.remove(dialBranches.indexOf(sender));
                         logger.info("Will cancel branch: " + branch.toString());
                         branch.tell(new Cancel(), self());
-                        if (dialBranches.size() > 0) {
+                        if (!dialBranches.isEmpty()) {
                             return;
                         } else if (attribute == null) {
                             fsm.transition(message, finishDialing);
@@ -684,7 +684,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         + ", statusCode " + response.get().getStatusCode());
             }
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-                if (dialBranches == null || dialBranches.size()==0) {
+                if (dialBranches == null || dialBranches.isEmpty()) {
                     logger.info("Downloader response is success, moving to Ready state");
                     fsm.transition(message, ready);
                 } else {
@@ -892,7 +892,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                executeDialAction(message, sender);
 //            }
             sender.tell(new Cancel(), self());
-            if (dialBranches.size() > 0) {
+            if (!dialBranches.isEmpty()) {
                 //Wait to check the response from the other branches
                 return;
             } else {
@@ -1865,7 +1865,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         logger.info("Canceled branch: " + branch.path());
                     }
                 }
-                if (dialBranches != null && dialBranches.size() > 0) {
+                if (dialBranches != null && !dialBranches.isEmpty()) {
                     dialBranches = null;
                 }
 //                    call.tell(new StopMediaGroup(), null);
@@ -1903,7 +1903,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                            }
                             branch.tell(new Cancel(), source);
                         }
-                        if (dialBranches.size() > 0) {
+                        if (!dialBranches.isEmpty()) {
                             dialBranches = null;
                         }
                         //Since initial call wants to finish dialling there is no point to check form RCML next

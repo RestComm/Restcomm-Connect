@@ -770,7 +770,7 @@ public class UssdInterpreter extends UntypedActor {
                     ussdCollectAction = ussdCollectTag.attribute("action").value();
                     ussdRestcommResponse.setUssdCollectAction(ussdCollectAction);
                     Queue<Tag> children = new java.util.concurrent.ConcurrentLinkedQueue<Tag>(ussdCollectTag.children());
-                    if (children != null && children.size() > 0) {
+                    if (children != null && !children.isEmpty()) {
                         ussdText.append(processUssdMessageTags(children));
                     } else if (ussdCollectTag.text() != null) {
                         ussdText.append(ussdCollectTag.text());
