@@ -26,7 +26,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CallStateChanged {
-    public static enum State {
+    public enum State {
         QUEUED("queued"), RINGING("ringing"), CANCELED("canceled"), BUSY("busy"), NOT_FOUND("not-found"), FAILED("failed"), NO_ANSWER(
                 "no-answer"), IN_PROGRESS("in-progress"), COMPLETED("completed");
 

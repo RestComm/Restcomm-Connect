@@ -30,7 +30,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public final class BridgeStateChanged {
 
-    public static enum BridgeState {
+    public enum BridgeState {
         READY("ready"), HALF_BRIDGED("half bridged"), BRIDGED("bridged"), INACTIVE("completed"), FAILED("failed");
 
         private final String text;

@@ -28,7 +28,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class UpdateLink {
-    public static enum Type {
+    public enum Type {
         PRIMARY, SECONDARY
     };
 

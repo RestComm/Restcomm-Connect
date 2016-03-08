@@ -25,7 +25,7 @@ package org.mobicents.servlet.restcomm.telephony;
  *
  */
 public class TextMessage {
-    public static enum SmsState {INBOUND_TO_APP, INBOUND_TO_CLIENT, INBOUND_TO_PROXY_OUT, OUTBOUND, NOT_FOUND}
+    public enum SmsState {INBOUND_TO_APP, INBOUND_TO_CLIENT, INBOUND_TO_PROXY_OUT, OUTBOUND, NOT_FOUND}
     private final String from;
     private final String to;
     private final SmsState state;
