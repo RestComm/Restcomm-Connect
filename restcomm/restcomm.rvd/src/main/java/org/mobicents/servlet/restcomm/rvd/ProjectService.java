@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.FileUtils;
 import org.mobicents.servlet.restcomm.rvd.exceptions.IncompatibleProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
@@ -117,7 +119,6 @@ public class ProjectService {
      * @param httpRequest
      * @throws URISyntaxException
      * @throws RvdException
-     * @throws UnsupportedEncodingException
      */
     public void fillStartUrlsForProjects(List<ProjectItem> items, HttpServletRequest httpRequest)
             throws ProjectException {
@@ -252,7 +253,6 @@ public class ProjectService {
 
     /**
      * Runs project validation on the request body. Throws ValidationException for normal validation errors. Returns the state loaded from the request in case it is needed or further processing
-     * @param request
      * @return
      * @throws RvdException
      */
@@ -343,26 +343,36 @@ public class ProjectService {
         Unzipper unzipper = new Unzipper(tempProjectDir);
         unzipper.unzip(archiveStream);
 
+        try {
+            // check project version for compatibility
+            String stateFilename = tempProjectDir.getPath() + "/state";
+            FileReader reader = new FileReader(stateFilename);
+            JsonParser parser = new JsonParser();
+            JsonElement element = parser.parse(reader);
+            String version = element.getAsJsonObject().get("header").getAsJsonObject().get("version").getAsString();
+            // is this project compatible (current RVD can open and run without upgrading) ?
+            if (UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), version)) {
+                // Create a temporary workspace storage. Also, set owner user to currently logged user.
+                WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
+                ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getName(), tempStorage);
+                state.getHeader().setOwner(owner);
+                FsProjectStorage.storeProject(false, state, tempProjectDir.getName(), tempStorage);
 
-        // Then try to load in case we got garbage
-        //FsStorageBase storageBase = new FsStorageBase(tempProjectDir.getParent(), rvdContext.getMarshaler());
-        //ProjectState state = storageBase.loadModelFromFile(tempProjectDir.getPath() + File.separator + "state", ProjectState.class);
+                // TODO Make these an atomic action!
+                //projectName = projectStorage.getAvailableProjectName(projectName);
+                projectName = FsProjectStorage.getAvailableProjectName(projectName, workspaceStorage);
+                FsProjectStorage.createProjectSlot(projectName, workspaceStorage);
 
-        // Create a temporary workspace storage. Also, set owner user to currently logged user.
-        WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
-        ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getName(), tempStorage);
-        state.getHeader().setOwner(owner);
-        FsProjectStorage.storeProject(false, state, tempProjectDir.getName(), tempStorage);
-
-
-        // TODO Make these an atomic action!
-        //projectName = projectStorage.getAvailableProjectName(projectName);
-        projectName = FsProjectStorage.getAvailableProjectName(projectName, workspaceStorage);
-        FsProjectStorage.createProjectSlot(projectName, workspaceStorage );
-
-        FsProjectStorage.importProjectFromDirectory(tempProjectDir, projectName, true, workspaceStorage);
-
-        return projectName;
+                FsProjectStorage.importProjectFromDirectory(tempProjectDir, projectName, true, workspaceStorage);
+                return projectName;
+            } else {
+                throw new StorageException("Imported project version (" + version + ") not compatible with current RVD version ("+ RvdConfiguration.getRvdProjectVersion() +")");
+            }
+        } catch ( Exception e) {
+            throw new StorageException("Error importing project from archive.",e);
+        } finally {
+            FileUtils.deleteQuietly(tempProjectDir);
+        }
     }
 
     public void addWavToProject(String projectName, String wavName, InputStream wavStream) throws StorageException {
