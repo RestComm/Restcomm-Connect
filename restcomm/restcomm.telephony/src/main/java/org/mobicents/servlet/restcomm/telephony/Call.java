@@ -531,7 +531,7 @@ public final class Call extends UntypedActor {
                     builder.setTo(to.getUser());
                     builder.setCallerName(name);
                     builder.setStartTime(new DateTime());
-                    String fromString = (from.getUser() != null ? from.getUser() : "CALLS REST API");
+                    String fromString = from.getUser() != null ? from.getUser() : "CALLS REST API";
                     builder.setFrom(fromString);
                     // builder.setForwardedFrom(callInfo.forwardedFrom());
                     // builder.setPhoneNumberSid(phoneId);

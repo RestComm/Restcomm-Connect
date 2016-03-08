@@ -335,9 +335,9 @@ public class UssdInterpreter extends UntypedActor {
         parameters.add(new BasicNameValuePair("CallSid", callSid));
         final String accountSid = accountId.toString();
         parameters.add(new BasicNameValuePair("AccountSid", accountSid));
-        final String from = (callInfo.from());
+        final String from = callInfo.from();
         parameters.add(new BasicNameValuePair("From", from));
-        final String to = (callInfo.to());
+        final String to = callInfo.to();
         parameters.add(new BasicNameValuePair("To", to));
         final String state = callState.toString();
         parameters.add(new BasicNameValuePair("CallStatus", state));

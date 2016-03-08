@@ -50,7 +50,7 @@ public class RvdUtils {
     }
 
     public static boolean safeEquals(String value1, String value2) {
-        return value1 == null ? (value1 == value2) : (value1.equals(value2));
+        return value1 == null ? (value1 == value2) : value1.equals(value2);
     }
 
     /**

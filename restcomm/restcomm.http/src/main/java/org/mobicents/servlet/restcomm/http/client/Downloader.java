@@ -109,7 +109,7 @@ public final class Downloader extends UntypedActor {
     }
 
     private boolean isHttpError(final int code) {
-        return (code >= 400);
+        return code >= 400;
     }
 
     private HttpResponseDescriptor validateXML (final HttpResponseDescriptor descriptor) throws XMLStreamException {

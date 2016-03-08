@@ -540,7 +540,7 @@
       */
      public static boolean isB2BUASession(SipServletMessage sipMessage) {
          SipSession linkedB2BUASession = getLinkedSession(sipMessage);
-         return (linkedB2BUASession != null);
+         return linkedB2BUASession != null;
      }
 
  }
