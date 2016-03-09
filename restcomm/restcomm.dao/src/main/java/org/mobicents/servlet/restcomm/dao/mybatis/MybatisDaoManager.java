@@ -48,6 +48,7 @@ import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.restcomm.dao.UsageDao;
 import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.dao.GeolocationDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -76,6 +77,7 @@ public final class MybatisDaoManager implements DaoManager {
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
     private InstanceIdDao instanceIdDao;
+    private GeolocationDao geolocationDao;
 
     public MybatisDaoManager() {
         super();
@@ -179,6 +181,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public GeolocationDao getGeolocationDao() {
+        return geolocationDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -244,5 +251,6 @@ public final class MybatisDaoManager implements DaoManager {
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
+        geolocationDao = new MybatisGeolocationDao(sessions);
     }
 }

@@ -20,6 +20,7 @@
 package org.mobicents.servlet.restcomm.dao;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 import java.util.Currency;
 import java.util.Date;
@@ -61,6 +62,14 @@ public final class DaoUtils {
         } else {
             return null;
         }
+    }
+
+    public static BigInteger readBigInteger(final Object object) {
+        if (object != null) {
+            return new BigInteger((String) object);
+            } else {
+                return null;
+                }
     }
 
     public static Boolean readBoolean(final Object object) {
