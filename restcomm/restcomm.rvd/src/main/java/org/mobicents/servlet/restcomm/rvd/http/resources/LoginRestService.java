@@ -22,6 +22,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.model.LoginForm;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.security.AuthenticationService;
 import org.mobicents.servlet.restcomm.rvd.security.SecurityUtils;
 import org.mobicents.servlet.restcomm.rvd.security.Ticket;
@@ -45,39 +46,6 @@ public class LoginRestService extends RestService {
         rvdSettings = rvdSettings.getInstance();
     }
 
-    /*
-    @GET
-    @Path("login")
-    public Response login(@Context HttpServletRequest request) {
-        //logger.debug("Running login");
-
-        // get username/password from request and authenticate against Restcomm
-        // ...
-        String userId = "administrator@company.com";
-        String password = "RestComm";
-        AuthenticationService authService = new AuthenticationService(rvdSettings, request);
-
-        try {
-            if ( authService.authenticate(userId, password) ) {
-                logger.debug("User " + userId + " authenticated");
-
-                // if authentication succeeds create a ticket for this user and return its id
-                TicketRepository tickets = TicketRepository.getInstance();
-                Ticket ticket = new Ticket(userId);
-                tickets.putTicket( ticket );
-
-                return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket) ).build();
-            }
-            else {
-                logger.debug("Authentication failed for user " + userId);
-                return Response.status(Status.UNAUTHORIZED).cookie( SecurityUtils.createTicketCookie(null) ).build();
-            }
-        } catch (RvdSecurityException e) {
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, null);
-        }
-    }
-    */
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("login")
@@ -90,12 +58,14 @@ public class LoginRestService extends RestService {
         AuthenticationService authService = new AuthenticationService();
 
         try {
-            if ( authService.authenticate(credentials.getUsername(), credentials.getPassword()) ) {
-                logger.debug("User " + credentials.getUsername() + " authenticated");
+            RestcommAccountInfoResponse account = authService.authenticate(credentials.getUsername(), credentials.getPassword());
+            if ( account != null ) {
+                String verifiedUsername = account.getEmail_address(); // in case Restcomm loosely authenticates with similar username, we need to have the exact username that exists in the database
+                logger.debug("User " + verifiedUsername + " authenticated");
 
                 // if authentication succeeds create a ticket for this user and return its id
                 TicketRepository tickets = TicketRepository.getInstance();
-                Ticket ticket = new Ticket(credentials.getUsername());
+                Ticket ticket = new Ticket(verifiedUsername);
                 ticket.setAuthenticationToken(authService.getAuthenticationToken()); // used for API access
                 ticket.setCookieBased(true);
                 tickets.putTicket( ticket );
