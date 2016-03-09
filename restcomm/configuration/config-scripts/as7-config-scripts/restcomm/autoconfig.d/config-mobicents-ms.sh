@@ -99,7 +99,16 @@ echo "Configuring Mobicents Media Server... MS_ADDRESS $MS_ADDRESS BIND_ADDRESS 
 if [ -z "$MS_ADDRESS" ]; then
 		MS_ADDRESS=$BIND_ADDRESS
 fi
-configUdpManager $MS_ADDRESS $NETWORK $SUBNET_MASK
+
+if [ -z "$MS_NETWORK" ]; then
+      MS_NETWORK=$NETWORK
+fi
+
+if [ -z "$MS_SUBNET_MASK" ]; then
+      MS_SUBNET_MASK=$SUBNET_MASK
+fi
+
+configUdpManager $MS_ADDRESS $MS_NETWORK $MS_SUBNET_MASK
 #configJavaOpts
 configLogDirectory
 echo 'Finished configuring Mobicents Media Server!'
