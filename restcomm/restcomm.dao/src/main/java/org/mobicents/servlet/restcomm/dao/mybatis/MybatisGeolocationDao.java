@@ -151,16 +151,17 @@ public class MybatisGeolocationDao implements GeolocationDao {
         map.put("response_status", gl.getResponseStatus());
         map.put("global_cell_id", gl.getGlobalCellId());
         map.put("location_area_code", gl.getLocationAreaCode());
-        map.put("location_timestamp", writeDateTime(gl.getLocationTimestamp()));
         map.put("mobile_country_code", gl.getMobileCountryCode());
         map.put("mobile_network_code", gl.getMobileNetworkCode());
         map.put("network_entity_address", gl.getNetworkEntityAddress());
+        map.put("age_of_location_info", gl.getAgeOfLocationInfo());
         map.put("device_latitude", gl.getDeviceLatitude());
         map.put("device_longitude", gl.getDeviceLongitude());
         map.put("accuracy", gl.getAccuracy());
         map.put("physical_address", gl.getPhysicalAddress());
         map.put("internet_address", gl.getInternetAddress());
         map.put("formatted_address", gl.getFormattedAddress());
+        map.put("location_timestamp", writeDateTime(gl.getLocationTimestamp()));
         map.put("event_geofence_latitude", gl.getEventGeofenceLatitude());
         map.put("event_geofence_longitude", gl.getEventGeofenceLongitude());
         map.put("radius", gl.getRadius());
@@ -184,16 +185,17 @@ public class MybatisGeolocationDao implements GeolocationDao {
         final String response_status = readString(map.get("response_status"));
         final String global_cell_id = readString(map.get("global_cell_id"));
         final String location_area_code = readString(map.get("location_area_code"));
-        final DateTime location_timestamp = readDateTime(map.get("location_timestamp"));
         final Integer mobile_country_code = readInteger(map.get("mobile_country_code"));
         final Integer mobile_network_code = readInteger(map.get("mobile_network_code"));
         final BigInteger network_entity_address = readBigInteger(map.get("network_entity_address"));
+        final Integer age_of_location_info = readInteger(map.get("age_of_location_info"));
         final String device_latitude = readString(map.get("device_latitude"));
         final String device_longitude = readString(map.get("device_longitude"));
         final BigInteger accuracy = readBigInteger(map.get("accuracy"));
         final String physical_address = readString(map.get("physical_address"));
         final String internet_address = readString(map.get("internet_address"));
         final String formatted_address = readString(map.get("formatted_address"));
+        final DateTime location_timestamp = readDateTime(map.get("location_timestamp"));
         final String event_geofence_latitude = readString(map.get("event_geofence_latitude"));
         final String event_geofence_longitude = readString(map.get("event_geofence_longitude"));
         final BigInteger radius = readBigInteger(map.get("radius"));
@@ -203,9 +205,9 @@ public class MybatisGeolocationDao implements GeolocationDao {
         final String api_version = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
         return new Geolocation(sid, date_created, date_updated, date_executed, account_sid, source, device_identifier,
-                geolocation_type, response_status, global_cell_id, location_area_code, location_timestamp, mobile_country_code,
-                mobile_network_code, network_entity_address, device_latitude, device_longitude, accuracy, physical_address,
-                internet_address, formatted_address, event_geofence_latitude, event_geofence_longitude, radius,
+                geolocation_type, response_status, global_cell_id, location_area_code, mobile_country_code, mobile_network_code,
+                network_entity_address, age_of_location_info, device_latitude, device_longitude, accuracy, physical_address,
+                internet_address, formatted_address, location_timestamp, event_geofence_latitude, event_geofence_longitude, radius,
                 geolocation_positioning_type, last_geolocation_response, cause, api_version, uri);
     }
 
