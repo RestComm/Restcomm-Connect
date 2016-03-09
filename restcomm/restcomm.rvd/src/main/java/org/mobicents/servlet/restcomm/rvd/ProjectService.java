@@ -17,6 +17,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.UnsupportedProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ProjectValidator;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.ValidationResult;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
@@ -329,7 +330,7 @@ public class ProjectService {
         return FsProjectStorage.archiveProject(projectName,workspaceStorage);
     }
 
-    public String importProjectFromArchive(InputStream archiveStream, String archiveFilename, String owner) throws StorageException {
+    public String importProjectFromArchive(InputStream archiveStream, String archiveFilename, String owner) throws RvdException {
         File archiveFile = new File(archiveFilename);
         String projectName = FilenameUtils.getBaseName(archiveFile.getName());
 
@@ -366,9 +367,11 @@ public class ProjectService {
                 FsProjectStorage.importProjectFromDirectory(tempProjectDir, projectName, true, workspaceStorage);
                 return projectName;
             } else {
-                throw new StorageException("Imported project version (" + version + ") not compatible with current RVD version ("+ RvdConfiguration.getRvdProjectVersion() +")");
+                throw new UnsupportedProjectVersion("Imported project version (" + version + ") not supported");
             }
-        } catch ( Exception e) {
+        } catch ( UnsupportedProjectVersion e) {
+            throw e;
+        } catch (Exception e) {
             throw new StorageException("Error importing project from archive.",e);
         } finally {
             FileUtils.deleteQuietly(tempProjectDir);
