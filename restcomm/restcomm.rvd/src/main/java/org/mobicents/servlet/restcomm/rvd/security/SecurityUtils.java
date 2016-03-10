@@ -39,4 +39,15 @@ public class SecurityUtils {
             throw new InvalidTicketCookie("Ivalid ticket cookie: " + ticketCookie);
     }
 
+    /**
+     * Extracts username and password from a Basic HTTP "Authorization" header. Expects only the value
+     * of the header. Thus, for header "Authorization: xyx" it expects only the "xyz" part.
+     *
+     * @param headerValue
+     * @return a BasicAuthCredentials object or null if no credentials are found or a parsing error occurs
+     */
+    public static BasicAuthCredentials parseBasicAuthHeader(String headerValue) {
+        return null;
+    }
+
 }
