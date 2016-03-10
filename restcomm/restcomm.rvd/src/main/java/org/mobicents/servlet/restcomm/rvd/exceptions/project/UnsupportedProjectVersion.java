@@ -1,4 +1,3 @@
-
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2016, Telestax Inc and individual contributors
@@ -19,31 +18,26 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd.restcomm;
+package org.mobicents.servlet.restcomm.rvd.exceptions.project;
+
+import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 
 /**
- * A reduced entity for a Restcomm Account. It contains only the properties that make
- * sense and are used by RVD.
+ * Thrown when:
+ * - trying to import projectswhose version is not supported by this version of RVD
+ * - ...
  *
+ * @author Orestis Tsakiridis
  */
-public class RestcommAccountInfoResponse {
-    String sid;
-    String friendly_name;
-    String email_address;
-
-    public RestcommAccountInfoResponse() {
-        // TODO Auto-generated constructor stub
+public class UnsupportedProjectVersion extends RvdException {
+    public UnsupportedProjectVersion() {
     }
 
-    public String getSid() {
-        return sid;
+    public UnsupportedProjectVersion(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public String getFriendly_name() {
-        return friendly_name;
-    }
-
-    public String getEmail_address() {
-        return email_address;
+    public UnsupportedProjectVersion(String message) {
+        super(message);
     }
 }

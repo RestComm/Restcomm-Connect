@@ -4,10 +4,15 @@
 
 configUdpManager() {
 	FILE=$MMS_HOME/deploy/server-beans.xml
+	MSERVER_EXTERNAL_ADDRESS="$MEDIASERVER_EXTERNAL_ADDRESS"
+
+	if [ "$MSERVER_EXTERNAL_ADDRESS" = "$1" ]; then
+   		MSERVER_EXTERNAL_ADDRESS="\<null\/\>"
+	fi
 
 	sed -e "s|<property name=\"bindAddress\">.*<\/property>|<property name=\"bindAddress\">$1<\/property>|" \
 	    -e "s|<property name=\"localBindAddress\">.*<\/property>|<property name=\"localBindAddress\">$1<\/property>|" \
-			-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MEDIASERVER_EXTERNAL_ADDRESS</property>|" \
+			-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MSERVER_EXTERNAL_ADDRESS</property>|" \
 	    -e "s|<property name=\"localNetwork\">.*<\/property>|<property name=\"localNetwork\">$2<\/property>|" \
 	    -e "s|<property name=\"localSubnet\">.*<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
 	    -e 's|<property name="useSbc">.*</property>|<property name="useSbc">true</property>|' \
@@ -99,7 +104,16 @@ echo "Configuring Mobicents Media Server... MS_ADDRESS $MS_ADDRESS BIND_ADDRESS 
 if [ -z "$MS_ADDRESS" ]; then
 		MS_ADDRESS=$BIND_ADDRESS
 fi
-configUdpManager $MS_ADDRESS $NETWORK $SUBNET_MASK
+
+if [ -z "$MS_NETWORK" ]; then
+      MS_NETWORK=$NETWORK
+fi
+
+if [ -z "$MS_SUBNET_MASK" ]; then
+      MS_SUBNET_MASK=$SUBNET_MASK
+fi
+
+configUdpManager $MS_ADDRESS $MS_NETWORK $MS_SUBNET_MASK
 #configJavaOpts
 configLogDirectory
 echo 'Finished configuring Mobicents Media Server!'

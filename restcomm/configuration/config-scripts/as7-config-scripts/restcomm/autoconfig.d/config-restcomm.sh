@@ -47,6 +47,7 @@ configRestcomm() {
 	outbound_proxy="$3"
 	outbound_proxy_user="$4"
 	outbound_proxy_password="$5"
+	ms_external_address="$6"
 	recording_address=$bind_address
 	if [ -n "$static_address" ]; then
 		recording_address=$static_address
@@ -57,8 +58,8 @@ configRestcomm() {
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
 			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$bind_address<\/external-ip>|" \
-			-e "s|<external-address>.*<\/external-address>|<external-address>$PUBLIC_IP<\/external-address>|" \
-			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$PUBLIC_IP<\/external-address>|" \
+			-e "s|<external-address>.*<\/external-address>|<external-address>$ms_external_address<\/external-address>|" \
+ 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$ms_external_address<\/external-address>|" \
 			-e "s|<normalize-numbers-for-outbound-calls>.*<\/normalize-numbers-for-outbound-calls>|<normalize-numbers-for-outbound-calls>false<\/normalize-numbers-for-outbound-calls>|" \
 			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
 			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
@@ -70,8 +71,8 @@ configRestcomm() {
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
 			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
-			-e "s|<external-address>.*<\/external-address>|<external-address>$static_address<\/external-address>|" \
-			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$static_address<\/external-address>|" \
+			-e "s|<external-address>.*<\/external-address>|<external-address>$ms_external_address<\/external-address>|" \
+ 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$ms_external_address<\/external-address>|" \
 			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|" \
 			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
 			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
@@ -80,7 +81,6 @@ configRestcomm() {
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
 			-e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
 			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
 			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 		fi
@@ -329,7 +329,7 @@ configMediaServerManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	enabled="$1"
 	bind_address="$2"
-	public_ip="$3"
+	ms_external_address="$3"
 
 	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
 		sed -e "/<mgcp-server class=\"org.mobicents.servlet.restcomm.mgcp.MediaGateway\">/ {
@@ -339,7 +339,7 @@ configMediaServerManager() {
 			N; s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|
 			N; s|<remote-port>.*</remote-port>|<remote-port>2427</remote-port>|
 			N; s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|
-			N; s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$public_ip</external-address>|
+			N; s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
@@ -363,7 +363,7 @@ configMediaServerMSaddress() {
 echo 'Configuring RestComm...'
 #configJavaOpts
 configMobicentsProperties
-configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD"
+configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD" "$MEDIASERVER_EXTERNAL_ADDRESS"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
@@ -371,6 +371,6 @@ configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
-configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$PUBLIC_IP"
+configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 configMediaServerMSaddress "$BIND_ADDRESS"
 echo 'Configured RestComm!'
