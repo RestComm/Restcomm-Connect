@@ -46,6 +46,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidServiceParameters;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.UnsupportedProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
 import org.mobicents.servlet.restcomm.rvd.jsonvalidation.exceptions.ValidationException;
@@ -463,7 +464,7 @@ public class ProjectRestService extends RestService {
                 String json_response = "{\"result\":[{\"size\":" + size(request.getInputStream()) + "}]}";
                 return Response.ok(json_response, MediaType.APPLICATION_JSON).build();
             }
-        } catch (StorageException e) {
+        } catch (StorageException | UnsupportedProjectVersion e) {
             logger.warn(e, e);
             logger.debug(e, e);
             return buildErrorResponse(Status.BAD_REQUEST, RvdResponse.Status.ERROR, e);
