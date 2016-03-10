@@ -35,6 +35,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipURI;
 
+import akka.actor.ActorRef;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 
@@ -50,12 +51,14 @@ import com.cloudhopper.smpp.type.Address;
 /**
  *
  * @author amit bhayani
+ * @author gvagenas@telestax.com
  *
  */
 public final class SmppService extends UntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
     private final ActorSystem system;
+    private final ActorRef smppMessageHandler;
     private final Configuration configuration;
     private boolean authenticateUsers = true;
     private final ServletConfig servletConfig;
@@ -80,10 +83,11 @@ public final class SmppService extends UntypedActor {
     private ArrayList<Smpp> smppList = new ArrayList<Smpp>();
 
     public SmppService(final ActorSystem system, final Configuration configuration, final SipFactory factory,
-            final DaoManager storage, final ServletContext servletContext) {
+                       final DaoManager storage, final ServletContext servletContext, final ActorRef smppMessageHandler) {
 
         super();
         this.system = system;
+        this.smppMessageHandler = smppMessageHandler;
         this.configuration = configuration;
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
@@ -234,7 +238,7 @@ public final class SmppService extends UntypedActor {
         // configurable?
         this.clientBootstrap = new DefaultSmppClient(this.executor, 25, monitorExecutor);
 
-        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort());
+        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort(), system, smppMessageHandler);
 
         (new Thread(this.smppClientOpsThread)).start();
 
@@ -243,9 +247,6 @@ public final class SmppService extends UntypedActor {
         }
 
         logger.info("SMPP Service started");
-
-
-
     }
 
     private SipURI outboundInterface(String transport) {
@@ -260,7 +261,5 @@ public final class SmppService extends UntypedActor {
         }
         return result;
     }
-
-
 
 }

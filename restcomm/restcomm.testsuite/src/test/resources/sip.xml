@@ -66,35 +66,13 @@
 	<servlet>
 		<servlet-name>SmsService</servlet-name>
 		<display-name>SmsService</display-name>
-		<description>VoIP Innovations SMS Service.</description>
+		<description>SMS Service.</description>
 		<servlet-class>
 			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
 		</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	
-	<servlet>
-		<servlet-name>SmppService</servlet-name>
-		<display-name>SmppService</display-name>
-		<description>SMPP Connection Service.</description>
-		<servlet-class>
-			org.mobicents.servlet.restcomm.smpp.SmppServiceProxy
-		</servlet-class>
-		<load-on-startup>2</load-on-startup>
-	</servlet>	
-	
-<!--
-	<servlet>
-		<servlet-name>SmppServerServletListener</servlet-name>
-		<display-name>SmppServerServletListener</display-name>
-		<description>SMPP Connection Service.</description>
-		<servlet-class>
-			org.mobicents.servlet.restcomm.smpp.SmppServerServletListener
-		</servlet-class>
-		<load-on-startup>2</load-on-startup>
-	</servlet>	
-	
-	-->
+
 	<servlet>
 		<servlet-name>CallManager</servlet-name>
 		<display-name>CallManager</display-name>
@@ -127,29 +105,14 @@
 
 	<listener>
 		<listener-class>
-			org.mobicents.servlet.restcomm.smpp.SmppServerServletListener
-		</listener-class>
-	</listener>	
-
-	<listener>
-		<listener-class>
 			org.mobicents.servlet.restcomm.Bootstrapper
 		</listener-class>
 	</listener>
-	
 	<listener>
 		<listener-class>
 			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
 		</listener-class>
 	</listener>
-	
-		<listener>
-		<listener-class>
-			org.mobicents.servlet.restcomm.smpp.SmppServiceProxy
-		</listener-class>
-	</listener>
-
-
 	<listener>
 		<listener-class>
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy

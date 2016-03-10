@@ -19,21 +19,11 @@
  */
 package org.mobicents.servlet.restcomm.sms;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -46,20 +36,24 @@ import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 import org.mobicents.servlet.restcomm.smpp.SmppClientOpsThread;
-import org.mobicents.servlet.restcomm.smpp.SmppHandlerProcessMessages;
+import org.mobicents.servlet.restcomm.smpp.SmppMessageHandler;
 import org.mobicents.servlet.restcomm.smpp.SmppOutboundMessageEntity;
 import org.mobicents.servlet.restcomm.telephony.TextMessage;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-
-import com.cloudhopper.smpp.SmppSession;
-import com.google.common.collect.ImmutableMap;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -83,17 +77,17 @@ public final class SmsSession extends UntypedActor {
     private SmsSessionRequest initial;
     private SmsSessionRequest last;
 
-    private final String getExternalIP = SmsInitConfigurationDetails.getConfiguration().subset("runtime-settings").getString("external-ip");
-    private final Configuration config = SmsInitConfigurationDetails.getConfiguration().subset("smpp");
-    private final String smppActivated = config.getString("[@activateSmppConnection]");
-    private final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
-    private final ActorSystem system = SmsInitConfigurationDetails.getSystem();
+    private final boolean smppActivated;
+    private final String externalIP;
 
+    private final ServletContext servletContext;
+
+    private ActorRef smppMessageHandler;
 
     private final ActorRef monitoringService;
 
     public SmsSession(final Configuration configuration, final SipFactory factory, final SipURI transport,
-            final DaoManager storage, final ActorRef monitoringService) {
+            final DaoManager storage, final ActorRef monitoringService, final ServletContext servletContext) {
         super();
         this.configuration = configuration;
         this.factory = factory;
@@ -102,8 +96,12 @@ public final class SmsSession extends UntypedActor {
         this.attributes = new HashMap<String, Object>();
         this.storage = storage;
         this.monitoringService = monitoringService;
-
-
+        this.servletContext = servletContext;
+        this.smppActivated = Boolean.parseBoolean(configuration.subset("smpp").getString("[@activateSmppConnection]", "false"));
+        if (smppActivated) {
+            smppMessageHandler = (ActorRef) servletContext.getAttribute(SmppMessageHandler.class.getName());
+        }
+        this.externalIP = configuration.subset("runtime-settings").getString("external-ip");
     }
 
     private void inbound(final Object message) throws IOException {
@@ -218,41 +216,19 @@ public final class SmsSession extends UntypedActor {
             toClientRegistration = registrations.getRegistration(toClient.getLogin());
         }
 
-        //******************************SMPP*******************************************
-
-
-        // Handle the SMS message.
-        SmsSessionRequest smmpRequest = (SmsSessionRequest) message;
-        final String smppDestination = smmpRequest.to();
         // Try to find an application defined for the phone number.
         final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(smppDestination);
-        if (number == null) {
+        IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
+
+        if (number == null && smppActivated) {
             logger.info("Destination is not a local Restcomm number, therefore, sending through SMPP :  " + to );
-        }
-
-        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null && number == null ){
-            logger.info("SMPP session is available and connected, outbound message will be forwarded TO :  " + to );
-            try {
-                final String smppFrom = from ; //fromUri.getUser();
-                final String smppTo = to ; //sipUri.getUser();
-                final String smppContent = body; //request.getContent().toString();
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
-                ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
-                sendOutboundMessage.tell(sms, null);
-
-            }catch (final Exception exception) {
-                // Log the exception.
-                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
-            }
-
-            return;
+            if (sendUsingSmpp(from, to, body)) return;
         }
 
         final SipApplicationSession application = factory.createApplicationSession();
         StringBuilder buffer = new StringBuilder();
         //buffer.append("sip:").append(from).append("@").append(transport.getHost() + ":" + transport.getPort());
-        buffer.append("sip:").append(from).append("@").append(getExternalIP + ":" + transport.getPort());
+        buffer.append("sip:").append(from).append("@").append(externalIP + ":" + transport.getPort());
         final String sender = buffer.toString();
         buffer = new StringBuilder();
         if (toClient != null && toClientRegistration != null) {
@@ -297,6 +273,23 @@ public final class SmsSession extends UntypedActor {
             logger.error(exception.getMessage(), exception);
         }}
 
+    private boolean sendUsingSmpp(String from, String to, String body) {
+        if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
+            logger.info("SMPP session is available and connected, outbound message will be forwarded TO :  " + to );
+            try {
+                final String smppFrom = from ;
+                final String smppTo = to ;
+                final String smppContent = body;
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
+                smppMessageHandler.tell(sms, null);
+            }catch (final Exception exception) {
+                // Log the exception.
+                logger.error("There was an error sending SMS to SMPP endpoint : " + exception);
+            }
+            return true;
+        }
+        return false;
+    }
 
 
     private void stopObserving(final Object message) {
@@ -306,18 +299,4 @@ public final class SmsSession extends UntypedActor {
             observers.remove(observer);
         }
     }
-
-
-    private ActorRef sendOutboundSmppMessages() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new  SmppHandlerProcessMessages(); //.sendSmsFromRestcommToSmpp();
-            }
-        }));
-    }
-
-
 }

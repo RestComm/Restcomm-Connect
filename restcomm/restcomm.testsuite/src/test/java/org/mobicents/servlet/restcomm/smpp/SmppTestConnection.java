@@ -1,7 +1,5 @@
 package org.mobicents.servlet.restcomm.smpp;
 
-import static org.junit.Assert.*;
-
 import java.net.URL;
 import java.text.ParseException;
 import java.util.concurrent.TimeUnit;
@@ -89,7 +87,7 @@ public class SmppTestConnection {
     @Test
     public void testSmppIsConnected() throws ParseException {
 
-      final SmppServerSession smppServerSession = SmppServerServletListener.DefaultSmppServerHandler.getSmppServerSession();
+      final SmppServerSession smppServerSession = MockSmppServer.DefaultSmppServerHandler.getSmppServerSession();
 
        logger.info("************SMPP TEST STARTING*****************");
    	

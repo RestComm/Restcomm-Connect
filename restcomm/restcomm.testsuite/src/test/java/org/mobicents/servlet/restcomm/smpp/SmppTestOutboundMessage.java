@@ -158,7 +158,7 @@ public class SmppTestOutboundMessage {
         //assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
         //assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 404);
         
-        assertTrue(SmppServerServletListener.TestSmppSessionHandler.getSmppOutBoundMessageReceivedByServer());
+        assertTrue(MockSmppServer.TestSmppSessionHandler.getSmppOutBoundMessageReceivedByServer());
     }
     
     @Deployment(name = "SmsTest", managed = true, testable = false)
