@@ -38,6 +38,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.ProjectDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingDoesNotExist;
 import org.mobicents.servlet.restcomm.rvd.exceptions.project.ProjectException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.UnsupportedProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.InvalidRestcommAppPackage;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.UnsupportedRasApplicationVersion;
@@ -351,11 +352,11 @@ public class RasRestService extends RestService {
             logger.warn(e);
             logger.debug(e,e);
             return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
-        } catch (InvalidRestcommAppPackage e ) {
+        } catch ( UnsupportedRasApplicationVersion | UnsupportedProjectVersion e ) {
             logger.error(e.getMessage(), e);
-            return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
-        } catch (UnsupportedRasApplicationVersion e) {
-            logger.warn(e.getMessage());
+            return buildErrorResponse(Status.BAD_REQUEST, RvdResponse.Status.ERROR, e);
+        } catch ( InvalidRestcommAppPackage e )  {
+            logger.error(e.getMessage(), e);
             return buildErrorResponse(Status.INTERNAL_SERVER_ERROR, RvdResponse.Status.ERROR, e);
         } catch ( Exception e /* TODO - use a more specific  type !!! */) {
             logger.error(e.getMessage(), e);
