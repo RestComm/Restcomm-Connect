@@ -66,22 +66,12 @@
 	<servlet>
 		<servlet-name>SmsService</servlet-name>
 		<display-name>SmsService</display-name>
-		<description>VoIP Innovations SMS Service.</description>
+		<description>SMS Service.</description>
 		<servlet-class>
 			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
 		</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	
-	<servlet>
-		<servlet-name>SmppService</servlet-name>
-		<display-name>SmppService</display-name>
-		<description>SMPP Connection Service.</description>
-		<servlet-class>
-			org.mobicents.servlet.restcomm.smpp.SmppServiceProxy
-		</servlet-class>
-		<load-on-startup>2</load-on-startup>
-	</servlet>	
 
 	<servlet>
 		<servlet-name>CallManager</servlet-name>
@@ -90,7 +80,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy
 		</servlet-class>
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>2</load-on-startup>
 	</servlet>
 
 	<servlet>
@@ -100,7 +90,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.ua.UserAgentManagerProxy
 		</servlet-class>
-		<load-on-startup>4</load-on-startup>
+		<load-on-startup>3</load-on-startup>
 	</servlet>
 
 	<servlet>
@@ -110,7 +100,7 @@
 		<servlet-class>
 			org.mobicents.servlet.restcomm.telephony.proxy.ProxyManagerProxy
 		</servlet-class>
-		<load-on-startup>5</load-on-startup>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
 
 	<listener>
@@ -123,11 +113,6 @@
 			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
 		</listener-class>
 	</listener>
-	<listener>
-		<listener-class>
-			org.mobicents.servlet.restcomm.smpp.SmppServiceProxy
-		</listener-class>
-	</listener>	
 	<listener>
 		<listener-class>
 			org.mobicents.servlet.restcomm.telephony.CallManagerProxy

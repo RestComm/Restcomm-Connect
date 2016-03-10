@@ -1,0 +1,9 @@
+1. Why SmsInitConfigurationDetails all details can be retrieved by context or configuration. The class is not even singleton
+2. Why SmppInitConfigurationDetails all details can be retrieved by context or configuration. The class is not even singleton
+3. !!!!!!! SmppClientOpsThread creates its own NEW ActorSystem
+4. SmppServiceProxy doRequest uses "smppService" but doResponse uses "service"
+5. SmppServiceProxy doesn't need doRequest or doResponse since it will never receive sip traffic. The class implements the SipServletListener just to initialize and create the neccessary actors/objects
+6. SmppService transport is UDP hardcoded
+7. SmppService Actor but uses nothing from Akka onReceive() does nothing
+8. Why we create new actor for every incoming or outgoing message? SmppHandlerInboundForwarder and SmppHandlerOutboundForwarder are created for every message
+

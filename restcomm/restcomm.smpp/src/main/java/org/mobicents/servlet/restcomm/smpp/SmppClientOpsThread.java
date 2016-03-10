@@ -32,9 +32,6 @@ import org.apache.log4j.Logger;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.PduAsyncResponse;
@@ -54,11 +51,10 @@ import com.cloudhopper.smpp.type.UnrecoverablePduException;
 
 /**
  * @author amit bhayani
+ * @author gvagenas@telestax.com
  *
  */
 public class SmppClientOpsThread implements Runnable{
-
-
 
     private static final Logger logger = Logger
             .getLogger(SmppClientOpsThread.class);
@@ -70,16 +66,17 @@ public class SmppClientOpsThread implements Runnable{
     protected volatile boolean started = true;
     private static int sipPort;
 
-
-    private final ActorSystem system = ActorSystem.create("SmppActorSystem");
-
+    private final ActorSystem system;
+    private final ActorRef smppMessageHandler;
 
     /**
      *
      */
-    public SmppClientOpsThread(DefaultSmppClient clientBootstrap, int sipPort) {
+    public SmppClientOpsThread(DefaultSmppClient clientBootstrap, int sipPort, final ActorSystem system, final ActorRef smppMessageHandler) {
         this.clientBootstrap = clientBootstrap;
         this.sipPort = sipPort;
+        this.system = system;
+        this.smppMessageHandler = smppMessageHandler;
     }
 
 
@@ -374,16 +371,10 @@ public class SmppClientOpsThread implements Runnable{
                 try {
                     sendSmppMessageToRestcomm (decodedPduMessage, destSmppAddress, sourceSmppAddress ) ;
                 } catch (IOException | ServletException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: "+e);
                 }
-
             }
-
             return response;
-
-
-
         }
 
 
@@ -446,23 +437,7 @@ public class SmppClientOpsThread implements Runnable{
         String from = smppFrom;
         String inboundMessage = smppMessage;
         SmppInboundMessageEntity smppInboundMessage =  new SmppInboundMessageEntity(to, from,inboundMessage );
-        ActorRef sendIncomingSmppToSmppHandler = smppInboundToHandler();
-        sendIncomingSmppToSmppHandler.tell(smppInboundMessage, null);
+        smppMessageHandler.tell(smppInboundMessage, null);
 
     }
-
-    private ActorRef smppInboundToHandler() {
-        return system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new  SmppHandlerProcessMessages();
-            }
-        }));
-    }
-
-
-
-
 }

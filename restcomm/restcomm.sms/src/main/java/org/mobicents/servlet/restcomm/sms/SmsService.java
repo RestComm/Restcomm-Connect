@@ -90,7 +90,6 @@ public final class SmsService extends UntypedActor {
     private final ServletContext servletContext;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
-    private static String smppActivated;
 
 
     private final ActorRef monitoringService;
@@ -118,10 +117,6 @@ public final class SmsService extends UntypedActor {
         // TODO this.useTo = runtime.getBoolean("use-to");
 
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
-
-        Configuration config = this.configuration.subset("smpp");
-        smppActivated = config.getString("[@activateSmppConnection]");
-
     }
 
 
@@ -147,43 +142,6 @@ public final class SmsService extends UntypedActor {
         final Client client = clients.getClient(fromUser);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
-        //final SmppSession smppSession = SmppClientOpsThread.getSmppSession();
-
-        /**
-        //************************SIP Request Send to SMPP Endpoint**************************************
-
-        //If SMPP is activated  send all SMS through the SMPP connection else
-        //go through normal SIP SMS aggregator
-        //if the Destination/To is not a Restcomm client, use SMPP
-
-        if (smppActivated.equalsIgnoreCase("true") && smppSession.isBound() && smppSession != null  ){
-
-            final String toUser = CallControlHelper.getUserSipId(request, useTo);
-            Client toClient = clients.getClient(toUser);
-            // Handle the SMS message.
-            final SipURI uri = (SipURI) request.getRequestURI();
-            final String to = uri.getUser();
-            // Format the destination to an E.164 phone number.
-            //final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-            String phone = to;
-
-            final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(phone);
-
-            // check if the destination SMS is NOT for a local Restcomm client, then, send using SMPP
-            if(toClient == null ){
-                logger.info("SMPP session is available and connected, outbound message will be forwarded -- client:  " + client);
-                final String smppFrom = request.getFrom().toString();
-                final String smppTo = request.getTo().toString();
-                final String smppContent = request.getContent().toString();
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(smppTo, smppFrom, smppContent);
-                ActorRef sendOutboundMessage =  sendOutboundSmppMessages();
-                sendOutboundMessage.tell(sms, null);
-                //SendOutboundSMPPMessages(client, request, smppSession, accounts, applications, self);
-
-            }
-        }**/
-
 
         // Make sure we force clients to authenticate.
         if (client != null) {
@@ -329,38 +287,6 @@ public final class SmsService extends UntypedActor {
                     }
                     interpreter = builder.build();
                 }
-                // else {
-                // appUri = number.getVoiceUrl();
-                // if (appUri != null) {
-                // final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
-                // builder.setConfiguration(configuration);
-                // builder.setStorage(storage);
-                // builder.setCallManager(self);
-                // builder.setSmsService(self);
-                // builder.setAccount(number.getAccountSid());
-                // builder.setVersion(number.getApiVersion());
-                // final Account account = accounts.getAccount(number.getAccountSid());
-                // builder.setEmailAddress(account.getEmailAddress());
-                // final Sid sid = number.getVoiceApplicationSid();
-                // if (sid != null) {
-                // final Application application = applications.getApplication(sid);
-                // builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
-                // builder.setMethod(application.getVoiceMethod());
-                // builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                // builder.setFallbackMethod(application.getVoiceFallbackMethod());
-                // builder.setStatusCallback(application.getStatusCallback());
-                // builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
-                // } else {
-                // builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
-                // builder.setMethod(number.getVoiceMethod());
-                // builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                // builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                // builder.setStatusCallback(number.getStatusCallback());
-                // builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                // }
-                // interpreter = builder.build();
-                // }
-                // }
                 final ActorRef session = session();
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
@@ -449,7 +375,7 @@ public final class SmsService extends UntypedActor {
             @Override
             public UntypedActor create() throws Exception {
                 Configuration smsConfiguration = configuration.subset("sms-aggregator");
-                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService);
+                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         }));
     }
