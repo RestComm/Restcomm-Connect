@@ -2,8 +2,11 @@ package org.mobicents.servlet.restcomm.rvd.security;
 
 import javax.ws.rs.core.NewCookie;
 
+import org.apache.commons.codec.binary.Base64;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.InvalidTicketCookie;
+
+import java.nio.charset.Charset;
 
 public class SecurityUtils {
 
@@ -47,6 +50,20 @@ public class SecurityUtils {
      * @return a BasicAuthCredentials object or null if no credentials are found or a parsing error occurs
      */
     public static BasicAuthCredentials parseBasicAuthHeader(String headerValue) {
+        if (headerValue != null) {
+            String[] parts = headerValue.split(" ");
+            if (parts.length >= 2 && parts[0].equals("Basic")) {
+                String base64Credentials = parts[1].trim();
+                String credentials = new String(Base64.decodeBase64(base64Credentials), Charset.forName("UTF-8"));
+                // credentials = username:password
+                final String[] values = credentials.split(":",2);
+                if (values.length >= 2) {
+                    BasicAuthCredentials credentialsObj = new BasicAuthCredentials(values[0], values[1]);
+                    return credentialsObj;
+                }
+
+            }
+        }
         return null;
     }
 
