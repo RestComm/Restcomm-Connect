@@ -42,21 +42,19 @@ import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.pdu.SubmitSm;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppProcessingException;
+import org.mobicents.servlet.restcomm.sms.smpp.SmppInboundMessageEntity;
 
 
 public class MockSmppServer {
 
     private final static Logger logger = Logger.getLogger(MockSmppServer.class);
 
-    //Message to be sent from SMPP Server to Restcomm
-    private final static String smppTo = "123456789";
-    private final static String smppFrom = "987654321";
-    private final static String smppMessage = "Message from SMPP Server to Restcomm";
-    private SipFactory factory;
     private final DefaultSmppServer smppServer;
     private static SmppServerSession smppServerSession;
     private static boolean linkEstablished = false;
     private static boolean messageSent = false;
+    private static SmppInboundMessageEntity smppInboundMessageEntity;
+    private static boolean messageReceived;
 
 
     public MockSmppServer() throws SmppChannelException {
@@ -74,6 +72,7 @@ public class MockSmppServer {
 
         // create a server configuration
         SmppServerConfiguration configuration = new SmppServerConfiguration();
+        configuration.setHost("127.0.0.1");
         configuration.setPort(2776);
         configuration.setMaxConnectionSize(10);
         configuration.setNonBlockingSocketsEnabled(true);
@@ -97,36 +96,56 @@ public class MockSmppServer {
 
             DeliverSm deliver = new DeliverSm();
 
-            deliver.setSourceAddress(new Address((byte)0x03, (byte)0x00, smppFrom));
-            deliver.setDestAddress(new Address((byte)0x01, (byte)0x01, smppTo));
+            deliver.setSourceAddress(new Address((byte) 0x03, (byte) 0x00, smppFrom));
+            deliver.setDestAddress(new Address((byte) 0x01, (byte) 0x01, smppTo));
             deliver.setShortMessage(textBytes);
 
-            WindowFuture<Integer,PduRequest,PduResponse> future = smppServerSession.sendRequestPdu(deliver, 10000, false);
+            WindowFuture<Integer, PduRequest, PduResponse> future = smppServerSession.sendRequestPdu(deliver, 10000, false);
             if (!future.await()) {
                 logger.error("Failed to receive deliver_sm_resp within specified time");
             } else if (future.isSuccess()) {
-                DeliverSmResp deliverSmResp = (DeliverSmResp)future.getResponse();
-                messageSent= true;
+                DeliverSmResp deliverSmResp = (DeliverSmResp) future.getResponse();
+                messageSent = true;
                 logger.info("deliver_sm_resp: commandStatus [" + deliverSmResp.getCommandStatus() + "=" + deliverSmResp.getResultMessage() + "]");
             } else {
                 logger.error("Failed to properly receive deliver_sm_resp: " + future.getCause());
             }
         } catch (Exception e) {
-            logger.fatal("Exception during sending SMPP message to Restcomm: "+e);
+            logger.fatal("Exception during sending SMPP message to Restcomm: " + e);
         }
     }
 
-    public void stop(){
-        smppServerSession.close();
-        smppServerSession.destroy();
+    public void stop() {
+        if (smppServerSession != null) {
+            smppServerSession.close();
+            smppServerSession.destroy();
+        }
+    }
+
+    public void cleanup() {
+        this.messageSent = false;
+        this.messageReceived = false;
+        this.smppInboundMessageEntity = null;
     }
 
     public static boolean isLinkEstablished() {
         return linkEstablished;
     }
-    public static boolean isMessageSent() { return messageSent; }
 
-    public static class DefaultSmppServerHandler implements SmppServerHandler {
+    public static boolean isMessageSent() {
+        return messageSent;
+    }
+
+    public static SmppInboundMessageEntity getSmppInboundMessageEntity() {
+        return smppInboundMessageEntity;
+    }
+
+    public static boolean isMessageReceived() {
+        return messageReceived;
+    }
+
+
+    private static class DefaultSmppServerHandler implements SmppServerHandler {
         @Override
         public void sessionBindRequested(Long sessionId, SmppSessionConfiguration sessionConfiguration, final BaseBind bindRequest) throws SmppProcessingException {
             // test name change of sessions
@@ -156,10 +175,6 @@ public class MockSmppServer {
             }
         }
 
-        public static SmppServerSession getSmppServerSession() {
-            return smppServerSession;
-        }
-
         @Override
         public void sessionDestroyed(Long sessionId, SmppServerSession session) {
             logger.info("Session destroyed: {} " + session);
@@ -173,9 +188,7 @@ public class MockSmppServer {
         }
     }
 
-    public static class TestSmppSessionHandler extends DefaultSmppSessionHandler {
-
-        private static boolean smppOutBoundMessageReceivedByServer;
+    private static class TestSmppSessionHandler extends DefaultSmppSessionHandler {
 
         private WeakReference<SmppSession> sessionRef;
 
@@ -210,69 +223,10 @@ public class MockSmppServer {
                     logger.info("********DeliverSm Exception******* " + e);
                 }
 
-                if (destSmppAddress.equalsIgnoreCase("9898989") &&
-                        decodedPduMessage.equalsIgnoreCase("Test message") &&
-                        sourceSmppAddress.equalsIgnoreCase("alice")) {
-                    //Message is correctly received from Restcomm
-                    smppOutBoundMessageReceivedByServer = true;
-                } else {
-                    smppOutBoundMessageReceivedByServer = false;
-                }
-
+                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage);
+                messageReceived = true;
             }
-
             return pduRequest.createResponse();
         }
-
-        public static boolean getSmppOutBoundMessageReceivedByServer() {
-            return smppOutBoundMessageReceivedByServer;
-
-        }
     }
-
-
-//    public static class SmppPrepareInboundMessage {
-//        private final static ActorSystem system = ActorSystem.create("SmppActorSystem");
-//        private final static Logger logger = Logger.getLogger(SmppPrepareInboundMessage.class);
-//
-//        //****************************************************************
-//        //
-//        //Use to send Inbound Message to Restcomm from Smpp Server
-//        //
-//        //****************************************************************
-//
-//        public static void sendMessageToRestcommFromSmppServer() throws IOException {
-//            logger.info("********INSIDE sendMessageToRestcommFromSmppServer ******* ");
-//            sendSmppMessageToRestcomm(smppMessage, smppTo, smppFrom);
-//        }
-//
-//        public static void sendSmppMessageToRestcomm(String smppMessage, String smppTo, String smppFrom) throws IOException {
-//
-//            String to = smppTo;
-//            String from = smppFrom;
-//            String inboundMessage = smppMessage;
-//            logger.info("********to ******* " + to);
-//            logger.info("********From ******* " + from);
-//            logger.info("********inboundMessage ******* " + inboundMessage);
-//
-//            SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage);
-//            ActorRef sendIncomingSmppToSmppHandler = smppInboundToHandler();
-//            sendIncomingSmppToSmppHandler.tell(smppInboundMessage, null);
-//
-//        }
-//
-//        private static ActorRef smppInboundToHandler() {
-//            logger.info("********INSIDE THE THING******* ");
-//            return system.actorOf(new Props(new UntypedActorFactory() {
-//                private static final long serialVersionUID = 1L;
-//
-//                @Override
-//                public UntypedActor create() throws Exception {
-//                    return new SmppMessageHandler(context);
-//                }
-//            }));
-//        }
-//
-//    }
-
 }

@@ -323,6 +323,11 @@
 			<version>7.6.0-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.sms</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
