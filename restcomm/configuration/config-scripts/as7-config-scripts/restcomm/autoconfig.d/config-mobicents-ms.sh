@@ -4,10 +4,15 @@
 
 configUdpManager() {
 	FILE=$MMS_HOME/deploy/server-beans.xml
+	MSERVER_EXTERNAL_ADDRESS="$MEDIASERVER_EXTERNAL_ADDRESS"
+
+	if [ "$MSERVER_EXTERNAL_ADDRESS" = "$1" ]; then
+   		MSERVER_EXTERNAL_ADDRESS="\<null\/\>"
+	fi
 
 	sed -e "s|<property name=\"bindAddress\">.*<\/property>|<property name=\"bindAddress\">$1<\/property>|" \
 	    -e "s|<property name=\"localBindAddress\">.*<\/property>|<property name=\"localBindAddress\">$1<\/property>|" \
-			-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MEDIASERVER_EXTERNAL_ADDRESS</property>|" \
+			-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MSERVER_EXTERNAL_ADDRESS</property>|" \
 	    -e "s|<property name=\"localNetwork\">.*<\/property>|<property name=\"localNetwork\">$2<\/property>|" \
 	    -e "s|<property name=\"localSubnet\">.*<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
 	    -e 's|<property name="useSbc">.*</property>|<property name="useSbc">true</property>|' \
