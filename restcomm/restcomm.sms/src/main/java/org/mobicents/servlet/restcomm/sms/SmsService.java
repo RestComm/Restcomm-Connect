@@ -91,7 +91,6 @@ public final class SmsService extends UntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
 
-
     private final ActorRef monitoringService;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
@@ -115,15 +114,10 @@ public final class SmsService extends UntypedActor {
         monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
-
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
     }
 
-
     private void message(final Object message) throws IOException {
-
-        logger.error("Sms SERVICE MESSAGE: " + message.getClass().getName() );
-
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
 
@@ -188,6 +182,10 @@ public final class SmsService extends UntypedActor {
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
                 logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
+
+                final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
+                trying.send();
+
                 ActorRef session = session();
                 // Create an SMS detail record.
                 final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
@@ -215,8 +213,7 @@ public final class SmsService extends UntypedActor {
                 // Store the sms record in the sms session.
                 session.tell(new SmsSessionAttribute("record", record), self());
                 // Send the SMS.
-                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),
-                        null);
+                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),request, null);
                 monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
                 session.tell(sms, self());
             }
@@ -332,10 +329,8 @@ public final class SmsService extends UntypedActor {
     }
 
     private void response(final Object message) throws Exception {
-
         final ActorRef self = self();
         final SipServletResponse response = (SipServletResponse) message;
-
         // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
         if (B2BUAHelper.isB2BUASession(response)) {
             B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
@@ -344,12 +339,14 @@ public final class SmsService extends UntypedActor {
         final SipApplicationSession application = response.getApplicationSession();
 
         //handle SIP application session and make sure it has not being invalidated
-        if(!application.getInvalidateWhenReady() && application.isValid()){
+        logger.info("Is SipApplicationSession valid: "+application.isValid());
+        if(application != null){
             final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
             session.tell(response, self);
             final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
             if (origRequest != null && origRequest.getSession().isValid()) {
-                origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+                SipServletResponse responseToOriginator = origRequest.createResponse(response.getStatus(), response.getReasonPhrase());
+                responseToOriginator.send();
             }
         }
     }
@@ -374,8 +371,7 @@ public final class SmsService extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                Configuration smsConfiguration = configuration.subset("sms-aggregator");
-                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
+                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         }));
     }
@@ -448,7 +444,4 @@ public final class SmsService extends UntypedActor {
         builder.setUri(uri);
         return builder.build();
     }
-
-
-
 }
