@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.text.ParseException;
-import java.util.concurrent.TimeUnit;
 
 import javax.sip.address.SipURI;
 
@@ -55,28 +54,9 @@ public class SmsOutTest {
 
     private final static Logger logger = Logger.getLogger(SmsOutTest.class);
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
-    
-    private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
-        53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
-        48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
-        13, 10, 116, 61, 48, 32, 48, 13, 10, 109, 61, 97, 117, 100, 105, 111, 32, 54, 48, 48, 48, 32, 82, 84, 80, 47, 65,
-        86, 80, 32, 48, 13, 10, 97, 61, 114, 116, 112, 109, 97, 112, 58, 48, 32, 80, 67, 77, 85, 47, 56, 48, 48, 48, 13, 10 };
-    private static final String body = new String(bytes);
-    
-    @ArquillianResource
-    private Deployer deployer;
-    @ArquillianResource
-    URL deploymentUrl;
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
-    private static SipStackTool tool3;
-    private static SipStackTool tool4;
-    private static SipStackTool tool5;
-    
-    private SipStack bobSipStack;
-    private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
     
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
@@ -86,52 +66,23 @@ public class SmsOutTest {
     private SipPhone outboundDestPhone;
     private String outboundDestContact = "sip:9898989@127.0.0.1:5094";
 
-    private SipStack georgeSipStack;
-    private SipPhone georgePhone;
-    private String georgeContact = "sip:george@127.0.0.1:5092";
-    
-    private SipStack fotiniSipStack;
-    private SipPhone fotiniPhone;
-    private String fotiniContact = "sip:fotini@127.0.0.1:5093";
-    
     @BeforeClass
     public static void beforeClass() throws Exception {
-    	
-    	
         tool1 = new SipStackTool("SmsTest1");
         tool2 = new SipStackTool("SmsTest2");
-        tool3 = new SipStackTool("SmsTest3");
-        tool4 = new SipStackTool("SmsTest4");
-        tool5 = new SipStackTool("SmsTest5");
     }
     
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
-        
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
+        aliceSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
-        
-        georgeSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
-        
-        fotiniSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
-        fotiniPhone = fotiniSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, fotiniContact);
-        
-        outboundDestSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
+
+        outboundDestSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
         outboundDestPhone = outboundDestSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, outboundDestContact);
     }
     
     @After
     public void after() throws Exception {
-        if (bobPhone != null) {
-            bobPhone.dispose();
-        }
-        if (bobSipStack != null) {
-            bobSipStack.dispose();
-        }
-
         if (aliceSipStack != null) {
             aliceSipStack.dispose();
         }
@@ -145,25 +96,10 @@ public class SmsOutTest {
         if (outboundDestPhone != null) {
             outboundDestPhone.dispose();
         }
-        
-        if (georgeSipStack != null) {
-            georgeSipStack.dispose();
-        }
-        if (georgePhone != null) {
-            georgePhone.dispose();
-        }
-        
-        if (fotiniSipStack != null) {
-            fotiniSipStack.dispose();
-        }
-        if (fotiniPhone != null) {
-            fotiniPhone.dispose();
-        }
     }
     
     @Test
-    public void testSendSmsToInvalidNumber() throws ParseException {
-     	
+    public void testSendSmsToInvalidNumber() throws ParseException, InterruptedException {
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
         
@@ -176,15 +112,44 @@ public class SmsOutTest {
         SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@127.0.0.1:5080", null, null, null, "Test message");
         assertTrue(aliceCall.waitForAuthorisation(5000));
-        
+        assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
+        assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 100);
+
         assertTrue(outboundDestCall.waitForMessage(5000));
         
         assertTrue(outboundDestCall.sendMessageResponse(404, "Not Found", 3600, null));
-        
+
         assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
+        logger.info("Last received response status code: "+aliceCall.getLastReceivedResponse().getStatusCode());
         assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 404);
     }
-    
+
+    @Test
+    public void testSendSmsToValidNumber() throws ParseException, InterruptedException {
+        SipCall outboundDestCall = outboundDestPhone.createSipCall();
+        outboundDestCall.listenForMessage();
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        Credential credential = new Credential("127.0.0.1", "alice", "1234");
+        alicePhone.addUpdateCredential(credential);
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.initiateOutgoingMessage(aliceContact, "sip:9898989@127.0.0.1:5080", null, null, null, "Test message");
+        assertTrue(aliceCall.waitForAuthorisation(5000));
+        assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
+        assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 100);
+
+        assertTrue(outboundDestCall.waitForMessage(5000));
+
+        assertTrue(outboundDestCall.sendMessageResponse(202, "Accepted", 3600, null));
+
+        assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
+        logger.info("Last received response status code: "+aliceCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == 202);
+    }
+
     @Deployment(name = "SmsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
@@ -202,16 +167,7 @@ public class SmsOutTest {
         archive.addAsWebInfResource("web_for_SmsTest.xml", "web.xml");
         archive.addAsWebInfResource("restcomm_SmsTest2.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_SmsTest", "data/hsql/restcomm.script");
-        archive.addAsWebResource("send-sms-test.xml");
-        archive.addAsWebResource("send-sms-test-greek.xml");
-        archive.addAsWebResource("send-sms-test-greek_huge.xml");
-        archive.addAsWebResource("send-sms-test2.xml");
-        archive.addAsWebResource("dial-client-entry.xml");
         logger.info("Packaged Test App");
-        
-
         return archive;
-        
-
     }
 }
