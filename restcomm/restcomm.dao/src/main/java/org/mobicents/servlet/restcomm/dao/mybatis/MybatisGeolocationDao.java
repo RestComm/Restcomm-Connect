@@ -149,7 +149,7 @@ public class MybatisGeolocationDao implements GeolocationDao {
         map.put("device_identifier", gl.getDeviceIdentifier());
         map.put("geolocation_type", gl.getGeolocationType());
         map.put("response_status", gl.getResponseStatus());
-        map.put("global_cell_id", gl.getGlobalCellId());
+        map.put("cell_id", gl.getCellId());
         map.put("location_area_code", gl.getLocationAreaCode());
         map.put("mobile_country_code", gl.getMobileCountryCode());
         map.put("mobile_network_code", gl.getMobileNetworkCode());
@@ -183,7 +183,7 @@ public class MybatisGeolocationDao implements GeolocationDao {
         final String device_identifier = readString(map.get("device_identifier"));
         final String geolocation_type = readString(map.get("geolocation_type"));
         final String response_status = readString(map.get("response_status"));
-        final String global_cell_id = readString(map.get("global_cell_id"));
+        final String cell_id = readString(map.get("cell_id"));
         final String location_area_code = readString(map.get("location_area_code"));
         final Integer mobile_country_code = readInteger(map.get("mobile_country_code"));
         final Integer mobile_network_code = readInteger(map.get("mobile_network_code"));
@@ -205,7 +205,7 @@ public class MybatisGeolocationDao implements GeolocationDao {
         final String api_version = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
         return new Geolocation(sid, date_created, date_updated, date_executed, account_sid, source, device_identifier,
-                geolocation_type, response_status, global_cell_id, location_area_code, mobile_country_code, mobile_network_code,
+                geolocation_type, response_status, cell_id, location_area_code, mobile_country_code, mobile_network_code,
                 network_entity_address, age_of_location_info, device_latitude, device_longitude, accuracy, physical_address,
                 internet_address, formatted_address, location_timestamp, event_geofence_latitude, event_geofence_longitude, radius,
                 geolocation_positioning_type, last_geolocation_response, cause, api_version, uri);

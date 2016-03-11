@@ -42,7 +42,7 @@ public class Geolocation {
     private final String deviceIdentifier;
     private final String geolocationType;
     private final String responseStatus;
-    private final String globalCellId;
+    private final String cellId;
     private final String locationAreaCode;
     private final Integer mobileCountryCode;
     private final Integer mobileNetworkCode;
@@ -65,7 +65,7 @@ public class Geolocation {
     private final URI uri;
 
     public Geolocation(Sid sid, DateTime dateCreated, DateTime dateUpdated, DateTime dateExecuted, Sid accountSid,
-            String source, String deviceIdentifier, String geolocationType, String responseStatus, String globalCellId,
+            String source, String deviceIdentifier, String geolocationType, String responseStatus, String cellId,
             String locationAreaCode, Integer mobileCountryCode, Integer mobileNetworkCode, BigInteger networkEntityAddress,
             Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, BigInteger accuracy,
             String physicalAddress, String internetAddress, String formattedAddress, DateTime locationTimestamp,
@@ -81,7 +81,7 @@ public class Geolocation {
         this.deviceIdentifier = deviceIdentifier;
         this.geolocationType = geolocationType;
         this.responseStatus = responseStatus;
-        this.globalCellId = globalCellId;
+        this.cellId = cellId;
         this.locationAreaCode = locationAreaCode;
         this.mobileCountryCode = mobileCountryCode;
         this.mobileNetworkCode = mobileNetworkCode;
@@ -140,8 +140,8 @@ public class Geolocation {
         return responseStatus;
     }
 
-    public String getGlobalCellId() {
-        return globalCellId;
+    public String getCellId() {
+        return cellId;
     }
 
     public String getLocationAreaCode() {
@@ -226,7 +226,7 @@ public class Geolocation {
 
     public Geolocation setSid(Sid sid) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -234,7 +234,7 @@ public class Geolocation {
 
     public Geolocation setDateCreated(DateTime dateCreated) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -242,7 +242,7 @@ public class Geolocation {
 
     public Geolocation setDateUpdated(DateTime dateUpdated) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -250,7 +250,7 @@ public class Geolocation {
 
     public Geolocation setDateExecuted(DateTime dateExecuted) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -258,7 +258,7 @@ public class Geolocation {
 
     public Geolocation setAccountSid(Sid accountSid) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -266,7 +266,7 @@ public class Geolocation {
 
     public Geolocation setSource(String source) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -274,7 +274,7 @@ public class Geolocation {
 
     public Geolocation setDeviceIdentifier(String deviceIdentifier) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -282,7 +282,7 @@ public class Geolocation {
 
     public Geolocation setGeolocationType(String geolocationType) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -290,15 +290,15 @@ public class Geolocation {
 
     public Geolocation setResponseStatus(String responseStatus) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setGlobalCellId(String globalCellId) {
+    public Geolocation setCellId(String cellId) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -306,7 +306,7 @@ public class Geolocation {
 
     public Geolocation setLocationAreaCode(String locationAreaCode) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -314,7 +314,7 @@ public class Geolocation {
 
     public Geolocation setLocationTimeStamp(DateTime locationTimestamp) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -322,7 +322,7 @@ public class Geolocation {
 
     public Geolocation setMobileCountryCode(Integer mobileCountryCode) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -330,7 +330,7 @@ public class Geolocation {
 
     public Geolocation setMobileNetworkCode(Integer mobileNetworkCode) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -338,7 +338,15 @@ public class Geolocation {
 
     public Geolocation setNetworkEntityAddress(BigInteger networkEntityAddress) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
+                internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
+                geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
+    }
+
+    public Geolocation setAgeOfLocationInfo(Integer ageOfLocationInfo) {
+        return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -346,7 +354,7 @@ public class Geolocation {
 
     public Geolocation setDeviceLatitude(String deviceLatitude) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -354,7 +362,7 @@ public class Geolocation {
 
     public Geolocation setDeviceLongitude(String deviceLongitude) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -362,7 +370,7 @@ public class Geolocation {
 
     public Geolocation setAccuracy(BigInteger accuracy) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -370,7 +378,7 @@ public class Geolocation {
 
     public Geolocation setPhysicalAddress(String physicalAddress) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -378,7 +386,7 @@ public class Geolocation {
 
     public Geolocation setInternetAddress(String internetAddress) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -386,7 +394,7 @@ public class Geolocation {
 
     public Geolocation setFormattedAddress(String formattedAddress) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -394,7 +402,7 @@ public class Geolocation {
 
     public Geolocation setEventGeofenceLatitude(String eventGeofenceLatitude) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -402,7 +410,7 @@ public class Geolocation {
 
     public Geolocation setEventGeofenceLongitude(String eventGeofenceLongitude) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -410,7 +418,7 @@ public class Geolocation {
 
     public Geolocation setRadius(BigInteger radius) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -418,7 +426,7 @@ public class Geolocation {
 
     public Geolocation setGeolocationPositioningType(String geolocationPositioningType) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -426,7 +434,7 @@ public class Geolocation {
 
     public Geolocation setLastGeolocationResponse(Boolean lastGeolocationResponse) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -434,7 +442,7 @@ public class Geolocation {
 
     public Geolocation setCause(String cause) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -442,7 +450,7 @@ public class Geolocation {
 
     public Geolocation setApiVersion(String apiVersion) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -450,7 +458,7 @@ public class Geolocation {
 
     public Geolocation setUri(URI uri) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
-                geolocationType, responseStatus, globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
+                geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
                 internetAddress, formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -469,7 +477,7 @@ public class Geolocation {
         private String deviceIdentifier;
         private String geolocationType;
         private String responseStatus;
-        private String globalCellId;
+        private String cellId;
         private String locationAreaCode;
         private Integer mobileCountryCode;
         private Integer mobileNetworkCode;
@@ -498,7 +506,7 @@ public class Geolocation {
         public Geolocation build() {
             final DateTime now = DateTime.now();
             return new Geolocation(sid, now, now, now, accountSid, source, deviceIdentifier, geolocationType, responseStatus,
-                    globalCellId, locationAreaCode, mobileCountryCode, mobileNetworkCode, networkEntityAddress,
+                    cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode, networkEntityAddress,
                     ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress, internetAddress,
                     formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
                     geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
@@ -529,8 +537,8 @@ public class Geolocation {
             this.responseStatus = responseStatus;
         }
 
-        public void setGlobalCellId(String globalCellId) {
-            this.globalCellId = globalCellId;
+        public void setCellId(String cellId) {
+            this.cellId = cellId;
         }
 
         public void setLocationAreaCode(String locationAreaCode) {

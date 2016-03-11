@@ -4,11 +4,11 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.GeolocationDao">
 	<insert id="addGeolocation" parameterType="map">
 		INSERT INTO restcomm_geolocation(sid, date_created, date_updated, date_executed, account_sid, source, device_identifier,
-		geo_location_type, response_status, global_cell_id, location_area_code, mobile_country_code, mobile_network_code, 
+		geo_location_type, response_status, cell_id, location_area_code, mobile_country_code, mobile_network_code, 
 		network_entity_address, age_of_location_info, device_latitude, device_longitude, accuracy, physical_address, internet_address, 
 		formatted_address, location_timestamp, event_geofence_latitude, event_geofence_longitude, radius, geolocation_positioning_type, 
 		last_geolocation_response, cause, api_version, uri) VALUES(#{sid}, #{date_created}, #{date_updated}, #{date_executed}, #{account_sid}, 
-		#{source}, #{device_identifier}, #{geo_location_type}, #{response_status}, #{global_cell_id}, #{location_area_code}, 
+		#{source}, #{device_identifier}, #{geo_location_type}, #{response_status}, #{cell_id}, #{location_area_code}, 
 		#{mobile_country_code}, #{mobile_network_code}, #{network_entity_address}, #{age_of_location_info}, #{device_latitude}, #{device_longitude}, 
 		#{accuracy}, #{physical_address}, #{internet_address}, #{formatted_address}, #{location_timestamp}, #{event_geofence_latitude}, 
 		#{event_geofence_longitude}, #{radius}, #{geolocation_positioning_type}, #{last_geolocation_response}, #{cause}, #{api_version}, 
@@ -29,7 +29,7 @@
 	
 	<update id="updateGeolocation" parameterType="map">
 		UPDATE "restcomm_geolocation" SET "date_updated"=#{date_updated}, "response_status"=#{response_status}, 
-		"global_cell_id"=#{global_cell_id}, "location_area_code"=#{location_area_code}, "mobile_country_code"=#{mobile_country_code}, 
+		"cell_id"=#{cell_id}, "location_area_code"=#{location_area_code}, "mobile_country_code"=#{mobile_country_code}, 
 		"mobile_network_code"=#{mobile_network_code}, "network_entity_address"=#{network_entity_address}, "age_of_location_info"=#{age_of_location_info}, 
 		"device_latitude"=#{device_latitude}, "device_longitude"=#{device_longitude}, "accuracy"=#{accuracy}, "physical_address"=#{physical_address}, 
 		"internet_address"=#{internet_address}, "formatted_address"=#{formatted_address}, "location_timestamp"=#{location_timestamp}, 
