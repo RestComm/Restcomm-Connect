@@ -12,8 +12,8 @@ public class TicketRepository {
 
     private ConcurrentHashMap<String,Ticket> tickets = new ConcurrentHashMap<String,Ticket>();
     private Date lastRemovalCheckTime; // time when a check was run to invalidate stale tickets
-    static final Integer STALE_REMOVAL_INTERVAL_MINUTES = 120; // every how many hours will the stale ticket removal take place?
-    static final Integer STALE_TICKET_LIFETIME_MINUTES = 120; // a ticket is considered stale if it hasn't been used for 30 minutes
+    static final Integer STALE_REMOVAL_INTERVAL_MINUTES = 120; // every how many minutes will the stale ticket removal take place?
+    static final Integer STALE_TICKET_LIFETIME_MINUTES = 120; // a ticket is considered stale if it hasn't been used for X minutes
 
 
     private TicketRepository() {
@@ -29,7 +29,9 @@ public class TicketRepository {
     }
 
     public void putTicket(Ticket ticket) {
+        //logger.debug("Adding ticket: " + ticket);
         tickets.put(ticket.getTicketId(), ticket);
+        //logger.debug(this.toString());
     }
 
     /**
@@ -46,7 +48,9 @@ public class TicketRepository {
             String ticketId = SecurityUtils.getTicketIdFromTicketCookie(ticketCookie);
             Ticket ticket = tickets.get(ticketId);
             if (ticket != null) {
+                logger.debug("Invalidating ticket: " + ticket);
                 tickets.remove(ticket.getTicketId());
+                //logger.debug(this.toString());
                 return;
             }
         } catch (InvalidTicketCookie e) {
@@ -59,15 +63,13 @@ public class TicketRepository {
      * Runs the stale ticket removal job if at least STALE_REMOVAL_INTERVAL_HOURS have passed
      */
     public void remindStaleTicketRemoval() {
+        //logger.debug("Checking if it's time to remove tickets");
         Date currentDate = new Date();
         Integer intervalMillis = STALE_REMOVAL_INTERVAL_MINUTES * 60 * 1000;
         if ( currentDate.getTime() - lastRemovalCheckTime.getTime() >= intervalMillis) {
-            logger.debug("Removing stale RVD tickets at " + currentDate);
             lastRemovalCheckTime = currentDate; // reset interval
             int removedCount = runStaleTicketRemovalJob(currentDate);
-            logger.debug("" + removedCount + " tickets removed." + tickets.size() + " tickets still in TicketRepository");
         }
-
     }
 
     /**
@@ -75,6 +77,7 @@ public class TicketRepository {
      * @return how many stale tickets were removed
      */
     private int runStaleTicketRemovalJob(Date currentDate) {
+        logger.debug("Running stale ticket removal job...");
         int removedCount = 0;
         for (String ticketId : tickets.keySet()) {
             Ticket ticket = tickets.get(ticketId);
@@ -85,7 +88,17 @@ public class TicketRepository {
                 removedCount ++;
             }
         }
+        //this.toString();
+        logger.debug("" + removedCount + " tickets removed." + tickets.size() + " tickets still in TicketRepository");
         return removedCount;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("Ticket repository contents:\n");
+        for (String ticketId : this.tickets.keySet() ) {
+            builder.append(tickets.get(ticketId).toString()).append("\n");
+        }
+        return builder.toString();
+    }
 }

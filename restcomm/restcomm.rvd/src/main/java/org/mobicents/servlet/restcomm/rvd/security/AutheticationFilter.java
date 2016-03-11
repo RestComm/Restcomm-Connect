@@ -16,6 +16,7 @@ import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.UserNotAuthenticated;
 import org.mobicents.servlet.restcomm.rvd.http.RvdResponse;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityException;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
@@ -64,19 +65,20 @@ public class AutheticationFilter implements ResourceFilter, ContainerRequestFilt
                     if ( authToken.equals(basicAuthTicket.getAuthenticationToken() ) ) {
                         basicAuthTicket.accessedNow();
                         basicAuthStatus = true;
-                        return wrapResponse(request, username, basicAuthTicket.getTicketId());
+                        return wrapResponse(request, basicAuthTicket.getUserId(), basicAuthTicket.getTicketId());
                     }
                 } else {
                     // try to authenticate
                     AuthenticationService authService = new AuthenticationService();
                     try {
-                        if ( authService.authenticate(basicAuthCredentials[0], basicAuthCredentials[1]) ) {
-                            Ticket newTicket = new Ticket(username, username);
+                        RestcommAccountInfoResponse account = authService.authenticate(username, authToken);
+                        if ( account != null ) {
+                            Ticket newTicket = new Ticket(username, account.getEmail_address()); // username is whatever is authenticated by Restcomm. Email_Address is the exact email_address as stored in the account. In case Restcomm authenticates loosely there are not necessarily exactly the same.
                             newTicket.setAuthenticationToken(basicAuthCredentials[1]);
                             newTicket.setCookieBased(false);
                             tickets.putTicket( newTicket );
                             // create the user for the context
-                            return wrapResponse(request, username, newTicket.getTicketId());
+                            return wrapResponse(request, account.getEmail_address(), newTicket.getTicketId());
                         }
                     } catch (RvdSecurityException e1) {
                         logger.error("Internal error while authentication against restcomm for user '" + basicAuthCredentials[0] + "'", e1 );

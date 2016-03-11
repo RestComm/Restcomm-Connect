@@ -159,13 +159,13 @@ echo "Looking for the IP Address, subnet, network and broadcast_address"
 fi
 BIND_ADDRESS="$PRIVATE_IP"
 
-if [[ -z "$MEDIASERVER_EXTERNAL_ADDRESS" ]]; then
-   MEDIASERVER_EXTERNAL_ADDRESS="$STATIC_ADDRESS"
-fi
-
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	MEDIASERVER_EXTERNAL_ADDRESS="\<null\/\>"
 	STATIC_ADDRESS=$BIND_ADDRESS
+fi
+
+if [[ -z "$MEDIASERVER_EXTERNAL_ADDRESS" ]]; then
+   MEDIASERVER_EXTERNAL_ADDRESS="$STATIC_ADDRESS"
 fi
 
 if [[ -z "$PUBLIC_IP" ]]; then
