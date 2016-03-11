@@ -20,14 +20,16 @@
  */
 package org.mobicents.servlet.restcomm;
 
-import javax.servlet.ServletContext;
-
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.Sid;
+
+import javax.servlet.ServletContext;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -40,21 +42,22 @@ public class GenerateInstanceId {
 //    private final Configuration configuration;
     private final ServletContext servletContext;
     private final InstanceIdDao instanceIdDao;
+    private final String host;
 
-    public GenerateInstanceId(ServletContext servletContext) {
-//        this.configuration = configuration;
+    public GenerateInstanceId(ServletContext servletContext) throws UnknownHostException {
         this.servletContext = servletContext;
+        host = InetAddress.getLocalHost().getHostAddress();
         instanceIdDao = ((DaoManager) servletContext.getAttribute(DaoManager.class.getName())).getInstanceIdDao();
     }
 
     public InstanceId instanceId() {
-        InstanceId instanceId = instanceIdDao.getInstanceId();
+        InstanceId instanceId = instanceIdDao.getInstanceIdByHost(host);
         if (instanceId != null) {
-            logger.info("Restcomm Instance ID: "+instanceId.getId());
+            logger.info("Restcomm Instance ID: "+instanceId.toString());
         } else {
-            instanceId = new InstanceId(Sid.generate(Sid.Type.INSTANCE), DateTime.now(), DateTime.now());
+            instanceId = new InstanceId(Sid.generate(Sid.Type.INSTANCE), host, DateTime.now(), DateTime.now());
             instanceIdDao.addInstancecId(instanceId);
-            logger.info("Restcomm Instance ID created: "+instanceId.getId());
+            logger.info("Restcomm Instance ID created: "+instanceId.toString());
         }
         servletContext.setAttribute(InstanceId.class.getName(), instanceId);
         return instanceId;
