@@ -28,6 +28,7 @@ import org.mobicents.servlet.restcomm.entities.InstanceId;
  */
 public interface InstanceIdDao {
     InstanceId getInstanceId();
+    InstanceId getInstanceIdByHost(String host);
     void addInstancecId(InstanceId instanceId);
     void updateInstanceId(InstanceId instanceId);
 }

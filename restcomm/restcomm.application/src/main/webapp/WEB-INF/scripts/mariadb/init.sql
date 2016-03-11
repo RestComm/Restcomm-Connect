@@ -4,7 +4,8 @@ USE restcomm;
 CREATE TABLE restcomm_instance_id ( 
 instance_id VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
-date_updated DATETIME NOT NULL
+date_updated DATETIME NOT NULL,
+host VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE restcomm_accounts (

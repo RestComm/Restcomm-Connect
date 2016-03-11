@@ -11,6 +11,10 @@
 		SELECT * FROM restcomm_instance_id;
 	</select>
 
+	<select id="getInstanceIdByHost" parameterType="string" resultType="hashmap">
+		SELECT * FROM restcomm_instance_id where host=#{host};
+	</select>
+
 	<update id="updateInstanceId" parameterType="map">
 		UPDATE restcomm_instance_id SET date_updated=#{date_updated}, instance_id=#{instance_id} WHERE instance_id=#{instance_id};
 	</update>
