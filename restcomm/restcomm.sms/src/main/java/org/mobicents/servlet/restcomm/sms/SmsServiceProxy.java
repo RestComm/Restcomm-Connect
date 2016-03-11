@@ -39,8 +39,8 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-import org.mobicents.servlet.restcomm.smpp.SmppMessageHandler;
-import org.mobicents.servlet.restcomm.smpp.SmppService;
+import org.mobicents.servlet.restcomm.sms.smpp.SmppMessageHandler;
+import org.mobicents.servlet.restcomm.sms.smpp.SmppService;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -115,7 +115,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             service = service(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
-            if (configuration.subset("smpp").getString("[@activateSmppConnection]").equalsIgnoreCase("true")) {
+            if (configuration.subset("smpp").getString("[@activateSmppConnection]", "false").equalsIgnoreCase("true")) {
                 logger.info("Will initialize SMPP");
                 smppMessageHandler = smppMessageHandler();
                 smppService = smppService(configuration,factory,storage,context, smppMessageHandler);

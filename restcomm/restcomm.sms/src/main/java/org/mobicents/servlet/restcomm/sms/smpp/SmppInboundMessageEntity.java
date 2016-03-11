@@ -1,7 +1,7 @@
-package org.mobicents.servlet.restcomm.smpp;
+package org.mobicents.servlet.restcomm.sms.smpp;
 
 
-public class SmppOutboundMessageEntity {
+public class SmppInboundMessageEntity {
 
 
     private final String smppTo;
@@ -9,11 +9,13 @@ public class SmppOutboundMessageEntity {
     private final String smppContent;
 
 
-    public SmppOutboundMessageEntity(String smppTo, String smppFrom, String smppContent){
+
+    public SmppInboundMessageEntity(String smppTo, String smppFrom, String smppContent){
 
         this.smppTo = smppTo;
         this.smppFrom = smppFrom;
         this.smppContent = smppContent;
+
 
     }
 
@@ -29,4 +31,5 @@ public class SmppOutboundMessageEntity {
     public final String getSmppContent(){
         return smppContent;
     }
+
 }

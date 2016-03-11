@@ -18,7 +18,7 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.smpp;
+package org.mobicents.servlet.restcomm.sms.smpp;
 
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 
@@ -98,21 +98,13 @@ public final class SmppService extends UntypedActor {
 
         Configuration config = this.configuration.subset("smpp");
         smppActivated = config.getString("[@activateSmppConnection]");
-        logger.info("checking if to use SMPP for SMS. SMPP activation is set to : " +  smppActivated );
 
         //get smpp address map from restcomm.xml file
         this.smppSourceAddressMap = config.getString("connections.connection[@sourceAddressMap]");
         this.smppDestinationAddressMap = config.getString("connections.connection[@destinationAddressMap]");
         this.smppTonNpiValue = config.getString("connections.connection[@tonNpiValue]");
 
-
-
-        //check if SMPP has been activated in the restcomm.xml file
-        if (smppActivated.equalsIgnoreCase("true")){
-            this.initializeSmppConnections();
-        }else{
-            logger.warning("Restcomm SMPP integration has not been activated, check the restcomm.xml file");
-        }
+        this.initializeSmppConnections();
     }
 
 
@@ -120,24 +112,8 @@ public final class SmppService extends UntypedActor {
         return smppTonNpiValue;
     }
 
-    public static String getSmppDestinationAddressMap(){
-        return smppDestinationAddressMap;
-    }
-
-    public static String getSmppSourceAddressMap(){
-        return smppSourceAddressMap;
-    }
-
-    public static String getSmppActivated(){
-        return smppActivated;
-    }
-
-
     @Override
-    public void onReceive(Object message) throws Exception {
-        logger.info("onReceive = " + message);
-
-    }
+    public void onReceive(Object message) throws Exception {}
 
 
     private void initializeSmppConnections() {
@@ -238,7 +214,7 @@ public final class SmppService extends UntypedActor {
         // configurable?
         this.clientBootstrap = new DefaultSmppClient(this.executor, 25, monitorExecutor);
 
-        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort(), system, smppMessageHandler);
+        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort(), smppMessageHandler);
 
         (new Thread(this.smppClientOpsThread)).start();
 

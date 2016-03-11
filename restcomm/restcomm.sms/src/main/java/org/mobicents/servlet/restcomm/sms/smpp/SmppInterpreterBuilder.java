@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.smpp;
+package org.mobicents.servlet.restcomm.sms.smpp;
 
 import java.net.URI;
 
