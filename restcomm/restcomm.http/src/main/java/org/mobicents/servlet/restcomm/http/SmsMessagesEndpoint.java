@@ -19,35 +19,20 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
-
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.Currency;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.util.Timeout;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
@@ -70,32 +55,35 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.util.StringUtils;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.util.Timeout;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Currency;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
 public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
-
-    private static final Logger logger = Logger.getLogger(SmsMessagesEndpoint.class);
     @Context
     protected ServletContext context;
     protected ActorSystem system;
@@ -231,9 +219,8 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
             }
         }
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-
         try {
-            Future<Object> future = ask(aggregator, new CreateSmsSession(), expires);
+            Future<Object> future = (Future<Object>) ask(aggregator, new CreateSmsSession(), expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
             Class<?> klass = object.getClass();
             if (SmsServiceResponse.class.equals(klass)) {
@@ -243,7 +230,6 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
                     final SmsMessage record = sms(new Sid(accountSid), getApiVersion(data), sender, recipient, body,
                             SmsMessage.Status.SENDING, SmsMessage.Direction.OUTBOUND_API);
                     dao.addSmsMessage(record);
-
                     // Send the sms.
                     final ActorRef session = smsServiceResponse.get();
                     final ActorRef observer = observer();
@@ -261,12 +247,10 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
                     }
                 }
             }
-
             return status(INTERNAL_SERVER_ERROR).build();
         } catch (final Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
-
     }
 
     private SmsMessage sms(final Sid accountSid, final String apiVersion, final String sender, final String recipient,
@@ -316,9 +300,6 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         }));
     }
 
-
-
-
     private final class SmsSessionObserver extends UntypedActor {
         public SmsSessionObserver() {
             super();
@@ -327,10 +308,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         @Override
         public void onReceive(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-
-            logger.info("Getting Class Used for Response " + message.getClass());
             if (SmsSessionResponse.class.equals(klass)) {
-
                 final SmsSessionResponse response = (SmsSessionResponse) message;
                 final SmsSessionInfo info = response.info();
                 SmsMessage record = (SmsMessage) info.attributes().get("record");
@@ -348,7 +326,4 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
             }
         }
     }
-
-
-
 }

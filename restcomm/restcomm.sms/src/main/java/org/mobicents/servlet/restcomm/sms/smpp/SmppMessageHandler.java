@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.smpp;
+package org.mobicents.servlet.restcomm.sms.smpp;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -26,6 +26,11 @@ import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
+import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
+import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
+import org.mobicents.servlet.restcomm.sms.SmsSession;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import javax.servlet.ServletContext;
@@ -65,13 +70,13 @@ public class SmppMessageHandler extends UntypedActor  {
         }else if(message instanceof SmppOutboundMessageEntity ){
             logger.info("SmppMessageHandler processing Outbound Message");
             outbound((SmppOutboundMessageEntity) message);
-        } else if (message instanceof SmppSessionObjects.CreateSmppSession) {
+        } else if (message instanceof CreateSmsSession) {
             final ActorRef session = session();
-            final SmppSessionObjects.SmppServiceResponse<ActorRef> response = new  SmppSessionObjects().new SmppServiceResponse<ActorRef>(session);
+            final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
             sender.tell(response, self);
-        }else if (message instanceof SmppSessionObjects.DestroySmppSession) {
-            final SmppSessionObjects.DestroySmppSession destroySmppSession = (SmppSessionObjects.DestroySmppSession) message;
-            final ActorRef session = destroySmppSession.session();
+        }else if (message instanceof DestroySmsSession) {
+            final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
+            final ActorRef session = destroySmsSession.session();
             context.stop(session);
         }
     }
@@ -145,7 +150,7 @@ public class SmppMessageHandler extends UntypedActor  {
 
                 final ActorRef session = session();
                 session.tell(request, self);
-                final SmppSessionObjects.SmppStartInterpreter start = new SmppSessionObjects().new SmppStartInterpreter(session);
+                final StartInterpreter start = new StartInterpreter(session);
                 interpreter.tell(start, self);
                 isFoundHostedApp = true;
 
@@ -176,9 +181,7 @@ public class SmppMessageHandler extends UntypedActor  {
 
             @Override
             public UntypedActor create() throws Exception {
-                Configuration smsConfiguration = configuration.subset("sms-aggregator");
-                //return new SmppSession();
-                return new SmppSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService);
+                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         }));
     }

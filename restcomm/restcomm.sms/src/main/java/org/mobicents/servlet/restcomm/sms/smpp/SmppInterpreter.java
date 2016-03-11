@@ -1,4 +1,4 @@
-package org.mobicents.servlet.restcomm.smpp;
+package org.mobicents.servlet.restcomm.sms.smpp;
 
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
@@ -46,18 +46,13 @@ import org.mobicents.servlet.restcomm.http.client.Downloader;
 import org.mobicents.servlet.restcomm.http.client.DownloaderResponse;
 import org.mobicents.servlet.restcomm.http.client.HttpRequestDescriptor;
 import org.mobicents.servlet.restcomm.http.client.HttpResponseDescriptor;
+import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
+import org.mobicents.servlet.restcomm.interpreter.StopInterpreter;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Parser;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.DestroySmppSession;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppServiceResponse;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppSessionInfo;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppSessionRequest;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppSessionResponse;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppStartInterpreter;
-import org.mobicents.servlet.restcomm.smpp.SmppSessionObjects.SmppStopInterpreter;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
@@ -70,6 +65,14 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import org.mobicents.servlet.restcomm.sms.CreateSmsSession;
+import org.mobicents.servlet.restcomm.sms.DestroySmsSession;
+import org.mobicents.servlet.restcomm.sms.GetLastSmsRequest;
+import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
+import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
+import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
+import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
+import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 
 public class SmppInterpreter extends UntypedActor  {
 
@@ -100,7 +103,7 @@ public class SmppInterpreter extends UntypedActor  {
     private Sid initialSessionSid;
     private ActorRef initialSession;
     private ActorRef mailerService;
-    private SmppSessionRequest initialSessionRequest;
+    private SmsSessionRequest initialSessionRequest;
     // HTTP Stuff.
     private final ActorRef downloader;
     // The storage engine.
@@ -302,10 +305,10 @@ public class SmppInterpreter extends UntypedActor  {
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
-        if (SmppStartInterpreter.class.equals(klass)) {
+        if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringLastSmsRequest);
-        } else if (SmppSessionRequest.class.equals(klass)) {
-            customRequestHeaderMap = ((SmppSessionRequest)message).headers();
+        } else if (SmsSessionRequest.class.equals(klass)) {
+            customRequestHeaderMap = ((SmsSessionRequest)message).headers();
             if(!state.equals(sendingSms)){
                 fsm.transition(message, downloadingRcml);
             }
@@ -352,8 +355,8 @@ public class SmppInterpreter extends UntypedActor  {
             } else {
                 invalidVerb(verb);
             }
-        } else if (SmppServiceResponse.class.equals(klass)) {
-            final SmppServiceResponse<ActorRef> response = (SmppServiceResponse<ActorRef>) message;
+        } else if (SmsServiceResponse.class.equals(klass)) {
+            final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
             if (response.succeeded()) {
                 if (creatingSmsSession.equals(state)) {
                     fsm.transition(message, sendingSms);
@@ -365,9 +368,9 @@ public class SmppInterpreter extends UntypedActor  {
                     fsm.transition(message, finished);
                 }
             }
-        } else if (SmppSessionResponse.class.equals(klass)) {
+        } else if (SmsSessionResponse.class.equals(klass)) {
             response(message);
-        } else if (SmppStopInterpreter.class.equals(klass)) {
+        } else if (StopInterpreter.class.equals(klass)) {
             if (sessions.size() > 0) {
                 fsm.transition(message, waitingForSmsResponses);
             } else {
@@ -423,9 +426,9 @@ public class SmppInterpreter extends UntypedActor  {
     private void response(final Object message) {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
-        if (SmppSessionResponse.class.equals(klass)) {
-            final SmppSessionResponse response = (SmppSessionResponse) message;
-            final SmppSessionInfo info = response.info();
+        if (SmsSessionResponse.class.equals(klass)) {
+            final SmsSessionResponse response = (SmsSessionResponse) message;
+            final SmsSessionInfo info = response.info();
             SmsMessage record = (SmsMessage) info.attributes().get("record");
             if (response.succeeded()) {
                 final DateTime now = DateTime.now();
@@ -446,12 +449,12 @@ public class SmppInterpreter extends UntypedActor  {
             }
             // Destroy the sms session.
             final ActorRef session = sessions.remove(record.getSid());
-            final DestroySmppSession destroy = new SmppSessionObjects().new DestroySmppSession(session);
+            final DestroySmsSession destroy = new DestroySmsSession(session);
             smppMessageHandler.tell(destroy, self);
             // Try to stop the interpreter.
             final State state = fsm.state();
             if (waitingForSmsResponses.equals(state)) {
-                final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new SmppStopInterpreter();
+                final StopInterpreter stop = new StopInterpreter();
                 self.tell(stop, self);
             }
         }
@@ -485,10 +488,10 @@ public class SmppInterpreter extends UntypedActor  {
 
         @Override
         public void execute(final Object message) throws Exception {
-            final SmppStartInterpreter request = (SmppStartInterpreter) message;
+            final StartInterpreter request = (StartInterpreter) message;
             initialSession = request.resource();
             initialSession.tell(new Observe(source), source);
-            initialSession.tell(new SmppSessionObjects().new GetLastSmppRequest(), source);
+            initialSession.tell(new GetLastSmsRequest(), source);
         }
     }
 
@@ -499,7 +502,7 @@ public class SmppInterpreter extends UntypedActor  {
 
         @Override
         public void execute(final Object message) throws Exception {
-            initialSessionRequest = (SmppSessionRequest) message;
+            initialSessionRequest = (SmsSessionRequest) message;
             initialSessionSid = Sid.generate(Sid.Type.SMS_MESSAGE);
             final SmsMessage.Builder builder = SmsMessage.builder();
             builder.setSid(initialSessionSid);
@@ -523,7 +526,7 @@ public class SmppInterpreter extends UntypedActor  {
             final SmsMessagesDao messages = storage.getSmsMessagesDao();
             messages.addSmsMessage(record);
             // Destroy the initial session.
-            smppMessageHandler.tell(new SmppSessionObjects().new DestroySmppSession(initialSession), source);
+            smppMessageHandler.tell(new DestroySmsSession(initialSession), source);
             initialSession = null;
             // Ask the downloader to get us the application that will be executed.
             final List<NameValuePair> parameters = parameters();
@@ -591,7 +594,7 @@ public class SmppInterpreter extends UntypedActor  {
                         final NotificationsDao notifications = storage.getNotificationsDao();
                         final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                         notifications.addNotification(notification);
-                        final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new  SmppStopInterpreter();
+                        final StopInterpreter stop = new  StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -599,7 +602,7 @@ public class SmppInterpreter extends UntypedActor  {
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);
-                    final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new  SmppStopInterpreter();
+                    final StopInterpreter stop = new  StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -649,7 +652,7 @@ public class SmppInterpreter extends UntypedActor  {
                 } catch (final Exception exception) {
                     final Notification notification = notification(ERROR_NOTIFICATION, 11100, text + " is an invalid URI.");
                     notifications.addNotification(notification);
-                    final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new  SmppStopInterpreter();
+                    final StopInterpreter stop = new  StopInterpreter();
                     source.tell(stop, source);
                     return;
                 }
@@ -676,7 +679,7 @@ public class SmppInterpreter extends UntypedActor  {
             // Save <Sms> verb.
             verb = (Tag) message;
             // Create a new sms session to handle the <Sms> verb.
-            smppMessageHandler.tell(new SmppSessionObjects().new CreateSmppSession(), source);
+            smppMessageHandler.tell(new CreateSmsSession(), source);
         }
     }
 
@@ -688,7 +691,7 @@ public class SmppInterpreter extends UntypedActor  {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final SmppServiceResponse<ActorRef> response = (SmppServiceResponse<ActorRef>) message;
+            final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
             final ActorRef session = response.get();
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Parse "from".
@@ -703,8 +706,8 @@ public class SmppInterpreter extends UntypedActor  {
                         final Notification notification = notification(ERROR_NOTIFICATION, 14102, from
                                 + " is an invalid 'from' phone number.");
                         notifications.addNotification(notification);
-                        smppMessageHandler.tell(new SmppSessionObjects().new DestroySmppSession(session), source);
-                        final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new  SmppStopInterpreter();
+                        smppMessageHandler.tell(new DestroySmsSession(session), source);
+                        final StopInterpreter stop = new  StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }
@@ -726,8 +729,8 @@ public class SmppInterpreter extends UntypedActor  {
             if (body == null || body.isEmpty()) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 14103, body + " is an invalid SMS body.");
                 notifications.addNotification(notification);
-                smppMessageHandler.tell(new SmppSessionObjects().new DestroySmppSession(session), source);
-                final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new  SmppStopInterpreter();
+                smppMessageHandler.tell(new DestroySmsSession(session), source);
+                final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
             } else {
@@ -745,14 +748,14 @@ public class SmppInterpreter extends UntypedActor  {
                             final Notification notification = notification(ERROR_NOTIFICATION, 14105, callback
                                     + " is an invalid URI.");
                             notifications.addNotification(notification);
-                            smppMessageHandler.tell(new SmppSessionObjects().new DestroySmppSession(session), source);
-                            final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new  SmppStopInterpreter();
+                            smppMessageHandler.tell(new DestroySmsSession(session), source);
+                            final StopInterpreter stop = new StopInterpreter();
                             source.tell(stop, source);
                             return;
                         }
                         final URI base = request.getUri();
                         final URI uri = resolve(base, target);
-                        session.tell(new SmppSessionObjects().new  SmppSessionAttribute("callback", uri), source);
+                        session.tell(new SmsSessionAttribute("callback", uri), source);
                     }
                 }
                 // Create an SMS detail record.
@@ -779,9 +782,9 @@ public class SmppInterpreter extends UntypedActor  {
                 final SmsMessagesDao messages = storage.getSmsMessagesDao();
                 messages.addSmsMessage(record);
                 // Store the sms record in the sms session.
-                session.tell(new SmppSessionObjects().new  SmppSessionAttribute("record", record), source);
+                session.tell(new  SmsSessionAttribute("record", record), source);
                 // Send the SMS.
-                final SmppSessionRequest sms = new SmppSessionObjects().new SmppSessionRequest(from, to, body, customHttpHeaderMap);
+                final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, customHttpHeaderMap);
                 session.tell(sms, source);
                 sessions.put(sid, session);
             }
@@ -797,7 +800,7 @@ public class SmppInterpreter extends UntypedActor  {
                         final Notification notification = notification(ERROR_NOTIFICATION, 11100, action
                                 + " is an invalid URI.");
                         notifications.addNotification(notification);
-                        final SmppSessionObjects.SmppStopInterpreter stop = new SmppSessionObjects().new  SmppStopInterpreter();
+                        final StopInterpreter stop = new StopInterpreter();
                         source.tell(stop, source);
                         return;
                     }

@@ -93,19 +93,27 @@
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.http</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.monitoring.service</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-	
-	  <dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.smpp</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
 
+		<dependency>
+			<groupId>com.cloudhopper</groupId>
+			<artifactId>ch-commons-gsm</artifactId>
+		</dependency>
 
+		<dependency>
+			<groupId>com.cloudhopper</groupId>
+			<artifactId>ch-smpp</artifactId>
+		</dependency>
     </dependencies>
 
 	<build>
