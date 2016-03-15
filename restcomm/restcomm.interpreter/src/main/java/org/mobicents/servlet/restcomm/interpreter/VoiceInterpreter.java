@@ -60,6 +60,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
@@ -1123,6 +1124,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         // Create a call detail record for the call.
                         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                         builder.setSid(callInfo.sid());
+                        builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                         builder.setDateCreated(callInfo.dateCreated());
                         builder.setAccountSid(accountId);
                         builder.setTo(callInfo.to());
@@ -1935,10 +1937,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("finishDialing state=bridged, will hangup outboundCall");
                     outboundCall.tell(new Hangup(), source);
                 } else {
-                    logger.debug("FinishDialing, State: " + state);
-                    logger.debug("State is not FORKING and not Bridged");
-                    logger.debug("Sender is initial call: " + sender.equals(call));
-                    logger.debug("Sender in the dialBranches: " + dialBranches.contains(sender));
+//                    logger.debug("FinishDialing, State: " + state);
+//                    logger.debug("State is not FORKING and not Bridged");
+//                    logger.debug("Sender is initial call: " + sender.equals(call));
+//                    logger.debug("Sender in the dialBranches: " + dialBranches.contains(sender));
                 }
             }
 

@@ -139,7 +139,8 @@ forwarded_from VARCHAR(30),
 caller_name VARCHAR(50),
 uri MEDIUMTEXT NOT NULL,
 call_path VARCHAR(255),
-ring_duration INT
+ring_duration INT,
+instanceid VARCHAR(255)
 );
 
 CREATE TABLE restcomm_clients (
