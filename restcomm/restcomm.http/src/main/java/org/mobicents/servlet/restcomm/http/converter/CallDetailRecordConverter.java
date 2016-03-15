@@ -62,6 +62,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
         final CallDetailRecord cdr = (CallDetailRecord) object;
         writer.startNode("Call");
         writeSid(cdr.getSid(), writer);
+        writeInstanceId(cdr.getInstanceId(), writer);
         writeDateCreated(cdr.getDateCreated(), writer);
         writeDateUpdated(cdr.getDateUpdated(), writer);
         writeParentCallSid(cdr.getParentCallSid(), writer);
@@ -98,6 +99,7 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
     public JsonElement serialize(final CallDetailRecord cdr, Type type, final JsonSerializationContext context) {
         final JsonObject object = new JsonObject();
         writeSid(cdr.getSid(), object);
+        writeInstanceId(cdr.getInstanceId(), object);
         writeDateCreated(cdr.getDateCreated(), object);
         writeDateUpdated(cdr.getDateUpdated(), object);
         writeParentCallSid(cdr.getParentCallSid(), object);
@@ -279,5 +281,18 @@ public final class CallDetailRecordConverter extends AbstractConverter implement
         writeNotifications(cdr, other);
         writeRecordings(cdr, other);
         object.add("subresource_uris", other);
+    }
+
+    private void writeInstanceId(final String instanceId, final HierarchicalStreamWriter writer) {
+        if (instanceId != null && !instanceId.isEmpty()) {
+            writer.startNode("InstanceId");
+            writer.setValue(instanceId);
+            writer.endNode();
+        }
+    }
+
+    private void writeInstanceId(final String instanceId, final JsonObject object) {
+        if (instanceId != null && !instanceId.isEmpty())
+            object.addProperty("InstanceId", instanceId);
     }
 }

@@ -46,6 +46,7 @@ import org.mobicents.servlet.restcomm.provisioning.number.api.ProvisionProvider;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
+@Deprecated
 public class Ping {
 
     private Logger logger = Logger.getLogger(Ping.class);
