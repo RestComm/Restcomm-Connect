@@ -196,7 +196,6 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
-        Boolean localOnly = Boolean.valueOf(info.getQueryParameters().getFirst("LocalOnly"));
 
         if (pageSize == null) {
             pageSize = "50";
