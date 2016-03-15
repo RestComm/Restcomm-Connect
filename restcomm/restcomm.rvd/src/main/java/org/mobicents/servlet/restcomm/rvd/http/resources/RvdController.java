@@ -219,11 +219,10 @@ public class RvdController extends RestService {
             } else
                 throw new UnauthorizedCallControlAccess("User '" + basicAuthUsername + "' is not authorized to access project '" + projectName + "'");
         } else {
-            // If an access token is present in the project make sure it matches the one in the url
-            if (info.accessToken != null) {
-                if (!info.accessToken.equals(accessToken))
-                    throw new UnauthorizedCallControlAccess("Web Trigger token authentication failed for '" + projectName + "'")
-                            .setRemoteIP(request.getRemoteAddr());
+            // If the token *is missing* or is wrong throw an error
+            if (RvdUtils.isEmpty(info.accessToken) || !info.accessToken.equals(accessToken) ) {
+                throw new UnauthorizedCallControlAccess("Web Trigger token authentication failed for '" + projectName + "'")
+                    .setRemoteIP(request.getRemoteAddr());
             }
             // load user profile
             ProfileDao profileDao = new FsProfileDao(workspaceStorage);
@@ -286,8 +285,11 @@ public class RvdController extends RestService {
         String from = fromParam;
         if (RvdUtils.isEmpty(from))
             from = info.lanes.get(0).startPoint.from;
-        if (RvdUtils.isEmpty(from))
-            from = projectName;
+        // fallback to the project name (sid). Only the first 10 characters are used.
+        if (RvdUtils.isEmpty(from)) {
+            if (!RvdUtils.isEmpty(projectName))
+                from = projectName.substring(0, projectName.length() < 10 ? projectName.length() : 10);
+        }
 
         if (RvdUtils.isEmpty(rcmlUrl))
             throw new CallControlInvalidConfigurationException("Could not determine application RCML url.");
