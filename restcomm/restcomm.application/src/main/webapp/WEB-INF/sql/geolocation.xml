@@ -3,7 +3,7 @@
 <!-- @author fernando.mendioroz@telestax.com (Fernando Mendioroz) -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.GeolocationDao">
 	<insert id="addGeolocation" parameterType="map">
-		INSERT INTO restcomm_geolocation("sid", "date_created", "date_updated", "date_executed", "account_sid", "source", "device_identifier",
+		INSERT INTO "restcomm_geolocation"("sid", "date_created", "date_updated", "date_executed", "account_sid", "source", "device_identifier",
 		"geo_location_type", "response_status", "cell_id", "location_area_code", "mobile_country_code", "mobile_network_code", 
 		"network_entity_address", "age_of_location_info", "device_latitude", "device_longitude", "accuracy", "physical_address", "internet_address", 
 		"formatted_address", "location_timestamp", "event_geofence_latitude", "event_geofence_longitude", "radius", "geolocation_positioning_type", 
