@@ -359,10 +359,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             throw new NullPointerException("Source can not be null.");
         } else if (!data.containsKey("DeviceIdentifier")) {
             throw new NullPointerException("DeviceIdentifier can not be null.");
-        } else if (!data.containsKey("GeolocationType")) {
-            throw new NullPointerException("GeolocationType can not be null.");
-        } else if (!data.containsKey("ResponseStatus")) {
-            throw new NullPointerException("ResponseStatus can not be null.");
-        }
+        } /*
+           * else if (!data.containsKey("GeolocationType")) { throw new NullPointerException("GeolocationType can not be null."
+           * ); } else if (!data.containsKey("ResponseStatus")) { throw new NullPointerException(
+           * "ResponseStatus can not be null."); }
+           */
     }
 }

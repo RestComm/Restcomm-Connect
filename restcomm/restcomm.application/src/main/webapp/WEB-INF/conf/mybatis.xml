@@ -16,7 +16,6 @@
     </environment>
   </environments>
   
-  
   <mappers>
     <mapper url="file://${sql}/accounts.xml"/>
     <mapper url="file://${sql}/applications.xml"/>
