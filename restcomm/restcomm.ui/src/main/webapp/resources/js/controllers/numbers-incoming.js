@@ -237,6 +237,12 @@ var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notific
 };
 
 var confirmNumberRegister = function(phone, isSIP, $dialog, $scope, RCommNumbers, Notifications, $location, $http) {
+    
+  //+1234 and 1234 considered as same number
+  var len = phone.length;
+  if(phone.phone_number.charAt(0)!== "+"){
+    phone.phone_number= "+" + phone.phone_number.substring(0, len);
+  }
   var newNumber = phone.phone_number || phone.phoneNumber;
   var newFriendly = phone.friendly_name || phone.friendlyName || newNumber;
   var newCost = phone.cost || 0;
