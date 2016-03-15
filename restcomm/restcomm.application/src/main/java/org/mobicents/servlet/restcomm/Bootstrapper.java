@@ -328,6 +328,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
+            RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
             //Depreciated
 //            Ping ping = new Ping(xml, context);
 //            ping.sendPing();

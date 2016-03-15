@@ -48,6 +48,7 @@ public class MainConfigurationSet extends ConfigurationSet {
     private static final boolean RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT = true;
     private final boolean useHostnameToResolveRelativeUrls;
     private final String hostname;
+    private String instanceId;
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-or-proxy-for-clients";
     private final boolean bypassLbForClients;
@@ -110,4 +111,9 @@ public class MainConfigurationSet extends ConfigurationSet {
 
     public boolean getBypassLbForClients() { return bypassLbForClients; }
 
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    public String getInstanceId() { return this.instanceId; }
 }
