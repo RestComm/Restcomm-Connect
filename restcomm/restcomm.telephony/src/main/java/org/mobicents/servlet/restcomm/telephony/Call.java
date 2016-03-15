@@ -526,6 +526,7 @@ public final class Call extends UntypedActor {
                 if (cdr == null) {
                     final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                     builder.setSid(id);
+                    builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                     builder.setDateCreated(created);
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());

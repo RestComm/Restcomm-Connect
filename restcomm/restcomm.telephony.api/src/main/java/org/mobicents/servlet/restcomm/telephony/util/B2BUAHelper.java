@@ -154,6 +154,7 @@
 
                  final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                  builder.setSid(Sid.generate(Sid.Type.CALL));
+                 builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                  builder.setDateCreated(DateTime.now());
                  builder.setAccountSid(client.getAccountSid());
                  builder.setTo(toClient.getFriendlyName());
@@ -282,6 +283,7 @@
 
              final CallDetailRecord.Builder builder = CallDetailRecord.builder();
              builder.setSid(Sid.generate(Sid.Type.CALL));
+             builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
              builder.setDateCreated(DateTime.now());
              builder.setAccountSid(fromClient.getAccountSid());
              builder.setTo(to.toString());

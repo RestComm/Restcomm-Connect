@@ -155,6 +155,11 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         return getCallDetailRecords(namespace + "getCallDetailRecordsByParentCall", parentCallSid.toString());
     }
 
+    @Override
+    public List<CallDetailRecord> getCallDetailRecordsByInstanceId(final Sid instanceId) {
+        return getCallDetailRecords(namespace + "getCallDetailRecordsByInstanceId", instanceId.toString());
+    }
+
     private List<CallDetailRecord> getCallDetailRecords(final String selector, Object input) {
         final SqlSession session = sessions.openSession();
         try {
@@ -204,6 +209,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
 
     private CallDetailRecord toCallDetailRecord(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));
+        final String instanceId = readString(map.get("instanceid"));
         final Sid parentCallSid = readSid(map.get("parent_call_sid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
@@ -225,7 +231,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final String callerName = readString(map.get("caller_name"));
         final URI uri = readUri(map.get("uri"));
         final String callPath = readString(map.get("call_path"));
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
                 startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName,
                 uri, callPath, ringDuration);
     }
@@ -233,6 +239,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     private Map<String, Object> toMap(final CallDetailRecord cdr) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", writeSid(cdr.getSid()));
+        map.put("instanceid", cdr.getInstanceId());
         map.put("parent_call_sid", writeSid(cdr.getParentCallSid()));
         map.put("date_created", writeDateTime(cdr.getDateCreated()));
         map.put("date_updated", writeDateTime(cdr.getDateUpdated()));
