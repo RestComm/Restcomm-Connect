@@ -63,4 +63,6 @@ public interface DaoManager extends Configurable, LifeCycle {
     ConfigurationDao getConfigurationDao();
 
     InstanceIdDao getInstanceIdDao();
+
+    IdentityInstancesDao getIdentityInstancesDao();
 }

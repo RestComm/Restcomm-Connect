@@ -27,26 +27,7 @@ import java.util.Properties;
 import org.apache.commons.configuration.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.dao.AnnouncementsDao;
-import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
-import org.mobicents.servlet.restcomm.dao.AvailablePhoneNumbersDao;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
-import org.mobicents.servlet.restcomm.dao.ClientsDao;
-import org.mobicents.servlet.restcomm.dao.ConfigurationDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.GatewaysDao;
-import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
-import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
-import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
-import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
-import org.mobicents.servlet.restcomm.dao.RecordingsDao;
-import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
-import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
-import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
-import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
-import org.mobicents.servlet.restcomm.dao.UsageDao;
+import org.mobicents.servlet.restcomm.dao.*;
 import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -78,6 +59,7 @@ public final class MybatisDaoManager implements DaoManager {
     private AnnouncementsDao announcementsDao;
     private ConfigurationDao configurationDao;
     private InstanceIdDao instanceIdDao;
+    private IdentityInstancesDao identityInstancesDao;
 
     public MybatisDaoManager() {
         super();
@@ -186,6 +168,9 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public IdentityInstancesDao getIdentityInstancesDao() { return identityInstancesDao; }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -251,5 +236,6 @@ public final class MybatisDaoManager implements DaoManager {
         gatewaysDao = new MybatisGatewaysDao(sessions);
         configurationDao = new MyBatisConfigurationDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
+        identityInstancesDao = new MybatisIdentityInstancesDao(sessions);
     }
 }

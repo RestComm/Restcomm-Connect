@@ -35,5 +35,6 @@
     <mapper resource="transcriptions.xml"/>
     <mapper resource="gateways.xml"/>
     <mapper resource="announcements.xml"/>
+    <mapper resource="identity-instances.xml"/>
   </mappers>
 </configuration>
