@@ -30,26 +30,30 @@ import org.joda.time.DateTime;
  * @author Orestis Tsakiridis
  */
 public class IdentityInstance {
-    private final Sid sid;
-    private final Sid organizationSid;
-    private final String name;
-    private final String restcommRestRAT;
-    private final DateTime restcommRestLastRegistrationDate;
-    private final String restcommRestStatus;
-    private final String restcommUiRAT;
-    private final DateTime restcommUiLastRegistrationDate;
-    private final String restcommUiStatus;
-    private final String rvdRestRAT;
-    private final DateTime rvdRestLastRegistrationDate;
-    private final String rvdRestStatus;
-    private final String rvdUiRAT;
-    private final DateTime rvdUiLastRegistrationDate;
-    private final String rvdUiStatus;
+    private Sid sid;
+    private Sid organizationSid;
+    private String name;
+    private DateTime dateCreated;
+    private DateTime dateUpdated;
+    private String restcommRestRAT;
+    private DateTime restcommRestLastRegistrationDate;
+    private Status restcommRestStatus;
+    private String restcommUiRAT;
+    private DateTime restcommUiLastRegistrationDate;
+    private Status restcommUiStatus;
+    private String rvdRestRAT;
+    private DateTime rvdRestLastRegistrationDate;
+    private Status rvdRestStatus;
+    private String rvdUiRAT;
+    private DateTime rvdUiLastRegistrationDate;
+    private Status rvdUiStatus;
 
-    public IdentityInstance(Sid sid, Sid organization_sid, String name, String restcommRestRAT, DateTime restcommRestLastRegistrationDate, String restcommRestStatus, String restcommUiRAT, DateTime restcommUiLastRegistrationDate, String restcommUiStatus, String rvdRestRAT, DateTime rvdRestLastRegistrationDate, String rvdRestStatus, String rvdUiRAT, DateTime rvdUiLastRegistrationDate, String rvdUiStatus) {
+    public IdentityInstance(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRestRAT, DateTime restcommRestLastRegistrationDate, Status restcommRestStatus, String restcommUiRAT, DateTime restcommUiLastRegistrationDate, Status restcommUiStatus, String rvdRestRAT, DateTime rvdRestLastRegistrationDate, Status rvdRestStatus, String rvdUiRAT, DateTime rvdUiLastRegistrationDate, Status rvdUiStatus) {
         this.sid = sid;
-        this.organizationSid = organization_sid;
+        this.organizationSid = organizationSid;
         this.name = name;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
         this.restcommRestRAT = restcommRestRAT;
         this.restcommRestLastRegistrationDate = restcommRestLastRegistrationDate;
         this.restcommRestStatus = restcommRestStatus;
@@ -62,6 +66,11 @@ public class IdentityInstance {
         this.rvdUiRAT = rvdUiRAT;
         this.rvdUiLastRegistrationDate = rvdUiLastRegistrationDate;
         this.rvdUiStatus = rvdUiStatus;
+    }
+
+    public IdentityInstance() {
+        sid = Sid.generate(Sid.Type.IDENTITY_INSTANCE);
+
     }
 
     public Sid getSid() {
@@ -84,7 +93,7 @@ public class IdentityInstance {
         return restcommRestLastRegistrationDate;
     }
 
-    public String getRestcommRestStatus() {
+    public Status getRestcommRestStatus() {
         return restcommRestStatus;
     }
 
@@ -96,7 +105,7 @@ public class IdentityInstance {
         return restcommUiLastRegistrationDate;
     }
 
-    public String getRestcommUiStatus() {
+    public Status getRestcommUiStatus() {
         return restcommUiStatus;
     }
 
@@ -108,7 +117,7 @@ public class IdentityInstance {
         return rvdRestLastRegistrationDate;
     }
 
-    public String getRvdRestStatus() {
+    public Status getRvdRestStatus() {
         return rvdRestStatus;
     }
 
@@ -120,7 +129,95 @@ public class IdentityInstance {
         return rvdUiLastRegistrationDate;
     }
 
-    public String getRvdUiStatus() {
+    public Status getRvdUiStatus() {
         return rvdUiStatus;
+    }
+
+    public void setSid(Sid sid) {
+        this.sid = sid;
+    }
+
+    public void setOrganizationSid(Sid organizationSid) {
+        this.organizationSid = organizationSid;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setRestcommRestRAT(String restcommRestRAT) {
+        this.restcommRestRAT = restcommRestRAT;
+    }
+
+    public void setRestcommRestLastRegistrationDate(DateTime restcommRestLastRegistrationDate) {
+        this.restcommRestLastRegistrationDate = restcommRestLastRegistrationDate;
+    }
+
+    public void setRestcommRestStatus(Status restcommRestStatus) {
+        this.restcommRestStatus = restcommRestStatus;
+    }
+
+    public void setRestcommUiRAT(String restcommUiRAT) {
+        this.restcommUiRAT = restcommUiRAT;
+    }
+
+    public void setRestcommUiLastRegistrationDate(DateTime restcommUiLastRegistrationDate) {
+        this.restcommUiLastRegistrationDate = restcommUiLastRegistrationDate;
+    }
+
+    public void setRestcommUiStatus(Status restcommUiStatus) {
+        this.restcommUiStatus = restcommUiStatus;
+    }
+
+    public void setRvdRestRAT(String rvdRestRAT) {
+        this.rvdRestRAT = rvdRestRAT;
+    }
+
+    public void setRvdRestLastRegistrationDate(DateTime rvdRestLastRegistrationDate) {
+        this.rvdRestLastRegistrationDate = rvdRestLastRegistrationDate;
+    }
+
+    public void setRvdRestStatus(Status rvdRestStatus) {
+        this.rvdRestStatus = rvdRestStatus;
+    }
+
+    public void setRvdUiRAT(String rvdUiRAT) {
+        this.rvdUiRAT = rvdUiRAT;
+    }
+
+    public void setRvdUiLastRegistrationDate(DateTime rvdUiLastRegistrationDate) {
+        this.rvdUiLastRegistrationDate = rvdUiLastRegistrationDate;
+    }
+
+    public void setRvdUiStatus(Status rvdUiStatus) {
+        this.rvdUiStatus = rvdUiStatus;
+    }
+
+    public DateTime getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(DateTime dateCreated) {
+        this.dateCreated = dateCreated;
+    }
+
+    public DateTime getDateUpdated() {
+        return dateUpdated;
+    }
+
+    public void setDateUpdated(DateTime dateUpdated) {
+        this.dateUpdated = dateUpdated;
+    }
+
+    public enum Status {
+        success, fail;
+
+        // Use this instead of direct valueOf(). It handles nulls too
+        public static Status getValueOf(String value) {
+            if ( value == null )
+                return null;
+            else
+                return Status.valueOf(value);
+        }
     }
 }
