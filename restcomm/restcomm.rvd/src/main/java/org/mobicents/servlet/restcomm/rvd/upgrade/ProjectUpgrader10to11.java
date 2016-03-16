@@ -1,5 +1,3 @@
-
-
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2016, Telestax Inc and individual contributors
@@ -23,15 +21,35 @@
 package org.mobicents.servlet.restcomm.rvd.upgrade;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
- * Implement this interface to define project upgrades from one version to another
- *
  * @author Orestis Tsakiridis
  */
-public interface ProjectUpgrader {
+public class ProjectUpgrader10to11 implements ProjectUpgrader {
+    @Override
+    public JsonElement upgrade(JsonElement sourceElement) {
+        // only version fields needs upgrade from 1.0 to 1.1
+        return setVersion(sourceElement, getResultingVersion());
+    }
 
-    JsonElement upgrade(JsonElement sourceElement);
+    /**
+     * Set project vesion to newVersion. Assumes "root.header.version" existence introduced
+     * in version 1.0
+     *
+     * @param root
+     * @param newVersion
+     * @return the same root JsonElement it was given (for easy chaining)
+     */
+    public static JsonElement setVersion(JsonElement root, String newVersion) {
+        JsonObject header = root.getAsJsonObject().get("header").getAsJsonObject();
+        header.remove("version");
+        header.addProperty("version",newVersion);
+        return root;
+    }
 
-    String getResultingVersion();
+    @Override
+    public String getResultingVersion() {
+        return "1.1";
+    }
 }
