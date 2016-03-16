@@ -289,9 +289,7 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return getGeolocations(accountSid, APPLICATION_XML_TYPE);
     }
 
-    /*
-     * @POST public Response putGeolocation(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String,
-     * String> data) { return putGeolocation(accountSid, data, APPLICATION_XML_TYPE); }
-     */
+    // @POST public Response putGeolocation(@PathParam("accountSid") final String accountSid, final
+    // MultivaluedMap<String,String> data) { return putGeolocation(accountSid, data, APPLICATION_XML_TYPE); }
 
 }
