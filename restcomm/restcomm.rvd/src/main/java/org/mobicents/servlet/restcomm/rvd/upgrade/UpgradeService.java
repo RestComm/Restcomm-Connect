@@ -89,7 +89,7 @@ public class UpgradeService {
      */
     public boolean upgradeProject(String projectName) throws StorageException, UpgradeException {
 
-        String[] versionPath = new String[] {"rvd714","1.0"};
+        String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"};
 
         StateHeader header = null;
         String startVersion = null;
