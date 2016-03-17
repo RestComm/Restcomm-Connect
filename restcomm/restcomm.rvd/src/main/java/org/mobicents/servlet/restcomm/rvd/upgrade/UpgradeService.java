@@ -35,6 +35,11 @@ public class UpgradeService {
      * @throws InvalidProjectVersion
      */
     public static boolean checkBackwardCompatible(String referenceProjectVersion, String checkedProjectVesion) throws InvalidProjectVersion {
+        if ( "1.6".equals(referenceProjectVersion)) {
+            if ( "1.6".equals(checkedProjectVesion) )
+                return true;
+            return false;
+        } else
         if ( "1.5".equals(referenceProjectVersion) ) {
             if ( "1.5".equals(checkedProjectVesion) || "1.4".equals(checkedProjectVesion) || "1.3".equals(checkedProjectVesion) || "1.2".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion) )
                 return true;
@@ -83,11 +88,11 @@ public class UpgradeService {
     /**
      * Upgrades a project to current RVD supported version
      * @param projectName
-     * @return false for projects already upgraded or older supported projects. true for projects that were indeed upgraded
+     * @return null for projects already upgraded or older supported projects. For projects that were indeed upgraded it returns the root JsonElement
      * @throws StorageException
      * @throws UpgradeException
      */
-    public boolean upgradeProject(String projectName) throws StorageException, UpgradeException {
+    public JsonElement upgradeProject(String projectName) throws StorageException, UpgradeException {
 
         String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"};
 
@@ -102,10 +107,10 @@ public class UpgradeService {
         }
 
         if ( startVersion.equals(RvdConfiguration.getRvdProjectVersion()) )
-            return false;
+            return null;
         if ( checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), startVersion) ) {
             //logger.warn("Project '" + projectName + "' is old but compatible. No need to upgrade.");
-            return false;
+            return null;
         }
 
         logger.info("Upgrading '" + projectName + "' from version " + startVersion);
@@ -135,7 +140,7 @@ public class UpgradeService {
 
         FsProjectStorage.backupProjectState(projectName,workspaceStorage);
         FsProjectStorage.updateProjectState(projectName, root.toString(), workspaceStorage);
-        return true;
+        return root;
     }
     /**
      * Upgrades all projects inside the project workspace to the version supported by current RVD
@@ -150,7 +155,7 @@ public class UpgradeService {
         List<String> projectNames = FsProjectStorage.listProjectNames(workspaceStorage);
         for ( String projectName : projectNames ) {
             try {
-                if ( upgradeProject(projectName) ) {
+                if ( upgradeProject(projectName) != null ) {
                     upgradedCount ++;
                     logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                     try {
