@@ -28,7 +28,6 @@ import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance.Status;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.exceptions.ConstraintViolationException;
 
 import java.util.HashMap;
 import java.util.List;
