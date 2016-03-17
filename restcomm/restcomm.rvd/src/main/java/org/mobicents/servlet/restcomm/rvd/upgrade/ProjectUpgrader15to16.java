@@ -30,9 +30,9 @@ import com.google.gson.JsonObject;
 public class ProjectUpgrader15to16 implements ProjectUpgrader {
     @Override
     public JsonElement upgrade(JsonElement sourceElement) {
-        ProjectUpgrader10to11.setVersion(sourceElement, getResultingVersion());
-
-        return null;
+        sourceElement = upgradeNumericCollectMenu(sourceElement);
+        sourceElement = ProjectUpgrader10to11.setVersion(sourceElement, getResultingVersion());
+        return sourceElement;
     }
 
     // converts numeric collect-menu keys to strings
