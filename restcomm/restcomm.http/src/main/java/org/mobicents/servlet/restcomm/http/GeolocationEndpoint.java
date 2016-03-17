@@ -135,7 +135,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         builder.setAccountSid(accountSid);
         builder.setSource(data.getFirst("Source"));
         builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
-        builder.setGeolocationType(data.getFirst("GeolocationType"));
+        // builder.setGeolocationType(data.getFirst("GeolocationType"));
+        if (data.containsKey("GeolocationType")) {
+            builder.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType")));
+        }
         builder.setResponseStatus(data.getFirst("ResponseStatus"));
         builder.setCellId(data.getFirst("CellId"));
         builder.setLocationAreaCode(data.getFirst("LocationAreaCode"));
@@ -271,7 +274,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
 
         if (data.containsKey("GeolocationType")) {
-            result = result.setGeolocationType(data.getFirst("GeolocationType"));
+            result = result.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType")));
         }
 
         if (data.containsKey("ResponseStatus")) {

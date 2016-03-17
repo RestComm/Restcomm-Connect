@@ -137,17 +137,18 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeGeolocationType(final String geoLocationType, final HierarchicalStreamWriter writer) {
-        if (geoLocationType != null) {
+    protected void writeGeolocationType(final Geolocation.GeolocationType geolocationType,
+            final HierarchicalStreamWriter writer) {
+        if (geolocationType != null) {
             writer.startNode("GeolocationType");
-            writer.setValue(geoLocationType);
+            writer.setValue(geolocationType.toString());
             writer.endNode();
         }
     }
 
-    protected void writeGeolocationType(final String geoLocationType, final JsonObject object) {
-        if (geoLocationType != null) {
-            object.addProperty("geo_location_type", geoLocationType);
+    protected void writeGeolocationType(final Geolocation.GeolocationType geolocationType, final JsonObject object) {
+        if (geolocationType != null) {
+            object.addProperty("geo_location_type", geolocationType.toString());
         } else {
             object.add("geo_location_type", JsonNull.INSTANCE);
         }

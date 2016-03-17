@@ -40,7 +40,8 @@ public class Geolocation {
     private final Sid accountSid;
     private final String source;
     private final String deviceIdentifier;
-    private final String geolocationType;
+    // private final String geolocationType;
+    private final GeolocationType geolocationType;
     private final String responseStatus;
     private final String cellId;
     private final String locationAreaCode;
@@ -64,8 +65,9 @@ public class Geolocation {
     private final String apiVersion;
     private final URI uri;
 
+
     public Geolocation(Sid sid, DateTime dateCreated, DateTime dateUpdated, DateTime dateExecuted, Sid accountSid,
-            String source, String deviceIdentifier, String geolocationType, String responseStatus, String cellId,
+            String source, String deviceIdentifier, GeolocationType geolocationType, String responseStatus, String cellId,
             String locationAreaCode, Integer mobileCountryCode, Integer mobileNetworkCode, BigInteger networkEntityAddress,
             Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, BigInteger accuracy,
             String physicalAddress, String internetAddress, String formattedAddress, DateTime locationTimestamp,
@@ -80,6 +82,7 @@ public class Geolocation {
         this.source = source;
         this.deviceIdentifier = deviceIdentifier;
         this.geolocationType = geolocationType;
+        // this.geolocationType = geolocationType;
         this.responseStatus = responseStatus;
         this.cellId = cellId;
         this.locationAreaCode = locationAreaCode;
@@ -132,7 +135,7 @@ public class Geolocation {
         return deviceIdentifier;
     }
 
-    public String getGeolocationType() {
+    public GeolocationType getGeolocationType() {
         return geolocationType;
     }
 
@@ -224,6 +227,31 @@ public class Geolocation {
         return uri;
     }
 
+    public enum GeolocationType {
+        Immediate("Immediate"), Notification("Notification");
+
+        private final String glt;
+
+        private GeolocationType(final String glt) {
+            this.glt = glt;
+        }
+
+        public static GeolocationType getValueOf(final String glt) {
+            GeolocationType[] values = values();
+            for (final GeolocationType value : values) {
+                if (value.toString().equals(glt)) {
+                    return value;
+                }
+            }
+            throw new IllegalArgumentException(glt + " is not a valid application GeolocationType.");
+        }
+
+        @Override
+        public String toString() {
+            return glt;
+        }
+    };
+
     public Geolocation setSid(Sid sid) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
@@ -280,7 +308,7 @@ public class Geolocation {
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setGeolocationType(String geolocationType) {
+    public Geolocation setGeolocationType(GeolocationType geolocationType) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -475,7 +503,8 @@ public class Geolocation {
         private Sid accountSid;
         private String source;
         private String deviceIdentifier;
-        private String geolocationType;
+        // private String geolocationType;
+        private GeolocationType geolocationType;
         private String responseStatus;
         private String cellId;
         private String locationAreaCode;
@@ -506,10 +535,10 @@ public class Geolocation {
         public Geolocation build() {
             final DateTime now = DateTime.now();
             return new Geolocation(sid, now, now, now, accountSid, source, deviceIdentifier, geolocationType, responseStatus,
-                    cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode, networkEntityAddress,
-                    ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress, internetAddress,
-                    formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
-                    geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
+                    cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode, networkEntityAddress, ageOfLocationInfo,
+                    deviceLatitude, deviceLongitude, accuracy, physicalAddress, internetAddress, formattedAddress,
+                    locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius, geolocationPositioningType,
+                    lastGeolocationResponse, cause, apiVersion, uri);
 
         }
 
@@ -529,7 +558,7 @@ public class Geolocation {
             this.deviceIdentifier = deviceIdentifier;
         }
 
-        public void setGeolocationType(String geolocationType) {
+        public void setGeolocationType(GeolocationType geolocationType) {
             this.geolocationType = geolocationType;
         }
 
