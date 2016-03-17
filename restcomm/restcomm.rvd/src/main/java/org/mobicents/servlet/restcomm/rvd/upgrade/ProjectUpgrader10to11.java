@@ -35,7 +35,7 @@ public class ProjectUpgrader10to11 implements ProjectUpgrader {
 
     /**
      * Set project vesion to newVersion. Assumes "root.header.version" existence introduced
-     * in version 1.0
+     * in project version 1.0
      *
      * @param root
      * @param newVersion
@@ -46,6 +46,18 @@ public class ProjectUpgrader10to11 implements ProjectUpgrader {
         header.remove("version");
         header.addProperty("version",newVersion);
         return root;
+    }
+
+    /**
+     * Returns project version. Assumes "root.header.version" existence introduced
+     * in project version 1.0
+     *
+     * @param root
+     * @return the project version as a string
+     */
+    public static String getVersion(JsonElement root) {
+        JsonObject header = root.getAsJsonObject().get("header").getAsJsonObject();
+        return header.get("version").getAsString();
     }
 
     @Override
