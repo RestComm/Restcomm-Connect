@@ -259,6 +259,7 @@
 	"gatherStepMenuInput": "Menu",
 	"gatherStepCollectDigitsInput": "Coletar dígitos",
 	"gatherStepDigitLabel": "Dígito",
+	"gatherStepDigitTooltip": "TRANSLATE: DTMF values allowed: 0-9,*,#,A,B,C,D",
 	"gatherStepDigitInputPlaceholder": "123",
 	"gatherStepDigitValidationErrorLabel": "Valor de dígito inválido",
 	"gatherStepTargetLabel": "Destino",

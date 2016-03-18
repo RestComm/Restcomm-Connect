@@ -284,6 +284,7 @@
 	"gatherStepMenuInput": "Menu",
 	"gatherStepCollectDigitsInput": "Collect digits",
 	"gatherStepDigitLabel": "Digit",
+	"gatherStepDigitTooltip": "DTMF values allowed: 0-9,*,#,A,B,C,D",
 	"gatherStepDigitInputPlaceholder": "123",
 	"gatherStepDigitValidationErrorLabel": "Invalid digit value",
 	"gatherStepTargetLabel": "Target",
