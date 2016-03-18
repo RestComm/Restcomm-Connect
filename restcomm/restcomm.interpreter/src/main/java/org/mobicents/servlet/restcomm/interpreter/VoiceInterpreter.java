@@ -19,38 +19,12 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static akka.pattern.Patterns.ask;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -58,12 +32,12 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.api.EmailResponse;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -78,8 +52,8 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
-import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
+import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -94,6 +68,7 @@ import org.mobicents.servlet.restcomm.telephony.AddParticipant;
 import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.BridgeManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.BridgeStateChanged;
+import org.mobicents.servlet.restcomm.telephony.CallFail;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
@@ -120,18 +95,42 @@ import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartBridge;
 import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
-import org.mobicents.servlet.restcomm.telephony.CallFail;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
+
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -734,12 +733,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, rejecting);
                 } else if (pause.equals(verb.name())) {
                     fsm.transition(message, pausing);
+                } else if (dial.equals(verb.name()))  {
+                    dialRecordAttribute = verb.attribute("record");
+                    fsm.transition(message, startDialing);
                 } else {
                     fsm.transition(message, initializingCall);
                 }
-            } else if (dial.equals(verb.name())) {
-                dialRecordAttribute = verb.attribute("record");
-                fsm.transition(message, startDialing);
+//          } else if (dial.equals(verb.name())) {
+//                dialRecordAttribute = verb.attribute("record");
+//                fsm.transition(message, startDialing);
             } else if (fax.equals(verb.name())) {
                 fsm.transition(message, caching);
             } else if (play.equals(verb.name())) {
@@ -1097,8 +1099,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Update the interpreter state.
                 verb = (Tag) message;
 
-                // Answer the call.
                 call.tell(new Answer(), source);
+//                if (!Verbs.dial.equals(verb.name())) {
+//                    // Answer the call only if the Verb IS NOT Dial.
+//                    // If verb is Dial call will be answered when called party answers
+//
+//                } else {
+//
+//                }
             }
         }
     }
@@ -1613,6 +1621,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 dialBranches = null;
             }
             outboundCall.tell(new GetCallInfo(), source);
+            //Time to answer initial call
+            call.tell(new Answer(), self());
         }
     }
 
@@ -1938,7 +1948,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.debug("FinishDialing, State: " + state);
                     logger.debug("State is not FORKING and not Bridged");
                     logger.debug("Sender is initial call: " + sender.equals(call));
-                    logger.debug("Sender in the dialBranches: " + dialBranches.contains(sender));
                 }
             }
 
