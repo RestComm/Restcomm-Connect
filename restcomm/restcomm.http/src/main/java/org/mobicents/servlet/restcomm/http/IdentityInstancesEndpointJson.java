@@ -36,7 +36,7 @@ public class IdentityInstancesEndpointJson extends SecuredEndpoint {
      * @return
      */
     @POST
-    public Response registerInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl) {
+    public Response registerIdentityInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl) {
         return Response.ok().build();
     }
 
@@ -73,7 +73,7 @@ public class IdentityInstancesEndpointJson extends SecuredEndpoint {
      */
     @GET
     @Path("/current")
-    public Response getCurrentInstance() {
+    public Response getCurrentIdentityInstance() {
         return Response.ok().build();
     }
 
@@ -85,11 +85,18 @@ public class IdentityInstancesEndpointJson extends SecuredEndpoint {
      */
     @DELETE
     @Path("/{identityInstanceSid}")
-    public Response unregisterInstance(@PathParam("sid") String identityInstanceSid) {
+    public Response unregisterIdentityInstance(@PathParam("sid") String identityInstanceSid) {
         return Response.ok().build();
     }
 
+    /**
+     * Register a restcomm instance to an identity server using an Initial Access Token (iat).
+     *
+     * @param iat
+     */
+    private void registerIdentityInstanceWithIAT(String iat, String redirectUrl, String restcommClientSecret) {
 
+    }
 
 
 }
