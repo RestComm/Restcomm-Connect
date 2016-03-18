@@ -50,7 +50,7 @@ public final class Collect {
     }
 
     public boolean hasPrompts() {
-        return (prompts != null && !prompts.isEmpty());
+        return prompts != null && !prompts.isEmpty();
     }
 
     public String pattern() {
@@ -58,7 +58,7 @@ public final class Collect {
     }
 
     public boolean hasPattern() {
-        return (pattern != null && !pattern.isEmpty());
+        return pattern != null && !pattern.isEmpty();
     }
 
     public int timeout() {
@@ -70,7 +70,7 @@ public final class Collect {
     }
 
     public boolean hasEndInputKey() {
-        return (endInputKey != null && !endInputKey.isEmpty());
+        return endInputKey != null && !endInputKey.isEmpty();
     }
 
     public int numberOfDigits() {

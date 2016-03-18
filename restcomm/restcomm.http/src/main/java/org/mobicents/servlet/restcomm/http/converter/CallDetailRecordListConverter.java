@@ -124,7 +124,7 @@ public final class CallDetailRecordListConverter extends AbstractConverter imple
     }
 
     private String getPreviousPageUri() {
-        return ((page == 0) ? "null" : pathUri + "?Page=" + (page - 1) + "&PageSize=" + pageSize);
+        return (page == 0) ? "null" : pathUri + "?Page=" + (page - 1) + "&PageSize=" + pageSize;
     }
 
     private String getNextPageUri(CallDetailRecordList list) {

@@ -65,7 +65,7 @@ public final class Record {
     }
 
     public boolean hasPrompts() {
-        return (prompts != null && !prompts.isEmpty());
+        return prompts != null && !prompts.isEmpty();
     }
 
     public int timeout() {
@@ -81,6 +81,6 @@ public final class Record {
     }
 
     public boolean hasEndInputKey() {
-        return (endInputKey != null && !endInputKey.isEmpty());
+        return endInputKey != null && !endInputKey.isEmpty();
     }
 }
