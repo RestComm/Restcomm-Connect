@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
+import javax.print.DocFlavor;
 import javax.sdp.SdpException;
 import javax.servlet.sip.Address;
 import javax.servlet.sip.AuthInfo;
@@ -688,10 +689,13 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
+            HangupReason reason = ((Cancel)message).getReason();
             if (isOutbound()) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
                 final SipServletRequest cancel = invite.createCancel();
+                if (reason != null)
+                    cancel.addHeader("Reason",reason.getDescription());
                 cancel.send();
             }
             msController.tell(new CloseMediaSession(), source);
@@ -1415,7 +1419,7 @@ public final class Call extends UntypedActor {
         if (sessionState == SipSession.State.INITIAL.name() || (sessionState == SipSession.State.EARLY.name() && isInbound())) {
             final SipServletResponse resp = invite.createResponse(Response.SERVER_INTERNAL_ERROR);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
-                resp.addHeader("Reason",hangup.getMessage());
+                resp.addHeader("Reason",hangup.getMessage().getDescription());
             }
             resp.send();
             fsm.transition(hangup, completed);
@@ -1423,7 +1427,7 @@ public final class Call extends UntypedActor {
         } if (sessionState == SipSession.State.EARLY.name()) {
             final SipServletRequest cancel = invite.createCancel();
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
-                cancel.addHeader("Reason",hangup.getMessage());
+                cancel.addHeader("Reason",hangup.getMessage().getDescription());
             }
             cancel.send();
             fsm.transition(hangup, completed);
@@ -1431,7 +1435,7 @@ public final class Call extends UntypedActor {
         } else {
             final SipServletRequest bye = session.createRequest("BYE");
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
-                bye.addHeader("Reason",hangup.getMessage());
+                bye.addHeader("Reason",hangup.getMessage().getDescription());
             }
             SipURI realInetUri = (SipURI) session.getAttribute("realInetUri");
             InetAddress byeRURI = InetAddress.getByName(((SipURI) bye.getRequestURI()).getHost());

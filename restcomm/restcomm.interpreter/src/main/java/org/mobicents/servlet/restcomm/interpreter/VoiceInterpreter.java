@@ -89,6 +89,7 @@ import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.GetConferenceInfo;
 import org.mobicents.servlet.restcomm.telephony.GetRelatedCall;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
+import org.mobicents.servlet.restcomm.telephony.HangupReason;
 import org.mobicents.servlet.restcomm.telephony.JoinCalls;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
@@ -1264,7 +1265,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                 } else {
                     if (call != null) {
-                        call.tell(new Hangup(), null);
+                        call.tell(new Hangup(HangupReason.PARSER_EXCEPTION), null);
                     }
                     final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
@@ -1612,7 +1613,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (isForking) {
                 dialBranches.remove(outboundCall);
                 for (final ActorRef branch : dialBranches) {
-                    branch.tell(new Cancel(), null);
+                    //We got an answer, cancel the other branches
+                    branch.tell(new Cancel(HangupReason.NORMAL_CLEARING), null);
                     // Race condition here. Correct way is to ask Call to Cancel and when done Call will notify Observer with
                     // CallStateChanged.Cancelled then
                     // ask CallManager to destroy the call.
@@ -1871,7 +1873,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     //                    if (attribute != null) {
     //                        executeDialAction(message, branch);
     //                    }
-                        branch.tell(new Cancel(), source);
+                        branch.tell(new Cancel(HangupReason.TIMEOUT), source);
                         logger.info("Canceled branch: " + branch.path());
                     }
                 }
@@ -1911,7 +1913,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                            if (attribute != null) {
 //                                executeDialAction(message, branch);
 //                            }
-                            branch.tell(new Cancel(), source);
+                            branch.tell(new Cancel(HangupReason.NORMAL_CLEARING), source);
                         }
                         if (dialBranches.size() > 0) {
                             dialBranches = null;
@@ -1943,7 +1945,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (bridged.equals(state)) {
                     logger.info("finishDialing state=bridged, will hangup outboundCall");
-                    outboundCall.tell(new Hangup(), source);
+                    outboundCall.tell(new Hangup(HangupReason.NORMAL_CLEARING), source);
                 } else {
                     logger.debug("FinishDialing, State: " + state);
                     logger.debug("State is not FORKING and not Bridged");
@@ -1953,10 +1955,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (sender == call) {
                 if (outboundCall != null) {
-                    outboundCall.tell(new Hangup(), self());
+                    outboundCall.tell(new Hangup(getHangupReason(outboundCallInfo)), self());
                 }
             } else {
-                call.tell(new Hangup(), self());
+                call.tell(new Hangup(getHangupReason(callInfo)), self());
             }
 
             if (recordingCall && sender == call) {
@@ -1993,6 +1995,27 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             dialChildren = null;
             outboundCall = null;
         }
+    }
+
+    private HangupReason getHangupReason(final CallInfo info) {
+        HangupReason reason = HangupReason.UNDEFINED;
+        if (info != null) {
+            CallStateChanged.State state = info.state();
+            if (state != null) {
+                if (state.equals(CallStateChanged.State.BUSY)) {
+                    reason = HangupReason.BUSY;
+                } else if (state.equals(CallStateChanged.State.CANCELED)) {
+                    reason = HangupReason.CANCELED;
+                } else if (state.equals(CallStateChanged.State.FAILED)) {
+                    reason = HangupReason.FAILED;
+                } else if (state.equals(CallStateChanged.State.NO_ANSWER)) {
+                    reason = HangupReason.NO_ANSWER;
+                } else if (state.equals(CallStateChanged.State.COMPLETED)) {
+                    reason = HangupReason.NORMAL_CLEARING;
+                }
+            }
+        }
+        return reason;
     }
 
     private final class AcquiringConferenceInfo extends AbstractDialAction {

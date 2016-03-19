@@ -16,11 +16,14 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 import org.mobicents.servlet.restcomm.tools.MonitoringServiceTool;
-import org.tritonus.share.sampled.file.THeaderlessAudioFileWriter;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
@@ -30,11 +33,19 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for the Dial forking
@@ -43,7 +54,7 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(Arquillian.class)
 public class DialForkTest {
 
-    private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
+    private final static Logger logger = Logger.getLogger(DialForkTest.class.getName());
 
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     private static final byte[] bytes = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -774,10 +785,10 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+//        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+//        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+//        bobCall.sendInviteOkAck();
+//        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
@@ -794,22 +805,26 @@ public class DialForkTest {
         assertTrue(aliceCall.listenForCancel());
         assertTrue(henriqueCall.listenForCancel());
 
-        assertTrue(bobCall.listenForDisconnect());
+//        assertTrue(bobCall.listenForDisconnect());
+        assertTrue(bobCall.listenForCancel());
 
+        SipTransaction bobCancelTransaction = bobCall.waitForCancel(50 * 1000);
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
         SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
         assertNotNull(georgeCancelTransaction);
         assertNotNull(aliceCancelTransaction);
         assertNotNull(henriqueCancelTransaction);
+        assertNotNull(bobCancelTransaction);
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+        bobCall.respondToCancel(bobCancelTransaction, 200, "OK - Bob", 600);
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+//        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+//        assertTrue(bobCall.respondToDisconnect());
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -1255,10 +1270,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(bobCall.sendInviteOkAck());
-
         assertTrue(aliceCall.waitForIncomingCall(5000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
@@ -1266,6 +1277,10 @@ public class DialForkTest {
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "Alice-OK", 3600, receivedBody, "application", "sdp",
                 null, null));
         assertTrue(aliceCall.waitForAck(5000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
 
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);

@@ -70,6 +70,7 @@ import org.mobicents.servlet.restcomm.telephony.ExecuteCallScript;
 import org.mobicents.servlet.restcomm.telephony.GetCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
+import org.mobicents.servlet.restcomm.telephony.HangupReason;
 import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
 
 import scala.concurrent.Await;
@@ -447,7 +448,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             if (status.equalsIgnoreCase("canceled")) {
                 if (callInfo.state().name().equalsIgnoreCase("queued") || callInfo.state().name().equalsIgnoreCase("ringing")) {
                     if (call != null) {
-                        call.tell(new Hangup(), null);
+                        call.tell(new Hangup(HangupReason.LCM_HANGUP_CANCELED), null);
                     }
                 } else {
                     // Do Nothing. We can only cancel Queued or Ringing calls
@@ -457,7 +458,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             if (status.equalsIgnoreCase("completed")) {
                 // Specifying "completed" will attempt to hang up a call even if it's already in progress.
                 if (call != null) {
-                    call.tell(new Hangup(), null);
+                    call.tell(new Hangup(HangupReason.LCM_HANGUP_COMPLETED), null);
                 }
             }
         }

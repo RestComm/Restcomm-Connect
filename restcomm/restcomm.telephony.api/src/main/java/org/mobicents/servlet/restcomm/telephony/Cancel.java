@@ -26,7 +26,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class Cancel {
-    public Cancel() {
-        super();
+    private HangupReason reason;
+    public Cancel(final HangupReason reason) {
+        this.reason = reason;
+    }
+    public HangupReason getReason() {
+        return reason;
     }
 }
