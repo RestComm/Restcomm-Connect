@@ -1,11 +1,14 @@
 package org.mobicents.servlet.restcomm.rvd.upgrade;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
+import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -20,6 +23,13 @@ import com.google.gson.JsonParser;
 
 public class UpgradeService {
     static final Logger logger = Logger.getLogger(UpgradeService.class.getName());
+
+    public enum UpgradabilityStatus {
+        UPGRADABLE, NOT_NEEDED
+    }
+
+    static final String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"};
+    static final List<String> upgradesPath = Arrays.asList(new String [] {"1.0","1.6"});
 
     private WorkspaceStorage workspaceStorage;
 
@@ -85,6 +95,31 @@ public class UpgradeService {
             throw new InvalidProjectVersion("Invalid version identifier: " + referenceProjectVersion);
     }
 
+    public static UpgradabilityStatus checkUpgradability(String rvdProjectVersion, String projectVersion) throws InvalidProjectVersion {
+        int projectIndex = -1;
+        int rvdIndex = -1;
+        for ( int i = 0; i < versionPath.length; i ++ ) {
+            if (versionPath[i].equals(projectVersion) )
+                projectIndex = i;
+            if (versionPath[i].equals(rvdProjectVersion))
+                rvdIndex = i;
+        }
+        if (rvdIndex == -1)
+            throw new IllegalStateException("RVD project version not found in the versionPath.");
+        if (projectIndex == -1)
+            throw new InvalidProjectVersion("Invalid project version checked for upgradability: " + projectVersion );
+
+        // ok, we have the version path. Is there any upgrade there ?
+        int i = projectIndex + 1;
+        boolean upgradesInvolved = false;
+        while (i <= rvdIndex) {
+            if (upgradesPath.contains(versionPath[i]))
+                upgradesInvolved = true;
+            i ++;
+        }
+        return UpgradabilityStatus.NOT_NEEDED;
+    }
+
     /**
      * Upgrades a project to current RVD supported version
      * @param projectName
@@ -93,9 +128,6 @@ public class UpgradeService {
      * @throws UpgradeException
      */
     public JsonElement upgradeProject(String projectName) throws StorageException, UpgradeException {
-
-        String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"};
-
         StateHeader header = null;
         String startVersion = null;
         try {
