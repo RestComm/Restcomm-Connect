@@ -503,7 +503,6 @@ public class Geolocation {
         private Sid accountSid;
         private String source;
         private String deviceIdentifier;
-        // private String geolocationType;
         private GeolocationType geolocationType;
         private String responseStatus;
         private String cellId;

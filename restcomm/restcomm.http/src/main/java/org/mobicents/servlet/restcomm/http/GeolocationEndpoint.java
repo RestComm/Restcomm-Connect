@@ -48,6 +48,7 @@ import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GeolocationDao;
 import org.mobicents.servlet.restcomm.entities.Geolocation;
+import org.mobicents.servlet.restcomm.entities.Geolocation.GeolocationType;
 import org.mobicents.servlet.restcomm.entities.GeolocationList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -99,9 +100,8 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-
     public Response putGeolocation(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+            GeolocationType geolocationType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:Geolocation");
             secureLevelControl(accountsDao, accountSid, null);
@@ -114,7 +114,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
-        Geolocation geolocation = createFrom(new Sid(accountSid), data);
+        Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
         dao.addGeolocation(geolocation);
 
         if (APPLICATION_XML_TYPE == responseType) {
@@ -127,18 +127,20 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-
-    private Geolocation createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+    private Geolocation createFrom(final Sid accountSid, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType) {
         final Geolocation.Builder builder = Geolocation.builder();
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
         builder.setSid(sid);
         builder.setAccountSid(accountSid);
         builder.setSource(data.getFirst("Source"));
         builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
-        // builder.setGeolocationType(data.getFirst("GeolocationType"));
-        if (data.containsKey("GeolocationType")) {
-            builder.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType")));
-        }
+        /*
+         * if (data.containsKey("GeolocationType")) {
+         * builder.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType"))); } else {
+         * builder.setGeolocationType(glType); }
+         */
+        builder.setGeolocationType(glType);
         builder.setResponseStatus(data.getFirst("ResponseStatus"));
         builder.setCellId(data.getFirst("CellId"));
         builder.setLocationAreaCode(data.getFirst("LocationAreaCode"));
@@ -169,7 +171,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-
     protected Response getGeolocation(final String accountSid, final String sid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
@@ -196,7 +197,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-
     protected Response getGeolocations(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
@@ -215,7 +215,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-
     protected Response deleteGeolocation(final String accountSid, final String sid) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Delete:Geolocation");
@@ -229,7 +228,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         dao.removeGeolocation(new Sid(sid));
         return ok().build();
     }
-
 
     protected Response updateGeolocation(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
@@ -259,7 +257,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             }
         }
     }
-
 
     private Geolocation update(final Geolocation geolocation, final MultivaluedMap<String, String> data) {
 
@@ -356,16 +353,11 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return result;
     }
 
-
     private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
         if (!data.containsKey("Source")) {
             throw new NullPointerException("Source can not be null.");
         } else if (!data.containsKey("DeviceIdentifier")) {
             throw new NullPointerException("DeviceIdentifier can not be null.");
-        } /*
-           * else if (!data.containsKey("GeolocationType")) { throw new NullPointerException("GeolocationType can not be null."
-           * ); } else if (!data.containsKey("ResponseStatus")) { throw new NullPointerException(
-           * "ResponseStatus can not be null."); }
-           */
+        }
     }
 }

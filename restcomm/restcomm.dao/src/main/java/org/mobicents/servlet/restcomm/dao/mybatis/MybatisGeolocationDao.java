@@ -182,7 +182,6 @@ public class MybatisGeolocationDao implements GeolocationDao {
         final Sid account_sid = readSid(map.get("account_sid"));
         final String source = readString(map.get("source"));
         final String device_identifier = readString(map.get("device_identifier"));
-        // final String geolocation_type = readString(map.get("geolocation_type"));
         final Geolocation.GeolocationType geolocation_type = readGeolocationType(map.get("geolocation_type"));
         final String response_status = readString(map.get("response_status"));
         final String cell_id = readString(map.get("cell_id"));

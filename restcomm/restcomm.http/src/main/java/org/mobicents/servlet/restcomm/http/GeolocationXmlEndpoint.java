@@ -34,6 +34,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.entities.Geolocation;
 
 /**
  * @author fernando.mendioroz@telestax.com (Fernando Mendioroz)
@@ -109,7 +110,7 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     @POST
     public Response updateImmediateGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, APPLICATION_JSON_TYPE);
     }
 
     @Path("/Immediate/{sid}.json")
@@ -130,12 +131,12 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     @POST
     public Response putImmediateGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, APPLICATION_XML_TYPE);
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, APPLICATION_XML_TYPE);
     }
 
     @Path("/Immediate/{sid}")
     @POST
-    public Response updateImmediateGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
+    public Response putImmediateGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
@@ -216,19 +217,12 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     @POST
     public Response updateNotificationGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, APPLICATION_JSON_TYPE);
     }
 
     @Path("/Notification/{sid}.json")
     @POST
     public Response updateNotificationGeolocationAsJsonPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Notification.json")
-    @PUT
-    public Response updateNotificationGeolocationJsonPut(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
@@ -242,14 +236,14 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
 
     @Path("/Notification")
     @POST
-    public Response updateNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
+    public Response putNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, APPLICATION_XML_TYPE);
     }
 
     @Path("/Notification/{sid}")
     @POST
-    public Response updateNotificationGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
+    public Response putNotificationGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
@@ -266,20 +260,6 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     public Response updateNotificationGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
-    }
-
-    // *** Unknown type of Geolocation *** //
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getGeolocationAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{sid}")
-    @GET
-    public Response getGeolocationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_XML_TYPE);
     }
 
     //
