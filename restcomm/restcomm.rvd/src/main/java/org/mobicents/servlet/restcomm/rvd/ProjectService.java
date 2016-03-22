@@ -216,7 +216,7 @@ public class ProjectService {
             //StateHeader header = projectStorage.loadStateHeader(projectName);
             StateHeader header = FsProjectStorage.loadStateHeader(projectName, workspaceStorage);
             //if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
-            if ( ! UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(),header.getVersion() )  )
+            if ( ! UpgradeService.checkBackwardCompatible(header.getVersion(), RvdConfiguration.getRvdProjectVersion() )  )
                 throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdConfiguration.getRvdProjectVersion() );
         } catch ( BadProjectHeader e ) {
             throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
@@ -354,10 +354,12 @@ public class ProjectService {
             // Create a temporary workspace storage.
             WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
             // is this project compatible (current RVD can open and run without upgrading) ?
-            if ( ! UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), version) ) {
-                if ( UpgradeService.checkUpgradability(RvdConfiguration.getRvdProjectVersion(), version) == UpgradeService.UpgradabilityStatus.UPGRADABLE ) {
-                    UpgradeService upgradeService = new UpgradeService(workspaceStorage);
+            if ( ! UpgradeService.checkBackwardCompatible(version, RvdConfiguration.getRvdProjectVersion()) ) {
+                if ( UpgradeService.checkUpgradability(version, RvdConfiguration.getRvdProjectVersion()) == UpgradeService.UpgradabilityStatus.UPGRADABLE ) {
+                    UpgradeService upgradeService = new UpgradeService(tempStorage);
                     upgradeService.upgradeProject(tempProjectDir.getName());
+                    BuildService buildService = new BuildService(tempStorage);
+                    buildService.buildProject(tempProjectDir.getName());
                 } else {
                     // project cannot be upgraded
                     throw new UnsupportedProjectVersion("Imported project version (" + version + ") not supported");

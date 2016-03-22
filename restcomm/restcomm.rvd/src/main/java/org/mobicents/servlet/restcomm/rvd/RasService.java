@@ -144,7 +144,7 @@ public class RasService {
         try {
             RappInfo info = workspaceStorage.loadModelFromXMLFile(tempDir.getPath() + "/app/" + "info.xml", RappInfo.class);
             RappConfig config = workspaceStorage.loadModelFromFile(tempDir.getPath() + "/app/" + "config", RappConfig.class);
-            if ( ! UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), info.getRvdAppVersion()) )
+            if ( ! UpgradeService.checkBackwardCompatible(info.getRvdAppVersion(), RvdConfiguration.getRvdProjectVersion()) )
                 throw new UnsupportedProjectVersion("Project version " + info.getRvdAppVersion() + " is not supported" );
             // also check version internally in the state file
             String stateFilename = tempDir.getPath() + "/app/rvd/state";
@@ -153,7 +153,7 @@ public class RasService {
             JsonElement element = parser.parse(reader);
             String version = element.getAsJsonObject().get("header").getAsJsonObject().get("version").getAsString();
             // is this project compatible (current RVD can open and run without upgrading) ?
-            if ( ! UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), version))
+            if ( ! UpgradeService.checkBackwardCompatible(version, RvdConfiguration.getRvdProjectVersion()))
                 throw new UnsupportedProjectVersion("Project version " + version + " is not supported" );
             // check ras package version
             int effectivePackageVersion = 1;
