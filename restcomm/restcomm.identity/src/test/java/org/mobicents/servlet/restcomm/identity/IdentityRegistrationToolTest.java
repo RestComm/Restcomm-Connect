@@ -36,11 +36,13 @@ public class IdentityRegistrationToolTest {
     IdentityRegistrationTool tool;
     String iat;
 
-    static String IAT = "eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiJkZmJiMjNmZi01ZDk2LTRjYTYtOTYxMC0zYzI1NWNiZDVjODYiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNDU4MzEwOTgxLCJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwODAvYXV0aC9yZWFsbXMvcmVzdGNvbW0iLCJhdWQiOiJodHRwOi8vMTI3LjAuMC4xOjgwODAvYXV0aC9yZWFsbXMvcmVzdGNvbW0iLCJ0eXAiOiJJbml0aWFsQWNjZXNzVG9rZW4ifQ.bJapQkh0ZPBcm4avgeqz6OpPu1EeDXuobNUxBNlToBqnHO1CWNGZN3_WYbn3SoagH50umvbC8WL9bLpMXPeLPTsk75JbTmZGtjRj3IMb6DgQfRLb2sDoX40RMJfUuDZVHqG6dmKwut8SAMDWCVJnfeTucCYrHbV13Lns36TqOqHHmrJ8z6VWcDd05k2cLY29JbiIz7rUIoWotIwr6rtgYvKbUdc2yzXdziqkJ2WMRDGhr0Nl2tOCtU7Ea51MpskYZmq5q7a9k8okXIfscsxpdV_dfmI4pm8bCctiKG7zrJ4ouw_1o8ma-sCDEw0n2cveOFhY14qgkE60OqaUPek6dQ";
+    static String IAT = "eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiIwOWRjYTNiMi04ZGZjLTRlM2EtYTIwNi02NDg5N2QyNTAyMWUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNDU4NjUzNTkzLCJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwODAvYXV0aC9yZWFsbXMvcmVzdGNvbW0tdGVzdCIsImF1ZCI6Imh0dHA6Ly8xMjcuMC4wLjE6ODA4MC9hdXRoL3JlYWxtcy9yZXN0Y29tbS10ZXN0IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.VehnxN_OC-JiFgUQEghIyoFwaWvP1EOVzof6sCTR52baCtsuCjS6omO_FVs3f9vzclX85Go7vf19F1mBBAXyHy3-fzJgJZ6wdk5AAAWbnmt0TkNM60irXa3sKvqMZnDae0L9dPRNoYEhe6_s6AUVZ25basb7uxLSDntNC4a-v0xI1gug_m-TKsjj967eIqJyUHknCbjKTjBewyFyCnSbWkQzCTojmCQ4QiYHGoLYpWYxpUlLI-iv-eOnlwQwcbDA9AbEf7vrk3FaykhnVisP-FmMhYUUYn11XUqkbIkFosE3mZKDMlvPW-j7r50bR4bIzVhXubw1IQBqoqB9AG0Dnw";
+    static String keycloakUrl = "http://127.0.0.1:8080/auth";
+    static String realm = "restcomm-test";
 
     @Before
     public void init() {
-        tool = new IdentityRegistrationTool("http://127.0.0.1:8080/auth");
+        tool = new IdentityRegistrationTool(keycloakUrl,realm);
         iat = IAT;
     }
 
