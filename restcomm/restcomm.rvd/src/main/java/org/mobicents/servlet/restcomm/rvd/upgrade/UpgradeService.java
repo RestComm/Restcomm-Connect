@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.rvd.upgrade;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.BuildService;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.InvalidProjectVersion;
-import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
 import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -44,7 +42,7 @@ public class UpgradeService {
      * @return
      * @throws InvalidProjectVersion
      */
-    public static boolean checkBackwardCompatible(String referenceProjectVersion, String checkedProjectVesion) throws InvalidProjectVersion {
+    public static boolean checkBackwardCompatible(String checkedProjectVesion, String referenceProjectVersion) throws InvalidProjectVersion {
         if ( "1.6".equals(referenceProjectVersion)) {
             if ( "1.6".equals(checkedProjectVesion) )
                 return true;
@@ -95,7 +93,7 @@ public class UpgradeService {
             throw new InvalidProjectVersion("Invalid version identifier: " + referenceProjectVersion);
     }
 
-    public static UpgradabilityStatus checkUpgradability(String rvdProjectVersion, String projectVersion) throws InvalidProjectVersion {
+    public static UpgradabilityStatus checkUpgradability(String projectVersion, String rvdProjectVersion) throws InvalidProjectVersion {
         int projectIndex = -1;
         int rvdIndex = -1;
         for ( int i = 0; i < versionPath.length; i ++ ) {
@@ -117,7 +115,10 @@ public class UpgradeService {
                 upgradesInvolved = true;
             i ++;
         }
-        return UpgradabilityStatus.NOT_NEEDED;
+        if (upgradesInvolved)
+            return UpgradabilityStatus.UPGRADABLE;
+        else
+            return UpgradabilityStatus.NOT_NEEDED;
     }
 
     /**
@@ -140,7 +141,7 @@ public class UpgradeService {
 
         if ( startVersion.equals(RvdConfiguration.getRvdProjectVersion()) )
             return null;
-        if ( checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), startVersion) ) {
+        if ( checkBackwardCompatible(startVersion, RvdConfiguration.getRvdProjectVersion()) ) {
             //logger.warn("Project '" + projectName + "' is old but compatible. No need to upgrade.");
             return null;
         }
