@@ -443,6 +443,7 @@ public class ProjectRestService extends RestService {
 
                             // Update application
                             applicationsApi.updateApplication(ticket, applicationSid, effectiveProjectName, null, projectKind);
+                            logger.info("Successfully imported project '" + applicationSid + "' from raw archive '" + item.getName() + "'");
 
                         } catch (Exception e) {
                             applicationsApi.rollbackCreateApplication(ticket, applicationSid);
