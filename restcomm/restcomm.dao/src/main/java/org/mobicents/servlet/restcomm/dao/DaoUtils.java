@@ -65,14 +65,6 @@ public final class DaoUtils {
         }
     }
 
-    public static BigInteger readBigInteger(final Object object) {
-        if (object != null) {
-            return new BigInteger((String) object);
-            } else {
-                return null;
-                }
-    }
-
     public static Boolean readBoolean(final Object object) {
         if (object != null) {
             return (Boolean) object;
@@ -100,6 +92,14 @@ public final class DaoUtils {
     public static Integer readInteger(final Object object) {
         if (object != null) {
             return (Integer) object;
+        } else {
+            return null;
+        }
+    }
+
+    public static BigInteger readBigInteger(final Object object) {
+        if (object != null) {
+            return (BigInteger) object;
         } else {
             return null;
         }

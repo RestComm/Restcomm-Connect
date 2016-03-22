@@ -155,7 +155,9 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
 
-    // *** Notification type of Geolocation *** //
+    /*******************************************/
+    // *** Notification type of Geolocation ***//
+    /*******************************************/
 
     @Path("/Notification.json")
     @DELETE

@@ -21,7 +21,6 @@
 
 package org.mobicents.servlet.restcomm.entities;
 
-import java.math.BigInteger;
 import java.net.URI;
 
 import org.joda.time.DateTime;
@@ -46,18 +45,18 @@ public class Geolocation {
     private final String locationAreaCode;
     private final Integer mobileCountryCode;
     private final String mobileNetworkCode;
-    private final BigInteger networkEntityAddress;
+    private final Long networkEntityAddress;
     private final Integer ageOfLocationInfo;
     private final String deviceLatitude;
     private final String deviceLongitude;
-    private final BigInteger accuracy;
+    private final Long accuracy;
     private final String physicalAddress;
     private final String internetAddress;
     private final String formattedAddress;
     private final DateTime locationTimestamp;
     private final String eventGeofenceLatitude;
     private final String eventGeofenceLongitude;
-    private final BigInteger radius;
+    private final Long radius;
     private final String geolocationPositioningType;
     private final String lastGeolocationResponse;
     private final String cause;
@@ -67,10 +66,11 @@ public class Geolocation {
 
     public Geolocation(Sid sid, DateTime dateCreated, DateTime dateUpdated, DateTime dateExecuted, Sid accountSid,
             String source, String deviceIdentifier, GeolocationType geolocationType, String responseStatus, String cellId,
-            String locationAreaCode, Integer mobileCountryCode, String mobileNetworkCode, BigInteger networkEntityAddress,
-            Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, BigInteger accuracy,
+            String locationAreaCode, Integer mobileCountryCode, String mobileNetworkCode, Long networkEntityAddress,
+            Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, Long accuracy,
             String physicalAddress, String internetAddress, String formattedAddress, DateTime locationTimestamp,
-            String eventGeofenceLatitude, String eventGeofenceLongitude, BigInteger radius, String geolocationPositioningType,
+ String eventGeofenceLatitude,
+            String eventGeofenceLongitude, Long radius, String geolocationPositioningType,
             String lastGeolocationResponse, String cause, String apiVersion, URI uri) {
         super();
         this.sid = sid;
@@ -157,7 +157,7 @@ public class Geolocation {
         return mobileNetworkCode;
     }
 
-    public BigInteger getNetworkEntityAddress() {
+    public Long getNetworkEntityAddress() {
         return networkEntityAddress;
     }
 
@@ -173,7 +173,7 @@ public class Geolocation {
         return deviceLongitude;
     }
 
-    public BigInteger getAccuracy() {
+    public Long getAccuracy() {
         return accuracy;
     }
 
@@ -201,7 +201,7 @@ public class Geolocation {
         return eventGeofenceLongitude;
     }
 
-    public BigInteger getRadius() {
+    public Long getRadius() {
         return radius;
     }
 
@@ -362,7 +362,7 @@ public class Geolocation {
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setNetworkEntityAddress(BigInteger networkEntityAddress) {
+    public Geolocation setNetworkEntityAddress(Long networkEntityAddress) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -394,7 +394,7 @@ public class Geolocation {
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setAccuracy(BigInteger accuracy) {
+    public Geolocation setAccuracy(Long accuracy) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -442,7 +442,7 @@ public class Geolocation {
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setRadius(BigInteger radius) {
+    public Geolocation setRadius(Long radius) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -507,18 +507,18 @@ public class Geolocation {
         private String locationAreaCode;
         private Integer mobileCountryCode;
         private String mobileNetworkCode;
-        private BigInteger networkEntityAddress;
+        private Long networkEntityAddress;
         private Integer ageOfLocationInfo;
         private String deviceLatitude;
         private String deviceLongitude;
-        private BigInteger accuracy;
+        private Long accuracy;
         private String physicalAddress;
         private String internetAddress;
         private String formattedAddress;
         private DateTime locationTimestamp;
         private String eventGeofenceLatitude;
         private String eventGeofenceLongitude;
-        private BigInteger radius;
+        private Long radius;
         private String geolocationPositioningType;
         private String lastGeolocationResponse;
         private String cause;
@@ -579,7 +579,7 @@ public class Geolocation {
             this.mobileNetworkCode = mobileNetworkCode;
         }
 
-        public void setNetworkEntityAddress(BigInteger networkEntityAddress) {
+        public void setNetworkEntityAddress(Long networkEntityAddress) {
             this.networkEntityAddress = networkEntityAddress;
         }
 
@@ -595,7 +595,7 @@ public class Geolocation {
             this.deviceLongitude = deviceLongitude;
         }
 
-        public void setAccuracy(BigInteger accuracy) {
+        public void setAccuracy(Long accuracy) {
             this.accuracy = accuracy;
         }
 
@@ -623,7 +623,7 @@ public class Geolocation {
             this.eventGeofenceLongitude = eventGeofenceLongitude;
         }
 
-        public void setRadius(BigInteger radius) {
+        public void setRadius(Long radius) {
             this.radius = radius;
         }
 

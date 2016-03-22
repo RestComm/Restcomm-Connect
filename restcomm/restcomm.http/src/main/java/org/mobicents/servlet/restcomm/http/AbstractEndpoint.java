@@ -117,6 +117,14 @@ public abstract class AbstractEndpoint {
         return bigInteger;
     }
 
+    protected Long getLong(final String name, final MultivaluedMap<String, String> data) {
+        Long l = null;
+        if (data.containsKey(name)) {
+            l = new Long(data.getFirst(name));
+        }
+        return l;
+    }
+
     protected DateTime getDateTime(final String name, final MultivaluedMap<String, String> data) {
         DateTime dateTime = null;
         if (data.containsKey(name)) {

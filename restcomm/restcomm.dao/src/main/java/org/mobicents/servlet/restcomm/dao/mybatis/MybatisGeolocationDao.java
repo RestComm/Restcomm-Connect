@@ -21,7 +21,6 @@
 
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBigInteger;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readInteger;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
@@ -31,8 +30,8 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeDateTime;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeUri;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readGeolocationType;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readLong;
 
-import java.math.BigInteger;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -187,18 +186,18 @@ public class MybatisGeolocationDao implements GeolocationDao {
         final String location_area_code = readString(map.get("location_area_code"));
         final Integer mobile_country_code = readInteger(map.get("mobile_country_code"));
         final String mobile_network_code = readString(map.get("mobile_network_code"));
-        final BigInteger network_entity_address = readBigInteger(map.get("network_entity_address"));
+        final Long network_entity_address = readLong(map.get("network_entity_address"));
         final Integer age_of_location_info = readInteger(map.get("age_of_location_info"));
         final String device_latitude = readString(map.get("device_latitude"));
         final String device_longitude = readString(map.get("device_longitude"));
-        final BigInteger accuracy = readBigInteger(map.get("accuracy"));
+        final Long accuracy = readLong(map.get("accuracy"));
         final String physical_address = readString(map.get("physical_address"));
         final String internet_address = readString(map.get("internet_address"));
         final String formatted_address = readString(map.get("formatted_address"));
         final DateTime location_timestamp = readDateTime(map.get("location_timestamp"));
         final String event_geofence_latitude = readString(map.get("event_geofence_latitude"));
         final String event_geofence_longitude = readString(map.get("event_geofence_longitude"));
-        final BigInteger radius = readBigInteger(map.get("radius"));
+        final Long radius = readLong(map.get("radius"));
         final String geolocation_positioning_type = readString(map.get("geolocation_positioning_type"));
         final String last_geolocation_response = readString(map.get("last_geolocation_response"));
         final String cause = readString(map.get("cause"));

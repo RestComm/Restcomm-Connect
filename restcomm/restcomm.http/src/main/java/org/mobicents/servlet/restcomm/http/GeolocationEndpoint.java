@@ -146,18 +146,18 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         builder.setLocationAreaCode(data.getFirst("LocationAreaCode"));
         builder.setMobileCountryCode(getInteger("MobileCountryCode", data));
         builder.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
-        builder.setNetworkEntityAddress(getBigInteger("NetworkEntityAddress", data));
+        builder.setNetworkEntityAddress(getLong("NetworkEntityAddress", data));
         builder.setAgeOfLocationInfo(getInteger("LocationAge", data));
         builder.setDeviceLatitude(data.getFirst("DeviceLatitude"));
         builder.setDeviceLongitude(data.getFirst("DeviceLongitude"));
-        builder.setAccuracy(getBigInteger("Accuracy", data));
+        builder.setAccuracy(getLong("Accuracy", data));
         builder.setPhysicalAddress(data.getFirst("PhysicalAddress"));
         builder.setInternetAddress(data.getFirst("InternetAddress"));
         builder.setFormattedAddress(data.getFirst("FormattedAddress"));
         builder.setLocationTimestamp(getDateTime("LocationTimestamp", data));
         builder.setEventGeofenceLatitude(data.getFirst("EventGeofenceLatitude"));
         builder.setEventGeofenceLongitude(data.getFirst("EventGeofenceLongitude"));
-        builder.setRadius(getBigInteger("Radius", data));
+        builder.setRadius(getLong("Radius", data));
         builder.setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
         builder.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
         builder.setCause(data.getFirst("Cause"));
@@ -270,9 +270,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             result = result.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
         }
 
-        if (data.containsKey("GeolocationType")) {
-            result = result.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType")));
-        }
+        /*
+         * if (data.containsKey("GeolocationType")) { result =
+         * result.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType"))); }
+         */
 
         if (data.containsKey("ResponseStatus")) {
             result = result.setResponseStatus(data.getFirst("ResponseStatus"));
@@ -295,7 +296,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
 
         if (data.containsKey("NetworkEntityAddress")) {
-            result = result.setNetworkEntityAddress(getBigInteger("NetworkEntityAddress", data));
+            result = result.setNetworkEntityAddress(getLong("NetworkEntityAddress", data));
         }
 
         if (data.containsKey("LocationAge")) {
@@ -311,7 +312,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
 
         if (data.containsKey("Accuracy")) {
-            result = result.setAccuracy(getBigInteger("Accuracy", data));
+            result = result.setAccuracy(getLong("Accuracy", data));
         }
 
         if (data.containsKey("PhysicalAddress")) {
@@ -339,7 +340,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
 
         if (data.containsKey("Radius")) {
-            result = result.setRadius(getBigInteger("Radius", data));
+            result = result.setRadius(getLong("Radius", data));
         }
 
         if (data.containsKey("GeolocationPositioningType")) {
@@ -348,6 +349,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
         if (data.containsKey("LastGeolocationResponse")) {
             result = result.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
+        }
+
+        if (data.containsKey("Cause")) {
+            result = result.setCause(data.getFirst("Cause"));
         }
 
         return result;

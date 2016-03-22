@@ -22,7 +22,6 @@
 package org.mobicents.servlet.restcomm.http.converter;
 
 import java.lang.reflect.Type;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
@@ -71,6 +70,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         writeGeolocationData(geolocation, writer); /*** GeolocationData XML ***/
         writeGeolocationPositioningType(geolocation.getGeolocationPositioningType(), writer);
         writeLastGeolocationResponse(geolocation.getLastGeolocationResponse(), writer);
+        writeCause(geolocation.getCause(), writer);
         writeApiVersion(geolocation.getApiVersion(), writer);
         writeUri(geolocation.getUri(), writer);
         writer.endNode();
@@ -91,6 +91,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         writeGeolocationData(geolocation, object); /*** GeolocationData Json ***/
         writeGeolocationPositioningType(geolocation.getGeolocationPositioningType(), object);
         writeLastGeolocationResponse(geolocation.getLastGeolocationResponse(), object);
+        writeCause(geolocation.getCause(), object);
         writeApiVersion(geolocation.getApiVersion(), object);
         writeUri(geolocation.getUri(), object);
         return object;
@@ -283,7 +284,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeNetworkEntityAddress(final BigInteger networkEntityAddress, final HierarchicalStreamWriter writer) {
+    protected void writeNetworkEntityAddress(final Long networkEntityAddress, final HierarchicalStreamWriter writer) {
         if (networkEntityAddress != null) {
             writer.startNode("NetworkEntityAddress");
             writer.setValue(networkEntityAddress.toString());
@@ -291,7 +292,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeNetworkEntityAddress(final BigInteger networkEntityAddress, final JsonObject object) {
+    protected void writeNetworkEntityAddress(final Long networkEntityAddress, final JsonObject object) {
         if (networkEntityAddress != null) {
             object.addProperty("network_entity_address", networkEntityAddress);
         } else {
@@ -347,7 +348,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeAccuracy(final BigInteger accuracy, final HierarchicalStreamWriter writer) {
+    protected void writeAccuracy(final Long accuracy, final HierarchicalStreamWriter writer) {
         if (accuracy != null) {
             writer.startNode("Accuracy");
             writer.setValue(accuracy.toString());
@@ -355,7 +356,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeAccuracy(final BigInteger accuracy, final JsonObject object) {
+    protected void writeAccuracy(final Long accuracy, final JsonObject object) {
         if (accuracy != null) {
             object.addProperty("accuracy", accuracy);
         } else {
@@ -460,7 +461,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeRadius(final BigInteger radius, final HierarchicalStreamWriter writer) {
+    protected void writeRadius(final Long radius, final HierarchicalStreamWriter writer) {
         if (radius != null) {
             writer.startNode("Radius");
             writer.setValue(radius.toString());
@@ -468,7 +469,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeRadius(final BigInteger radius, final JsonObject object) {
+    protected void writeRadius(final Long radius, final JsonObject object) {
         if (radius != null) {
             object.addProperty("radius", radius);
         } else {
@@ -507,6 +508,22 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
             object.addProperty("last_geolocation_response", lastGeolocationResponse);
         } else {
             object.add("last_geolocation_response", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeCause(final String cause, final HierarchicalStreamWriter writer) {
+        if (cause != null) {
+            writer.startNode("Cause");
+            writer.setValue(cause.toString());
+            writer.endNode();
+        }
+    }
+
+    protected void writeCause(final String cause, final JsonObject object) {
+        if (cause != null) {
+            object.addProperty("cause", cause);
+        } else {
+            object.add("cause", JsonNull.INSTANCE);
         }
     }
 
