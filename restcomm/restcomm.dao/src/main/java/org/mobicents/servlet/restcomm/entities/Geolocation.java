@@ -40,13 +40,12 @@ public class Geolocation {
     private final Sid accountSid;
     private final String source;
     private final String deviceIdentifier;
-    // private final String geolocationType;
     private final GeolocationType geolocationType;
     private final String responseStatus;
     private final String cellId;
     private final String locationAreaCode;
     private final Integer mobileCountryCode;
-    private final Integer mobileNetworkCode;
+    private final String mobileNetworkCode;
     private final BigInteger networkEntityAddress;
     private final Integer ageOfLocationInfo;
     private final String deviceLatitude;
@@ -60,7 +59,7 @@ public class Geolocation {
     private final String eventGeofenceLongitude;
     private final BigInteger radius;
     private final String geolocationPositioningType;
-    private final Boolean lastGeolocationResponse;
+    private final String lastGeolocationResponse;
     private final String cause;
     private final String apiVersion;
     private final URI uri;
@@ -68,11 +67,11 @@ public class Geolocation {
 
     public Geolocation(Sid sid, DateTime dateCreated, DateTime dateUpdated, DateTime dateExecuted, Sid accountSid,
             String source, String deviceIdentifier, GeolocationType geolocationType, String responseStatus, String cellId,
-            String locationAreaCode, Integer mobileCountryCode, Integer mobileNetworkCode, BigInteger networkEntityAddress,
+            String locationAreaCode, Integer mobileCountryCode, String mobileNetworkCode, BigInteger networkEntityAddress,
             Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, BigInteger accuracy,
             String physicalAddress, String internetAddress, String formattedAddress, DateTime locationTimestamp,
             String eventGeofenceLatitude, String eventGeofenceLongitude, BigInteger radius, String geolocationPositioningType,
-            Boolean lastGeolocationResponse, String cause, String apiVersion, URI uri) {
+            String lastGeolocationResponse, String cause, String apiVersion, URI uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -82,7 +81,6 @@ public class Geolocation {
         this.source = source;
         this.deviceIdentifier = deviceIdentifier;
         this.geolocationType = geolocationType;
-        // this.geolocationType = geolocationType;
         this.responseStatus = responseStatus;
         this.cellId = cellId;
         this.locationAreaCode = locationAreaCode;
@@ -155,7 +153,7 @@ public class Geolocation {
         return mobileCountryCode;
     }
 
-    public Integer getMobileNetworkCode() {
+    public String getMobileNetworkCode() {
         return mobileNetworkCode;
     }
 
@@ -211,7 +209,7 @@ public class Geolocation {
         return geolocationPositioningType;
     }
 
-    public Boolean getLastGeolocationResponse() {
+    public String getLastGeolocationResponse() {
         return lastGeolocationResponse;
     }
 
@@ -356,7 +354,7 @@ public class Geolocation {
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setMobileNetworkCode(Integer mobileNetworkCode) {
+    public Geolocation setMobileNetworkCode(String mobileNetworkCode) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -460,7 +458,7 @@ public class Geolocation {
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setLastGeolocationResponse(Boolean lastGeolocationResponse) {
+    public Geolocation setLastGeolocationResponse(String lastGeolocationResponse) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -508,7 +506,7 @@ public class Geolocation {
         private String cellId;
         private String locationAreaCode;
         private Integer mobileCountryCode;
-        private Integer mobileNetworkCode;
+        private String mobileNetworkCode;
         private BigInteger networkEntityAddress;
         private Integer ageOfLocationInfo;
         private String deviceLatitude;
@@ -522,7 +520,7 @@ public class Geolocation {
         private String eventGeofenceLongitude;
         private BigInteger radius;
         private String geolocationPositioningType;
-        private Boolean lastGeolocationResponse;
+        private String lastGeolocationResponse;
         private String cause;
         private String apiVersion;
         private URI uri;
@@ -577,7 +575,7 @@ public class Geolocation {
             this.mobileCountryCode = mobileCountryCode;
         }
 
-        public void setMobileNetworkCode(Integer mobileNetworkCode) {
+        public void setMobileNetworkCode(String mobileNetworkCode) {
             this.mobileNetworkCode = mobileNetworkCode;
         }
 
@@ -633,7 +631,7 @@ public class Geolocation {
             this.geolocationPositioningType = geolocationPositioningType;
         }
 
-        public void setLastGeolocationResponse(Boolean lastGeolocationResponse) {
+        public void setLastGeolocationResponse(String lastGeolocationResponse) {
             this.lastGeolocationResponse = lastGeolocationResponse;
         }
 

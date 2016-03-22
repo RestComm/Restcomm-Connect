@@ -145,7 +145,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         builder.setCellId(data.getFirst("CellId"));
         builder.setLocationAreaCode(data.getFirst("LocationAreaCode"));
         builder.setMobileCountryCode(getInteger("MobileCountryCode", data));
-        builder.setMobileNetworkCode(getInteger("MobileNetworkCode", data));
+        builder.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
         builder.setNetworkEntityAddress(getBigInteger("NetworkEntityAddress", data));
         builder.setAgeOfLocationInfo(getInteger("LocationAge", data));
         builder.setDeviceLatitude(data.getFirst("DeviceLatitude"));
@@ -159,7 +159,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         builder.setEventGeofenceLongitude(data.getFirst("EventGeofenceLongitude"));
         builder.setRadius(getBigInteger("Radius", data));
         builder.setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
-        builder.setLastGeolocationResponse(getBoolean("LastGeolocationResponse", data));
+        builder.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
         builder.setCause(data.getFirst("Cause"));
         builder.setApiVersion(getApiVersion(data));
         String rootUri = configuration.getString("root-uri");
@@ -291,7 +291,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
 
         if (data.containsKey("MobileNetworkCode")) {
-            result = result.setMobileNetworkCode(getInteger("MobileNetworkCode", data));
+            result = result.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
         }
 
         if (data.containsKey("NetworkEntityAddress")) {
@@ -347,7 +347,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
 
         if (data.containsKey("LastGeolocationResponse")) {
-            result = result.setLastGeolocationResponse(getBoolean("LastGeolocationResponse", data));
+            result = result.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
         }
 
         return result;

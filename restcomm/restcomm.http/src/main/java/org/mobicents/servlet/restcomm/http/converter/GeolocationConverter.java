@@ -67,6 +67,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         writeSource(geolocation.getSource(), writer);
         writeDeviceIdentifier(geolocation.getDeviceIdentifier(), writer);
         writeGeolocationType(geolocation.getGeolocationType(), writer);
+        writeResponseStatus(geolocation.getResponseStatus(), writer);
         writeGeolocationData(geolocation, writer); /*** GeolocationData XML ***/
         writeGeolocationPositioningType(geolocation.getGeolocationPositioningType(), writer);
         writeLastGeolocationResponse(geolocation.getLastGeolocationResponse(), writer);
@@ -86,6 +87,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         writeSource(geolocation.getSource(), object);
         writeDeviceIdentifier(geolocation.getDeviceIdentifier(), object);
         writeGeolocationType(geolocation.getGeolocationType(), object);
+        writeResponseStatus(geolocation.getResponseStatus(), object);
         writeGeolocationData(geolocation, object); /*** GeolocationData Json ***/
         writeGeolocationPositioningType(geolocation.getGeolocationPositioningType(), object);
         writeLastGeolocationResponse(geolocation.getLastGeolocationResponse(), object);
@@ -154,21 +156,36 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
+    protected void writeResponseStatus(final String responseStatus, final HierarchicalStreamWriter writer) {
+        if (responseStatus != null) {
+            writer.startNode("ResponseStatus");
+            writer.setValue(responseStatus);
+            writer.endNode();
+        }
+    }
+
+    protected void writeResponseStatus(final String responseStatus, final JsonObject object) {
+        if (responseStatus != null) {
+            object.addProperty("response_status", responseStatus);
+        } else {
+            object.add("response_status", JsonNull.INSTANCE);
+        }
+    }
+
     protected void writeGeolocationData(Geolocation geolocation, final HierarchicalStreamWriter writer) {
         writer.startNode("GeolocationData");
         if (geolocation != null) {
             writeCellId(geolocation.getCellId(), writer);
-            writeAgeOfLocationInfo(geolocation.getAgeOfLocationInfo(), writer);
             writeMobileCountryCode(geolocation.getMobileCountryCode(), writer);
             writeMobileNetworkCode(geolocation.getMobileNetworkCode(), writer);
             writeNetworkEntityAddress(geolocation.getNetworkEntityAddress(), writer);
             writeAgeOfLocationInfo(geolocation.getAgeOfLocationInfo(), writer);
             writeDeviceLatitude(geolocation.getDeviceLatitude(), writer);
             writeDeviceLongitude(geolocation.getDeviceLongitude(), writer);
-            writeNetworkEntityAddress(geolocation.getAccuracy(), writer);
-            writeAccuracy(geolocation.getPhysicalAddress(), writer);
+            writeAccuracy(geolocation.getAccuracy(), writer);
             writeInternetAddress(geolocation.getInternetAddress(), writer);
-            writeInternetAddress(geolocation.getFormattedAddress(), writer);
+            writePhysicalAddress(geolocation.getPhysicalAddress(), writer);
+            writeFormattedAddress(geolocation.getFormattedAddress(), writer);
             writeLocationTimestamp(geolocation.getLocationTimestamp(), writer);
             writeEventGeofenceLatitude(geolocation.getEventGeofenceLatitude(), writer);
             writeEventGeofenceLongitude(geolocation.getEventGeofenceLongitude(), writer);
@@ -182,17 +199,16 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
             final JsonObject other = new JsonObject();
             writeCellId(geolocation.getCellId(), other);
             writeLocationAreaCode(geolocation.getLocationAreaCode(), other);
-            writeAgeOfLocationInfo(geolocation.getAgeOfLocationInfo(), other);
             writeMobileCountryCode(geolocation.getMobileCountryCode(), other);
             writeMobileNetworkCode(geolocation.getMobileNetworkCode(), other);
             writeNetworkEntityAddress(geolocation.getNetworkEntityAddress(), other);
             writeAgeOfLocationInfo(geolocation.getAgeOfLocationInfo(), other);
             writeDeviceLatitude(geolocation.getDeviceLatitude(), other);
             writeDeviceLongitude(geolocation.getDeviceLongitude(), other);
-            writeNetworkEntityAddress(geolocation.getAccuracy(), other);
-            writeAccuracy(geolocation.getPhysicalAddress(), other);
+            writeAccuracy(geolocation.getAccuracy(), other);
             writeInternetAddress(geolocation.getInternetAddress(), other);
-            writeInternetAddress(geolocation.getFormattedAddress(), other);
+            writePhysicalAddress(geolocation.getPhysicalAddress(), other);
+            writeFormattedAddress(geolocation.getFormattedAddress(), other);
             writeLocationTimestamp(geolocation.getLocationTimestamp(), other);
             writeEventGeofenceLatitude(geolocation.getEventGeofenceLatitude(), other);
             writeEventGeofenceLongitude(geolocation.getEventGeofenceLongitude(), other);
@@ -251,7 +267,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeMobileNetworkCode(final Integer mobileNetworkCode, final HierarchicalStreamWriter writer) {
+    protected void writeMobileNetworkCode(final String mobileNetworkCode, final HierarchicalStreamWriter writer) {
         if (mobileNetworkCode != null) {
             writer.startNode("MobileNetworkCode");
             writer.setValue(mobileNetworkCode.toString());
@@ -259,7 +275,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeMobileNetworkCode(final Integer mobileNetworkCode, final JsonObject object) {
+    protected void writeMobileNetworkCode(final String mobileNetworkCode, final JsonObject object) {
         if (mobileNetworkCode != null) {
             object.addProperty("mobile_network_code", mobileNetworkCode);
         } else {
@@ -331,7 +347,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeAccuracy(final String accuracy, final HierarchicalStreamWriter writer) {
+    protected void writeAccuracy(final BigInteger accuracy, final HierarchicalStreamWriter writer) {
         if (accuracy != null) {
             writer.startNode("Accuracy");
             writer.setValue(accuracy.toString());
@@ -339,7 +355,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeAccuracy(final String accuracy, final JsonObject object) {
+    protected void writeAccuracy(final BigInteger accuracy, final JsonObject object) {
         if (accuracy != null) {
             object.addProperty("accuracy", accuracy);
         } else {
@@ -376,6 +392,22 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
             object.addProperty("internet_address", internetAddress);
         } else {
             object.add("internet_address", JsonNull.INSTANCE);
+        }
+    }
+
+    protected void writeFormattedAddress(final String formattedAddress, final HierarchicalStreamWriter writer) {
+        if (formattedAddress != null) {
+            writer.startNode("FormattedAddress");
+            writer.setValue(formattedAddress);
+            writer.endNode();
+        }
+    }
+
+    protected void writeFormattedAddress(final String formattedAddress, final JsonObject object) {
+        if (formattedAddress != null) {
+            object.addProperty("formatted_address", formattedAddress);
+        } else {
+            object.add("formatted_address", JsonNull.INSTANCE);
         }
     }
 
@@ -461,7 +493,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeLastGeolocationResponse(final Boolean lastGeolocationResponse,
+    protected void writeLastGeolocationResponse(final String lastGeolocationResponse,
             final HierarchicalStreamWriter writer) {
         if (lastGeolocationResponse != null) {
             writer.startNode("LastGeolocationResponse");
@@ -470,7 +502,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeLastGeolocationResponse(final Boolean lastGeolocationResponse, final JsonObject object) {
+    protected void writeLastGeolocationResponse(final String lastGeolocationResponse, final JsonObject object) {
         if (lastGeolocationResponse != null) {
             object.addProperty("last_geolocation_response", lastGeolocationResponse);
         } else {
