@@ -20,14 +20,23 @@
 
 package org.mobicents.servlet.restcomm.http;
 
-import javax.ws.rs.*;
+import com.google.gson.Gson;
+import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.identity.exceptions.InitialAccessTokenExpired;
+
+import javax.ws.rs.FormParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.GET;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
 /**
  * @author Orestis Tsakiridis.
  */
 @Path("/IdentityInstances")
-public class IdentityInstancesEndpointJson extends SecuredEndpoint {
+public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
 
     /**
      *
@@ -36,8 +45,13 @@ public class IdentityInstancesEndpointJson extends SecuredEndpoint {
      * @return
      */
     @POST
-    public Response registerIdentityInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl) {
-        return Response.ok().build();
+    public Response registerIdentityInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl, @FormParam("KeycloakBaseUrl") String keycloakBaseUrl) throws InitialAccessTokenExpired {
+        IdentityInstance instance = registerIdentityInstanceWithIAT(initialAccessToken, redirectUrl, keycloakBaseUrl);
+
+        // TODO use a proper converted  here
+        Gson gson = new Gson();
+        String json = gson.toJson(instance);
+        return Response.ok(json).header("Content-Type", "application/json").build();
     }
 
     /**
@@ -88,15 +102,4 @@ public class IdentityInstancesEndpointJson extends SecuredEndpoint {
     public Response unregisterIdentityInstance(@PathParam("sid") String identityInstanceSid) {
         return Response.ok().build();
     }
-
-    /**
-     * Register a restcomm instance to an identity server using an Initial Access Token (iat).
-     *
-     * @param iat
-     */
-    private void registerIdentityInstanceWithIAT(String iat, String redirectUrl, String restcommClientSecret) {
-
-    }
-
-
 }

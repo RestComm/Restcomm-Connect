@@ -23,12 +23,9 @@ package org.mobicents.servlet.restcomm.identity;
 import java.util.UUID;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import org.apache.commons.lang.NotImplementedException;
-import org.keycloak.representations.idm.ClientRepresentation;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.identity.entities.ClientEntity;
 import org.mobicents.servlet.restcomm.identity.exceptions.InitialAccessTokenExpired;
@@ -41,14 +38,23 @@ import javax.ws.rs.core.MediaType;
 public class IdentityRegistrationTool {
 
     private String keycloakBaseUrl;
-    private static String CLIENT_REGISTRATION_SUFFIX = "/realms/restcomm/clients-registrations/default";
+    private String realm;
     public static String RESTCOMM_REST_CLIENT_SUFFIX = "restcomm-rest";
     public static String RESTCOMM_UI_CLIENT_SUFFIX = "restcomm-ui";
     public static String RVD_REST_CLIENT_SUFFIX = "rvd-rest";
     public static String RVD_UI_CLIENT_SUFFIX = "rvd-ui";
 
+    public String getClientRegistrationRelativeUrl() {
+        return "/realms/" + realm + "/clients-registrations/default";
+    }
+
     public IdentityRegistrationTool(String keycloakBaseUrl) {
+        this(keycloakBaseUrl, "restcomm"); // default realm
+    }
+
+    public IdentityRegistrationTool(String keycloakBaseUrl, String realm) {
         this.keycloakBaseUrl = keycloakBaseUrl;
+        this.realm = realm;
     }
 
     public IdentityInstance registerInstanceWithIAT(String iat, String[] redirectUrls, String restcommClientSecret) throws InitialAccessTokenExpired {
@@ -102,7 +108,7 @@ public class IdentityRegistrationTool {
     ClientEntity registerClient(String clientId, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws InitialAccessTokenExpired {
         // create the Keycloak Client entity (not related to the jersey client class)
         Client jersey = Client.create();
-        WebResource resource = jersey.resource(keycloakBaseUrl + CLIENT_REGISTRATION_SUFFIX);
+        WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl());
         // build a client representation as a JSON object
         ClientEntity repr = new ClientEntity();
         repr.setClientId(clientId);
@@ -128,7 +134,7 @@ public class IdentityRegistrationTool {
 
     Integer unregisterClient(String clientId, String registrationAccessToken) {
         Client jersey = Client.create();
-        WebResource resource = jersey.resource(keycloakBaseUrl + CLIENT_REGISTRATION_SUFFIX + "/" + clientId);
+        WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl() + "/" + clientId);
         ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + registrationAccessToken).delete(ClientResponse.class);
         return response.getStatus();
     }
