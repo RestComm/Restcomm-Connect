@@ -5,32 +5,11 @@ package org.mobicents.servlet.restcomm.configuration.sets;
  */
 public interface IdentityConfigurationSet {
 
-    Boolean getHeadless();
-
-    String getAuthServerBaseUrl();
-
-    String getUsername();
-
-    String getPassword();
-
-    Boolean getInviteExistingUsers();
-
-    String getAdminAccountSid();
-
-    String[] getRedirectUris();
+    String getAuthServerUrl();
 
     String getRealm();
 
     String getRealmkey();
 
-    MigrationMethod getMethod();
-
-    String getAuthServerUrl();
-
-    enum MigrationMethod {
-        startup,
-        ui
-    }
-
-    String ADMINISTRATOR_ROLE = "Administrator";
+    String ADMINISTRATOR_ROLE = "Administrator"; // TODO is this really needed
 }

@@ -286,40 +286,11 @@
 		<hostname></hostname>
 	</http-client>
 
-	<!-- Adjust Identity behaviour -->
+	<!-- Identity/keycloak specific settings -->
 	<identity>
-		<!-- Headless mode
-			'true' - operate Restcomm without Authorization server and no AdminUI or RVD functionality
-			'false' (default) - use keycloak authorization server and support for AdminUI and RVD -->
-		<headless>false</headless>
-		<auth-server-base-url>https://identity.restcomm.com</auth-server-base-url>
+		<auth-server-url>https://identity.restcomm.com/auth</auth-server-url>
 		<realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB</realm-public-key>
-		<migration>
-			<!-- Migration method to use:
-			 	 - startup: do the migration/registration when the instance starts from the Bootstrapper class.
-			 	 - ui: trigger the migration/registration from the AdminUI
-			 -->
-			<method>startup</method> <!-- ui | startup -->
-			<!-- Creadentials keycloak user that will carry out the instance registration.
-				 The same user will become the instance administrator and linked to admin account defined below.
-				 This user should exist -->
-			<username>administrator@company.com</username>
-			<password>RestComm</password>
-			<!-- Should existing keycloak users be granted access to this instance (invited) or not. If set to 'false' only newly created
-			 	 users will have access -->
-			<invite-existing-users>true</invite-existing-users>
-			<!-- Restcomm account that will become Administrator when instance is registered.
-				if not provided, no Restcomm account will be linked to the user that does the migration . -->
-			<admin-account-sid>ACae6e420f425248d6a26948c17a9e2acf</admin-account-sid>
-			<!-- Url base that will be allowed to redirect to when going through the oauth workflow. Typically,
-			 	 the base (scheme://host:port) of the url used for accessing AdminUI or RVD in your premise should be ok. -->
-			<redirect-uris>http://127.0.0.1:8080</redirect-uris>
-			<!-- Use the following existing instance id instead of creating new identity instance in auth server.
-				 Put this only if you have already created an instance.
-				 NOT IMPLEMENTED!
-			-->
-			<!-- <instance-id>xxx</instance-id> -->
-		</migration>
+		<realm>restcomm</realm>
 	</identity>
 
 	<!-- The SMS aggregator is responsible for the handling of SMS messages 

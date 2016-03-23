@@ -38,6 +38,7 @@ public class IdentityInstance {
     private String restcommRestRAT;
     private DateTime restcommRestLastRegistrationDate;
     private Status restcommRestStatus;
+    private String restcommRestClientSecret; // ++
     private String restcommUiRAT;
     private DateTime restcommUiLastRegistrationDate;
     private Status restcommUiStatus;
@@ -207,6 +208,14 @@ public class IdentityInstance {
 
     public void setDateUpdated(DateTime dateUpdated) {
         this.dateUpdated = dateUpdated;
+    }
+
+    public String getRestcommRestClientSecret() {
+        return restcommRestClientSecret;
+    }
+
+    public void setRestcommRestClientSecret(String restcommRestClientSecret) {
+        this.restcommRestClientSecret = restcommRestClientSecret;
     }
 
     public enum Status {
