@@ -115,6 +115,14 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
+    /**
+     * Will return the current organization SID based on the request domain name, configuration etc.
+     * For now it returns a hardcoded value that is required by SSO identity instances.
+     */
+    protected Sid getCurrentOrganizationSid() {
+        return Sid.generate(Sid.Type.ORGANIZATION, "ORxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    }
+
 /*
     TODO compatibility  check for multitenenancy
     protected void secure(final Account account, final String permission) throws AuthorizationException {

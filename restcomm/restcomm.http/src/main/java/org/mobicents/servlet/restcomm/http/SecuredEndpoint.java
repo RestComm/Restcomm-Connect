@@ -32,7 +32,10 @@ import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSe
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.AccountKey;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
@@ -49,6 +52,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected MutableIdentityConfigurationSet identityConfiguration;
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
+    protected IdentityInstancesDao identityInstancesDao;
     protected IdentityContext identityContext;
 
     public SecuredEndpoint() {
@@ -59,10 +63,25 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
+        this.identityInstancesDao = storage.getIdentityInstancesDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
         restcommRoles = identityContext.getRestcommRoles();
         this.userIdentityContext = new UserIdentityContext(identityContext, request, accountsDao);
 
+    }
+
+    /**
+     * Returns identity instance taking into account current organization.
+     *
+     * @return the current Identity Instance entity
+     */
+    protected IdentityInstance getIdentityInstance() {
+        // is there an IdentityInstance already for this organization ?
+        Sid organizationSid = getCurrentOrganizationSid();
+        if (organizationSid == null)
+            throw new IllegalStateException("No active organization found");
+        IdentityInstance currentInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
+        return currentInstance;
     }
 
     // Authorize request by using either keycloak token or API key method. If any of them succeeds, request is allowed

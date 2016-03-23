@@ -20,6 +20,7 @@
 
 package org.mobicents.servlet.restcomm.http;
 
+import com.google.gson.Gson;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -31,6 +32,7 @@ import org.mobicents.servlet.restcomm.identity.exceptions.InitialAccessTokenExpi
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 /**
@@ -51,24 +53,30 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
-        // setup the identity instances DAO
-        final DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        this.identityInstancesDao = daoManager.getIdentityInstancesDao();
     }
 
 
-    protected IdentityInstance registerIdentityInstanceWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) throws InitialAccessTokenExpired {
+    protected Response registerIdentityInstanceWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) throws InitialAccessTokenExpired {
         String clientSecret = generateClientSecret();
         // determine keycloakBaseUrl based on configuration and defaults
         String keycloakBaseUrl = keycloakBaseUrlParam;
         if (StringUtils.isEmpty(keycloakBaseUrl))
             keycloakBaseUrl = getKeycloakBaseUrl();
+        // is there an IdentityInstance already for this organization ?
+        IdentityInstance existingInstance = getIdentityInstance();
+        if (existingInstance == null) {
+            IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, getRealm());
+            IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, new String [] {redirectUrl}, clientSecret);
+            instance.setOrganizationSid(getCurrentOrganizationSid());
+            identityInstancesDao.addIdentityInstance(instance);
+            IdentityInstance storedInstance = identityInstancesDao.getIdentityInstanceByName(instance.getName());
 
-        IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, getRealm());
-        IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, new String [] {redirectUrl}, clientSecret);
-        identityInstancesDao.addIdentityInstance(instance);
-        IdentityInstance storedInstance = identityInstancesDao.getIdentityInstanceByName(instance.getName());
-        return storedInstance;
+            // TODO use a proper converter here
+            Gson gson = new Gson();
+            String json = gson.toJson(storedInstance);
+            return Response.ok(json).header("Content-Type", "application/json").build();
+        } else
+            return Response.status(Response.Status.CONFLICT).build();
     }
 
     private String generateClientSecret() {
