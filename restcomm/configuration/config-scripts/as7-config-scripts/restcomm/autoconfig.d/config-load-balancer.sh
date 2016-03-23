@@ -3,82 +3,53 @@
 ## Description: Configures SIP Load Balancer
 ## Author     : Henrique Rosa (henrique.rosa@telestax.com)
 ## Author     : Pavel Slegr (pavel.slegr@telestax.com)
+## Author     : Charles Roufay (charles.roufay@telestax.com)
 ##
-
+## Last update: 22/03/2016
+## Change Log: Move away from Telestax Proxy and configure LB from restcomm.conf
 ## FUNCTIONS
-configLoadBalancer() {
-	lb_file="$LB_HOME/lb-configuration.properties"
-	bind_address="$1"
-
-	sed -e "s|^host=.*|host=$bind_address|" $lb_file > $lb_file.bak
-	mv $lb_file.bak $lb_file
-	echo 'Updated Load Balancer configuration file'
-}
-
+##
+##
+##
+##
 configSipStack() {
-	lb_file="$RESTCOMM_HOME/standalone/configuration/mss-sip-stack.properties"
-	bind_address="$1"
-	proxy_address="$2"
+	lb_sipstack_file="$RESTCOMM_HOME/standalone/configuration/mss-sip-stack.properties"
 
-	if grep -q "org.mobicents.ha.javax.sip.REACHABLE_CHECK" "$lb_file";
-	then
-	    echo "reachable check property found"
-	else
-	    echo "adding org.mobicents.ha.javax.sip.REACHABLE_CHECK into mss-sip-stack.properties"
-            echo "#org.mobicents.ha.javax.sip.REACHABLE_CHECK=" >> $lb_file
-	fi
-
-        if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
+        if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
 		sed -e 's|^#org.mobicents.ha.javax.sip.BALANCERS=|org.mobicents.ha.javax.sip.BALANCERS=|' \
-		    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$proxy_address:5065|" \
+		    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$LB_ADDRESS:$LB_PORT|" \
    		    -e 's|^#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \
 		    -e "s|org.mobicents.ha.javax.sip.REACHABLE_CHECK=.*|org.mobicents.ha.javax.sip.REACHABLE_CHECK=false|" \
-		    $lb_file > $lb_file.bak
+		    $lb_sipstack_file > $lb_sipstack_file.bak
 
-		echo 'Activated Telestax Proxy on SIP stack configuration file'
+		echo 'Load Balancer has been activated and mss-sip-stack.properties file updated'
 	else
-
-	
-		if [[ "$RUN_MODE" == *"-lb" ]]; then
-			sed -e 's|^#org.mobicents.ha.javax.sip.BALANCERS=|org.mobicents.ha.javax.sip.BALANCERS=|' \
-			    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$bind_address:5065|" \
-			    $lb_file > $lb_file.bak
-			echo 'Activated Load Balancer on SIP stack configuration file'
-		else
 			sed -e 's|^org.mobicents.ha.javax.sip.BALANCERS=|#org.mobicents.ha.javax.sip.BALANCERS=|' \
 			    -e 's|^org.mobicents.ha.javax.sip.REACHABLE_CHECK=|#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \
-				$lb_file > $lb_file.bak
+				$lb_sipstack_file > $lb_sipstack_file.bak
 			echo 'Deactivated Load Balancer on SIP stack configuration file'
-		fi
+
 	fi
-	mv $lb_file.bak $lb_file
+	mv $lb_sipstack_file.bak $lb_sipstack_file
 }
 
-configLogs() {
-	# Create directory to keep logs
-	mkdir -p $LB_HOME/logs
-	echo "Created logging directory $LB_HOME/logs"
-	
-	# make log location absolute
-	lb_file="$LB_HOME/lb-log4j.xml"
-	sed -e "s|<param name=\"file\" value=\".*\"/>|<param name=\"file\" value=\"$LB_HOME/logs/load-balancer.log\"/>|" $lb_file > $lb_file.bak
-	mv -f $lb_file.bak $lb_file
-}
 
 configStandalone() {
-	lb_file="$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml"
+	lb_standalone_file="$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml"
 	
 	path_name='org.mobicents.ext'
 	if [[ "$RUN_MODE" == *"-lb" ]]; then
 		path_name="org.mobicents.ha.balancing.only"
 	fi
 	
-	sed -e "s|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\".*\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\"$path_name\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|" $lb_file > $lb_file.bak
-	mv -f $lb_file.bak $lb_file
+	sed -e "s|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\".*\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|subsystem xmlns=\"urn:org.mobicents:sip-servlets-as7:1.0\" application-router=\"configuration/dars/mobicents-dar.properties\" stack-properties=\"configuration/mss-sip-stack.properties\" path-name=\"$path_name\" app-dispatcher-class=\"org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl\" concurrency-control-mode=\"SipApplicationSession\" congestion-control-interval=\"-1\"|" $lb_standalone_file > $lb_standalone_file.bak
+	mv -f $lb_standalone_file.bak lb_standalone_file
 }
 
+
+
 ## MAIN
-configLogs
-configLoadBalancer "$BIND_ADDRESS" 
-configSipStack "$BIND_ADDRESS" "$PROXY_PRIVATE_IP"
+configSipStack 
 configStandalone
+
+
