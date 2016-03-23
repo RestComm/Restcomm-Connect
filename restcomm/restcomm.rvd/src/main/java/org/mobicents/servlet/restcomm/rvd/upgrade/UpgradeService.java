@@ -23,7 +23,7 @@ public class UpgradeService {
     static final Logger logger = Logger.getLogger(UpgradeService.class.getName());
 
     public enum UpgradabilityStatus {
-        UPGRADABLE, NOT_NEEDED
+        UPGRADABLE, NOT_NEEDED, NOT_SUPPORTED
     }
 
     static final String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"};
@@ -105,7 +105,7 @@ public class UpgradeService {
         if (rvdIndex == -1)
             throw new IllegalStateException("RVD project version not found in the versionPath.");
         if (projectIndex == -1)
-            throw new InvalidProjectVersion("Invalid project version checked for upgradability: " + projectVersion );
+            return UpgradabilityStatus.NOT_SUPPORTED;
 
         // ok, we have the version path. Is there any upgrade there ?
         int i = projectIndex + 1;
