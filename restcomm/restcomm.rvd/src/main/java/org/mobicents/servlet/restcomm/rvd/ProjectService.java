@@ -216,7 +216,7 @@ public class ProjectService {
             //StateHeader header = projectStorage.loadStateHeader(projectName);
             StateHeader header = FsProjectStorage.loadStateHeader(projectName, workspaceStorage);
             //if ( ! header.getVersion().equals(RvdConfiguration.getRvdProjectVersion()) )
-            if ( ! UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(),header.getVersion() )  )
+            if ( ! UpgradeService.checkBackwardCompatible(header.getVersion(), RvdConfiguration.getRvdProjectVersion() )  )
                 throw new IncompatibleProjectVersion("Error loading project '" + projectName + "'. Project version: " + header.getVersion() + " - RVD project version: " + RvdConfiguration.getRvdProjectVersion() );
         } catch ( BadProjectHeader e ) {
             throw new IncompatibleProjectVersion("Bad or missing project header for project '" + projectName + "'");
@@ -330,8 +330,8 @@ public class ProjectService {
         return FsProjectStorage.archiveProject(projectName,workspaceStorage);
     }
 
-    public String importProjectFromArchive(InputStream archiveStream, String archiveFilename, String owner) throws RvdException {
-        File archiveFile = new File(archiveFilename);
+    public void importProjectFromRawArchive(InputStream archiveStream, String applicationSid, String owner) throws RvdException {
+        File archiveFile = new File(applicationSid);
         String projectName = FilenameUtils.getBaseName(archiveFile.getName());
 
         // First unzip to temp dir
@@ -344,31 +344,43 @@ public class ProjectService {
         Unzipper unzipper = new Unzipper(tempProjectDir);
         unzipper.unzip(archiveStream);
 
+        importProject(tempProjectDir, applicationSid, owner );
+    }
+
+    public String importProject(File tempProjectDir, String suggestedName, String owner) throws RvdException {
         try {
             // check project version for compatibility
             String stateFilename = tempProjectDir.getPath() + "/state";
             FileReader reader = new FileReader(stateFilename);
             JsonParser parser = new JsonParser();
-            JsonElement element = parser.parse(reader);
-            String version = element.getAsJsonObject().get("header").getAsJsonObject().get("version").getAsString();
+            JsonElement rootElement = parser.parse(reader);
+            String version = rootElement.getAsJsonObject().get("header").getAsJsonObject().get("version").getAsString();
+            // Create a temporary workspace storage.
+            WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
             // is this project compatible (current RVD can open and run without upgrading) ?
-            if (UpgradeService.checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), version)) {
-                // Create a temporary workspace storage. Also, set owner user to currently logged user.
-                WorkspaceStorage tempStorage = new WorkspaceStorage(tempProjectDir.getParent(), rvdContext.getMarshaler());
-                ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getName(), tempStorage);
-                state.getHeader().setOwner(owner);
-                FsProjectStorage.storeProject(false, state, tempProjectDir.getName(), tempStorage);
-
-                // TODO Make these an atomic action!
-                //projectName = projectStorage.getAvailableProjectName(projectName);
-                projectName = FsProjectStorage.getAvailableProjectName(projectName, workspaceStorage);
-                FsProjectStorage.createProjectSlot(projectName, workspaceStorage);
-
-                FsProjectStorage.importProjectFromDirectory(tempProjectDir, projectName, true, workspaceStorage);
-                return projectName;
-            } else {
-                throw new UnsupportedProjectVersion("Imported project version (" + version + ") not supported");
+            if ( ! UpgradeService.checkBackwardCompatible(version, RvdConfiguration.getRvdProjectVersion()) ) {
+                if ( UpgradeService.checkUpgradability(version, RvdConfiguration.getRvdProjectVersion()) == UpgradeService.UpgradabilityStatus.UPGRADABLE ) {
+                    UpgradeService upgradeService = new UpgradeService(tempStorage);
+                    upgradeService.upgradeProject(tempProjectDir.getName());
+                    BuildService buildService = new BuildService(tempStorage);
+                    buildService.buildProject(tempProjectDir.getName());
+                } else {
+                    // project cannot be upgraded
+                    throw new UnsupportedProjectVersion("Imported project version (" + version + ") not supported");
+                }
             }
+            // project is either compatible or was upgraded
+            ProjectState state = FsProjectStorage.loadProject(tempProjectDir.getName(), tempStorage);
+            state.getHeader().setOwner(owner);
+            FsProjectStorage.storeProject(false, state, tempProjectDir.getName(), tempStorage);
+
+            // TODO Make these an atomic action!
+            suggestedName = FsProjectStorage.getAvailableProjectName(suggestedName, workspaceStorage);
+            FsProjectStorage.createProjectSlot(suggestedName, workspaceStorage);
+
+            FsProjectStorage.importProjectFromDirectory(tempProjectDir, suggestedName, true, workspaceStorage);
+            return suggestedName;
+
         } catch ( UnsupportedProjectVersion e) {
             throw e;
         } catch (Exception e) {
