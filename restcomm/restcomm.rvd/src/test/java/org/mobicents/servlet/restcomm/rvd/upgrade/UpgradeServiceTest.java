@@ -37,5 +37,6 @@ public class UpgradeServiceTest {
         Assert.assertEquals(UpgradabilityStatus.UPGRADABLE, UpgradeService.checkUpgradability("1.5","1.6"));
         Assert.assertEquals(UpgradabilityStatus.NOT_NEEDED, UpgradeService.checkUpgradability("1.1","1.5"));
         Assert.assertEquals(UpgradabilityStatus.UPGRADABLE, UpgradeService.checkUpgradability("1.1","1.6"));
+        Assert.assertEquals(UpgradabilityStatus.NOT_SUPPORTED, UpgradeService.checkUpgradability("INVALID_VERSION", "1.6"));
     }
 }

@@ -12,7 +12,7 @@
 
 		Required: yes
 	-->
-	<workspaceLocation>/home/nando/telestax/RVDWorkspace</workspaceLocation>
+	<workspaceLocation>workspace</workspaceLocation>
 
 	<!--
 		Override automatic restcomm address resolution.
