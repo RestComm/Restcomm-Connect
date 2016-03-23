@@ -35,6 +35,8 @@ public interface IdentityInstancesDao {
 
     IdentityInstance getIdentityInstanceByName(String name);
 
+    IdentityInstance getIdentityInstanceByOrganizationSid(Sid organizationSid); // TODO convert this to an SID
+
     List<IdentityInstance> getIdentityInstances();
 
     void removeIdentityInstance(Sid sid);

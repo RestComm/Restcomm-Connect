@@ -79,6 +79,11 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
     }
 
     @Override
+    public IdentityInstance getIdentityInstanceByOrganizationSid(Sid organizationSid) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<IdentityInstance> getIdentityInstances() {
         return null;
     }

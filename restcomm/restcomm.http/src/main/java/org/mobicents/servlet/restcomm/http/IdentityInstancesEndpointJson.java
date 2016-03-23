@@ -46,12 +46,7 @@ public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
      */
     @POST
     public Response registerIdentityInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl, @FormParam("KeycloakBaseUrl") String keycloakBaseUrl) throws InitialAccessTokenExpired {
-        IdentityInstance instance = registerIdentityInstanceWithIAT(initialAccessToken, redirectUrl, keycloakBaseUrl);
-
-        // TODO use a proper converted  here
-        Gson gson = new Gson();
-        String json = gson.toJson(instance);
-        return Response.ok(json).header("Content-Type", "application/json").build();
+        return registerIdentityInstanceWithIAT(initialAccessToken, redirectUrl, keycloakBaseUrl);
     }
 
     /**
@@ -70,7 +65,7 @@ public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
      */
     @Path("/{identityInstanceSid}")
     @GET
-    public Response getIdentityInstance() {
+    public Response getIdentityInstanceBySid() {
         return Response.ok().build();
     }
 
