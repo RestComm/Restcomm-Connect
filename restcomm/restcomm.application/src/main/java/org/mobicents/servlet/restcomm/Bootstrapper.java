@@ -23,17 +23,13 @@ import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.configuration.DatabaseConfigurationSource;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
-import org.mobicents.servlet.restcomm.identity.exceptions.IdentityMigrationException;
-import org.mobicents.servlet.restcomm.identity.migration.IdentityMigrationTool;
-import org.mobicents.servlet.restcomm.identity.migration.MigrationInfo;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 import org.mobicents.servlet.restcomm.identity.configuration.RvdConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
@@ -246,27 +242,23 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
-    private RestcommConfiguration initRestcommConfiguration(Configuration xml, DaoManager daoManager, ServletContext serevletContext) {
+    private RestcommConfiguration initRestcommConfiguration(Configuration xml, DaoManager daoManager, ServletContext servletContext) {
         RestcommConfiguration config = RestcommConfiguration.createOnce();
         ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
         config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
+        // identity configuration
         logger.info("Initializing Restcomm Identity...");
         IdentityConfigurationSetImpl identityConfig = new IdentityConfigurationSetImpl(apacheSource);
         config.addConfigurationSet("identity", identityConfig);
-        DatabaseConfigurationSource dbSource = new DatabaseConfigurationSource(daoManager.getConfigurationDao());
-        RvdConfigurationUpdateListener rvdListener = new RvdConfigurationUpdateListener(serevletContext,identityConfig);
-        MutableIdentityConfigurationSet identityDbConfig = new MutableIdentityConfigurationSetImpl(dbSource);
-        identityDbConfig.registerUpdateListener(rvdListener);
-        config.addConfigurationSet("mutable-identity", identityDbConfig);
 
-        if (identityConfig.getHeadless())
-            logger.warn("Restcomm is operating in HEADLESS mode. Both Administration Console and Visual Designer are disabled. Use REST API to access Restcomm services.");
-        if (!"init".equals(identityDbConfig.getMode()) && identityDbConfig.getInstanceId() != null)
-            logger.info("Restcomm Identity configured using auth server " + identityConfig.getAuthServerBaseUrl() + ". Identity instance ID: " + identityDbConfig.getInstanceId() );
-        if ("init".equals(identityDbConfig.getMode()))
-            logger.warn( "Restcomm identity is not configured. Need to run identity migration.");
+        // RvdConfigurationUpdateListener rvdListener = new RvdConfigurationUpdateListener(servletContext,identityConfig);
 
         return config;
+    }
+
+    // initialize Identity Context
+    private void initIdentityContext(IdentityConfigurationSet conf, DaoManager daoManager, ServletContext servletContext ) {
+        IdentityContext identityContext = new IdentityContext(conf.getRealm(), conf.getRealmkey(), conf.getAuthServerUrl(), );
     }
 
     @Override
@@ -312,15 +304,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Initialize identityContext
             IdentityContext identityContext = new IdentityContext(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity(), new RestcommRoles(xml));
             context.setAttribute(IdentityContext.class.getName(), identityContext);
-            // Migrate identity if necessary.
-            MigrationInfo migrationInfo = new MigrationInfo(restcommConfig.getIdentity(), restcommConfig.getMutableIdentity(), restcommConfig, context, storage.getAccountsDao(), true );
-            try {
-                if (IdentityMigrationTool.shouldMigrate(migrationInfo)) {
-                    IdentityMigrationTool.performMigration(migrationInfo);
-                }
-            } catch (IdentityMigrationException e) {
-                logger.error("Identity registration/migration failed. Your Restcomm instance may not be operational.", e);
-            }
 
             // Create the media gateway.
 

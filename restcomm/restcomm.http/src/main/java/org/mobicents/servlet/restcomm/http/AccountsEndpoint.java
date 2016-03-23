@@ -57,8 +57,6 @@ import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
-import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi;
-import org.mobicents.servlet.restcomm.identity.RestcommIdentityApi.UserEntity;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
@@ -69,7 +67,7 @@ public abstract class AccountsEndpoint extends AccountsEndpointBase {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    protected MutableIdentityConfigurationSet mutableIdentityConfiguration;
+    //protected MutableIdentityConfigurationSet mutableIdentityConfiguration;
     protected IdentityConfigurationSet identityConfiguration;
     protected Gson gson;
     protected XStream xstream;
@@ -83,7 +81,7 @@ public abstract class AccountsEndpoint extends AccountsEndpointBase {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
-        mutableIdentityConfiguration = RestcommConfiguration.getInstance().getMutableIdentity();
+        //mutableIdentityConfiguration = RestcommConfiguration.getInstance().getMutableIdentity();
         identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
@@ -134,17 +132,17 @@ public abstract class AccountsEndpoint extends AccountsEndpointBase {
      * If the requested account does not exist and it's the user himself that makes the request, create a new one based
      * on the token information. Of course take into account the configuration too.
      */
-    private Account handleMissingAccount( String accountSid, AccessToken token) {
-        Account account = null;
-        if ( mutableIdentityConfiguration.getAutoImportUsers() ) {
-            if ( token.getPreferredUsername().equals(accountSid) ) {
-                account = accountFromAccessToken(token);
-                accountsDao.addAccount(account);
-                logger.info("Automatically created Account '" + account.getSid() + "' and linked to user '" + accountSid + "'" );
-            }
-        }
-        return account;
-    }
+//    private Account handleMissingAccount( String accountSid, AccessToken token) {
+//        Account account = null;
+//        if ( mutableIdentityConfiguration.getAutoImportUsers() ) {
+//            if ( token.getPreferredUsername().equals(accountSid) ) {
+//                account = accountFromAccessToken(token);
+//                accountsDao.addAccount(account);
+//                logger.info("Automatically created Account '" + account.getSid() + "' and linked to user '" + accountSid + "'" );
+//            }
+//        }
+//        return account;
+//    }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         try {
@@ -345,9 +343,9 @@ public abstract class AccountsEndpoint extends AccountsEndpointBase {
         if ( !validateUsername(username) )
             return Outcome.BAD_INPUT;
         if ( org.apache.commons.lang.StringUtils.isEmpty(restcommAccount.getEmailAddress()) ) {
-            RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext, RestcommConfiguration.getInstance().getIdentity(), RestcommConfiguration.getInstance().getMutableIdentity());
-            if ( api.inviteUser(username) != Outcome.OK ) // assign roles
-                return Outcome.NOT_FOUND;
+            //RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext, RestcommConfiguration.getInstance().getIdentity(), RestcommConfiguration.getInstance().getMutableIdentity());
+            //if ( api.inviteUser(username) != Outcome.OK ) // assign roles
+            //    return Outcome.NOT_FOUND;
             restcommAccount = restcommAccount.setEmailAddress(username);
             try {
                 accountsDao.updateAccount(restcommAccount);
@@ -389,13 +387,13 @@ public abstract class AccountsEndpoint extends AccountsEndpointBase {
         return Response.ok().build();
     }
 
-    protected Outcome createUser(String username, String friendlyName, String tempPassword) {
-        if ( !validateUsername(username) )
-            return Outcome.BAD_INPUT;
-        UserEntity user = new UserEntity(username, friendlyName, null, tempPassword);
-        RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext,identityConfiguration,mutableIdentityConfiguration );
-        return api.createUser(user);
-    }
+//    protected Outcome createUser(String username, String friendlyName, String tempPassword) {
+//        if ( !validateUsername(username) )
+//            return Outcome.BAD_INPUT;
+//        UserEntity user = new UserEntity(username, friendlyName, null, tempPassword);
+//        RestcommIdentityApi api = new RestcommIdentityApi(userIdentityContext,identityConfiguration,mutableIdentityConfiguration );
+//        return api.createUser(user);
+//    }
 
     // Validates an username (EmailAddress) before mapping an account to it.
     // TODO - validation rules may include checks whether this address is @deployment.domain

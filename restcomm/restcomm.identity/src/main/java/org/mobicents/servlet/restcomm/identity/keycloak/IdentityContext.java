@@ -23,9 +23,15 @@ package org.mobicents.servlet.restcomm.identity.keycloak;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.IdentityUtils;
 import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNames;
+import org.mobicents.servlet.restcomm.identity.exceptions.KeycloakDeploymentAlreadyCreated;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
+
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Identity Context holds all identity related entities whose lifecycle follows Restcomm lifecycle, such as
@@ -40,28 +46,37 @@ public class IdentityContext {
     String realmName;
     String realmKey;
     String authServerUrl;
-    // our custom 'instance' layer properties
-    String instanceId;
-
-    private KeycloakDeployment deployment;
-    private KeycloakDeployment unregisteredDeployment;
     private RestcommRoles restcommRoles;
+    ConcurrentHashMap<Sid,KeycloakDeployment> deployments = new ConcurrentHashMap<Sid,KeycloakDeployment>();
 
-    public IdentityContext(String realmName, String realmKey, String authServerUrl, String instanceId, String clientSecret, RestcommRoles restcommRoles) {
+    public IdentityContext(String realmName, String realmKey, String authServerUrl, RestcommRoles restcommRoles) {
         this.realmName = realmName;
         this.realmKey = realmKey;
         this.authServerUrl = authServerUrl;
-        this.instanceId = instanceId;
-        KeycloakConfigurationBuilder confBuilder = new KeycloakConfigurationBuilder(realmName, realmKey, authServerUrl, instanceId, clientSecret);
-        this.unregisteredDeployment = IdentityUtils.createDeployment(confBuilder.getUnregisteredRestcommConfig());
-        if ( instanceId != null )
-            this.deployment = IdentityUtils.createDeployment(confBuilder.getRestcommConfig());
         this.restcommRoles = restcommRoles;
     }
 
-    public IdentityContext(IdentityConfigurationSet config, MutableIdentityConfigurationSet mutableConfig, RestcommRoles restcommRoles) {
-        this(config.getRealm(), config.getRealmkey(), config.getAuthServerBaseUrl() + "/auth", mutableConfig.getInstanceId(), mutableConfig.getRestcommClientSecret(), restcommRoles);
+    public void addDeployment( IdentityInstance instance ) throws KeycloakDeploymentAlreadyCreated {
+        if ( ! deployments.contains(instance.getSid()) ) {
+            KeycloakConfigurationBuilder confBuilder = new KeycloakConfigurationBuilder(realmName, realmKey, authServerUrl, instance.getName(), instance.getRestcommRestClientSecret());
+            KeycloakDeployment deployment = IdentityUtils.createDeployment(confBuilder.getUnregisteredRestcommConfig());
+            deployments.put(instance.getSid(), deployment);
+        } else {
+            throw new KeycloakDeploymentAlreadyCreated("Keycloak deployment is already created for identity instance '" + instance.getName() + "'");
+        }
     }
+
+    /**
+     * Returns a keycloak deployment for the specified identity instance or null if non exists.
+     *
+     * @param identityInstanceSid
+     * @return existing keycloak deployment object of null
+     */
+    public KeycloakDeployment getDeployment(Sid identityInstanceSid) {
+        return deployments.get(identityInstanceSid);
+    }
+
+
 
     public String getRealmName() {
         return realmName;
@@ -75,28 +90,16 @@ public class IdentityContext {
         return authServerUrl;
     }
 
-    public String getInstanceId() {
-        return instanceId;
-    }
-
-    public KeycloakDeployment getDeployment() {
-        return deployment;
-    }
-
-    public KeycloakDeployment getUnregisteredDeployment() {
-        return unregisteredDeployment;
-    }
-
     public RestcommRoles getRestcommRoles() { return restcommRoles; }
 
-    public String getClientName(IdentityResourceNames clientType) {
-        switch (clientType) {
-            case RESTCOMM_REST: return instanceId + "-restcomm-rest";
-            case RESTCOMM_UI: return instanceId + "-restcomm-ui";
-            case RESTCOMM_RVD_REST: return instanceId + "-restcomm-rvd-rest";
-            case RESTCOMM_RVD_UI: return instanceId + "-restcomm-rvd-ui";
-        }
-        throw new IllegalStateException("Invalid IdentityResourceName found: " + clientType.toString());
-    }
+//    public String getClientName(IdentityResourceNames clientType) {
+//        switch (clientType) {
+//            case RESTCOMM_REST: return instanceId + "-restcomm-rest";
+//            case RESTCOMM_UI: return instanceId + "-restcomm-ui";
+//            case RESTCOMM_RVD_REST: return instanceId + "-restcomm-rvd-rest";
+//            case RESTCOMM_RVD_UI: return instanceId + "-restcomm-rvd-ui";
+//        }
+//        throw new IllegalStateException("Invalid IdentityResourceName found: " + clientType.toString());
+//    }
 
 }

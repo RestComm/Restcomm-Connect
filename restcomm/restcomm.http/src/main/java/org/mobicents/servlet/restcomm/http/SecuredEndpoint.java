@@ -49,11 +49,12 @@ import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
  */
 public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected static RestcommRoles restcommRoles;
-    protected MutableIdentityConfigurationSet identityConfiguration;
+    //protected MutableIdentityConfigurationSet identityConfiguration;
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
     protected IdentityInstancesDao identityInstancesDao;
     protected IdentityContext identityContext;
+    protected IdentityInstance identityInstance;
 
     public SecuredEndpoint() {
         super();
@@ -67,6 +68,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
         restcommRoles = identityContext.getRestcommRoles();
         this.userIdentityContext = new UserIdentityContext(identityContext, request, accountsDao);
+        this.identityInstance = determineIdentityInstance();
 
     }
 
@@ -75,13 +77,17 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      *
      * @return the current Identity Instance entity
      */
-    protected IdentityInstance getIdentityInstance() {
+    private IdentityInstance determineIdentityInstance() {
         // is there an IdentityInstance already for this organization ?
         Sid organizationSid = getCurrentOrganizationSid();
         if (organizationSid == null)
             throw new IllegalStateException("No active organization found");
         IdentityInstance currentInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
         return currentInstance;
+    }
+
+    protected IdentityInstance getIdentityInstance() {
+        return identityInstance;
     }
 
     // Authorize request by using either keycloak token or API key method. If any of them succeeds, request is allowed
@@ -113,7 +119,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         Set<String> roleNames = null;
         if ( userIdentityContext.getOauthToken() != null ) {
             try {
-                roleNames = userIdentityContext.getOauthToken().getResourceAccess(identityContext.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
+                roleNames = userIdentityContext.getOauthToken().getResourceAccess(getRestcommResourceName()).getRoles();
             } catch (NullPointerException e) {
                 throw new AuthorizationException();
             }
@@ -131,7 +137,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected void secure (final String permission) {
         Set<String> roleNames = null;
         if ( userIdentityContext.getOauthToken() != null )
-            roleNames = userIdentityContext.getOauthToken().getResourceAccess(identityContext.getClientName(IdentityResourceNames.RESTCOMM_REST)).getRoles();
+            roleNames = userIdentityContext.getOauthToken().getResourceAccess(getRestcommResourceName()).getRoles();
         else
         if ( userIdentityContext.getAccountKey() != null ) {
             if ( userIdentityContext.getAccountKey().isVerified() )
@@ -192,7 +198,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     private AuthOutcome secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
         // both api-level and account-level checks should be satisfied
-        AccessToken.Access access = accessToken.getResourceAccess(identityContext.getClientName(IdentityResourceNames.RESTCOMM_REST));
+        AccessToken.Access access = accessToken.getResourceAccess(getRestcommResourceName());
         if (access == null)
             return AuthOutcome.FAILED;
         Set<String> roleNames = access.getRoles();
@@ -265,6 +271,18 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected AccessToken getKeycloakAccessToken() {
         AccessToken token = userIdentityContext.getOauthToken();
         return token;
+    }
+
+    /**
+     * Returns the keycloak resource name for the Restcomm-REST Client
+     * (i.e. ${instanceName}-restcomm-rest
+     *
+     * @return resource name as a String
+     */
+    protected String getRestcommResourceName() {
+        if (identityInstance == null)
+            throw new IllegalStateException("Identity instance has not been set");
+        return identityInstance.getName() + "-restcomm-rest";
     }
 
 }
