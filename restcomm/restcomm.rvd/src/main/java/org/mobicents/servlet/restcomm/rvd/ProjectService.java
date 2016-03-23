@@ -330,8 +330,8 @@ public class ProjectService {
         return FsProjectStorage.archiveProject(projectName,workspaceStorage);
     }
 
-    public String importProjectFromArchive(InputStream archiveStream, String archiveFilename, String owner) throws RvdException {
-        File archiveFile = new File(archiveFilename);
+    public void importProjectFromRawArchive(InputStream archiveStream, String applicationSid, String owner) throws RvdException {
+        File archiveFile = new File(applicationSid);
         String projectName = FilenameUtils.getBaseName(archiveFile.getName());
 
         // First unzip to temp dir
@@ -344,6 +344,10 @@ public class ProjectService {
         Unzipper unzipper = new Unzipper(tempProjectDir);
         unzipper.unzip(archiveStream);
 
+        importProject(tempProjectDir, applicationSid, owner );
+    }
+
+    public String importProject(File tempProjectDir, String suggestedName, String owner) throws RvdException {
         try {
             // check project version for compatibility
             String stateFilename = tempProjectDir.getPath() + "/state";
@@ -371,12 +375,11 @@ public class ProjectService {
             FsProjectStorage.storeProject(false, state, tempProjectDir.getName(), tempStorage);
 
             // TODO Make these an atomic action!
-            //projectName = projectStorage.getAvailableProjectName(projectName);
-            projectName = FsProjectStorage.getAvailableProjectName(projectName, workspaceStorage);
-            FsProjectStorage.createProjectSlot(projectName, workspaceStorage);
+            suggestedName = FsProjectStorage.getAvailableProjectName(suggestedName, workspaceStorage);
+            FsProjectStorage.createProjectSlot(suggestedName, workspaceStorage);
 
-            FsProjectStorage.importProjectFromDirectory(tempProjectDir, projectName, true, workspaceStorage);
-            return projectName;
+            FsProjectStorage.importProjectFromDirectory(tempProjectDir, suggestedName, true, workspaceStorage);
+            return suggestedName;
 
         } catch ( UnsupportedProjectVersion e) {
             throw e;
