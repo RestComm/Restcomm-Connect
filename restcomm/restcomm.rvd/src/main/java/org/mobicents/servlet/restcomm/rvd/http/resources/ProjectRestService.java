@@ -432,7 +432,7 @@ public class ProjectRestService extends RestService {
 
                         try {
                             // Import application
-                            projectService.importProjectFromArchive(item.openStream(), applicationSid, loggedUser.getName());
+                            projectService.importProjectFromRawArchive(item.openStream(), applicationSid, loggedUser.getName());
                             effectiveProjectName = FilenameUtils.getBaseName(item.getName());
                             // buildService.buildProject(effectiveProjectName);
 
