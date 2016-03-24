@@ -94,7 +94,7 @@
 	"dialStepClientBeforeConnectLabel": "Before connect",
 	"dialStepClientDestinationInputPlaceholder": "thomas",
 	"dialStepClientDestinationInputTooltip": "Dial to client",
-	"dialStepConferenceInputPlaceholder": "1234",
+	"dialStepConferenceInputPlaceholder": "My Conference Room",
 	"dialStepConferenceInputTooltip": "Dial to conference",
 	"dialStepConferenceWaitTooltip": "A module to run while waiting to be added to the conference. Fill it with 'Play' or 'Say' steps",
 	"dialStepConferenceWaitLabel": "While waiting",
