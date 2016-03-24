@@ -23,11 +23,11 @@ package org.mobicents.servlet.restcomm.http;
 import com.google.gson.Gson;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
+import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.http.responseentities.IdentityInstanceEntity;
 import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
-import org.mobicents.servlet.restcomm.identity.exceptions.InitialAccessTokenExpired;
+import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -40,12 +40,9 @@ import java.util.UUID;
  */
 public class IdentityInstancesEndpoint extends SecuredEndpoint {
 
-    private static String KEYCLOAK_REALM_DEFAULT = "restcomm";
-    private static String KEYCLOAK_BASE_URL_DEFAULT = "https://identity.restcomm.com/auth";
-
     @Context
     protected ServletContext context;
-    IdentityInstancesDao identityInstancesDao;
+    IdentityConfigurationSet identityConfig;
 
     @PostConstruct
     private void init() {
@@ -53,19 +50,20 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
+        identityConfig = newConfiguration.getIdentity();
     }
 
 
-    protected Response registerIdentityInstanceWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) throws InitialAccessTokenExpired {
+    protected Response registerIdentityInstanceWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) throws AuthServerAuthorizationError {
         String clientSecret = generateClientSecret();
         // determine keycloakBaseUrl based on configuration and defaults
         String keycloakBaseUrl = keycloakBaseUrlParam;
         if (StringUtils.isEmpty(keycloakBaseUrl))
-            keycloakBaseUrl = getKeycloakBaseUrl();
+            keycloakBaseUrl = identityConfig.getAuthServerUrl();
         // is there an IdentityInstance already for this organization ?
-        IdentityInstance existingInstance = getIdentityInstance();
+        IdentityInstance existingInstance = getActiveIdentityInstance();
         if (existingInstance == null) {
-            IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, getRealm());
+            IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, identityConfig.getRealm());
             IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, new String [] {redirectUrl}, clientSecret);
             instance.setOrganizationSid(getCurrentOrganizationSid());
             identityInstancesDao.addIdentityInstance(instance);
@@ -73,27 +71,21 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
 
             // TODO use a proper converter here
             Gson gson = new Gson();
-            String json = gson.toJson(storedInstance);
+            String json = gson.toJson(new IdentityInstanceEntity(storedInstance));
             return Response.ok(json).header("Content-Type", "application/json").build();
         } else
             return Response.status(Response.Status.CONFLICT).build();
     }
 
+    protected Response getCurrentIdentityInstance() {
+        IdentityInstance instance = getActiveIdentityInstance();
+        // TODO use a proper converter here
+        Gson gson = new Gson();
+        String json = gson.toJson(new IdentityInstanceEntity(instance));
+        return Response.ok(json).header("Content-Type", "application/json").build();
+    }
+
     private String generateClientSecret() {
         return UUID.randomUUID().toString();
     }
-
-    private String getRealm() {
-        // TODO try first to load from configuration
-        return KEYCLOAK_REALM_DEFAULT;
-    }
-
-    private String getKeycloakBaseUrl() {
-        // TODO first try to load from configuration
-        return KEYCLOAK_BASE_URL_DEFAULT;
-    }
-
-
-
-
 }

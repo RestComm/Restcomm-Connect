@@ -29,7 +29,6 @@ import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
@@ -39,7 +38,6 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.AccountKey;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNames;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 
@@ -67,7 +65,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         this.identityInstancesDao = storage.getIdentityInstancesDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
         restcommRoles = identityContext.getRestcommRoles();
-        this.userIdentityContext = new UserIdentityContext(identityContext, request, accountsDao);
+        this.userIdentityContext = new UserIdentityContext(identityContext, request, accountsDao, identityInstance);
         this.identityInstance = determineIdentityInstance();
 
     }
@@ -86,7 +84,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return currentInstance;
     }
 
-    protected IdentityInstance getIdentityInstance() {
+    protected IdentityInstance getActiveIdentityInstance() {
         return identityInstance;
     }
 

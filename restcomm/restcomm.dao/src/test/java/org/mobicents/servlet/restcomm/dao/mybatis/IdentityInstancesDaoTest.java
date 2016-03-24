@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -42,6 +43,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class IdentityInstancesDaoTest {
     private static MybatisDaoManager manager;
+
+    String organizationSidForIdentityInstance = "ORxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
     public IdentityInstancesDaoTest() {
         super();
@@ -66,12 +69,13 @@ public class IdentityInstancesDaoTest {
         final IdentityInstancesDao identityInstances = manager.getIdentityInstancesDao();
 
         String name = "test-instance";
-        Sid organizationSid = Sid.generate(Sid.Type.IDENTITY_INSTANCE);
+        Sid organizationSid = Sid.generate(Sid.Type.ORGANIZATION);
         DateTime dateCreated = DateTime.now();
         DateTime dateUpdated = DateTime.now();
         String restcommRestRAT = "rat1";
         DateTime restcommRestLastRegistrationDate = DateTime.now();
         Status restcommRestStatus = Status.success;
+        String restcommRestClientSecret = "client-top-secret";
         String restcommUiRAT = "rat2";;
         DateTime restcommUiLastRegistrationDate = DateTime.now();
         Status restcommUiStatus = Status.fail;
@@ -97,6 +101,7 @@ public class IdentityInstancesDaoTest {
         iinstance.setRestcommRestRAT(restcommRestRAT);
         iinstance.setRestcommRestLastRegistrationDate(restcommRestLastRegistrationDate);
         iinstance.setRestcommRestStatus(restcommRestStatus);
+        iinstance.setRestcommRestClientSecret(restcommRestClientSecret);
 
         iinstance.setRestcommUiRAT(restcommUiRAT);
         iinstance.setRestcommUiLastRegistrationDate(restcommUiLastRegistrationDate);
@@ -114,10 +119,19 @@ public class IdentityInstancesDaoTest {
         assertEquals("restcomm-rest RAT differ", restcommRestRAT, iinstance2.getRestcommRestRAT());
         assertEquals("restcomm-rest last registration dates differ", restcommRestLastRegistrationDate, iinstance2.getRestcommRestLastRegistrationDate());
         assertEquals("restcomm-rest statuses differ", restcommRestStatus, iinstance2.getRestcommRestStatus());
+        assertEquals("restcomm-rest client secrets differ",restcommRestClientSecret, iinstance2.getRestcommRestClientSecret());
 
         // TODO add test clauses for the rest Clients
         //assertEquals("restcomm-ui RAT differ", restcommUiRAT, iinstance2.getRestcommUiRAT());
         //assertEquals("restcomm-ui last registration dates differ", restcommUiLastRegistrationDate, iinstance2.getRestcommUiLastRegistrationDate());
         //assertEquals("restcomm-ui statuses differ", restcommUiStatus, iinstance2.getRestcommUiStatus());
+    }
+
+    @Test
+    public void retrieveInstanceByOrganizationSid() {
+        final IdentityInstancesDao dao = manager.getIdentityInstancesDao();
+        IdentityInstance instance = dao.getIdentityInstanceByOrganizationSid(new Sid(organizationSidForIdentityInstance) );
+        assertNotNull(instance);
+        assertEquals("bound-instance",instance.getName());
     }
 }

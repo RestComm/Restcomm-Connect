@@ -21,16 +21,12 @@
 package org.mobicents.servlet.restcomm.identity.keycloak;
 
 import org.keycloak.adapters.KeycloakDeployment;
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
+import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.IdentityUtils;
-import org.mobicents.servlet.restcomm.identity.configuration.IdentityResourceNames;
-import org.mobicents.servlet.restcomm.identity.exceptions.KeycloakDeploymentAlreadyCreated;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -46,37 +42,58 @@ public class IdentityContext {
     String realmName;
     String realmKey;
     String authServerUrl;
-    private RestcommRoles restcommRoles;
+    RestcommRoles restcommRoles;
     ConcurrentHashMap<Sid,KeycloakDeployment> deployments = new ConcurrentHashMap<Sid,KeycloakDeployment>();
+    IdentityInstancesDao dao;
 
-    public IdentityContext(String realmName, String realmKey, String authServerUrl, RestcommRoles restcommRoles) {
+
+    public IdentityContext(String realmName, String realmKey, String authServerUrl, RestcommRoles restcommRoles, IdentityInstancesDao identityInstancesDao) {
         this.realmName = realmName;
         this.realmKey = realmKey;
         this.authServerUrl = authServerUrl;
         this.restcommRoles = restcommRoles;
+        this.dao = identityInstancesDao;
     }
 
-    public void addDeployment( IdentityInstance instance ) throws KeycloakDeploymentAlreadyCreated {
-        if ( ! deployments.contains(instance.getSid()) ) {
+    /**
+     * Creates a new deployment out of an identity instance and puts in a hashmap. If it's allready there it returns it.
+     *
+     * @param instance
+     * @return
+     * @throws KeycloakDeploymentAlreadyCreated
+     */
+    public KeycloakDeployment addDeployment( IdentityInstance instance ) {
+        KeycloakDeployment existingDeployment = deployments.get(instance.getSid());
+        // if it's already there do nothing (return it)
+        if (existingDeployment != null)
+            return existingDeployment;
+        else {
             KeycloakConfigurationBuilder confBuilder = new KeycloakConfigurationBuilder(realmName, realmKey, authServerUrl, instance.getName(), instance.getRestcommRestClientSecret());
             KeycloakDeployment deployment = IdentityUtils.createDeployment(confBuilder.getUnregisteredRestcommConfig());
             deployments.put(instance.getSid(), deployment);
-        } else {
-            throw new KeycloakDeploymentAlreadyCreated("Keycloak deployment is already created for identity instance '" + instance.getName() + "'");
+            return deployment;
         }
     }
 
     /**
-     * Returns a keycloak deployment for the specified identity instance or null if non exists.
+     * Returns a keycloak deployment for an identity instance sid in a lazy way (creates
+     * it the deployment if not alread there).
      *
      * @param identityInstanceSid
      * @return existing keycloak deployment object of null
      */
     public KeycloakDeployment getDeployment(Sid identityInstanceSid) {
-        return deployments.get(identityInstanceSid);
+        KeycloakDeployment deployment = deployments.get(identityInstanceSid);
+        if (deployment == null) {
+            IdentityInstance addedInstance = dao.getIdentityInstance(identityInstanceSid);
+            if (addedInstance != null) {
+                return addDeployment(addedInstance);
+            } else
+                return null;
+        } else {
+            return deployment;
+        }
     }
-
-
 
     public String getRealmName() {
         return realmName;

@@ -49,7 +49,7 @@ public class IdentityInstance {
     private DateTime rvdUiLastRegistrationDate;
     private Status rvdUiStatus;
 
-    public IdentityInstance(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRestRAT, DateTime restcommRestLastRegistrationDate, Status restcommRestStatus, String restcommUiRAT, DateTime restcommUiLastRegistrationDate, Status restcommUiStatus, String rvdRestRAT, DateTime rvdRestLastRegistrationDate, Status rvdRestStatus, String rvdUiRAT, DateTime rvdUiLastRegistrationDate, Status rvdUiStatus) {
+    public IdentityInstance(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRestRAT, DateTime restcommRestLastRegistrationDate, Status restcommRestStatus, String restcommRestClientSecret, String restcommUiRAT, DateTime restcommUiLastRegistrationDate, Status restcommUiStatus, String rvdRestRAT, DateTime rvdRestLastRegistrationDate, Status rvdRestStatus, String rvdUiRAT, DateTime rvdUiLastRegistrationDate, Status rvdUiStatus) {
         this.sid = sid;
         this.organizationSid = organizationSid;
         this.name = name;
@@ -58,6 +58,7 @@ public class IdentityInstance {
         this.restcommRestRAT = restcommRestRAT;
         this.restcommRestLastRegistrationDate = restcommRestLastRegistrationDate;
         this.restcommRestStatus = restcommRestStatus;
+        this.restcommRestClientSecret = restcommRestClientSecret;
         this.restcommUiRAT = restcommUiRAT;
         this.restcommUiLastRegistrationDate = restcommUiLastRegistrationDate;
         this.restcommUiStatus = restcommUiStatus;
@@ -71,7 +72,10 @@ public class IdentityInstance {
 
     public IdentityInstance() {
         sid = Sid.generate(Sid.Type.IDENTITY_INSTANCE);
+    }
 
+    public IdentityInstance(Sid sid) {
+        this.sid = sid;
     }
 
     public Sid getSid() {

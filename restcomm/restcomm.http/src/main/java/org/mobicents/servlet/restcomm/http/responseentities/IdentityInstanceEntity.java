@@ -18,23 +18,20 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.identity.exceptions;
+package org.mobicents.servlet.restcomm.http.responseentities;
+
+import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 
 /**
- * Thrown when trying to create a new keycloak deployment for an Identity Instance
- * but it's alread there (see IdentityContext)
- *
  * @author Orestis Tsakiridis
  */
-public class KeycloakDeploymentAlreadyCreated extends Exception {
-    public KeycloakDeploymentAlreadyCreated() {
-    }
+public class IdentityInstanceEntity {
 
-    public KeycloakDeploymentAlreadyCreated(String s) {
-        super(s);
-    }
+    private String sid;
+    private String name;
 
-    public KeycloakDeploymentAlreadyCreated(String s, Throwable throwable) {
-        super(s, throwable);
+    public IdentityInstanceEntity(IdentityInstance instance) {
+        this.sid = instance.getSid().toString();
+        this.name = instance.getName();
     }
 }

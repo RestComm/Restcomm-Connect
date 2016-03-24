@@ -21,17 +21,16 @@
 package org.mobicents.servlet.restcomm.identity.exceptions;
 
 /**
- * Thrown when an initial access token has expired or has already been used. In that case the administrator
- * should request a new one.
+ * Thrown when access to keycloak HTTP apis is refused with 403
  *
  * @author Orestis Tsakiridis
  */
-public class InitialAccessTokenExpired extends Exception {
-    public InitialAccessTokenExpired() {
+public class AuthServerAuthorizationError extends Exception {
+    public AuthServerAuthorizationError() {
         super();
     }
 
-    public InitialAccessTokenExpired(String message) {
+    public AuthServerAuthorizationError(String message) {
         super(message);
     }
 }

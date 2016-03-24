@@ -25,9 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.identity.entities.ClientEntity;
-import org.mobicents.servlet.restcomm.identity.exceptions.InitialAccessTokenExpired;
-
-import java.util.UUID;
+import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 
 /**
  * @author Orestis Tsakiridis
@@ -47,7 +45,7 @@ public class IdentityRegistrationToolTest {
     }
 
     @Test
-    public void testClientCreationAndRemoval() throws InitialAccessTokenExpired {
+    public void testClientCreationAndRemoval() throws AuthServerAuthorizationError {
         // create client
         ClientEntity clientEntity = tool.registerClient("TEST-restcomm-rest", iat, new String[] {"http://192.168.1.39:8080"},"topsecret",null, null );
         Assert.assertNotNull(clientEntity);
@@ -57,7 +55,7 @@ public class IdentityRegistrationToolTest {
     }
 
     @Test
-    public void testIdentityInstanceCreationAndRemoval() throws InitialAccessTokenExpired {
+    public void testIdentityInstanceCreationAndRemoval() throws AuthServerAuthorizationError {
         IdentityInstance identityInstance = tool.registerInstanceWithIAT(iat, null, "topsecret");
         Assert.assertNotNull(identityInstance);
         tool.unregisterInstanceWithRAT(identityInstance);

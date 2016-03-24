@@ -34,9 +34,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
@@ -107,19 +105,11 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
 
     @POST
     @Path("/{accountSid}/operations/link")
-    public Response linkAccount(@PathParam("accountSid") String accountSid, @FormParam("username") String username, @FormParam("create") String create, @FormParam("friendly_name") String friendly_name, @FormParam("password") String password) {
+    public Response linkAccount(@PathParam("accountSid") String accountSid, @FormParam("username") String username) {
         // TODO - access control
         Sid sid = new Sid(accountSid);
         Account account = accountsDao.getAccount(sid);
-        if ( "true".equals(create) && !StringUtils.isEmpty(username) ) {
-            Outcome create_outcome = createUser(username, friendly_name, password);
-            if ( create_outcome == Outcome.OK )
-                return toResponse(linkAccountToUser(account, username));
-            else
-                return toResponse(create_outcome);
-        } else {
-            return toResponse(linkAccountToUser(account, username));
-        }
+        return toResponse(linkAccountToUser(account, username));
     }
 
     @DELETE

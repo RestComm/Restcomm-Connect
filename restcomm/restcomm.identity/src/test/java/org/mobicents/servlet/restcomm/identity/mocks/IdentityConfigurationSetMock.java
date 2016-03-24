@@ -27,92 +27,16 @@ import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSe
  */
 public class IdentityConfigurationSetMock implements IdentityConfigurationSet {
 
-    Boolean headless;
-    String authServerBaseUrl;
     String authServerUrl;
-    String username;
-    String password;
-    Boolean inviteExistingUsers;
-    String adminAccountSid;
-    String[] redirectUris;
-    MigrationMethod method;
     String realm = "restcomm";
     String realmKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv";
 
     public IdentityConfigurationSetMock() {
     }
 
-    public void setHeadless(Boolean headless) {
-        this.headless = headless;
-    }
-
-    public void setAuthServerBaseUrl(String authServerBaseUrl) {
-        this.authServerBaseUrl = authServerBaseUrl;
-    }
-
     public void setAuthServerUrl(String authServerUrl) {
         this.authServerUrl = authServerUrl;
     }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setInviteExistingUsers(Boolean inviteExistingUsers) {
-        this.inviteExistingUsers = inviteExistingUsers;
-    }
-
-    public void setAdminAccountSid(String adminAccountSid) {
-        this.adminAccountSid = adminAccountSid;
-    }
-
-    public void setRedirectUris(String[] redirectUris) {
-        this.redirectUris = redirectUris;
-    }
-
-    public void setMethod(MigrationMethod method) {
-        this.method = method;
-    }
-
-    @Override
-    public Boolean getHeadless() {
-        return headless;
-    }
-
-    @Override
-    public String getAuthServerBaseUrl() {
-        return authServerBaseUrl;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public Boolean getInviteExistingUsers() {
-        return inviteExistingUsers;
-    }
-
-    @Override
-    public String getAdminAccountSid() {
-        return adminAccountSid;
-    }
-
-    @Override
-    public String[] getRedirectUris() {
-        return redirectUris;
-    }
-
     @Override
     public String getRealm() {
         return realm;
@@ -121,11 +45,6 @@ public class IdentityConfigurationSetMock implements IdentityConfigurationSet {
     @Override
     public String getRealmkey() {
         return realmKey;
-    }
-
-    @Override
-    public MigrationMethod getMethod() {
-        return method;
     }
 
     @Override

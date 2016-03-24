@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
 
 /**
@@ -43,8 +44,10 @@ public class UserIdentityContext {
     final AccessToken oauthToken;
     final AccountKey accountKey;
     final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
+    final IdentityInstance identityInstance;
 
-    public UserIdentityContext(IdentityContext identityContext, HttpServletRequest request, AccountsDao accountsDao) {
+    public UserIdentityContext(IdentityContext identityContext, HttpServletRequest request, AccountsDao accountsDao, IdentityInstance identityInstance) {
+        this.identityInstance = identityInstance;
         if (identityContext == null) {
             oauthTokenString = null;
             oauthToken = null;
@@ -83,7 +86,7 @@ public class UserIdentityContext {
     }
 
     private AccessToken verifyToken(String tokenString, IdentityContext identityContext) {
-        return IdentityUtils.verifyToken(tokenString, identityContext.getDeployment());
+        return IdentityUtils.verifyToken(tokenString, identityContext.getDeployment(identityInstance.getSid()));
     }
 
     private AccountKey extractAccountKey(HttpServletRequest request, AccountsDao dao) {

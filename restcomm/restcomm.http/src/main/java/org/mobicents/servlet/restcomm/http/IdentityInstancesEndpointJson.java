@@ -20,9 +20,8 @@
 
 package org.mobicents.servlet.restcomm.http;
 
-import com.google.gson.Gson;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
-import org.mobicents.servlet.restcomm.identity.exceptions.InitialAccessTokenExpired;
+import org.apache.commons.lang.NotImplementedException;
+import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -45,7 +44,7 @@ public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
      * @return
      */
     @POST
-    public Response registerIdentityInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl, @FormParam("KeycloakBaseUrl") String keycloakBaseUrl) throws InitialAccessTokenExpired {
+    public Response registerIdentityInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl, @FormParam("KeycloakBaseUrl") String keycloakBaseUrl) throws AuthServerAuthorizationError {
         return registerIdentityInstanceWithIAT(initialAccessToken, redirectUrl, keycloakBaseUrl);
     }
 
@@ -56,17 +55,7 @@ public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
      */
     @GET
     public Response getIdentityInstances() {
-        return Response.ok().build();
-    }
-
-    /**
-     * Returns a single Identity Instance. Only (super) administrators can access this.
-     * @return
-     */
-    @Path("/{identityInstanceSid}")
-    @GET
-    public Response getIdentityInstanceBySid() {
-        return Response.ok().build();
+        throw new NotImplementedException();
     }
 
     /**
@@ -83,7 +72,16 @@ public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
     @GET
     @Path("/current")
     public Response getCurrentIdentityInstance() {
-        return Response.ok().build();
+        return super.getCurrentIdentityInstance();
+    }
+    /**
+     * Returns a single Identity Instance. Only (super) administrators can access this.
+     * @return
+     */
+    @Path("/{identityInstanceSid}")
+    @GET
+    public Response getIdentityInstanceBySid() {
+        throw new NotImplementedException();
     }
 
     /**
@@ -95,6 +93,6 @@ public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
     @DELETE
     @Path("/{identityInstanceSid}")
     public Response unregisterIdentityInstance(@PathParam("sid") String identityInstanceSid) {
-        return Response.ok().build();
+        throw new NotImplementedException();
     }
 }

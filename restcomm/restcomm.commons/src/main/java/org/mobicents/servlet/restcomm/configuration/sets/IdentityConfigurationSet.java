@@ -1,7 +1,7 @@
 package org.mobicents.servlet.restcomm.configuration.sets;
 
 /**
- * Created by otsakir on 12/10/15.
+ * @author Orestis Tsakiridis
  */
 public interface IdentityConfigurationSet {
 

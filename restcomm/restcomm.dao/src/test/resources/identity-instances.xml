@@ -25,12 +25,19 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.IdentityInstancesDao">
     <insert id="addIdentityInstance" parameterType="map">
-        INSERT INTO "restcomm_identity_instances" ("sid", "organization_sid", "name", "date_created", "date_updated", "restcomm_rest_rat", "restcomm_rest_last_registration_date", "restcomm_rest_status")
-        VALUES(#{sid}, #{organization_sid}, #{name}, #{date_created}, #{date_updated}, #{restcomm_rest_rat}, #{restcomm_rest_last_registration_date}, #{restcomm_rest_status})
+        INSERT INTO "restcomm_identity_instances" ("sid", "organization_sid", "name", "date_created", "date_updated", "restcomm_rest_rat", "restcomm_rest_last_registration_date", "restcomm_rest_status", "restcomm_rest_client_secret")
+        VALUES(#{sid}, #{organization_sid}, #{name}, #{date_created}, #{date_updated}, #{restcomm_rest_rat}, #{restcomm_rest_last_registration_date}, #{restcomm_rest_status}, #{restcomm_rest_client_secret})
     </insert>
 
     <select id="getIdentityInstance" parameterType="string" resultType="hashmap">
         SELECT * FROM "restcomm_identity_instances" WHERE "sid"=#{sid};
     </select>
 
+    <select id="getIdentityInstanceByOrganizationSid" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_identity_instances" WHERE "organization_sid"=#{organization_sid};
+    </select>
+
+    <select id="getIdentityInstanceByName" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_identity_instances" WHERE "name"=#{name};
+    </select>
 </mapper>

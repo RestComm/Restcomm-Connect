@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
@@ -46,6 +47,7 @@ public abstract class AbstractEndpoint {
     protected Logger logger = Logger.getLogger(AbstractEndpoint.class);
     private String defaultApiVersion;
     protected Configuration configuration;
+    protected RestcommConfiguration newConfiguration;
     protected String baseRecordingsPath;
     @Context
     protected ServletContext context;
@@ -60,6 +62,7 @@ public abstract class AbstractEndpoint {
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
         defaultApiVersion = configuration.getString("api-version");
+        newConfiguration = RestcommConfiguration.getInstance();
     }
 
     protected String getApiVersion(final MultivaluedMap<String, String> data) {
@@ -120,7 +123,7 @@ public abstract class AbstractEndpoint {
      * For now it returns a hardcoded value that is required by SSO identity instances.
      */
     protected Sid getCurrentOrganizationSid() {
-        return Sid.generate(Sid.Type.ORGANIZATION, "ORxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        return new Sid("OR00000000000000000000000000000000");
     }
 
 /*
