@@ -1,4 +1,3 @@
-
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2016, Telestax Inc and individual contributors
@@ -19,36 +18,25 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd.restcomm;
+package org.mobicents.servlet.restcomm.rvd.security;
 
 /**
- * A reduced entity for a Restcomm Account. It contains only the properties that make
- * sense and are used by RVD.
- *
+ * @author Orestis Tsakiridis
  */
-public class RestcommAccountInfoResponse {
-    String sid;
-    String friendly_name;
-    String email_address;
-    String status;
+public class BasicAuthCredentials {
+    String username;
+    String password;
 
-    public RestcommAccountInfoResponse() {
-        // TODO Auto-generated constructor stub
+    public BasicAuthCredentials(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
-    public String getSid() {
-        return sid;
+    public String getUsername() {
+        return username;
     }
 
-    public String getFriendly_name() {
-        return friendly_name;
-    }
-
-    public String getEmail_address() {
-        return email_address;
-    }
-
-    public String getStatus() {
-        return status;
+    public String getPassword() {
+        return password;
     }
 }

@@ -76,10 +76,11 @@ public class AuthenticationService {
             }
             Gson gson = new Gson();
             RestcommAccountInfoResponse accountInfo = gson.fromJson(reader, RestcommAccountInfoResponse.class);
-            return accountInfo;
-        } else {
-            return null;
+            if (accountInfo.getStatus().equalsIgnoreCase("active")) {
+                return accountInfo;
+            }
         }
+        return null;
     }
 
     public String getAuthenticationToken() {
