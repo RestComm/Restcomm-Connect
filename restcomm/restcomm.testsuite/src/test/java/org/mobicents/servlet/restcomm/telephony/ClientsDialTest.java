@@ -447,6 +447,7 @@ public class ClientsDialTest {
               pstnTest = "+" + pstnTest.substring(0, numLength); 
         }
         
+        
         // Initiate a call to sip:pstnNumber@127.0.0.1:5070
         final SipCall mariaCall = mariaPhone.createSipCall();
         mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnTest+"@127.0.0.1:5070" , null, body, "application", "sdp", null, null);
