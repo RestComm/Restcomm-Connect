@@ -1,4 +1,3 @@
-
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2016, Telestax Inc and individual contributors
@@ -19,36 +18,22 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd.restcomm;
+package org.mobicents.servlet.restcomm.rvd.upgrade;
+
+import com.google.gson.JsonElement;
 
 /**
- * A reduced entity for a Restcomm Account. It contains only the properties that make
- * sense and are used by RVD.
- *
+ * @author Orestis Tsakiridis
  */
-public class RestcommAccountInfoResponse {
-    String sid;
-    String friendly_name;
-    String email_address;
-    String status;
-
-    public RestcommAccountInfoResponse() {
-        // TODO Auto-generated constructor stub
+public class ProjectUpgraded11to12 implements ProjectUpgrader {
+    @Override
+    public JsonElement upgrade(JsonElement sourceElement) {
+        // only version fields needs upgrade from 1.1 to 1.2
+        return ProjectUpgrader10to11.setVersion(sourceElement, getResultingVersion());
     }
 
-    public String getSid() {
-        return sid;
-    }
-
-    public String getFriendly_name() {
-        return friendly_name;
-    }
-
-    public String getEmail_address() {
-        return email_address;
-    }
-
-    public String getStatus() {
-        return status;
+    @Override
+    public String getResultingVersion() {
+        return "1.2";
     }
 }
