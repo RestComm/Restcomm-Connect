@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.configuration.sets;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
@@ -8,14 +7,14 @@ public class IdentityConfigurationSetImpl extends ConfigurationSetImpl implement
     private static Logger logger = Logger.getLogger(IdentityConfigurationSetImpl.class);
 
     // identity connectivity keys
-    public static final String AUTH_SERVER_URL_KEY = "identity.auth-server-base-url";
+    public static final String AUTH_SERVER_URL_KEY = "identity.auth-server-url";
     public static final String REALM_KEY = "identity.realm";
     public static final String REALM_KEY_KEY = "identity.realm-public-key";
 
     // identity connectivity variables
-    private final String authServerUrl;
-    private final String realm;
-    private final String realmkey;
+    private String authServerUrl;
+    private String realm;
+    private String realmkey;
 
     // other static stuff to keep them all in a single place
     public static final String ADMINISTRATOR_ROLE = "Administrator";

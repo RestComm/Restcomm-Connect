@@ -28,7 +28,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.identity.entities.ClientEntity;
-import org.mobicents.servlet.restcomm.identity.exceptions.InitialAccessTokenExpired;
+import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 
 import javax.ws.rs.core.MediaType;
 
@@ -57,7 +57,7 @@ public class IdentityRegistrationTool {
         this.realm = realm;
     }
 
-    public IdentityInstance registerInstanceWithIAT(String iat, String[] redirectUrls, String restcommClientSecret) throws InitialAccessTokenExpired {
+    public IdentityInstance registerInstanceWithIAT(String iat, String[] redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError {
         String instanceName = generateName();
         ClientEntity restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
         ClientEntity restcommUiClient = registerRestcommUiClient(instanceName,iat,null,restcommClientSecret,false,true);
@@ -89,23 +89,23 @@ public class IdentityRegistrationTool {
         return UUID.randomUUID().toString().split("-")[0];
     }
 
-    ClientEntity registerRestcommRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws InitialAccessTokenExpired {
+    ClientEntity registerRestcommRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
         return registerClient(instanceName + "-" + RESTCOMM_REST_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRestcommUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws InitialAccessTokenExpired {
+    ClientEntity registerRestcommUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
         return registerClient(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRvdRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws InitialAccessTokenExpired {
+    ClientEntity registerRvdRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
         return registerClient(instanceName + "-" + RVD_REST_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRvdUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws InitialAccessTokenExpired {
+    ClientEntity registerRvdUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
         return registerClient(instanceName + "-" + RVD_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerClient(String clientId, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws InitialAccessTokenExpired {
+    ClientEntity registerClient(String clientId, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
         // create the Keycloak Client entity (not related to the jersey client class)
         Client jersey = Client.create();
         WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl());
@@ -126,7 +126,7 @@ public class IdentityRegistrationTool {
             return createdClient;
         } else
         if (response.getStatus() == 403){
-            throw new InitialAccessTokenExpired("Cannot create keycloak Client " + repr.getClientId());
+            throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
         }
 
         return null;

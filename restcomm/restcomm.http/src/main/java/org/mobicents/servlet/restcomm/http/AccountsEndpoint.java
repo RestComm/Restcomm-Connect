@@ -43,10 +43,8 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
-import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
-import org.mobicents.servlet.restcomm.configuration.sets.MutableIdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
@@ -144,6 +142,7 @@ public abstract class AccountsEndpoint extends AccountsEndpointBase {
 //        return account;
 //    }
 
+    // TODO clear 404 semantics. Maybe it should be returned only if an account does not really exist in order to make right decisions on the client
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         try {
             secure();
@@ -159,15 +158,8 @@ public abstract class AccountsEndpoint extends AccountsEndpointBase {
                     return status(NOT_FOUND).build();
                 }
 
-            } else { // If not, try to load by FriendlyName, email etc.
-                try {
-                    account = accountsDao.getAccount(accountSid);
-                    if ( account == null )
-                        account = handleMissingAccount(accountSid, getKeycloakAccessToken());
-                    sid = account.getSid();
-                } catch (Exception e) {
-                    return status(NOT_FOUND).build();
-                }
+            } else {
+               return status(NOT_FOUND).build(); // TODO here we should return 400 - BAD_PARAMS
             }
 
             if (account == null) {

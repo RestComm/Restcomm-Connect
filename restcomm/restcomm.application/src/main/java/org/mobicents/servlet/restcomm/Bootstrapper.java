@@ -21,9 +21,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
 import org.apache.log4j.Logger;
-import org.mobicents.servlet.restcomm.configuration.DatabaseConfigurationSource;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sources.ApacheConfigurationSource;
@@ -31,7 +29,6 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
-import org.mobicents.servlet.restcomm.identity.configuration.RvdConfigurationUpdateListener;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
@@ -242,7 +239,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return context.getContextPath();
     }
 
-    private RestcommConfiguration initRestcommConfiguration(Configuration xml, DaoManager daoManager, ServletContext servletContext) {
+    private RestcommConfiguration initRestcommConfiguration(Configuration xml) {
         RestcommConfiguration config = RestcommConfiguration.createOnce();
         ApacheConfigurationSource apacheSource = new ApacheConfigurationSource(xml);
         config.addConfigurationSet("main", new MainConfigurationSet(apacheSource));
@@ -254,11 +251,6 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         // RvdConfigurationUpdateListener rvdListener = new RvdConfigurationUpdateListener(servletContext,identityConfig);
 
         return config;
-    }
-
-    // initialize Identity Context
-    private void initIdentityContext(IdentityConfigurationSet conf, DaoManager daoManager, ServletContext servletContext ) {
-        IdentityContext identityContext = new IdentityContext(conf.getRealm(), conf.getRealmkey(), conf.getAuthServerUrl(), );
     }
 
     @Override
@@ -300,9 +292,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
-            RestcommConfiguration restcommConfig = initRestcommConfiguration(xml, storage, context);
+            RestcommConfiguration restcommConfig = initRestcommConfiguration(xml);
             // Initialize identityContext
-            IdentityContext identityContext = new IdentityContext(restcommConfig.getIdentity(),restcommConfig.getMutableIdentity(), new RestcommRoles(xml));
+            IdentityContext identityContext = new IdentityContext(restcommConfig.getIdentity().getRealm(), restcommConfig.getIdentity().getRealmkey(), restcommConfig.getIdentity().getAuthServerUrl(), new RestcommRoles(xml), storage.getIdentityInstancesDao() );
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
             // Create the media gateway.

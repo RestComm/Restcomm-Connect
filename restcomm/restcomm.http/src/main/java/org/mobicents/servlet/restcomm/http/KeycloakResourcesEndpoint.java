@@ -31,7 +31,7 @@ public class KeycloakResourcesEndpoint extends SecuredEndpoint {
     private void init() {
         //this.mutableIdentityConfig = RestcommConfiguration.getInstance().getMutableIdentity();
         this.identityConfig = RestcommConfiguration.getInstance().getIdentity();
-        this.confBuilder = new KeycloakConfigurationBuilder(identityConfig.getRealm(), identityConfig.getRealmkey(), identityConfig.getAuthServerUrl(), getIdentityInstance().getName(), getIdentityInstance().getRestcommRestClientSecret());
+        this.confBuilder = new KeycloakConfigurationBuilder(identityConfig.getRealm(), identityConfig.getRealmkey(), identityConfig.getAuthServerUrl(), getActiveIdentityInstance().getName(), getActiveIdentityInstance().getRestcommRestClientSecret());
     }
 
     @GET
