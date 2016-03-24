@@ -109,7 +109,7 @@
 	"dialStepConferenceMaxTooltip": "The maximum number of participants allowed in the conference",
 	"dialStepConferenceMaxLabel": "Max participants",
 	"dialStepConferenceMaxPlaceholder": "3",
-	"dialStepSipUriInputLabel": "sip:",
+	"dialStepSipUriInputLabel": "Sip URI",
 	"dialStepSipUriInputPlaceholder": "sip:thomas@127.0.0.1:5080",
 	"dialStepSipUriInputTooltip": "Dial to SIP URI",
 	"dialStepContinueTooltip": "Choose the module to continue to after the end of the call. 'core_DialCallStatus', 'core_DialCallSid', 'core_DialCallDuration' and 'core_RecordingUrl' (if Recording is enabled) variables will be available.",
