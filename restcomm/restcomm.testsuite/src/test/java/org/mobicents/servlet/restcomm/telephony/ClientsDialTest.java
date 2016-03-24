@@ -421,6 +421,70 @@ public class ClientsDialTest {
         //        assertTrue(georgeCall.respondToDisconnect());
     }
 
+    // Non regression test for issue #600. Restcomm redirects to the number in format "+1234567". 
+    // For exampe, if dial 1234567 Restcomm will redirect to +1234567. 
+    @Test
+    public void testClientDialToNumber() throws ParseException, InterruptedException, InvalidArgumentException {
+
+        assertNotNull(mariaRestcommClientSid);
+        assertNotNull(dimitriRestcommClientSid);
+        
+        String pstnTest = "123456789";
+        // Register Maria Restcomm client 
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 14400, 3600));
+        Thread.sleep(3000);
+        
+        Credential c = new Credential("127.0.0.1", "maria", "1234");
+        mariaPhone.addUpdateCredential(c);
+
+        Thread.sleep(1000);
+        
+        // Check if the first character of the PSTN is number. If yes, add "+" to the string,
+        // so a number in format +123456789 is called
+        if(Character.isDigit(pstnTest.charAt(0))){  
+              int numLength=pstnTest.length();
+              pstnTest = "+" + pstnTest.substring(0, numLength); 
+        }
+        
+        // Initiate a call to sip:pstnNumber@127.0.0.1:5070
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnTest+"@127.0.0.1:5070" , null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
+
+        // Prepare client to receive call
+        SipPhone newSipPhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+pstnTest+"@127.0.0.1:5070");
+        final SipCall georgeCall = newSipPhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        georgeCall.waitForIncomingCall(5 * 1000);
+        georgeCall.sendIncomingCallResponse(Response.RINGING, "RINGING-George", 3600);
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
+
+        
+        if (responseMaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(mariaCall.sendInviteOkAck());
+
+        Thread.sleep(3000);
+        georgeCall.listenForDisconnect();
+        assertTrue(mariaCall.disconnect());
+        
+    }
+
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
