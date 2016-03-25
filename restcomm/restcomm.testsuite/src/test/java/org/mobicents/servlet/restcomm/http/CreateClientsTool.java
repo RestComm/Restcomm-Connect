@@ -1,7 +1,6 @@
 package org.mobicents.servlet.restcomm.http;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,28 +60,27 @@ public class CreateClientsTool {
     }
 
     private String getClientUrl(String deploymentUrl, JsonObject account, Boolean xml) {
-      if (deploymentUrl.endsWith("/")) {
-          deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-      }
-      StringBuffer curlCommand = new StringBuffer("http://");
-      curlCommand.append(account.get("sid"));
-      curlCommand.append(":");
-      curlCommand.append(account.get("auth_token"));
-      curlCommand.append(deploymentUrl.replace("http://", "@"));
-      //StringBuffer curlCommand = new StringBuffer(deploymentUrl);
-      curlCommand.append("/2012-04-24/Accounts/").append(account.get("sid"));
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+        StringBuffer curlCommand = new StringBuffer("http://");
+        curlCommand.append(account.get("sid"));
+        curlCommand.append(":");
+        curlCommand.append(account.get("auth_token"));
+        curlCommand.append(deploymentUrl.replace("http://", "@"));
+        curlCommand.append("/2012-04-24/Accounts/").append(account.get("sid"));
 
-      if(xml){
-          curlCommand.append("/Clients");
-      } else {
-          curlCommand.append("/Clients.json");
-      }
+        if (xml) {
+            curlCommand.append("/Clients");
+        } else {
+            curlCommand.append("/Clients.json");
+        }
 
-      return curlCommand.toString().replace("\"", "");
+        return curlCommand.toString().replace("\"", "");
     }
 
-    public JsonObject getClientOfAccount(String deploymentUrl, JsonObject account,
-                                         String credentialUsername, String credentialPassword) {
+    public JsonObject getClientOfAccount(String deploymentUrl, JsonObject account, String credentialUsername,
+            String credentialPassword) {
         String url = getClientUrl(deploymentUrl, account);
         JsonObject jsonResponse = null;
         String authToken = getAuthorizationToken(credentialUsername, credentialPassword);
@@ -102,20 +100,19 @@ public class CreateClientsTool {
             }
 
             httpGet.releaseConnection();
-        }catch (ClientProtocolException e){
+        } catch (ClientProtocolException e) {
             e.printStackTrace();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return jsonResponse;
     }
-    
+
     public void updateClientVoiceUrl(String deploymentUrl, JsonObject account, String clientSid, String voiceUrl,
-            String credentialUsername, String credentialPassword) 
-            throws ClientProtocolException, IOException{
+            String credentialUsername, String credentialPassword) throws ClientProtocolException, IOException {
         String url = getClientUrl(deploymentUrl, account);
         String clientUrl = url.replace("Clients.json", "Clients/" + clientSid);
-        
+
         String authToken = getAuthorizationToken(credentialUsername, credentialPassword);
         HttpClient httpclient = new DefaultHttpClient();
         HttpPost httpPost = new HttpPost(clientUrl);
@@ -123,7 +120,7 @@ public class CreateClientsTool {
         List<NameValuePair> nvps = new ArrayList<NameValuePair>();
         if (voiceUrl != null)
             nvps.add(new BasicNameValuePair("VoiceUrl", voiceUrl));
-        
+
         httpPost.setEntity(new UrlEncodedFormEntity(nvps));
         HttpResponse response = httpclient.execute(httpPost);
         System.out.println("Response: \n" + response.toString());
@@ -139,6 +136,7 @@ public class CreateClientsTool {
                 + "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json";
 
         String clientSid = null;
+
         HttpClient httpclient = new DefaultHttpClient();
 
         HttpPost httpPost = new HttpPost(url);
