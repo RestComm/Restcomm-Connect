@@ -50,4 +50,7 @@ Continuous Integration and Delivery
 
 Acknowledgements
 ========
+Java Profiler sponsored by YourKit 
+[![YourKit The Industry Leader in .NET & Java Profiling](https://www.yourkit.com/images/yk_logo.png)](https://www.yourkit.com/)
+
 [See who has been contributing to RestComm](http://www.telestax.com/opensource/acknowledgments/)
