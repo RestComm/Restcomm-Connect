@@ -54,6 +54,7 @@ configRestcomm() {
 	fi
 
 	if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
+                        # JH don't know what an active proxy is; assume i don't need to do anything here.
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
@@ -67,16 +68,46 @@ configRestcomm() {
 
 	else
 		if [ -n "$static_address" ]; then
-			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
-			-e "s|<external-address>.*<\/external-address>|<external-address>$ms_external_address<\/external-address>|" \
- 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$ms_external_address<\/external-address>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|" \
-			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
-			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+                        #  JH. Use absolute URLs containing the Static (Public) address. Add recordings-uri. How does
+                        # recordings-path fit into this? I'm leaving <recordngs-path> in there as a reminder until I get an answer.
+			# Also need to get rid of open lines.
+                        if [ -n $HTTP_DISABLED ]; then
+                                # JH. URIs using HTTPS
+                                sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
+                                -e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+
+                                -e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http://${static_address}:8443/restcomm/audio<\/prompts-uri>|" \
+                                -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http://${static_address}:8443/restcomm/cache<\/cache-uri>|" \
+                                -e "s|<recordings-uri>.*<\/recordings-uri>|<recordings-uri>http://${static_address}:8443/restcomm/recordings<\/recordings-uri>|" \
+
+ <recordings-path>file://${restcomm:home}/recordings</recordings-path>
+
+                                -e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
+                                -e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
+                                -e "s|<external-address>.*<\/external-address>|<external-address>$static_address<\/external-address>|" \
+                                -e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$static_address<\/external-address>|" \
+                                -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|" \
+                                -e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
+                                -e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+                        else
+                                # JH. URIs using HTTP. Add recordings-uri
+                                sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
+                                -e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
+
+                                -e "s|<prompts-uri>.*<\/prompts-uri>|<prompts-uri>http://${static_address}:8080/restcomm/audio<\/prompts-uri>|" \
+                                -e "s|<cache-uri>.*<\/cache-uri>|<cache-uri>http://${static_address}:8080/restcomm/cache<\/cache-uri>|" \
+                                -e "s|<recordingss-uri>.*<\/recordings-uri>|<recordings-uri>http://${static_address}:8080/restcomm/recordings<\/recordings-uri>|" \
+
+                                -e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
+                                -e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
+                                -e "s|<external-address>.*<\/external-address>|<external-address>$static_address<\/external-address>|" \
+                                -e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$static_address<\/external-address>|" \
+                                -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|" \
+                                -e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
+                                -e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+                        fi
 		else
+                        # JH.  No static address; use relative URLs   ??? What's that mean??? On the same system, "file://"??  Does anything need to be done here?
 			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
 			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
 			-e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
