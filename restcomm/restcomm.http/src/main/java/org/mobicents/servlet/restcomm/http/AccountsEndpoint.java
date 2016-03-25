@@ -32,7 +32,6 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -310,15 +309,6 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     }
 
     private Account update(final Account account, final MultivaluedMap<String, String> data) {
-        System.out.println("Data Size: " + data.size() + "\n Data: ");
-        Iterator<List<String>> i = data.values().iterator();
-        while (i.hasNext()) {
-            List<String> entries = i.next();
-            for (int j = 0; j < entries.size(); j++) {
-                System.out.println(entries.get(j));
-            }
-        }
-
         Account result = account;
         if (data.containsKey("FriendlyName")) {
             result = result.setFriendlyName(data.getFirst("FriendlyName"));
@@ -357,9 +347,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                     String email = account.getEmailAddress();
                     if (email != null && !email.equals("")) {
                         String username = email.split("@")[0];
-                        System.out.println("Client username: " + username);
                         Client client = clientDao.getClient(username);
-                        // System.out.println(client.getPassword());
                         if (client != null) {
                             // TODO: need to encrypt this password because it's
                             // same with Account password.
@@ -367,9 +355,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                             if (data.containsKey("Password")) {
                                 // Md5Hash(data.getFirst("Password")).toString();
                                 String password = data.getFirst("Password");
-                                System.out.println("Data pass: " + data.getFirst("Password"));
                                 client = client.setPassword(password);
-                                System.out.println("Client pass: " + client.getPassword());
                             }
 
                             if (data.containsKey("FriendlyName")) {

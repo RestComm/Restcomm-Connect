@@ -123,7 +123,6 @@ public class CreateClientsTool {
 
         httpPost.setEntity(new UrlEncodedFormEntity(nvps));
         HttpResponse response = httpclient.execute(httpPost);
-        System.out.println("Response: \n" + response.toString());
         httpPost.releaseConnection();
     }
 

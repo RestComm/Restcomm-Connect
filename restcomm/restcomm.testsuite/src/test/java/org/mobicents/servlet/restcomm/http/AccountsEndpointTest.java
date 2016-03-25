@@ -109,7 +109,7 @@ public class AccountsEndpointTest {
         JsonObject clientOfAccount = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
                 subAccountResponse, adminUsername, newAdminPassword);
         assertNotNull(clientOfAccount);
-        System.out.println(clientOfAccount);
+
         CreateClientsTool.getInstance().updateClientVoiceUrl(deploymentUrl.toString(), subAccountResponse,
                 clientOfAccount.get("sid").getAsString(), "http://127.0.0.1:8080/restcomm/demos/welcome.xml",
                 adminUsername, newAdminPassword);
@@ -128,7 +128,7 @@ public class AccountsEndpointTest {
             SipPhone thinhPhone = thinhSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, thinhContact);
 
             SipURI reqUri = thinhSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-            System.out.println(reqUri.toString());
+            
             assertTrue(thinhPhone.register(reqUri, "lyhungthinh", subAccountPassword, thinhContact, 1800, 1800));
             assertTrue(thinhPhone.unregister(thinhContact, 0));
 
