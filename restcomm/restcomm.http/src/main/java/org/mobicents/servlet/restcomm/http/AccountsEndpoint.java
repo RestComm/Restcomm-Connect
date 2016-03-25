@@ -32,6 +32,7 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -107,7 +108,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         final DateTime now = DateTime.now();
         final String emailAddress = data.getFirst("EmailAddress");
 
-        // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
+        // Issue 108:
+        // https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
         final Sid sid = Sid.generate(Sid.Type.ACCOUNT, emailAddress);
 
         String friendlyName = emailAddress;
@@ -197,7 +199,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
         dao.removeAccount(sidToBeRemoved);
 
-        //Remove its SIP client account
+        // Remove its SIP client account
         clientDao.removeClients(sidToBeRemoved);
 
         return ok().build();
@@ -283,9 +285,10 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     private Client createClientFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
         final Client.Builder builder = Client.builder();
         final Sid sid = Sid.generate(Sid.Type.CLIENT);
-        //TODO: need to encrypt this password because it's same with Account password.
+        // TODO: need to encrypt this password because it's same with Account
+        // password.
         // Don't implement now. Opened another issue for it.
-        //String password = new Md5Hash(data.getFirst("Password")).toString();
+        // String password = new Md5Hash(data.getFirst("Password")).toString();
         String password = data.getFirst("Password");
 
         builder.setSid(sid);
@@ -305,6 +308,15 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     }
 
     private Account update(final Account account, final MultivaluedMap<String, String> data) {
+        System.out.println("Data Size: " + data.size() + "\n Data: ");
+        Iterator<List<String>> i = data.values().iterator();
+        while (i.hasNext()) {
+            List<String> entries = i.next();
+            for (int j = 0; j < entries.size(); j++) {
+                System.out.println(entries.get(j));
+            }
+        }
+
         Account result = account;
         if (data.containsKey("FriendlyName")) {
             result = result.setFriendlyName(data.getFirst("FriendlyName"));
@@ -335,23 +347,34 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             final Subject subject = SecurityUtils.getSubject();
             try {
                 if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
-                        || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
+                        || (subject.getPrincipal().equals(accountSid)
+                                && subject.isPermitted("RestComm:Modify:Accounts"))) {
                     dao.updateAccount(account);
 
                     // Update SIP client of the corresponding Account
-                    MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
-                    String username = data.getFirst("EmailAddress").split("@")[0];
-                    Client client = clientDao.getClient(username);
-                    if (client != null) {
-                        //TODO: need to encrypt this password because it's same with Account password.
-                        // Don't implement now. Opened another issue for it.
-                        //String password = new Md5Hash(data.getFirst("Password")).toString();
-                        String password = data.getFirst("Password");
-                        client.setPassword(password);
-                        if (data.containsKey("FriendlyName")) {
-                            client.setFriendlyName(data.getFirst("FriendlyName"));
+                    String email = account.getEmailAddress();
+                    if (email != null && !email.equals("")) {
+                        String username = email.split("@")[0];
+                        System.out.println("Client username: " + username);
+                        Client client = clientDao.getClient(username);
+                        // System.out.println(client.getPassword());
+                        if (client != null) {
+                            // TODO: need to encrypt this password because it's
+                            // same with Account password.
+                            // Don't implement now. Opened another issue for it.
+                            if (data.containsKey("Password")) {
+                                // Md5Hash(data.getFirst("Password")).toString();
+                                String password = data.getFirst("Password");
+                                System.out.println("Data pass: " + data.getFirst("Password"));
+                                client = client.setPassword(password);
+                                System.out.println("Client pass: " + client.getPassword());
+                            }
+
+                            if (data.containsKey("FriendlyName")) {
+                                client = client.setFriendlyName(data.getFirst("FriendlyName"));
+                            }
+                            clientDao.updateClient(client);
                         }
-                        clientDao.updateClient(client);
                     }
                 } else {
                     return status(UNAUTHORIZED).build();

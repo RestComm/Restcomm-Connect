@@ -48,11 +48,22 @@ public class RestcommAccountsTool {
         return accountsUrl;
     }
 
-    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password, String accountSid, String status) {
+    public void removeAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid){
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
-        String url = getAccountsUrl(deploymentUrl,true) + "/"+accountSid+".json";
+        String url = getAccountsUrl(deploymentUrl, true) + "/" + accountSid;
+
+        WebResource webResource = jerseyClient.resource(url);   
+        webResource.accept(MediaType.APPLICATION_JSON).delete();
+    }
+    
+    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
+            String password, String accountSid, String status) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String url = getAccountsUrl(deploymentUrl, true) + "/" + accountSid + ".json";
 
         WebResource webResource = jerseyClient.resource(url);
 
