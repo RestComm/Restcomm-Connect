@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm.http;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -67,6 +69,7 @@ public class CreateClientsTool {
       curlCommand.append(":");
       curlCommand.append(account.get("auth_token"));
       curlCommand.append(deploymentUrl.replace("http://", "@"));
+      //StringBuffer curlCommand = new StringBuffer(deploymentUrl);
       curlCommand.append("/2012-04-24/Accounts/").append(account.get("sid"));
 
       if(xml){
@@ -78,11 +81,11 @@ public class CreateClientsTool {
       return curlCommand.toString().replace("\"", "");
     }
 
-    public JsonObject getClientOfAccount(String deploymentUrl, JsonObject account) {
+    public JsonObject getClientOfAccount(String deploymentUrl, JsonObject account,
+                                         String credentialUsername, String credentialPassword) {
         String url = getClientUrl(deploymentUrl, account);
         JsonObject jsonResponse = null;
-        String authToken = getAuthorizationToken(account.get("email_address").toString(),
-                                                   account.get("auth_token").toString());
+        String authToken = getAuthorizationToken(credentialUsername, credentialPassword);
 
         try {
             HttpClient httpclient = new DefaultHttpClient();
@@ -94,7 +97,8 @@ public class CreateClientsTool {
                 HttpEntity entity = response.getEntity();
                 String res = EntityUtils.toString(entity);
                 JsonParser parser = new JsonParser();
-                jsonResponse = parser.parse(res).getAsJsonObject();
+                JsonArray jArray = parser.parse(res).getAsJsonArray();
+                jsonResponse = jArray.get(0).getAsJsonObject();
             }
 
             httpGet.releaseConnection();
@@ -104,6 +108,26 @@ public class CreateClientsTool {
             e.printStackTrace();
         }
         return jsonResponse;
+    }
+    
+    public void updateClientVoiceUrl(String deploymentUrl, JsonObject account, String clientSid, String voiceUrl,
+            String credentialUsername, String credentialPassword) 
+            throws ClientProtocolException, IOException{
+        String url = getClientUrl(deploymentUrl, account);
+        String clientUrl = url.replace("Clients.json", "Clients/" + clientSid);
+        
+        String authToken = getAuthorizationToken(credentialUsername, credentialPassword);
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httpPost = new HttpPost(clientUrl);
+        httpPost.addHeader("Authorization", "Basic " + authToken);
+        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+        if (voiceUrl != null)
+            nvps.add(new BasicNameValuePair("VoiceUrl", voiceUrl));
+        
+        httpPost.setEntity(new UrlEncodedFormEntity(nvps));
+        HttpResponse response = httpclient.execute(httpPost);
+        System.out.println("Response: \n" + response.toString());
+        httpPost.releaseConnection();
     }
 
     public String createClient(String deploymentUrl, String username, String password, String voiceUrl)
@@ -115,7 +139,6 @@ public class CreateClientsTool {
                 + "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json";
 
         String clientSid = null;
-        System.out.println("*** URL: " + url);
         HttpClient httpclient = new DefaultHttpClient();
 
         HttpPost httpPost = new HttpPost(url);
