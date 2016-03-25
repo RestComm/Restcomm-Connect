@@ -68,6 +68,7 @@ import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author lyhungthinh@gmail.com (Thinh Ly) - Fix issue #784
  */
 public abstract class AccountsEndpoint extends AbstractEndpoint {
     @Context
@@ -285,6 +286,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     private Client createClientFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
         final Client.Builder builder = Client.builder();
         final Sid sid = Sid.generate(Sid.Type.CLIENT);
+
         // TODO: need to encrypt this password because it's same with Account
         // password.
         // Don't implement now. Opened another issue for it.

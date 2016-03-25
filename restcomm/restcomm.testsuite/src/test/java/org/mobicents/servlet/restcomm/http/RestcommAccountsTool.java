@@ -12,6 +12,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author <a href="mailto:lyhungthinh@gmail.com">Thinh Ly</a>
  */
 
 public class RestcommAccountsTool {
@@ -35,31 +36,31 @@ public class RestcommAccountsTool {
     }
 
     private String getAccountsUrl(String deploymentUrl, Boolean xml) {
-//        if (accountsUrl == null) {
-            if (deploymentUrl.endsWith("/")) {
-                deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-            }
-            if(xml){
-                accountsUrl = deploymentUrl + "/2012-04-24/Accounts";
-            } else {
-                accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
-            }
-//        }
+        // if (accountsUrl == null) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+        if (xml) {
+            accountsUrl = deploymentUrl + "/2012-04-24/Accounts";
+        } else {
+            accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
+        }
+        // }
         return accountsUrl;
     }
 
-    public void removeAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid){
+    public void removeAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
         String url = getAccountsUrl(deploymentUrl, true) + "/" + accountSid;
 
-        WebResource webResource = jerseyClient.resource(url);   
+        WebResource webResource = jerseyClient.resource(url);
         webResource.accept(MediaType.APPLICATION_JSON).delete();
     }
-    
-    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
-            String password, String accountSid, String status) {
+
+    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken,
+            String emailAddress, String password, String accountSid, String status) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
@@ -81,8 +82,8 @@ public class RestcommAccountsTool {
         return jsonResponse;
     }
 
-    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
-            String password) {
+    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken,
+            String emailAddress, String password) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
