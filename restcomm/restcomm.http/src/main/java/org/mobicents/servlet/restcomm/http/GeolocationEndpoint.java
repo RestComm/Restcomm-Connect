@@ -109,7 +109,11 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         try {
-            validate(data);
+            if (geolocationType.toString().equalsIgnoreCase("Immediate")) {
+                validateImmediateGeolocation(data);
+            } else if (geolocationType.toString().equalsIgnoreCase("Notification")) {
+                validateNotificationGeolocation(data);
+            }
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
@@ -129,19 +133,42 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private Geolocation createFrom(final Sid accountSid, final MultivaluedMap<String, String> data,
             Geolocation.GeolocationType glType) {
+        // *** Validation of parameters with specified values *** //
+        if (data.containsKey("GeofenceEvent")) {
+            String geofenceEvent = data.getFirst("GeofenceEvent");
+            if (!geofenceEvent.equalsIgnoreCase("in") && !geofenceEvent.equalsIgnoreCase("out")
+                    && !geofenceEvent.equalsIgnoreCase("in-out")) {
+                final Geolocation.Builder builder = Geolocation.builder();
+                builder.setCause("Incorrect API parameter setup for GeofenceEvent");
+                builder.setResponseStatus("rejected");
+                return buildNokGeolocation(accountSid, data, glType, builder);
+            }
+        }
+        if (data.containsKey("DesiredAccuracy")) {
+            String desiredAccuracy = data.getFirst("DesiredAccuracy");
+            if (!desiredAccuracy.equalsIgnoreCase("High") && !desiredAccuracy.equalsIgnoreCase("Average")
+                    && !desiredAccuracy.equalsIgnoreCase("Low")) {
+                final Geolocation.Builder builder = Geolocation.builder();
+                builder.setCause("Incorrect API parameter setup for DesiredAccuracy");
+                builder.setResponseStatus("rejected");
+                return buildNokGeolocation(accountSid, data, glType, builder);
+            }
+        }
+        Geolocation gl = buildGeolocation(accountSid, data, glType);
+        return gl;
+    }
+
+    private Geolocation buildGeolocation(final Sid accountSid, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType) {
         final Geolocation.Builder builder = Geolocation.builder();
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
         builder.setSid(sid);
         builder.setAccountSid(accountSid);
         builder.setSource(data.getFirst("Source"));
         builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
-        /*
-         * if (data.containsKey("GeolocationType")) {
-         * builder.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType"))); } else {
-         * builder.setGeolocationType(glType); }
-         */
         builder.setGeolocationType(glType);
         builder.setResponseStatus(data.getFirst("ResponseStatus"));
+        builder.setCause(data.getFirst("Cause"));
         builder.setCellId(data.getFirst("CellId"));
         builder.setLocationAreaCode(data.getFirst("LocationAreaCode"));
         builder.setMobileCountryCode(getInteger("MobileCountryCode", data));
@@ -160,7 +187,32 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         builder.setRadius(getLong("Radius", data));
         builder.setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
         builder.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
-        builder.setCause(data.getFirst("Cause"));
+        builder.setApiVersion(getApiVersion(data));
+        String rootUri = configuration.getString("root-uri");
+        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
+                .append("/Geolocation/").append(sid.toString());
+        builder.setUri(URI.create(buffer.toString()));
+        return builder.build();
+    }
+
+    private Geolocation buildNokGeolocation(final Sid accountSid, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType, final Geolocation.Builder builder) {
+        final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
+        builder.setSid(sid);
+        builder.setAccountSid(accountSid);
+        builder.setSource(data.getFirst("Source"));
+        builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
+        builder.setGeolocationType(glType);
+        /*
+         * builder.setCellId(null); builder.setLocationAreaCode(null); builder.setMobileCountryCode(null);
+         * builder.setMobileNetworkCode(null); builder.setNetworkEntityAddress(null); builder.setAgeOfLocationInfo(null);
+         * builder.setDeviceLatitude(null); builder.setDeviceLongitude(null); builder.setAccuracy(null);
+         * builder.setPhysicalAddress(null); builder.setInternetAddress(null); builder.setFormattedAddress(null);
+         * builder.setLocationTimestamp(null); builder.setEventGeofenceLatitude(null); builder.setEventGeofenceLongitude(null);
+         * builder.setRadius(null); builder.setGeolocationPositioningType(null); builder.setLastGeolocationResponse(null);
+         */
         builder.setApiVersion(getApiVersion(data));
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
@@ -270,11 +322,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             result = result.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
         }
 
-        /*
-         * if (data.containsKey("GeolocationType")) { result =
-         * result.setGeolocationType(Geolocation.GeolocationType.getValueOf(data.getFirst("GeolocationType"))); }
-         */
-
         if (data.containsKey("ResponseStatus")) {
             result = result.setResponseStatus(data.getFirst("ResponseStatus"));
         }
@@ -358,11 +405,37 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return result;
     }
 
-    private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
+    private void validateImmediateGeolocation(final MultivaluedMap<String, String> data) throws RuntimeException {
+        // ** Validation of mandatory parameters on Immediate type of Geolocation POST requests **/
         if (!data.containsKey("Source")) {
             throw new NullPointerException("Source can not be null.");
         } else if (!data.containsKey("DeviceIdentifier")) {
             throw new NullPointerException("DeviceIdentifier can not be null.");
+        } else if (!data.containsKey("DesiredAccuracy")) {
+            throw new NullPointerException("DesiredAccuracy can not be null.");
+        } else if (!data.containsKey("StatusCallback")) {
+            throw new NullPointerException("StatusCallback can not be null.");
+        }
+    }
+
+    private void validateNotificationGeolocation(final MultivaluedMap<String, String> data) throws RuntimeException {
+        // ** Validation of mandatory parameters on Notification type of Geolocation POST requests **/
+        if (!data.containsKey("Source")) {
+            throw new NullPointerException("Source can not be null.");
+        } else if (!data.containsKey("DeviceIdentifier")) {
+            throw new NullPointerException("DeviceIdentifier can not be null.");
+        } else if (!data.containsKey("DesiredAccuracy")) {
+            throw new NullPointerException("DesiredAccuracy can not be null.");
+        } else if (!data.containsKey("StatusCallback")) {
+            throw new NullPointerException("StatusCallback can not be null.");
+        } else if (!data.containsKey("EventGeofenceLatitude")) {
+            throw new NullPointerException("EventGeofenceLatitude can not be null.");
+        } else if (!data.containsKey("EventGeofenceLongitude")) {
+            throw new NullPointerException("EventGeofenceLongitude can not be null.");
+        } else if (!data.containsKey("GeofenceRange")) {
+            throw new NullPointerException("GeofenceRange can not be null.");
+        } else if (!data.containsKey("GeofenceEvent")) {
+            throw new NullPointerException("GeofenceEvent can not be null.");
         }
     }
 }
