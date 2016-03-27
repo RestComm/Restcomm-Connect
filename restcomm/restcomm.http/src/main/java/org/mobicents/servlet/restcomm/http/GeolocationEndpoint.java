@@ -43,6 +43,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -139,9 +140,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             if (!geofenceEvent.equalsIgnoreCase("in") && !geofenceEvent.equalsIgnoreCase("out")
                     && !geofenceEvent.equalsIgnoreCase("in-out")) {
                 final Geolocation.Builder builder = Geolocation.builder();
-                builder.setCause("Incorrect API parameter setup for GeofenceEvent");
+                builder.setCause("GeofenceEvent value not API compliant");
                 builder.setResponseStatus("rejected");
-                return buildNokGeolocation(accountSid, data, glType, builder);
+                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
             }
         }
         if (data.containsKey("DesiredAccuracy")) {
@@ -149,11 +150,32 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             if (!desiredAccuracy.equalsIgnoreCase("High") && !desiredAccuracy.equalsIgnoreCase("Average")
                     && !desiredAccuracy.equalsIgnoreCase("Low")) {
                 final Geolocation.Builder builder = Geolocation.builder();
-                builder.setCause("Incorrect API parameter setup for DesiredAccuracy");
+                builder.setCause("DesiredAccuracy value not API compliant");
                 builder.setResponseStatus("rejected");
-                return buildNokGeolocation(accountSid, data, glType, builder);
+                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
             }
         }
+        if (data.containsKey("EventGeofenceLatitude")) {
+            String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
+            Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat);
+            if (!eventGeofenceLatWGS84) {
+                final Geolocation.Builder builder = Geolocation.builder();
+                builder.setCause("EventGeofenceLatitude value not WGS84 compliant");
+                builder.setResponseStatus("rejected");
+                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+            }
+        }
+        if (data.containsKey("EventGeofenceLongitude")) {
+            String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
+            Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
+            if (!eventGeofenceLongWGS84) {
+                final Geolocation.Builder builder = Geolocation.builder();
+                builder.setCause("EventGeofenceLongitude value not WGS84 compliant");
+                builder.setResponseStatus("rejected");
+                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+            }
+        }
+        // *** All parameters with specified values validations passed *** //
         Geolocation gl = buildGeolocation(accountSid, data, glType);
         return gl;
     }
@@ -197,7 +219,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    private Geolocation buildNokGeolocation(final Sid accountSid, final MultivaluedMap<String, String> data,
+    private Geolocation buildDeniedGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
             Geolocation.GeolocationType glType, final Geolocation.Builder builder) {
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
         builder.setSid(sid);
@@ -205,14 +227,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         builder.setSource(data.getFirst("Source"));
         builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
         builder.setGeolocationType(glType);
-        /*
-         * builder.setCellId(null); builder.setLocationAreaCode(null); builder.setMobileCountryCode(null);
-         * builder.setMobileNetworkCode(null); builder.setNetworkEntityAddress(null); builder.setAgeOfLocationInfo(null);
-         * builder.setDeviceLatitude(null); builder.setDeviceLongitude(null); builder.setAccuracy(null);
-         * builder.setPhysicalAddress(null); builder.setInternetAddress(null); builder.setFormattedAddress(null);
-         * builder.setLocationTimestamp(null); builder.setEventGeofenceLatitude(null); builder.setEventGeofenceLongitude(null);
-         * builder.setRadius(null); builder.setGeolocationPositioningType(null); builder.setLastGeolocationResponse(null);
-         */
         builder.setApiVersion(getApiVersion(data));
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
@@ -312,97 +326,85 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private Geolocation update(final Geolocation geolocation, final MultivaluedMap<String, String> data) {
 
-        Geolocation result = geolocation;
+        Geolocation updatedGeolocation = geolocation;
 
+        // *** Validation of already rejected or unauthorized Geolocations ***//
+        if ((geolocation.getResponseStatus() != null && geolocation.getResponseStatus().equalsIgnoreCase("rejected"))
+                || (geolocation.getResponseStatus() != null
+                        && geolocation.getResponseStatus().equalsIgnoreCase("unauthorized"))) {
+            geolocation.setDateUpdated(DateTime.now());
+            return geolocation;
+        }
+
+        // *** Set of parameters with provided data for proper Geolocation update***//
         if (data.containsKey("Source")) {
-            result = result.setSource(data.getFirst("Source"));
+            updatedGeolocation = updatedGeolocation.setSource(data.getFirst("Source"));
         }
-
         if (data.containsKey("DeviceIdentifier")) {
-            result = result.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
+            updatedGeolocation = updatedGeolocation.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
         }
-
         if (data.containsKey("ResponseStatus")) {
-            result = result.setResponseStatus(data.getFirst("ResponseStatus"));
+            updatedGeolocation = updatedGeolocation.setResponseStatus(data.getFirst("ResponseStatus"));
         }
-
         if (data.containsKey("CellId")) {
-            result = result.setCellId(data.getFirst("CellId"));
+            updatedGeolocation = updatedGeolocation.setCellId(data.getFirst("CellId"));
         }
-
         if (data.containsKey("LocationAreaCode")) {
-            result = result.setLocationAreaCode(data.getFirst("LocationAreaCode"));
+            updatedGeolocation = updatedGeolocation.setLocationAreaCode(data.getFirst("LocationAreaCode"));
         }
-
         if (data.containsKey("MobileCountryCode")) {
-            result = result.setMobileCountryCode(getInteger("MobileCountryCode", data));
+            updatedGeolocation = updatedGeolocation.setMobileCountryCode(getInteger("MobileCountryCode", data));
         }
-
         if (data.containsKey("MobileNetworkCode")) {
-            result = result.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
+            updatedGeolocation = updatedGeolocation.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
         }
-
         if (data.containsKey("NetworkEntityAddress")) {
-            result = result.setNetworkEntityAddress(getLong("NetworkEntityAddress", data));
+            updatedGeolocation = updatedGeolocation.setNetworkEntityAddress(getLong("NetworkEntityAddress", data));
         }
-
         if (data.containsKey("LocationAge")) {
-            result = result.setAgeOfLocationInfo(getInteger("LocationAge", data));
+            updatedGeolocation = updatedGeolocation.setAgeOfLocationInfo(getInteger("LocationAge", data));
         }
-
         if (data.containsKey("DeviceLatitude")) {
-            result = result.setDeviceLatitude(data.getFirst("DeviceLatitude"));
+            updatedGeolocation = updatedGeolocation.setDeviceLatitude(data.getFirst("DeviceLatitude"));
         }
-
         if (data.containsKey("DeviceLongitude")) {
-            result = result.setDeviceLongitude(data.getFirst("DeviceLongitude"));
+            updatedGeolocation = updatedGeolocation.setDeviceLongitude(data.getFirst("DeviceLongitude"));
         }
-
         if (data.containsKey("Accuracy")) {
-            result = result.setAccuracy(getLong("Accuracy", data));
+            updatedGeolocation = updatedGeolocation.setAccuracy(getLong("Accuracy", data));
         }
-
         if (data.containsKey("PhysicalAddress")) {
-            result = result.setPhysicalAddress(data.getFirst("PhysicalAddress"));
+            updatedGeolocation = updatedGeolocation.setPhysicalAddress(data.getFirst("PhysicalAddress"));
         }
-
         if (data.containsKey("InternetAddress")) {
-            result = result.setInternetAddress(data.getFirst("InternetAddress"));
+            updatedGeolocation = updatedGeolocation.setInternetAddress(data.getFirst("InternetAddress"));
         }
-
         if (data.containsKey("FormattedAddress")) {
-            result = result.setFormattedAddress(data.getFirst("FormattedAddress"));
+            updatedGeolocation = updatedGeolocation.setFormattedAddress(data.getFirst("FormattedAddress"));
         }
-
         if (data.containsKey("LocationTimestamp")) {
-            result = result.setLocationTimeStamp(getDateTime("LocationTimestamp", data));
+            updatedGeolocation = updatedGeolocation.setLocationTimeStamp(getDateTime("LocationTimestamp", data));
         }
-
         if (data.containsKey("EventGeofenceLatitude")) {
-            result = result.setEventGeofenceLatitude(data.getFirst("EventGeofenceLatitude"));
+            updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude(data.getFirst("EventGeofenceLatitude"));
         }
-
         if (data.containsKey("EventGeofenceLongitude")) {
-            result = result.setEventGeofenceLongitude(data.getFirst("EventGeofenceLongitude"));
+            updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude(data.getFirst("EventGeofenceLongitude"));
         }
-
         if (data.containsKey("Radius")) {
-            result = result.setRadius(getLong("Radius", data));
+            updatedGeolocation = updatedGeolocation.setRadius(getLong("Radius", data));
         }
-
         if (data.containsKey("GeolocationPositioningType")) {
-            result = result.setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
+            updatedGeolocation = updatedGeolocation.setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
         }
-
         if (data.containsKey("LastGeolocationResponse")) {
-            result = result.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
+            updatedGeolocation = updatedGeolocation.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
         }
-
         if (data.containsKey("Cause")) {
-            result = result.setCause(data.getFirst("Cause"));
+            updatedGeolocation = updatedGeolocation.setCause(data.getFirst("Cause"));
         }
-
-        return result;
+        updatedGeolocation.setDateUpdated(DateTime.now());
+        return updatedGeolocation;
     }
 
     private void validateImmediateGeolocation(final MultivaluedMap<String, String> data) throws RuntimeException {
@@ -436,6 +438,28 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             throw new NullPointerException("GeofenceRange can not be null.");
         } else if (!data.containsKey("GeofenceEvent")) {
             throw new NullPointerException("GeofenceEvent can not be null.");
+        }
+    }
+
+    private boolean validateWGS84(String coordinates) {
+
+        String degrees = "°";
+        String minutes = "'";
+        Boolean WGS84_validation;
+        Boolean pattern1 = coordinates.matches("[NWSE]{1}\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
+        Boolean pattern2 = coordinates.matches("\\d{1,3}[" + degrees + "]\\d{1,3}[" + minutes + "]\\d{1,2}\\.\\d{1,2}["
+                + minutes + "][" + minutes + "][NWSE]{1}$");
+        Boolean pattern3 = coordinates.matches("\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
+        Boolean pattern4 = coordinates.matches("-?\\d+(\\.\\d+)?");
+
+        if (pattern1 || pattern2 || pattern3 || pattern4) {
+            WGS84_validation = true;
+            System.out.println("Coordinates " + coordinates + " are WGS84 compliant");
+            return WGS84_validation;
+        } else {
+            WGS84_validation = false;
+            System.out.println("Coordinates " + coordinates + " are NOT WGS84 compliant");
+            return WGS84_validation;
         }
     }
 }
