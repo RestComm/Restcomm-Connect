@@ -25,6 +25,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.responseentities.IdentityInstanceEntity;
 import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
@@ -54,7 +55,7 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
     }
 
 
-    protected Response registerIdentityInstanceWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) throws AuthServerAuthorizationError {
+    protected Response registerIdentityInstanceWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) {
         String clientSecret = generateClientSecret();
         // determine keycloakBaseUrl based on configuration and defaults
         String keycloakBaseUrl = keycloakBaseUrlParam;
@@ -64,11 +65,15 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         IdentityInstance existingInstance = getActiveIdentityInstance();
         if (existingInstance == null) {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, identityConfig.getRealm());
-            IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, new String [] {redirectUrl}, clientSecret);
-            instance.setOrganizationSid(getCurrentOrganizationSid());
-            identityInstancesDao.addIdentityInstance(instance);
-            IdentityInstance storedInstance = identityInstancesDao.getIdentityInstanceByName(instance.getName());
-
+            IdentityInstance storedInstance;
+            try {
+                IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, new String [] {redirectUrl}, clientSecret);
+                instance.setOrganizationSid(getCurrentOrganizationSid());
+                identityInstancesDao.addIdentityInstance(instance);
+                storedInstance = identityInstancesDao.getIdentityInstanceByName(instance.getName());
+            } catch (AuthServerAuthorizationError authServerAuthorizationError) {
+                return Response.status(Response.Status.FORBIDDEN).header("Content-Type", "application/json").build();
+            }
             // TODO use a proper converter here
             Gson gson = new Gson();
             String json = gson.toJson(new IdentityInstanceEntity(storedInstance));
@@ -83,6 +88,19 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         Gson gson = new Gson();
         String json = gson.toJson(new IdentityInstanceEntity(instance));
         return Response.ok(json).header("Content-Type", "application/json").build();
+    }
+
+    protected Response unregisterIdentityInstance(String sid) {
+        Sid instanceSid = new Sid(sid);
+        IdentityInstance instance = identityInstancesDao.getIdentityInstance(instanceSid);
+        if (instance != null) {
+            IdentityRegistrationTool tool = new IdentityRegistrationTool(identityConfig.getAuthServerUrl(), identityConfig.getRealm());
+            tool.unregisterInstanceWithRAT(instance);
+            identityInstancesDao.removeIdentityInstance(instanceSid);
+            return Response.ok().build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 
     private String generateClientSecret() {

@@ -92,7 +92,7 @@ public class IdentityInstancesEndpointJson extends IdentityInstancesEndpoint {
      */
     @DELETE
     @Path("/{identityInstanceSid}")
-    public Response unregisterIdentityInstance(@PathParam("sid") String identityInstanceSid) {
-        throw new NotImplementedException();
+    public Response unregisterIdentityInstance(@PathParam("identityInstanceSid") String identityInstanceSid) {
+        return super.unregisterIdentityInstance(identityInstanceSid);
     }
 }

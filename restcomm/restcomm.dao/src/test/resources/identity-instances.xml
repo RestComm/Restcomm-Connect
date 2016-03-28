@@ -25,8 +25,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.IdentityInstancesDao">
     <insert id="addIdentityInstance" parameterType="map">
-        INSERT INTO "restcomm_identity_instances" ("sid", "organization_sid", "name", "date_created", "date_updated", "restcomm_rest_rat", "restcomm_rest_last_registration_date", "restcomm_rest_status", "restcomm_rest_client_secret")
-        VALUES(#{sid}, #{organization_sid}, #{name}, #{date_created}, #{date_updated}, #{restcomm_rest_rat}, #{restcomm_rest_last_registration_date}, #{restcomm_rest_status}, #{restcomm_rest_client_secret})
+        INSERT INTO "restcomm_identity_instances" ("sid", "organization_sid", "name", "date_created", "date_updated", "restcomm_rest_rat", "restcomm_rest_last_registration_date", "restcomm_rest_status", "restcomm_rest_client_secret", "restcomm_ui_rat", "restcomm_ui_last_registration_date", "restcomm_ui_status", "rvd_rest_rat", "rvd_rest_last_registration_date", "rvd_rest_status", "rvd_ui_rat", "rvd_ui_last_registration_date", "rvd_ui_status")
+        VALUES(#{sid}, #{organization_sid}, #{name}, #{date_created}, #{date_updated}, #{restcomm_rest_rat}, #{restcomm_rest_last_registration_date}, #{restcomm_rest_status}, #{restcomm_rest_client_secret}, #{restcomm_ui_rat}, #{restcomm_ui_last_registration_date}, #{restcomm_ui_status}, #{rvd_rest_rat}, #{rvd_rest_last_registration_date}, #{rvd_rest_status}, #{rvd_ui_rat}, #{rvd_ui_last_registration_date}, #{rvd_ui_status})
     </insert>
 
     <select id="getIdentityInstance" parameterType="string" resultType="hashmap">
@@ -40,4 +40,8 @@
     <select id="getIdentityInstanceByName" parameterType="string" resultType="hashmap">
         SELECT * FROM "restcomm_identity_instances" WHERE "name"=#{name};
     </select>
+
+    <delete id="removeIdentityInstance" parameterType="string">
+        DELETE FROM "restcomm_identity_instances" WHERE "sid"=#{sid};
+    </delete>
 </mapper>

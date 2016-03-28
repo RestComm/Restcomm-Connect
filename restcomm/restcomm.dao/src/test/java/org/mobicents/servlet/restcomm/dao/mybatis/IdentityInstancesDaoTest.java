@@ -34,9 +34,7 @@ import org.mobicents.servlet.restcomm.entities.IdentityInstance.Status;
 import java.io.InputStream;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Orestis Tsakiridis
@@ -92,6 +90,11 @@ public class IdentityInstancesDaoTest {
         IdentityInstance iinstance2 = identityInstances.getIdentityInstance(iinstance.getSid());
         assertEquals("identity instance SIDs (for empty records) differ",iinstance.getSid().toString(), iinstance2.getSid().toString());
 
+        // remove and make sure it's not there
+        identityInstances.removeIdentityInstance(iinstance.getSid());
+        iinstance2 = identityInstances.getIdentityInstance(iinstance.getSid());
+        assertNull("identity instance was not removed", iinstance2);
+
         // create an identity instance in the store
         iinstance = new IdentityInstance();
         iinstance.setName(name);
@@ -107,6 +110,14 @@ public class IdentityInstancesDaoTest {
         iinstance.setRestcommUiLastRegistrationDate(restcommUiLastRegistrationDate);
         iinstance.setRestcommUiStatus(restcommUiStatus);
 
+        iinstance.setRvdRestRAT(rvdRestRAT);
+        iinstance.setRvdRestLastRegistrationDate(rvdRestLastRegistrationDate);
+        iinstance.setRvdRestStatus(rvdRestStatus);
+
+        iinstance.setRvdUiRAT(rvdUiRAT);
+        iinstance.setRvdUiLastRegistrationDate(rvdUiLastRegistrationDate);
+        iinstance.setRvdUiStatus(rvdUiStatus);
+
         identityInstances.addIdentityInstance(iinstance);
 
         // retrieve back the stored identity instance
@@ -121,10 +132,17 @@ public class IdentityInstancesDaoTest {
         assertEquals("restcomm-rest statuses differ", restcommRestStatus, iinstance2.getRestcommRestStatus());
         assertEquals("restcomm-rest client secrets differ",restcommRestClientSecret, iinstance2.getRestcommRestClientSecret());
 
-        // TODO add test clauses for the rest Clients
-        //assertEquals("restcomm-ui RAT differ", restcommUiRAT, iinstance2.getRestcommUiRAT());
-        //assertEquals("restcomm-ui last registration dates differ", restcommUiLastRegistrationDate, iinstance2.getRestcommUiLastRegistrationDate());
-        //assertEquals("restcomm-ui statuses differ", restcommUiStatus, iinstance2.getRestcommUiStatus());
+        assertEquals("restcomm-ui RAT differ", restcommUiRAT, iinstance2.getRestcommUiRAT());
+        assertEquals("restcomm-ui last registration dates differ", restcommUiLastRegistrationDate, iinstance2.getRestcommUiLastRegistrationDate());
+        assertEquals("restcomm-ui statuses differ", restcommUiStatus, iinstance2.getRestcommUiStatus());
+
+        assertEquals("rvd-rest RAT differ", rvdRestRAT, iinstance2.getRvdRestRAT());
+        assertEquals("rvd-rest last registration dates differ", rvdRestLastRegistrationDate, iinstance2.getRvdRestLastRegistrationDate());
+        assertEquals("rvd-rest statuses differ", rvdRestStatus, iinstance2.getRvdRestStatus());
+
+        assertEquals("rvd-ui RAT differ", rvdUiRAT, iinstance2.getRvdUiRAT());
+        assertEquals("rvd-ui last registration dates differ", rvdUiLastRegistrationDate, iinstance2.getRvdUiLastRegistrationDate());
+        assertEquals("rvd-ui statuses differ", rvdUiStatus, iinstance2.getRvdUiStatus());
     }
 
     @Test

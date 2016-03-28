@@ -112,7 +112,13 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
 
     @Override
     public void removeIdentityInstance(Sid sid) {
-        throw new NotImplementedException();
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(namespace + "removeIdentityInstance", sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
@@ -168,7 +174,7 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
         map.put("rvd_rest_last_registration_date", DaoUtils.writeDateTime(instance.getRvdRestLastRegistrationDate()));
         map.put("rvd_rest_status", instance.getRvdRestStatus());
 
-        map.put("rvd_rat", instance.getRvdUiRAT());
+        map.put("rvd_ui_rat", instance.getRvdUiRAT());
         map.put("rvd_ui_last_registration_date", DaoUtils.writeDateTime(instance.getRvdUiLastRegistrationDate()));
         map.put("rvd_ui_status", instance.getRvdUiStatus());
 

@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.identity.entities.ClientEntity;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
+import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
 
 /**
  * @author Orestis Tsakiridis
@@ -45,7 +46,7 @@ public class IdentityRegistrationToolTest {
     }
 
     @Test
-    public void testClientCreationAndRemoval() throws AuthServerAuthorizationError {
+    public void testClientCreationAndRemoval() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
         // create client
         ClientEntity clientEntity = tool.registerClient("TEST-restcomm-rest", iat, new String[] {"http://192.168.1.39:8080"},"topsecret",null, null );
         Assert.assertNotNull(clientEntity);
