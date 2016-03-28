@@ -26,9 +26,11 @@ import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.identity.entities.ClientEntity;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
+import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
 
 import javax.ws.rs.core.MediaType;
 
@@ -36,6 +38,8 @@ import javax.ws.rs.core.MediaType;
  * @author Oretis Tsakiridis
  */
 public class IdentityRegistrationTool {
+
+    static final Logger logger = Logger.getLogger(IdentityRegistrationTool.class.getName());
 
     private String keycloakBaseUrl;
     private String realm;
@@ -57,13 +61,31 @@ public class IdentityRegistrationTool {
         this.realm = realm;
     }
 
+    /**
+     * Registers keycloak Clients for an identity instance using an Initial Access Token (iat). Returns a
+     * new IdentityInstance object on success or null on failure.
+     *
+     * @param iat
+     * @param redirectUrls
+     * @param restcommClientSecret
+     * @return the new IdentityInstance or null
+     * @throws AuthServerAuthorizationError
+     */
     public IdentityInstance registerInstanceWithIAT(String iat, String[] redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError {
         String instanceName = generateName();
-        ClientEntity restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
-        ClientEntity restcommUiClient = registerRestcommUiClient(instanceName,iat,null,restcommClientSecret,false,true);
-        ClientEntity rvdRestClient = registerRvdRestClient(instanceName,iat,null,restcommClientSecret,false,false);
-        ClientEntity rvdUiClient = registerRvdUiClient(instanceName,iat,null,restcommClientSecret,false,true);
-
+        ClientEntity restcommRestClient;
+        ClientEntity restcommUiClient;
+        ClientEntity rvdRestClient;
+        ClientEntity rvdUiClient;
+        try {
+            restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
+            restcommUiClient = registerRestcommUiClient(instanceName,iat,null,restcommClientSecret,false,true);
+            rvdRestClient = registerRvdRestClient(instanceName,iat,null,restcommClientSecret,false,false);
+            rvdUiClient = registerRvdUiClient(instanceName,iat,null,restcommClientSecret,false,true);
+        } catch (IdentityClientRegistrationError e) {
+            logger.error(e);
+            return null;
+        }
         IdentityInstance identityInstance = new IdentityInstance();
         identityInstance.setName(instanceName);
         identityInstance.setRestcommRestRAT(restcommRestClient.getRegistrationAccessToken());
@@ -89,23 +111,23 @@ public class IdentityRegistrationTool {
         return UUID.randomUUID().toString().split("-")[0];
     }
 
-    ClientEntity registerRestcommRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
+    ClientEntity registerRestcommRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         return registerClient(instanceName + "-" + RESTCOMM_REST_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRestcommUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
+    ClientEntity registerRestcommUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         return registerClient(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRvdRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
+    ClientEntity registerRvdRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         return registerClient(instanceName + "-" + RVD_REST_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRvdUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
+    ClientEntity registerRvdUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         return registerClient(instanceName + "-" + RVD_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerClient(String clientId, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError {
+    ClientEntity registerClient(String clientId, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         // create the Keycloak Client entity (not related to the jersey client class)
         Client jersey = Client.create();
         WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl());
@@ -127,9 +149,9 @@ public class IdentityRegistrationTool {
         } else
         if (response.getStatus() == 403){
             throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
+        } else {
+            throw new IdentityClientRegistrationError("Client registration for client '" + clientId + "' failed with status " + response.getStatus());
         }
-
-        return null;
     }
 
     Integer unregisterClient(String clientId, String registrationAccessToken) {

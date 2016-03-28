@@ -1,6 +1,6 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2016, Telestax Inc and individual contributors
+ * Copyright 2011-2016, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,18 +21,19 @@
 package org.mobicents.servlet.restcomm.identity.exceptions;
 
 /**
+ * Thrown when a keycloak Client registration fails.
+ *
  * @author Orestis Tsakiridis
  */
-public class IdentityMigrationException extends Exception {
-    public IdentityMigrationException(String message) {
-        super(message);
+public class IdentityClientRegistrationError extends Exception {
+    public IdentityClientRegistrationError() {
     }
 
-    public IdentityMigrationException(String message, Throwable cause) {
-        super(message, cause);
+    public IdentityClientRegistrationError(String s) {
+        super(s);
     }
 
-    public IdentityMigrationException(Throwable cause) {
-        super(cause);
+    public IdentityClientRegistrationError(String s, Throwable throwable) {
+        super(s, throwable);
     }
 }
