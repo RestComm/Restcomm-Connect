@@ -305,7 +305,7 @@ public final class CallManager extends UntypedActor {
         // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
         // registered
 
-        String toUser = CallControlHelper.getUserSipId(request, useTo);
+        final String toUser = CallControlHelper.getUserSipId(request, useTo);
         
         final String ruri = ((SipURI) request.getRequestURI()).getHost();
         final String toHost = ((SipURI) request.getTo().getURI()).getHost();
@@ -324,15 +324,6 @@ public final class CallManager extends UntypedActor {
 
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
             Client toClient = clients.getClient(toUser);
-            if(Character.isDigit(toUser.charAt(0))){  // RestComm always redirects to the "+" number. 
-                int numLength=toUser.length();
-                logger.info("First character is digit");
-                toUser = "+" + toUser.substring(0, numLength); 
-                toClient = clients.getClient(toUser);
-            }
-            else{
-                logger.info("Proceed to INVITE");
-            }
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
                 logger.info("Client is not null: " + client.getLogin() + " will try to proxy to client: "+ toClient);
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
@@ -503,10 +494,28 @@ public final class CallManager extends UntypedActor {
         try {
             // Try to find an application defined for the phone number.
             final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            number = numbers.getIncomingPhoneNumber(formatedPhone);
-            if (number == null) {
-                number = numbers.getIncomingPhoneNumber(phone);
-            }
+            if(phone.charAt(0)== '+'){
+                //check if incomming number is formated (+1xxxxxx)
+                number = numbers.getIncomingPhoneNumber(formatedPhone);
+                if(number == null){ 
+                  number = numbers.getIncomingPhoneNumber(phone);
+                }
+                if(number == null){
+                  //remove the (+) and check if exists
+                  phone=phone.substring(1, phone.length());
+                  number = numbers.getIncomingPhoneNumber(phone);
+                }
+            } else { //check if incoming number is (1xxxxxx)
+                number = numbers.getIncomingPhoneNumber(formatedPhone);
+                if(number == null){ 
+                  number = numbers.getIncomingPhoneNumber(phone);
+                }
+                if(number == null){
+                  //add the (+) and check if exists
+                  phone = "+" + phone.substring(0, phone.length());
+                  number = numbers.getIncomingPhoneNumber(phone);
+                }
+            } 
             if (number == null) {
                 // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
                 number = numbers.getIncomingPhoneNumber("*");
