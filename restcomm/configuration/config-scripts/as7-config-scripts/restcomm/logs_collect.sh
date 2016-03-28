@@ -1,4 +1,8 @@
 #!/bin/bash
+##
+## Descript+ion: Script that collects all necessary system logs and data.
+## Author     : Lefteris Banos
+#
 
 DATE=$(date +%F_%H_%M)
 DIR_NAME=restcomm_$DATE
@@ -137,6 +141,7 @@ if [ -d "$LOGS_DIR_ZIP" ]; then
 
 make_tar () {
  if [ -d "$LOGS_DIR_ZIP" ]; then
+    echo TAR_FILE : $LOGS_DIR_ZIP.tar.gz
      tar -zcf $LOGS_DIR_ZIP.tar.gz -C $LOGS_DIR_ZIP . 3>&1 1>&2 2>&3
      rm -rf $LOGS_DIR_ZIP
      return 0
@@ -159,6 +164,25 @@ if [ -d "$LOGS_DIR_ZIP" ]; then
  fi
    exit 1
 }
+
+
+getPID(){
+   RESTCOMM_PID=$(jps | grep jboss-modules.jar | cut -d " " -f 1)
+
+   while read -r line
+   do
+    if  ps -ef | grep $line | grep -q  mediaserver
+    then
+          RMS_PID=$line
+   fi
+   done < <(jps | grep Main | cut -d " " -f 1)
+
+  if [[ -z "$RESTCOMM_PID" || -z "$RMS_PID" ]]; then
+        echo "Please make sure that rescomm is running properly"
+        exit 1
+  fi
+}
+
 
 usage () {
    cat << EOF
@@ -208,9 +232,7 @@ if [ ! -e $LOGS_DIR_ZIP ]; then
    mkdir -p $LOGS_DIR_ZIP
 fi
 
-RESTCOMM_PID=`jps | grep jboss-modules.jar | cut -d " " -f 1`
-RMS_PID=`jps | grep Main | cut -d " " -f 1`
-
+getPID
 restcomm_logs
 mediaserver_logs
 system_logs
@@ -226,5 +248,4 @@ if $tflag ; then
 fi
 if $zflag ; then
    make_tar
-   echo TAR_FILE : $LOGS_DIR_ZIP.tar.gz
 fi
