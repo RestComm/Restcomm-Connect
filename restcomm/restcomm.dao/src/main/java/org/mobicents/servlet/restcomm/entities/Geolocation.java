@@ -67,9 +67,8 @@ public class Geolocation {
     public Geolocation(Sid sid, DateTime dateCreated, DateTime dateUpdated, DateTime dateExecuted, Sid accountSid,
             String source, String deviceIdentifier, GeolocationType geolocationType, String responseStatus, String cellId,
             String locationAreaCode, Integer mobileCountryCode, String mobileNetworkCode, Long networkEntityAddress,
-            Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, Long accuracy,
-            String physicalAddress, String internetAddress, String formattedAddress, DateTime locationTimestamp,
- String eventGeofenceLatitude,
+            Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, Long accuracy, String physicalAddress,
+            String internetAddress, String formattedAddress, DateTime locationTimestamp, String eventGeofenceLatitude,
             String eventGeofenceLongitude, Long radius, String geolocationPositioningType,
             String lastGeolocationResponse, String cause, String apiVersion, URI uri) {
         super();
@@ -267,6 +266,7 @@ public class Geolocation {
     }
 
     public Geolocation setDateUpdated(DateTime dateUpdated) {
+        System.out.println("setDateUpdated (Geolocation): " + dateUpdated);
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -498,6 +498,7 @@ public class Geolocation {
     public static final class Builder {
 
         private Sid sid;
+        private DateTime dateUpdated;
         private Sid accountSid;
         private String source;
         private String deviceIdentifier;
@@ -531,16 +532,20 @@ public class Geolocation {
 
         public Geolocation build() {
             final DateTime now = DateTime.now();
-            return new Geolocation(sid, now, now, now, accountSid, source, deviceIdentifier, geolocationType, responseStatus,
-                    cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode, networkEntityAddress, ageOfLocationInfo,
-                    deviceLatitude, deviceLongitude, accuracy, physicalAddress, internetAddress, formattedAddress,
-                    locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius, geolocationPositioningType,
-                    lastGeolocationResponse, cause, apiVersion, uri);
-
+            return new Geolocation(sid, now, dateUpdated, now, accountSid, source, deviceIdentifier, geolocationType,
+                    responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode, networkEntityAddress,
+                    ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress, internetAddress,
+                    formattedAddress, locationTimestamp, eventGeofenceLatitude, eventGeofenceLongitude, radius,
+                    geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
         }
 
         public void setSid(Sid sid) {
             this.sid = sid;
+        }
+
+        public void setDateUpdated(DateTime dateUpdated) {
+            System.out.println("dateUpdated (builder): " + dateUpdated);
+            this.dateUpdated = dateUpdated;
         }
 
         public void setAccountSid(Sid accountSid) {
@@ -612,6 +617,7 @@ public class Geolocation {
         }
 
         public void setLocationTimestamp(DateTime locationTimestamp) {
+            // locationTimestamp = DateTime.now();
             this.locationTimestamp = locationTimestamp;
         }
 

@@ -120,15 +120,30 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
 
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
-        dao.addGeolocation(geolocation);
 
-        if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse(geolocation);
-            return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
+        if (geolocation.getResponseStatus() != null && (geolocation.getResponseStatus().equalsIgnoreCase("rejected")
+                || geolocation.getResponseStatus().equalsIgnoreCase("unauthorized"))) {
+            System.out.println("Geolocation ResponseStatus rejected or unauthorized for that Sid");
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(geolocation);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
         } else {
-            return null;
+
+            dao.addGeolocation(geolocation);
+
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(geolocation);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
         }
     }
 
@@ -175,6 +190,17 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
             }
         }
+        if (data.containsKey("LocationTimestamp")) {
+            try {
+                DateTime locationTimestamp = getDateTime("LocationTimestamp", data);
+                System.out.println("locationTimestamp value: " + locationTimestamp);
+            } catch (Exception e) {
+                final Geolocation.Builder builder = Geolocation.builder();
+                builder.setCause("LocationTimestamp value not API compliant");
+                builder.setResponseStatus("rejected");
+                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+            }
+        }
         // *** All parameters with specified values validations passed *** //
         Geolocation gl = buildGeolocation(accountSid, data, glType);
         return gl;
@@ -185,6 +211,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         final Geolocation.Builder builder = Geolocation.builder();
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
         builder.setSid(sid);
+        DateTime currentDateTime = DateTime.now();
+        System.out.println("GeolocationEndpoint buildGeolocation, currentDateTime: " + currentDateTime);
+        builder.setDateUpdated(currentDateTime);
         builder.setAccountSid(accountSid);
         builder.setSource(data.getFirst("Source"));
         builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
@@ -223,6 +252,8 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             Geolocation.GeolocationType glType, final Geolocation.Builder builder) {
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
         builder.setSid(sid);
+        DateTime currentDateTime = DateTime.now();
+        builder.setDateUpdated(currentDateTime);
         builder.setAccountSid(accountSid);
         builder.setSource(data.getFirst("Source"));
         builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
@@ -310,6 +341,8 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 secureLevelControl(accountsDao, accountSid, String.valueOf(geolocation.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
+            } catch (final NullPointerException exception) {
+                return status(BAD_REQUEST).entity(exception.getMessage()).build();
             }
             geolocation = update(geolocation, data);
             dao.updateGeolocation(geolocation);
@@ -336,7 +369,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return geolocation;
         }
 
-        // *** Set of parameters with provided data for proper Geolocation update***//
+        // *** Set of parameters with provided data for Geolocation update***//
         if (data.containsKey("Source")) {
             updatedGeolocation = updatedGeolocation.setSource(data.getFirst("Source"));
         }
@@ -403,7 +436,11 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         if (data.containsKey("Cause")) {
             updatedGeolocation = updatedGeolocation.setCause(data.getFirst("Cause"));
         }
-        updatedGeolocation.setDateUpdated(DateTime.now());
+        DateTime thisDateTime = DateTime.now();
+        System.out.println("GeolocationEndpoint, DateTime.now(): " + thisDateTime);
+        updatedGeolocation = updatedGeolocation.setDateUpdated(thisDateTime);
+        System.out.println(
+                "GeolocationEndpoint update, updatedGeolocation.getDateUpdated(): " + updatedGeolocation.getDateUpdated());
         return updatedGeolocation;
     }
 
