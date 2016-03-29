@@ -422,14 +422,21 @@ public class ClientsDialTest {
     }
 
     // Non regression test for issue #600. Restcomm redirects to the number in format "+1234567". 
-    // For exampe, if dial 1234567 Restcomm will redirect to +1234567. 
+    // For exampe, if dial 1234567 Restcomm will redirect to +1234567. In case the incoming number and 
+    // the client number (georgeNumber) differ in the first character(+), then (+) is added or removed to the 
+    // incoming number accordingly.
+   
     @Test
     public void testClientDialToNumber() throws ParseException, InterruptedException, InvalidArgumentException {
 
         assertNotNull(mariaRestcommClientSid);
         assertNotNull(dimitriRestcommClientSid);
         
-        String pstnTest = "123456789";
+        String georgeNumber = "+123456789";
+        String pstnTest= "123456789";
+        
+        int numLength=pstnTest.length();
+        
         // Register Maria Restcomm client 
         SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 14400, 3600));
@@ -440,22 +447,29 @@ public class ClientsDialTest {
 
         Thread.sleep(1000);
         
-        // Check if the first character of the PSTN is number. If yes, add "+" to the string,
-        // so a number in format +123456789 is called
-        if(Character.isDigit(pstnTest.charAt(0))){  
-              int numLength=pstnTest.length();
-              pstnTest = "+" + pstnTest.substring(0, numLength); 
-        }
+        // Check if the first character of the incoming number is "+". If yes, check if it is
+        // same as client number and if not remove the "+" from incoming number.   
+        if(pstnTest.charAt(0)=='+'){
+            if(!pstnTest.equals(georgeNumber)){
+                pstnTest=pstnTest.substring(1, numLength);
+            }
+        } 
+                
+        // Check if the first character of the incoming number is different then "+". 
+        // If yes, check if it is same as client number and if not, add the "+" to incoming number.
+        if(pstnTest.charAt(0)!='+'){
+            if(!pstnTest.equals(georgeNumber)){
+                pstnTest= "+" + pstnTest.substring(0, numLength);
+            }
+        } 
         
-        
-        // Initiate a call to sip:pstnNumber@127.0.0.1:5070
         final SipCall mariaCall = mariaPhone.createSipCall();
         mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnTest+"@127.0.0.1:5070" , null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
 
         // Prepare client to receive call
-        SipPhone newSipPhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+pstnTest+"@127.0.0.1:5070");
+        SipPhone newSipPhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+georgeNumber+"@127.0.0.1:5070");
         final SipCall georgeCall = newSipPhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
