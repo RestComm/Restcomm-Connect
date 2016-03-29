@@ -1,73 +1,104 @@
-// var module = angular.module('product', []);
-
-var auth = {};
+var keycloakAuth = {};
 var logout = function(){
     console.log('*** LOGOUT');
-    auth.loggedIn = false;
-    auth.authz = null;
-    window.location = auth.logoutUrl;
+    keycloakAuth.loggedIn = false;
+    keycloakAuth.authz = null;
+    window.location = keycloakAuth.logoutUrl;
 };
 
 
-angular.element(document).ready(function ($http) {
-	$http.get("/restcomm/identity/config/mode")
-	.success(function (data, status) {
-		angular.module("rcApp").constant("authMode",data.mode);
-		if (data.mode == "cloud") {
-    
-			var keycloakAuth = new Keycloak('/restcomm/identity/config/restcomm-ui.json');
-			auth.loggedIn = false;
-
-			keycloakAuth.init({ onLoad: 'login-required' }).success(function () {
-				auth.loggedIn = true;
-				auth.authz = keycloakAuth;
-				auth.logoutUrl = keycloakAuth.authServerUrl + "/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/index.html";
-				angular.module('rcApp').factory('Auth', function() {
-					return auth;
-				});
-				
-				keycloakAuth.loadUserProfile().success(function () {
-					var initInjector = angular.injector(["ng"]);
-					var $myhttp = initInjector.get("$http");
-					
-					$myhttp({
-						method: 'GET',
-						url: '/restcomm/2012-04-24/Accounts.json/' + keycloakAuth.profile.username ,
-						headers: {
-							Authorization: 'Bearer ' + keycloakAuth.token
-						}
-					}).success(function(response) {
-						//console.log("Retrieved account info for user " + keycloakAuth.profile.username);
-						auth.restcommAccount = response;
-						auth.authStatus = "instance"; // instance | realm | failed
-						angular.bootstrap(document, ["rcApp"]);
-					}).error(function(errorResponse, status) {
-						// Handle error case
-						if (status == 401)
-							auth.authStatus = "realm"; // access to realm but not to this instance
-						console.log("Error retrieving account for user '" + keycloakAuth.profile.username + "'");
-						angular.bootstrap(document, ["rcApp"]);
-					});
-					
-				});
-				console.log(keycloakAuth.profile);      
+angular.element(document).ready(['$http',function ($http) {
+  // manually inject $q since it's not available
+  var initInjector = angular.injector(["ng"]);
+  var $q = initInjector.get("$q");
+  // try to retrieve Identity server configuration
+  var serverPromise = $q.defer();
+  $http.get("/restcomm/2012-04-24/Identity/Server").success(function (serverConfig) {
+    console.log(serverConfig);
+    serverPromise.resolve(serverConfig);
+  }).error( function (response) {
+    serverPromise.reject();
+  });
+  // try to retrieve IdentityInstance
+  var instancePromise = $q.defer();
+  $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
+    instancePromise.resolve(instance);
+  }).error(function (response) {
+    if (response.status == 404)
+      instancePromise.resolve(null);
+    else
+      instancePromise.reject();
+  });
+  // when both responses are received do sth...
+  $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
+    console.log("SuCCESS");
+    var identityConfig = responses[0];
+    var identityInstance = responses[1];
+    // is this instance supposed to be secured by an auth server ?
+    angular.module('rcApp').value('IdentityConfig', function () {
+      return identityServerConfig;
+    });
+    angular.module('rcApp').value('IdentityInstance', function () {
+      return identityInstance;
+    });
+    angular.module('rcApp').factory('KeycloakAuth', function() {
+      return keycloakAuth;
+    });
+    if ( !! identityConfig.authServerUrl && !! identityInstance ) {
+      // if the instance is already secured by keycloak
+      var keycloak = new Keycloak({ url: identityConfig.authServerUrl, realm: identityConfig.realm, identityInstance.name + "-restcomm-ui" });
+			keycloakAuth.loggedIn = false;
+			keycloak.init({ onLoad: 'login-required' }).success(function () {
+				keycloakAuth.loggedIn = true;
+				keycloakAuth.authz = keycloak;
+				keycloakAuth.logoutUrl = identityConfig.authServerUrl + "/realms/" + identityConfig.realm + "/tokens/logout?redirect_uri=" + window.location.origin + "/index.html";
+        angular.bootstrap(document, ["rcApp"]);
 			}).error(function (a, b) {
 					window.location.reload();
 			});
-		} else {
-			angular.module("rcApp").constant("authMode","init");
-			angular.module('rcApp').factory('Auth', function() {
-				return auth;
-			});
-			angular.bootstrap(document, ["rcApp"]);
-		}
-		
-		
-	})
-	.error(function (response) {
-		console.log("Internal server error: cannot retrieve identity mode.");
-	});
+    } else
+    if ( !! identityConfig.authServerUrl && ! identityInstance ){
+      // keycloak is already configured but no identity instance yet
+      angular.bootstrap(document, ["rcApp"]);
+    } else {
+      // no identity configuration. We should run in compatibility authorization mode
+      angular.bootstrap(document, ["rcApp"]);
+    }
 
+  }, function () {
+    console.log("Internal server error");
+  });
+}]);
+
+function Identity(identityConfig, identityInstance, KeycloakAuth) {
+  this.identityConfig = identityConfig;
+  this.identityInstance = identityInstance;
+  this.keycloakAuth = keycloakAuth;
+
+  this.restcommAccount = null;
+  this.userProfile = null;
+
+  // is an identity server configured in Restcomm ?
+  function identityServerConfigured () {
+    return !!this.identityConfig && (!!this.identityConfig.authServerUrl);
+  }
+  this.identityServerConfigured = identityServerConfigured;
+  // is the instance secured by keyloak ?
+  function securedByKeycloak () {
+    return identityServerConfigured && (!!this.identityInstance) && (!!this.identityInstance.name);
+  }
+  this.securedByKeycloak = securedByKeycloak;
+  // is the user logged in keycloak ?
+  function loggedInKeycloak() {
+    throw "NOT IMPLEMENTED";
+  }
+  this.loggedInKeycloak = loggedInKeycloak;
+  //
+
+}
+
+angular.module('rcApp').factory('identity', function (IdentityConfig, IdentityInstance, KeycloakAuth) {
+  return new Identity(IdentityConfig, IdentityInstance, KeycloakAuth);
 });
 
 angular.module('rcApp').factory('authInterceptor', function($q, Auth) {

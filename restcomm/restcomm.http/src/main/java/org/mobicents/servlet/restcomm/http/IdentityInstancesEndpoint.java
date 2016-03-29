@@ -86,8 +86,12 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         IdentityInstance instance = getActiveIdentityInstance();
         // TODO use a proper converter here
         Gson gson = new Gson();
-        String json = gson.toJson(new IdentityInstanceEntity(instance));
-        return Response.ok(json).header("Content-Type", "application/json").build();
+        if (instance == null)
+            return Response.status(Response.Status.NOT_FOUND).build();
+        else {
+            String json = gson.toJson(new IdentityInstanceEntity(instance));
+            return Response.ok(json).header("Content-Type", "application/json").build();
+        }
     }
 
     protected Response unregisterIdentityInstance(String sid) {
