@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 public final class CallDetailRecord {
     private final Sid sid;
     private final Sid parentCallSid;
+    private final Sid conferenceSid;
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
     private final Sid accountSid;
@@ -57,7 +58,7 @@ public final class CallDetailRecord {
 
     private final String callPath;
 
-    public CallDetailRecord(final Sid sid, final Sid parentCallSid, final DateTime dateCreated, final DateTime dateUpdated,
+    public CallDetailRecord(final Sid sid, final Sid parentCallSid, final Sid conferenceSid, final DateTime dateCreated, final DateTime dateUpdated,
             final Sid accountSid, final String to, final String from, final Sid phoneNumberSid, final String status,
             final DateTime startTime, final DateTime endTime, final Integer duration, final BigDecimal price,
             final Currency priceUnit, final String direction, final String answeredBy, final String apiVersion,
@@ -65,6 +66,7 @@ public final class CallDetailRecord {
         super();
         this.sid = sid;
         this.parentCallSid = parentCallSid;
+        this.conferenceSid = conferenceSid;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.accountSid = accountSid;
@@ -97,6 +99,10 @@ public final class CallDetailRecord {
 
     public Sid getParentCallSid() {
         return parentCallSid;
+    }
+
+    public Sid getConferenceSid() {
+        return conferenceSid;
     }
 
     public DateTime getDateCreated() {
@@ -180,43 +186,49 @@ public final class CallDetailRecord {
     }
 
     public CallDetailRecord setStatus(final String status) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setStartTime(final DateTime startTime) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setEndTime(final DateTime endTime) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setDuration(final Integer duration) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath,ringDuration);
+                callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setRingDuration(final Integer ringDuration) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setPrice(final BigDecimal price) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath,ringDuration);
+                callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setAnsweredBy(final String answeredBy) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath, ringDuration);
+    }
+
+    public CallDetailRecord setConferenceSid(final Sid conferenceSid) {
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
@@ -225,6 +237,7 @@ public final class CallDetailRecord {
     public static final class Builder {
         private Sid sid;
         private Sid parentCallSid;
+        private Sid conferenceSid;
         private DateTime dateCreated;
         private DateTime dateUpdated;
         private Sid accountSid;
@@ -251,6 +264,7 @@ public final class CallDetailRecord {
             super();
             sid = null;
             parentCallSid = null;
+            conferenceSid = null;
             dateCreated = null;
             dateUpdated = DateTime.now();
             accountSid = null;
@@ -273,9 +287,9 @@ public final class CallDetailRecord {
         }
 
         public CallDetailRecord build() {
-            return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid,
+            return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                     status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                    callerName, uri, callPath,ringDuration);
+                    callerName, uri, callPath, ringDuration);
         }
 
         public void setSid(final Sid sid) {
@@ -284,6 +298,10 @@ public final class CallDetailRecord {
 
         public void setParentCallSid(final Sid parentCallSid) {
             this.parentCallSid = parentCallSid;
+        }
+
+        public void setConferenceSid(final Sid conferenceSid) {
+            this.conferenceSid = conferenceSid;
         }
 
         public void setDateCreated(final DateTime dateCreated) {
