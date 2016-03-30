@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
-    INSERT INTO restcomm_call_detail_records (sid, parent_call_sid, date_created, date_updated, account_sid, recipient, sender, phone_number_sid, status,
-    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration) VALUES (#{sid}, #{parent_call_sid},
+    INSERT INTO restcomm_call_detail_records (sid, parent_call_sid, conference_sid, date_created, date_updated, account_sid, recipient, sender, phone_number_sid, status,
+    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration) VALUES (#{sid}, #{parent_call_sid}, #{conference_sid},
 		#{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price},
 		#{direction},	#{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration});
   </insert>
@@ -33,6 +33,9 @@
 		<if test="parentCallSid != null">
 			AND parent_call_sid like #{parentCallSid}
 		</if>
+		<if test="conferenceSid != null">
+			AND conference_sid like #{conferenceSid}
+		</if>
 		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
 		<if test="startTime != null">
 		    AND start_time &gt;= #{startTime}
@@ -58,6 +61,9 @@
 		</if>
 		<if test="parentCallSid != null">
 			AND parent_call_sid like #{parentCallSid}
+		</if>
+		<if test="conferenceSid != null">
+			AND conference_sid like #{conferenceSid}
 		</if>
 		<!-- select * from "restcomm_call_detail_records" where "start_time" >= '2013-08-23' order by "start_time" ; -->
 		<if test="startTime != null">
@@ -99,7 +105,11 @@
   <select id="getCallDetailRecordsByParentCall" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_call_detail_records WHERE parent_call_sid=#{parent_call_sid};
   </select>
-  
+
+  <select id="getCallDetailRecordsByConferenceId" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_call_detail_records WHERE conference_sid=#{conference_sid};
+  </select>
+    
   <delete id="removeCallDetailRecord" parameterType="string">
     DELETE FROM restcomm_call_detail_records WHERE sid=#{sid};
   </delete>
