@@ -74,6 +74,7 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
             } catch (AuthServerAuthorizationError authServerAuthorizationError) {
                 return Response.status(Response.Status.FORBIDDEN).header("Content-Type", "application/json").build();
             }
+            logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
             // TODO use a proper converter here
             Gson gson = new Gson();
             String json = gson.toJson(new IdentityInstanceEntity(storedInstance));

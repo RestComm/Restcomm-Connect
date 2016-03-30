@@ -6,22 +6,6 @@ var logout = function(){
     window.location = keycloakAuth.logoutUrl;
 };
 
-function IdentityConfig(server, instance) {
-    this.server = server;
-    this.instance = instance;
-
-    // is an identity server configured in Restcomm ?
-    function identityServerConfigured () {
-    return !!this.server && (!!this.server.authServerUrl);
-    }
-    this.identityServerConfigured = identityServerConfigured;
-    // is the instance secured by keyloak ?
-    function securedByKeycloak () {
-    return identityServerConfigured && (!!this.instance) && (!!this.instance.name);
-    }
-    this.securedByKeycloak = securedByKeycloak;
-}
-
 angular.element(document).ready(['$http',function ($http) {
   // manually inject $q since it's not available
   var initInjector = angular.injector(["ng"]);
@@ -79,17 +63,6 @@ angular.element(document).ready(['$http',function ($http) {
   });
 }]);
 
-// Contstructor of the Identity service
-function Identity(IdentityConfig, KeycloakAuth) {
-  this.config = IdentityConfig;
-  this.keycloakAuth = KeycloakAuth; //
-  this.account = null; // restcomm account
-  this.user = null; // keycloak user profile
-}
-
-angular.module('rcApp').factory('Identity', function (IdentityConfig, KeycloakAuth) {
-  return new Identity(IdentityConfig, KeycloakAuth);
-});
 
 angular.module('rcApp').factory('authInterceptor', function($q, Auth) {
     return {
@@ -109,9 +82,6 @@ angular.module('rcApp').factory('authInterceptor', function($q, Auth) {
         }
     };
 });
-
-
-
 
 angular.module('rcApp').config(function($httpProvider) {
     // TODO -fix this!

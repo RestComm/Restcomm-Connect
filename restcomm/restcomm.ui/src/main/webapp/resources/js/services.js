@@ -21,6 +21,34 @@ rcServices.factory('SessionService', function() {
   }
 });
 
+// IdentityConfig "service"
+function IdentityConfig(server, instance) {
+    this.server = server;
+    this.instance = instance;
+
+    // is an identity server configured in Restcomm ?
+    function identityServerConfigured () {
+        return !!this.server && (!!this.server.authServerUrl);
+    }
+    this.identityServerConfigured = identityServerConfigured;
+    // is the instance secured by keyloak ?
+    function securedByKeycloak () {
+        return identityServerConfigured && (!!this.instance) && (!!this.instance.name);
+    }
+    this.securedByKeycloak = securedByKeycloak;
+}
+
+// Identity service
+function Identity(IdentityConfig, KeycloakAuth) {
+  this.config = IdentityConfig;
+  this.keycloakAuth = KeycloakAuth; //
+  this.account = null; // restcomm account
+  this.user = null; // keycloak user profile
+}
+angular.module('rcApp').factory('Identity', function (IdentityConfig, KeycloakAuth) {
+  return new Identity(IdentityConfig, KeycloakAuth);
+});
+
 rcServices.service('Authorization', function(KeycloakAuth,Identity,md5,Notifications,$q) {
 	var serviceInstance = {};
 
@@ -493,6 +521,18 @@ rcServices.factory('RCommStatistics', function($resource) {
     {
     }
   );
+});
+
+rcServices.factory('IdentityInstances', function($resource) {
+    return $resource('/restcomm/2012-04-24/Identity/Instances', {}, {
+        register: {
+            method:'POST',
+            url: '/restcomm/2012-04-24/Identity/Instances',
+            headers : {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }
+    });
 });
 
 rcServices.factory('RCommJMX', function($resource) {
