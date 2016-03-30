@@ -338,7 +338,7 @@ public class Geolocation {
                 geolocationPositioningType, lastGeolocationResponse, cause, apiVersion, uri);
     }
 
-    public Geolocation setLocationTimeStamp(DateTime locationTimestamp) {
+    public Geolocation setLocationTimestamp(DateTime locationTimestamp) {
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,

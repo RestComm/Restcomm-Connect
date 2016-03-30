@@ -416,7 +416,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             updatedGeolocation = updatedGeolocation.setFormattedAddress(data.getFirst("FormattedAddress"));
         }
         if (data.containsKey("LocationTimestamp")) {
-            updatedGeolocation = updatedGeolocation.setLocationTimeStamp(getDateTime("LocationTimestamp", data));
+            updatedGeolocation = updatedGeolocation.setLocationTimestamp(getDateTime("LocationTimestamp", data));
         }
         if (data.containsKey("EventGeofenceLatitude")) {
             updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude(data.getFirst("EventGeofenceLatitude"));
