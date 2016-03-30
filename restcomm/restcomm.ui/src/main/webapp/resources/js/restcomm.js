@@ -17,8 +17,8 @@ var rcMod = angular.module('rcApp', [
   'ngSanitize'
 ]);
 
-rcMod.config(['$routeProvider', '$locationProvider', 'IdentityConfig', function($routeProvider, $locationProvider, identityConfig) {
-  if ( identityConfig.securedByKeycloak() ) {
+rcMod.config(['$routeProvider', '$locationProvider', 'IdentityConfig', function($routeProvider, $locationProvider, IdentityConfig) {
+  if ( IdentityConfig.securedByKeycloak() || ! IdentityConfig.identityServerConfigured() ) {
 	  $routeProvider.
 		when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
 		when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl', resolve: {
@@ -103,11 +103,12 @@ rcMod.config(['$routeProvider', '$locationProvider', 'IdentityConfig', function(
 		}})	
 		.otherwise({redirectTo: '/dashboard'});
 	  // $locationProvider.html5Mode(true);
-	} else {
+	} else
+	if (IdentityConfig.identityServerConfigured()) {
 	    // instance is not secured
 		$routeProvider.
 			when('/unregistered', {templateUrl: 'modules/unregistered.html', controller: 'UnregisteredCtrl'}).
-			when('/register', {templateUrl: 'modules/register.html', controller: 'RegisterCtrl'}).
+			when('/instance/register', {templateUrl: 'modules/instance-registration.html', controller: 'InstanceRegistrationCtrl'}).
 			otherwise({redirectTo: '/unregistered'});
 	}
 }]);
