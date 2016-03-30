@@ -205,6 +205,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     private CallDetailRecord toCallDetailRecord(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));
         final Sid parentCallSid = readSid(map.get("parent_call_sid"));
+        final Sid conferenceSid = readSid(map.get("conference_sid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final Sid accountSid = readSid(map.get("account_sid"));
@@ -225,7 +226,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final String callerName = readString(map.get("caller_name"));
         final URI uri = readUri(map.get("uri"));
         final String callPath = readString(map.get("call_path"));
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
+        return new CallDetailRecord(sid, parentCallSid, conferenceSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
                 startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName,
                 uri, callPath, ringDuration);
     }
@@ -234,6 +235,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", writeSid(cdr.getSid()));
         map.put("parent_call_sid", writeSid(cdr.getParentCallSid()));
+        map.put("conference_sid", writeSid(cdr.getConferenceSid()));
         map.put("date_created", writeDateTime(cdr.getDateCreated()));
         map.put("date_updated", writeDateTime(cdr.getDateUpdated()));
         map.put("account_sid", writeSid(cdr.getAccountSid()));
