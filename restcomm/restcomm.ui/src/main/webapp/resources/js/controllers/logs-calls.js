@@ -2,11 +2,11 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, AuthService, RCommLogsCalls) {
+rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, Identity, RCommLogsCalls) {
 
   $scope.Math = window.Math;
 
-  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
+  $scope.sid = Identity.getAccountSid(); // SessionService.get("sid");
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -123,8 +123,8 @@ $scope.sortBy = function(field) {
   $scope.getCallsList(0);
 });
 
-rcMod.controller('LogsCallsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, AuthService, RCommLogsCalls, callSid) {
-  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
+rcMod.controller('LogsCallsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, Identity, RCommLogsCalls, callSid) {
+  $scope.sid = Identity.getAccountSid();
   $scope.callSid = $routeParams.callSid || callSid;
 
   $scope.closeCallDetails = function () {

@@ -2,11 +2,10 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('DashboardCtrl', function ($scope, $resource, $route, $rootScope, AuthService, Auth, RCommStatistics) {
-	var Account = Auth.restcommAccount;
-	$scope.sid = Account.sid;
-	$scope.accountData = Account; 
-	$scope.profile = AuthService.getProfile(); 
+rcMod.controller('DashboardCtrl', function ($scope, $resource, $route, $rootScope, Identity, RCommStatistics) {
+	$scope.sid = Identity.account.sid;
+	$scope.accountData = Identity.account;
+	$scope.profile = Identity.user;
 
   var startDate = new Date(new Date().setDate(new Date().getDate()-30)).toJSON().slice(0,10);
   var endDate = new Date().toJSON().slice(0,10);

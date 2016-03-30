@@ -2,15 +2,13 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, SessionService, Notifications, RCommAccounts, authMode) {
+rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, SessionService, Notifications, RCommAccounts, Identity) {
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
     $rootScope.location = $location.path();
   });
-  
-  $scope.authMode = authMode;
-  //$scope.auth = AuthService;
+
   $scope.sid = SessionService.get('sid');
 
   $scope.testNotifications = function() {
@@ -49,7 +47,7 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, RCommAccountOperations, md5, Auth, AuthService, $location, Notifications) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, RCommAccountOperations, md5, Auth, Identity, $location, Notifications) {
 	var accountBackup = {};
 		
 	/*
@@ -58,7 +56,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 	});
 	*/
 	
-	$scope.loggedSid = AuthService.getLoggedSid();
+	$scope.loggedSid = Identity.getAccountSid();
 	$scope.userLink = {}; // holds all info regarding account-user linking
 
   function refreshAllAccounts () {
@@ -74,7 +72,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 		});
 		
 	} else {  // retrieve currently logged account information
-		$scope.account = RCommAccounts.view({format:'json', accountSid:AuthService.getLoggedSid()}, function (account) {
+		$scope.account = RCommAccounts.view({format:'json', accountSid:Identity.getAccountSid()}, function (account) {
 			onAccountReload(account);			
 		});
 	}

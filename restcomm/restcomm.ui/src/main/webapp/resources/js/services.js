@@ -21,14 +21,15 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
+rcServices.service('Authorization', function(KeycloakAuth,Identity,md5,Notifications,$q) {
 	var serviceInstance = {};
-		
+
+		/*
 	serviceInstance.isLoggedIn = function() {
-		return Auth.loggedIn;
+		return KeycloakAuth.loggedIn;
     }
 	serviceInstance.getAuthStatus = function () {
-		return Auth.authStatus;
+		return KeycloakAuth.authStatus;
 	}
 	serviceInstance.getLoggedSid = function() {
 		return Auth.restcommAccount.sid;
@@ -45,11 +46,12 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 	serviceInstance.logout = function() {
 		Auth.authz.logout();
 	}
+	*/
 	
 	serviceInstance.secureAny = function(roles) {
 		var deferred = $q.defer();
 		for (var i=0; i<roles.length; i++) {
-			if ( Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId ) ) {
+			if ( KeycloakAuth.authz.hasResourceRole(roles[i], KeycloakAuth.authz.clientId ) ) {
 				deferred.resolve("AUTH_STATUS_INSTANCE");
 				return deferred.promise;
 			}
@@ -61,7 +63,7 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 	serviceInstance.secureAll = function(roles) {
 		var deferred = $q.defer();
 		for (var i=0; i<roles.length; i++) {
-			if ( ! Auth.authz.hasResourceRole(roles[i], Auth.authz.clientId) ) {
+			if ( ! KeycloakAuth.authz.hasResourceRole(roles[i], KeycloakAuth.authz.clientId) ) {
 				deferred.reject("AUTH_STATUS_REALM");
 				Notifications.error("You are not authorized to access this resource");
 				return deferred.promise;
@@ -74,11 +76,11 @@ rcServices.service('AuthService', function(Auth,md5,Notifications,$q) {
 			return serviceInstance.secureAny([role]);
 	}
 	serviceInstance.hasRole = function(role) {
-		return Auth.authz.hasResourceRole(role, Auth.authz.clientId);
+		return KeycloakAuth.authz.hasResourceRole(role, KeycloakAuth.authz.clientId);
 	}
 	serviceInstance.hasAccount = function() {
 		var deferred = $q.defer();
-		if (!!Auth.restcommAccount)
+		if (!!identity.account)
 			deferred.resolve(true);
 		else
 			deferred.reject("AUTH_STATUS_NOACCOUNT");

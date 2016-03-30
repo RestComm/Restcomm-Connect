@@ -4,9 +4,9 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Incoming : List ---------------------------------------------------
 
-rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, AuthService, Auth, RCommNumbers, Notifications) {
+rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, Identity, Auth, RCommNumbers, Notifications) {
   $anchorScroll(); // scroll to top
-  $scope.sid = AuthService.getLoggedSid();
+  $scope.sid = Identity.getAccountSid();
 
   // edit incoming number friendly name --------------------------------------
   $scope.editingFriendlyName = "";
@@ -55,12 +55,12 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, AuthService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
+var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, Identity, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
 
   // are we editing details...
   //if($scope.phoneSid === $routeParams.phoneSid) {
 
-    $scope.sid = AuthService.getLoggedSid();
+    $scope.sid = Identity.getAccountSid();
     $scope.phoneSid = $routeParams.phoneSid;
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
@@ -76,7 +76,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   //}
 
   // query for available apps
-  $scope.availableApps = RCommApps.query({account:AuthService.getUsername()});
+  $scope.availableApps = RCommApps.query({account:Identity.getUsername()});
   $scope.localApps = localApps;
 
   //$scope.countries = countries;
@@ -145,9 +145,9 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   }
 };
 
-var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dialog, $modalInstance, AuthService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dialog, $modalInstance, Identity, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
 
-  $scope.sid = AuthService.getLoggedSid();
+  $scope.sid = Identity.getAccountSid();
 
   //$scope.countries = countries;
   $scope.countries = allCountries;
