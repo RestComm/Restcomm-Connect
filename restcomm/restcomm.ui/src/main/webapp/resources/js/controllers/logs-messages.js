@@ -2,11 +2,11 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $modal, AuthService, RCommLogsMessages) {
+rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $modal, Identity, RCommLogsMessages) {
 
   $scope.Math = window.Math;
 
-  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
+  $scope.sid = Identity.getAccountSid();
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -71,8 +71,8 @@ $scope.sortBy = function(field) {
 
 });
 
-rcMod.controller('LogsMessagesDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, AuthService, RCommLogsMessages, messageSid) {
-  $scope.sid =AuthService.getLoggedSid(); // SessionService.get("sid");
+rcMod.controller('LogsMessagesDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, Identity, RCommLogsMessages, messageSid) {
+  $scope.sid = Identity.getAccountSid();
   $scope.messageSid = $routeParams.messageSid || messageSid;
 
   $scope.closeMessageDetails = function () {

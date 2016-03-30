@@ -4,9 +4,9 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : SIP Clients : List ------------------------------------------------
 
-rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, AuthService, RCommClients, RCommApps) {
+rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Identity, RCommClients, RCommApps) {
 
-  $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
+  $scope.sid = Identity.getAccountSid();
 
   // edit incoming client friendly name --------------------------------------
   $scope.editingFriendlyName = "";
@@ -56,12 +56,12 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Aut
 
 // Numbers : SIP Clients : Details (also used for Modal) -----------------------
 
-var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, AuthService, RCommClients, RCommApps, Notifications, localApps) {
+var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, Identity, RCommClients, RCommApps, Notifications, localApps) {
 
 	$scope.localApps = localApps;
   // are we editing details...
   if($scope.clientSid = $routeParams.clientSid) {
-    $scope.sid = AuthService.getLoggedSid(); // SessionService.get("sid");
+    $scope.sid = Identity.getAccountSid();
 
     $scope.clientDetails = RCommClients.get({accountSid:$scope.sid, clientSid: $scope.clientSid});
   } // or registering a new one ?

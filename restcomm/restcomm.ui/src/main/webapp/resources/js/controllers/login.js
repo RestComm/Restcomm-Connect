@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications) {
+rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, Notifications) {
 
   $scope.alerts = [];
 
