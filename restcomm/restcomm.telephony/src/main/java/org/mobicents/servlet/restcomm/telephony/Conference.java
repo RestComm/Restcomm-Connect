@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -75,6 +76,7 @@ public final class Conference extends UntypedActor {
 
     // Runtime stuff
     private final String name;
+    private final Sid conferenceSid;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
 
@@ -115,6 +117,7 @@ public final class Conference extends UntypedActor {
 
         // Runtime stuff
         this.name = name;
+        this.conferenceSid = Sid.generate(Sid.Type.CONFERENCE);
         this.mscontroller = msController;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
@@ -325,11 +328,11 @@ public final class Conference extends UntypedActor {
     private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
         ConferenceInfo information = null;
         if (is(waiting)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name);
+            information = new ConferenceInfo(conferenceSid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name);
         } else if (is(running)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name);
+            information = new ConferenceInfo(conferenceSid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED, name);
+            information = new ConferenceInfo(conferenceSid, calls, ConferenceStateChanged.State.COMPLETED, name);
         }
         sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
     }
