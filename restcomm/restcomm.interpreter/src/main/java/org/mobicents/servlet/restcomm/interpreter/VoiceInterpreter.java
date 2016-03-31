@@ -2065,6 +2065,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Join the conference.
                 final AddParticipant request = new AddParticipant(call);
                 conference.tell(request, source);
+
+                if (callRecord != null) {
+                    callRecord = callRecord.setConferenceSid(conferenceInfo.conferenceSid());
+                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                    records.updateCallDetailRecord(callRecord);
+                }
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
