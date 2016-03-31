@@ -110,10 +110,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         try {
-            if (geolocationType.toString().equalsIgnoreCase("Immediate")) {
-                validateImmediateGeolocation(data);
-            } else if (geolocationType.toString().equalsIgnoreCase("Notification")) {
-                validateNotificationGeolocation(data);
+            if (!geolocationType.toString().equalsIgnoreCase("Immediate")
+                    && !geolocationType.toString().equalsIgnoreCase("Notification")) {
+                validateGeolocationType(data);
             }
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
@@ -121,8 +120,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
 
-        if (geolocation.getResponseStatus() != null && (geolocation.getResponseStatus().equalsIgnoreCase("rejected")
-                || geolocation.getResponseStatus().equalsIgnoreCase("unauthorized"))) {
+        if (geolocation.getResponseStatus() != null && geolocation.getResponseStatus().equalsIgnoreCase("rejected")) {
             System.out.println("Geolocation ResponseStatus rejected or unauthorized for that Sid");
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
@@ -149,58 +147,142 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private Geolocation createFrom(final Sid accountSid, final MultivaluedMap<String, String> data,
             Geolocation.GeolocationType glType) {
-        // *** Validation of parameters with specified values *** //
-        if (data.containsKey("GeofenceEvent")) {
-            String geofenceEvent = data.getFirst("GeofenceEvent");
-            if (!geofenceEvent.equalsIgnoreCase("in") && !geofenceEvent.equalsIgnoreCase("out")
-                    && !geofenceEvent.equalsIgnoreCase("in-out")) {
-                final Geolocation.Builder builder = Geolocation.builder();
-                builder.setCause("GeofenceEvent value not API compliant");
-                builder.setResponseStatus("rejected");
-                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+
+        // *** Validation of not null and specific formatted parameters *** //
+
+        // *** Source can not be null ***/
+        try {
+            if (!data.containsKey("Source")) {
+                return rejectedGeolocationRequest(accountSid, data, glType, "Source value con not be null");
             }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for Source value");
         }
-        if (data.containsKey("DesiredAccuracy")) {
-            String desiredAccuracy = data.getFirst("DesiredAccuracy");
-            if (!desiredAccuracy.equalsIgnoreCase("High") && !desiredAccuracy.equalsIgnoreCase("Average")
-                    && !desiredAccuracy.equalsIgnoreCase("Low")) {
-                final Geolocation.Builder builder = Geolocation.builder();
-                builder.setCause("DesiredAccuracy value not API compliant");
-                builder.setResponseStatus("rejected");
-                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+
+        // *** DeviceIdentifier can not be null ***/
+        try {
+            if (!data.containsKey("DeviceIdentifier")) {
+                return rejectedGeolocationRequest(accountSid, data, glType, "DeviceIdentifier value con not be null");
             }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceIdentifier value");
         }
-        if (data.containsKey("EventGeofenceLatitude")) {
-            String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
-            Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat);
-            if (!eventGeofenceLatWGS84) {
-                final Geolocation.Builder builder = Geolocation.builder();
-                builder.setCause("EventGeofenceLatitude value not WGS84 compliant");
-                builder.setResponseStatus("rejected");
-                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+
+        // *** StatusCallback can not be null ***/
+        try {
+            if (!data.containsKey("StatusCallback")) {
+                return rejectedGeolocationRequest(accountSid, data, glType, "StatusCallback value con not be null");
             }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for StatusCallback value");
         }
-        if (data.containsKey("EventGeofenceLongitude")) {
-            String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
-            Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
-            if (!eventGeofenceLongWGS84) {
-                final Geolocation.Builder builder = Geolocation.builder();
-                builder.setCause("EventGeofenceLongitude value not WGS84 compliant");
-                builder.setResponseStatus("rejected");
-                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+
+        // *** DesiredAccuracy can not be null and must be API compliant: High, Average or Low***/
+        try {
+            if (data.containsKey("DesiredAccuracy")) {
+                String desiredAccuracy = data.getFirst("DesiredAccuracy");
+                if (!desiredAccuracy.equalsIgnoreCase("High") && !desiredAccuracy.equalsIgnoreCase("Average")
+                        && !desiredAccuracy.equalsIgnoreCase("Low")) {
+                    return rejectedGeolocationRequest(accountSid, data, glType, "DesiredAccuracy value not API compliant");
+                }
+            } else {
+                return rejectedGeolocationRequest(accountSid, data, glType, "DesiredAccuracy can not be null");
             }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DesiredAccuracy value");
         }
-        if (data.containsKey("LocationTimestamp")) {
-            try {
+
+        // *** GeofenceEvent must belong to Notification type of Geolocation, not null and API compliant: in, out or in-out***/
+        try {
+            if (!data.containsKey("GeofenceEvent") && glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceEvent value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("GeofenceEvent") && !glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceEvent only applies for Notification type of Geolocation");
+            } else if (data.containsKey("GeofenceEvent") && glType.toString().equalsIgnoreCase("Notification")) {
+                String geofenceEvent = data.getFirst("GeofenceEvent");
+                if (!geofenceEvent.equalsIgnoreCase("in") && !geofenceEvent.equalsIgnoreCase("out")
+                        && !geofenceEvent.equalsIgnoreCase("in-out")) {
+                        return rejectedGeolocationRequest(accountSid, data, glType, "GeofenceEvent value not API compliant");
+                }
+            }
+        } catch (Exception exception) {
+            System.out.println("Exception: "+exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for GeofenceEvent value");
+        }
+
+        // *** EventGeofenceLatitude must belong to Notification type of Geolocation, not null and API compliant: WGS84 only***/
+        try {
+            if (!data.containsKey("EventGeofenceLatitude") && glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLatitude value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLatitude") && !glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLatitude only applies for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLatitude") && glType.toString().equalsIgnoreCase("Notification")) {
+                String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
+                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLat);
+                if (!eventGeofenceLongWGS84) {
+                    return rejectedGeolocationRequest(accountSid, data, glType,
+                            "EventGeofenceLatitude value not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+                System.out.println("Exception: "+exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLatitude value");
+        }
+
+        // *** EventGeofenceLongitude must belong to Notification type of Geolocation and must be API compliant: WGS84 only ***/
+        try {
+            if (!data.containsKey("EventGeofenceLongitude") && glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLongitude value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLongitude") && !glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLongitude only applies for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLongitude") && glType.toString().equalsIgnoreCase("Notification")) {
+                String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
+                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
+                if (!eventGeofenceLongWGS84) {
+                    return rejectedGeolocationRequest(accountSid, data, glType,
+                            "EventGeofenceLongitude value not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+                System.out.println("Exception: "+exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLongitude value");
+        }
+
+        // *** GeofenceRange can not be null in Notification type of Geolocation***/
+        try {
+            if (!data.containsKey("GeofenceRange") && glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceRange value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("GeofenceRange") && !glType.toString().equalsIgnoreCase("Notification")) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceRange only applies for Notification type of Geolocation");
+            }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for GeofenceRange value");
+        }
+
+        // *** LocationTimestamp must be API compliant: DateTime format only***/
+        try {
+            if (data.containsKey("LocationTimestamp")) {
                 DateTime locationTimestamp = getDateTime("LocationTimestamp", data);
                 System.out.println("locationTimestamp value: " + locationTimestamp);
-            } catch (Exception e) {
-                final Geolocation.Builder builder = Geolocation.builder();
-                builder.setCause("LocationTimestamp value not API compliant");
-                builder.setResponseStatus("rejected");
-                return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
             }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "LocationTimestamp value not API compliant");
         }
+
         // *** All parameters with specified values validations passed *** //
         Geolocation gl = buildGeolocation(accountSid, data, glType);
         return gl;
@@ -418,13 +500,15 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         if (data.containsKey("LocationTimestamp")) {
             updatedGeolocation = updatedGeolocation.setLocationTimestamp(getDateTime("LocationTimestamp", data));
         }
-        if (data.containsKey("EventGeofenceLatitude")) {
+        if (data.containsKey("EventGeofenceLatitude")
+                && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
             updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude(data.getFirst("EventGeofenceLatitude"));
         }
-        if (data.containsKey("EventGeofenceLongitude")) {
+        if (data.containsKey("EventGeofenceLongitude")
+                && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
             updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude(data.getFirst("EventGeofenceLongitude"));
         }
-        if (data.containsKey("Radius")) {
+        if (data.containsKey("Radius") && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
             updatedGeolocation = updatedGeolocation.setRadius(getLong("Radius", data));
         }
         if (data.containsKey("GeolocationPositioningType")) {
@@ -433,7 +517,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         if (data.containsKey("LastGeolocationResponse")) {
             updatedGeolocation = updatedGeolocation.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
         }
-        if (data.containsKey("Cause")) {
+        if (data.containsKey("Cause") && geolocation.getCause() != null) {
             updatedGeolocation = updatedGeolocation.setCause(data.getFirst("Cause"));
         }
         DateTime thisDateTime = DateTime.now();
@@ -444,39 +528,12 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return updatedGeolocation;
     }
 
-    private void validateImmediateGeolocation(final MultivaluedMap<String, String> data) throws RuntimeException {
-        // ** Validation of mandatory parameters on Immediate type of Geolocation POST requests **/
-        if (!data.containsKey("Source")) {
-            throw new NullPointerException("Source can not be null.");
-        } else if (!data.containsKey("DeviceIdentifier")) {
-            throw new NullPointerException("DeviceIdentifier can not be null.");
-        } else if (!data.containsKey("DesiredAccuracy")) {
-            throw new NullPointerException("DesiredAccuracy can not be null.");
-        } else if (!data.containsKey("StatusCallback")) {
-            throw new NullPointerException("StatusCallback can not be null.");
-        }
+    private void validateGeolocationType(final MultivaluedMap<String, String> data) throws RuntimeException {
+        // ** Validation of Geolocation POST requests with valid type**/
+        throw new NullPointerException("Geolocation Type can not be null, but either Immediate or Notification.");
+
     }
 
-    private void validateNotificationGeolocation(final MultivaluedMap<String, String> data) throws RuntimeException {
-        // ** Validation of mandatory parameters on Notification type of Geolocation POST requests **/
-        if (!data.containsKey("Source")) {
-            throw new NullPointerException("Source can not be null.");
-        } else if (!data.containsKey("DeviceIdentifier")) {
-            throw new NullPointerException("DeviceIdentifier can not be null.");
-        } else if (!data.containsKey("DesiredAccuracy")) {
-            throw new NullPointerException("DesiredAccuracy can not be null.");
-        } else if (!data.containsKey("StatusCallback")) {
-            throw new NullPointerException("StatusCallback can not be null.");
-        } else if (!data.containsKey("EventGeofenceLatitude")) {
-            throw new NullPointerException("EventGeofenceLatitude can not be null.");
-        } else if (!data.containsKey("EventGeofenceLongitude")) {
-            throw new NullPointerException("EventGeofenceLongitude can not be null.");
-        } else if (!data.containsKey("GeofenceRange")) {
-            throw new NullPointerException("GeofenceRange can not be null.");
-        } else if (!data.containsKey("GeofenceEvent")) {
-            throw new NullPointerException("GeofenceEvent can not be null.");
-        }
-    }
 
     private boolean validateWGS84(String coordinates) {
 
@@ -498,5 +555,13 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             System.out.println("Coordinates " + coordinates + " are NOT WGS84 compliant");
             return WGS84_validation;
         }
+    }
+
+    private Geolocation rejectedGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType, String cause) {
+        final Geolocation.Builder builder = Geolocation.builder();
+        builder.setResponseStatus("rejected");
+        builder.setCause(cause);
+        return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
     }
 }

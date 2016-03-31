@@ -307,7 +307,7 @@ event_geofence_longitude VARCHAR(15),
 radius BIGINT, 
 geolocation_positioning_type VARCHAR(15), 
 last_geolocation_response VARCHAR(15), 
-cause VARCHAR(50), 
+cause VARCHAR(150), 
 api_version VARCHAR(10) NOT NULL, 
 uri LONGVARCHAR NOT NULL);
 

@@ -592,12 +592,26 @@ public class Geolocation {
             this.ageOfLocationInfo = ageOfLocationInfo;
         }
 
-        public void setDeviceLatitude(String deviceLatitude) {
-            this.deviceLatitude = deviceLatitude;
+        public void setDeviceLatitude(String devLatitude) {
+            if (devLatitude != null) {
+                Boolean devLatitudeWGS84 = validateWGS84(devLatitude);
+                if (devLatitudeWGS84) {
+                    this.deviceLatitude = devLatitude;
+                } else {
+                    this.deviceLatitude = "Malformed";
+                }
+            }
         }
 
-        public void setDeviceLongitude(String deviceLongitude) {
-            this.deviceLongitude = deviceLongitude;
+        public void setDeviceLongitude(String devLongitude) {
+            if (devLongitude != null) {
+                Boolean devLongitudeWGS84 = validateWGS84(devLongitude);
+                if (devLongitudeWGS84) {
+                    this.deviceLongitude = devLongitude;
+                } else {
+                    this.deviceLongitude = "Malformed";
+                }
+            }
         }
 
         public void setAccuracy(Long accuracy) {
@@ -617,16 +631,35 @@ public class Geolocation {
         }
 
         public void setLocationTimestamp(DateTime locationTimestamp) {
-            // locationTimestamp = DateTime.now();
-            this.locationTimestamp = locationTimestamp;
+            try {
+                this.locationTimestamp = locationTimestamp;
+            } catch (Exception exception) {
+                DateTime locTimestamp = DateTime.parse("1900-01-01");
+                this.locationTimestamp = locTimestamp;
+            }
+
         }
 
-        public void setEventGeofenceLatitude(String eventGeofenceLatitude) {
-            this.eventGeofenceLatitude = eventGeofenceLatitude;
+        public void setEventGeofenceLatitude(String eventGeofenceLat) {
+            if (eventGeofenceLat != null) {
+                Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat);
+                if (eventGeofenceLatWGS84) {
+                    this.eventGeofenceLatitude = eventGeofenceLat;
+                } else {
+                    this.eventGeofenceLatitude = "Malformed";
+                }
+            }
         }
 
-        public void setEventGeofenceLongitude(String eventGeofenceLongitude) {
-            this.eventGeofenceLongitude = eventGeofenceLongitude;
+        public void setEventGeofenceLongitude(String eventGeofenceLong) {
+            if (eventGeofenceLong != null) {
+                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
+                if (eventGeofenceLongWGS84) {
+                    this.eventGeofenceLongitude = eventGeofenceLong;
+                } else {
+                    this.eventGeofenceLongitude = "Malformed";
+                }
+            }
         }
 
         public void setRadius(Long radius) {
@@ -642,7 +675,13 @@ public class Geolocation {
         }
 
         public void setCause(String cause) {
-            this.cause = cause;
+            if (this.responseStatus != null
+                    && (this.responseStatus.equalsIgnoreCase("rejected") || this.responseStatus.equalsIgnoreCase("unauthorized")
+                            || this.responseStatus.equalsIgnoreCase("failed"))) {
+                this.cause = cause;
+            } else {
+                this.cause = null;
+            }
         }
 
         public void setApiVersion(String apiVersion) {
@@ -651,6 +690,28 @@ public class Geolocation {
 
         public void setUri(URI uri) {
             this.uri = uri;
+        }
+
+        private boolean validateWGS84(String coordinates) {
+
+            String degrees = "°";
+            String minutes = "'";
+            Boolean WGS84_validation;
+            Boolean pattern1 = coordinates.matches("[NWSE]{1}\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
+            Boolean pattern2 = coordinates.matches("\\d{1,3}[" + degrees + "]\\d{1,3}[" + minutes + "]\\d{1,2}\\.\\d{1,2}["
+                    + minutes + "][" + minutes + "][NWSE]{1}$");
+            Boolean pattern3 = coordinates.matches("\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
+            Boolean pattern4 = coordinates.matches("-?\\d+(\\.\\d+)?");
+
+            if (pattern1 || pattern2 || pattern3 || pattern4) {
+                WGS84_validation = true;
+                System.out.println("Coordinates " + coordinates + " are WGS84 compliant");
+                return WGS84_validation;
+            } else {
+                WGS84_validation = false;
+                System.out.println("Coordinates " + coordinates + " are NOT WGS84 compliant");
+                return WGS84_validation;
+            }
         }
 
     }
