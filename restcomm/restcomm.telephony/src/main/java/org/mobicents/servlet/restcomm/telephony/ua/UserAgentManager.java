@@ -73,6 +73,7 @@ public final class UserAgentManager extends UntypedActor {
     private final DaoManager storage;
     private final ServletContext servletContext;
     private ActorRef monitoringService;
+    private final int pingInterval;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -84,7 +85,7 @@ public final class UserAgentManager extends UntypedActor {
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
         this.storage = storage;
-        int pingInterval = runtime.getInt("ping-interval", 60);
+        pingInterval = runtime.getInt("ping-interval", 60);
         getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
     }
 
@@ -94,7 +95,16 @@ public final class UserAgentManager extends UntypedActor {
         for (final Registration result : results) {
             final DateTime expires = result.getDateExpires();
             if (expires.isBeforeNow() || expires.isEqualNow()) {
-                logger.info("Registration: "+result.getAddressOfRecord()+" expired and will remove it now");
+                logger.info("Registration: "+result.getAddressOfRecord()+" expired and will be removed now");
+                registrations.removeRegistration(result);
+                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                return;
+            }
+            final DateTime updated = result.getDateUpdated();
+            Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
+            if ( (DateTime.now().getMillis() - updated.getMillis()) >  pingIntervalMillis) {
+                //Last time this registration updated was older than (pingInterval * 3), looks like it doesn't respond to OPTIONS
+                logger.info("Registration: "+result.getAddressOfRecord()+" didn't respond to OPTIONS and will be removed now");
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             }
@@ -250,6 +260,11 @@ public final class UserAgentManager extends UntypedActor {
             if (response.getApplicationSession().isValid()) {
                 response.getApplicationSession().invalidate();
             }
+        final RegistrationsDao registrations = storage.getRegistrationsDao();
+        Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser());
+        //Registration here shouldn't be null. Update it
+        registration = registration.updated();
+        registrations.updateRegistration(registration);
     }
 
     private SipURI outboundInterface(String toTransport) {
