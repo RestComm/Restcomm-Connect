@@ -933,8 +933,14 @@ public final class Call extends UntypedActor {
             msController.tell(command, source);
         }
 
-        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException {
-            final String externalIp = sipMessage.getInitialRemoteAddr();
+        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
+            String externalIp = null;
+            final SipURI externalSipUri = (SipURI) sipMessage.getAttribute("realInetUri");
+            if (externalSipUri != null) {
+                externalIp = externalSipUri.toString();
+            } else {
+                externalIp = sipMessage.getInitialRemoteAddr();
+            }
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
             return new CreateMediaSession("sendrecv", offer, false, webrtc);
