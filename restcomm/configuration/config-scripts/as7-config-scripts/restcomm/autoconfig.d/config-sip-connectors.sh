@@ -13,11 +13,11 @@ configConnectors() {
 
 	if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
 		sed -e "s|path-name=\"org.mobicents.ext\" \(app-dispatcher-class=.*\)|path-name=\"org.mobicents.ha.balancing.only\" \1|" \
-		-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_UDP\"/>|" \
-	        -e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_TCP\"/>|" \
-	        -e "s|<connector name=\"sip-tls\" .*/>|<connector name=\"sip-tls\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tls\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_TLS\"/>|" \
-	        -e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_WS\"/>|" \
-	        -e "s|<connector name=\"sip-wss\" .*/>|<connector name=\"sip-wss\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-wss\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_WSS\"/>|" \
+		-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_UDP\" use-load-balancer=\"true\"/>|" \
+	        -e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_TCP\" use-load-balancer=\"true\"/>|" \
+	        -e "s|<connector name=\"sip-tls\" .*/>|<connector name=\"sip-tls\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tls\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_TLS\" use-load-balancer=\"true\"/>|" \
+	        -e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_WS\" use-load-balancer=\"true\"/>|" \
+	        -e "s|<connector name=\"sip-wss\" .*/>|<connector name=\"sip-wss\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-wss\" use-static-address=\"true\" static-server-address=\"$LB_ADDRESS\" static-server-port=\"$LB_SIP_PORT_WSS\" use-load-balancer=\"true\"/>|" \
 	    $FILE > $FILE.bak
 
 	else
