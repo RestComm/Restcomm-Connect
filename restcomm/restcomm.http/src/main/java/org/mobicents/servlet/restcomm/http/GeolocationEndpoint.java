@@ -350,6 +350,14 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
+    private Geolocation rejectedGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType, String cause) {
+        final Geolocation.Builder builder = Geolocation.builder();
+        builder.setResponseStatus("rejected");
+        builder.setCause(cause);
+        return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+    }
+
     protected Response getGeolocation(final String accountSid, final String sid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
@@ -443,88 +451,262 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
         Geolocation updatedGeolocation = geolocation;
 
-        // *** Validation of already rejected or unauthorized Geolocations ***//
-        if ((geolocation.getResponseStatus() != null && geolocation.getResponseStatus().equalsIgnoreCase("rejected"))
-                || (geolocation.getResponseStatus() != null
-                        && geolocation.getResponseStatus().equalsIgnoreCase("unauthorized"))) {
-            geolocation.setDateUpdated(DateTime.now());
-            return geolocation;
+        // *** Validation of already rejected, unauthorized or failed Geolocations ***//
+        if (geolocation.getResponseStatus() != null && (geolocation.getResponseStatus().equalsIgnoreCase("rejected")
+                || geolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
+                || geolocation.getResponseStatus().equalsIgnoreCase("failed"))) {
+            updatedGeolocation.setDateUpdated(DateTime.now());
+            if (data.containsKey("Cause")){
+                updatedGeolocation.setCause(data.getFirst("Cause"));
+                // "Cause" is only updated if "ResponseStatus" is not null and is either "rejected", "unauthorized" or "failed"
+                // Otherwise, it's value in HTTP PUT is ignored
+            }
+            return updatedGeolocation;
         }
 
         // *** Set of parameters with provided data for Geolocation update***//
         if (data.containsKey("Source")) {
-            updatedGeolocation = updatedGeolocation.setSource(data.getFirst("Source"));
+            try {
+                updatedGeolocation = updatedGeolocation.setSource(data.getFirst("Source"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Source: " + exception.getMessage());
+            }
         }
         if (data.containsKey("DeviceIdentifier")) {
-            updatedGeolocation = updatedGeolocation.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
+            try {
+                updatedGeolocation = updatedGeolocation.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Source: " + exception.getMessage());
+            }
         }
         if (data.containsKey("ResponseStatus")) {
             updatedGeolocation = updatedGeolocation.setResponseStatus(data.getFirst("ResponseStatus"));
+            if (data.containsKey("Cause") && (updatedGeolocation.getResponseStatus().equalsIgnoreCase("rejected")
+                    || updatedGeolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
+                    || updatedGeolocation.getResponseStatus().equalsIgnoreCase("failed"))) {
+                updatedGeolocation.setCause(data.getFirst("Cause"));
+            }
         }
         if (data.containsKey("CellId")) {
-            updatedGeolocation = updatedGeolocation.setCellId(data.getFirst("CellId"));
+            try {
+                updatedGeolocation = updatedGeolocation.setCellId(data.getFirst("CellId"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating CellId: " + exception.getMessage());
+            }
         }
         if (data.containsKey("LocationAreaCode")) {
-            updatedGeolocation = updatedGeolocation.setLocationAreaCode(data.getFirst("LocationAreaCode"));
+            try {
+                updatedGeolocation = updatedGeolocation.setLocationAreaCode(data.getFirst("LocationAreaCode"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Location Area Code: " + exception.getMessage());
+            }
         }
         if (data.containsKey("MobileCountryCode")) {
-            updatedGeolocation = updatedGeolocation.setMobileCountryCode(getInteger("MobileCountryCode", data));
+            try {
+                updatedGeolocation = updatedGeolocation.setMobileCountryCode(getInteger("MobileCountryCode", data));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Mobile Country Code: " + exception.getMessage());
+            }
         }
         if (data.containsKey("MobileNetworkCode")) {
-            updatedGeolocation = updatedGeolocation.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
+            try {
+                updatedGeolocation = updatedGeolocation.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Mobile Network Code: " + exception.getMessage());
+            }
         }
         if (data.containsKey("NetworkEntityAddress")) {
-            updatedGeolocation = updatedGeolocation.setNetworkEntityAddress(getLong("NetworkEntityAddress", data));
+            try {
+                updatedGeolocation = updatedGeolocation.setNetworkEntityAddress(getLong("NetworkEntityAddress", data));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Network Entity Address: " + exception.getMessage());
+            }
         }
         if (data.containsKey("LocationAge")) {
-            updatedGeolocation = updatedGeolocation.setAgeOfLocationInfo(getInteger("LocationAge", data));
+            try {
+                updatedGeolocation = updatedGeolocation.setAgeOfLocationInfo(getInteger("LocationAge", data));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Age of Location Info: " + exception.getMessage());
+            }
         }
         if (data.containsKey("DeviceLatitude")) {
-            updatedGeolocation = updatedGeolocation.setDeviceLatitude(data.getFirst("DeviceLatitude"));
+            try {
+                String deviceLat = data.getFirst("DeviceLatitude");
+                Boolean deviceLatWGS84 = validateWGS84(deviceLat);
+                if (!deviceLatWGS84) {
+                    updatedGeolocation = updatedGeolocation.setDeviceLatitude("Malformed");
+                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                } else {
+                    updatedGeolocation = updatedGeolocation.setDeviceLatitude(deviceLat);
+                    try {
+                        String responseStatus = updatedGeolocation.getResponseStatus();
+                        if (responseStatus != null) {
+                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
+                        } else if (updatedGeolocation.getDeviceLongitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getEventGeofenceLatitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getEventGeofenceLongitude().equalsIgnoreCase("Malformed")) {
+                            updatedGeolocation.setResponseStatus("Malformed");
+                        } else {
+                            updatedGeolocation.setResponseStatus("Undetermined");
+                        }
+                    } catch (NullPointerException npe) {
+                        System.out.println("Exception in updating device latitude: " + npe.getMessage());
+                    }
+                }
+            } catch (Exception exception) {
+                System.out.println("Exception in updating device latitude: " + exception.getMessage());
+            }
         }
         if (data.containsKey("DeviceLongitude")) {
             updatedGeolocation = updatedGeolocation.setDeviceLongitude(data.getFirst("DeviceLongitude"));
+            try {
+                String deviceLong = data.getFirst("DeviceLongitude");
+                Boolean deviceLongGS84 = validateWGS84(deviceLong);
+                if (!deviceLongGS84) {
+                    updatedGeolocation = updatedGeolocation.setDeviceLongitude("Malformed");
+                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                } else {
+                    updatedGeolocation = updatedGeolocation.setDeviceLongitude(deviceLong);
+                    try {
+                        String responseStatus = updatedGeolocation.getResponseStatus();
+                        if (responseStatus != null) {
+                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
+                        } else if (updatedGeolocation.getDeviceLatitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getEventGeofenceLatitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getEventGeofenceLongitude().equalsIgnoreCase("Malformed")) {
+                            updatedGeolocation.setResponseStatus("Malformed");
+                        } else {
+                            updatedGeolocation.setResponseStatus("Undetermined");
+                        }
+                    } catch (NullPointerException npe) {
+                        System.out.println("Exception in updating device longitude: " + npe.getMessage());
+                    }
+                }
+            } catch (Exception exception) {
+                System.out.println("Exception in updating device longitude: " + exception.getMessage());
+            }
         }
         if (data.containsKey("Accuracy")) {
-            updatedGeolocation = updatedGeolocation.setAccuracy(getLong("Accuracy", data));
+            try {
+                updatedGeolocation = updatedGeolocation.setAccuracy(getLong("Accuracy", data));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating accuracy: " + exception.getMessage());
+            }
         }
         if (data.containsKey("PhysicalAddress")) {
-            updatedGeolocation = updatedGeolocation.setPhysicalAddress(data.getFirst("PhysicalAddress"));
+            try {
+                updatedGeolocation = updatedGeolocation.setPhysicalAddress(data.getFirst("PhysicalAddress"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating physical address: " + exception.getMessage());
+            }
         }
         if (data.containsKey("InternetAddress")) {
-            updatedGeolocation = updatedGeolocation.setInternetAddress(data.getFirst("InternetAddress"));
+            try {
+                updatedGeolocation = updatedGeolocation.setInternetAddress(data.getFirst("InternetAddress"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating Internet address: " + exception.getMessage());
+            }
         }
         if (data.containsKey("FormattedAddress")) {
-            updatedGeolocation = updatedGeolocation.setFormattedAddress(data.getFirst("FormattedAddress"));
+            try {
+                updatedGeolocation = updatedGeolocation.setFormattedAddress(data.getFirst("FormattedAddress"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating formatted address: " + exception.getMessage());
+            }
         }
         if (data.containsKey("LocationTimestamp")) {
-            updatedGeolocation = updatedGeolocation.setLocationTimestamp(getDateTime("LocationTimestamp", data));
+            try{
+                updatedGeolocation = updatedGeolocation.setLocationTimestamp(getDateTime("LocationTimestamp", data));
+            } catch (Exception exception) {
+                DateTime locTimestamp = DateTime.parse("1900-01-01");
+                updatedGeolocation = updatedGeolocation.setLocationTimestamp(locTimestamp);
+            }
         }
         if (data.containsKey("EventGeofenceLatitude")
                 && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
-            updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude(data.getFirst("EventGeofenceLatitude"));
+            try {
+                String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
+                Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat);
+                if (!eventGeofenceLatWGS84) {
+                    updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude("Malformed");
+                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                } else {
+                    updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude(eventGeofenceLat);
+                    try {
+                        String responseStatus = updatedGeolocation.getResponseStatus();
+                        if (responseStatus != null) {
+                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
+                        } else if (updatedGeolocation.getDeviceLatitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getDeviceLongitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getEventGeofenceLongitude().equalsIgnoreCase("Malformed")) {
+                            updatedGeolocation.setResponseStatus("Malformed");
+                        } else {
+                            updatedGeolocation.setResponseStatus("Undetermined");
+                        }
+                    } catch (NullPointerException npe) {
+                        System.out.println("Exception in updating event geofence latitude: " + npe.getMessage());
+                    }
+                }
+            } catch (Exception exception) {
+                System.out.println("Exception in updating event geofence latitude for notification geolocation: "
+                        + exception.getMessage());
+            }
+
         }
         if (data.containsKey("EventGeofenceLongitude")
                 && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
-            updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude(data.getFirst("EventGeofenceLongitude"));
+            try {
+                String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
+                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
+                if (!eventGeofenceLongWGS84) {
+                    updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude("Malformed");
+                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                } else {
+                    updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude(eventGeofenceLong);
+                    try {
+                        String responseStatus = updatedGeolocation.getResponseStatus();
+                        if (responseStatus != null) {
+                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
+                        } else if (updatedGeolocation.getDeviceLatitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getDeviceLongitude().equalsIgnoreCase("Malformed")
+                                || updatedGeolocation.getEventGeofenceLatitude().equalsIgnoreCase("Malformed")) {
+                            updatedGeolocation.setResponseStatus("Malformed");
+                        } else {
+                            updatedGeolocation.setResponseStatus("Undetermined");
+                        }
+                    } catch (NullPointerException npe) {
+                        System.out.println("Exception in updating event geofence longitude: " + npe.getMessage());
+                    }
+                }
+            } catch (Exception exception) {
+                System.out.println("Exception in updating event geofence longlitude for notification geolocation: "
+                        + exception.getMessage());
+            }
         }
         if (data.containsKey("Radius") && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
-            updatedGeolocation = updatedGeolocation.setRadius(getLong("Radius", data));
+            try {
+                updatedGeolocation = updatedGeolocation.setRadius(getLong("Radius", data));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating radius for notification geolocation: " + exception.getMessage());
+            }
         }
         if (data.containsKey("GeolocationPositioningType")) {
-            updatedGeolocation = updatedGeolocation.setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
+            try {
+                updatedGeolocation = updatedGeolocation
+                        .setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating geolocation positioning type: " + exception.getMessage());
+            }
         }
         if (data.containsKey("LastGeolocationResponse")) {
-            updatedGeolocation = updatedGeolocation.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
-        }
-        if (data.containsKey("Cause") && geolocation.getCause() != null) {
-            updatedGeolocation = updatedGeolocation.setCause(data.getFirst("Cause"));
+            try {
+                updatedGeolocation = updatedGeolocation.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
+            } catch (Exception exception) {
+                System.out.println("Exception in updating last geolocation response: " + exception.getMessage());
+            }
         }
         DateTime thisDateTime = DateTime.now();
-        System.out.println("GeolocationEndpoint, DateTime.now(): " + thisDateTime);
         updatedGeolocation = updatedGeolocation.setDateUpdated(thisDateTime);
-        System.out.println(
-                "GeolocationEndpoint update, updatedGeolocation.getDateUpdated(): " + updatedGeolocation.getDateUpdated());
         return updatedGeolocation;
     }
 
@@ -533,7 +715,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         throw new NullPointerException("Geolocation Type can not be null, but either Immediate or Notification.");
 
     }
-
 
     private boolean validateWGS84(String coordinates) {
 
@@ -557,11 +738,5 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-    private Geolocation rejectedGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
-            Geolocation.GeolocationType glType, String cause) {
-        final Geolocation.Builder builder = Geolocation.builder();
-        builder.setResponseStatus("rejected");
-        builder.setCause(cause);
-        return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
-    }
+
 }

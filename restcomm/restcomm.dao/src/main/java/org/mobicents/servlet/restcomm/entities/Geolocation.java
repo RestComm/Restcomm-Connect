@@ -544,7 +544,6 @@ public class Geolocation {
         }
 
         public void setDateUpdated(DateTime dateUpdated) {
-            System.out.println("dateUpdated (builder): " + dateUpdated);
             this.dateUpdated = dateUpdated;
         }
 
@@ -599,6 +598,7 @@ public class Geolocation {
                     this.deviceLatitude = devLatitude;
                 } else {
                     this.deviceLatitude = "Malformed";
+                    this.responseStatus = "Malformed";
                 }
             }
         }
@@ -610,6 +610,7 @@ public class Geolocation {
                     this.deviceLongitude = devLongitude;
                 } else {
                     this.deviceLongitude = "Malformed";
+                    this.responseStatus = "Malformed";
                 }
             }
         }
@@ -647,6 +648,7 @@ public class Geolocation {
                     this.eventGeofenceLatitude = eventGeofenceLat;
                 } else {
                     this.eventGeofenceLatitude = "Malformed";
+                    this.responseStatus = "Malformed";
                 }
             }
         }
@@ -658,6 +660,7 @@ public class Geolocation {
                     this.eventGeofenceLongitude = eventGeofenceLong;
                 } else {
                     this.eventGeofenceLongitude = "Malformed";
+                    this.responseStatus = "Malformed";
                 }
             }
         }
@@ -679,6 +682,8 @@ public class Geolocation {
                     && (this.responseStatus.equalsIgnoreCase("rejected") || this.responseStatus.equalsIgnoreCase("unauthorized")
                             || this.responseStatus.equalsIgnoreCase("failed"))) {
                 this.cause = cause;
+                // "Cause" is only updated is "ResponseStatus" is not null and is either "rejected", "unauthorized" or "failed"
+                // Otherwise, it's value in HTTP POST is ignored
             } else {
                 this.cause = null;
             }
@@ -715,5 +720,7 @@ public class Geolocation {
         }
 
     }
+
+
 
 }
