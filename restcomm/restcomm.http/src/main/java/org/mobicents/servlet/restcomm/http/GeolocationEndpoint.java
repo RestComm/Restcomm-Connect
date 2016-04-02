@@ -147,9 +147,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private Geolocation createFrom(final Sid accountSid, final MultivaluedMap<String, String> data,
             Geolocation.GeolocationType glType) {
-
         // *** Validation of not null and specific formatted parameters *** //
-
         // *** Source can not be null ***/
         try {
             if (!data.containsKey("Source")) {
@@ -194,6 +192,34 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         } catch (Exception exception) {
             System.out.println("Exception: " + exception.getMessage());
             return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DesiredAccuracy value");
+        }
+
+        // *** DeviceLatitude must be API compliant: High, Average or Low***/
+        try {
+            if (data.containsKey("DeviceLatitude")) {
+                String deviceLat = data.getFirst("DeviceLatitude");
+                Boolean devLatWGS84 = validateWGS84(deviceLat);
+                if (!devLatWGS84) {
+                    return failedGeolocationRequest(accountSid, data, glType, "DeviceLatitude not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceLatitude value");
+        }
+
+        // *** DeviceLongitude must be API compliant: High, Average or Low***/
+        try {
+            if (data.containsKey("DeviceLongitude")) {
+                String deviceLong = data.getFirst("DeviceLongitude");
+                Boolean devLongWGS84 = validateWGS84(deviceLong);
+                if (!devLongWGS84) {
+                    return failedGeolocationRequest(accountSid, data, glType, "DeviceLongitude not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+            System.out.println("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceLatitude value");
         }
 
         // *** GeofenceEvent must belong to Notification type of Geolocation, not null and API compliant: in, out or in-out***/
@@ -330,7 +356,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    private Geolocation buildDeniedGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
+    private Geolocation buildIncorrectGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
             Geolocation.GeolocationType glType, final Geolocation.Builder builder) {
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
         builder.setSid(sid);
@@ -355,7 +381,44 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         final Geolocation.Builder builder = Geolocation.builder();
         builder.setResponseStatus("rejected");
         builder.setCause(cause);
-        return buildDeniedGeolocationRequest(accountSid, data, glType, builder);
+        return buildIncorrectGeolocationRequest(accountSid, data, glType, builder);
+    }
+
+    private Geolocation failedGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType, String cause) {
+        final Geolocation.Builder builder = Geolocation.builder();
+        builder.setResponseStatus("failed");
+        builder.setCause(cause);
+        return buildIncorrectGeolocationRequest(accountSid, data, glType, builder);
+    }
+
+    private Geolocation buildIncorrectGeolocationUpdateRequest(final Sid accountSid, final Sid sid,
+            final MultivaluedMap<String, String> data, Geolocation.GeolocationType glType, final Geolocation.Builder builder) {
+        builder.setSid(sid);
+        DateTime currentDateTime = DateTime.now();
+        builder.setDateUpdated(currentDateTime);
+        builder.setAccountSid(accountSid);
+        builder.setSource(data.getFirst("Source"));
+        builder.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
+        builder.setGeolocationType(glType);
+        builder.setApiVersion(getApiVersion(data));
+        String rootUri = configuration.getString("root-uri");
+        rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
+                .append("/Geolocation/").append(sid.toString());
+        builder.setUri(URI.create(buffer.toString()));
+        return builder.build();
+    }
+
+    private Geolocation badGeolocationUpdateRequest(Geolocation geolocation, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType, String responseStatus, String badUpdateCause) {
+        final Sid accountSid = geolocation.getAccountSid();
+        final Sid sid = geolocation.getSid();
+        final Geolocation.Builder builder = Geolocation.builder();
+        builder.setResponseStatus(responseStatus);
+        builder.setCause(badUpdateCause);
+        return buildIncorrectGeolocationUpdateRequest(accountSid, sid, data, glType, builder);
     }
 
     protected Response getGeolocation(final String accountSid, final String sid, final MediaType responseType) {
@@ -451,18 +514,19 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
         Geolocation updatedGeolocation = geolocation;
 
-        // *** Validation of already rejected, unauthorized or failed Geolocations ***//
-        if (geolocation.getResponseStatus() != null && (geolocation.getResponseStatus().equalsIgnoreCase("rejected")
-                || geolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
-                || geolocation.getResponseStatus().equalsIgnoreCase("failed"))) {
-            updatedGeolocation.setDateUpdated(DateTime.now());
-            if (data.containsKey("Cause")){
-                updatedGeolocation.setCause(data.getFirst("Cause"));
-                // "Cause" is only updated if "ResponseStatus" is not null and is either "rejected", "unauthorized" or "failed"
-                // Otherwise, it's value in HTTP PUT is ignored
-            }
-            return updatedGeolocation;
-        }
+        // *** Validation of already rejected Geolocations ***//
+        /*
+         * try { if (geolocation.getResponseStatus() != null && (geolocation.getResponseStatus().equalsIgnoreCase("rejected") ||
+         * geolocation.getResponseStatus().equalsIgnoreCase("unauthorized") ||
+         * geolocation.getResponseStatus().equalsIgnoreCase("failed"))) { updatedGeolocation.setDateUpdated(DateTime.now()); if
+         * (data.containsKey("Cause")) { updatedGeolocation.setCause(data.getFirst("Cause")); // "Cause" is only updated if
+         * "ResponseStatus" is not null and is either "rejected", "unauthorized" or // "failed", otherwise, it's value in HTTP
+         * PUT is ignored } } else if (geolocation.getResponseStatus() != null &&
+         * (!geolocation.getResponseStatus().equalsIgnoreCase("unauthorized") ||
+         * !geolocation.getResponseStatus().equalsIgnoreCase("failed"))) { updatedGeolocation.setCause(null); // "Cause" is set
+         * to null if "ResponseStatus" is not null and is neither "rejected", "unauthorized" nor "failed" } } catch (Exception
+         * exception) { System.out.println("Exception in updating Cause: " + exception.getMessage()); }
+         */
 
         // *** Set of parameters with provided data for Geolocation update***//
         if (data.containsKey("Source")) {
@@ -481,11 +545,23 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
         if (data.containsKey("ResponseStatus")) {
             updatedGeolocation = updatedGeolocation.setResponseStatus(data.getFirst("ResponseStatus"));
+            updatedGeolocation.setDateUpdated(DateTime.now());
             if (data.containsKey("Cause") && (updatedGeolocation.getResponseStatus().equalsIgnoreCase("rejected")
                     || updatedGeolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
                     || updatedGeolocation.getResponseStatus().equalsIgnoreCase("failed"))) {
                 updatedGeolocation.setCause(data.getFirst("Cause"));
             }
+            if (!updatedGeolocation.getResponseStatus().equalsIgnoreCase("rejected")
+                    || !updatedGeolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
+                    || !updatedGeolocation.getResponseStatus().equalsIgnoreCase("failed")) {
+                updatedGeolocation.setCause(null);
+            }
+        }
+        if (updatedGeolocation.getResponseStatus() != null
+                && (!updatedGeolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
+                        || !updatedGeolocation.getResponseStatus().equalsIgnoreCase("failed"))) {
+            updatedGeolocation.setCause(null);
+            // "Cause" is set to null if "ResponseStatus" is not null and is neither "rejected", "unauthorized" nor "failed"
         }
         if (data.containsKey("CellId")) {
             try {
@@ -534,24 +610,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 String deviceLat = data.getFirst("DeviceLatitude");
                 Boolean deviceLatWGS84 = validateWGS84(deviceLat);
                 if (!deviceLatWGS84) {
-                    updatedGeolocation = updatedGeolocation.setDeviceLatitude("Malformed");
-                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                    return badGeolocationUpdateRequest(geolocation, data, geolocation.getGeolocationType(), "failed",
+                            "DeviceLatitude not WGS84 compliant");
                 } else {
                     updatedGeolocation = updatedGeolocation.setDeviceLatitude(deviceLat);
-                    try {
-                        String responseStatus = updatedGeolocation.getResponseStatus();
-                        if (responseStatus != null) {
-                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
-                        } else if (updatedGeolocation.getDeviceLongitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getEventGeofenceLatitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getEventGeofenceLongitude().equalsIgnoreCase("Malformed")) {
-                            updatedGeolocation.setResponseStatus("Malformed");
-                        } else {
-                            updatedGeolocation.setResponseStatus("Undetermined");
-                        }
-                    } catch (NullPointerException npe) {
-                        System.out.println("Exception in updating device latitude: " + npe.getMessage());
-                    }
                 }
             } catch (Exception exception) {
                 System.out.println("Exception in updating device latitude: " + exception.getMessage());
@@ -563,24 +625,11 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 String deviceLong = data.getFirst("DeviceLongitude");
                 Boolean deviceLongGS84 = validateWGS84(deviceLong);
                 if (!deviceLongGS84) {
-                    updatedGeolocation = updatedGeolocation.setDeviceLongitude("Malformed");
-                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                    return badGeolocationUpdateRequest(geolocation, data, geolocation.getGeolocationType(), "failed",
+                            "DeviceLongitude not WGS84 compliant");
                 } else {
                     updatedGeolocation = updatedGeolocation.setDeviceLongitude(deviceLong);
-                    try {
-                        String responseStatus = updatedGeolocation.getResponseStatus();
-                        if (responseStatus != null) {
-                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
-                        } else if (updatedGeolocation.getDeviceLatitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getEventGeofenceLatitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getEventGeofenceLongitude().equalsIgnoreCase("Malformed")) {
-                            updatedGeolocation.setResponseStatus("Malformed");
-                        } else {
-                            updatedGeolocation.setResponseStatus("Undetermined");
-                        }
-                    } catch (NullPointerException npe) {
-                        System.out.println("Exception in updating device longitude: " + npe.getMessage());
-                    }
+
                 }
             } catch (Exception exception) {
                 System.out.println("Exception in updating device longitude: " + exception.getMessage());
@@ -628,24 +677,12 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
                 Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat);
                 if (!eventGeofenceLatWGS84) {
-                    updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude("Malformed");
-                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                    return badGeolocationUpdateRequest(geolocation, data, geolocation.getGeolocationType(), "failed",
+                            "EventGeofenceLatitude not WGS84 compliant");
+
                 } else {
                     updatedGeolocation = updatedGeolocation.setEventGeofenceLatitude(eventGeofenceLat);
-                    try {
-                        String responseStatus = updatedGeolocation.getResponseStatus();
-                        if (responseStatus != null) {
-                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
-                        } else if (updatedGeolocation.getDeviceLatitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getDeviceLongitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getEventGeofenceLongitude().equalsIgnoreCase("Malformed")) {
-                            updatedGeolocation.setResponseStatus("Malformed");
-                        } else {
-                            updatedGeolocation.setResponseStatus("Undetermined");
-                        }
-                    } catch (NullPointerException npe) {
-                        System.out.println("Exception in updating event geofence latitude: " + npe.getMessage());
-                    }
+
                 }
             } catch (Exception exception) {
                 System.out.println("Exception in updating event geofence latitude for notification geolocation: "
@@ -659,24 +696,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
                 Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
                 if (!eventGeofenceLongWGS84) {
-                    updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude("Malformed");
-                    updatedGeolocation = updatedGeolocation.setResponseStatus("Malformed");
+                    return badGeolocationUpdateRequest(geolocation, data, geolocation.getGeolocationType(), "failed",
+                            "EventGeofenceLongitude not WGS84 compliant");
                 } else {
                     updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude(eventGeofenceLong);
-                    try {
-                        String responseStatus = updatedGeolocation.getResponseStatus();
-                        if (responseStatus != null) {
-                            updatedGeolocation.setResponseStatus(updatedGeolocation.getResponseStatus());
-                        } else if (updatedGeolocation.getDeviceLatitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getDeviceLongitude().equalsIgnoreCase("Malformed")
-                                || updatedGeolocation.getEventGeofenceLatitude().equalsIgnoreCase("Malformed")) {
-                            updatedGeolocation.setResponseStatus("Malformed");
-                        } else {
-                            updatedGeolocation.setResponseStatus("Undetermined");
-                        }
-                    } catch (NullPointerException npe) {
-                        System.out.println("Exception in updating event geofence longitude: " + npe.getMessage());
-                    }
                 }
             } catch (Exception exception) {
                 System.out.println("Exception in updating event geofence longlitude for notification geolocation: "

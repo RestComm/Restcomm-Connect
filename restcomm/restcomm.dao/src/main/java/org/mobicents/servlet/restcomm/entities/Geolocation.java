@@ -592,27 +592,19 @@ public class Geolocation {
         }
 
         public void setDeviceLatitude(String devLatitude) {
-            if (devLatitude != null) {
-                Boolean devLatitudeWGS84 = validateWGS84(devLatitude);
-                if (devLatitudeWGS84) {
-                    this.deviceLatitude = devLatitude;
-                } else {
-                    this.deviceLatitude = "Malformed";
-                    this.responseStatus = "Malformed";
-                }
-            }
+            this.deviceLatitude = devLatitude;
+            /*
+             * if (devLatitude != null) { Boolean devLatitudeWGS84 = validateWGS84(devLatitude); if (devLatitudeWGS84) {
+             * this.deviceLatitude = devLatitude; } else { this.deviceLatitude = "Malformed"; } }
+             */
         }
 
         public void setDeviceLongitude(String devLongitude) {
-            if (devLongitude != null) {
-                Boolean devLongitudeWGS84 = validateWGS84(devLongitude);
-                if (devLongitudeWGS84) {
-                    this.deviceLongitude = devLongitude;
-                } else {
-                    this.deviceLongitude = "Malformed";
-                    this.responseStatus = "Malformed";
-                }
-            }
+            this.deviceLongitude = devLongitude;
+            /*
+             * if (devLongitude != null) { Boolean devLongitudeWGS84 = validateWGS84(devLongitude); if (devLongitudeWGS84) {
+             * this.deviceLongitude = devLongitude; } else { this.deviceLongitude = "Malformed"; } }
+             */
         }
 
         public void setAccuracy(Long accuracy) {
@@ -642,27 +634,21 @@ public class Geolocation {
         }
 
         public void setEventGeofenceLatitude(String eventGeofenceLat) {
-            if (eventGeofenceLat != null) {
-                Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat);
-                if (eventGeofenceLatWGS84) {
-                    this.eventGeofenceLatitude = eventGeofenceLat;
-                } else {
-                    this.eventGeofenceLatitude = "Malformed";
-                    this.responseStatus = "Malformed";
-                }
-            }
+            this.eventGeofenceLatitude = eventGeofenceLat;
+            /*
+             * if (eventGeofenceLat != null) { Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat); if
+             * (eventGeofenceLatWGS84) { this.eventGeofenceLatitude = eventGeofenceLat; } else { this.eventGeofenceLatitude =
+             * "Malformed"; } }
+             */
         }
 
         public void setEventGeofenceLongitude(String eventGeofenceLong) {
-            if (eventGeofenceLong != null) {
-                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
-                if (eventGeofenceLongWGS84) {
-                    this.eventGeofenceLongitude = eventGeofenceLong;
-                } else {
-                    this.eventGeofenceLongitude = "Malformed";
-                    this.responseStatus = "Malformed";
-                }
-            }
+            this.eventGeofenceLongitude = eventGeofenceLong;
+            /*
+             * if (eventGeofenceLong != null) { Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong); if
+             * (eventGeofenceLongWGS84) { this.eventGeofenceLongitude = eventGeofenceLong; } else { this.eventGeofenceLongitude
+             * = "Malformed"; } }
+             */
         }
 
         public void setRadius(Long radius) {
@@ -678,14 +664,16 @@ public class Geolocation {
         }
 
         public void setCause(String cause) {
-            if (this.responseStatus != null
-                    && (this.responseStatus.equalsIgnoreCase("rejected") || this.responseStatus.equalsIgnoreCase("unauthorized")
+            if (responseStatus != null && (responseStatus.equalsIgnoreCase("rejected")
+                    || responseStatus.equalsIgnoreCase("unauthorized")
                             || this.responseStatus.equalsIgnoreCase("failed"))) {
                 this.cause = cause;
-                // "Cause" is only updated is "ResponseStatus" is not null and is either "rejected", "unauthorized" or "failed"
-                // Otherwise, it's value in HTTP POST is ignored
-            } else {
+                // "cause" is only updated if "responseStatus" is not null and is either "rejected", "unauthorized" or "failed"
+                // Otherwise, it's value in HTTP POST/PUT is ignored
+            } else if (responseStatus != null && (!responseStatus.equalsIgnoreCase("rejected")
+                    || !responseStatus.equalsIgnoreCase("unauthorized") || !responseStatus.equalsIgnoreCase("failed"))) {
                 this.cause = null;
+                // "cause" is set to null if "responseStatus" is not null and is neither "rejected", "unauthorized" nor "failed"
             }
         }
 
@@ -695,28 +683,6 @@ public class Geolocation {
 
         public void setUri(URI uri) {
             this.uri = uri;
-        }
-
-        private boolean validateWGS84(String coordinates) {
-
-            String degrees = "°";
-            String minutes = "'";
-            Boolean WGS84_validation;
-            Boolean pattern1 = coordinates.matches("[NWSE]{1}\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
-            Boolean pattern2 = coordinates.matches("\\d{1,3}[" + degrees + "]\\d{1,3}[" + minutes + "]\\d{1,2}\\.\\d{1,2}["
-                    + minutes + "][" + minutes + "][NWSE]{1}$");
-            Boolean pattern3 = coordinates.matches("\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
-            Boolean pattern4 = coordinates.matches("-?\\d+(\\.\\d+)?");
-
-            if (pattern1 || pattern2 || pattern3 || pattern4) {
-                WGS84_validation = true;
-                System.out.println("Coordinates " + coordinates + " are WGS84 compliant");
-                return WGS84_validation;
-            } else {
-                WGS84_validation = false;
-                System.out.println("Coordinates " + coordinates + " are NOT WGS84 compliant");
-                return WGS84_validation;
-            }
         }
 
     }
