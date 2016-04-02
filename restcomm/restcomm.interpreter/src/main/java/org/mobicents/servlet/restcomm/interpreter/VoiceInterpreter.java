@@ -2014,6 +2014,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             conferenceState = conferenceInfo.state();
             final Tag child = conference(verb);
 
+            if (callRecord != null) {
+            	//TODO: remove this msg after testing
+                logger.info("************************ going to add conference sid in call detail record ************************conferenceInfo: "
+						+ conferenceInfo
+						+ " | conferenceInfo.conferenceSid: "
+						+ conferenceInfo.conferenceSid());
+				callRecord = callRecord.setConferenceSid(conferenceInfo.conferenceSid());
+				final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+				records.updateCallDetailRecord(callRecord);
+			} else {
+				//TODO: remove this msg after testing
+				logger.info("************************ Failed to add conference sid in call detail record ************************");
+			}
             // If there is room join the conference.
             int max = 40;
             Attribute attribute = child.attribute("maxParticipants");
@@ -2065,12 +2078,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Join the conference.
                 final AddParticipant request = new AddParticipant(call);
                 conference.tell(request, source);
-
-                if (callRecord != null) {
-                    callRecord = callRecord.setConferenceSid(conferenceInfo.conferenceSid());
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                    records.updateCallDetailRecord(callRecord);
-                }
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
