@@ -266,7 +266,6 @@ public class Geolocation {
     }
 
     public Geolocation setDateUpdated(DateTime dateUpdated) {
-        System.out.println("setDateUpdated (Geolocation): " + dateUpdated);
         return new Geolocation(sid, dateCreated, dateUpdated, dateExecuted, accountSid, source, deviceIdentifier,
                 geolocationType, responseStatus, cellId, locationAreaCode, mobileCountryCode, mobileNetworkCode,
                 networkEntityAddress, ageOfLocationInfo, deviceLatitude, deviceLongitude, accuracy, physicalAddress,
@@ -593,18 +592,10 @@ public class Geolocation {
 
         public void setDeviceLatitude(String devLatitude) {
             this.deviceLatitude = devLatitude;
-            /*
-             * if (devLatitude != null) { Boolean devLatitudeWGS84 = validateWGS84(devLatitude); if (devLatitudeWGS84) {
-             * this.deviceLatitude = devLatitude; } else { this.deviceLatitude = "Malformed"; } }
-             */
         }
 
         public void setDeviceLongitude(String devLongitude) {
             this.deviceLongitude = devLongitude;
-            /*
-             * if (devLongitude != null) { Boolean devLongitudeWGS84 = validateWGS84(devLongitude); if (devLongitudeWGS84) {
-             * this.deviceLongitude = devLongitude; } else { this.deviceLongitude = "Malformed"; } }
-             */
         }
 
         public void setAccuracy(Long accuracy) {
@@ -630,25 +621,14 @@ public class Geolocation {
                 DateTime locTimestamp = DateTime.parse("1900-01-01");
                 this.locationTimestamp = locTimestamp;
             }
-
         }
 
         public void setEventGeofenceLatitude(String eventGeofenceLat) {
             this.eventGeofenceLatitude = eventGeofenceLat;
-            /*
-             * if (eventGeofenceLat != null) { Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat); if
-             * (eventGeofenceLatWGS84) { this.eventGeofenceLatitude = eventGeofenceLat; } else { this.eventGeofenceLatitude =
-             * "Malformed"; } }
-             */
         }
 
         public void setEventGeofenceLongitude(String eventGeofenceLong) {
             this.eventGeofenceLongitude = eventGeofenceLong;
-            /*
-             * if (eventGeofenceLong != null) { Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong); if
-             * (eventGeofenceLongWGS84) { this.eventGeofenceLongitude = eventGeofenceLong; } else { this.eventGeofenceLongitude
-             * = "Malformed"; } }
-             */
         }
 
         public void setRadius(Long radius) {

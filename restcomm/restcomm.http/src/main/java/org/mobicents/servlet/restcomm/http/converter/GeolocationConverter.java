@@ -177,6 +177,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         writer.startNode("GeolocationData");
         if (geolocation != null) {
             writeCellId(geolocation.getCellId(), writer);
+            writeLocationAreaCode(geolocation.getLocationAreaCode(), writer);
             writeMobileCountryCode(geolocation.getMobileCountryCode(), writer);
             writeMobileNetworkCode(geolocation.getMobileNetworkCode(), writer);
             writeNetworkEntityAddress(geolocation.getNetworkEntityAddress(), writer);

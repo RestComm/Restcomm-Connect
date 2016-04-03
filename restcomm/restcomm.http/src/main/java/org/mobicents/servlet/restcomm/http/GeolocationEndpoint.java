@@ -514,20 +514,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
         Geolocation updatedGeolocation = geolocation;
 
-        // *** Validation of already rejected Geolocations ***//
-        /*
-         * try { if (geolocation.getResponseStatus() != null && (geolocation.getResponseStatus().equalsIgnoreCase("rejected") ||
-         * geolocation.getResponseStatus().equalsIgnoreCase("unauthorized") ||
-         * geolocation.getResponseStatus().equalsIgnoreCase("failed"))) { updatedGeolocation.setDateUpdated(DateTime.now()); if
-         * (data.containsKey("Cause")) { updatedGeolocation.setCause(data.getFirst("Cause")); // "Cause" is only updated if
-         * "ResponseStatus" is not null and is either "rejected", "unauthorized" or // "failed", otherwise, it's value in HTTP
-         * PUT is ignored } } else if (geolocation.getResponseStatus() != null &&
-         * (!geolocation.getResponseStatus().equalsIgnoreCase("unauthorized") ||
-         * !geolocation.getResponseStatus().equalsIgnoreCase("failed"))) { updatedGeolocation.setCause(null); // "Cause" is set
-         * to null if "ResponseStatus" is not null and is neither "rejected", "unauthorized" nor "failed" } } catch (Exception
-         * exception) { System.out.println("Exception in updating Cause: " + exception.getMessage()); }
-         */
-
         // *** Set of parameters with provided data for Geolocation update***//
         if (data.containsKey("Source")) {
             try {
@@ -545,22 +531,24 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
         if (data.containsKey("ResponseStatus")) {
             updatedGeolocation = updatedGeolocation.setResponseStatus(data.getFirst("ResponseStatus"));
-            updatedGeolocation.setDateUpdated(DateTime.now());
+            updatedGeolocation = updatedGeolocation.setDateUpdated(DateTime.now());
             if (data.containsKey("Cause") && (updatedGeolocation.getResponseStatus().equalsIgnoreCase("rejected")
                     || updatedGeolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
                     || updatedGeolocation.getResponseStatus().equalsIgnoreCase("failed"))) {
-                updatedGeolocation.setCause(data.getFirst("Cause"));
+                updatedGeolocation = updatedGeolocation.setCause(data.getFirst("Cause"));
+                // cause is set to null if responseStatus is not rejected, failed or unauthorized
             }
             if (!updatedGeolocation.getResponseStatus().equalsIgnoreCase("rejected")
                     || !updatedGeolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
                     || !updatedGeolocation.getResponseStatus().equalsIgnoreCase("failed")) {
-                updatedGeolocation.setCause(null);
+                updatedGeolocation = updatedGeolocation.setCause(null);
+                // cause is set to null if responseStatus is not rejected, failed or unauthorized
             }
         }
         if (updatedGeolocation.getResponseStatus() != null
                 && (!updatedGeolocation.getResponseStatus().equalsIgnoreCase("unauthorized")
                         || !updatedGeolocation.getResponseStatus().equalsIgnoreCase("failed"))) {
-            updatedGeolocation.setCause(null);
+            updatedGeolocation = updatedGeolocation.setCause(null);
             // "Cause" is set to null if "ResponseStatus" is not null and is neither "rejected", "unauthorized" nor "failed"
         }
         if (data.containsKey("CellId")) {
@@ -739,6 +727,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     }
 
+
     private boolean validateWGS84(String coordinates) {
 
         String degrees = "°";
@@ -752,11 +741,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
         if (pattern1 || pattern2 || pattern3 || pattern4) {
             WGS84_validation = true;
-            System.out.println("Coordinates " + coordinates + " are WGS84 compliant");
             return WGS84_validation;
         } else {
             WGS84_validation = false;
-            System.out.println("Coordinates " + coordinates + " are NOT WGS84 compliant");
             return WGS84_validation;
         }
     }
