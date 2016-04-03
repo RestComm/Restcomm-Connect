@@ -158,13 +158,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.mobicents.servlet.sip.containers</groupId>
-			<artifactId>sip-servlets-tomcat-7</artifactId>
-			<version>${sipservletapi.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-application-router</artifactId>
 			<version>${sipservletapi.version}</version>
