@@ -375,13 +375,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.mobicents.servlet.sip.containers</groupId>
-        <artifactId>sip-servlets-tomcat-7</artifactId>
-        <version>${sipservletapi.version}</version>
-        <scope>provided</scope>
-      </dependency>
-
-      <dependency>
         <groupId>org.mobicents.servlet.sip</groupId>
         <artifactId>sip-servlets-application-router</artifactId>
         <version>${sipservletapi.version}</version>
@@ -501,13 +494,6 @@
     <dependency>
       <groupId>org.mobicents.servlet.sip.containers</groupId>
       <artifactId>sip-servlets-catalina-7</artifactId>
-      <version>${sipservletapi.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mobicents.servlet.sip.containers</groupId>
-      <artifactId>sip-servlets-tomcat-7</artifactId>
       <version>${sipservletapi.version}</version>
       <scope>provided</scope>
     </dependency>
