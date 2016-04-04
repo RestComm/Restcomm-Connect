@@ -880,15 +880,6 @@ public final class Call extends UntypedActor {
                 resp.send();
             }
 
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid()) {
-                invite.getSession().setInvalidateWhenReady(true);
-            }
-
-            if (invite.getApplicationSession().isValid()) {
-                invite.getApplicationSession().setInvalidateWhenReady(true);
-            }
-
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -1088,15 +1079,6 @@ public final class Call extends UntypedActor {
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
-
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid()) {
-                invite.getSession().invalidate();
-            }
-
-            if (invite.getApplicationSession().isValid()) {
-                invite.getApplicationSession().invalidate();
-            }
 
             //In the case of canceled that reach the completed method, don't change the external state
             if (!external.equals(CallStateChanged.State.CANCELED)) {
