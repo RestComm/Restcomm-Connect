@@ -24,6 +24,7 @@ import java.io.IOException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletContextEvent;
@@ -31,6 +32,8 @@ import javax.servlet.sip.SipServletListener;
 import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.sip.message.Request;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
@@ -83,6 +86,17 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
 
     @Override
     protected void doResponse(final SipServletResponse response) throws ServletException, IOException {
+        if (response.getMethod().equals(Request.BYE) && response.getStatus() >= 200) {
+            SipSession sipSession = response.getSession();
+            SipApplicationSession sipApplicationSession = response.getApplicationSession();
+            if (sipSession.isValid()) {
+                sipSession.setInvalidateWhenReady(true);
+            }
+            if (sipApplicationSession.isValid()) {
+                sipApplicationSession.setInvalidateWhenReady(true);
+            }
+            return;
+        }
         if (isUssdMessage(response)) {
             ussdManager.tell(response, null);
         } else {
