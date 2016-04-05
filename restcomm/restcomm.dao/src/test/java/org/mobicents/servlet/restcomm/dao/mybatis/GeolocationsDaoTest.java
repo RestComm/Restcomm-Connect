@@ -64,21 +64,21 @@ public class GeolocationsDaoTest {
     }
 
     @Test
-    public void createReadUpdateDelete() {
+    public void geolocationCreateReadUpdateDelete() {
 
-        final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
+        final Sid accountSid = Sid.generate(Sid.Type.ACCOUNT);
         URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/geolocation-hello-world.xml");
         final Geolocation.Builder builder = Geolocation.builder();
         builder.setSid(sid);
-        DateTime currentDateTime = DateTime.parse("");
+        DateTime currentDateTime = DateTime.now();
         builder.setDateUpdated(currentDateTime);
-        builder.setAccountSid(account);
-        builder.setSource("Source");
-        builder.setDeviceIdentifier("DeviceIdentifier");
+        builder.setAccountSid(accountSid);
+        builder.setSource("mlpclient1");
+        builder.setDeviceIdentifier("device1");
         builder.setGeolocationType(GeolocationType.Immediate);
         builder.setResponseStatus("successfull");
-        builder.setCause("NA");
+        // builder.setCause("NA");
         builder.setCellId("12345");
         builder.setLocationAreaCode("978");
         builder.setMobileCountryCode(748);
@@ -116,7 +116,7 @@ public class GeolocationsDaoTest {
         assertTrue(result.getDeviceIdentifier().equals(geolocation.getDeviceIdentifier()));
         assertTrue(result.getGeolocationType().equals(geolocation.getGeolocationType()));
         assertTrue(result.getResponseStatus().equals(geolocation.getResponseStatus()));
-        assertTrue(result.getCause().equals(geolocation.getCause()));
+        // assertTrue(result.getCause().equals(geolocation.getCause()));
         assertTrue(result.getCellId().equals(geolocation.getCellId()));
         assertTrue(result.getLocationAreaCode().equals(geolocation.getLocationAreaCode()));
         assertTrue(result.getMobileCountryCode().equals(geolocation.getMobileCountryCode()));
@@ -139,11 +139,9 @@ public class GeolocationsDaoTest {
         assertTrue(result.getUri().equals(geolocation.getUri()));
 
         // Update the Geolocation
-        url = URI.create("http://127.0.0.1:8080/restcomm/demos/geolocation-hello.xml");
-        DateTime customDateTime1 = DateTime.parse("Tue, 22 Mar 2016 00:00:00 -0300");
-        DateTime customDateTime2 = DateTime.parse("Tue, 22 Mar 2016 21:59:59 -0300");
-        geolocation = geolocation.setDateUpdated(customDateTime1);
-        geolocation = geolocation.setSource("099077937");
+        URI url2 = URI.create("http://127.0.0.1:8080/restcomm/demos/geolocation-hello.xml");
+        geolocation = geolocation.setDateUpdated(currentDateTime);
+        geolocation = geolocation.setSource("mlpclient2");
         geolocation = geolocation.setDeviceIdentifier("device:fernando'siPhone");
         geolocation = geolocation.setGeolocationType(GeolocationType.Notification);
         geolocation = geolocation.setResponseStatus("queued");
@@ -159,41 +157,46 @@ public class GeolocationsDaoTest {
         geolocation = geolocation.setInternetAddress("200.0.91.253");
         geolocation = geolocation.setPhysicalAddress("A1-DD-0A-27-92-00");
         geolocation = geolocation.setFormattedAddress("27NW Street, 23456, Greenwich, Ireland");
-        geolocation = geolocation.setLocationTimestamp(customDateTime2);
-        geolocation = geolocation.setEventGeofenceLatitude("N32 87 91.74");
-        geolocation = geolocation.setEventGeofenceLongitude("E121 98 01.99");
+        geolocation = geolocation.setLocationTimestamp(currentDateTime);
+        geolocation = geolocation.setEventGeofenceLatitude("33.426280");
+        geolocation = geolocation.setEventGeofenceLongitude("70.426280");
         geolocation = geolocation.setRadius((long) 99999);
         geolocation = geolocation.setGeolocationPositioningType("GPS");
         geolocation = geolocation.setLastGeolocationResponse("false");
+        geolocation = geolocation.setUri(url2);
+
+        // Update the Geolocation in the data store g
+        geolocations.updateGeolocation(geolocation);
 
         // Read the updated Geolocation from the data store
-        Geolocation updateResult = geolocations.getGeolocation(sid);
+        result = geolocations.getGeolocation(sid);
 
         // Validate the results
-        assertTrue(updateResult.getDateUpdated().equals(geolocation.getDateUpdated()));
-        assertTrue(updateResult.getSource().equals(geolocation.getSource()));
-        assertTrue(updateResult.getDeviceIdentifier().equals(geolocation.getDeviceIdentifier()));
-        assertTrue(updateResult.getGeolocationType().equals(geolocation.getGeolocationType()));
-        assertTrue(updateResult.getResponseStatus().equals(geolocation.getResponseStatus()));
-        assertTrue(updateResult.getCause().equals(geolocation.getCause()));
-        assertTrue(updateResult.getCellId().equals(geolocation.getCellId()));
-        assertTrue(updateResult.getLocationAreaCode().equals(geolocation.getLocationAreaCode()));
-        assertTrue(updateResult.getMobileCountryCode().equals(geolocation.getMobileCountryCode()));
-        assertTrue(updateResult.getMobileNetworkCode().equals(geolocation.getMobileNetworkCode()));
-        assertTrue(updateResult.getNetworkEntityAddress().equals(geolocation.getNetworkEntityAddress()));
-        assertTrue(updateResult.getAgeOfLocationInfo().equals(geolocation.getAgeOfLocationInfo()));
-        assertTrue(updateResult.getDeviceLatitude().equals(geolocation.getDeviceLatitude()));
-        assertTrue(updateResult.getDeviceLongitude().equals(geolocation.getDeviceLongitude()));
-        assertTrue(updateResult.getAccuracy().equals(geolocation.getAccuracy()));
-        assertTrue(updateResult.getInternetAddress().equals(geolocation.getInternetAddress()));
-        assertTrue(updateResult.getPhysicalAddress().equals(geolocation.getPhysicalAddress()));
-        assertTrue(updateResult.getFormattedAddress().equals(geolocation.getFormattedAddress()));
-        assertTrue(updateResult.getLocationTimestamp().equals(geolocation.getLocationTimestamp()));
-        assertTrue(updateResult.getEventGeofenceLatitude().equals(geolocation.getEventGeofenceLatitude()));
-        assertTrue(updateResult.getEventGeofenceLongitude().equals(geolocation.getEventGeofenceLongitude()));
-        assertTrue(updateResult.getRadius().equals(geolocation.getRadius()));
-        assertTrue(updateResult.getGeolocationPositioningType().equals(geolocation.getGeolocationPositioningType()));
-        assertTrue(updateResult.getLastGeolocationResponse().equals(geolocation.getLastGeolocationResponse()));
+        assertTrue(result.getDateUpdated().equals(geolocation.getDateUpdated()));
+        assertTrue(result.getAccountSid().equals(geolocation.getAccountSid()));
+        assertTrue(result.getSource().equals(geolocation.getSource()));
+        assertTrue(result.getDeviceIdentifier().equals(geolocation.getDeviceIdentifier()));
+        assertTrue(result.getGeolocationType().equals(geolocation.getGeolocationType()));
+        assertTrue(result.getResponseStatus().equals(geolocation.getResponseStatus()));
+        // assertTrue(result.getCause().equals(geolocation.getCause()));
+        assertTrue(result.getCellId().equals(geolocation.getCellId()));
+        assertTrue(result.getLocationAreaCode().equals(geolocation.getLocationAreaCode()));
+        assertTrue(result.getMobileCountryCode().equals(geolocation.getMobileCountryCode()));
+        assertTrue(result.getMobileNetworkCode().equals(geolocation.getMobileNetworkCode()));
+        assertTrue(result.getNetworkEntityAddress().equals(geolocation.getNetworkEntityAddress()));
+        assertTrue(result.getAgeOfLocationInfo().equals(geolocation.getAgeOfLocationInfo()));
+        assertTrue(result.getDeviceLatitude().equals(geolocation.getDeviceLatitude()));
+        assertTrue(result.getDeviceLongitude().equals(geolocation.getDeviceLongitude()));
+        assertTrue(result.getAccuracy().equals(geolocation.getAccuracy()));
+        assertTrue(result.getInternetAddress().equals(geolocation.getInternetAddress()));
+        assertTrue(result.getPhysicalAddress().equals(geolocation.getPhysicalAddress()));
+        assertTrue(result.getFormattedAddress().equals(geolocation.getFormattedAddress()));
+        assertTrue(result.getLocationTimestamp().equals(geolocation.getLocationTimestamp()));
+        assertTrue(result.getEventGeofenceLatitude().equals(geolocation.getEventGeofenceLatitude()));
+        assertTrue(result.getEventGeofenceLongitude().equals(geolocation.getEventGeofenceLongitude()));
+        assertTrue(result.getRadius().equals(geolocation.getRadius()));
+        assertTrue(result.getGeolocationPositioningType().equals(geolocation.getGeolocationPositioningType()));
+        assertTrue(result.getLastGeolocationResponse().equals(geolocation.getLastGeolocationResponse()));
 
         // Delete the Geolocation record
         geolocations.removeGeolocation(sid);
@@ -203,20 +206,21 @@ public class GeolocationsDaoTest {
     }
 
     @Test
-    public void readDeleteByAccountSid() {
-        final Sid account = Sid.generate(Sid.Type.ACCOUNT);
+    public void geolocationReadDeleteByAccountSid() {
+
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
+        final Sid accountSid = Sid.generate(Sid.Type.ACCOUNT);
         URI url = URI.create("geolocation-hello-world.xml");
         final Geolocation.Builder builder = Geolocation.builder();
         builder.setSid(sid);
-        DateTime currentDateTime = DateTime.parse("");
+        DateTime currentDateTime = DateTime.now();
         builder.setDateUpdated(currentDateTime);
-        builder.setAccountSid(account);
+        builder.setAccountSid(accountSid);
         builder.setSource("Source");
         builder.setDeviceIdentifier("DeviceIdentifier");
         builder.setGeolocationType(GeolocationType.Immediate);
         builder.setResponseStatus("successfull");
-        builder.setCause("NA");
+        // builder.setCause("NA");
         builder.setCellId("12345");
         builder.setLocationAreaCode("978");
         builder.setMobileCountryCode(748);
@@ -244,13 +248,13 @@ public class GeolocationsDaoTest {
         geolocations.addGeolocation(geolocation);
 
         // Get all the Geolocations for a specific account.
-        assertTrue(geolocations.getGeolocation(account) != null);
+        assertTrue(geolocations.getGeolocation(accountSid) != null);
 
-        // Remove all the Geolocations for a specific account.
-        geolocations.removeGeolocation(account);
+        // Remove the Geolocations for a specific account.
+        geolocations.removeGeolocation(accountSid);
 
-        // Validate that the Geolocations were removed.
-        assertTrue(geolocations.getGeolocation(account) == null);
+        // Validate that the Geolocation were removed.
+        assertTrue(geolocations.getGeolocation(accountSid) == null);
     }
 
 }
