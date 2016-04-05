@@ -34,6 +34,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.sip.message.Request;
+import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
@@ -55,6 +56,8 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = Logger.getLogger(CallManagerProxy.class);
+
+    private boolean sendTryingForInitalRequests = false;
 
     private ActorSystem system;
     private ActorRef manager;
@@ -80,6 +83,10 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         if (isUssdMessage(request)) {
             ussdManager.tell(request, null);
         } else {
+            if (request.isInitial() && sendTryingForInitalRequests) {
+                SipServletResponse resp = request.createResponse(Response.TRYING);
+                resp.send();
+            }
             manager.tell(request, null);
         }
     }
@@ -179,6 +186,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
             logger.info("CallManagerProxy sip servlet initialized. Will proceed to create CallManager and UssdManager");
             context = event.getServletContext();
             configuration = (Configuration) context.getAttribute(Configuration.class.getName());
+            sendTryingForInitalRequests = Boolean.parseBoolean(configuration.subset("runtime-settings").getString("send-trying-for-initial-requests", "false"));
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             final MediaServerControllerFactory mscontrolFactory = (MediaServerControllerFactory) context

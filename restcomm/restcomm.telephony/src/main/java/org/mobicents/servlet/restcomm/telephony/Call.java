@@ -222,6 +222,8 @@ public final class Call extends UntypedActor {
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.ringing));
         transitions.add(new Transition(this.uninitialized, this.queued));
+        transitions.add(new Transition(this.uninitialized, this.canceled));
+        transitions.add(new Transition(this.uninitialized, this.completed));
         transitions.add(new Transition(this.queued, this.canceled));
         transitions.add(new Transition(this.queued, this.initializing));
         transitions.add(new Transition(this.ringing, this.busy));
@@ -648,10 +650,15 @@ public final class Call extends UntypedActor {
                 to = (SipURI) invite.getTo().getURI();
                 timeout = -1;
                 direction = INBOUND;
-                // Send a ringing response.
-                final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
-                ringing.addHeader("X-Call-Sid",id.toString());
-                ringing.send();
+                try {
+                    // Send a ringing response
+                    final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
+                    ringing.addHeader("X-Call-Sid", id.toString());
+                    ringing.send();
+                } catch (IllegalStateException exception) {
+                    logger.debug("Exception while creating 180 response to inbound invite request");
+                    fsm.transition(message, canceled);
+                }
 
                 SipURI initialInetUri = getInitialIpAddressPort(invite);
 
@@ -1207,8 +1214,10 @@ public final class Call extends UntypedActor {
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(ringing)) {
-            fsm.transition(message, initializing);
+        if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
+                fsm.transition(message, initializing);
+        } else {
+            fsm.transition(message, canceled);
         }
     }
 
@@ -1251,7 +1260,7 @@ public final class Call extends UntypedActor {
             if (is(initializing)) {
                 fsm.transition(message, canceling);
             } else if (is(ringing) && isInbound()) {
-                fsm.transition(message, canceled);
+                fsm.transition(message, canceling);
             }
             // XXX can receive SIP cancel any other time?
         } else if ("BYE".equalsIgnoreCase(method)) {
