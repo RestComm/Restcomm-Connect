@@ -78,7 +78,7 @@ public class GeolocationsDaoTest {
         builder.setDeviceIdentifier("device1");
         builder.setGeolocationType(GeolocationType.Immediate);
         builder.setResponseStatus("successfull");
-        // builder.setCause("NA");
+        builder.setCause("NA");
         builder.setCellId("12345");
         builder.setLocationAreaCode("978");
         builder.setMobileCountryCode(748);
@@ -116,7 +116,7 @@ public class GeolocationsDaoTest {
         assertTrue(result.getDeviceIdentifier().equals(geolocation.getDeviceIdentifier()));
         assertTrue(result.getGeolocationType().equals(geolocation.getGeolocationType()));
         assertTrue(result.getResponseStatus().equals(geolocation.getResponseStatus()));
-        // assertTrue(result.getCause().equals(geolocation.getCause()));
+        assertTrue(result.getCause() == geolocation.getCause());
         assertTrue(result.getCellId().equals(geolocation.getCellId()));
         assertTrue(result.getLocationAreaCode().equals(geolocation.getLocationAreaCode()));
         assertTrue(result.getMobileCountryCode().equals(geolocation.getMobileCountryCode()));
@@ -139,12 +139,10 @@ public class GeolocationsDaoTest {
         assertTrue(result.getUri().equals(geolocation.getUri()));
 
         // Update the Geolocation
+        // The API is designed so that source, deviceIdentifier and geolocationType shall not possible to update once created
         URI url2 = URI.create("http://127.0.0.1:8080/restcomm/demos/geolocation-hello.xml");
         geolocation = geolocation.setDateUpdated(currentDateTime);
-        geolocation = geolocation.setSource("mlpclient-2");
-        geolocation = geolocation.setDeviceIdentifier("device:fernando'siPhone");
-        geolocation = geolocation.setGeolocationType(GeolocationType.Notification);
-        geolocation = geolocation.setResponseStatus("queued");
+        geolocation = geolocation.setResponseStatus("failed");
         geolocation = geolocation.setCause("API not compliant");
         geolocation = geolocation.setCellId("00010");
         geolocation = geolocation.setLocationAreaCode("0A1");
@@ -174,11 +172,8 @@ public class GeolocationsDaoTest {
         // Validate the results
         assertTrue(result.getDateUpdated().equals(geolocation.getDateUpdated()));
         assertTrue(result.getAccountSid().equals(geolocation.getAccountSid()));
-        assertTrue(result.getSource().equals(geolocation.getSource()));
-        assertTrue(result.getDeviceIdentifier().equals(geolocation.getDeviceIdentifier()));
-        assertTrue(result.getGeolocationType().equals(geolocation.getGeolocationType()));
         assertTrue(result.getResponseStatus().equals(geolocation.getResponseStatus()));
-        // assertTrue(result.getCause().equals(geolocation.getCause()));
+        assertTrue(result.getCause() == geolocation.getCause());
         assertTrue(result.getCellId().equals(geolocation.getCellId()));
         assertTrue(result.getLocationAreaCode().equals(geolocation.getLocationAreaCode()));
         assertTrue(result.getMobileCountryCode().equals(geolocation.getMobileCountryCode()));
@@ -220,7 +215,7 @@ public class GeolocationsDaoTest {
         builder.setDeviceIdentifier("DeviceIdentifier");
         builder.setGeolocationType(GeolocationType.Immediate);
         builder.setResponseStatus("successfull");
-        // builder.setCause("NA");
+        builder.setCause("NA");
         builder.setCellId("12345");
         builder.setLocationAreaCode("978");
         builder.setMobileCountryCode(748);
@@ -248,7 +243,7 @@ public class GeolocationsDaoTest {
         geolocations.addGeolocation(geolocation);
 
         // Get all the Geolocations for a specific account.
-        assertTrue(geolocations.getGeolocation(accountSid) != null);
+        assertTrue(geolocations.getGeolocations(accountSid) != null);
 
         // Remove the Geolocations for a specific account.
         geolocations.removeGeolocation(accountSid);
