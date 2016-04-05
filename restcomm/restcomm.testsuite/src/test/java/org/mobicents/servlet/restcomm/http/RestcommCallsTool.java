@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.http;
 
-import java.io.StringReader;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -28,7 +27,6 @@ import com.thoughtworks.xstream.XStream;
 public class RestcommCallsTool {
 
     private static RestcommCallsTool instance;
-    private static String accountsUrl;
     private static Logger logger = Logger.getLogger(RestcommCallsTool.class);
     
     private RestcommCallsTool() {}
@@ -45,21 +43,17 @@ public class RestcommCallsTool {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
 
-        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls" + ((json) ? ".json" : "");
 
-        return accountsUrl;
+
+        return deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls" + ((json) ? ".json" : "");
     }
 
     private String getRecordingsUrl(String deploymentUrl, String username, Boolean json) {
-        if (accountsUrl == null) {
             if (deploymentUrl.endsWith("/")) {
                 deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
             }
 
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Recordings.json";
-        }
-
-        return accountsUrl;
+        return deploymentUrl + "/2012-04-24/Accounts/" + username + "/Recordings.json";
     }
 
     private String getCallRecordingsUrl(String deploymentUrl, String username, String callSid, Boolean json) {
@@ -67,7 +61,7 @@ public class RestcommCallsTool {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
 
-        String url = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls/" + callSid + "/Recordings" + ((json) ? ".json" : "");
+        String url = deploymentUrl + "2012-04-24/Accounts/" + username + "/Calls/" + callSid + "/Recordings" + ((json) ? ".json" : "");
         return url;
     }
 
@@ -97,6 +91,38 @@ public class RestcommCallsTool {
     public JsonObject getCalls(String deploymentUrl, String username, String authToken) {
         return (JsonObject) getCalls(deploymentUrl, username, authToken, null, null, true);
     }
+
+//    public JsonObject getCall(String deploymentUrl, String username, String authToken, String callSid) {
+//
+//        Client jerseyClient = Client.create();
+//        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+//
+//        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls/" + callSid + ".json";
+//
+//        String url = getAccountsUrl(deploymentUrl, username, true);
+//
+//        WebResource webResource = jerseyClient.resource(url);
+//
+//        String response = null;
+//
+//        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+//
+//        JsonParser parser = new JsonParser();
+//
+//            JsonObject jsonObject = null;
+//            try {
+//                JsonElement jsonElement = parser.parse(response);
+//                if (jsonElement.isJsonObject()) {
+//                    jsonObject = jsonElement.getAsJsonObject();
+//                } else {
+//                    logger.info("JsonElement: " + jsonElement.toString());
+//                }
+//            } catch (Exception e) {
+//                logger.info("Exception during JSON response parsing, exception: "+e);
+//                logger.info("JSON response: "+response);
+//            }
+//            return jsonObject;
+//    }
 
     public JsonObject getCalls(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize,
             Boolean json) {

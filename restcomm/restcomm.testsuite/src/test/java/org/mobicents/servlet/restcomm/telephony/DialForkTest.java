@@ -219,11 +219,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
@@ -242,6 +237,11 @@ public class DialForkTest {
                 null, null));
         assertTrue(henriqueCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         georgeCall.listenForCancel();
         aliceCall.listenForCancel();
 
@@ -251,6 +251,9 @@ public class DialForkTest {
         assertNotNull(aliceCancelTransaction);
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+
+        assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
 
         //Wait to cancel the other branches
         Thread.sleep(2000);
@@ -269,6 +272,8 @@ public class DialForkTest {
         bobCall.disconnect();
 
         assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
+        assertTrue(henriqueCall.respondToDisconnect());
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
         alicePhone.unregister(aliceContact, 3600);
 
@@ -337,11 +342,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 600));
@@ -358,6 +358,11 @@ public class DialForkTest {
                 null, null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         assertTrue(henriqueCall.listenForCancel());
         assertTrue(georgeCall.listenForCancel());
 
@@ -367,6 +372,9 @@ public class DialForkTest {
         assertNotNull(henriqueCancelTransaction);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
+
+        assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
 
         Thread.sleep(2000);
 
@@ -384,6 +392,8 @@ public class DialForkTest {
         bobCall.disconnect();
 
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        assertTrue(aliceCall.respondToDisconnect());
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
         alicePhone.unregister(aliceContact, 3600);
 
@@ -450,12 +460,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
 
@@ -478,6 +482,11 @@ public class DialForkTest {
                 null, null));
         assertTrue(henriqueCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertTrue(liveCalls == 1);
@@ -492,6 +501,8 @@ public class DialForkTest {
         bobCall.disconnect();
 
         assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
+        assertTrue(henriqueCall.respondToDisconnect());
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
         alicePhone.unregister(aliceContact, 3600);
 
@@ -560,12 +571,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
 
@@ -577,10 +582,10 @@ public class DialForkTest {
         assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
 
         //int DECLINE = 603;
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.DECLINE, "Busy Here-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.DECLINE, "Decline-George", 3600));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
-        assertTrue(aliceCall.sendIncomingCallResponse(Response.DECLINE, "Busy Here-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.DECLINE, "Decline-Alice", 3600));
         assertTrue(aliceCall.waitForAck(50 * 1000));
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
@@ -588,6 +593,12 @@ public class DialForkTest {
         assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique", 3600, receivedBody, "application", "sdp",
                 null, null));
         assertTrue(henriqueCall.waitForAck(50 * 1000));
+
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -603,6 +614,7 @@ public class DialForkTest {
         bobCall.disconnect();
 
         assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
         alicePhone.unregister(aliceContact, 3600);
 
@@ -632,7 +644,7 @@ public class DialForkTest {
     }
 
     @Test
-    public synchronized void testDialForkBobSendsBye() throws InterruptedException, ParseException, MalformedURLException {
+    public synchronized void testDialForkBobSendsCancel() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -671,11 +683,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
@@ -693,11 +700,13 @@ public class DialForkTest {
         henriqueCall.listenForCancel();
 
         Thread.sleep(1000);
-        bobCall.disconnect();
+        SipTransaction bobCancelTransaction = bobCall.sendCancel();
+        assertNotNull(bobCancelTransaction);
 
-        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(30000);
-        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30000);
-        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(30000);
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50000);
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50000);
+
 
         assertNotNull(georgeCancelTransaction);
         assertNotNull(aliceCancelTransaction);
@@ -706,6 +715,10 @@ public class DialForkTest {
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK-2-Cancel-Henrique", 3600);
+
+        assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
 
         alicePhone.unregister(aliceContact, 3600);
 
@@ -733,7 +746,7 @@ public class DialForkTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
-        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
@@ -785,11 +798,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-//        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-//        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-//        bobCall.sendInviteOkAck();
-//        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
         assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -805,8 +813,11 @@ public class DialForkTest {
         assertTrue(aliceCall.listenForCancel());
         assertTrue(henriqueCall.listenForCancel());
 
-//        assertTrue(bobCall.listenForDisconnect());
-        assertTrue(bobCall.listenForCancel());
+        Thread.sleep(1000);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(30 * 1000));
+        assertEquals(Response.TEMPORARILY_UNAVAILABLE, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString().contains(HangupReason.NO_ANSWER.getDescription()));
 
         SipTransaction bobCancelTransaction = bobCall.waitForCancel(50 * 1000);
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
@@ -815,16 +826,15 @@ public class DialForkTest {
         assertNotNull(georgeCancelTransaction);
         assertNotNull(aliceCancelTransaction);
         assertNotNull(henriqueCancelTransaction);
-        assertNotNull(bobCancelTransaction);
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
-        bobCall.respondToCancel(bobCancelTransaction, 200, "OK - Bob", 600);
+
+        assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
-
-//        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-//        assertTrue(bobCall.respondToDisconnect());
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -900,11 +910,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
         assertTrue(georgeCall.sendIncomingCallResponse(183, "Ringing-George", 600));
@@ -918,7 +923,9 @@ public class DialForkTest {
         assertTrue(aliceCall.listenForCancel());
         assertTrue(henriqueCall.listenForCancel());
 
-        assertTrue(bobCall.listenForDisconnect());
+        assertTrue(bobCall.waitOutgoingCallResponse(30 * 1000));
+        assertEquals(Response.TEMPORARILY_UNAVAILABLE, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString().contains(HangupReason.NO_ANSWER.getDescription()));
 
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
@@ -930,10 +937,11 @@ public class DialForkTest {
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
-        assertTrue(alicePhone.unregister(aliceContact, 3600));
+        assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -1019,11 +1027,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
         assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -1040,8 +1043,6 @@ public class DialForkTest {
         assertTrue(aliceCall.listenForCancel());
         assertTrue(henriqueCall.listenForCancel());
 
-        Thread.sleep(1000);
-
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
         SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
@@ -1051,6 +1052,11 @@ public class DialForkTest {
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+
+        assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+        assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
@@ -1069,6 +1075,11 @@ public class DialForkTest {
         assertTrue(fotiniCall.waitForAck(5000));
         fotiniCall.listenForDisconnect();
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
 
@@ -1079,6 +1090,8 @@ public class DialForkTest {
         assertTrue(bobCall.disconnect());
 
         assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
+        assertTrue(fotiniCall.respondToDisconnect());
+        assertTrue(fotiniCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
         Thread.sleep(10000);
 
@@ -1152,11 +1165,6 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
         assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -1176,22 +1184,6 @@ public class DialForkTest {
         assertTrue(henriqueCall.waitForAck(50 * 1000));
         //No one will answer the call and RCML will move to the next verb to call Fotini
 
-//        assertTrue(georgeCall.listenForCancel());
-//        assertTrue(aliceCall.listenForCancel());
-//        assertTrue(henriqueCall.listenForCancel());
-//
-//        Thread.sleep(1000);
-//
-//        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
-//        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
-//        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
-//        assertNotNull(georgeCancelTransaction);
-//        assertNotNull(aliceCancelTransaction);
-//        assertNotNull(henriqueCancelTransaction);
-//        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
-//        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
-//        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
-
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -1209,6 +1201,11 @@ public class DialForkTest {
         assertTrue(fotiniCall.waitForAck(5000));
         fotiniCall.listenForDisconnect();
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
 
@@ -1218,6 +1215,8 @@ public class DialForkTest {
         assertTrue(bobCall.disconnect());
 
         assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
+        assertTrue(fotiniCall.respondToDisconnect());
+        assertTrue(fotiniCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
         Thread.sleep(10000);
 

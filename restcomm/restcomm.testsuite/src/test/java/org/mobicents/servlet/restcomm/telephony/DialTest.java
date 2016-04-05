@@ -216,8 +216,10 @@ public class DialTest {
         if (fotiniSipStack != null) {
             fotiniSipStack.dispose();
         }
+        Thread.sleep(3000);
+        wireMockRule.resetRequests();
         deployer.undeploy("DialTest");
-        Thread.sleep(1000);
+        Thread.sleep(3000);
     }
 
     @Test
@@ -348,12 +350,6 @@ public class DialTest {
         }).start();
 
         // assertTrue(bobCall.waitForDisconnect(30 * 1000));
-
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
     }
 
     @Test
@@ -412,18 +408,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(3000);
 
@@ -433,11 +428,7 @@ public class DialTest {
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
         assertTrue(bobCall.respondToDisconnect());
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(bobCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
     }
 
     @Test
@@ -474,12 +465,6 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         //Ringing time 5 sec
@@ -489,6 +474,11 @@ public class DialTest {
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         Thread.sleep(3000);
 
         // hangup.
@@ -497,13 +487,9 @@ public class DialTest {
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
-        Thread.sleep(3000);
+        Thread.sleep(10000);
 
         //Check CDR
         cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
@@ -516,14 +502,6 @@ public class DialTest {
     @Test
     public synchronized void testDialUriBobHangupCheckCDRs() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
-
-        int initialCdrSize = 0;
-
-        //Check CDR
-        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
-        if (cdrs != null) {
-            initialCdrSize = cdrs.get("calls").getAsJsonArray().size();
-        }
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -546,13 +524,12 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        String bobCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-Call-Sid").toString().split(":")[1].trim();
+        assertNotNull(bobCallSid);
 
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        String aliceCallSid = aliceCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
+        assertNotNull(aliceCallSid);
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         //Ringing time 5 sec
         Thread.sleep(5000);
@@ -561,36 +538,38 @@ public class DialTest {
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         Thread.sleep(3000);
         aliceCall.listenForDisconnect();
         // hangup.
         bobCall.disconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
-        Thread.sleep(6000);
+        Thread.sleep(12000);
 
         //Check CDR
-        cdrs = RestcommCallsTool.getInstance().getCalls("http://127.0.0.1:8080/restcomm", adminAccountSid, adminAuthToken);
-        assertNotNull(cdrs);
-        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
-        if (((JsonObject)cdrsArray.get(initialCdrSize)).get("direction").getAsString().equalsIgnoreCase("inbound")) {
-            assertTrue(((JsonObject)cdrsArray.get(initialCdrSize)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(initialCdrSize+1)).get("parent_call_sid").getAsString()));
-            int inboundDuration = ((JsonObject)cdrsArray.get(initialCdrSize)).get("duration").getAsInt();
-            assertTrue(inboundDuration==8);
-        } else {
-            assertTrue(((JsonObject)cdrsArray.get(initialCdrSize+1)).get("sid").getAsString().equals(((JsonObject)cdrsArray.get(initialCdrSize)).get("parent_call_sid").getAsString()));
-            int outboundDuration = ((JsonObject)cdrsArray.get(initialCdrSize+1)).get("duration").getAsInt();
-            int outboundRingDuration = ((JsonObject)cdrsArray.get(initialCdrSize+1)).get("ring_duration").getAsInt();
-            assertTrue(outboundDuration==3);
-            assertTrue(outboundRingDuration==5);
-        }
-        assertTrue((cdrsArray.size() - initialCdrSize) == 2);
+
+        JsonObject bobCdr = RestcommCallsTool.getInstance().getCall("http://127.0.0.1:8080/restcomm", adminAccountSid,adminAuthToken, bobCallSid);
+        JsonObject aliceCdr = RestcommCallsTool.getInstance().getCall("http://127.0.0.1:8080/restcomm", adminAccountSid,adminAuthToken, aliceCallSid);
+
+        assertNotNull(bobCdr);
+        assertNotNull(aliceCdr);
+
+        assertTrue(aliceCdr.get("sid").getAsString().equals(aliceCallSid));
+        int outboundDuration = aliceCdr.get("duration").getAsInt();
+        int outboundRingDuration = aliceCdr.get("ring_duration").getAsInt();
+        assertTrue(outboundDuration==3);
+        assertTrue(outboundRingDuration==5);
+
+        assertTrue(bobCdr.get("sid").getAsString().equals(bobCallSid));
+        int inboundDuration = bobCdr.get("duration").getAsInt();
+        assertTrue(inboundDuration==8);
     }
 
     @Test
@@ -618,12 +597,6 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
@@ -631,18 +604,19 @@ public class DialTest {
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         Thread.sleep(3000);
 
         // hangup.
         bobCall.disconnect();
 
         aliceCall.listenForDisconnect();
-        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.waitForDisconnect(50 * 1000));
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
     }
 
     final String screeningResponse = "<Response></Response>";
@@ -678,18 +652,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(3000);
 
@@ -698,11 +671,7 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
     }
 
     @Test
@@ -730,18 +699,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(3000);
 
@@ -750,11 +718,7 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
     }
 
     @Test @Ignore //Ignore because of issue: https://github.com/Mobicents/sipunit/issues/4
@@ -783,12 +747,6 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         aliceCall.listenForIncomingCall();
         assertTrue(aliceCall.waitForIncomingCall(60 * 1000));
         System.out.println("!!!!!!!!! Exception: "+aliceCall.getException());
@@ -798,6 +756,11 @@ public class DialTest {
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         Thread.sleep(3000);
 
         // hangup.
@@ -805,11 +768,7 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
     }
 
     //Test for issue RESTCOMM-617
@@ -838,18 +797,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(3000);
 
@@ -858,11 +816,7 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
     }
 
     @Test
@@ -890,18 +844,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(7000);
 
@@ -910,11 +863,9 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
+
+//        Thread.sleep(10000);
 
         bobCall.listenForMessage();
         assertTrue(bobCall.waitForMessage(60 * 1000));
@@ -961,12 +912,6 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
@@ -974,6 +919,12 @@ public class DialTest {
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        bobCall.listenForMessage();
         Thread.sleep(7000);
 
         // hangup.
@@ -981,19 +932,14 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
-        bobCall.listenForMessage();
         assertTrue(bobCall.waitForMessage(60 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(5000);
+        Thread.sleep(7000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
@@ -1002,24 +948,9 @@ public class DialTest {
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
 
         logger.info("About to check the Status Callback Requests");
-        Map<String, String> statusCallbacks = new HashMap<String,String>();
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
-        for (LoggedRequest loggedRequest : requests) {
-            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
-            String[] params = queryParam.split("&");
-            String callSid = params[0].split("=")[1];
-            String callStatus = params[4].split("=")[1];
-            if (statusCallbacks.containsKey(callSid)) {
-                statusCallbacks.remove(callSid);
-            }
-            statusCallbacks.put(callSid, callStatus);
-        }
-        assertTrue(statusCallbacks.size()==1);
-        Iterator<String> iter = statusCallbacks.keySet().iterator();
-        while (iter.hasNext()) {
-            String key = iter.next();
-            assertTrue(statusCallbacks.get(key).equalsIgnoreCase("completed"));
-        }
+        assertTrue(requests.size()==3);
+        assertTrue(requests.get(2).getUrl().contains("CallStatus=completed"));
     }
 
     @Test //Test case for issue 320
@@ -1051,18 +982,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(7000);
 
@@ -1071,11 +1001,7 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
         bobCall.listenForMessage();
         assertTrue(bobCall.waitForMessage(60 * 1000));
@@ -1083,7 +1009,7 @@ public class DialTest {
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
 
-        Thread.sleep(5000);
+        Thread.sleep(7000);
 
         final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl, adminAccountSid, adminAuthToken);
@@ -1109,18 +1035,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(7000);
 
@@ -1129,11 +1054,9 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
+
+        Thread.sleep(10000);
 
         bobCall.listenForMessage();
         assertTrue(bobCall.waitForMessage(60 * 1000));
@@ -1166,18 +1089,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
         assertTrue(aliceCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(7000);
 
@@ -1187,11 +1109,9 @@ public class DialTest {
 
         aliceCall.listenForDisconnect();
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
+
+        Thread.sleep(10000);
 
         bobCall.listenForMessage();
         assertTrue(bobCall.waitForMessage(60 * 1000));
@@ -1206,26 +1126,6 @@ public class DialTest {
         assertTrue(recordings.size() == 3);
         assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(2)).get("duration").getAsString()));
         assertNotNull(((JsonObject)recordings.get(2)).get("uri").getAsString());
-
-        logger.info("About to check the Status Callback Requests");
-        Map<String, String> statusCallbacks = new HashMap<String,String>();
-        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
-        for (LoggedRequest loggedRequest : requests) {
-            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
-            String[] params = queryParam.split("&");
-            String callSid = params[0].split("=")[1];
-            String callStatus = params[4].split("=")[1];
-            if (statusCallbacks.containsKey(callSid)) {
-                statusCallbacks.remove(callSid);
-            }
-            statusCallbacks.put(callSid, callStatus);
-        }
-        assertTrue(statusCallbacks.size()==3);
-        Iterator<String> iter = statusCallbacks.keySet().iterator();
-        while (iter.hasNext()) {
-            String key = iter.next();
-            assertTrue(statusCallbacks.get(key).equalsIgnoreCase("completed"));
-        }
     }
 
     @Test
@@ -1250,12 +1150,6 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
         final SipRequest lastRequest = georgeCall.getLastReceivedRequest();
@@ -1267,17 +1161,18 @@ public class DialTest {
         assertTrue(contactHeader.equalsIgnoreCase("Contact: \"+13055872294\" <sip:+13055872294@127.0.0.1:5080>"));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
         Thread.sleep(3000);
         georgeCall.listenForDisconnect();
         // hangup.
         bobCall.disconnect();
         assertTrue(!bobCall.callTimeoutOrError());
         assertTrue(georgeCall.waitForDisconnect(30 * 1000));
-        try {
-            Thread.sleep(10 * 1000);
-        } catch (final InterruptedException exception) {
-            exception.printStackTrace();
-        }
+        assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
     }
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
@@ -1309,19 +1204,13 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.FORBIDDEN, "FORBIDDEN-George", 3600));
         assertTrue(georgeCall.waitForAck(50 * 1000));
 
-        bobCall.listenForDisconnect();
-        assertTrue(bobCall.waitForDisconnect(5000));
-        assertTrue(bobCall.respondToDisconnect());
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.NOT_FOUND, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString().contains(HangupReason.FAILED.getDescription()));
     }
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
@@ -1347,18 +1236,17 @@ public class DialTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-        bobCall.sendInviteOkAck();
-        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
         String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
         assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
                 null, null));
         assertTrue(georgeCall.waitForAck(50 * 1000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         Thread.sleep(3000);
         bobCall.disconnect();
@@ -1402,12 +1290,6 @@ public synchronized void testDialNumberGeorgePassInitialCallerId() throws Interr
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
     SipRequest georgeInvite = georgeCall.getLastReceivedRequest();
     assertTrue(((FromHeader)georgeInvite.getMessage().getHeader("From")).getAddress().getDisplayName().contains("bob"));
@@ -1417,17 +1299,19 @@ public synchronized void testDialNumberGeorgePassInitialCallerId() throws Interr
             null, null));
     assertTrue(georgeCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     Thread.sleep(3000);
     georgeCall.listenForDisconnect();
     // hangup.
     bobCall.disconnect();
 
     assertTrue(georgeCall.waitForDisconnect(30 * 1000));
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(georgeCall.respondToDisconnect());
+    assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 @Test
@@ -1466,11 +1350,6 @@ public synchronized void testDialFork() throws InterruptedException, ParseExcept
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     // Start a new thread for George
     new Thread(new Runnable() {
         @Override
@@ -1500,6 +1379,11 @@ public synchronized void testDialFork() throws InterruptedException, ParseExcept
             null, null));
     assertTrue(henriqueCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     henriqueCall.listenForDisconnect();
 
     Thread.sleep(8000);
@@ -1509,12 +1393,8 @@ public synchronized void testDialFork() throws InterruptedException, ParseExcept
     bobCall.disconnect();
 
     assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
-
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(henriqueCall.respondToDisconnect());
+    assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 @Test
@@ -1557,11 +1437,6 @@ public synchronized void testDialForkWithStatusCallback() throws InterruptedExce
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     // Start a new thread for George
     new Thread(new Runnable() {
         @Override
@@ -1591,6 +1466,11 @@ public synchronized void testDialForkWithStatusCallback() throws InterruptedExce
             null, null));
     assertTrue(henriqueCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     henriqueCall.listenForDisconnect();
 
     Thread.sleep(8000);
@@ -1600,32 +1480,15 @@ public synchronized void testDialForkWithStatusCallback() throws InterruptedExce
     bobCall.disconnect();
 
     assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
+    assertTrue(henriqueCall.respondToDisconnect());
+    assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    Thread.sleep(10000);
 
     logger.info("About to check the Status Callback Requests");
-    Map<String, String> statusCallbacks = new HashMap<String,String>();
+
     List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
-    for (LoggedRequest loggedRequest : requests) {
-        String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
-        String[] params = queryParam.split("&");
-        String callSid = params[0].split("=")[1];
-        String callStatus = params[4].split("=")[1];
-        if (statusCallbacks.containsKey(callSid)) {
-            statusCallbacks.remove(callSid);
-        }
-        statusCallbacks.put(callSid, callStatus);
-    }
-    assertTrue(statusCallbacks.size()==1);
-    Iterator<String> iter = statusCallbacks.keySet().iterator();
-    while (iter.hasNext()) {
-        String key = iter.next();
-        assertTrue(statusCallbacks.get(key).equalsIgnoreCase("completed"));
-    }
+    assertTrue(requests.get(requests.size()-1).getUrl().contains("CallStatus=completed"));
 }
 
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
@@ -1665,11 +1528,6 @@ public synchronized void testDialForkNoAnswerButFromHenrique() throws Interrupte
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
     assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
     assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -1687,6 +1545,11 @@ public synchronized void testDialForkNoAnswerButFromHenrique() throws Interrupte
             null, null));
     assertTrue(henriqueCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     assertTrue(georgeCall.listenForCancel());
     assertTrue(aliceCall.listenForCancel());
 
@@ -1697,6 +1560,10 @@ public synchronized void testDialForkNoAnswerButFromHenrique() throws Interrupte
     georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
     aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
 
+    assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+    assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+
+
     henriqueCall.listenForDisconnect();
 
     Thread.sleep(8000);
@@ -1706,12 +1573,8 @@ public synchronized void testDialForkNoAnswerButFromHenrique() throws Interrupte
     bobCall.disconnect();
 
     assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
-
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(henriqueCall.respondToDisconnect());
+    assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
@@ -1751,11 +1614,6 @@ public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws Interrup
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
     assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 3600));
     assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
@@ -1774,6 +1632,11 @@ public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws Interrup
             null, null));
     assertTrue(georgeCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     assertTrue(henriqueCall.listenForCancel());
     assertTrue(aliceCall.listenForCancel());
 
@@ -1784,6 +1647,9 @@ public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws Interrup
     henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
     aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
 
+    assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+    assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+
     georgeCall.listenForDisconnect();
 
     Thread.sleep(8000);
@@ -1793,12 +1659,8 @@ public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws Interrup
     bobCall.disconnect();
 
     assertTrue(georgeCall.waitForDisconnect(30 * 1000));
-
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(georgeCall.respondToDisconnect());
+    assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
@@ -1838,11 +1700,6 @@ public synchronized void testDialForkNoAnswerButFromAliceClient() throws Interru
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
     assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying-George", 600));
     assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 600));
@@ -1861,6 +1718,11 @@ public synchronized void testDialForkNoAnswerButFromAliceClient() throws Interru
             null, null));
     assertTrue(aliceCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     assertTrue(henriqueCall.listenForCancel());
     assertTrue(georgeCall.listenForCancel());
 
@@ -1869,7 +1731,10 @@ public synchronized void testDialForkNoAnswerButFromAliceClient() throws Interru
     assertNotNull(georgeCancelTransaction);
     assertNotNull(henriqueCancelTransaction);
     henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
-    aliceCall.respondToCancel(georgeCancelTransaction, 200, "OK - Alice", 600);
+    georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - Alice", 600);
+
+    assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
+    assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.CANCELED.getDescription()));
 
     aliceCall.listenForDisconnect();
 
@@ -1880,12 +1745,8 @@ public synchronized void testDialForkNoAnswerButFromAliceClient() throws Interru
     bobCall.disconnect();
 
     assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(aliceCall.respondToDisconnect());
+    assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
@@ -1929,11 +1790,6 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
     assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
     assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -1950,6 +1806,10 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
     assertTrue(aliceCall.listenForCancel());
     assertTrue(henriqueCall.listenForCancel());
 
+//    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+//    assertEquals(Response.TEMPORARILY_UNAVAILABLE, bobCall.getLastReceivedResponse().getStatusCode());
+//    assertTrue(bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+
     SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(20 * 1000);
     SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(20 * 1000);
     SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(20 * 1000);
@@ -1960,7 +1820,20 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
     aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
     henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
+    assertTrue(georgeCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+    assertTrue(henriqueCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+    assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.TIMEOUT.getDescription()));
+
     assertTrue(alicePhone.unregister(aliceContact, 3600));
+
+    //RCML contains a Pause verb after Dial Fork, so Bob's call will be answered here before calling Fotini
+
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+    Thread.sleep(3000);
 
     //Now Fotini should receive a call
     assertTrue(fotiniCall.waitForIncomingCall(30 * 1000));
@@ -1978,12 +1851,8 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
     bobCall.disconnect();
 
     assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
-
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(fotiniCall.respondToDisconnect());
+    assertTrue(fotiniCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 } 
 
 //    @Rule
@@ -2036,11 +1905,6 @@ public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL()
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
     assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
     assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -2078,6 +1942,11 @@ public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL()
     assertTrue(fotiniCall.waitForAck(5000));
     fotiniCall.listenForDisconnect();
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     Thread.sleep(2000);
 
     // hangup.
@@ -2085,12 +1954,8 @@ public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL()
     assertTrue(bobCall.disconnect());
 
     assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
-
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(fotiniCall.respondToDisconnect());
+    assertTrue(fotiniCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 //    private String rcmlToReturn = "<Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
@@ -2147,12 +2012,8 @@ public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURL() throws I
     assertTrue(bobCall.disconnect());
 
     assertTrue(fotiniCall.waitForDisconnect(50 * 1000));
-
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(fotiniCall.respondToDisconnect());
+    assertTrue(fotiniCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 private String sayRcml = "<Response><Say>Hello</Say></Response>";
@@ -2200,6 +2061,7 @@ public synchronized void testDialWithCustomHeaders() throws InterruptedException
 
     assertTrue(bobCall.waitForDisconnect(5 * 1000));
     assertTrue(bobCall.respondToDisconnect());
+    assertTrue(bobCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 @Test
@@ -2228,12 +2090,6 @@ public synchronized void testDialSip() throws InterruptedException, ParseExcepti
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
     MessageExt invite = (MessageExt) aliceCall.getLastReceivedRequest().getMessage();
     assertNotNull(invite);
@@ -2249,20 +2105,20 @@ public synchronized void testDialSip() throws InterruptedException, ParseExcepti
             null));
     assertTrue(aliceCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     Thread.sleep(3000);
 
     // hangup.
     bobCall.disconnect();
 
-    aliceCall.disconnect();
-    // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(aliceCall.waitForDisconnect(5 * 1000));
+    assertTrue(aliceCall.respondToDisconnect());
+    assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
-
 
 @Ignore
 @Test
@@ -2291,12 +2147,6 @@ public synchronized void testDialSipAuth() throws InterruptedException, ParseExc
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
-
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
     assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
     MessageExt invite = (MessageExt) aliceCall.getLastReceivedRequest().getMessage();
@@ -2339,18 +2189,19 @@ public synchronized void testDialSipAuth() throws InterruptedException, ParseExc
             null));
     assertTrue(aliceCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     Thread.sleep(3000);
 
     // hangup.
     bobCall.disconnect();
 
-    aliceCall.disconnect();
-    // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+    assertTrue(aliceCall.respondToDisconnect());
+    assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 @Test
@@ -2380,12 +2231,6 @@ public synchronized void testDialSipTagScreening() throws InterruptedException, 
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
     MessageExt invite = (MessageExt) aliceCall.getLastReceivedRequest().getMessage();
     assertNotNull(invite);
@@ -2406,18 +2251,19 @@ public synchronized void testDialSipTagScreening() throws InterruptedException, 
             headers, null));
     assertTrue(aliceCall.waitForAck(50 * 1000));
 
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+    bobCall.sendInviteOkAck();
+    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
     Thread.sleep(3000);
 
     // hangup.
     bobCall.disconnect();
 
-    aliceCall.disconnect();
-    // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+    assertTrue(aliceCall.respondToDisconnect());
+    assertTrue(aliceCall.getLastReceivedRequest().getMessage().getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
 }
 
 @Test
@@ -2447,12 +2293,6 @@ public synchronized void testDialSipDialTagScreening() throws InterruptedExcepti
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
     MessageExt invite = (MessageExt) aliceCall.getLastReceivedRequest().getMessage();
     assertNotNull(invite);
@@ -2472,18 +2312,9 @@ public synchronized void testDialSipDialTagScreening() throws InterruptedExcepti
             "sdp", headers, null));
     assertTrue(aliceCall.waitForAck(50 * 1000));
 
-    Thread.sleep(3000);
-
-    // hangup.
-    bobCall.disconnect();
-
-    aliceCall.disconnect();
-    // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.NOT_FOUND, bobCall.getLastReceivedResponse().getStatusCode());
+    assertTrue(bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString().contains(HangupReason.FAILED.getDescription()));
 }
 
 @Test
@@ -2513,12 +2344,6 @@ public synchronized void testDialSipDialTagScreening180Decline() throws Interrup
         assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
     }
 
-    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-    assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-    bobCall.sendInviteOkAck();
-    assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
     assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
     MessageExt invite = (MessageExt) aliceCall.getLastReceivedRequest().getMessage();
     assertNotNull(invite);
@@ -2542,18 +2367,9 @@ public synchronized void testDialSipDialTagScreening180Decline() throws Interrup
             headers, null));
     assertTrue(aliceCall.waitForAck(50 * 1000));
 
-    Thread.sleep(3000);
-
-    // hangup.
-    bobCall.disconnect();
-
-    aliceCall.disconnect();
-    // assertTrue(aliceCall.waitForDisconnect(30 * 1000));
-    try {
-        Thread.sleep(10 * 1000);
-    } catch (final InterruptedException exception) {
-        exception.printStackTrace();
-    }
+    assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+    assertEquals(Response.BUSY_HERE, bobCall.getLastReceivedResponse().getStatusCode());
+    assertTrue(bobCall.getLastReceivedResponse().getMessage().getHeader("Reason").toString().contains(HangupReason.BUSY.getDescription()));
 }
 
 @Deployment(name = "DialTest", managed = false, testable = false)
