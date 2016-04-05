@@ -141,7 +141,7 @@ public class GeolocationsDaoTest {
         // Update the Geolocation
         URI url2 = URI.create("http://127.0.0.1:8080/restcomm/demos/geolocation-hello.xml");
         geolocation = geolocation.setDateUpdated(currentDateTime);
-        geolocation = geolocation.setSource("mlpclient2");
+        geolocation = geolocation.setSource("mlpclient-2");
         geolocation = geolocation.setDeviceIdentifier("device:fernando'siPhone");
         geolocation = geolocation.setGeolocationType(GeolocationType.Notification);
         geolocation = geolocation.setResponseStatus("queued");

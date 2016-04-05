@@ -645,13 +645,13 @@ public class Geolocation {
 
         public void setCause(String cause) {
             if (responseStatus != null && (responseStatus.equalsIgnoreCase("rejected")
-                    || responseStatus.equalsIgnoreCase("unauthorized")
-                            || this.responseStatus.equalsIgnoreCase("failed"))) {
+                    || responseStatus.equalsIgnoreCase("unauthorized") || responseStatus.equalsIgnoreCase("failed"))) {
                 this.cause = cause;
                 // "cause" is only updated if "responseStatus" is not null and is either "rejected", "unauthorized" or "failed"
                 // Otherwise, it's value in HTTP POST/PUT is ignored
-            } else if (responseStatus != null && (!responseStatus.equalsIgnoreCase("rejected")
-                    || !responseStatus.equalsIgnoreCase("unauthorized") || !responseStatus.equalsIgnoreCase("failed"))) {
+            }
+            if (responseStatus != null && (!responseStatus.equalsIgnoreCase("rejected")
+                    && !responseStatus.equalsIgnoreCase("unauthorized") && !responseStatus.equalsIgnoreCase("failed"))) {
                 this.cause = null;
                 // "cause" is set to null if "responseStatus" is not null and is neither "rejected", "unauthorized" nor "failed"
             }
