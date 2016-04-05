@@ -98,6 +98,7 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
 import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
@@ -1189,9 +1190,35 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (ParserFailed.class.equals(klass)) {
                 call.tell(new Hangup(HangupReason.PARSER_EXCEPTION), source);
             } else {
-                call.tell(new Hangup(), source);
+                if (message instanceof CallManagerResponse && !((CallManagerResponse)message).succeeded()) {
+                    call.tell(new Hangup(HangupReason.INVALID), source);
+                } else {
+                    call.tell(new Hangup(getHangupReason(callState)), source);
+                }
             }
         }
+    }
+
+    protected HangupReason getHangupReason(final CallStateChanged.State callState) {
+        HangupReason reason = HangupReason.UNDEFINED;
+        if (callState != null) {
+            if (callState != null) {
+                if (callState.equals(CallStateChanged.State.BUSY)) {
+                    reason = HangupReason.BUSY;
+                } else if (callState.equals(CallStateChanged.State.CANCELED)) {
+                    reason = HangupReason.CANCELED;
+                } else if (callState.equals(CallStateChanged.State.FAILED)) {
+                    reason = HangupReason.FAILED;
+                } else if (callState.equals(CallStateChanged.State.NO_ANSWER)) {
+                    reason = HangupReason.NO_ANSWER;
+                } else if (callState.equals(CallStateChanged.State.COMPLETED)) {
+                    reason = HangupReason.NORMAL_CLEARING;
+                } else if (callState.equals(CallStateChanged.State.IN_PROGRESS)) {
+                    reason = HangupReason.NORMAL_CLEARING;
+                }
+            }
+        }
+        return reason;
     }
 
     final class Redirecting extends AbstractAction {

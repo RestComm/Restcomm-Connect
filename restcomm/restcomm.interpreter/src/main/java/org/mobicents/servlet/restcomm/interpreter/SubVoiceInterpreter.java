@@ -380,7 +380,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state() || CallStateChanged.State.BUSY == event.state()) {
 
-                originalInterpreter.tell(new Cancel(), source);
+                originalInterpreter.tell(new Cancel(getHangupReason(callState)), source);
             }
         } else if (MediaGroupResponse.class.equals(klass)) {
             final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;

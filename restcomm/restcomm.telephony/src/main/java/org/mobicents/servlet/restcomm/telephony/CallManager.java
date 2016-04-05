@@ -820,7 +820,7 @@ public final class CallManager extends UntypedActor {
                 logger.info("New Intepreter for Second call leg: " + relatedInterpreter.path() + " started");
             } else {
                 logger.info("moveConnectedCallLeg is: " + moveConnectedCallLeg + " so will hangup relatedCall: "+relatedCall.path());
-                relatedCall.tell(new Hangup(), null);
+                relatedCall.tell(new Hangup(HangupReason.LCM_HANGUP_NORMAL_CLEARING), null);
 //                getContext().stop(relatedCall);
             }
         }

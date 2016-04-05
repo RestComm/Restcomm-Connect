@@ -28,9 +28,11 @@ public enum HangupReason {
     FAILED("Call_Failed"),
     CANCELED("Call_Canceled"),
     TIMEOUT("Call_Timeout"),
+    INVALID("Invalid"),
     NORMAL_CLEARING("Normal_Clearing"),
     LCM_HANGUP_CANCELED("LCM_canceled"),
     LCM_HANGUP_COMPLETED("LCM_completed"),
+    LCM_HANGUP_NORMAL_CLEARING("LCM_normal_clearing"),
     PARSER_EXCEPTION("Exception_to_parse_downloaded_RCML"),
     UNDEFINED("Undefined");
 

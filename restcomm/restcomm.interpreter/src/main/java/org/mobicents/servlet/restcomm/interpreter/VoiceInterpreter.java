@@ -190,6 +190,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean liveCallModification = false;
     private boolean recordingCall = true;
     protected boolean isParserFailed = false;
+    protected boolean callInitialized = false;
 
     // Call bridging
     private final ActorRef bridgeManager;
@@ -509,6 +510,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (CallResponse.class.equals(klass)) {
+            logger.info("CallResponse received, sender==call: "+(sender==call)+ " ,fsm.state()"+state);
             if (forking.equals(state)) {
                 // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
                 // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest
@@ -549,6 +551,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 // update db and callback statusCallback url.
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
+                if (sender == call && !callInitialized) {
+                    //Initial call is now in progress, which means Restcomm answered the call, which means the call is initialized now
+                    logger.info("Call moved to IN_PROGRESS state, fsm.state(): "+state);
+                    callInitialized = true;
+                    fsm.transition(message, acquiringOutboundCallInfo);
+                }
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
                     if (parser != null) {
                         fsm.transition(message, ready);
@@ -561,12 +569,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (outboundCall == null || !sender.equals(call)) {
                         outboundCall = sender;
                     }
-                    fsm.transition(message, acquiringOutboundCallInfo);
+                    //Time to answer initial call
+                    call.tell(new Answer(), self());
+//                    fsm.transition(message, acquiringOutboundCallInfo);
                 } else if (conferencing.equals(state)) {
                     // Call left the conference successfully
                     if (!liveCallModification) {
                         // Hang up the call
-                        final Hangup hangup = new Hangup();
+                        final Hangup hangup = new Hangup(HangupReason.NORMAL_CLEARING);
                         call.tell(hangup, self);
                     } else {
                         // XXX start processing new RCML and give instructions to call
@@ -592,11 +602,22 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finishDialing);
                         }
                     } else if (finishDialing.equals(state)) {
-                        removeDialBranch(message, sender);
+                        if (call == sender) {
+                            logger.info("Sender is call");
+                        } else {
+                            logger.info("Sender is Outbound call");
+                        }
+                        if (dialBranches != null && dialBranches.contains(sender)) {
+                            removeDialBranch(message, sender);
+                        } else {
+                            sender.tell(new Hangup(getHangupReason(event.state())), self());
+                        }
                         return;
                     } else {
-                        if (!finishDialing.equals(state))
+                        //Race condition here. If the RCML has next but Call sends Completed, VI will move to Finished state
+                        if (!finishDialing.equals(state)) {
                             fsm.transition(message, finished);
+                        }
                     }
             } else if (CallStateChanged.State.BUSY == event.state()) {
                 if (forking.equals(state)) {
@@ -612,7 +633,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         logger.info("call state changed. New call state: " + ((CallStateChanged) message).state() + "Sender in the dialBranches: " + dialBranches.contains(sender));
                         ActorRef branch = dialBranches.remove(dialBranches.indexOf(sender));
                         logger.info("Will cancel branch: " + branch.toString());
-                        branch.tell(new Cancel(), self());
+                        branch.tell(new Cancel(HangupReason.CANCELED), self());
                         if (dialBranches.size() > 0) {
                             return;
                         } else if (attribute == null) {
@@ -625,7 +646,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, finishDialing);
                 }
             } else if (CallStateChanged.State.CANCELED == event.state()) {
-                if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging) {
+                if (state == forking && sender == call) {
+                    fsm.transition(message,finishDialing);
+                } else if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging) {
                     return;
                 } else {
                     if (sender == call) {
@@ -734,15 +757,24 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, rejecting);
                 } else if (pause.equals(verb.name())) {
                     fsm.transition(message, pausing);
-                } else if (dial.equals(verb.name()))  {
+                } else if (dial.equals(verb.name()) && !isDialConference(verb)) { // && verb.attribute("record") == null)  {
+                    //Inbound Call that is now ringing and first Verb Dial ( NOT Dial Conference - NOT record = true)
+                    //Should move to StartDialing and answer the call later
+                    //depending on the Dial outcome
                     dialRecordAttribute = verb.attribute("record");
                     fsm.transition(message, startDialing);
                 } else {
+                    //If inbound Call is ringing but first verb is not Dial
+                    //move to initializingCall state
                     fsm.transition(message, initializingCall);
                 }
-//          } else if (dial.equals(verb.name())) {
-//                dialRecordAttribute = verb.attribute("record");
-//                fsm.transition(message, startDialing);
+          } else if (!callInitialized && !(dial.equals(verb.name()) || hangup.equals(verb.name()))) {
+                fsm.transition(message, initializingCall);
+            } else if (dial.equals(verb.name())) {
+                //Outgoing call with RCML that includes Dial verb
+                //Should proceed to the RCML as usual.
+                dialRecordAttribute = verb.attribute("record");
+                fsm.transition(message, startDialing);
             } else if (fax.equals(verb.name())) {
                 fsm.transition(message, caching);
             } else if (play.equals(verb.name())) {
@@ -894,7 +926,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //            if (attribute != null) {
 //                executeDialAction(message, sender);
 //            }
-            sender.tell(new Cancel(), self());
+            sender.tell(new Cancel(getHangupReason(((CallStateChanged) message).state())), self());
             if (dialBranches.size() > 0) {
                 //Wait to check the response from the other branches
                 return;
@@ -1043,6 +1075,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    protected boolean isDialConference(final Tag container) {
+        final List<Tag> children = container.children();
+        for (final Tag child : children) {
+            if (Nouns.conference.equals(child.name())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private abstract class AbstractAction implements Action {
         protected final ActorRef source;
 
@@ -1101,13 +1143,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 verb = (Tag) message;
 
                 call.tell(new Answer(), source);
-//                if (!Verbs.dial.equals(verb.name())) {
-//                    // Answer the call only if the Verb IS NOT Dial.
-//                    // If verb is Dial call will be answered when called party answers
-//
-//                } else {
-//
-//                }
+                callInitialized = true;
             }
         }
     }
@@ -1181,6 +1217,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Ask the downloader to get us the application that will be executed.
             final List<NameValuePair> parameters = parameters();
             request = new HttpRequestDescriptor(url, method, parameters);
+            logger.info("Downloading RMCL, url: "+url.toString());
             downloader.tell(request, source);
         }
     }
@@ -1265,7 +1302,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                 } else {
                     if (call != null) {
-                        call.tell(new Hangup(HangupReason.PARSER_EXCEPTION), null);
+                        if (outboundCallInfo != null) {
+                            call.tell(new Hangup(getHangupReason(outboundCallInfo.state())),null);
+                        } else {
+                            call.tell(new Hangup(HangupReason.NORMAL_CLEARING), null);
+                        }
                     }
                     final StopInterpreter stop = new StopInterpreter();
                     source.tell(stop, source);
@@ -1614,7 +1655,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 dialBranches.remove(outboundCall);
                 for (final ActorRef branch : dialBranches) {
                     //We got an answer, cancel the other branches
-                    branch.tell(new Cancel(HangupReason.NORMAL_CLEARING), null);
+                    branch.tell(new Cancel(HangupReason.CANCELED), null);
                     // Race condition here. Correct way is to ask Call to Cancel and when done Call will notify Observer with
                     // CallStateChanged.Cancelled then
                     // ask CallManager to destroy the call.
@@ -1623,8 +1664,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 dialBranches = null;
             }
             outboundCall.tell(new GetCallInfo(), source);
-            //Time to answer initial call
-            call.tell(new Answer(), self());
+//            //Time to answer initial call
+//            call.tell(new Answer(), self());
         }
     }
 
@@ -1860,7 +1901,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 attribute = verb.attribute("action");
             }
 
-            if (message instanceof ReceiveTimeout && dialBranches != null) {
+            if ((message instanceof ReceiveTimeout && dialBranches != null) || (message instanceof CallStateChanged
+                    && ((CallStateChanged) message).state().equals(CallStateChanged.State.NO_ANSWER))) {
                 logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
@@ -1913,7 +1955,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                            if (attribute != null) {
 //                                executeDialAction(message, branch);
 //                            }
-                            branch.tell(new Cancel(HangupReason.NORMAL_CLEARING), source);
+                            branch.tell(new Cancel(getHangupReason(callState)), source);
                         }
                         if (dialBranches.size() > 0) {
                             dialBranches = null;
@@ -1931,7 +1973,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     } else if (dialBranches != null && dialBranches.contains(sender)) {
                         removeDialBranch(message, sender);
-                        return;
+                        if (dialBranches.size() > 0)
+                            return;
                     } else {
                         // Ask the parser for the next action to take.
                         final GetNextVerb next = GetNextVerb.instance();
@@ -1943,7 +1986,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         outboundCall = null;
                         return;
                     }
-                } else if (bridged.equals(state)) {
+                } else if (bridged.equals(state) || bridging.equals(state)) {
                     logger.info("finishDialing state=bridged, will hangup outboundCall");
                     outboundCall.tell(new Hangup(HangupReason.NORMAL_CLEARING), source);
                 } else {
@@ -1955,10 +1998,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (sender == call) {
                 if (outboundCall != null) {
-                    outboundCall.tell(new Hangup(getHangupReason(outboundCallInfo)), self());
+                    outboundCall.tell(new Hangup(getHangupReason(outboundCallInfo.state())), self());
                 }
             } else {
-                call.tell(new Hangup(getHangupReason(callInfo)), self());
+                call.tell(new Hangup(getHangupReason(callState)), self());
             }
 
             if (recordingCall && sender == call) {
@@ -1995,27 +2038,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             dialChildren = null;
             outboundCall = null;
         }
-    }
-
-    private HangupReason getHangupReason(final CallInfo info) {
-        HangupReason reason = HangupReason.UNDEFINED;
-        if (info != null) {
-            CallStateChanged.State state = info.state();
-            if (state != null) {
-                if (state.equals(CallStateChanged.State.BUSY)) {
-                    reason = HangupReason.BUSY;
-                } else if (state.equals(CallStateChanged.State.CANCELED)) {
-                    reason = HangupReason.CANCELED;
-                } else if (state.equals(CallStateChanged.State.FAILED)) {
-                    reason = HangupReason.FAILED;
-                } else if (state.equals(CallStateChanged.State.NO_ANSWER)) {
-                    reason = HangupReason.NO_ANSWER;
-                } else if (state.equals(CallStateChanged.State.COMPLETED)) {
-                    reason = HangupReason.NORMAL_CLEARING;
-                }
-            }
-        }
-        return reason;
     }
 
     private final class AcquiringConferenceInfo extends AbstractDialAction {
@@ -2333,7 +2355,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // XXX verify if this code is still necessary
                 if (outboundCall != null && !liveCallModification) {
                     outboundCall.tell(new StopObserving(source), null);
-                    outboundCall.tell(new Hangup(), null);
+                    outboundCall.tell(new Hangup(getHangupReason(outboundCallInfo.state())), null);
                 }
 
             // If the call is in a conference remove it.
@@ -2423,7 +2445,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     + "At the postStop() method. Will clean up Voice Interpreter. Keep calls: " + liveCallModification);
             if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
                 logger.info("At postStop(), will clean up outbound call");
-                outboundCall.tell(new Hangup(), null);
+                outboundCall.tell(new Hangup(getHangupReason(outboundCallInfo.state())), null);
                 callManager.tell(new DestroyCall(outboundCall), null);
                 outboundCall = null;
             }
