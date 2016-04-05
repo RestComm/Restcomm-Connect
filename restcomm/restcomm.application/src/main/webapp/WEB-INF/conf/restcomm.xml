@@ -77,6 +77,10 @@
 		     Default valur false so call are routed through LB-->
 		<bypass-lb-for-clients>false</bypass-lb-for-clients>
 
+		<!-- Set to true so Restcomm will send 100 Trying on initial Request-->
+		<!-- Used only for testing. !!! Don't enable this for production -->
+		<send-trying-for-initial-requests>false</send-trying-for-initial-requests>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
