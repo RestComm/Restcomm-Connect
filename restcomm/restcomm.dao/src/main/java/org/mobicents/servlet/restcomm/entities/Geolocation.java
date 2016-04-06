@@ -632,7 +632,11 @@ public class Geolocation {
         }
 
         public void setRadius(Long radius) {
-            this.radius = radius;
+            if (geolocationType.toString().equalsIgnoreCase("Notification")) {
+                this.radius = radius;
+            } else {
+                this.radius = null;
+            }
         }
 
         public void setGeolocationPositioningType(String geolocationPositioningType) {
