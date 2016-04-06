@@ -933,11 +933,13 @@ public final class Call extends UntypedActor {
 
         private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
             String externalIp = null;
-            final SipURI externalSipUri = (SipURI) sipMessage.getAttribute("realInetUri");
+            final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
             if (externalSipUri != null) {
+                logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString());
                 externalIp = externalSipUri.toString();
             } else {
                 externalIp = sipMessage.getInitialRemoteAddr();
+                logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
             }
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
