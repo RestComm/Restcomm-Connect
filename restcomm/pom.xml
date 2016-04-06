@@ -84,7 +84,7 @@
 		<mobicents.mgcp.impl.version>3.0.2.FINAL</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
-    <sipservletapi.version>3.1.687</sipservletapi.version>
+    <sipservletapi.version>3.1.688</sipservletapi.version>
 		<staxapi.version>1.0.1</staxapi.version>
 		<staximpl.version>1.2.0</staximpl.version>
 		<servlet-api.version>7.0.50</servlet-api.version>
@@ -101,7 +101,7 @@
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
-    <sip-ri.version>1.2.245</sip-ri.version>
+    <sip-ri.version>1.2.273</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>1.0.1</mss.arquillian.version>
 		<mss.shrinkwrap.version>1.0.1</mss.shrinkwrap.version>
@@ -138,7 +138,6 @@
 		<module>restcomm.interpreter</module>
 		<module>restcomm.http</module>
 		<module>restcomm.sms</module>
-		<module>restcomm.smpp</module>
 		<module>restcomm.provisioning.number.api</module>
 		<module>restcomm.provisioning.number.vi</module>
 		<module>restcomm.provisioning.number.nexmo</module>
