@@ -462,10 +462,10 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("physical_address").getAsString().equals(physicalAddress));
         assertTrue(geolocationJson.get("formatted_address").getAsString().equals(formattedAddress));
         assertTrue(geolocationJson.get("location_timestamp").getAsString().equals(locationTimestamp));
-        assertTrue(geolocationJson.get("radius").getAsString().equals(radius));
+        assertTrue(geolocationJson.get("radius").getAsString() == radius);
         assertTrue(geolocationJson.get("geolocation_positioning_type").getAsString().equals(geolocationPositioningType));
         assertTrue(geolocationJson.get("last_geolocation_response").getAsString().equals(lastGeolocationResponse));
-        assertTrue(geolocationJson.get("cause").getAsString().equals(cause));
+        assertTrue(geolocationJson.get("cause").getAsString() == cause);
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Test asserts via GET to a Geolocation list
@@ -493,10 +493,10 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("physical_address").getAsString().equals(physicalAddress));
         assertTrue(geolocationJson.get("formatted_address").getAsString().equals(formattedAddress));
         assertTrue(geolocationJson.get("location_timestamp").getAsString().equals(locationTimestamp));
-        assertTrue(geolocationJson.get("radius").getAsString().equals(radius));
+        assertTrue(geolocationJson.get("radius").getAsString() == radius);
         assertTrue(geolocationJson.get("geolocation_positioning_type").getAsString().equals(geolocationPositioningType));
         assertTrue(geolocationJson.get("last_geolocation_response").getAsString().equals(lastGeolocationResponse));
-        assertTrue(geolocationJson.get("cause").getAsString().equals(cause));
+        assertTrue(geolocationJson.get("cause").getAsString() == cause);
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
     }
@@ -579,17 +579,17 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("physical_address").getAsString().equals(physicalAddress));
         assertTrue(geolocationJson.get("formatted_address").getAsString().equals(formattedAddress));
         assertTrue(geolocationJson.get("location_timestamp").getAsString().equals(locationTimestamp));
-        assertTrue(geolocationJson.get("radius").getAsString().equals(radius));
+        assertTrue(geolocationJson.get("radius").getAsString() == radius);
         assertTrue(geolocationJson.get("geolocation_positioning_type").getAsString().equals(geolocationPositioningType));
         assertTrue(geolocationJson.get("last_geolocation_response").getAsString().equals(lastGeolocationResponse));
-        assertTrue(geolocationJson.get("cause").getAsString().equals(cause));
+        assertTrue(geolocationJson.get("cause").getAsString() == cause);
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Define new values for the Geolocation attributes (PUT test)
         geolocationParamsUpdate = new MultivaluedMapImpl();
         geolocationParamsUpdate.add("DesiredAccuracy", "Average");
         geolocationParamsUpdate.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
-        geolocationParamsUpdate.add("ResponseStatus", responseStatus = "partially-successfull");
+        geolocationParamsUpdate.add("ResponseStatus", responseStatus = "successfull");
         geolocationParamsUpdate.add("CellId", cellId = "55777");
         geolocationParamsUpdate.add("LocationAreaCode", locationAreaCode = "707");
         geolocationParamsUpdate.add("MobileCountryCode", mobileCountryCode = "748");
@@ -636,10 +636,10 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("physical_address").getAsString().equals(physicalAddress));
         assertTrue(geolocationJson.get("formatted_address").getAsString().equals(formattedAddress));
         assertTrue(geolocationJson.get("location_timestamp").getAsString().equals(locationTimestamp));
-        assertTrue(geolocationJson.get("radius").getAsString().equals(radius));
+        assertTrue(geolocationJson.get("radius").getAsString() == radius);
         assertTrue(geolocationJson.get("geolocation_positioning_type").getAsString().equals(geolocationPositioningType));
         assertTrue(geolocationJson.get("last_geolocation_response").getAsString().equals(lastGeolocationResponse));
-        assertTrue(geolocationJson.get("cause").getAsString().equals(cause));
+        assertTrue(geolocationJson.get("cause").getAsString() == cause);
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
     }
