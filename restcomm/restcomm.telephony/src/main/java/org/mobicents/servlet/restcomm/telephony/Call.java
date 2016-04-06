@@ -222,6 +222,8 @@ public final class Call extends UntypedActor {
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.ringing));
         transitions.add(new Transition(this.uninitialized, this.queued));
+        transitions.add(new Transition(this.uninitialized, this.canceled));
+        transitions.add(new Transition(this.uninitialized, this.completed));
         transitions.add(new Transition(this.queued, this.canceled));
         transitions.add(new Transition(this.queued, this.initializing));
         transitions.add(new Transition(this.ringing, this.busy));
@@ -648,10 +650,15 @@ public final class Call extends UntypedActor {
                 to = (SipURI) invite.getTo().getURI();
                 timeout = -1;
                 direction = INBOUND;
-                // Send a ringing response.
-                final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
-                ringing.addHeader("X-Call-Sid",id.toString());
-                ringing.send();
+                try {
+                    // Send a ringing response
+                    final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
+                    ringing.addHeader("X-Call-Sid", id.toString());
+                    ringing.send();
+                } catch (IllegalStateException exception) {
+                    logger.debug("Exception while creating 180 response to inbound invite request");
+                    fsm.transition(message, canceled);
+                }
 
                 SipURI initialInetUri = getInitialIpAddressPort(invite);
 
@@ -880,15 +887,6 @@ public final class Call extends UntypedActor {
                 resp.send();
             }
 
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid()) {
-                invite.getSession().setInvalidateWhenReady(true);
-            }
-
-            if (invite.getApplicationSession().isValid()) {
-                invite.getApplicationSession().setInvalidateWhenReady(true);
-            }
-
             // Notify the observers.
             external = CallStateChanged.State.FAILED;
             final CallStateChanged event = new CallStateChanged(external);
@@ -933,8 +931,14 @@ public final class Call extends UntypedActor {
             msController.tell(command, source);
         }
 
-        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException {
-            final String externalIp = sipMessage.getInitialRemoteAddr();
+        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
+            String externalIp = null;
+            final SipURI externalSipUri = (SipURI) sipMessage.getAttribute("realInetUri");
+            if (externalSipUri != null) {
+                externalIp = externalSipUri.toString();
+            } else {
+                externalIp = sipMessage.getInitialRemoteAddr();
+            }
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
             return new CreateMediaSession("sendrecv", offer, false, webrtc);
@@ -1083,15 +1087,6 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
 
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid()) {
-                invite.getSession().invalidate();
-            }
-
-            if (invite.getApplicationSession().isValid()) {
-                invite.getApplicationSession().invalidate();
-            }
-
             //In the case of canceled that reach the completed method, don't change the external state
             if (!external.equals(CallStateChanged.State.CANCELED)) {
                 // Notify the observers.
@@ -1219,8 +1214,10 @@ public final class Call extends UntypedActor {
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(ringing)) {
-            fsm.transition(message, initializing);
+        if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
+                fsm.transition(message, initializing);
+        } else {
+            fsm.transition(message, canceled);
         }
     }
 
@@ -1263,7 +1260,7 @@ public final class Call extends UntypedActor {
             if (is(initializing)) {
                 fsm.transition(message, canceling);
             } else if (is(ringing) && isInbound()) {
-                fsm.transition(message, canceled);
+                fsm.transition(message, canceling);
             }
             // XXX can receive SIP cancel any other time?
         } else if ("BYE".equalsIgnoreCase(method)) {
