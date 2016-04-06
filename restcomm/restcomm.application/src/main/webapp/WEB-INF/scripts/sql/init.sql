@@ -133,6 +133,19 @@ CREATE TABLE "restcomm_call_detail_records" (
 "ring_duration" INT
 );
 
+CREATE TABLE "restcomm_conference_detail_records" (
+"conference_sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"date_created" DATETIME NOT NULL,
+"date_updated" DATETIME NOT NULL,
+"account_sid" VARCHAR(34) NOT NULL,
+"status" VARCHAR(20) NOT NULL,
+"start_time" DATETIME,
+"end_time" DATETIME,
+"api_version" VARCHAR(10) NOT NULL,
+"friendly_name" VARCHAR(60),
+"uri" LONGVARCHAR NOT NULL
+);
+
 CREATE TABLE "restcomm_clients" (
 "sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATETIME NOT NULL,

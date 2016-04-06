@@ -104,7 +104,7 @@
     SELECT * FROM "restcomm_call_detail_records" WHERE "parent_call_sid"=#{parent_call_sid};
   </select>
   
-  <select id="getCallDetailRecordsByConferenceId" parameterType="string" resultType="hashmap">
+  <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid};
   </select>
   
