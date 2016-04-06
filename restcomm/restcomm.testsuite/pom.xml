@@ -18,14 +18,6 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
-		<dependency>
-            <groupId>com.telestax.servlet</groupId>
-            <artifactId>restcomm.smpp</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-		
 
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
