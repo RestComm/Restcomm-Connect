@@ -132,7 +132,7 @@ public class GeolocationsDaoTest {
         assertTrue(result.getLocationTimestamp().equals(geolocation.getLocationTimestamp()));
         assertTrue(result.getEventGeofenceLatitude().equals(geolocation.getEventGeofenceLatitude()));
         assertTrue(result.getEventGeofenceLongitude().equals(geolocation.getEventGeofenceLongitude()));
-        assertTrue(result.getRadius().equals(geolocation.getRadius()));
+        assertTrue(result.getRadius() == geolocation.getRadius());
         assertTrue(result.getGeolocationPositioningType().equals(geolocation.getGeolocationPositioningType()));
         assertTrue(result.getLastGeolocationResponse().equals(geolocation.getLastGeolocationResponse()));
         assertTrue(result.getApiVersion().equals(geolocation.getApiVersion()));
