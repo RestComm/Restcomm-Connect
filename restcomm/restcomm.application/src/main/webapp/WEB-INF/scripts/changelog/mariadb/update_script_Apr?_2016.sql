@@ -1,0 +1,3 @@
+-- TODO: by maria-farooq@live.com.
+-- Add all schema changes, made for conference API, in this change log file.
+-- Is there any changelog file for mysql as well?
