@@ -19,22 +19,23 @@
  */
 package org.mobicents.servlet.restcomm.telephony.ua;
 
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.toHex;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import com.telestax.servlet.MonitoringService;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.ClientsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
+import org.mobicents.servlet.restcomm.entities.Client;
+import org.mobicents.servlet.restcomm.entities.Registration;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.UserRegistration;
+import org.mobicents.servlet.restcomm.util.DigestAuthentication;
+import scala.concurrent.duration.Duration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -46,26 +47,20 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.dao.ClientsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
-import org.mobicents.servlet.restcomm.entities.Client;
-import org.mobicents.servlet.restcomm.entities.Registration;
-import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.telephony.UserRegistration;
-import org.mobicents.servlet.restcomm.util.DigestAuthentication;
-
-import com.telestax.servlet.MonitoringService;
-
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import scala.concurrent.duration.Duration;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static org.mobicents.servlet.restcomm.util.HexadecimalUtils.toHex;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -78,6 +73,7 @@ public final class UserAgentManager extends UntypedActor {
     private final DaoManager storage;
     private final ServletContext servletContext;
     private ActorRef monitoringService;
+    private final int pingInterval;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -89,7 +85,7 @@ public final class UserAgentManager extends UntypedActor {
         this.authenticateUsers = runtime.getBoolean("authenticate");
         this.factory = factory;
         this.storage = storage;
-        int pingInterval = runtime.getInt("ping-interval", 60);
+        pingInterval = runtime.getInt("ping-interval", 60);
         getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
     }
 
@@ -99,7 +95,16 @@ public final class UserAgentManager extends UntypedActor {
         for (final Registration result : results) {
             final DateTime expires = result.getDateExpires();
             if (expires.isBeforeNow() || expires.isEqualNow()) {
-                logger.info("Registration: "+result.getAddressOfRecord()+" expired and will remove it now");
+                logger.info("Registration: "+result.getAddressOfRecord()+" expired and will be removed now");
+                registrations.removeRegistration(result);
+                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                return;
+            }
+            final DateTime updated = result.getDateUpdated();
+            Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
+            if ( (DateTime.now().getMillis() - updated.getMillis()) >  pingIntervalMillis) {
+                //Last time this registration updated was older than (pingInterval * 3), looks like it doesn't respond to OPTIONS
+                logger.info("Registration: "+result.getAddressOfRecord()+" didn't respond to OPTIONS and will be removed now");
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             }
@@ -194,8 +199,6 @@ public final class UserAgentManager extends UntypedActor {
     }
 
     private void patch(final SipURI uri, final String address, final int port) throws UnknownHostException {
-        final InetAddress host = InetAddress.getByName(uri.getHost());
-        final String ip = host.getHostAddress();
         uri.setHost(address);
         uri.setPort(port);
     }
@@ -257,6 +260,11 @@ public final class UserAgentManager extends UntypedActor {
             if (response.getApplicationSession().isValid()) {
                 response.getApplicationSession().invalidate();
             }
+        final RegistrationsDao registrations = storage.getRegistrationsDao();
+        Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser());
+        //Registration here shouldn't be null. Update it
+        registration = registration.updated();
+        registrations.updateRegistration(registration);
     }
 
     private SipURI outboundInterface(String toTransport) {

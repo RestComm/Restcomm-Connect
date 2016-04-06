@@ -18,14 +18,10 @@
 			convention and synchronization with database entities. This execution
 			will occurs max one time per Restcomm version. To force a new run, 
 			remove the file .version inside RVD workspace. -->
-		<rvd-workspace-migration-enabled>true</rvd-workspace-migration-enabled>
+		<rvd-workspace-migration-enabled>false</rvd-workspace-migration-enabled>
 
 		<!-- The location where the audio prompts are located. -->
 		<prompts-uri>/restcomm/audio</prompts-uri>
-
-		<!-- Conference audio files, these will be played when a participant joins or leaves the conference -->
-		<conference-entry-audio>beep.wav</conference-entry-audio>
-		<conference-exit-audio>alert.wav</conference-exit-audio>
 
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
@@ -61,11 +57,11 @@
 
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1) 
 			when creating an outbound call -->
-		<normalize-numbers-for-outbound-calls>false</normalize-numbers-for-outbound-calls>
-		<!--If set to TRUE Restcomm will use the From address of initial call as 
-			caller-id for calls created with Dial Number. Caller A (callerId A) dials 
-			DID XYZ that is bind to RCML that Dials Number 4321. If from-address-to-proxied-calls 
-			is TRUE Restcomm will pass callerId A to the created call -->
+		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
+		<!--If set to TRUE Restcomm will use the From address of initial call to 
+			proxied calls Caller A dials DID XYZ that is bind to RCML that Dials Number 
+			4321. If from-address-to-proxied-calls is TRUE Restcomm will pass callerId 
+			A to the created call -->
 		<from-address-to-proxied-calls>true</from-address-to-proxied-calls>
 
 		<!-- Control whether Restcomm will try to patch the Request-URI and SDP 
@@ -73,13 +69,9 @@
 		<!-- Default value: true -->
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
-		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set.
-		     Default valur false so call are routed through LB-->
-		<bypass-lb-for-clients>false</bypass-lb-for-clients>
-
 		<!-- Set to true so Restcomm will send 100 Trying on initial Request-->
 		<!-- Used only for testing. !!! Don't enable this for production -->
-		<send-trying-for-initial-requests>false</send-trying-for-initial-requests>
+		<send-trying-for-initial-requests>true</send-trying-for-initial-requests>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -96,15 +88,14 @@
 				proxy when -->
 			<!-- creating the From header, as the userpart of the sip uri. Example: 
 				From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
-			<!-- Must be TRUE for Nexmo integration -->
-			<outboudproxy-user-at-from-header>false</outboudproxy-user-at-from-header>
+			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
 			<!-- When set to true, Restcomm will use the original user for the display 
 				name of the From header -->
 			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
 			<user-at-displayed-name>true</user-at-displayed-name>
 
 			<!-- Allow fallback to backup proxy -->
-			<allow-fallback>false</allow-fallback>
+			<allow-fallback>true</allow-fallback>
 			<!-- Number of maximum failed calls before switching from primary to the 
 				fallback outbound proxy -->
 			<max-failed-calls>20</max-failed-calls>
@@ -117,13 +108,12 @@
 			<login>restcomm</login>
 			<password>restcomm</password>
 			<endpoint>restcomm_instance_id</endpoint>
-			<siteId>site_id</siteId>
 			<uri>http://127.0.0.1:2080</uri>
 		</telestax-proxy>
 
 		<!-- TelScale USSD Gateway -->
 		<ussd-gateway>
-			<ussd-gateway-uri></ussd-gateway-uri>
+			<ussd-gateway-uri>127.0.0.1:5090</ussd-gateway-uri>
 			<ussd-gateway-user></ussd-gateway-user>
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>
@@ -149,55 +139,18 @@
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
-				<permission>RestComm:*:EmailMessages</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>
 
-	<!--Bandwidth Provisioning API Configuration class: org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager 
-		username - The username assigned to you at account setup for the Bandwidth 
-		Provisioning Portal (https://webui.inetwork.com) password - Password used 
-		to login to the Bandwidth Provisioning portal (https://webui.inetwork.com) 
-		accountId - Account ID assigned to you by Bandwidth at account setup siteId 
-		- The Site ID within your Bandwidth account where numbers should be provisioned. 
-		The site is called Location in the portal. You can find the site Id in the 
-		url string by navigating to Account/Configuration/Locations and selecting 
-		the proper location. Given the url: https://webui.inetwork.com/report/#editlocation:%7B%22a%22:5555111,%22s%22:1234,%22p%22:507567%7D 
-		The site Id will be 1234, that is the characters after the s%22: You can 
-		also get the site Id by querying the Sites REST API directly. uri - Should 
-		always be https://api.inetwork.com/v1.0 for production traffic and numbers. -->
-	<!-- <phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager"> 
-		<callback-urls> <voice url="" method="SIP"/> <sms url="" method="SIP"/> <fax 
-		url="" method="SIP"/> <ussd url="" method="SIP"/> </callback-urls> <bandwidth> 
-		<username></username> <password></password> <accountId></accountId> <siteId></siteId> 
-		<uri>https://api.inetwork.com/v1.0</uri> </bandwidth> </phone-number-provisioning> -->
-
-	<!--Voxbone Provisioning API Configuration For Callback URLs, use {E164}@IP_ADDRESS:PORT 
-		username - The username assigned to you at account setup for the Voxbone 
-		Portal (https://voxbone.com) password - Password used to login to the Voxbone 
-		portal (https://voxbone.com) uri - The URI of voxbone rest services. Usually 
-		not changed except if you want to test with a sandbox account Should always 
-		be https://api.voxbone.com/ws-voxbone/services/rest for production traffic 
-		and numbers. -->
-	<!-- <phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager"> 
-		<callback-urls> <voice url="+{E164}@IP_ADDRESS:PORT" method="SIP"/> <sms 
-		url="+{E164}@IP_ADDRESS:PORT" method="SIP"/> <fax url="+{E164}@IP_ADDRESS:PORT" 
-		method="SIP"/> <ussd url="+{E164}@IP_ADDRESS:PORT" method="SIP"/> </callback-urls> 
-		<voxbone> <username></username> <password></password> <uri>https://api.voxbone.com/ws-voxbone/services/rest</uri> 
-		</voxbone> </phone-number-provisioning> -->
-	<!-- Configuration for the VoIP Innovations provisioning API. class: org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager 
-		voice url: URL (host:port) and method (SIP or SIPS) to where a DID for voice 
-		should forward the calls sms url: URL (host:port) and method (SS7, SMPP, 
-		SIP or SIPS) to where a DID for voice should forward the calls fax url: URL 
-		(host:port) and method (SIP or SIPS) to where a DID for voice should forward 
-		the calls ussd url: URL (host:port) and method (SS7, SIP or SIPS) to where 
-		a DID for voice should forward the calls Configuration for Nexmo class: org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager -->
-	<phone-number-provisioning class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
+	<!-- Configuration for the VoIP Innovations provisioning API. -->
+	<phone-number-provisioning
+		class="org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<callback-urls>
-			<voice url="" method="" />
-			<sms url="" method="" />
-			<fax url="" method="" />
-			<ussd url="" method="" />
+			<voice url="localhost:5080" method="SIP" />
+			<sms url="localhost:5080" method="SIP" />
+			<fax url="localhost:5080" method="SIP" />
+			<ussd url="localhost:5080" method="SIP" />
 		</callback-urls>
 		<voip-innovations>
 			<login></login>
@@ -205,24 +158,6 @@
 			<endpoint></endpoint>
 			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
 		</voip-innovations>
-		<bandwidth>
-			<username></username>
-			<password></password>
-			<accountId></accountId>
-			<siteId></siteId>
-			<uri>https://api.inetwork.com/v1.0</uri>
-		</bandwidth>
-		<nexmo>
-			<api-key></api-key>
-			<api-secret></api-secret>
-			<uri>https://rest.nexmo.com/</uri>
-			<smpp-system-type></smpp-system-type>
-		</nexmo>
-		<voxbone>
-			<username></username>
-			<password></password>
-			<uri>https://api.voxbone.com/ws-voxbone/services/rest</uri>
-		</voxbone>
 	</phone-number-provisioning>
 
 	<smtp-notify>
@@ -236,14 +171,17 @@
 	</smtp-notify>
 
 	<smtp-service>
-		<host></host>
+		<host>
+		</host>
 		<user></user>
 		<password></password>
 		<port></port>
 	</smtp-service>
 
-	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
-		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
+	<dao-manager
+		class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
+		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml
+		</configuration-file>
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
 	</dao-manager>
@@ -257,7 +195,6 @@
 		<reduced-redundancy>false</reduced-redundancy>
 		<days-to-retain-public-url>180</days-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
-		<bucket-region>us-east-1</bucket-region>
 	</amazon-s3>
 
 	<!-- Defines how RestComm communicates with the Media Server Control layer. 
@@ -288,17 +225,18 @@
 		the maximum amount of time to wait for a response from the media server before 
 		abandoning the request. This does NOT apply to RQNT/NOTIFY request/response. -->
 	<media-server-manager>
-		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MediaGateway" name="Mobicents Media Server">
+		<mgcp-server class="org.mobicents.servlet.restcomm.mgcp.MockMediaGateway"
+			name="Mobicents Media Server">
 			<local-address>127.0.0.1</local-address>
 			<local-port>2727</local-port>
 			<remote-address>127.0.0.1</remote-address>
 			<remote-port>2427</remote-port>
-			<response-timeout>500</response-timeout>
+			<response-timeout>1500</response-timeout>
 			<!-- <external-address></external-address> -->
 		</mgcp-server>
 	</media-server-manager>
 	
-	<!-- Adjust http client behaviour for outgoing requests -->
+		<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
 		<response-timeout>5000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
@@ -317,57 +255,8 @@
 		interface for more information. -->
 	<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
 		<outbound-prefix></outbound-prefix>
-		<outbound-endpoint>127.0.0.1:5070</outbound-endpoint>
+		<outbound-endpoint>127.0.0.1:5090</outbound-endpoint>
 	</sms-aggregator>
-
-
-    <!-- by default activateSmppConnection is set to false -->
-     
-    <smpp class="org.mobicents.servlet.restcomm.smpp.SmppService" activateSmppConnection ="false">
-        <connections>
-            <connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
-				<!-- Name must be unique for each connection -->
-				<name>test</name>
-				<systemid>test</systemid>
-				<peerip>127.0.0.1</peerip>
-				<peerport>2776</peerport>
-				<bindtype>TRANSCEIVER</bindtype>
-				<!-- These are optional params -->
-				<password>test</password>
-				<systemtype>sms</systemtype>
-				<!-- byte value for interface version 0x34 is 3.4, 0x33 is 3.3 and 0x50 
-					is 5.0 -->
-				<interfaceversion>0x34</interfaceversion>
-				<ton>-1</ton>
-				<npi>-1</npi>
-				<range></range>
-				<!-- Default value is 1. The window size is the amount of unacknowledged 
-					requests that are permitted to be outstanding/unacknowledged at any given 
-					time. If more requests are added, the underlying stack will throw an exception. -->
-				<windowsize>1</windowsize>
-				<!-- Default value is 60000 milli seconds. This parameter is used to 
-					specify the time to wait until a slot opens up in the 'sendWindow'. -->
-				<windowwaittimeout>60000</windowwaittimeout>
-				<!-- BIND request must be sent within configured timeout in ms -->
-				<connecttimeout>10000</connecttimeout>
-				<!-- Set the amount of time to wait for an endpoint to respond to a request 
-					before it expires. Defaults to disabled (-1). -->
-				<requestexpirytimeout>30000</requestexpirytimeout>
-				<!-- Sets the amount of time between executions of monitoring the window 
-					for requests that expire. It's recommended that this generally either matches 
-					or is half the value of requestExpiryTimeout. Therefore, at worst a request 
-					would could take up 1.5X the requestExpiryTimeout to clear out. -->
-				<windowmonitorinterval>15000</windowmonitorinterval>
-				<logbytes>true</logbytes>
-				<countersenabled>true</countersenabled>
-				<!-- Default value is 30000 milli seconds. When SMPP connects to a remote 
-					server, it sends an 'ENQUIRE_LINK' after every configured enquire-link-delay. 
-					If no response received for 3 consecutive requests, connection will be killed 
-					and attempted to connect again -->
-				<enquirelinkdelay>30000</enquirelinkdelay>
-			</connection>
-		</connections>
-	</smpp>
 
 	<!-- The Fax Service is used to send and receive faxes on behalf of RestComm. -->
 	<fax-service class="org.mobicents.servlet.restcomm.fax.InterfaxService">
@@ -404,9 +293,10 @@
 		</spanish> <swedish> <female>elin8k</female> <male>emil8k</male> </swedish> 
 		<turkish> <female>ipek8k</female> <male></male> </turkish> </speakers> </speech-synthesizer> -->
 
-	<speech-synthesizer class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+	<speech-synthesizer
+		class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
 		<service-root>http://api.voicerss.org</service-root>
-		<apikey></apikey>
+		<apikey>16824850f3634b9eb8a464350c0b133d</apikey>
 		<languages>
 			<catalan>ca-es</catalan>
 			<chinese-china>zh-cn</chinese-china>
@@ -426,7 +316,18 @@
 			<italian>it-it</italian>
 			<japanese>ja-jp</japanese>
 			<korean>ko-kr</korean>
-			<norwegian>nb-no</norwegian>
+			<norwegian>nb-no</norwegian>	<!-- Adjust http client behaviour for outgoing requests -->
+	<http-client>
+		<!-- Control peer certificate verification for https connections. Two modes are supported:
+			'allowall' : Disables peer certificate verification. Use it when testing.
+			'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->
+		<ssl-mode>strict</ssl-mode>
+		<!-- Control whether relative URL should be resolved using hostname instead of IP Address.
+		If for any reason hostname resolution fails, IP Address will be used -->
+		<use-hostname-to-resolve-relative-url>true</use-hostname-to-resolve-relative-url>
+		<!-- Optionally provide the hostname to be used, otherwise Java will try to get the hostname of the machine JVM is running -->
+		<hostname></hostname>
+	</http-client>
 			<polish>pl-pl</polish>
 			<portuguese-brasil>pt-br</portuguese-brasil>
 			<portuguese-portugal>pt-pt</portuguese-portugal>
