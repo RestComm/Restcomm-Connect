@@ -101,7 +101,7 @@
 		<junit.version>4.10</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
-    <sip-ri.version>1.2.245</sip-ri.version>
+    <sip-ri.version>1.2.273</sip-ri.version>
 		<arquillian.version>1.0.3.Final</arquillian.version>
 		<mss.arquillian.version>1.0.1</mss.arquillian.version>
 		<mss.shrinkwrap.version>1.0.1</mss.shrinkwrap.version>
