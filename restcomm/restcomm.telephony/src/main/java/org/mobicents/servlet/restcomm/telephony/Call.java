@@ -936,8 +936,8 @@ public final class Call extends UntypedActor {
             String externalIp = null;
             final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
             if (externalSipUri != null) {
-                logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString());
-                externalIp = externalSipUri.toString();
+                logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
+                externalIp = externalSipUri.getHost().toString();
             } else {
                 externalIp = sipMessage.getInitialRemoteAddr();
                 logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
