@@ -2289,7 +2289,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             if (!dialActionExecuted) {
                     executeDialAction(message, outboundCall);
-                callback();
+                callback(true);
             }
             // XXX review bridge cleanup!!
 
