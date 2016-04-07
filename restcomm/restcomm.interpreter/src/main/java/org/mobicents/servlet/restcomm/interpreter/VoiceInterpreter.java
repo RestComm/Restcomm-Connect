@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
@@ -526,9 +527,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Check from whom is the message (initial call or outbound call) and update info accordingly
                 if (sender == call) {
                     callInfo = response.get();
+                    if (callInfo.state() == CallStateChanged.State.CANCELED || (callInfo.invite() != null && callInfo.invite().getSession().getState().equals(SipSession.State.TERMINATED))) {
+                        fsm.transition(message, finished);
+                        return;
+                    } else {
+                        call.tell(new Observe(self()), self());
+                        //Enable Monitoring Service for the call
+                        if (monitoring != null)
+                            call.tell(new Observe(monitoring), self());
+                    }
                 } else {
                     outboundCallInfo = response.get();
                 }
+
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
                     fsm.transition(message, downloadingRcml);

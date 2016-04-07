@@ -64,7 +64,7 @@
 					</div>						
 				</div>
 				<div class='row form-group'>
-					<div class='col-md-2'>
+					<div class='col-md-3'>
 						<div class="input-group input-group-sm">
 							<span class="input-group-addon" tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepTranscribeTooltip' | translate}}">{{'recordStepTranscribeLabel' | translate}}</span>
 				            <select ng-model='step.transcribe' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
@@ -78,7 +78,7 @@
 							-->
 						</div>				
 					</div>
-					<div class='col-md-7'>
+					<div class='col-md-6'>
 						<div class="input-group input-group-sm">
 							<span class='input-group-addon' tooltip-trigger='mouseenter' tooltip-popup-delay='1000' tooltip="{{'recordStepTranscribeCallbackTooltip' | translate}}">{{'recordStepTranscribeCallbackLabel' | translate}}</span>
 							<input ng-model='step.transcribeCallback' type='text' auto-clear class='form-control' placeholder="{{'recordStepTranscribeCallbackInputPlaceholder' | translate}}"/>
