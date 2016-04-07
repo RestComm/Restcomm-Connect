@@ -564,7 +564,7 @@ public final class CallManager extends UntypedActor {
     private boolean redirectToClientVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
             final ApplicationsDao applications, final Client client) {
         URI clientAppVoiceUril = client.getVoiceUrl();
-        boolean isClientManaged = (clientAppVoiceUril != null);
+        boolean isClientManaged = (clientAppVoiceUril != null && !clientAppVoiceUril.toString().isEmpty() &&  !clientAppVoiceUril.toString().equals(""));
         if (isClientManaged) {
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
