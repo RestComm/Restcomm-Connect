@@ -266,7 +266,7 @@ public final class CallManager extends UntypedActor {
         ActorRef call = request.call();
         if (call != null) {
             logger.info("About to destroy call: "+request.call().path());
-            context.stop(request.call());
+            context.stop(call);
         }
     }
 
