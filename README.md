@@ -16,8 +16,6 @@ Telecom Application Development is within reach of only a small number of highly
 
 Restcomm is here to change that! Joining a wave of innovating companies and service providers, Restcomm brings common sense to the millions of web developers with an intuitive and powerful set of RESTful APIs. Read the Restcomm data sheet.
 
-Ready to take Restcomm for a spin? [TRY IT NOW](https://aws.amazon.com/marketplace/pp/B00FFHJ6SU) on Amazon Marketplace. It only takes a few minutes to set it up and running.
-
 Downloads
 ========
 
@@ -52,4 +50,7 @@ Continuous Integration and Delivery
 
 Acknowledgements
 ========
+Java Profiler sponsored by YourKit 
+[![YourKit The Industry Leader in .NET & Java Profiling](https://www.yourkit.com/images/yk_logo.png)](https://www.yourkit.com/)
+
 [See who has been contributing to RestComm](http://www.telestax.com/opensource/acknowledgments/)
