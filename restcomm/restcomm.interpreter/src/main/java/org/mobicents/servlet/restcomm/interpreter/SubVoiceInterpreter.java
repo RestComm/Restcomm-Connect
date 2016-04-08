@@ -358,6 +358,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             } else if (pause.equals(verb.name())) {
                 fsm.transition(message, pausing);
             } else if (hangup.equals(verb.name())) {
+                originalInterpreter.tell(message, source);
                 fsm.transition(message, hangingUp);
             } else if (redirect.equals(verb.name())) {
                 fsm.transition(message, redirecting);
