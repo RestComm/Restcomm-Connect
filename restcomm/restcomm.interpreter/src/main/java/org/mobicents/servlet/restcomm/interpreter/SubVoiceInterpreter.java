@@ -315,6 +315,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             if (downloaderResponse.succeeded() && HttpStatus.SC_OK == downloaderResponse.get().getStatusCode()) {
                 fsm.transition(message, ready);
             } else if (downloaderResponse.succeeded() && HttpStatus.SC_NOT_FOUND == downloaderResponse.get().getStatusCode()) {
+                originalInterpreter.tell(new Exception("Downloader Response Exception"), source);
                 fsm.transition(message, notFound);
             }
         } else if (DiskCacheResponse.class.equals(klass)) {
