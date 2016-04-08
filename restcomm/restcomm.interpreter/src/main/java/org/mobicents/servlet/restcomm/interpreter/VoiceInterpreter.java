@@ -2498,11 +2498,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (child != null && child.attribute("url") != null) {
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
-                Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
+                try {
+                    Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
+                    Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
+                    Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
 
-                if (!End.class.equals(object.getClass())) {
+                    if (!End.class.equals(object.getClass())) {
+                        fsm.transition(message, hangingUp);
+                        return;
+                    }
+                } catch (Exception e) {
+                    logger.info("Exception while trying to execute call screening: "+e);
                     fsm.transition(message, hangingUp);
                     return;
                 }
