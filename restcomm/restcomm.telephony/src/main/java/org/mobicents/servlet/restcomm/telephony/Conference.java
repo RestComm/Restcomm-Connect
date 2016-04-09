@@ -89,7 +89,7 @@ public final class Conference extends UntypedActor {
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initialiing", new Initializing(source));
+        this.initializing = new State("initializing", new Initializing(source));
         this.waiting = new State("waiting", new Waiting(source));
         this.running = new State("running", new Running(source));
         this.evicting = new State("evicting", new Evicting(source));

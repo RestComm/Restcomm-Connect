@@ -62,6 +62,7 @@ import org.mobicents.servlet.restcomm.api.EmailResponse;
 import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.email.EmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -208,6 +209,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     CallStateChanged.State callState = null;
     // A call detail record.
     CallDetailRecord callRecord = null;
+    // A conference detail record.
+    protected ConferenceDetailRecord  conferenceDetailRecord = null;
 
     // State for outbound calls.
     ActorRef outboundCall = null;

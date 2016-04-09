@@ -6,18 +6,24 @@
 
     <insert id="addConferenceDetailRecord" parameterType="map">
         INSERT INTO "restcomm_conference_detail_records" ("conference_sid", "date_created", "date_updated", "account_sid", "status",
-        "start_time", "end_time", "friendly_name", "uri") VALUES (#{conference_sid}, #{date_created}, #{date_updated}, #{account_sid}, 
-        #{status}, #{start_time}, #{end_time}, #{friendly_name}, #{uri});
+        "start_time", "end_time", "friendly_name", "api_version", "uri") VALUES (#{conference_sid}, #{date_created}, #{date_updated}, #{account_sid}, 
+        #{status}, #{start_time}, #{end_time}, #{friendly_name}, #{api_version}, #{uri});
     </insert>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
-		SELECT * FROM "restcomm_conference_detail_records WHERE "conference_sid"=#{conferenceSid};
+		SELECT * FROM "restcomm_conference_detail_records" WHERE "conference_sid"=#{conferenceSid};
 	</select>
 	<select id="getConferenceDetailRecords" parameterType="string" resultType="hashmap">
         SELECT * FROM "restcomm_conference_detail_records" WHERE "account_sid"=#{account_sid};
     </select>
     <select id="getConferenceDetailRecordsByStatus" parameterType="string" resultType="hashmap">
        SELECT * FROM "restcomm_conference_detail_records" WHERE "status"=#{status};
-    </select> 
+    </select>
+    <select id="getConferenceDetailRecordsByStartTime" parameterType="date" resultType="hashmap">
+        SELECT * FROM "restcomm_conference_detail_records" WHERE "start_time"&gt;=#{start_time} AND "start_time"&lt;DATE_ADD(#{start_time},INTERVAL 1 DAY);
+    </select>
+    <select id="getConferenceDetailRecordsByEndTime" parameterType="date" resultType="hashmap">
+		SELECT * FROM "restcomm_conference_detail_records" WHERE "end_time"&lt;=#{end_time};
+    </select>
     <select id="getTotalConferenceDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM "restcomm_conference_detail_records" WHERE "account_sid"=#{accountSid}
 		<if test="status != null">
