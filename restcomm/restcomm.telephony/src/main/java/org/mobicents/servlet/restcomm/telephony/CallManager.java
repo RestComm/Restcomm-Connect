@@ -141,6 +141,10 @@ public final class CallManager extends UntypedActor {
     private String myHostIp;
     private String proxyIp;
 
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    private CreateCall createCallRequest;
+    private SwitchProxy switchProxyRequest;
+
     //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
 
@@ -166,10 +170,6 @@ public final class CallManager extends UntypedActor {
         }
 
     }
-
-    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    private CreateCall createCallRequest;
-    private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
             final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,

@@ -42,19 +42,15 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
-import org.mobicents.servlet.restcomm.entities.Recording;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordConverter;
-import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordListConverter;
-import org.mobicents.servlet.restcomm.http.converter.RecordingConverter;
-import org.mobicents.servlet.restcomm.http.converter.RecordingListConverter;
-import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.converter.ConferenceDetailRecordConverter;
+import org.mobicents.servlet.restcomm.http.converter.ConferenceDetailRecordListConverter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -73,7 +69,7 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
     private Gson gson;
     private GsonBuilder builder;
     private XStream xstream;
-    private CallDetailRecordListConverter listConverter;
+    private ConferenceDetailRecordListConverter listConverter;
 
     public ConferencesEndpoint() {
         super();
@@ -85,32 +81,27 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration);
-        CallDetailRecordConverter converter = new CallDetailRecordConverter(configuration);
-        listConverter = new CallDetailRecordListConverter(configuration);
-        final RecordingConverter recordingConverter = new RecordingConverter(configuration);
+        ConferenceDetailRecordConverter converter = new ConferenceDetailRecordConverter(configuration);
+        listConverter = new ConferenceDetailRecordListConverter(configuration);
         builder = new GsonBuilder();
-        builder.registerTypeAdapter(CallDetailRecord.class, converter);
-        builder.registerTypeAdapter(CallDetailRecordList.class, listConverter);
-        builder.registerTypeAdapter(Recording.class, recordingConverter);
+        builder.registerTypeAdapter(ConferenceDetailRecord.class, converter);
+        builder.registerTypeAdapter(ConferenceDetailRecordList.class, listConverter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
-        xstream.registerConverter(recordingConverter);
-        xstream.registerConverter(new RecordingListConverter(configuration));
-        xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
     }
 
-    protected Response getConference(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getConference(final String accountSid, final String conferenceSid, final MediaType responseType) {
         try {
-            secure(daoManager.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+            secure(daoManager.getAccountsDao().getAccount(accountSid), "RestComm:Read:Conferences");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
-        final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(sid));
+        final ConferenceDetailRecordsDao dao = daoManager.getConferenceDetailRecordsDao();
+        final ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(new Sid(conferenceSid));
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
@@ -133,7 +124,7 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
     protected Response getConferences(final String accountSid, UriInfo info, MediaType responseType) {
 
         try {
-            secure(daoManager.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+            secure(daoManager.getAccountsDao().getAccount(accountSid), "RestComm:Read:Conferences");
             secureLevelControl(daoManager.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
@@ -141,12 +132,10 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
 
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
-        String recipient = info.getQueryParameters().getFirst("To");
-        String sender = info.getQueryParameters().getFirst("From");
         String status = info.getQueryParameters().getFirst("Status");
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
-        String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
+        String friendlyName = info.getQueryParameters().getFirst("FriendlyName");
 
         if (pageSize == null) {
             pageSize = "50";
@@ -160,31 +149,31 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
         int offset = (page == "0") ? 0 : (((Integer.parseInt(page) - 1) * Integer.parseInt(pageSize)) + Integer
                 .parseInt(pageSize));
 
-        CallDetailRecordsDao dao = daoManager.getCallDetailRecordsDao();
+        ConferenceDetailRecordsDao dao = daoManager.getConferenceDetailRecordsDao();
 
-        CallDetailRecordFilter filterForTotal;
+        ConferenceDetailRecordFilter filterForTotal;
         try {
-            filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                    parentCallSid, null, null);
+            filterForTotal = new ConferenceDetailRecordFilter(accountSid, status, startTime, endTime, friendlyName,
+                    null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
 
-        final int total = dao.getTotalCallDetailRecords(filterForTotal);
+        final int total = dao.getTotalConferenceDetailRecords(filterForTotal);
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
 
-        CallDetailRecordFilter filter;
+        ConferenceDetailRecordFilter filter;
         try {
-            filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                    parentCallSid, limit, offset);
+            filter = new ConferenceDetailRecordFilter(accountSid, status, startTime, endTime, friendlyName,
+                    limit, offset);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
 
-        final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
+        final List<ConferenceDetailRecord> cdrs = dao.getConferenceDetailRecords(filter);
 
         listConverter.setCount(total);
         listConverter.setPage(Integer.parseInt(page));
@@ -192,10 +181,10 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
         listConverter.setPathUri(info.getRequestUri().getPath());
 
         if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
+            final RestCommResponse response = new RestCommResponse(new ConferenceDetailRecordList(cdrs));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(new CallDetailRecordList(cdrs)), APPLICATION_JSON).build();
+            return ok(gson.toJson(new ConferenceDetailRecordList(cdrs)), APPLICATION_JSON).build();
         } else {
             return null;
         }

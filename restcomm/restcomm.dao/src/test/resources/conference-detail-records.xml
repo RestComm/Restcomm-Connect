@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- @author maria-farooq@live.com (Maria Farooq) -->
+<mapper
+	namespace="org.mobicents.servlet.sip.restcomm.dao.ConferenceDetailRecordsDao">
+
+	<!-- Lets deal with later <select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
+		SELECT conference_sid, date_created, max(date_updated) date_updated, account_sid, status, uri FROM restcomm_call_detail_records WHERE conference_sid=#{conferenceSid} group by conference_sid;
+	</select>
+    -->
+    <select id="getConferenceDetailRecords" parameterType="string" resultType="hashmap">
+		SELECT "conference_sid", "date_created", "date_updated", "account_sid", "status", "uri" FROM "restcomm_call_detail_records" WHERE "account_sid"=#{account_sid} group by "conference_sid";
+	</select>
+
+	<!-- 
+	 May be we can have separate table for conference to support following functions in a good way
+	  
+	<insert id="addConferenceDetailRecord" parameterType="map"></insert>
+	<update id="updateConferenceDetailRecord" parameterType="map"></update>
+	<delete id="removeConferenceDetailRecord" parameterType="string"></delete>
+	<delete id="removeConferenceDetailRecords" parameterType="string"></delete>
+	-->
+</mapper>

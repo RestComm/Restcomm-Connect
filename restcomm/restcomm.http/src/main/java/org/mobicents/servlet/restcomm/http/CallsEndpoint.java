@@ -203,7 +203,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         CallDetailRecordFilter filterForTotal;
         try {
             filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                    parentCallSid, null, null);
+                    parentCallSid, null, null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
@@ -217,7 +217,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         CallDetailRecordFilter filter;
         try {
             filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                    parentCallSid, limit, offset);
+                    parentCallSid, null, limit, offset);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }

@@ -147,11 +147,11 @@ conference_sid VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL,
 account_sid VARCHAR(34) NOT NULL,
-status VARCHAR(20) NOT NULL,
+status VARCHAR(100) NOT NULL,
 start_time DATETIME,
 end_time DATETIME,
-api_version VARCHAR(10) NOT NULL,
 friendly_name VARCHAR(60),
+api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
 
