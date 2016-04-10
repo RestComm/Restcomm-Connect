@@ -41,7 +41,8 @@ public class UssdRestcommResponse {
     private String errorCode;
 
     public String getMessage() {
-        return message;
+        return message.replace("\n","\\n");
+//        return message;
     }
 
     public void setMessage(String message) {
