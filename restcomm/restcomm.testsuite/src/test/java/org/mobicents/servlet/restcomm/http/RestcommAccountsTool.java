@@ -6,6 +6,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -48,7 +49,7 @@ public class RestcommAccountsTool {
 
         return accountsUrl;
     }
-    
+
     public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password, String accountSid, String status) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -70,7 +71,7 @@ public class RestcommAccountsTool {
 
         return jsonResponse;
     }
-    
+
     public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
             String password) {
 
@@ -93,7 +94,8 @@ public class RestcommAccountsTool {
         return jsonResponse;
     }
 
-    public JsonObject getAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String username) {
+    public JsonObject getAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String username)
+            throws UniformInterfaceException {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
