@@ -238,7 +238,7 @@ public final class UserAgentManager extends UntypedActor {
             // RESTCOMM-301 NPE in RestComm Ping
             toTransport = "udp";
         }
-        if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss") || toTransport.equalsIgnoreCase("tcp")) { //issue #935: Don't send OPTION if transport is tcp
+        if (toTransport.equalsIgnoreCase("ws") || toTransport.equalsIgnoreCase("wss")) {
             return;
         }
         final SipURI outboundInterface = outboundInterface(toTransport);
