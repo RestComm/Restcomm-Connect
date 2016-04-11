@@ -5,13 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
-<<<<<<< HEAD
-    INSERT INTO restcomm_call_detail_records (sid, parent_call_sid, conference_sid, date_created, date_updated, account_sid, recipient, sender, phone_number_sid, status,
-    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration) VALUES (#{sid}, #{parent_call_sid}, #{conference_sid},
-=======
     INSERT INTO restcomm_call_detail_records (sid, instanceid, parent_call_sid, conference_sid, date_created, date_updated, account_sid, recipient, sender, phone_number_sid, status,
-    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration) VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, , #{conference_sid},
->>>>>>> master
+    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration) VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{conference_sid},
 		#{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price},
 		#{direction},	#{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration});
   </insert>
@@ -117,17 +112,14 @@
     SELECT * FROM restcomm_call_detail_records WHERE parent_call_sid=#{parent_call_sid};
   </select>
 
-<<<<<<< HEAD
   <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_call_detail_records WHERE conference_sid=#{conference_sid};
   </select>
-    
-=======
+
 	<select id="getCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_call_detail_records WHERE instanceid=#{instanceid};
 	</select>
 
->>>>>>> master
   <delete id="removeCallDetailRecord" parameterType="string">
     DELETE FROM restcomm_call_detail_records WHERE sid=#{sid};
   </delete>

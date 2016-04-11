@@ -46,6 +46,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 //import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -102,6 +103,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     private CallDetailRecordListConverter listConverter;
     private AccountsDao accountsDao;
     private RecordingsDao recordingsDao;
+    private String instanceId;
 
     private boolean normalizePhoneNumbers;
 
@@ -134,6 +136,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RecordingListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         xstream.registerConverter(listConverter);
+
+        instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
 
         normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
@@ -176,6 +180,13 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
 
+        boolean localInstanceOnly = true;
+        try {
+            String localOnly = info.getQueryParameters().getFirst("localOnly");
+            if (localOnly!= null && localOnly.equalsIgnoreCase("false"))
+                localInstanceOnly = false;
+        } catch (Exception e) {}
+
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
         // String afterSid = info.getQueryParameters().getFirst("AfterSid");
@@ -203,8 +214,14 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         CallDetailRecordFilter filterForTotal;
         try {
-            filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                    parentCallSid, conferenceSid, null, null);
+
+            if (localInstanceOnly) {
+                filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                        parentCallSid, conferenceSid, null, null);
+            } else {
+                filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                        parentCallSid, conferenceSid, null, null, instanceId);
+            }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
@@ -217,8 +234,13 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         CallDetailRecordFilter filter;
         try {
-            filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                    parentCallSid, null, limit, offset);
+            if (localInstanceOnly) {
+                filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                        parentCallSid, null, limit, offset);
+            } else {
+                filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
+                        parentCallSid, null, limit, offset, instanceId);
+            }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
