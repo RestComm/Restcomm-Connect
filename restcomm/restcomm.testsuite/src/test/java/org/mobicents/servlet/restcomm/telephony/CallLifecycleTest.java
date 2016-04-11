@@ -183,8 +183,8 @@ public class CallLifecycleTest {
         Thread.sleep(2000);
     }
 
-    @Test //TODO Fails when the whole test class runs but Passes when run individually
-    public void testDialCancelBeforeDialingClientAlice() throws ParseException, InterruptedException, MalformedURLException {
+    @Test
+    public void testDialCancelBeforeDialingClientAliceAfterTrying() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -208,11 +208,14 @@ public class CallLifecycleTest {
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        assertTrue(response == Response.TRYING);
 
         SipTransaction cancelTransaction = bobCall.sendCancel();
         assertNotNull(cancelTransaction);
-        bobCall.waitForCancelResponse(cancelTransaction,5000);
+        assertTrue(bobCall.waitForCancelResponse(cancelTransaction,5 * 1000));
+        assertTrue(bobCall.getLastReceivedResponse().getStatusCode()==Response.OK);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertTrue(bobCall.getLastReceivedResponse().getStatusCode()==Response.REQUEST_TERMINATED);
 
         Thread.sleep(10000);
 
@@ -222,6 +225,53 @@ public class CallLifecycleTest {
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
         assertTrue(liveCalls==0);
         assertTrue(liveCallsArraySize==0);
+    }
+
+    @Test
+    public void testDialCancelBeforeDialingClientAliceAfterRinging() throws ParseException, InterruptedException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+
+        SipTransaction cancelTransaction = bobCall.sendCancel();
+        assertNotNull(cancelTransaction);
+        assertTrue(bobCall.waitForCancelResponse(cancelTransaction,5 * 1000));
+        assertTrue(bobCall.getLastReceivedResponse().getStatusCode()==Response.OK);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertTrue(bobCall.getLastReceivedResponse().getStatusCode()==Response.REQUEST_TERMINATED);
+
+//        Thread.sleep(15000);
+//
+//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        logger.info("LiveCalls: "+liveCalls);
+//        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+//        assertTrue(liveCalls==0);
+//        assertTrue(liveCallsArraySize==0);
 
         Thread.sleep(10000);
 
@@ -229,7 +279,7 @@ public class CallLifecycleTest {
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
         assertTrue(requests.size() == 1);
         //        requests.get(0).g;
-        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();
         List<String> params = Arrays.asList(requestBody.split("&"));
         String callSid = "";
         for (String param : params) {
@@ -875,7 +925,7 @@ public class CallLifecycleTest {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_callLifecycleTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
         logger.info("Packaged Test App");

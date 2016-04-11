@@ -44,6 +44,10 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		}).error(function (data, status, headers, config) {
 			if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
+			if (status == 401){
+				notifications.put({type:'danger',message:"You have been logged out! Please, log-in using the same Account you used  already logged in on RestComm admin page."});
+				authentication.doLogout();
+			}
 		});
 	}
 	

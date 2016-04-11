@@ -7,7 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class ProjectUpgrader714To10 extends ProjectUpgrader {
+public class ProjectUpgrader714To10 implements ProjectUpgrader {
     static final Logger logger = Logger.getLogger(ProjectUpgrader714To10.class.getName());
 
     public ProjectUpgrader714To10() {
