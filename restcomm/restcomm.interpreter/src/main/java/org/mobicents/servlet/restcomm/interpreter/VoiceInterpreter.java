@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
@@ -61,6 +62,7 @@ import org.joda.time.Interval;
 import org.mobicents.servlet.restcomm.api.EmailResponse;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -532,9 +534,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Check from whom is the message (initial call or outbound call) and update info accordingly
                 if (sender == call) {
                     callInfo = response.get();
+                    if (callInfo.state() == CallStateChanged.State.CANCELED || (callInfo.invite() != null && callInfo.invite().getSession().getState().equals(SipSession.State.TERMINATED))) {
+                        fsm.transition(message, finished);
+                        return;
+                    } else {
+                        call.tell(new Observe(self()), self());
+                        //Enable Monitoring Service for the call
+                        if (monitoring != null)
+                            call.tell(new Observe(monitoring), self());
+                    }
                 } else {
                     outboundCallInfo = response.get();
                 }
+
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
                     fsm.transition(message, downloadingRcml);
@@ -1130,6 +1142,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         // Create a call detail record for the call.
                         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                         builder.setSid(callInfo.sid());
+                        builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                         builder.setDateCreated(callInfo.dateCreated());
                         builder.setAccountSid(accountId);
                         builder.setTo(callInfo.to());
@@ -1942,10 +1955,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("finishDialing state=bridged, will hangup outboundCall");
                     outboundCall.tell(new Hangup(), source);
                 } else {
-                    logger.debug("FinishDialing, State: " + state);
-                    logger.debug("State is not FORKING and not Bridged");
-                    logger.debug("Sender is initial call: " + sender.equals(call));
-                    logger.debug("Sender in the dialBranches: " + dialBranches.contains(sender));
+//                    logger.debug("FinishDialing, State: " + state);
+//                    logger.debug("State is not FORKING and not Bridged");
+//                    logger.debug("Sender is initial call: " + sender.equals(call));
+//                    logger.debug("Sender in the dialBranches: " + dialBranches.contains(sender));
                 }
             }
 
@@ -2540,11 +2553,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (child != null && child.attribute("url") != null) {
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
-                Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-                Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
-                Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
+                try {
+                    Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
+                    Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
+                    Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
 
-                if (!End.class.equals(object.getClass())) {
+                    if (!End.class.equals(object.getClass())) {
+                        fsm.transition(message, hangingUp);
+                        return;
+                    }
+                } catch (Exception e) {
+                    logger.info("Exception while trying to execute call screening: "+e);
                     fsm.transition(message, hangingUp);
                     return;
                 }

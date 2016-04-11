@@ -44,7 +44,7 @@
 
 									<div class="input-group input-group-sm">
 										<span class="input-group-addon">{{'gatherStepDigitLabel' | translate}}</span>
-										<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="number" placeholder="{{'gatherStepDigitInputPlaceholder' | translate}}" ng-pattern="/^[0-9]+$/" ng-model='mapping.digits' required></input>
+										<input name="digits" class="form-control ng-pristine ng-valid ng-valid-pattern" type="text" placeholder="{{'gatherStepDigitInputPlaceholder' | translate}}" ng-pattern="/^[0-9*#ABCD]+$/" ng-model='mapping.digits' required title="{{'gatherStepDigitTooltip' | translate}}"></input>
 									</div>
 									<div class="validation-error"  ng-show="form.digits.$invalid">{{'gatherStepDigitValidationErrorLabel' | translate}}</div>
 
