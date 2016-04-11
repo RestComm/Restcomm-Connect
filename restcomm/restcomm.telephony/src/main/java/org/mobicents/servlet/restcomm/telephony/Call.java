@@ -654,7 +654,7 @@ public final class Call extends UntypedActor {
                 try {
                     // Send a ringing response
                     final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
-                    ringing.addHeader("X-Call-Sid", id.toString());
+                    ringing.addHeader("X-RestComm-CallSid", id.toString());
                     ringing.send();
                 } catch (IllegalStateException exception) {
                     logger.debug("Exception while creating 180 response to inbound invite request");
@@ -1529,7 +1529,7 @@ public final class Call extends UntypedActor {
                         // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
                         answer = SdpUtils.endWithNewLine(answer);
                         okay.setContent(answer, "application/sdp");
-                        okay.addHeader("X-Call-Sid",id.toString());
+                        okay.addHeader("X-RestComm-CallSid",id.toString());
                         okay.send();
                         waitForAck = true;
                     } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
