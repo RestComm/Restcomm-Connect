@@ -318,12 +318,20 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             //Last, print Version and send PING if needed
             Version.printVersion();
-            GenerateInstanceId generateInstanceId = new GenerateInstanceId(context);
-            InstanceId instanceId = generateInstanceId.instanceId();
+            GenerateInstanceId generateInstanceId = null;
+            InstanceId instanceId = null;
+            try {
+                generateInstanceId = new GenerateInstanceId(context);
+                instanceId = generateInstanceId.instanceId();
+            } catch (UnknownHostException e) {
+                logger.error("UnknownHostException during the generation of InstanceId: "+e);
+            }
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
-            Ping ping = new Ping(xml, context);
-            ping.sendPing();
+            RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
+            //Depreciated
+//            Ping ping = new Ping(xml, context);
+//            ping.sendPing();
         }
     }
 }

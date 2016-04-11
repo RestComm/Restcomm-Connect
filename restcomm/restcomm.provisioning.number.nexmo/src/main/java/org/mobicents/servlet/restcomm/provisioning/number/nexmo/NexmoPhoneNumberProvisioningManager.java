@@ -54,7 +54,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
     private static final Logger logger = Logger.getLogger(NexmoPhoneNumberProvisioningManager.class);
 
     protected Boolean telestaxProxyEnabled;
-    protected String uri, apiKey, apiSecret;
+    protected String uri, apiKey, apiSecret, smppSystemType;
     protected String searchURI, buyURI, updateURI, cancelURI;
     protected Configuration activeConfiguration;
     protected ContainerConfiguration containerConfiguration;
@@ -76,12 +76,14 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
             uri = telestaxProxyConfiguration.getString("uri");
             apiKey = telestaxProxyConfiguration.getString("api-key");
             apiSecret = telestaxProxyConfiguration.getString("api-secret");
+            smppSystemType = telestaxProxyConfiguration.getString("smpp-system-type", "inbound");
             activeConfiguration = telestaxProxyConfiguration;
         } else {
             Configuration nexmoConfiguration = phoneNumberProvisioningConfiguration.subset("nexmo");
             uri = nexmoConfiguration.getString("uri");
             apiKey = nexmoConfiguration.getString("api-key");
             apiSecret = nexmoConfiguration.getString("api-secret");
+            smppSystemType = nexmoConfiguration.getString("smpp-system-type", "inbound");
             activeConfiguration = nexmoConfiguration;
         }
         searchURI = uri + "/number/search/" + apiKey + "/" + apiSecret + "/";
@@ -333,11 +335,11 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
                 if(phoneNumberParameters.getSmsUrl() != null && !phoneNumberParameters.getSmsUrl().isEmpty()
                         && phoneNumberParameters.getVoiceUrl() != null && !phoneNumberParameters.getVoiceUrl().isEmpty()) {
                     updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip" +
-                            "&moHttpUrl=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=inbound";
+                            "&moHttpUrl=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=" + smppSystemType;
                 } else if(phoneNumberParameters.getVoiceUrl() != null && !phoneNumberParameters.getVoiceUrl().isEmpty()) {
-                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip";
+                    updateUri = updateUri + "voiceCallbackValue=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getVoiceUrl(), "UTF-8") + "&voiceCallbackType=sip"  + "&moSmppSysType=" + smppSystemType;
                 } else {
-                    updateUri = updateUri + "moHttpUrl=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=inbound";
+                    updateUri = updateUri + "moHttpUrl=" + URLEncoder.encode(phoneNumber+"@"+phoneNumberParameters.getSmsUrl(), "UTF-8") + "&moSmppSysType=" + smppSystemType ;
                 }
             }
             final HttpPost updatePost = new HttpPost(updateUri);

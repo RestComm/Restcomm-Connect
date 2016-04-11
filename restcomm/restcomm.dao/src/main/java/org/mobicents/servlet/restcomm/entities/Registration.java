@@ -115,6 +115,11 @@ public final class Registration implements Comparable<Registration> {
                 userAgent, timeToLive, location, webrtc);
     }
 
+    public Registration updated() {
+        final DateTime now = DateTime.now();
+        return new Registration(sid, dateCreated, now, dateExpires, addressOfRecord, displayName, userName, userAgent, timeToLive, location, webrtc);
+    }
+
     @Override
     public int compareTo(Registration registration) {
         // use reverse order of comparator to have registrations sorted in descending order
