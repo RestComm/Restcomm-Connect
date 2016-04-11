@@ -64,9 +64,11 @@ import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
@@ -173,6 +175,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // FSM.
     // The conference manager.
     private final ActorRef conferenceManager;
+    // A conference detail record.
+    private ConferenceDetailRecord  conferenceDetailRecord = null;
 
     // State for outbound calls.
     private boolean isForking;
@@ -2017,35 +2021,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             conferenceState = conferenceInfo.state();
             final Tag child = conference(verb);
 
-            if (callRecord != null) {
-                final Sid conferenceSid = conferenceInfo.conferenceSid();
-                callRecord = callRecord.setConferenceSid(conferenceSid);
-                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
-                records.updateCallDetailRecord(callRecord);
-
-                //Adding conference record in DB
-                final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
-                //TODO: maria thinks following line is an expensive operation
-                conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
-                if(conferenceDetailRecord == null){
-                    logger.info("conferenceDetailRecord"+ conferenceDetailRecord);
-                    logger.info("conferenceDetailRecord"+ conferenceDetailRecord);
-                    final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                    conferenceBuilder.setConferenceSid(conferenceSid);
-                    conferenceBuilder.setDateCreated(callRecord.getDateCreated());
-                    conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
-                    conferenceBuilder.setFriendlyName(conferenceInfo.name());
-                    conferenceBuilder.setStatus(conferenceState.name());
-                    conferenceBuilder.setApiVersion(version);
-                    final StringBuilder UriBuffer = new StringBuilder();
-                    UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
-                    UriBuffer.append(conferenceSid);
-                    final URI uri = URI.create(UriBuffer.toString());
-                    conferenceBuilder.setUri(uri);
-                    conferenceDetailRecord = conferenceBuilder.build();
-                    conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
-                }
-            }
             // If there is room join the conference.
             int max = 40;
             Attribute attribute = child.attribute("maxParticipants");
@@ -2101,6 +2076,38 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, source);
+            }
+            //
+            if (callRecord != null) {
+                final Sid conferenceSid = conferenceInfo.conferenceSid();
+                callRecord = callRecord.setConferenceSid(conferenceSid);
+                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                records.updateCallDetailRecord(callRecord);
+
+                //Adding conference record in DB
+                final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
+                //TODO: maria thinks following line is an expensive operation, can be replaced with a cheaper condition
+                //conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
+                if(conferenceDetailRecord == null){
+                    final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+                    conferenceBuilder.setConferenceSid(conferenceSid);
+                    conferenceBuilder.setDateCreated(callRecord.getDateCreated());
+                    conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
+                    conferenceBuilder.setStatus(conferenceState.name());
+                    conferenceBuilder.setApiVersion(version);
+                    final StringBuilder UriBuffer = new StringBuilder();
+                    UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
+                    UriBuffer.append(conferenceSid);
+                    final URI uri = URI.create(UriBuffer.toString());
+                    conferenceBuilder.setUri(uri);
+
+                    IncomingPhoneNumbersDao incomingPhoneNumbersDao = storage.getIncomingPhoneNumbersDao();
+                    IncomingPhoneNumber incomingPhoneNumber = incomingPhoneNumbersDao.getIncomingPhoneNumber(callRecord.getTo());
+                    if(incomingPhoneNumbersDao != null)
+                        conferenceBuilder.setFriendlyName(incomingPhoneNumber.getFriendlyName());
+                    conferenceDetailRecord = conferenceBuilder.build();
+                    conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
+                }
             }
         }
     }
@@ -2249,7 +2256,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             if (conferenceDetailRecord != null) {
-                logger.info("conferenceState.name()"+conferenceState.name());
                 conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
                 final DateTime end = DateTime.now();
                 conferenceDetailRecord = conferenceDetailRecord.setEndTime(end);

@@ -7,8 +7,8 @@
 TODO: 1. Add unit cases for conference api
 TODO: 2. Add db schema change log in mariadb changelog file
 TODO: 3. Find out if there is change log/ update script for mysql DB. (like we have for mariadb)
-TODO: 4. 
-TODO: 5.
-TODO: 6.
+TODO: 4. Friendly name column should be large, very large
+TODO: 5. do we need to add StartConferenceOnEnter and EndConferenceOnExit as twillio's?
+TODO: 6.why conference never goes to complete state
 TODO: 7. Update documentation where needed
 TODO: 8. Remove this file
