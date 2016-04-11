@@ -6,9 +6,9 @@ mkdir $WORKSPACE
 cp -ar /data/devWorkspace/telWorkspace/telscale-restcomm/* $WORKSPACE
 
 export MAJOR_VERSION_NUMBER=7.6.0
-export RESTCOMM_BRANCH=master
+export RESTCOMM_BRANCH=issue953
 export RUN_TESTSUITE=false
-export BUILD_NUMBER=13131
+export BUILD_NUMBER=$RESTCOMM_BRANCH
 
 rm Mobicents-Restcomm*.zip
 rm dependencies -rf
