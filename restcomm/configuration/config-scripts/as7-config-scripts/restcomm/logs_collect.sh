@@ -43,7 +43,7 @@ restcomm_logs_bytime () {
 
 mediaserver_logs () {
 if [ -d "$LOGS_DIR_ZIP" ]; then
-  cp $MMS_LOGS/$MEDIASERVER_FILE $LOGS_DIR_ZIP/
+  cp $MMS_LOGS/$MEDIASERVER_FILE $LOGS_DIR_ZIP/mms_server.log
   return 0
  fi
    exit 1
