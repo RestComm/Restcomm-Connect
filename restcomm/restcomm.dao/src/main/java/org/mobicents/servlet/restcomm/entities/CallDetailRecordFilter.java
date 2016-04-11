@@ -42,9 +42,15 @@ public class CallDetailRecordFilter {
     private final String conferenceSid;
     private final Integer limit;
     private final Integer offset;
+    private final String instanceid;
 
     public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
             String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
+        this(accountSid,recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,null);
+    }
+
+    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
+            String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
         this.accountSid = accountSid;
 
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -72,8 +78,14 @@ public class CallDetailRecordFilter {
             SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
             Date date = parser.parse(endTime);
             this.endTime = date;
-        } else
+        } else {
             this.endTime = null;
+        }
+        if (instanceId != null && !instanceId.isEmpty()) {
+            this.instanceid = instanceId;
+        } else {
+            this.instanceid = null;
+        }
     }
 
     public String getSid() {
@@ -116,4 +128,5 @@ public class CallDetailRecordFilter {
         return offset;
     }
 
+    public String getInstanceid() { return instanceid; }
 }
