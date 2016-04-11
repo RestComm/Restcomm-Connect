@@ -66,7 +66,7 @@
 	<servlet>
 		<servlet-name>SmsService</servlet-name>
 		<display-name>SmsService</display-name>
-		<description>VoIP Innovations SMS Service.</description>
+		<description>SMS Service.</description>
 		<servlet-class>
 			org.mobicents.servlet.restcomm.sms.SmsServiceProxy
 		</servlet-class>
