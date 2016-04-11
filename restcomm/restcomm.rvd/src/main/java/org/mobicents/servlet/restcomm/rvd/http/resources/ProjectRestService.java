@@ -432,7 +432,7 @@ public class ProjectRestService extends RestService {
 
                         try {
                             // Import application
-                            projectService.importProjectFromArchive(item.openStream(), applicationSid, loggedUser.getName());
+                            projectService.importProjectFromRawArchive(item.openStream(), applicationSid, loggedUser.getName());
                             effectiveProjectName = FilenameUtils.getBaseName(item.getName());
                             // buildService.buildProject(effectiveProjectName);
 
@@ -443,6 +443,7 @@ public class ProjectRestService extends RestService {
 
                             // Update application
                             applicationsApi.updateApplication(ticket, applicationSid, effectiveProjectName, null, projectKind);
+                            logger.info("Successfully imported project '" + applicationSid + "' from raw archive '" + item.getName() + "'");
 
                         } catch (Exception e) {
                             applicationsApi.rollbackCreateApplication(ticket, applicationSid);

@@ -29,7 +29,7 @@
   </delete>
   
   <update id="updateRegistration" parameterType="map">
-    UPDATE "restcomm_registrations" SET "ttl"=#{ttl}, "date_expires"=#{date_expires} WHERE "address_of_record"=#{address_of_record} AND 
+    UPDATE "restcomm_registrations" SET "ttl"=#{ttl}, "date_expires"=#{date_expires}, "date_updated"=#{date_updated} WHERE "address_of_record"=#{address_of_record} AND
     "display_name"=#{display_name} AND "location"=#{location} AND "user_agent"=#{user_agent};
   </update>
 </mapper>
