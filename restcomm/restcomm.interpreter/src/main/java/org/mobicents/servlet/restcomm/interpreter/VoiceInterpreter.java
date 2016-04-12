@@ -2288,7 +2288,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     records.updateCallDetailRecord(callRecord);
                 }
             if (!dialActionExecuted) {
+                // FinishRecording already runs the actionUrl using the
+                // downloader.tell(request,...
+                if (!StopInterpreter.class.equals(klass)
+                        && !CallStateChanged.class.equals(klass)) {
                     executeDialAction(message, outboundCall);
+                }
                 callback(true);
             }
             // XXX review bridge cleanup!!
