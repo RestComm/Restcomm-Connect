@@ -12,13 +12,10 @@
             <dd>
                 <input id="new-account-friendly-name" class="form-control" ng-model="newAccount.friendlyName" type="text" maxlength="64" placeholder="Wife Account" />
             </dd>
-            <!-- 
             <dt>Email Address</dt>
             <dd>
                 <input id="new-account-email" class="form-control" ng-model="newAccount.email" type="email" placeholder="labs@restcomm.org" autofocus required />
             </dd>
-            -->
-            <!--
             <dt>Password</dt>
             <dd>
                 <div class="col-md-12 password-strength-modal" ng-password-strength="newAccount.password" ng-show="newAccount.password"></div>
@@ -29,8 +26,6 @@
                 <input id="new-account-password-confirmation" class="form-control" name="new-account-password-confirmation" ng-model="newAccount.passwordConfirmation" equals="{{newAccount.password}}" type="password" placeholder="mySafeP@ssw0rD!" />
                 <span></span>
             </dd>
-            -->
-            <!-- 
             <dt>Role</dt>
             <dd>
                 <select class="form-control">
@@ -38,7 +33,6 @@
                     <option value="Developer">Developer</option>
                 </select>
             </dd>
-             -->
             <dt>Status</dt>
             <dd>
                 <select class="form-control" ng-init="newAccount.status = statuses[1]" ng-model="newAccount.status" ng-options="status for status in statuses">
@@ -49,5 +43,5 @@
 </div>
 <div class="modal-footer">
     <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-click="createAccount(newAccount)">Register</button>
+    <button class="btn btn-primary" ng-disabled="pwdStrength < 50 || newAccountForm.$invalid" ng-click="createAccount(newAccount)">Register</button>
 </div>

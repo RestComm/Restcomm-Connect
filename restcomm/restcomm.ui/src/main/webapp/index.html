@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<!-- <html ng-app="rcApp"> -->
-<html>
+<html ng-app="rcApp">
     <head>
         <title>RestComm</title>
 
@@ -57,7 +56,7 @@
             #wrap > .container-fluid {
                 padding-top: 60px;
             }
-            #wrap > .container {
+            #wrap .container {
                 padding-top: 60px;
             }
             .container .credit {
@@ -98,6 +97,7 @@
         <script type="text/javascript" src="lib/angular/angular.min.js"></script>
         <script type="text/javascript" src="lib/file-upload/angular-file-upload.min.js"></script>
         <script type="text/javascript" src="lib/angular-route/angular-route.min.js"></script>
+        <script type="text/javascript" src="lib/angular-ui-router/angular-ui-router.js"></script>
         <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
         <script type="text/javascript" src="lib/angular/angular-datepicker.js"></script>
         <script type="text/javascript" src="lib/underscore/underscore.js"></script>
@@ -112,10 +112,8 @@
         <script type="text/javascript" src="lib/nvd3/nv.d3.js"></script>
         <script type="text/javascript" src="lib/angular-nvd3/angular-nvd3.js"></script>
 
-		<script src="https://identity.restcomm.com/auth/js/keycloak.js"></script>
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
         <script type="text/javascript" src="resources/js/controllers.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/application.js"></script>
         <script type="text/javascript" src="resources/js/controllers/global.js"></script>
         <script type="text/javascript" src="resources/js/controllers/navbar.js"></script>
         <script type="text/javascript" src="resources/js/controllers/login.js"></script>
@@ -129,12 +127,6 @@
         <script type="text/javascript" src="resources/js/controllers/numbers-outgoing.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>        
         <script type="text/javascript" src="resources/js/controllers/events.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/register.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/terms.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/unregistered.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/unauthorized.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/unlinked.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/instance-registration.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
         <script type="text/javascript" src="resources/js/directives.js"></script>
@@ -145,9 +137,11 @@
         <script type="text/javascript" src="resources/js/restcommApps/appConfig.js"></script>
         <script type="text/javascript" src="resources/js/restcommApps/services.js"></script>
 
-        <script type="text/javascript" src="keycloak-app.js"></script>
+        <!-- Keycloak -->
+        <script type="text/javascript" src="lib/keycloak/keycloak.js"></script>
+        
     </head>
-    <body ng-controller="AppCtrl">
+    <body>
         <div id="wrap">
             <div class="notifications-wrapper" data-ng-show="notifications.data.length > 0">
                 <div ng-repeat="notification in notifications.data">
@@ -160,75 +154,10 @@
                     </div>
                 </div>
             </div>
-            <div class="navbar navbar-inverse navbar-fixed-top" role="navigation" ng-controller="MenuCtrl">
-                <div class="container-fluid">
-                        <div class="navbar-header">
-                            <span class="navbar-brand"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
-                        </div>
-                        <i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
-                        
-                        <!-- If the instance has not been registered -->
-                        <div ng-if="authMode == 'init'" class="navbar-collapse collapse">
-                            <ul class="nav navbar-nav">
-                                <li><a> </a></li>
-                            </ul>
-                            <ul class="nav navbar-nav pull-right">
-                                <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> Guest <b class="caret"></b></a>
-                                    <ul id="rightMenu" class="dropdown-menu pull-right">
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div><!--/.nav-collapse -->
-                        
-                        <!-- Normal path: if the instnace is registered, normal path -->
-                        <div ng-if="auth.getAuthStatus()=='instance' && authMode != 'init'" class="navbar-collapse collapse">
-                            <div ng-show="auth.isLoggedIn()">
-                            <ul class="nav navbar-nav">
-                                <li><a> </a></li>
-                                <li><a ng-href="#/dashboard"><i class="fa fa-dashboard"></i> Dashboard</a></li>
-                                <li class="divider-vertical"></li>
-                                <li><a ng-href="#/numbers"><i class="fa fa-phone"></i> Numbers</a></li>
-                                <li class="divider-vertical"></li>
-                                <li><a ng-href="#/logs"><i class="fa fa-file-text-o"></i> Logs</a></li>
-                                <li class="divider-vertical"></li>
-                                <!--<li><a ng-click="testNotifications()"><i class="fa fa-flag-checkered"></i> Notification</a></li>-->
-                                <!--<li class="divider-vertical"></li>-->
-                                <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="fa fa-pencil"></i> Visual Designer</a></li>
-                                <li class="divider-vertical"></li>
-                                <li><a ng-href="#/ras/" ><i class="fa fa-shopping-cart"></i> Restcomm Apps</a></li>
-                                <li class="divider-vertical"></li>  
-                                <!--<li><a ng-href="#/providers"><i class="fa fa-cogs"></i> Providers</a></li>-->
-                                <!--<li class="divider-vertical"></li>-->
-                                <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
-                                <!--<li class="divider-vertical"></li>-->
-                            </ul>
-                            <!--<i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>-->
-                            <ul class="nav navbar-nav pull-right">
-                                <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ auth.getUsername() }} <b class="caret"></b></a>
-                                    <ul id="rightMenu" class="dropdown-menu pull-right">
-                                        <li><a href="#/profile/{{ auth.getAccountSid() }}"><i class="fa fa-cog"></i> Account Settings</a></li>
-                                        <li class="divider"></li>
-                                        <li ng-show="auth.hasRole('Administrator')" class="navbar-header text-muted" style="margin-left: 10px;">Sub Accounts</li>
-                                        <!--<li ng-show="auth.hasRole('Administrator')" ng-repeat="account in accountsList" ng-hide="account.sid == auth.getAccountSid()"><a href="#"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>-->
-                                        <li ng-show="auth.hasRole('Administrator')" class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><i class="fa fa-plus"></i> Create New Account...</a> </li>
-                                        <!-- 
-                                        <li class="divider"></li>
-											<li class="navbar-header text-muted" style="margin-left: 10px;">Instance</li>
-                                        	<li class=""><a href="#/register"><i class="fa fa-cloud"></i> Register ...</a> </li>
-                                        	-->
-                                        <li ng-show="auth.hasRole('Administrator')" class="divider"></li>
-                                        <li><a href="#" ng-click="auth.logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
-                                    </ul>
-                                </li>
-                            </ul>
-                            </div>
-                        </div><!--/.nav-collapse -->
-                    </div>
-            </div>
-            <div class="container" ng-view>
-            </div>
+
+            <!-- child states templates are injected here -->
+            <div ui-view></div>
+
             <div id="push"></div>
             <div id="footer" class="opacity50">
                 <div class="container">
