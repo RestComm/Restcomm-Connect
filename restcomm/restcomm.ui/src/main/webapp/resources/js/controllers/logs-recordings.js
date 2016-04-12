@@ -2,11 +2,11 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $modal, Identity, RCommLogsRecordings) {
+rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $modal, SessionService, RCommLogsRecordings) {
 
   $scope.Math = window.Math;
 
-  $scope.sid = Identity.getAccountSid();
+  $scope.sid = SessionService.get("sid");
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -69,9 +69,9 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $mo
 
 });
 
-rcMod.controller('LogsRecordingsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, Identity, RCommLogsRecordings, recordingSid) {
-  $scope.sid = Identity.getAccountSid();
-  $scope.recordingSid = $routeParams.recordingSid || recordingSid;
+rcMod.controller('LogsRecordingsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsRecordings, recordingSid) {
+  $scope.sid = SessionService.get("sid");
+  $scope.recordingSid = $stateParams.recordingSid || recordingSid;
 
   $scope.closeRecordingDetails = function () {
     $modalInstance.dismiss('cancel');

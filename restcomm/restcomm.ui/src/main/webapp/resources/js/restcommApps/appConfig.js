@@ -1,4 +1,4 @@
-var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $routeParams, rappConfig, rapp, bootstrapObject, $http, Notifications, $window, rappService, $sce) {
+var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('RappManagerConfigCtrl', function($scope, $upload, $stateParams, rappConfig, rapp, bootstrapObject, $http, Notifications, $window, rappService, $sce) {
 	
 	$scope.initRappConfig = function (rappConfig, bootstrapObj) {
 		var i;
@@ -18,7 +18,7 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 		var bootstrapObject = $scope.generateBootstrap(rappConfig);
 		//console.log(bootstrapObject);
 		$http({
-			url: '/restcomm-rvd/api/apps/' + $scope.projectName + '/parameters',
+			url: '/restcomm-rvd/services/ras/apps/' + $scope.applicationSid + '/bootstrap',
 			method: 'POST',
 			data: bootstrapObject,
 			headers: {'Content-Type': 'application/data'}
@@ -89,7 +89,8 @@ var rappManagerConfigCtrl = angular.module("rcApp.restcommApps").controller('Rap
 	
 	
 	
-	$scope.projectName = $routeParams.projectName;
+	$scope.projectName = $stateParams.projectName;
+	$scope.applicationSid = $stateParams.applicationSid;
 	$scope.rappConfig = rappConfig;
 	$scope.rapp = rapp;
 	$scope.bootstrapObject = bootstrapObject;

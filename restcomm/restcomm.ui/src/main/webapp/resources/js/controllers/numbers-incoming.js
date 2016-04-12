@@ -4,9 +4,9 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : Incoming : List ---------------------------------------------------
 
-rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, Identity, Auth, RCommNumbers, Notifications) {
+rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $rootScope, $anchorScroll, SessionService, RCommNumbers, Notifications) {
   $anchorScroll(); // scroll to top
-  $scope.sid = Identity.getAccountSid();
+  $scope.sid = SessionService.get("sid");
 
   // edit incoming number friendly name --------------------------------------
   $scope.editingFriendlyName = "";
@@ -25,7 +25,8 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
   };
 
   // add incoming number -----------------------------------------------------
-
+/*
+// no modal is used for number registration any more
   $scope.showRegisterIncomingNumberModal = function () {
     var registerIncomingNumberModal = $modal.open({
       controller: NumberDetailsCtrl,
@@ -43,6 +44,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
       }
     );
   };
+  */
 
   // delete incoming number --------------------------------------------------
 
@@ -55,13 +57,13 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, Identity, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope) {
+var NumberDetailsCtrl = function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
 
   // are we editing details...
-  //if($scope.phoneSid === $routeParams.phoneSid) {
+  //if($scope.phoneSid === $stateParams.phoneSid) {
 
-    $scope.sid = Identity.getAccountSid();
-    $scope.phoneSid = $routeParams.phoneSid;
+    $scope.sid = SessionService.get("sid");
+    $scope.phoneSid = $stateParams.phoneSid
 
     $scope.numberDetails = RCommNumbers.get({accountSid:$scope.sid, phoneSid: $scope.phoneSid});
 
@@ -76,7 +78,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   //}
 
   // query for available apps
-  $scope.availableApps = RCommApps.query({account:Identity.getUsername()});
+  //$scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
   $scope.localApps = localApps;
 
   //$scope.countries = countries;
@@ -106,7 +108,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
       function() { // success
         Notifications.success('Number "' + number.phone_number + '" updated successfully!');
         $rootScope.$broadcast("incoming-number-updated", {phoneSid:$scope.phoneSid, params: params});
-        $location.path( "/numbers/incoming/" );
+        $location.path( "/numbers/incoming" );
       },
       function() { // error
         Notifications.error('Failed to update number "' + number.phone_number + '".');
@@ -145,9 +147,9 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   }
 };
 
-var NumberRegisterCtrl = function ($scope, $routeParams, $location, $http, $dialog, $modalInstance, Identity, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+var NumberRegisterCtrl = function ($scope, $stateParams, $location, $http, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
 
-  $scope.sid = Identity.getAccountSid();
+  $scope.sid = SessionService.get("sid");
 
   //$scope.countries = countries;
   $scope.countries = allCountries;
@@ -219,7 +221,7 @@ var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notific
           function() {
             Notifications.success('The incoming number "' + phone.phone_number + '" has been deleted.');
             if($location) {
-              $location.path( "/numbers/incoming/" );
+              $location.path( "/numbers/incoming" );
             }
             else {
               $scope.numbersList = RCommNumbers.query({accountSid:$scope.sid});
@@ -301,17 +303,24 @@ var createNumberParams = function(number, isSIP) {
 
   // Optional fields
   params["FriendlyName"] = number.friendly_name || number.friendlyName;
+  params["VoiceApplicationSid"] = number.voice_application_sid; // || number.voiceApplicationSid;
   params["VoiceUrl"] = number.voice_url; // || number.voiceUrl; - return "" as "". It will help the server clear values.
   params["VoiceMethod"] = number.voice_method || number.voiceMethod;
   params["VoiceFallbackUrl"] = number.voice_fallback_url; // || number.voiceFallbackUrl;
   params["VoiceFallbackMethod"] = number.voice_fallback_method || number.voiceFallbackMethod;
   params["StatusCallback"] = number.status_callback; // || number.statusCallback;
   params["StatusCallbackMethod"] = number.status_callback_method || number.statusCallbackMethod;
+  params["SmsApplicationSid"] = number.sms_application_sid; // || number.smsApplicationSid;
   params["SmsUrl"] = number.sms_url; // || number.smsUrl;
   params["SmsMethod"] = number.sms_method || number.smsMethod;
   params["SmsFallbackUrl"] = number.sms_fallback_url; // || number.smsFallbackUrl;
   params["SmsFallbackMethod"] = number.sms_fallback_method || number.smsFallbackMethod;
   params["VoiceCallerIdLookup"] = number.voice_caller_id_lookup || number.voiceCallerIdLookup;
+  params["UssdUrl"] = number.ussd_url;
+  params["UssdMethod"] = number.ussd_method;
+  params["UssdFallbackUrl"] = number.ussd_fallback_url;
+  params["UssdFallbackMethod"] = number.ussd_fallback_method;
+  params["UssdApplicationSid"] = number.ussd_application_sid;
   if(isSIP) {
 	  params["isSIP"] = "true";
   }

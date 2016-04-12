@@ -21,7 +21,175 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-// IdentityConfig "service"
+rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth){
+    var account = null;
+    var uninitialized = null;
+
+    function getAccountSid() {
+        if (!!account)
+            return account.sid;
+        return null;
+    };
+
+    function getAccount() {
+        return account;
+    };
+
+    // returns Friendly Name for the logged account. Override this in SSO to also cover users with no account mapped
+    function getFriendlyName() {
+        if (!!account)
+            return account.friendly_name;
+        return "";
+    }
+
+    // Checks access for typical restcomm operations. It resolves to a valid, authorized restcomm Account.
+    // It Returns a promise.
+    //
+    //  - rejected:
+    //      MISSING_ACCOUNT_SID,
+    //      KEYCLCOAK_NO_LINKED_ACCOUNT
+    //      KEYCLOAK_INSTANCE_NOT_REGISTERED
+    //
+    //  - resolved: returns a valid Restcomm account for the logged user
+    function checkAccess() {
+        //var role; // undefined - it should be provided as a function parameter
+        var deferred = $q.defer();
+
+        if (IdentityConfig.securedByKeycloak()) {
+            if (!KeycloakAuth.loggedIn)
+                deferred.reject("KEYCLOAK_NOT_LOGGED_IN"); // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
+            var username = getUsername();  // since we're logged in, there MUST be a username available
+            var promisedAccount = $q.defer();
+            if (!account) {
+                $http.get({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + username, headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
+                .success(status,data) {
+                    promisedAccount.resolve(data);
+                }
+                .error(status,data) {
+                    deferred.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
+                    promisedAccount.reject();
+                }
+            } else {
+                promisedAccount.resolve(account);
+            }
+
+            // when the account becomes available, make sure the username/email_address match
+            promisedAccount.promise.then(function (fecthedAccount) {
+                if (username.toLowerCase() == fetchedAccount.email_address) {
+                    setActiveAccount(fetchedAccount);
+                    deferred.resolve();
+                }
+            }
+                // do nothing if promise is rejected
+            );
+        } else
+        if (IdentityConfig.securedByRestcomm()) {
+            if (!!getAccountSid()) // get account sid from js application (not from session storage) - if F5 is pressed this is lost
+                deferred.resolve();
+            else {
+                var sid = SessionService.get('sid');
+                if (!!sid) {
+                    RCommAccounts.view({accountSid:sid}, function (data) {
+                        setActiveAccount(data);
+                        deferred.resolve();
+                    });
+                } else {
+                    deferred.reject("MISSING_ACCOUNT_SID");
+                }
+            }
+        } else {
+            // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
+            deferred.reject("KEYCLOAK_INSTANCE_NOT_REGISTERED");
+        }
+        return deferred.promise;
+    }
+
+    // updates all necessary state
+    function setActiveAccount(newAccount) {
+        account = newAccount;
+        SessionService.set('sid',newAccount.sid);
+        if (account && account.status == 'uninitialized')
+            uninitialized = true;
+        else
+            uninitialized = false;
+    }
+
+    function clearActiveAccount() {
+        SessionService.unset('sid');
+        account = null;
+        uninitialized = null;
+    }
+
+    function isUninitialized() {
+        return uninitialized;
+    }
+
+    // Returns a promise.
+    //  - resolved: OK, UNINITIALIZED
+    //  - rejected: SUSPENDED, UNKNOWN_ERROR, AUTH_ERROR
+    function login(credentials) {
+      var deferred = $q.defer();
+      // TEMPORARY... FIXME!
+      var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
+      var login = $http.get(apiPath).
+        success(function(data, status, headers, config) {
+          if (status == 200) {
+            //if(data.date_created && data.date_created == data.date_updated) {
+            if(data.status) {
+              if(data.status == 'uninitialized') {
+                setActiveAccount(data);
+                deferred.resolve("UNINITIALIZED");
+                return;
+              }
+              else if(data.status == 'suspended') {
+                clearActiveAccount();
+                deferred.reject('SUSPENDED');
+                return;
+              }
+              else if (data.status == 'active') {
+                setActiveAccount(data);
+                deferred.resolve('OK');
+                return;
+              }
+            }
+          }
+          // some sort of unknown error occured
+          clearActiveAccount();
+          deferred.reject('UNKNOWN_ERROR');
+          return;
+        }).
+        error(function(data) {
+          Notifications.error("Login failed! Please confirm your credentials.");
+          clearActiveAccount();
+          deferred.reject('AUTH_ERROR');
+          return;
+        });
+      return deferred.promise;
+    }
+
+    function logout() {
+          SessionService.unset('sid');
+          account = null;
+    }
+
+    function getUsername() {
+        if ()
+        ...
+    }
+
+    // public interface
+    return {
+        login: login,
+        logout: logout,
+        getAccountSid: getAccountSid,
+        getAccount: getAccount,
+        getFrientlyName: getFriendlyName,
+        checkAccess: checkAccess,
+        isUninitialized: isUninitialized
+    }
+});
+
+// IdentityConfig service constructor. See restcomm.js. This service is created early before the rcMod angular module is initialized and is accessible as a 'constant' service.
 function IdentityConfig(server, instance) {
     this.server = server;
     this.instance = instance;
@@ -30,95 +198,26 @@ function IdentityConfig(server, instance) {
     function identityServerConfigured () {
         return !!this.server && (!!this.server.authServerUrl);
     }
-    this.identityServerConfigured = identityServerConfigured;
-    // is the instance secured by keyloak ?
+    // True is Restcomm is configured to use an authorization server and an identity instance is already in place
     function securedByKeycloak () {
         return identityServerConfigured && (!!this.instance) && (!!this.instance.name);
     }
-    this.securedByKeycloak = securedByKeycloak;
-}
-
-// Identity service
-function Identity(IdentityConfig, KeycloakAuth) {
-  this.config = IdentityConfig;
-  this.keycloakAuth = KeycloakAuth; //
-  this.account = null; // restcomm account
-  this.user = null; // keycloak user profile
-}
-angular.module('rcApp').factory('Identity', function (IdentityConfig, KeycloakAuth) {
-  return new Identity(IdentityConfig, KeycloakAuth);
-});
-
-rcServices.service('Authorization', function(KeycloakAuth,Identity,md5,Notifications,$q) {
-	var serviceInstance = {};
-
-		/*
-	serviceInstance.isLoggedIn = function() {
-		return KeycloakAuth.loggedIn;
+    // True if Restcomm is used for authorization (legacy mode). No keycloak needs to be present.
+    function securedByRestcomm() {
+        return identityServerConfigured();
     }
-	serviceInstance.getAuthStatus = function () {
-		return KeycloakAuth.authStatus;
-	}
-	serviceInstance.getLoggedSid = function() {
-		return Auth.restcommAccount.sid;
-	}
-	serviceInstance.getLoggedAccount = function () {
-		return Auth.restcommAccount;
-	}
-	serviceInstance.getUsername = function() {
-		return Auth.authz.profile.username;
-	}
-	serviceInstance.getProfile = function() {
-		return Auth.authz.profile;
-	}
-	serviceInstance.logout = function() {
-		Auth.authz.logout();
-	}
-	*/
-	
-	serviceInstance.secureAny = function(roles) {
-		var deferred = $q.defer();
-		for (var i=0; i<roles.length; i++) {
-			if ( KeycloakAuth.authz.hasResourceRole(roles[i], KeycloakAuth.authz.clientId ) ) {
-				deferred.resolve("AUTH_STATUS_INSTANCE");
-				return deferred.promise;
-			}
-		}
-		deferred.reject("AUTH_STATUS_REALM");
-		Notifications.error("You are not authorized to access this resource");
-		return deferred.promise;
-	}
-	serviceInstance.secureAll = function(roles) {
-		var deferred = $q.defer();
-		for (var i=0; i<roles.length; i++) {
-			if ( ! KeycloakAuth.authz.hasResourceRole(roles[i], KeycloakAuth.authz.clientId) ) {
-				deferred.reject("AUTH_STATUS_REALM");
-				Notifications.error("You are not authorized to access this resource");
-				return deferred.promise;
-			}
-		}
-		deferred.resolve("AUTH_STATUS_INSTANCE");
-		return deferred.promise;
-	}
-	serviceInstance.secure = function(role) {
-			return serviceInstance.secureAny([role]);
-	}
-	serviceInstance.hasRole = function(role) {
-		return KeycloakAuth.authz.hasResourceRole(role, KeycloakAuth.authz.clientId);
-	}
-	serviceInstance.hasAccount = function() {
-		var deferred = $q.defer();
-		if (!!identity.account)
-			deferred.resolve(true);
-		else
-			deferred.reject("AUTH_STATUS_NOACCOUNT");
-		return deferred.promise;
-	}
 
-    
-    return serviceInstance;
-		
-});
+    // Public interface
+
+    this.identityServerConfigured = identityServerConfigured;
+    this.securedByKeycloak = securedByKeycloak;
+    this.securedByRestcomm = securedByRestcomm;
+}
+
+// KeycloakAuth service is manually initialized in restcomm.js
+//angular.module('rcApp').factory('KeycloakAuth', function() {
+//  return keycloakAuth;
+//});
 
 rcServices.factory('Notifications', function($rootScope, $timeout, $log) {
   // time (in ms) the notifications are shown
@@ -246,11 +345,6 @@ rcServices.factory('RCommAccounts', function($resource) {
       format:'json'
     },
     {
-	  all: {
-		method: 'GET',
-		url: '/restcomm/2012-04-24/Accounts.:format',
-		isArray: true
-	  },
       view: {
         method: 'GET',
         url: '/restcomm/2012-04-24/Accounts.:format/:accountSid'
@@ -267,36 +361,8 @@ rcServices.factory('RCommAccounts', function($resource) {
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
-      },
-      remove: {
-		  method:'DELETE',
-		  url: '/restcomm/2012-04-24/Accounts.:format/:accountSid.:format'
-	  }
+      }
     });
-});
-
-rcServices.factory('RCommAccountOperations', function($resource) {
-	return $resource('/restcomm/2012-04-24/Accounts/:accountSid/operations/', {}, {
-		linkUser: { 
-			method: 'POST', 
-			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/link',
-			headers : {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		},
-		unlinkUser: {
-			method: 'DELETE',
-			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/link'
-		},
-		revokeKey: {
-			method: 'DELETE',
-			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/key'
-		},
-		assignKey: {
-			method: 'GET',
-			url: '/restcomm/2012-04-24/Accounts/:accountSid/operations/key/assign'
-		}
-	});
 });
 
 rcServices.factory('RCommNumbers', function($resource) {
@@ -483,6 +549,20 @@ rcServices.factory('RCommApps', function($resource) {
 	  return $resource('/restcomm-rvd/services/projects');
 });
 
+rcServices.factory('RCVersion', function($resource) {
+   return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Version.:format', {
+        accountSid: '@accountSid',
+        format: 'json'
+   },
+        {
+          get: {
+            method: 'GET',
+            url: '/restcomm/2012-04-24/Accounts/:accountSid/Version.:format'
+          }
+        }
+  );
+});
+
 rcServices.factory('RCommAvailableNumbers', function($resource) {
   return $resource('/restcomm/2012-04-24/Accounts/:accountSid/AvailablePhoneNumbers/:countryCode/Local.:format',
     {
@@ -521,18 +601,6 @@ rcServices.factory('RCommStatistics', function($resource) {
     {
     }
   );
-});
-
-rcServices.factory('IdentityInstances', function($resource) {
-    return $resource('/restcomm/2012-04-24/Identity/Instances', {}, {
-        register: {
-            method:'POST',
-            url: '/restcomm/2012-04-24/Identity/Instances',
-            headers : {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        }
-    });
 });
 
 rcServices.factory('RCommJMX', function($resource) {

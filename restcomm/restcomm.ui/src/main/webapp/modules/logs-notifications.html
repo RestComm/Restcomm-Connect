@@ -51,7 +51,7 @@
             <tbody>
             <tr ng-repeat="notification in filtered = (notificationsLogsList | filter:query | orderBy:sort:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
                 <td><a href="" ng-click="showNotificationDetailsModal(notification)">{{ notification.date_created | date:"EEE, yyyy-MM-dd H:mm:ss"  }}</a></td>
-                <td><div class="text-center" tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-remove-sign' : 'fa fa-warning'"></i></div></td>
+                <td><div class="text-center" tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-times' : 'fa fa-warning'"></i></div></td>
                 <td><div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div></td>
                 <td><div class="text-center"><a href="#/logs/calls/{{ notification.call_sid }}">{{ notification.call_sid }}</a></div></td>
                 <td><div class="text-center" title="{{ notification.message_text }}">{{ (notification.message_text | limitTo: 35) + '...' }}</div></td>

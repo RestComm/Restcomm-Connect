@@ -14,104 +14,258 @@ var rcMod = angular.module('rcApp', [
   'angularFileUpload',
   'ngPasswordStrength',
   'nvd3',
-  'ngSanitize'
+  'ngSanitize',
+  'ui.router'
 ]);
 
-rcMod.config(['$routeProvider', '$locationProvider', 'IdentityConfig', function($routeProvider, $locationProvider, IdentityConfig) {
-  if ( IdentityConfig.securedByKeycloak() || ! IdentityConfig.identityServerConfigured() ) {
-	  $routeProvider.
-		when('/login', {templateUrl: 'modules/login.html', controller: 'LoginCtrl'}).
-		when('/profile', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/profile/:accountSid', {templateUrl: 'modules/profile.html', controller: 'ProfileCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/dashboard', {templateUrl: 'modules/dashboard.html', controller: 'DashboardCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); },
-			hasAccount: function (Authorization) { return Authorization.hasAccount();}
-		}}).
-		when('/numbers', {redirectTo: '/numbers/incoming'}).
-		when('/numbers/incoming', {templateUrl: 'modules/numbers-incoming.html', controller: 'NumbersCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/numbers/register-incoming', {
-		  templateUrl: 'modules/numbers-incoming-register.html',
-		  controller: 'NumberRegisterCtrl',
-		  resolve: {
-			$modalInstance : function() { return undefined; },
-			allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
-			providerCountries: function(RCommAvailableNumbers, Authorization) { return RCommAvailableNumbers.getAvailableCountries({accountSid:Authorization.getLoggedSid()}).$promise; },
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		  }
-		}).
-		when('/numbers/incoming/:phoneSid', {templateUrl: 'modules/numbers-incoming-details.html', controller: 'NumberDetailsCtrl', resolve: { 
-			$modalInstance : function() {return undefined;}, 
-			allCountries : function() {return undefined;}, 
-			providerCountries : function() {return undefined;},	
-			localApps: function (rappService) { return rappService.refreshLocalApps();},
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/numbers/clients', {templateUrl: 'modules/numbers-clients.html', controller: 'ClientsCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/numbers/clients/:clientSid', {templateUrl: 'modules/numbers-clients-details.html', controller: 'ClientDetailsCtrl', resolve: { 
-			$modalInstance : function() {return undefined;}, 
-			localApps: function (rappService) { return rappService.refreshLocalApps();},
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/numbers/outgoing', {templateUrl: 'modules/numbers-outgoing.html', controller: 'OutgoingCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/numbers/shortcodes', {templateUrl: 'modules/numbers-shortcodes.html', controller: 'MainCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/numbers/porting', {templateUrl: 'modules/numbers-porting.html', controller: 'MainCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/logs', {redirectTo: '/logs/calls', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/logs/calls', {templateUrl: 'modules/logs-calls.html', controller: 'LogsCallsCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/logs/calls/:callSid', {templateUrl: 'modules/logs-calls-details.html', controller: 'LogsCallsDetailsCtrl', resolve: { 
-			$modalInstance : function() {return undefined;}, callSid: function() {},
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/logs/messages', {templateUrl: 'modules/logs-messages.html', controller: 'LogsMessagesCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/logs/recordings', {templateUrl: 'modules/logs-recordings.html', controller: 'LogsRecordingsCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/logs/transcriptions', {templateUrl: 'modules/logs-transcriptions.html', controller: 'LogsTranscriptionsCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/logs/notifications', {templateUrl: 'modules/logs-notifications.html', controller: 'LogsNotificationsCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/usage', {templateUrl: 'modules/usage.html', controller: 'MainCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/providers', {templateUrl: 'modules/providers.html', controller: 'MainCtrl', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}}).
-		when('/unauthorized', {templateUrl: 'modules/errors/unauthorized.html'}).	
-		when('/unlinked', {templateUrl: 'modules/errors/unlinked.html', resolve: {
-			authorized: function (Authorization) { return Authorization.secure('Developer'); }
-		}})	
-		.otherwise({redirectTo: '/dashboard'});
-	  // $locationProvider.html5Mode(true);
-	} else
-	if (IdentityConfig.identityServerConfigured()) {
-	    // instance is not secured
-		$routeProvider.
-			when('/unregistered', {templateUrl: 'modules/unregistered.html', controller: 'UnregisteredCtrl'}).
-			when('/instance/register', {templateUrl: 'modules/instance-registration.html', controller: 'InstanceRegistrationCtrl'}).
-			otherwise({redirectTo: '/unregistered'});
-	}
+// For all states that that have resolve sections that rely on a determined authorization status (AuthService.checkAccess()) and are children of 'restcomm' state, the 'authorize' value should be injected in the dependent 'resolve' values. See state 'restcomm.incoming-phone / localApps'.
+rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+  $stateProvider.state('public',{
+    templateUrl:'templates/public-state.html'
+  });
+  $stateProvider.state('public.login',{
+    url:"/login",
+    templateUrl:'modules/login.html',
+    controller:'LoginCtrl'
+  });
+  $stateProvider.state('public.registerinstance',{
+    parent:'public'
+  });
+  // 'restcomm' state assumes (requires) an authorized restcomm Account to have been determined. Child states can take that for granted.
+  $stateProvider.state('restcomm',{
+    templateUrl:'templates/restcomm-state.html',
+    controller:'RestcommCtrl',
+    resolve: {
+        authorize: function (AuthService) {
+            return AuthService.checkAccess();
+        }
+    }
+  });
+  $stateProvider.state('restcomm.dashboard',{
+    url:'/dashboard',
+    templateUrl:'modules/dashboard.html',
+    controller: 'DashboardCtrl'
+  });
+  $urlRouterProvider.when('/numbers','/numbers/incoming'); //redirect to numbers/incoming
+  $stateProvider.state('restcomm.numbers-incoming',{
+    url:'/numbers/incoming',
+    templateUrl:'modules/numbers-incoming.html',
+    controller:'NumbersCtrl'
+  });
+  $stateProvider.state('restcomm.profile',{
+    url:'/profile',
+    templateUrl:'modules/profile.html',
+    controller:'ProfileCtrl'
+  });
+  $stateProvider.state('restcomm.profile-account',{
+    url:'/profile/:accountSid',
+    templateUrl:'modules/profile.html',
+    controller:'ProfileCtrl'
+  });
+  $stateProvider.state('restcomm.register-incoming',{
+    url:'/numbers/register-incoming',
+    templateUrl:'modules/numbers-incoming-register.html',
+    controller:'NumberRegisterCtrl',
+    resolve: {
+        $modalInstance : function() { return undefined; },
+        allCountries : function(RCommAvailableNumbers) { return RCommAvailableNumbers.getCountries().$promise; },
+        providerCountries: function(RCommAvailableNumbers, AuthService, authorize) { return RCommAvailableNumbers.getAvailableCountries({accountSid:AuthService.getAccountSid()}).$promise; }
+    }
+  });
+  $stateProvider.state('restcomm.incoming-phone',{
+    url:'/numbers/incoming/:phoneSid',
+    templateUrl:'modules/numbers-incoming-details.html',
+    controller:'NumberDetailsCtrl',
+    resolve: {
+        $modalInstance : function() {return undefined;},
+        allCountries : function() {return undefined;},
+        providerCountries : function() {return undefined;},
+        localApps: function (rappService, authorize) { return rappService.refreshLocalApps();}
+    }
+  });
+  $stateProvider.state('restcomm.clients',{
+    url:'/numbers/clients',
+    templateUrl: 'modules/numbers-clients.html',
+    controller: 'ClientsCtrl'
+  });
+  $stateProvider.state('restcomm.client-details', {
+    url:'/numbers/clients/:clientSid',
+    templateUrl: 'modules/numbers-clients-details.html',
+    controller: 'ClientDetailsCtrl',
+    resolve: {
+        $modalInstance : function() {return undefined;},
+        localApps: function (rappService,authorize) { return rappService.refreshLocalApps();}
+    }
+  });
+  $stateProvider.state('restcomm.numbers-outgoing',{
+    url:'/numbers/outgoing',
+    templateUrl: 'modules/numbers-outgoing.html',
+    controller: 'OutgoingCtrl'
+  });
+  $stateProvider.state('restcomm.numbers-shortcodes',{
+    url:'/numbers/shortcodes',
+    templateUrl: 'modules/numbers-shortcodes.html',
+    controller: 'MainCtrl'
+  });
+  $stateProvider.state('restcomm.numbers-porting',{
+    url:'/numbers/porting',
+    templateUrl: 'modules/numbers-porting.html',
+    controller: 'MainCtrl'
+  });
+  $urlRouterProvider.when('/logs','/logs/calls');  // redirect /logs to /logs/calls
+  $stateProvider.state('restcomm.logs-calls',{
+    url:'/logs/calls',
+    templateUrl: 'modules/logs-calls.html',
+    controller: 'LogsCallsCtrl'
+  });
+  $stateProvider.state('restcom.logs-call-details', {
+    url:'/logs/calls/:callSid',
+    templateUrl: 'modules/logs-calls-details.html',
+    controller: 'LogsCallsDetailsCtrl',
+    resolve: {
+        $modalInstance : function() {return undefined;},
+        callSid: function() {}
+    }
+  });
+  $stateProvider.state('restcomm.logs-messages', {
+    url:'/logs/messages',
+    templateUrl: 'modules/logs-messages.html',
+    controller: 'LogsMessagesCtrl'
+  });
+  $stateProvider.state('restcomm.logs-recordings',{
+    url:'/logs/recordings',
+    templateUrl: 'modules/logs-recordings.html',
+    controller: 'LogsRecordingsCtrl'
+  });
+  $stateProvider.state('restcomm.logs-transcriptions',{
+    url:'/logs/transcriptions',
+    templateUrl: 'modules/logs-transcriptions.html',
+    controller: 'LogsTranscriptionsCtrl'
+  });
+  $stateProvider.state('restcomm.logs-notifications',{
+    url:'/logs/notifications',
+    templateUrl: 'modules/logs-notifications.html',
+    controller: 'LogsNotificationsCtrl'
+  });
+  $stateProvider.state('restcomm.usage',{
+    url:'/usage',
+    templateUrl: 'modules/usage.html',
+    controller: 'MainCtrl'
+  });
+  $stateProvider.state('restcomm.providers',{
+    url:'/providers',
+    templateUrl: 'modules/providers.html',
+    controller: 'MainCtrl'
+  });
+  $urlRouterProvider.otherwise('/dashboard');
+
 }]);
+
+// Keycloak configuration ***
+
+var keycloakAuth = {};
+var logout = function(){
+    console.log('*** LOGOUT');
+    keycloakAuth.loggedIn = false;
+    keycloakAuth.authz = null;
+    window.location = keycloakAuth.logoutUrl;
+};
+
+angular.element(document).ready(['$http',function ($http) {
+  var keycloak = new Keycloak({ url: "http://192.168.1.40:8080/auth", realm: "uirouter-test", clientId: "uirouter-test" });
+  keycloakAuth.loggedIn = false;
+  keycloak.init({ onLoad: 'login-required' }).success(function () {
+    keycloakAuth.loggedIn = true;
+    keycloakAuth.authz = keycloak;
+    keycloakAuth.logoutUrl = "http://192.168.1.40:8080/auth/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/index.html";
+    angular.bootstrap(document, ["rcApp"]);
+  }).error(function (a, b) {
+    console.log("authentication failed");
+  });
+}]);
+
+angular.element(document).ready(['$http',function ($http) {
+  // manually inject $q since it's not available
+  var initInjector = angular.injector(["ng"]);
+  var $q = initInjector.get("$q");
+  // try to retrieve Identity server configuration
+  var serverPromise = $q.defer();
+  $http.get("/restcomm/2012-04-24/Identity/Server").success(function (serverConfig) {
+    console.log(serverConfig);
+    serverPromise.resolve(serverConfig);
+  }).error( function (response) {
+    serverPromise.reject();
+  });
+  // try to retrieve IdentityInstance
+  var instancePromise = $q.defer();
+  $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
+    instancePromise.resolve(instance);
+  }).error(function (response) {
+    if (response.status == 404)
+      instancePromise.resolve(null);
+    else
+      instancePromise.reject();
+  });
+  // when both responses are received do sth...
+  $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
+    console.log("SuCCESS");
+    // create a constant with keycloak server and instance identity configuration
+    var identityConfig = new IdentityConfig(responses[0],responses[1]);
+    angular.module('rcApp').constant('IdentityConfig', identityConfig);
+    angular.module('rcApp').factory('KeycloakAuth', function() {
+      return keycloakAuth;
+    });
+    if ( identityConfig.securedByKeycloak() ) {
+      // if the instance is already secured by keycloak
+      var keycloak = new Keycloak({ url: identityConfig.server.authServerUrl, realm: identityConfig.server.realm, clientId: identityConfig.instance.name + "-restcomm-ui" });
+			keycloakAuth.loggedIn = false;
+			keycloak.init({ onLoad: 'login-required' }).success(function () {
+				keycloakAuth.loggedIn = true;
+				keycloakAuth.authz = keycloak;
+				keycloakAuth.logoutUrl = identityConfig.server.authServerUrl + "/realms/" + identityConfig.server.realm + "/tokens/logout?redirect_uri=" + window.location.origin + "/index.html";
+        angular.bootstrap(document, ["rcApp"]);
+			}).error(function (a, b) {
+					window.location.reload();
+			});
+    } else
+    if (identityConfig.identityServerConfigured() && !identityConfig.securedByKeycloak()){
+      // keycloak is already configured but no identity instance yet
+      angular.bootstrap(document, ["rcApp"]);
+    } else {
+      // no identity configuration. We should run in compatibility authorization mode
+      angular.bootstrap(document, ["rcApp"]);
+    }
+
+  }, function () {
+    console.log("Internal server error");
+  });
+}]);
+
+
+
+angular.module('rcApp').factory('authInterceptor', function($q, Auth) {
+    return {
+        request: function (config) {
+            var deferred = $q.defer();
+            if (Auth.authz.token) {
+                Auth.authz.updateToken(5).success(function() {
+                    config.headers = config.headers || {};
+                    config.headers.Authorization = 'Bearer ' + Auth.authz.token;
+
+                    deferred.resolve(config);
+                }).error(function() {
+                        deferred.reject('Failed to refresh token');
+                });
+            }
+            return deferred.promise;
+        }
+    };
+});
+
+// End-of Keycloak configuration ***
+
+
+
 
 rcMod.directive('equals', function() {
   return {
@@ -142,6 +296,14 @@ rcMod.directive('equals', function() {
   }
 });
 
+rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
+  $rootScope.$on("$routeChangeStart", function(event, next, current) {
+    $anchorScroll(); // scroll to top
+    //if(!AuthService.isLoggedIn()) {
+    //  $location.path("/login");
+    //}
+  })
+});
 
 // AJAX LOADER
 /* FIXME: Disabled since it causes $http and $resource not to call error callbacks
@@ -164,6 +326,43 @@ angular
   });
 */
 
+// There is a circular dependency issue when directly injecting AuthService in the function. A workaround using $injector has
+// been used - http://stackoverflow.com/questions/20647483/angularjs-injecting-service-into-a-http-interceptor-circular-dependency
+rcMod.
+  factory('authHttpResponseInterceptor',['$q','$location','$injector',function($q,$location,$injector){
+    return {
+      request: function(config) {
+    	  var rvd_prefix = "/restcomm-rvd/";
+    	  if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix ) {
+    		  //console.log("Adding auth headers to RVD request - " + config.url);
+    		  var AuthService = $injector.get('AuthService');
+    		  var account = AuthService.getAccount();
+    		  if (!!account) {
+                  var auth_header = account.email_address + ":" + account.auth_token;
+                  auth_header = "Basic " + btoa(auth_header);
+                  config.headers.authorization = auth_header;
+		      }
+    	  }
+	      return config;
+	    },
+      response: function(response){
+        if (response.status === 401) {
+          $location.path('/login').search('returnTo', $location.path());
+        }
+        return response || $q.when(response);
+      },
+      responseError: function(rejection) {
+        if (rejection.status === 401) {
+          $location.path('/login').search('returnTo', $location.path());
+        }
+        return $q.reject(rejection);
+      }
+    }
+  }])
+  .config(['$httpProvider',function($httpProvider) {
+    // http Intercpetor to check auth failures for xhr requests
+    $httpProvider.interceptors.push('authHttpResponseInterceptor');
+  }]);
 
 /*
 var interceptor = ['$rootScope', '$q', '$location', function (scope, $q, $location) {
