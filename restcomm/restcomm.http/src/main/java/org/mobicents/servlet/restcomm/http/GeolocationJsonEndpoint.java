@@ -50,10 +50,24 @@ public class GeolocationJsonEndpoint extends GeolocationEndpoint {
         return getGeolocations(accountSid, APPLICATION_JSON_TYPE);
     }
 
+    @Path("/Immediate.json")
     @POST
-    public Response putGeolocation(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data,
-            Geolocation.GeolocationType glType) {
-        return putGeolocation(accountSid, data, glType, APPLICATION_JSON_TYPE);
+    public Response putImmediateGeolocation(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, APPLICATION_JSON_TYPE);
     }
+
+    @Path("/Notification.json")
+    @POST
+    public Response putNotificationGeolocation(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, APPLICATION_JSON_TYPE);
+    }
+
+    /*
+     * @POST public Response putGeolocation(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String,
+     * String> data, Geolocation.GeolocationType glType) { return putGeolocation(accountSid, data, glType,
+     * APPLICATION_JSON_TYPE); }
+     */
 
 }

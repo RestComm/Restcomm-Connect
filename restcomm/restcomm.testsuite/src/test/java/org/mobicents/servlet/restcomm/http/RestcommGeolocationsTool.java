@@ -60,11 +60,45 @@ public class RestcommGeolocationsTool {
         return geolocationsUrl;
     }
 
-    private String getGeolocationUrl(String deploymentUrl, String accountSid, String geolocationSid, Boolean xml) {
+    private String getImmediateGeolocationsUrl(String deploymentUrl, String accountSid, Boolean xml) {
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
-        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/" + geolocationSid;
+        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Immediate";
+        if (!xml) {
+            geolocationsUrl += ".json";
+        }
+        return geolocationsUrl;
+    }
+
+    private String getNotificationGeolocationsUrl(String deploymentUrl, String accountSid, Boolean xml) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Notification";
+        if (!xml) {
+            geolocationsUrl += ".json";
+        }
+        return geolocationsUrl;
+    }
+
+    private String getImmediateGeolocationUrl(String deploymentUrl, String accountSid, String geolocationSid, Boolean xml) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Immediate/" + geolocationSid;
+
+        if (!xml) {
+            geolocationsUrl += ".json";
+        }
+        return geolocationsUrl;
+    }
+
+    private String getNotificationGeolocationUrl(String deploymentUrl, String accountSid, String geolocationSid, Boolean xml) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Notification/" + geolocationSid;
 
         if (!xml) {
             geolocationsUrl += ".json";
@@ -79,11 +113,11 @@ public class RestcommGeolocationsTool {
         return deploymentUrl;
     }
 
-    public JsonObject createGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
+    public JsonObject createImmediateGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
             String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getGeolocationsUrl(deploymentUrl, adminAccountSid, false);
+        String url = getImmediateGeolocationsUrl(deploymentUrl, adminAccountSid, false);
         WebResource webResource = jerseyClient.resource(url);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
         JsonParser parser = new JsonParser();
@@ -91,11 +125,42 @@ public class RestcommGeolocationsTool {
         return jsonResponse;
     }
 
-    public JsonObject getGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
+    public JsonObject createNotificationGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
+            String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        String url = getNotificationGeolocationsUrl(deploymentUrl, adminAccountSid, false);
+        WebResource webResource = jerseyClient.resource(url);
+        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        return jsonResponse;
+    }
+
+    public JsonObject getImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
+            String adminAccountSid, String geolocationSid) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        String url = getImmediateGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
+        WebResource webResource = jerseyClient.resource(url);
+        String response = null;
+        JsonObject jsonResponse = null;
+        try {
+            response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+            JsonParser parser = new JsonParser();
+            jsonResponse = parser.parse(response).getAsJsonObject();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return jsonResponse;
+    }
+
+    public JsonObject getNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
+            String adminAccountSid,
             String geolocationSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
+        String url = getNotificationGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
         WebResource webResource = jerseyClient.resource(url);
         String response = null;
         JsonObject jsonResponse = null;
@@ -121,11 +186,11 @@ public class RestcommGeolocationsTool {
         return jsonResponse;
     }
 
-    public JsonObject updateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
+    public JsonObject updateImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
             String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
+        String url = getImmediateGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
         WebResource webResource = jerseyClient.resource(url);
         String response = "";
         if (usePut) {
@@ -138,10 +203,40 @@ public class RestcommGeolocationsTool {
         return jsonResponse;
     }
 
-    public void deleteGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
+    public JsonObject updateNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
+            String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        String url = getNotificationGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
+        WebResource webResource = jerseyClient.resource(url);
+        String response = "";
+        if (usePut) {
+            response = webResource.accept(MediaType.APPLICATION_JSON).put(String.class, geolocationParams);
+        } else {
+            response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
+        }
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        return jsonResponse;
+    }
+
+    public void deleteImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
+            String adminAccountSid, String geolocationSid) throws IOException {
+        String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
+        String url = getImmediateGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
+                adminAccountSid, geolocationSid, false);
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
+        WebResource webResource = jerseyClient.resource(url);
+        webResource.accept(MediaType.APPLICATION_JSON).delete();
+    }
+
+    public void deleteNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
+            String adminAccountSid,
             String geolocationSid) throws IOException {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
-        String url = getGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint, adminAccountSid,
+        String url = getNotificationGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
+                adminAccountSid,
                 geolocationSid, false);
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));

@@ -108,7 +108,7 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
 
     @Path("/Immediate.json")
     @POST
-    public Response updateImmediateGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
+    public Response putImmediateGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, APPLICATION_JSON_TYPE);
     }
@@ -217,7 +217,7 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
 
     @Path("/Notification.json")
     @POST
-    public Response updateNotificationGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
+    public Response putNotificationGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, APPLICATION_JSON_TYPE);
     }
@@ -270,8 +270,5 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     public Response getGeolocationsAsXml(@PathParam("accountSid") final String accountSid) {
         return getGeolocations(accountSid, APPLICATION_XML_TYPE);
     }
-
-    // @POST public Response putGeolocation(@PathParam("accountSid") final String accountSid, final
-    // MultivaluedMap<String,String> data) { return putGeolocation(accountSid, data, APPLICATION_XML_TYPE); }
 
 }
