@@ -18,7 +18,8 @@ type VARCHAR(8) NOT NULL,
 status VARCHAR(16) NOT NULL,
 auth_token VARCHAR(32),
 role VARCHAR(64) NOT NULL,
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL,
+linked BOOLEAN
 );
 
 CREATE TABLE restcomm_announcements (
@@ -290,7 +291,8 @@ null,
 "active",
 NULL,
 "Administrator",
-"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf");
+"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf",
+FALSE);
 
 /* Create demo Applications */
 INSERT INTO restcomm_applications VALUES('AP73926e7113fa4d95981aa96b76eca854','2015-09-23 06:56:04.108000','2015-09-23 06:56:04.108000','rvdCollectVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854','/restcomm-rvd/services/apps/rvdCollectVerbDemo/controller','voice');
