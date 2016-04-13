@@ -233,6 +233,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
+        transitions.add(new Transition(initializingCall, acquiringOutboundCallInfo));
         transitions.add(new Transition(initializingCall, downloadingRcml));
         transitions.add(new Transition(initializingCall, ready));
         transitions.add(new Transition(initializingCall, finishDialing));
@@ -555,7 +556,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     //Initial call is now in progress, which means Restcomm answered the call, which means the call is initialized now
                     logger.info("Call moved to IN_PROGRESS state, fsm.state(): "+state);
                     callInitialized = true;
-                    fsm.transition(message, acquiringOutboundCallInfo);
+                    if (callInfo.direction().equalsIgnoreCase("inbound")) {
+                        fsm.transition(message, acquiringOutboundCallInfo);
+                    }
                 }
                 if (initializingCall.equals(state) || rejecting.equals(state)) {
                     if (parser != null) {
@@ -804,7 +807,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (callState.equals(CallStateChanged.State.COMPLETED)) {
                 fsm.transition(message, finished);
             } else {
-                if (!isParserFailed) {
+                if (!isParserFailed && !is(hangingUp)) {
                     logger.info("End tag received will move to hangup the call");
                     fsm.transition(message, hangingUp);
                 } else {

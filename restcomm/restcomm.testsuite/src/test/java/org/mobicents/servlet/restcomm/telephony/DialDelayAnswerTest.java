@@ -683,6 +683,125 @@ public class DialDelayAnswerTest {
         assertTrue(georgeCall.disconnect());
     }
 
+    private String dialFirstClientRcml = "<Response><Dial timeout=\"3\" action=\"http://127.0.0.1:8090/action1\" method=\"GET\">" +
+            "<Client>alice</Client></Dial></Response>";
+    private String firstActionRcml = "<Response><Dial timeout=\"3\" action=\"http://127.0.0.1:8090/action2\" method=\"GET\">\" +\n" +
+            "<Sip>sip:henrique@127.0.0.1:5092</Sip></Dial></Response>";
+    private String secondActionRcml = "<Response><Dial timeout=\"3\">\" +\n" +
+            "<Sip>sip:fotini@127.0.0.1:5093</Sip></Dial></Response>";
+    private String dialSubsequentialDialing = "<Response><Dial timeout=\"3\">" +
+            "<Client>alice</Client></Dial><Dial timeout=\"3\"><Sip>sip:henrique@127.0.0.1:5092</Sip></Dial</Response>";
+
+    @Test
+    public void testSubsequentDialing() throws InterruptedException, ParseException, MalformedURLException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialSubsequentialDialing)));
+
+        stubFor(get(urlPathEqualTo("/action1"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(firstActionRcml)));
+
+        stubFor(get(urlPathEqualTo("/action2"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(secondActionRcml)));
+
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(30000);
+        assertNotNull(aliceCancelTransaction);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
+
+        assertTrue(henriqueCall.waitForIncomingCall(5000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Henrique-Trying", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Henrique-Ringing", 3600));
+
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(30000);
+        assertNotNull(henriqueCancelTransaction);
+        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK-2-Cancel-Henrique", 3600);
+
+        assertTrue(fotiniCall.waitForIncomingCall(5000));
+        assertTrue(fotiniCall.sendIncomingCallResponse(Response.TRYING, "Henrique-Trying", 3600));
+        assertTrue(fotiniCall.sendIncomingCallResponse(Response.RINGING, "Henrique-Ringing", 3600));
+        String receivedBody = new String(fotiniCall.getLastReceivedRequest().getRawContent());
+        assertTrue(fotiniCall.sendIncomingCallResponse(Response.OK, "Fotini-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(fotiniCall.waitForAck(5000));
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 1);
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(aliceCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+        Message message = bobCall.getLastReceivedRequest().getMessage();
+        assertTrue(message.getHeader("Reason").toString().contains(HangupReason.NORMAL_CLEARING.getDescription()));
+
+        alicePhone.unregister(aliceContact, 3600);
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+    }
+
     @Deployment(name = "DelayDialAnswerTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
