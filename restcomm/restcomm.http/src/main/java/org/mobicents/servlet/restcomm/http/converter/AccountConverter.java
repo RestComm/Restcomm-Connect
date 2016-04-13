@@ -68,6 +68,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeDateUpdated(account.getDateUpdated(), writer);
         writeAuthToken(account, writer);
         writeUri(account.getUri(), writer);
+        writeLinked(account.getLinked(), writer);
         writeSubResourceUris(account, writer);
         writer.endNode();
     }
@@ -85,6 +86,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeDateUpdated(account.getDateUpdated(), object);
         writeAuthToken(account, object);
         writeUri(account.getUri(), object);
+        writeLinked(account.getLinked(), object);
         writeSubResourceUris(account, object);
         return object;
     }
@@ -257,4 +259,23 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         object.addProperty("role", role);
     }
 
+    private void writeLinked(final Boolean linked, final JsonObject object) {
+        if (linked != null) {
+            object.addProperty("linked", linked);
+        } else {
+            object.addProperty("linked", Boolean.FALSE);
+        }
+    }
+
+    private void writeLinked(final Boolean linked, final HierarchicalStreamWriter writer) {
+        if (linked != null) {
+            writer.startNode("Linked");
+            writer.setValue(linked.toString());
+            writer.endNode();
+        } else {
+            writer.startNode("Linked");
+            writer.setValue(Boolean.FALSE.toString());
+            writer.endNode();
+        }
+    }
 }

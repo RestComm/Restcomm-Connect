@@ -165,8 +165,9 @@ public final class MybatisAccountsDao implements AccountsDao {
         final String authToken = readString(map.get("auth_token"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
+        final Boolean linked = readBoolean(map.get("linked"));
         return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, accountSid, type, status, authToken,
-                role, uri);
+                role, uri, linked);
     }
 
     private Map<String, Object> toMap(final Account account) {
@@ -182,6 +183,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("auth_token", account.getAuthToken());
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
+        map.put("linked", account.getLinked());
         return map;
     }
 }
