@@ -9,7 +9,8 @@ CREATE TABLE "restcomm_accounts" (
 "status" VARCHAR(16) NOT NULL,
 "auth_token" VARCHAR(32),
 "role" VARCHAR(64) NOT NULL,
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL,
+"linked" BOOLEAN
 );
 
 CREATE TABLE "restcomm_announcements" (

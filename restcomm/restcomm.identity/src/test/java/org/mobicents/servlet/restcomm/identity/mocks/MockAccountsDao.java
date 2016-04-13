@@ -79,7 +79,7 @@ public class MockAccountsDao implements AccountsDao {
             accountSid = Sid.generate(Sid.Type.ACCOUNT);
         final Account.Type type = Account.Type.FULL;
         final Account.Status status = Account.Status.ACTIVE;
-        return new Account(accountSid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, authToken, null, null);
+        return new Account(accountSid, now, now, emailAddress, friendlyName, parentAccountSid, type, status, authToken, null, null, Boolean.FALSE);
     }
 
     @Override

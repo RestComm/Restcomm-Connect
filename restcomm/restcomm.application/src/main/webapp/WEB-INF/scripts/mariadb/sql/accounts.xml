@@ -5,9 +5,9 @@
 	<insert id="addAccount" parameterType="map">
 		INSERT INTO restcomm_accounts (sid, date_created, date_updated,
 		email_address, friendly_name, account_sid, type, status, auth_token,
-		role, uri)
+		role, uri, linked)
 		VALUES(#{sid}, #{date_created}, #{date_updated}, #{email_address}, #{friendly_name},
-		#{account_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri});
+		#{account_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri}, #{linked});
 	</insert>
 
 	<select id="getAccount" parameterType="string" resultType="hashmap">
@@ -39,7 +39,7 @@
 	<update id="updateAccount" parameterType="map">
 		UPDATE restcomm_accounts SET date_updated=#{date_updated},
 		email_address=#{email_address}, friendly_name=#{friendly_name},
-		type=#{type}, status=#{status}, auth_token=#{auth_token}, role=#{role}
+		type=#{type}, status=#{status}, auth_token=#{auth_token}, role=#{role}, linked=#{linked}
 		WHERE sid=#{sid};
 	</update>
 </mapper>

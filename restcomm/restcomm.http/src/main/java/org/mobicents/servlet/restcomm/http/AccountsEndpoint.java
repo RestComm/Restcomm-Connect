@@ -44,7 +44,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -104,6 +103,10 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if (data.containsKey("Status")) {
             status = Account.Status.valueOf(data.getFirst("Status"));
         }
+        Boolean linked = false;
+        if (data.containsKey("Linked")) {
+            linked = Boolean.parseBoolean(data.getFirst("Linked"));
+        }
         final String password = data.getFirst("Password");
         final String authToken = new Md5Hash(password).toString();
         final String role = data.getFirst("Role");
@@ -112,7 +115,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, linked);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
