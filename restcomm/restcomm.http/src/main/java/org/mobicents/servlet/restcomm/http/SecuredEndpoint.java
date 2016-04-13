@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.http;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
@@ -46,8 +47,6 @@ import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 public abstract class SecuredEndpoint extends AbstractEndpoint {
-    protected static RestcommRoles restcommRoles;
-    //protected MutableIdentityConfigurationSet identityConfiguration;
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
     protected IdentityInstancesDao identityInstancesDao;
@@ -64,7 +63,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         this.accountsDao = storage.getAccountsDao();
         this.identityInstancesDao = storage.getIdentityInstancesDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
-        restcommRoles = identityContext.getRestcommRoles();
         this.userIdentityContext = new UserIdentityContext(identityContext, request, accountsDao, identityInstance);
         this.identityInstance = determineIdentityInstance();
 
@@ -109,6 +107,24 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
+     * Checks if the effective account (aka subject) has 'permission' on the operatedAccount. Actually, this checks (a) if
+     * effective account sid == operated account sid, and (b) effective account has 'permission' according to its roles. For (a)
+     * see secureAccount(...).
+     *
+     * @param operatedAccount
+     * @param permission
+     * @return
+     */
+    protected boolean isSecured(final Account operatedAccount, final String permission) {
+        try {
+            secure(operatedAccount, permission);
+            return true;
+        } catch (AuthorizationException e) {
+            return false;
+        }
+    }
+
+    /**
      * Allows general purpose access if one of the following happens:
      * - User carries a token that contains a role (any role) for this application/client
      * - Account key was verified.
@@ -132,6 +148,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         throw new AuthorizationException();
     }
 
+    // boolean overloaded form of secure()
+    protected boolean isSecured() {
+        try {
+            secure();
+            return true;
+        } catch (AuthorizationException e) {
+            return false;
+        }
+    }
+
     protected void secure (final String permission) {
         Set<String> roleNames = null;
         if ( userIdentityContext.getOauthToken() != null )
@@ -147,6 +173,20 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
                 return;
 
         throw new AuthorizationException();
+    }
+
+    protected boolean isSecured(final String permission) {
+        try {
+            secure(permission);
+            return true;
+        } catch (AuthorizationException e) {
+            return false;
+        }
+    }
+
+    // Checks is the effective account (aka 'subject' in shoro terminology) has the specified role. Throws an exception if not.
+    protected boolean hasRole(final String role) {
+        throw new NotImplementedException();
     }
 
     /**
@@ -167,6 +207,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         Permission neededPermission = resolver.resolvePermission(neededPermissionString);
 
         // check the neededPermission against all roles of the user
+        RestcommRoles restcommRoles = identityContext.getRestcommRoles();
         for (String roleName: roleNames) {
             SimpleRole simpleRole = restcommRoles.getRole(roleName);
             if ( simpleRole == null) {
@@ -253,13 +294,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     /**
      * Makes sure a user authenticated against actorAccount can access operatedAccount. In practice allows access if actorAccount == operatedAccount
      * OR if operatedAccount is a sub-account of actorAccount
+     *
+     * UPDATE: parent-child relation check is disabled for compatibility reasons.
+     *
      * @param actorAccount
      * @param operatedAccount
      * @return
      */
     protected AuthOutcome secureAccount(Account actorAccount, final Account operatedAccount) {
         if ( actorAccount != null && actorAccount.getSid() != null ) {
-            if ( actorAccount.getSid().equals(operatedAccount.getSid()) || actorAccount.getSid().equals(operatedAccount.getAccountSid()) ) {
+            if ( actorAccount.getSid().equals(operatedAccount.getSid()) /*|| actorAccount.getSid().equals(operatedAccount.getAccountSid()) */ ) {
                 return AuthOutcome.OK;
             }
         }
@@ -281,6 +325,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         if (identityInstance == null)
             throw new IllegalStateException("Identity instance has not been set");
         return identityInstance.getName() + "-restcomm-rest";
+    }
+
+    /**
+     * Returns the string literal for the administrator role. This role is granted implicitly access from secure() method.
+     * No need to explicitly apply it at each protected resource
+     * .
+     * @return the administrator role as string
+     */
+    private String getAdministratorRole() {
+        return "Administrator";
     }
 
 }
