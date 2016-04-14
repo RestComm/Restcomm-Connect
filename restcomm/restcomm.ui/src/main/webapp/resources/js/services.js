@@ -56,26 +56,28 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         var deferred = $q.defer();
 
         if (IdentityConfig.securedByKeycloak()) {
-            if (!KeycloakAuth.loggedIn)
+            if (!KeycloakAuth.loggedIn) {
                 deferred.reject("KEYCLOAK_NOT_LOGGED_IN"); // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
+                return deferred.promise;
+            }
             var username = getUsername();  // since we're logged in, there MUST be a username available
             var promisedAccount = $q.defer();
             if (!account) {
-                $http.get({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + username, headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
-                .success(status,data) {
+                $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
+                .success(function (data,status) {
                     promisedAccount.resolve(data);
-                }
-                .error(status,data) {
+                })
+                .error(function (data,status) {
                     deferred.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
                     promisedAccount.reject();
-                }
+                });
             } else {
                 promisedAccount.resolve(account);
             }
 
             // when the account becomes available, make sure the username/email_address match
-            promisedAccount.promise.then(function (fecthedAccount) {
-                if (username.toLowerCase() == fetchedAccount.email_address) {
+            promisedAccount.promise.then(function (fetchedAccount) {
+                if (username.toLowerCase() == fetchedAccount.email_address.toLowerCase()) {
                     setActiveAccount(fetchedAccount);
                     deferred.resolve();
                 }
@@ -172,9 +174,11 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
           account = null;
     }
 
+    // Returns the username (email address) for the logged  user. It's only available when keycloak is used for authorization.
     function getUsername() {
-        if ()
-        ...
+        if (IdentityConfig.securedByKeycloak() && KeycloakAuth.loggedIn)
+            return KeycloakAuth.authz.tokenParsed.preferred_username;
+        return null;
     }
 
     // public interface

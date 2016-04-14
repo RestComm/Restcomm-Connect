@@ -219,7 +219,11 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if (accountsDao.getAccount(account.getSid()) == null) {
             final Account parent = accountsDao.getAccount(sid);
             if (parent.getStatus().equals(Account.Status.ACTIVE) ) {
-                secure("RestComm:Create:Accounts");
+                try {
+                    secure("RestComm:Create:Accounts");
+                } catch (AuthorizationException e) {
+                    return status(UNAUTHORIZED).build();
+                }
                 if (!hasAccountRole("Administrator") || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
                 }

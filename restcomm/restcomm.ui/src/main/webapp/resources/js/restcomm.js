@@ -171,6 +171,7 @@ var logout = function(){
     window.location = keycloakAuth.logoutUrl;
 };
 
+/*
 angular.element(document).ready(['$http',function ($http) {
   var keycloak = new Keycloak({ url: "http://192.168.1.40:8080/auth", realm: "uirouter-test", clientId: "uirouter-test" });
   keycloakAuth.loggedIn = false;
@@ -183,6 +184,7 @@ angular.element(document).ready(['$http',function ($http) {
     console.log("authentication failed");
   });
 }]);
+*/
 
 angular.element(document).ready(['$http',function ($http) {
   // manually inject $q since it's not available
@@ -242,25 +244,28 @@ angular.element(document).ready(['$http',function ($http) {
 }]);
 
 
-
-angular.module('rcApp').factory('authInterceptor', function($q, Auth) {
+// Authorization interceptor. It's effective when restcomm is secured by Keycloak.
+angular.module('rcApp').factory('authInterceptor', function($q) {
     return {
         request: function (config) {
             var deferred = $q.defer();
-            if (Auth.authz.token) {
-                Auth.authz.updateToken(5).success(function() {
+            if (keycloakAuth.authz.token) {
+                keycloakAuth.authz.updateToken(5).success(function() {
                     config.headers = config.headers || {};
-                    config.headers.Authorization = 'Bearer ' + Auth.authz.token;
-
+                    config.headers.Authorization = 'Bearer ' + keycloakAuth.authz.token;
                     deferred.resolve(config);
                 }).error(function() {
-                        deferred.reject('Failed to refresh token');
+                    deferred.reject('Failed to refresh token');
                 });
             }
             return deferred.promise;
         }
     };
-});
+}).config(['$httpProvider','IdentityConfig', function($httpProvider,IdentityConfig) {
+    if ( IdentityConfig.securedByKeycloak() ) {
+        $httpProvider.interceptors.push('authInterceptor');
+    }
+}]);
 
 // End-of Keycloak configuration ***
 
