@@ -19,10 +19,12 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
@@ -63,9 +65,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         this.accountsDao = storage.getAccountsDao();
         this.identityInstancesDao = storage.getIdentityInstancesDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
-        this.userIdentityContext = new UserIdentityContext(identityContext, request, accountsDao, identityInstance);
         this.identityInstance = determineIdentityInstance();
-
+        this.userIdentityContext = new UserIdentityContext(identityContext, request, accountsDao, identityInstance);
     }
 
     /**
@@ -160,8 +161,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     protected void secure (final String permission) {
         Set<String> roleNames = null;
-        if ( userIdentityContext.getOauthToken() != null )
-            roleNames = userIdentityContext.getOauthToken().getResourceAccess(getRestcommResourceName()).getRoles();
+        if ( userIdentityContext.getOauthToken() != null ) {
+            // oauth token roles are not used even even if oauth token is present for common operations.
+            // Instead, the roles from the effective account are used
+            //roleNames = userIdentityContext.getOauthToken().getResourceAccess(getRestcommResourceName()).getRoles();
+            Account effectiveAccount = userIdentityContext.getEffectiveAccount();
+            if ( effectiveAccount != null && !StringUtils.isEmpty(effectiveAccount.getRole()) ) {
+                roleNames = new HashSet<String>();
+                roleNames.add(effectiveAccount.getRole());
+            }
+        }
         else
         if ( userIdentityContext.getAccountKey() != null ) {
             if ( userIdentityContext.getAccountKey().isVerified() )
