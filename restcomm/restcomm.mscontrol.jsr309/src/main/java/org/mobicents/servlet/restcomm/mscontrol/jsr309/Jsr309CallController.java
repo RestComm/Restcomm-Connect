@@ -277,6 +277,12 @@ public class Jsr309CallController extends MediaServerController {
                                 // Get the generated offer
                                 localSdp = new String(event.getMediaServerSdp());
 
+                                // hrosa - necessary patch for Dialogic XMS WebRTC calls
+                                // https://github.com/RestComm/Restcomm-Connect/issues/986
+                                if (webrtc) {
+                                    localSdp = localSdp.replaceAll("SAVP ", "SAVPF ");
+                                }
+
                                 // Move to a pending state waiting for an answer
                                 fsm.transition(event, pending);
                             }

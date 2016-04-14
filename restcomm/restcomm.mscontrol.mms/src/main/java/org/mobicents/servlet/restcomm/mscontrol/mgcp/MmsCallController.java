@@ -205,8 +205,11 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.uninitialized, this.closingRemoteConnection));
         transitions.add(new Transition(this.acquiringMediaGatewayInfo, this.acquiringMediaSession));
         transitions.add(new Transition(this.acquiringMediaSession, this.acquiringBridge));
+        transitions.add(new Transition(this.acquiringMediaSession, this.stopping));
         transitions.add(new Transition(this.acquiringBridge, this.creatingMediaGroup));
+        transitions.add(new Transition(this.acquiringBridge, this.stopping));
         transitions.add(new Transition(this.creatingMediaGroup, this.acquiringRemoteConnection));
+        transitions.add(new Transition(this.creatingMediaGroup, this.stopping));
         transitions.add(new Transition(this.creatingMediaGroup, this.failed));
         transitions.add(new Transition(this.acquiringRemoteConnection, this.initializingRemoteConnection));
         transitions.add(new Transition(this.initializingRemoteConnection, this.openingRemoteConnection));
@@ -447,7 +450,8 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(pending) || is(updatingRemoteConnection) || is(active) || is(acquiringInternalLink) || is(updatingInternalLink)) {
+        if (is(pending) || is(updatingRemoteConnection) || is(active) || is(acquiringInternalLink) || is(updatingInternalLink)
+                || is(creatingMediaGroup) || is(acquiringBridge) || is(acquiringMediaSession)) {
             fsm.transition(message, stopping);
         }
     }
@@ -1010,11 +1014,15 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
-            // Stop the media group
-            mediaGroup.tell(new StopMediaGroup(), super.source);
+            if (mediaGroup != null) {
+                // Stop the media group
+                mediaGroup.tell(new StopMediaGroup(), super.source);
+            }
 
-            // Stop bridge endpoint
-            bridgeEndpoint.tell(new DestroyEndpoint(), super.source);
+            if (bridgeEndpoint != null) {
+                // Stop bridge endpoint
+                bridgeEndpoint.tell(new DestroyEndpoint(), super.source);
+            }
         }
 
     }

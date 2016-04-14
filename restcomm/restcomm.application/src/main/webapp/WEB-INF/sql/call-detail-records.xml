@@ -5,8 +5,8 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
-    INSERT INTO "restcomm_call_detail_records" ("sid", "parent_call_sid", "date_created", "date_updated", "account_sid", "recipient", "sender", "phone_number_sid", "status",
-    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration") VALUES (#{sid}, #{parent_call_sid}, #{date_created},
+    INSERT INTO "restcomm_call_detail_records" ("sid", "instanceid", "parent_call_sid", "date_created", "date_updated", "account_sid", "recipient", "sender", "phone_number_sid", "status",
+    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration") VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created},
     #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction},
     #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration});
   </insert>
@@ -20,6 +20,9 @@
 	<select id="getTotalCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE "account_sid"=#{accountSid}
 
+		<if test="instanceid != null">
+			AND "instanceid" like #{instanceid}
+		</if>
 		<if test="recipient != null">
 			AND "recipient" like #{recipient}
 		</if>
@@ -47,6 +50,9 @@
 	<select id="getCallDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" AS "restcomm_call_detail_records" WHERE "account_sid"=#{accountSid}
 
+		<if test="instanceid != null">
+			AND "instanceid" like #{instanceid}
+		</if>
 		<if test="recipient != null">
 			AND "recipient" like #{recipient}
 		</if>
@@ -97,6 +103,10 @@
   <select id="getCallDetailRecordsByParentCall" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "parent_call_sid"=#{parent_call_sid};
   </select>
+
+	<select id="getCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
+		SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid};
+	</select>
   
   <delete id="removeCallDetailRecord" parameterType="string">
     DELETE FROM "restcomm_call_detail_records" WHERE "sid"=#{sid};
