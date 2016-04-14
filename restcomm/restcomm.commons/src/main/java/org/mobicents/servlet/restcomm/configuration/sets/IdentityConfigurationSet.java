@@ -5,6 +5,14 @@ package org.mobicents.servlet.restcomm.configuration.sets;
  */
 public interface IdentityConfigurationSet {
 
+    /**
+     * Keycloak base url like: http://authserver:8080/auth.
+     *
+     * It also controls whether Keycloak or Restcomm will be used as an authorization server. Leave it blank to
+     * set Restcomm operate on legacy mode.
+     *
+     * @return the keycloak base url
+     */
     String getAuthServerUrl();
 
     String getRealm();

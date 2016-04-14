@@ -20,6 +20,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
@@ -295,6 +296,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             RestcommConfiguration restcommConfig = initRestcommConfiguration(xml);
             // Initialize identityContext
             IdentityContext identityContext = new IdentityContext(restcommConfig.getIdentity().getRealm(), restcommConfig.getIdentity().getRealmkey(), restcommConfig.getIdentity().getAuthServerUrl(), new RestcommRoles(xml), storage.getIdentityInstancesDao() );
+            String authServerUrl = restcommConfig.getIdentity().getAuthServerUrl();
+            if ( StringUtils.isEmpty(authServerUrl) ) {
+                logger.info("Restcomm running in compatibility authorization mode. No external Keycloak server will be used.");
+            } else {
+                logger.info("Restcomm will use external Keycloak authorization server at: " + authServerUrl + " - Realm: " + restcommConfig.getIdentity().getRealm() );
+            }
+
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
             // Create the media gateway.

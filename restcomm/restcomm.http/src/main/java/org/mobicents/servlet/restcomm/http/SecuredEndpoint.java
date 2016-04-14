@@ -184,10 +184,32 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
-    // Checks is the effective account (aka 'subject' in shoro terminology) has the specified role. Throws an exception if not.
-    protected boolean hasRole(final String role) {
+    /**
+     * Checks is the effective account (aka 'subject' in shiro terminology) has the specified role. Throws an exception if not.
+     * At some point we should add support for multiple roles.
+     *
+     * @param role
+     * @return
+     */
+    protected boolean hasAccountRole(final String role) {
+        Account account = userIdentityContext.getEffectiveAccount();
+        if (account != null) {
+            if (role != null && role.equals(account.getRole())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the oauth token has the specified role. It's not effective if no keycloak server is used.
+     * @param role
+     * @return
+     */
+    protected boolean hasOauthRole(final String role) {
         throw new NotImplementedException();
     }
+
 
     /**
      * Checks if the a user with roles 'roleNames' is allowed to perform actions in 'neededPermissionString'
@@ -262,6 +284,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             return AuthOutcome.FAILED;
 
         Set<String> roleNames = accountKey.getRoles();
+        // if operating user is an administrator grant access without asking questions
+        if (roleNames.contains(IdentityConfigurationSet.ADMINISTRATOR_ROLE))
+            return AuthOutcome.OK;
+
         if ( !roleNames.contains(IdentityConfigurationSet.ADMINISTRATOR_ROLE) && secureApi(permission, roleNames) == AuthOutcome.FAILED )
             return AuthOutcome.FAILED;
         // check if the logged user has access to the account that is operated upon

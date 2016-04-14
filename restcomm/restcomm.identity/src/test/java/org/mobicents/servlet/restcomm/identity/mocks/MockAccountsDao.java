@@ -61,18 +61,6 @@ public class MockAccountsDao implements AccountsDao {
         return null;
     }
 
-    @Override
-    public Account getAccountByEmail(String arg0) {
-        throw new UnsupportedOperationException();
-    }
-
-
-
-    @Override
-    public List<Account> getAccounts() {
-        return accounts;
-    }
-
     public Account buildTestAccount(Sid accountSid, String emailAddress, String friendlyName, String authToken, Sid parentAccountSid  ) {
         final DateTime now = DateTime.now();
         if (accountSid == null)

@@ -140,7 +140,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }
 
         try {
-            if ((hasRole("Administrator") && secureLevelControlAccounts(account))
+            if ((hasAccountRole("Administrator") && secureLevelControlAccounts(account))
                     || isSecured(account,"RestComm:Modify:Accounts")) {
             } else {
                 return status(UNAUTHORIZED).build();
@@ -220,7 +220,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             final Account parent = accountsDao.getAccount(sid);
             if (parent.getStatus().equals(Account.Status.ACTIVE) ) {
                 secure("RestComm:Create:Accounts");
-                if (!hasRole("Administrator") || !data.containsKey("Role")) {
+                if (!hasAccountRole("Administrator") || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
                 }
                 accountsDao.addAccount(account);
@@ -275,7 +275,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } else {
             account = update(account, data);
             try {
-                if ((hasRole("Administrator") && secureLevelControlAccounts(account))
+                if ((hasAccountRole("Administrator") && secureLevelControlAccounts(account))
                         || isSecured(account,"RestComm:Modify:Accounts")) {
                     accountsDao.updateAccount(account);
                 } else {
@@ -312,6 +312,8 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     private boolean secureLevelControlAccounts(Account reference) {
         Account subjectAccount = userIdentityContext.getEffectiveAccount();
         Account referenceAccount = reference;
+        if (subjectAccount == null || reference == null)
+            throw new AuthorizationException();
         if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getSid()))) {
             if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getAccountSid()))) {
                 throw new AuthorizationException();
