@@ -25,17 +25,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
-
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.exceptions.ConstraintViolationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
@@ -55,8 +52,6 @@ public final class MybatisAccountsDao implements AccountsDao {
     public void addAccount(final Account account) {
         final SqlSession session = sessions.openSession();
         try {
-            if ( !checkEmailRestriction(account) )
-                throw new ConstraintViolationException("Cannot add account '" + account.getSid() + "'. email_address '" + account.getEmailAddress() + "' already taken.");
             session.insert(namespace + "addAccount", toMap(account));
             session.commit();
         } finally {
@@ -80,15 +75,6 @@ public final class MybatisAccountsDao implements AccountsDao {
         if (account == null) {
             account = getAccount(namespace + "getAccount", name);
         }
-
-        return account;
-    }
-
-    @Override
-    public Account getAccountByEmail(final String name) {
-        Account account = null;
-
-        account = getAccount(namespace + "getAccountByEmail", name);
 
         return account;
     }
@@ -124,30 +110,6 @@ public final class MybatisAccountsDao implements AccountsDao {
         }
     }
 
-    /**
-     * Returns all available accounts.
-     *
-     * If toplevel is true it will return only the toplevel accounts.
-     * @param toplevel
-     * @return
-     */
-    @Override
-    public List<Account> getAccounts() {
-        final SqlSession session = sessions.openSession();
-        try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAllAccounts");
-            final List<Account> accounts = new ArrayList<Account>();
-            if (results != null && !results.isEmpty()) {
-                for (final Map<String, Object> result : results) {
-                    accounts.add(toAccount(result));
-                }
-            }
-            return accounts;
-        } finally {
-            session.close();
-        }
-    }
-
     @Override
     public void removeAccount(final Sid sid) {
         removeAccount(namespace + "removeAccount", sid);
@@ -171,36 +133,11 @@ public final class MybatisAccountsDao implements AccountsDao {
     private void updateAccount(final String selector, final Account account) {
         final SqlSession session = sessions.openSession();
         try {
-            if ( !checkEmailRestriction(account) )
-                throw new ConstraintViolationException("Cannot add account '" + account.getSid() + "'. email_address '" + account.getEmailAddress() + "' already taken.");
             session.update(selector, toMap(account));
             session.commit();
         } finally {
             session.close();
         }
-    }
-
-    /**
-     * Check if there is already a different account with the email address of addedAccount. If there such
-     * a conflict, return false. Otherwise return true.
-     *
-     * This function enforces email uniqueness from the application layer (not the database layer). It's not
-     * an atomic action so, beware.
-     *
-     * @param addedAccount
-     * @return
-     */
-    private boolean checkEmailRestriction(Account addedAccount) {
-        if ( StringUtils.isEmpty(addedAccount.getEmailAddress()) )
-            return true; // email address is already empty so we are safe to proceed
-        Account existingAccount = getAccountByEmail(addedAccount.getEmailAddress());
-        if (existingAccount == null)
-            return true; // no account found with that email address
-        else
-        if (existingAccount.getSid().equals(addedAccount.getSid()))
-            return true; // ok, its the same account.
-        else
-            return false;
     }
 
     private Account toAccount(final Map<String, Object> map) {
