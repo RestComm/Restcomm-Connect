@@ -1686,7 +1686,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
-        if (!dialActionExecuted && verb != null) {
+        if (!dialActionExecuted && verb != null && dial.equals(verb.name())) {
             logger.info("Proceeding to execute Dial Action attribute");
             this.dialActionExecuted = true;
             final List<NameValuePair> parameters = parameters();
@@ -2301,12 +2301,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     records.updateCallDetailRecord(callRecord);
                 }
             if (!dialActionExecuted) {
-                // FinishRecording already runs the actionUrl using the
-                // downloader.tell(request,...
-                if (!StopInterpreter.class.equals(klass)
-                        && !CallStateChanged.class.equals(klass)) {
-                    executeDialAction(message, outboundCall);
-                }
+                executeDialAction(message, outboundCall);
                 callback(true);
             }
             // XXX review bridge cleanup!!
@@ -2529,6 +2524,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Stop ringing from inbound call
             final StopMediaGroup stop = new StopMediaGroup();
             call.tell(stop, super.source);
+
 
             // Wait for a Media Group Response to finally ask Bridge to join calls
             // Check method onReceive() for MediaGroupResponse

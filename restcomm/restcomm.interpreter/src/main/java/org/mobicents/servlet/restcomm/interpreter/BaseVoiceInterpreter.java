@@ -457,8 +457,6 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 Future<Object> future = ask(downloader, requestCallback, timeout);
                 DownloaderResponse downloaderResponse = null;
                 try {
-                    // the Future Await.result causes issue #859. it is disabled
-                    // as the downloaderResponse is not used
                     downloaderResponse = (DownloaderResponse) Await.result(
                             future, Duration.create(10, TimeUnit.SECONDS));
 
@@ -1839,9 +1837,25 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        // using self() hangs after finishOnKey
+
                         // downloader.tell(request, self());
-                        downloader.tell(request, null);
+
+                        final Timeout timeout = new Timeout(Duration.create(5,
+                                TimeUnit.SECONDS));
+                        Future<Object> future = ask(downloader, request,
+                                timeout);
+                        DownloaderResponse downloaderResponse = null;
+                        try {
+
+                            downloaderResponse = (DownloaderResponse) Await
+                                    .result(future, Duration.create(10,
+                                            TimeUnit.SECONDS));
+
+
+                        } catch (Exception e) {
+                            logger.error("DownloaderResponse callback Exception when processing");
+                        }
+
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
