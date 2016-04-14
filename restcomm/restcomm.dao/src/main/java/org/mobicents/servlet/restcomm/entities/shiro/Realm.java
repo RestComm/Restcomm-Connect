@@ -91,7 +91,7 @@ public final class Realm extends AuthorizingRealm {
                 sid = new Sid(username);
                 account = accounts.getAccount(sid);
             } else {
-                account = accounts.getAccount(username);
+                account = accounts.getAccountToAuthenticate(username);
                 sid = account.getSid();
             }
 

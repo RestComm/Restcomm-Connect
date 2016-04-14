@@ -46,6 +46,7 @@ import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -594,6 +595,7 @@ public class UssdCall extends UntypedActor  {
             if (callDetailrecordsDao != null) {
                 final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                 builder.setSid(id);
+                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                 builder.setDateCreated(created);
                 builder.setAccountSid(accountId);
                 builder.setTo(to.getUser());
