@@ -12,4 +12,4 @@ bin
 .DS_Store
 **/*~
 log
-screen
+csv
