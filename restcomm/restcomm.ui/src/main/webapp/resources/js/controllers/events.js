@@ -32,9 +32,12 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    if (error == "MISSING_ACCOUNT_SID")
 	        $state.go("public.login");
 	    else
-	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED")
-	        $state.go("user.")
-
+	    if (error == "MISSING_LOGGED_ACCOUNT") {
+	        $state.go("public.login");
+	    }
+	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
+	        console.log("Identity Instance not registered.");
+	    }
 	});
 });
 

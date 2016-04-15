@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.http;
 
 import com.google.gson.Gson;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.http.responseentities.IdentityServerEntity;
 
@@ -49,6 +50,10 @@ public class IdentityServerEndpointJson extends AbstractEndpoint {
 
     @GET
     public Response getServerConfig() {
+        // if no auth server has been configured return a 404
+        if (StringUtils.isEmpty(config.getAuthServerUrl()))
+            return Response.status(Response.Status.NOT_FOUND).build();
+        // else
         IdentityServerEntity server = new IdentityServerEntity(config.getRealm(), config.getRealmkey(), config.getAuthServerUrl());
         Gson gson = new Gson();
         String json = gson.toJson(server);

@@ -195,7 +195,10 @@ angular.element(document).ready(['$http',function ($http) {
     console.log(serverConfig);
     serverPromise.resolve(serverConfig);
   }).error( function (response) {
-    serverPromise.reject();
+    if (response.status == 404)
+        serverPromise.resolve(null);
+    else
+        serverPromise.reject();
   });
   // try to retrieve IdentityInstance
   var instancePromise = $q.defer();
@@ -335,12 +338,12 @@ angular
 // There is a circular dependency issue when directly injecting AuthService in the function. A workaround using $injector has
 // been used - http://stackoverflow.com/questions/20647483/angularjs-injecting-service-into-a-http-interceptor-circular-dependency
 rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location','$injector',function($q,$location,$injector){
+  factory('authHttpResponseInterceptor',['$q','$location','$injector','IdentityConfig',function($q,$location,$injector,IdentityConfig){
     return {
       request: function(config) {
+          var restcomm_prefix = "/restcomm/"
     	  var rvd_prefix = "/restcomm-rvd/";
-    	  if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix ) {
-    		  //console.log("Adding auth headers to RVD request - " + config.url);
+    	  if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
     		  var AuthService = $injector.get('AuthService');
     		  var account = AuthService.getAccount();
     		  if (!!account) {
@@ -349,25 +352,29 @@ rcMod.
                   config.headers.authorization = auth_header;
 		      }
     	  }
-	      return config;
+		  return config;
 	    },
       response: function(response){
-        if (response.status === 401) {
-          $location.path('/login').search('returnTo', $location.path());
-        }
-        return response || $q.when(response);
+            var AuthService = $injector.get('AuthService');
+            if (response.status === 401) {
+              AuthService.onAuthError();
+            }
+            return response || $q.when(response);
       },
       responseError: function(rejection) {
-        if (rejection.status === 401) {
-          $location.path('/login').search('returnTo', $location.path());
-        }
-        return $q.reject(rejection);
+            var AuthService = $injector.get('AuthService');
+            if (rejection.status === 401) {
+              AuthService.onAuthError();
+            }
+            return $q.reject(rejection);
       }
     }
   }])
-  .config(['$httpProvider',function($httpProvider) {
-    // http Intercpetor to check auth failures for xhr requests
-    $httpProvider.interceptors.push('authHttpResponseInterceptor');
+  .config(['$httpProvider','IdentityConfig', function($httpProvider, IdentityConfig) {
+    if ( IdentityConfig.securedByRestcomm() ) {
+        // http Intercpetor to check auth failures for xhr requests
+        $httpProvider.interceptors.push('authHttpResponseInterceptor');
+    }
   }]);
 
 /*
