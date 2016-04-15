@@ -1,0 +1,41 @@
+= Restcomm RCML – Pause
+
+[[pause]]
+== Pause
+The *<Pause>* verb waits silently for a specific number of seconds. If <Pause> is the first verb in a RCML response, RestComm will wait the specified number of seconds before picking up the call.  
+
+=== Pause Attributes
+
+[cols=",,",options="header",]
+|===================================
+|Name |Allowed Values |Default Value
+|length |integer > 0 |1 second
+|===================================
+
+* *length.* The 'length' attribute specifies how many seconds RestComm will wait silently before continuing on.
+
+=== Nesting
+The <Pause> verb can not have any other verbs or nouns nested.
+
+=== Examples
+For an example of how to use the *<Pause>* verb see below.
+
+----
+<Response>
+    <Pause length="5"/>
+</Response>
+----
+
+[[examples-2]]
+==== Delayed pickup
+
+This example demonstrates using `<Pause>` to wait between two `<Say>` verbs.
+
+----
+<?xml version="1.0" encoding="UTF-8" ?>
+<Response>
+    <Say>I will pause 10 seconds starting now!</Say>
+    <Pause length="10"/>
+    <Say>I just paused 10 seconds</Say>
+</Response>
+----

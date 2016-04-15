@@ -1,0 +1,64 @@
+= Restcomm RCML – Fax
+
+[[fax]]
+== Fax
+
+The *<Fax>* verb sends a fax to some a fax machine.
+
+=== Fax Attributes
+
+[cols=",,",options="header",]
+|==============================================
+|Name |Allowed Values |Default Value
+|to |phone number |see below
+|from |phone number |see below
+|action |relative or absolute URL |none
+|method |GET, POST |POST
+|statusCallback |relative or absolute URL |none
+|==============================================
+
+ 
+
+* *to.* The 'to' attribute takes a valid E.164 phone number as a value. RestComm will send a fax to this number. When sending a fax during an incoming call, 'to' defaults to the caller. When sending an fax during an outgoing call, 'to' defaults to the called party. The value of 'to' must be a valid phone number.
+* *from.* The 'from' attribute takes a valid E.164 phone number as an argument. When sending a fax during an incoming call, 'from' defaults to the calling party. When sending a fax during an outgoing call, 'from' defaults to the called party. The value of 'from' must be a valid phone number.
+* *action.* The 'action' attribute takes a URL as an argument. After processing the <Fax> verb, RestComm will make a GET or POST request to this URL with the form parameters 'FaxStatus' and 'FaxSid'. Using an 'action' URL, your application can receive synchronous notification that the message was successfully enqueued. If you provide an 'action' URL, RestComm will use the RCML received in your response to the 'action' URL request to continue the current call. Any RCML verbs occuring after a <Fax> which specifies an 'action' attribute are unreachable. If no 'action' is provided, <Fax> will finish and RestComm will move on to the next RCML verb in the document. If there is no next verb, RestComm will end the phone call.
++
+*Request Parameters*
++
+[cols=",",options="header",]
+|============================================================================
+|Parameter |Description
+|FaxSid |The Sid for the Sms message.
+|FaxStatus |The current status of the Sms message. Either 'sent' or 'failed'.
+|============================================================================
+
+ 
+
+* *method.* The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action' URL via HTTP GET or POST. This attribute is modeled after the HTML form 'method' attribute.
+* *statusCallback.* The 'statusCallback' attribute takes a URL as an argument. When the fax is actually sent, or if sending fails, RestComm will make an asynchronous POST request to this URL with the parameters 'FaxStatus' and 'FaxSid'. Note, 'statusCallback' always uses HTTP POST to request the given url.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|====================================================================
+|Parameter |Description
+|FaxSid |The Sid for the fax message.
+|FaxStatus |The current status of the fax. Either 'sent' or 'failed'.
+|====================================================================
+
+ 
+
+=== Nesting
+
+The <Fax> verb can not have any other verbs or nouns nested.
+
+=== Examples
+For an example of how to use the <Fax> verb see below.
+
+----
+<Response>
+    <Fax>This is a test fax.</Fax>
+</Response>
+----
+
+ 
