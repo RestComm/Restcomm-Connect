@@ -180,7 +180,7 @@ fi
 source $BASEDIR/autoconfigure.sh
 
 # start restcomm in selected run mode
-if [ -z "$MS_ADDRESS" ] || [ "$MS_ADDRESS" == "$BIND_ADDRESS" ]; then
+if [ "${MS_EXTERNAL^^}" = "FALSE"  ]; then
 	startMediaServer
 fi
 startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
