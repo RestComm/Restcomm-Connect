@@ -24,14 +24,11 @@ package org.mobicents.servlet.restcomm.http;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.entities.Geolocation;
 
 /**
  * @author fernando.mendioroz@telestax.com (Fernando Mendioroz)
@@ -49,25 +46,4 @@ public class GeolocationJsonEndpoint extends GeolocationEndpoint {
     public Response getGeolocationsAsJson(@PathParam("accountSid") final String accountSid) {
         return getGeolocations(accountSid, APPLICATION_JSON_TYPE);
     }
-
-    @Path("/Immediate.json")
-    @POST
-    public Response putImmediateGeolocation(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Notification.json")
-    @POST
-    public Response putNotificationGeolocation(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, APPLICATION_JSON_TYPE);
-    }
-
-    /*
-     * @POST public Response putGeolocation(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String,
-     * String> data, Geolocation.GeolocationType glType) { return putGeolocation(accountSid, data, glType,
-     * APPLICATION_JSON_TYPE); }
-     */
-
 }

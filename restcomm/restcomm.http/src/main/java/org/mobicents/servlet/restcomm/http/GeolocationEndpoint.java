@@ -234,11 +234,11 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 String geofenceEvent = data.getFirst("GeofenceEvent");
                 if (!geofenceEvent.equalsIgnoreCase("in") && !geofenceEvent.equalsIgnoreCase("out")
                         && !geofenceEvent.equalsIgnoreCase("in-out")) {
-                        return rejectedGeolocationRequest(accountSid, data, glType, "GeofenceEvent value not API compliant");
+                    return rejectedGeolocationRequest(accountSid, data, glType, "GeofenceEvent value not API compliant");
                 }
             }
         } catch (Exception exception) {
-            System.out.println("Exception: "+exception.getMessage());
+            System.out.println("Exception: " + exception.getMessage());
             return rejectedGeolocationRequest(accountSid, data, glType, "Exception for GeofenceEvent value");
         }
 
@@ -259,7 +259,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 }
             }
         } catch (Exception exception) {
-                System.out.println("Exception: "+exception.getMessage());
+            System.out.println("Exception: " + exception.getMessage());
             return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLatitude value");
         }
 
@@ -280,7 +280,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 }
             }
         } catch (Exception exception) {
-                System.out.println("Exception: "+exception.getMessage());
+            System.out.println("Exception: " + exception.getMessage());
             return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLongitude value");
         }
 
@@ -318,6 +318,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             Geolocation.GeolocationType glType) {
         final Geolocation.Builder builder = Geolocation.builder();
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
+        String geoloctype = glType.toString();
         builder.setSid(sid);
         DateTime currentDateTime = DateTime.now();
         System.out.println("GeolocationEndpoint buildGeolocation, currentDateTime: " + currentDateTime);
@@ -351,7 +352,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
-                .append("/Geolocation/").append(sid.toString());
+                .append("/Geolocation/" + geoloctype + "/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
     }
@@ -359,6 +360,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     private Geolocation buildIncorrectGeolocationRequest(final Sid accountSid, final MultivaluedMap<String, String> data,
             Geolocation.GeolocationType glType, final Geolocation.Builder builder) {
         final Sid sid = Sid.generate(Sid.Type.GEOLOCATION);
+        String geoloctype = glType.toString();
         builder.setSid(sid);
         DateTime currentDateTime = DateTime.now();
         builder.setDateUpdated(currentDateTime);
@@ -371,7 +373,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
-                .append("/Geolocation/").append(sid.toString());
+                .append("/Geolocation/" + geoloctype + "/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
     }
@@ -394,6 +396,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private Geolocation buildIncorrectGeolocationUpdateRequest(final Sid accountSid, final Sid sid,
             final MultivaluedMap<String, String> data, Geolocation.GeolocationType glType, final Geolocation.Builder builder) {
+        String geoloctype = glType.toString();
         builder.setSid(sid);
         DateTime currentDateTime = DateTime.now();
         builder.setDateUpdated(currentDateTime);
@@ -406,7 +409,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
-                .append("/Geolocation/").append(sid.toString());
+                .append("/Geolocation/" + geoloctype + "/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
     }
@@ -652,7 +655,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             }
         }
         if (data.containsKey("LocationTimestamp")) {
-            try{
+            try {
                 updatedGeolocation = updatedGeolocation.setLocationTimestamp(getDateTime("LocationTimestamp", data));
             } catch (Exception exception) {
                 DateTime locTimestamp = DateTime.parse("1900-01-01");
@@ -727,7 +730,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     }
 
-
     private boolean validateWGS84(String coordinates) {
 
         String degrees = "°";
@@ -747,6 +749,5 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return WGS84_validation;
         }
     }
-
 
 }

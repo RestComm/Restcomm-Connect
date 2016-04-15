@@ -156,8 +156,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonObject getNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-            String adminAccountSid,
-            String geolocationSid) {
+            String adminAccountSid, String geolocationSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getNotificationGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
@@ -232,12 +231,10 @@ public class RestcommGeolocationsTool {
     }
 
     public void deleteNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-            String adminAccountSid,
-            String geolocationSid) throws IOException {
+            String adminAccountSid, String geolocationSid) throws IOException {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
         String url = getNotificationGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
-                adminAccountSid,
-                geolocationSid, false);
+                adminAccountSid, geolocationSid, false);
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
         WebResource webResource = jerseyClient.resource(url);
