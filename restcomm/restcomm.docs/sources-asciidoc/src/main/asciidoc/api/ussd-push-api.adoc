@@ -1,0 +1,31 @@
+= Restcomm API – USSD Push
+
+[[ussd-push]]
+== UssdPush
+A *UssdPush* resource represents a message sent from Restcomm to a USSD gateway.
+
+=== UssdPush Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/UssdPush*
+
+=== Supported Operations
+
+*HTTP POST* Sends a Ussd message to the configured USSD Gataeway 
+
+== Example of UssdPush
+The USSD gateway to which Restcomm must send the UssdMessage must be configured in the restcomm.xml file. IP address and port must be configured. Username/password for the USSD are optional.
+
+----
+    <!-- TelScale USSD Gateway -->
+    <ussd-gateway>
+    <ussd-gateway-uri>IP_USSD_GW:PORT_NUMBER</ussd-gateway-uri>
+    <ussd-gateway-user></ussd-gateway-user>
+    <ussd-gateway-password></ussd-gateway-password>
+    </ussd-gateway>
+----
+
+See below a curl example for the USSD Push:
+
+----
+curl -X POST -H "application/json" http://ACae6e420f425248d6a26948c17a9e2acf:YOUR_PWD@RESTCOMM_IP_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a-d "From=Restcomm" -d "To=123" -d "Url=http://RESTCOMM_IP_ADDRESS:8080/restcomm-rvd/services/apps/YOUR_USSD_APP/controller"
+----

@@ -1,0 +1,386 @@
+= Restcomm API – Incoming Phone Numbers
+
+[[IncomingPhoneNumbers]]
+== IncomingPhoneNumbers
+
+An IncomingPhoneNumber instance resource represents a Restcomm phone number 
+
+The IncomingPhoneNumbers list resource represents an account's Restcomm phone numbers. You can POST to the list resource to provision a new Restcomm number. To find a new number to provision use the subresources of the AvailablePhoneNumbers resource. 
+
+You can transfer phone numbers between two Restcomm accounts if you're using subaccounts. For details, see Exchanging Numbers Between Subaccounts. Provisioning a phone number is a two-step process. First, you must find an available phone number to provision using the subresources of the AvailablePhoneNumbers resource. Second, you must POST to the IncomingPhoneNumbers list resource, documented below.
+
+[[incomingphonenumber-instance-resource]]
+=== IncomingPhoneNumber Instance Resource
+
+[[resource-uri]]
+==== Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/IncomingPhoneNumbers/\{IncomingPhoneNumberSid}*
+
+[[resource-properties]]
+==== Resource Properties
+
+[cols=",",]
+|==================================================================================================================================================================================================================================================
+|*Property* |*Description*
+|Sid |A 34 character string that uniquely identifies this resource.
+|DateCreated |The date that this resource was created, given as GMThttp://www.ietf.org/rfc/rfc2822.txt[RFC 2822] format.
+|DateUpdated |The date that this resource was last updated, given as GMThttp://www.ietf.org/rfc/rfc2822.txt[RFC 2822] format.
+|FriendlyName |A human readable descriptive text for this resource, up to 64 characters long. By default, the FriendlyName is a nicely formatted version of the phone number.
+|AccountSid |The unique id of the Account responsible for this phone number.
+|PhoneNumber |The incoming phone number. e.g., +16175551212 (http://en.wikipedia.org/wiki/E.164[E.164] format)
+|ApiVersion |Calls to this phone number will start a new RCML session with this API version.
+|VoiceCallerIdLookup |Look up the caller's caller-ID name from the CNAM database ($0.01 per look up). Either true or false.
+|VoiceUrl |The URL Restcomm will request when this phone number receives a call.
+|VoiceMethod |The HTTP method Restcomm will use when requesting the above Url. Either GET or POST.
+|VoiceFallbackUrl |The URL that Restcomm will request if an error occurs retrieving or executing the RCML requested by Url.
+|VoiceFallbackMethod |The HTTP method Restcomm will use when requesting the VoiceFallbackUrl. Either GET or POST.
+|StatusCallback |The URL that Restcomm will request to pass status parameters (such as call ended) to your application.
+|StatusCallbackMethod |The HTTP method Restcomm will use to make requests to the StatusCallback URL. Either GET or POST.
+|VoiceApplicationSid |The 34 character sid of the application Restcomm should use to handle phone calls to this number. If a VoiceApplicationSid is present, Restcomm will ignore all of the voice urls above and use those set on the application.
+|SmsUrl |The URL Restcomm will request when receiving an incoming SMS message to this number.
+|SmsMethod |The HTTP method Restcomm will use when making requests to the SmsUrl. Either GET or POST.
+|SmsFallbackUrl |The URL that Restcomm will request if an error occurs retrieving or executing the RCML from SmsUrl.
+|SmsFallbackMethod |The HTTP method Restcomm will use when requesting the above URL. Either GET or POST.
+|SmsApplicationSid |The 34 character sid of the application Restcomm should use to handle SMSs sent to this number. If a SmsApplicationSid is present, Restcomm will ignore all of the SMS urls above and use those set on the application.
+|Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are Voice, SMS, and MMS with each having a value of either true or false.
+|AddressRequirements |This indicates whether the phone number requires you or your customer to have an Address registered with Restcomm. Possible values are none, any, local, or foreign.
+|Beta |Phone numbers new to the Restcomm platform are marked as beta. Possible values are either true or false.
+|Uri |The URI for this resource, relative to https://api.Restcomm.com.
+|==================================================================================================================================================================================================================================================
+
+[[address-requirement-values]]
+==== Address Requirement Values
+
+The following are the possible values for the address_required property.
+
+[cols=",",]
+|==============================================================================
+|*Status* |*Description*
+|none |An Address is not required for this phone number.
+|any |Your account must have an Address, but it can be anywhere in the world.
+|local |Your account must have an Address within the phone number's country.
+|foreign |Your account must have an Address outside the phone number's country.
+|==============================================================================
+
+[[http-methods]]
+==== HTTP Methods
+
+[[http-get]]
+===== HTTP GET
+
+
+[[http-post-and-put]]
+===== HTTP POST and PUT
+
+Tries to update the incoming phone number's properties, and returns the updated resource representation if successful. The returned response is identical to that returned above when making a GET request.
+
+[[optional-parameters]]
+====== Optional Parameters
+
+You may specify one or more of the following parameters to update this phone number's respective properties:
+
+[cols=",",]
+|==========================================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|FriendlyName |A human readable description of the new incoming phone number resource, with maximum length 64 characters.
+|ApiVersion |Calls to this phone number will start a new RCML session with this API version - 2012-04-24
+|VoiceUrl |The URL that Restcomm should request when somebody dials the phone number.
+|VoiceMethod |The HTTP method that should be used to request the VoiceUrl. Either GET or POST.
+|VoiceFallbackUrl |A URL that Restcomm will request if an error occurs requesting or executing the RCML defined by VoiceUrl.
+|VoiceFallbackMethod |The HTTP method that should be used to request the VoiceFallbackUrl. Either GET or POST.
+|StatusCallback |The URL that Restcomm will request to pass status parameters (such as call ended) to your application.
+|StatusCallbackMethod |The HTTP method Restcomm will use to make requests to the StatusCallback URL. Either GET or POST.
+|VoiceCallerIdLookup |Do a lookup of a caller's name from the CNAM database and post it to your app. Either true or false.
+|VoiceApplicationSid |The 34 character sid of the application Restcomm should use to handle phone calls to this number. If a VoiceApplicationSid is present, Restcomm will ignore all of the voice urls above and use those set on the application instead.
+|SmsUrl |The URL that Restcomm should request when somebody sends an SMS to the new phone number.
+|SmsMethod |The HTTP method that should be used to request the SmsUrl. Either GET or POST.
+|SmsFallbackUrl |A URL that Restcomm will request if an error occurs requesting or executing the RCML defined by SmsUrl.
+|SmsFallbackMethod |The HTTP method that should be used to request the SmsFallbackUrl. Either GET or POST.
+|SmsApplicationSid |The 34 character sid of the application Restcomm should use to handle SMSs sent to this number. If a SmsApplicationSid is present, Restcomm will ignore all of the SMS urls above and use those set on the application instead.
+|AccountSid |The unique 34 character id of the account to which you wish to transfer this phone number.
+|==========================================================================================================================================================================================================================================================
+
+[[http-delete]]
+===== HTTP DELETE
+
+Release this phone number from your account. Restcomm will no longer answer calls to this number, and you will stop being billed the monthly phone number fee. The phone number will eventually be recycled and potentially given to another customer, so use with care. If you make a mistake, contact us. We may be able to give you the number back. If successful, returns an HTTP 204 response with no body.
+
+[[incomingphonenumbers-list-resource]]
+=== IncomingPhoneNumbers List Resource
+
+
+[[resource-uri-1]]
+==== Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/IncomingPhoneNumbers*
+
+[[http-methods]]
+==== HTTP Methods
+
+[[http-get-1]]
+===== HTTP GET
+
+Returns a list of IncomingPhoneNumber resource representations, each representing a phone number given to your account. The list includes paging information.
+
+[[list-filters]]
+====== List Filters
+
+The following query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+[cols=",",]
+|============================================================================================================================================================
+|*Parameter* |*Description*
+|PhoneNumber |Only show the incoming phone number resources that match this pattern. You can specify partial numbers and use '*' as a wildcard for any digit.
+|FriendlyName |Only show the incoming phone number resources with friendly names that exactly match this name.
+|Beta |Include phone numbers new to the Restcomm platform. Possible values are either true or false. Default is true.
+|============================================================================================================================================================
+
+[[http-post]]
+===== HTTP POST
+
+Purchases a new phone number for your account. If a phone number is found for your request, Restcomm will add it to your account and bill you for the first month's cost of the phone number. If Restcomm cannot find a phone number to match your request, you will receive an HTTP 400 with Restcomm error code. To find an available phone number to POST, use the subresources of the AvailablePhoneNumbers list resource.
+
+[[required-parameters]]
+====== Required Parameters
+
+Your request *must* include *exactly one* of the following parameters:
+
+[cols=",",]
+|==============================================================================================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|PhoneNumber |The phone number you want to purchase. The number should be formatted starting with a '+' followed by the country code and the number inhttp://en.wikipedia.org/wiki/E.164[E.164] format e.g., '+15105555555'. *You must include either this or an AreaCode parameter to have your POST succeed.*
+|AreaCode |The desired area code for your new incoming phone number. Any three digit, US or Canada area code is valid. Restcomm will provision a random phone number within this area code for you. *You must include either this or a PhoneNumber parameter to have your POST succeed.* (US and Canada only)
+|==============================================================================================================================================================================================================================================================================================================
+
+If you include both parameters, we will use the AreaCode parameter and ignore the PhoneNumber provided.
+
+[[optional-parameters-1]]
+====== Optional Parameters
+
+Your request may include the following parameters:
+
+[cols=",",]
+|=====================================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|FriendlyName |A human readable description of the new incoming phone number. Maximum 64 characters. Defaults to a formatted version of the number.
+|VoiceUrl |The URL that Restcomm should request when somebody dials the new phone number.
+|VoiceMethod |The HTTP method that should be used to request the VoiceUrl. Must be either GET or POST. Defaults to POST.
+|VoiceFallbackUrl |A URL that Restcomm will request if an error occurs requesting or executing the RCML at Url.
+|VoiceFallbackMethod |The HTTP method that should be used to request the VoiceFallbackUrl. Either GET or POST. Defaults to POST.
+|StatusCallback |The URL that Restcomm will request to pass status parameters (such as call ended) to your application.
+|StatusCallbackMethod |The HTTP method Restcomm will use to make requests to the StatusCallback URL. Either GET or POST. Defaults to POST.
+|VoiceCallerIdLookup |Do a lookup of a caller's name from the CNAM database and post it to your app. Either true or false. Defaults to false.
+|VoiceApplicationSid |The 34 character sid of the application Restcomm should use to handle phone calls to the new number. If a VoiceApplicationSid is present, Restcomm will ignore all of the voice urls above and use those set on the application.
+|SmsUrl |The URL that Restcomm should request when somebody sends an SMS to the phone number.
+|SmsMethod |The HTTP method that should be used to request the SmsUrl. Must be either GET or POST. Defaults to POST.
+|SmsFallbackUrl |A URL that Restcomm will request if an error occurs requesting or executing the RCML defined by SmsUrl.
+|SmsFallbackMethod |The HTTP method that should be used to request the SmsFallbackUrl. Must be either GET or POST. Defaults to POST.
+|SmsApplicationSid |The 34 character sid of the application Restcomm should use to handle SMSs sent to the new number. If a SmsApplicationSid is present, Restcomm will ignore all of the SMS urls above and use those set on the application.
+|ApiVersion |The Restcomm REST API version to use for incoming calls made to this number. If omitted, uses 2012-04-24.
+|=====================================================================================================================================================================================================================================================
+
+If successful, Restcomm responds with a representation of the new phone number that was assigned to your account.  
+
+[[http-put]]
+===== HTTP PUT
+
+Not Supported.
+
+[[http-delete-1]]
+===== HTTP DELETE
+
+Not Supported.
+
+[[local-incomingphonenumber-factory-resource]]
+=== Local IncomingPhoneNumber Factory Resource
+
+POSTing to this resource allows you to request a new local phone number be added to your account. This subresource represents only Local phone numbers.
+
+[[resource-uri-2]]
+==== Resource URI
+
+*/2012-04-24/Accounts/\{YourAccountSid}/IncomingPhoneNumbers/Local*
+
+[[http-methods]]
+==== HTTP Methods
+
+[[http-get-2]]
+===== HTTP GET
+
+Returns a list of local <IncomingPhoneNumber> elements, each representing a local (not toll-free) phone number given to your account, under an <IncomingPhoneNumbers> list element that includes paging information. Works exactly the same as the IncomingPhoneNumber resource, but filters out toll-free numbers.
+
+[[http-post-1]]
+===== HTTP POST
+
+Adds a new phone number to your account. If a phone number is found for your request, Restcomm will add it to your account and bill you for the first month's cost of the phone number. If Restcomm can't find a phone number to match your request, you will receive an HTTP 400 with Restcomm error code. To find an available phone number to POST, use the subresources of the AvailablePhoneNumbers list resource.
+
+[[required-parameters-1]]
+====== Required Parameters
+
+Your request *must* include PhoneNumber. We do not support AreaCode for this subresource:
+
+[cols=",",]
+|==============================================================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|PhoneNumber |The phone number you want to purchase. The number should be formatted starting with a '+' followed by the country code and the number inhttp://en.wikipedia.org/wiki/E.164[E.164] format e.g., '+15105555555'. *You must include this to have your POST succeed.*
+|==============================================================================================================================================================================================================================================================================
+
+[[optional-parameters-2]]
+====== Optional Parameters
+
+The optional parameters for this request are exactly the same as POSTing directly to the IncomingPhoneNumbers/ resource. If successful, Restcomm responds with a representation of the new phone number that was assigned to your account.  
+
+[[http-put-1]]
+===== HTTP PUT
+
+Not Supported.
+
+[[http-delete-2]]
+===== HTTP DELETE
+
+Not Supported.
+
+[[toll-free-incomingphonenumber-factory-resource]]
+=== Toll-Free IncomingPhoneNumber Factory Resource
+
+This subresource represents only toll-free phone numbers. POSTing to this resource allows you to request a new toll-free phone number be added to your account.
+
+[[resource-uri-3]]
+==== Resource URI
+
+*/2012-04-24/Accounts/\{YourAccountSid}/IncomingPhoneNumbers/TollFree*
+
+[[http-methods-1]]
+==== HTTP Methods
+
+[[http-get-3]]
+===== HTTP GET
+
+Returns a list of local <IncomingPhoneNumber> elements, each representing a toll-free phone number given to your account, under an <IncomingPhoneNumbers> list element that includes paging information. Works exactly the same as the IncomingPhoneNumber resource, but filters out all numbers that aren't toll-free.
+
+[[http-post-2]]
+===== HTTP POST
+
+Adds a new phone number to your account. If a phone number is found for your request, Restcomm will add it to your account and bill you for the first month's cost of the phone number. If Restcomm can't find a phone number to match your request, you will receive an HTTP 400 with Restcomm error code. To find an available phone number to POST, use the subresources of the AvailablePhoneNumbers list resource.
+
+[[required-parameters-2]]
+====== Required Parameters
+
+Your request *must* include PhoneNumber. We do not support AreaCode for this subresource:
+
+[cols=",",]
+|===========================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|PhoneNumber |The phone number you want to purchase. The number should be formatted starting with a '+' followed by the country code and the number in E.164 format e.g., '+15105555555'. *You must include this to have your POST succeed.*
+|===========================================================================================================================================================================================================================================
+
+[[optional-parameters-3]]
+====== Optional Parameters
+
+The optional parameters for this request are exactly the same as POSTing directly to the IncomingPhoneNumbers/ resource. If successful, Restcomm will respond with a representation of the new phone number that was assigned to your account.  
+
+[[http-put-2]]
+===== HTTP PUT
+
+Not Supported.
+
+[[http-delete-3]]
+===== HTTP DELETE
+
+Not Supported.
+
+[[mobile-incomingphonenumber-factory-resource]]
+=== Mobile IncomingPhoneNumber Factory Resource
+
+POSTing to this resource allows you to request a new mobile phone number be added to your account. This subresource represents only mobile phone numbers, i.e. not toll free numbers or local numbers.
+
+[[resource-uri-4]]
+==== Resource URI
+
+*/2012-04-24/Accounts/\{YourAccountSid}/IncomingPhoneNumbers/Mobile*
+
+[[http-methods-2]]
+==== HTTP Methods
+
+[[http-get-4]]
+===== HTTP GET
+
+Returns a list of local <IncomingPhoneNumber> elements, each representing a mobile phone number given to your account, under an <IncomingPhoneNumbers> list element that includes paging information. Works exactly the same as the IncomingPhoneNumber resource, but filters out local and toll free numbers.
+
+[[http-post-3]]
+===== HTTP POST
+
+Adds a new phone number to your account. If a phone number is found for your request, Restcomm will add it to your account and bill you for the first month's cost of the phone number. If Restcomm can't find a phone number to match your request, you will receive an HTTP 400 with Restcomm error code. To find an available phone number to POST, use the subresources of the AvailablePhoneNumbers list resource.
+
+[[required-parameters-3]]
+====== Required Parameters
+
+Your request *must* include PhoneNumber. We do not support AreaCode for this subresource:
+
+[cols=",",]
+|==============================================================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|PhoneNumber |The phone number you want to purchase. The number should be formatted starting with a '+' followed by the country code and the number inhttp://en.wikipedia.org/wiki/E.164[E.164] format e.g., '+15105555555'. *You must include this to have your POST succeed.*
+|==============================================================================================================================================================================================================================================================================
+
+[[optional-parameters-4]]
+====== Optional Parameters
+
+The optional parameters for this request are exactly the same as POSTing directly to the IncomingPhoneNumbers/ resource. If successful, Restcomm will respond with a representation of the new phone number that was assigned to your account.  
+
+[[http-put-3]]
+===== HTTP PUT
+
+Not Supported.
+
+[[http-delete-4]]
+===== HTTP DELETE
+
+Not Supported.  
+
+== Attach a phone number to an application
+
+This one uses the default application
+
+....
+curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+....
+
+Result of the above command
+
+....
+{
+  "sid": "PNdd7a0a0248244615978bd5781598e5eb",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "friendly_name": "234",
+  "phone_number": "+1234",
+  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "status_callback_method": "POST",
+  "voice_caller_id_lookup": false,
+  "date_created": "2013-10-04T17:42:02.500-06:00",
+  "date_updated": "2013-10-04T17:42:02.500-06:00",
+  "sms_method": "POST",
+  "sms_fallback_method": "POST",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb.json"
+
+....
+
+== Delete a phone number
+
+You have to get the SID of the phone and use curl to delete as follows
+
+....
+curl -X DELETE http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb
+....
+
+== List of phone numbers
+
+Gets all numbers created using *IncomingPhoneNumbers.json*
+
+....
+curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json
+....

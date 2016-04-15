@@ -1,0 +1,50 @@
+[av_heading heading='Play' tag='h2' color='' custom_font='' style='' size='' subheading_active='' subheading_size='15' padding='10'][/av_heading] The *Play* verb is used to play an audio file to the remote party.
+
+*Play Attributes*
+
+[cols=",,",options="header",]
+|===================================
+|Name |Allowed Values |Default Value
+|loop |integer > 1 |1
+|===================================
+
+ 
+
+* *loop.* The 'loop' attribute specifies how many times you'd like the audio file to be repeated. Specifying '0' will cause the the <Play> verb to loop until the call is hung up.
+
+ 
+
+*Supported Audio Formats*
+
+[cols=",",options="header",]
+|=============================
+|MIME type |Description
+|audio/wav |wav format audio
+|audio/wave |wav format audio
+|audio/x-wav |wav format audio
+|=============================
+
+ 
+
+[[section]]
+
+[av_heading heading='Media Server Audio File Format' tag='h3' color='' custom_font='' style='' size='' subheading_active='' subheading_size='15' padding='10'][/av_heading]
+
+[[section-1]]
+ 
+~
+
+* *Nesting.* The <Play> verb can not have any other verbs or nouns nested. Only a URL.
+
+*Basic example.* For an example of how to use the *<Play>* verb see below.
+
+[source,lang:default,decode:true]
+----
+<Response>
+<Play>http://foobar.com/demo.wav</Play>
+</Response>
+----
+
+ 
+
+
