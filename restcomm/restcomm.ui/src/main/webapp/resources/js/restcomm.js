@@ -164,8 +164,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
 // Keycloak configuration ***
 
 var keycloakAuth = {};
-var logout = function(){
-    console.log('*** LOGOUT');
+var keycloakLogout = function(){
     keycloakAuth.loggedIn = false;
     keycloakAuth.authz = null;
     window.location = keycloakAuth.logoutUrl;
@@ -224,7 +223,7 @@ angular.element(document).ready(['$http',function ($http) {
 			keycloak.init({ onLoad: 'login-required' }).success(function () {
 				keycloakAuth.loggedIn = true;
 				keycloakAuth.authz = keycloak;
-				keycloakAuth.logoutUrl = identityConfig.server.authServerUrl + "/realms/" + identityConfig.server.realm + "/tokens/logout?redirect_uri=" + window.location.origin + "/index.html";
+				keycloakAuth.logoutUrl = identityConfig.server.authServerUrl + "/realms/" + identityConfig.server.realm + "/protocol/openid-connect/logout?redirect_uri=" + window.location.origin;
         angular.bootstrap(document, ["rcApp"]);
 			}).error(function (a, b) {
 					window.location.reload();
@@ -248,6 +247,8 @@ angular.element(document).ready(['$http',function ($http) {
 angular.module('rcApp').factory('authInterceptor', function($q) {
     return {
         request: function (config) {
+            if (!keycloakAuth.authz)
+                return config;
             var deferred = $q.defer();
             if (keycloakAuth.authz.token) {
                 keycloakAuth.authz.updateToken(5).success(function() {

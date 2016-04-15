@@ -172,6 +172,13 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     function logout() {
           SessionService.unset('sid');
           account = null;
+          // uninitialized = ???
+          if (IdentityConfig.securedByKeycloak())
+            keycloakLogout(); // keycloak logout - defined in restcomm.js
+          else {
+            $http.get('/restcomm/2012-04-24/Logout'); // TODO should we wait for a response before moving to login view ?
+            $state.go("public.login");
+          }
     }
 
     // Returns the username (email address) for the logged  user. It's only available when keycloak is used for authorization.
