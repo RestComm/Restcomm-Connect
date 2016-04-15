@@ -22,9 +22,6 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
   $scope.logout = function() {
     AuthService.logout();
-    $http.get('/restcomm/2012-04-24/Logout')/*.
-     success(function() {console.log('Logged out from API.');}).
-     error(function() {console.log('Failed to logout from API.');})*/;
   };
 
   //if(AuthService.isLoggedIn()) {

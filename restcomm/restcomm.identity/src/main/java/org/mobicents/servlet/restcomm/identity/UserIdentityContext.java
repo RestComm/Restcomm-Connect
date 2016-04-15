@@ -21,6 +21,8 @@
 package org.mobicents.servlet.restcomm.identity;
 
 import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,8 +46,21 @@ public class UserIdentityContext {
     final AccessToken oauthToken;
     final AccountKey accountKey;
     final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
+    Set<String> effectiveAccountRoles;
     final IdentityInstance identityInstance;
 
+    /**
+     * After successfull creation of a UserIdentityContext object the following stands:
+     * - if an oauth token was present and verified *oauthToken* will contain it. Otherwise it will be null
+     * - TODO If a *linked* account exists for the oauth token username *effectiveAccount* will be set
+     * - if BASIC http credentials were present *accountKey* will contain them. Check accountKey.isVerified()
+     * - if BASIC http credentials were verified effective account will be set to this account.
+     * - if both oauthToken and accountKey are set and verified, effective account will be set to the account indicated by accountKey.
+     * @param identityContext
+     * @param request
+     * @param accountsDao
+     * @param identityInstance
+     */
     public UserIdentityContext(IdentityContext identityContext, HttpServletRequest request, AccountsDao accountsDao, IdentityInstance identityInstance) {
         this.identityInstance = identityInstance;
         if (identityContext == null) {
@@ -68,9 +83,15 @@ public class UserIdentityContext {
             effectiveAccount = accountsDao.getAccount(oauthToken.getPreferredUsername());
         } else
         if (accountKey != null) {
-            effectiveAccount = accountKey.getAccount();
+            if (accountKey.isVerified()) {
+                effectiveAccount = accountKey.getAccount();
+            } else
+                effectiveAccount = null;
         } else
             effectiveAccount = null;
+
+        if (effectiveAccount != null)
+            effectiveAccountRoles = extractAccountRoles(effectiveAccount);
     }
 
     private String extractOauthTokenString(HttpServletRequest request) {
@@ -83,6 +104,16 @@ public class UserIdentityContext {
             }
         }
         return null;
+    }
+
+    private Set<String> extractAccountRoles(Account account) {
+        if (account == null)
+            return null;
+        Set<String> roles = new HashSet<String>();
+        if (!StringUtils.isEmpty(account.getRole())) {
+            roles.add(account.getRole());
+        }
+        return roles;
     }
 
     private AccessToken verifyToken(String tokenString, IdentityContext identityContext) {
@@ -122,6 +153,10 @@ public class UserIdentityContext {
 
     public Account getEffectiveAccount() {
         return effectiveAccount;
+    }
+
+    public Set<String> getEffectiveAccountRoles() {
+        return effectiveAccountRoles;
     }
 
     // generates a random api key to be used for accessing an Account using Basic HTTP authentication

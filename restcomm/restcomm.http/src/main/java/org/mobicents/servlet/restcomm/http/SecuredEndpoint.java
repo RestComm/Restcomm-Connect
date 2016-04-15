@@ -19,18 +19,15 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.representations.AccessToken;
-import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSetImpl;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -38,7 +35,6 @@ import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.identity.AccountKey;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.identity.keycloak.IdentityContext;
@@ -96,15 +92,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @throws AuthorizationException
      */
     protected void secure(final Account operatedAccount, final String permission) throws AuthorizationException {
-        if ( userIdentityContext.getOauthToken() != null )
-            if ( secureKeycloak(operatedAccount, permission, userIdentityContext.getOauthToken() ) == AuthOutcome.OK )
-                return;
-
-        if ( userIdentityContext.getAccountKey() != null )
-            if ( secureApikey(operatedAccount, permission, userIdentityContext.getAccountKey()) == AuthOutcome.OK )
-                return;
-
-        throw new AuthorizationException();
+        secure(permission); // check an authbenticated account allowed to do "permission" is available
+        if ( secureAccount(userIdentityContext.getEffectiveAccount(), operatedAccount) != AuthOutcome.OK )
+            throw new AuthorizationException();
     }
 
     /**
@@ -126,27 +116,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
-     * Allows general purpose access if one of the following happens:
-     * - User carries a token that contains a role (any role) for this application/client
-     * - Account key was verified.
+     * Grants general purpose access if any valid token exists in the request
      */
     protected void secure() {
-        Set<String> roleNames = null;
-        if ( userIdentityContext.getOauthToken() != null ) {
-            try {
-                roleNames = userIdentityContext.getOauthToken().getResourceAccess(getRestcommResourceName()).getRoles();
-            } catch (NullPointerException e) {
-                throw new AuthorizationException();
-            }
-            if (roleNames != null)
-                return;
-        }
-        else
-        if ( userIdentityContext.getAccountKey() != null ) {
-            if ( userIdentityContext.getAccountKey().isVerified() )
-                return;
-        }
-        throw new AuthorizationException();
+        if (userIdentityContext.getEffectiveAccount() == null)
+            throw new AuthorizationException();
     }
 
     // boolean overloaded form of secure()
@@ -159,29 +133,17 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
+    /**
+     * Checks there is a valid authenticated account in the request credentials (BASIC http or Oauth) and its roles
+     * allow *permission*.
+     *
+     * @param permission
+     */
     protected void secure (final String permission) {
-        Set<String> roleNames = null;
-        if ( userIdentityContext.getOauthToken() != null ) {
-            // oauth token roles are not used even even if oauth token is present for common operations.
-            // Instead, the roles from the effective account are used
-            //roleNames = userIdentityContext.getOauthToken().getResourceAccess(getRestcommResourceName()).getRoles();
-            Account effectiveAccount = userIdentityContext.getEffectiveAccount();
-            if ( effectiveAccount != null && !StringUtils.isEmpty(effectiveAccount.getRole()) ) {
-                roleNames = new HashSet<String>();
-                roleNames.add(effectiveAccount.getRole());
-            }
-        }
-        else
-        if ( userIdentityContext.getAccountKey() != null ) {
-            if ( userIdentityContext.getAccountKey().isVerified() )
-                roleNames = userIdentityContext.getAccountKey().getRoles();
-        }
+        secure(); // ok there is a valid authenticated account
+        if ( secureApi(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
+            throw new AuthorizationException();
 
-        if ( roleNames != null )
-            if ( secureApi(permission, roleNames) == AuthOutcome.OK )
-                return;
-
-        throw new AuthorizationException();
     }
 
     protected boolean isSecured(final String permission) {
@@ -201,11 +163,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @return
      */
     protected boolean hasAccountRole(final String role) {
-        Account account = userIdentityContext.getEffectiveAccount();
-        if (account != null) {
-            if (role != null && role.equals(account.getRole())) {
-                return true;
-            }
+        if (userIdentityContext.getEffectiveAccount() != null) {
+            return userIdentityContext.getEffectiveAccountRoles().contains(role);
         }
         return false;
     }
@@ -260,75 +219,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
-     * Implements authorization using keycloak Oauth token
-     * @param account
-     * @param neededPermissionString
-     * @param accessToken
-     * @return
-     */
-    private AuthOutcome secureKeycloak(final Account account, final String neededPermissionString, final AccessToken accessToken) {
-        // both api-level and account-level checks should be satisfied
-        AccessToken.Access access = accessToken.getResourceAccess(getRestcommResourceName());
-        if (access == null)
-            return AuthOutcome.FAILED;
-        Set<String> roleNames = access.getRoles();
-        if ( secureApi(neededPermissionString, roleNames) == AuthOutcome.FAILED )
-            return AuthOutcome.FAILED;
-        // check if the logged user has access to the account that is operated upon
-        if ( secureAccountByUsername(accessToken.getPreferredUsername(), account) == AuthOutcome.FAILED )
-            return AuthOutcome.FAILED;
-
-        return AuthOutcome.OK;
-    }
-
-    /**
-     * Implements authorization using the API Key credentials i.e. Basic HTTP auth username:password and compares against local authToken and roles.
-     * @param account
-     * @param permission
-     * @param accountKey
-     * @return
-     */
-    private AuthOutcome secureApikey(final Account account, final String permission, final AccountKey accountKey) {
-        if ( ! accountKey.isVerified() )
-            return AuthOutcome.FAILED;
-
-        Set<String> roleNames = accountKey.getRoles();
-        // if operating user is an administrator grant access without asking questions
-        if (roleNames.contains(IdentityConfigurationSet.ADMINISTRATOR_ROLE))
-            return AuthOutcome.OK;
-
-        if ( !roleNames.contains(IdentityConfigurationSet.ADMINISTRATOR_ROLE) && secureApi(permission, roleNames) == AuthOutcome.FAILED )
-            return AuthOutcome.FAILED;
-        // check if the logged user has access to the account that is operated upon
-        if ( secureAccount(accountKey.getAccount(), account) == AuthOutcome.FAILED )
-            return AuthOutcome.FAILED;
-
-        return AuthOutcome.OK;
-    }
-
-    // uses keycloak token
-    protected String getLoggedUsername() {
-        AccessToken token = userIdentityContext.getOauthToken();
-        if (token != null) {
-            return token.getPreferredUsername();
-        }
-        return null;
-    }
-
-    /**
-     * Makes sure that User 'username' can access resources of the operatedAccount. An Account should
-     * be mapped to the specific User through its emailAddress property.
-     *
-     */
-    protected AuthOutcome secureAccountByUsername(final String username, final Account operatedAccount) {
-        // load logged user's account
-        Account loggedAccount = accountsDao.getAccount(username);
-        return secureAccount(loggedAccount, operatedAccount);
-    }
-
-    /**
      * Makes sure a user authenticated against actorAccount can access operatedAccount. In practice allows access if actorAccount == operatedAccount
-     * OR if operatedAccount is a sub-account of actorAccount
+     * OR (UNDER REVIEW) if operatedAccount is a sub-account of actorAccount
      *
      * UPDATE: parent-child relation check is disabled for compatibility reasons.
      *
