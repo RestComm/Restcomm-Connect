@@ -49,6 +49,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //      MISSING_ACCOUNT_SID,
     //      KEYCLCOAK_NO_LINKED_ACCOUNT
     //      KEYCLOAK_INSTANCE_NOT_REGISTERED
+    //      MISSING_LOGGED_ACCOUNT - no Account is stored in the JS application and cookie authentication is not supported (no shiro). Applies when using Restcomm authentication, not keycloak.
     //
     //  - resolved: returns a valid Restcomm account for the logged user
     function checkAccess() {
@@ -88,17 +89,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         if (IdentityConfig.securedByRestcomm()) {
             if (!!getAccountSid()) // get account sid from js application (not from session storage) - if F5 is pressed this is lost
                 deferred.resolve();
-            else {
-                var sid = SessionService.get('sid');
-                if (!!sid) {
-                    RCommAccounts.view({accountSid:sid}, function (data) {
-                        setActiveAccount(data);
-                        deferred.resolve();
-                    });
-                } else {
-                    deferred.reject("MISSING_ACCOUNT_SID");
-                }
-            }
+            else
+                deferred.reject("MISSING_LOGGED_ACCOUNT");
         } else {
             // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
             deferred.reject("KEYCLOAK_INSTANCE_NOT_REGISTERED");
@@ -132,9 +124,14 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     function login(credentials) {
       var deferred = $q.defer();
       // TEMPORARY... FIXME!
-      var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
-      var login = $http.get(apiPath).
-        success(function(data, status, headers, config) {
+      //var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
+      var auth_header = credentials.sid + ":" + md5.createHash(credentials.token);
+      auth_header = "Basic " + btoa(auth_header);
+      var login = $http({
+        method:"GET",
+        url:"/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid,
+        headers:{authorization: auth_header}
+      }).success(function(data, status, headers, config) {
           if (status == 200) {
             //if(data.date_created && data.date_created == data.date_updated) {
             if(data.status) {
@@ -181,6 +178,16 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
           }
     }
 
+    // applies to Restcomm authorization (not keycloak)
+    function onAuthError() {
+        if (IdentityConfig.securedByRestcomm()) {
+            SessionService.unset('sid');
+            account = null;
+            //$state.go("public.login");
+            $location.path('/login').search('returnTo', $location.path());
+        }
+    }
+
     // Returns the username (email address) for the logged  user. It's only available when keycloak is used for authorization.
     function getUsername() {
         if (IdentityConfig.securedByKeycloak() && KeycloakAuth.loggedIn)
@@ -196,26 +203,28 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         getAccount: getAccount,
         getFrientlyName: getFriendlyName,
         checkAccess: checkAccess,
-        isUninitialized: isUninitialized
+        isUninitialized: isUninitialized,
+        onAuthError: onAuthError
     }
 });
 
 // IdentityConfig service constructor. See restcomm.js. This service is created early before the rcMod angular module is initialized and is accessible as a 'constant' service.
 function IdentityConfig(server, instance) {
+    var This = this;
     this.server = server;
     this.instance = instance;
 
     // is an identity server configured in Restcomm ?
     function identityServerConfigured () {
-        return !!this.server && (!!this.server.authServerUrl);
+        return !!This.server && (!!This.server.authServerUrl);
     }
     // True is Restcomm is configured to use an authorization server and an identity instance is already in place
     function securedByKeycloak () {
-        return identityServerConfigured && (!!this.instance) && (!!this.instance.name);
+        return identityServerConfigured() && (!!This.instance) && (!!This.instance.name);
     }
     // True if Restcomm is used for authorization (legacy mode). No keycloak needs to be present.
     function securedByRestcomm() {
-        return identityServerConfigured();
+        return !identityServerConfigured();
     }
 
     // Public interface
