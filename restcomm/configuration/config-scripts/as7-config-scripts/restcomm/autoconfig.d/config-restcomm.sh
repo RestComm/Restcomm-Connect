@@ -419,7 +419,35 @@ configMediaServerMSaddress() {
 	fi
 }
 
+configRestCommURIs() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
+	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
+		if [ "$DISABLE_HTTP" = "true" ]; then
+		sed -e "s|<prompts-uri>/restcomm/audio</prompts-uri>|<remote-address>https://$MS_ADDRESS/restcomm/audio<\/remote-address>|" \
+		    -e "s|<cache-uri>/restcomm/cache</cache-uri>|<cache-uri>https://$MS_ADDRESS/restcomm/cache</cache-uri><\/local-address>|" \
+			  -e "s|<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>|<error-dictionary-uri>https://$MS_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
+
+		else
+		sed -e "s|<prompts-uri>/restcomm/audio</prompts-uri>|<remote-address>http://$MS_ADDRESS/restcomm/audio<\/remote-address>|" \
+		    -e "s|<cache-uri>/restcomm/cache</cache-uri>|<cache-uri>http://$MS_ADDRESS/restcomm/cache</cache-uri><\/local-address>|" \
+			  -e "s|<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>|<error-dictionary-uri>http://$MS_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
+		fi
+		mv $FILE.bak $FILE
+		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
+	fi
+}
+
+
+updateRecordingsPath() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+	if [ -n "$RECORDINGS_PATH" ]; then
+		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://${RECORDINGS_PATH}<\/recordings-path>|" $FILE > $FILE.bak
+		echo "Updated RECORDINGS_PATH "
+		mv $FILE.bak $FILE
+	fi
+}
 
 # MAIN
 echo 'Configuring RestComm...'
@@ -436,4 +464,6 @@ configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$
 configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
 configMediaServerMSaddress "$BIND_ADDRESS"
+configRestCommURIs
+updateRecordingsPath
 echo 'Configured RestComm!'
