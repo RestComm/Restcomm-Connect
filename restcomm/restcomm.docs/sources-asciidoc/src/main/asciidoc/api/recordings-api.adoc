@@ -1,0 +1,101 @@
+= Restcomm API – Recordings
+
+[[Recordings]]
+== Recordings
+
+Recordings are generated when you use the *<Record>* verb. Those recordings are hosted with RestComm for you to retrieve. The Recordings list resource represents the set of an account's recordings.
+
+=== Recording Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/Recordings/\{RecordingSid}*
+
+To download the audio file just append *.wav* after the *RecordingSid.*
+
+=== Resource Properties
+
+[cols=",",options="header",]
+|==========================================================================
+|Property |Description
+|Sid |A string that uniquely identifies this recording.
+|DateCreated |The date that this recording was created.
+|DateUpdated |The date that this recording was last updated.
+|AccountSid |The unique id of the Account that created this recording.
+|CallSid |The unique id of the call during which the recording was made.
+|Duration |The length of the recording, in seconds.
+|ApiVersion |The API version in use during the recording.
+|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|==========================================================================
+
+=== Supported Operations
+
+*HTTP GET.* Returns the representation of a Recording resource, including the properties above. 
+**HTTP DELETE**. Removes the recording from the account.
+
+== Recording List Resource
+
+=== Recording List Resource URI
+
+* */2012-04-24/Accounts/{AccountSid}/Recordings*
+
+* */2012-04-24/Accounts/{AccountSid}/Calls/{CallSid}/Recordings*
+
+NOTE: Unlike the Recording instance resource described above, the list of recordings IS protected by your account credentials like most parts of this API. You must use HTTP basic auth to access the Recordings list resource.*
+
+=== Supported Operations
+
+==== HTTP GET
+
+Returns the list representation of all the Recording resources for this Account, including the properties above.
+
+Returns a list of Recording resource representations, each representing a recording generated during the course of a phone call. The list includes paging information.
+
+[[list-get-filters]]
+===== List Filters
+
+The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+[cols=",",options="header",]
+|=====================================================================================================================================================================================================================================================================================================================
+|Parameter |Description
+|CallSid |Show only recordings made during the call given by this sid.
+|DateCreated |Only show recordings created on the given date. Should be formatted as `YYYY-MM-DD`. You can also specify inequality, such as `DateCreated<=YYYY-MM-DD` for recordings generated at or before midnight on a date, and `DateCreated>=YYYY-MM-DD` for recordings generated at or after midnight on a date.
+|=====================================================================================================================================================================================================================================================================================================================
+
+
+== How to Record a Message
+
+Go to the RCML section to learn how to record a message.
+
+== Get List of Recordings
+
+The list of recorded *wav* files can be found in the directory *$RESTCOMM_HOME/standalone/deployments/restcomm.war/recordings/*
+
+From the bash terminal, you can run the command below:
+
+....
+curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings
+....
+
+The response will be similar to the one below.
+
+[source,lang:xml,decode:true]
+----
+<RestcommResponse>
+<Recording>
+      <Sid>REb4c03af76cdc4a27aad0d9d759e119bc</Sid>
+      <DateCreated>2014-08-11T10:53:25.000-04:00</DateCreated>
+      <DateUpdated>2014-08-11T10:53:25.000-04:00</DateUpdated>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <CallSid>CA2647e1424239420087d75ff4083e9f2b</CallSid>
+      <Duration>13.0</Duration>
+      <ApiVersion>2012-04-24</ApiVersion>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/REb4c03af76cdc4a27aad0d9d759e119bc</Uri>
+    </Recording>
+----
+
+NOTE: *<Sid>* holds the file name of the recorded message. The recording Sid.**wav** is available in the file system only. 
+
+If you want to return the recording url you will need to parse the *<Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/REb4c03af76cdc4a27aad0d9d759e119bc</Uri>* response from Restcomm and add the extension .**wav**
+
+The *<Uri>* holds the http URI that can be used for playback or to download the recorded message. 
+Here is how to access the file using http *http://IP_ADDRESS:8080/restcomm/recordings/REb4c03af76cdc4a27aad0d9d759e119bc.wav*

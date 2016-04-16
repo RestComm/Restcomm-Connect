@@ -95,7 +95,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         validate(data);
 
         final DateTime now = DateTime.now();
-        final String emailAddress = data.getFirst("EmailAddress");
+        final String emailAddress = (data.getFirst("EmailAddress")).toLowerCase();
 
         // Issue 108: https://bitbucket.org/telestax/telscale-restcomm/issue/108/account-sid-could-be-a-hash-of-the
         final Sid sid = Sid.generate(Sid.Type.ACCOUNT, emailAddress);
@@ -227,7 +227,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
 
         // If Account already exists don't add it again
-        if (dao.getAccount(account.getSid()) == null) {
+        if (dao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
             final Account parent = dao.getAccount(sid);
             if (parent.getStatus().equals(Account.Status.ACTIVE)
                     && (subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts")))) {
@@ -239,7 +239,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
                 return status(UNAUTHORIZED).build();
             }
         } else {
-            return status(CONFLICT).entity("The sid generated to the new account is already in use.").build();
+            return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
         }
 
         if (APPLICATION_JSON_TYPE == responseType) {

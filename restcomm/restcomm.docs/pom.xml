@@ -14,10 +14,10 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>sources</module>
+		<module>sources-asciidoc</module>
 	</modules>
 
-	<profiles>
+	<!--profiles>
 		<profile>
 			<id>release</id>
 			<modules>
@@ -53,7 +53,7 @@
 				<module>jdocbook-telscale</module>
 			</modules>
 		</profile>
-	</profiles>
+	</profiles-->
 	<!-- repositories -->
 	<repositories>
 		<repository>

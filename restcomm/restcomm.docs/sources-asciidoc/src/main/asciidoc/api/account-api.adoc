@@ -1,0 +1,173 @@
+= Restcomm API – Account
+
+[[Accounts]]
+== Accounts
+
+Accounts and sub-accounts are useful for things like segmenting phone numbers and usage data for your users and controlling access to data.
+
+=== Account Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}*
+
+=== Resource Properties
+
+[cols=",",options="header",]
+|=========================================================================================================================
+|Property |Description
+|Sid |A string that uniquely identifies this account.
+|DateCreated |The date that this account was created.
+|DateUpdated |The date that this account was last updated.
+|FriendlyName |A description of this account, up to 64 characters long. By default the FriendlyName is your email address.
+|Status |The status of this account. Possible values are active, suspended, and closed.
+|AuthToken |The authorization token for this account. This should not be shared.
+|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|=========================================================================================================================
+
+=== Supported Operations
+
+*HTTP GET.* Returns the representation of an Account resource, including the properties above.
+
+* Account Resource URI. */2012-04-24/Accounts/\{EmailAddress}*
+
+**HTTP POST/PUT**. Modifies an Account resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|==============================================================================================
+|Parameter |Description
+|FriendlyName |A description of this account, up to 64 characters long.
+|Status |The status of this account. Possible values are active, suspended, and closed.
+|Password |A password that will be used to generate the AuthToken for the new Account resource.
+|==============================================================================================
+
+**Get information about the default account.**
+
+....
+curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
+....
+
+
+**Change default account password(AuthToken).**
+
+....
+curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=NewPassword"
+....
+
+NOTE: The above command uses the Account SID and the one below uses the Email Account. Note the administrator%40company.com is used instead of administrator@company.com . This is because using curl on the bash terminal doesn't parse the @ correctlyl. If you were to running on a browser, you can safely use the @ as the web browser will correctly handle it.
+
+....
+curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf
+....
+
+The above commands will print an output similar to the one below:
+
+----
+<RestcommResponse>
+  <Account>
+    <Sid>ACae6e420f425248d6a26948c17a9e2acf</Sid>
+    <FriendlyName>Default Administrator Account</FriendlyName>
+    <Status>active</Status>
+    <Type>Full</Type>
+    <DateCreated>2012-04-24T00:00:00.000-06:00</DateCreated>
+    <DateUpdated>2012-04-24T00:00:00.000-06:00</DateUpdated>
+    <AuthToken>77f8c12cc7b8f8423e5c38b035249166</AuthToken>
+    <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf</Uri>
+    <SubresourceUris>
+      <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers</AvailablePhoneNumbers>
+      <Calls>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls</Calls>
+      <Conferences>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences</Conferences>
+      <IncomingPhoneNumbers>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers</IncomingPhoneNumbers>
+      <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Notifications</Notifications>
+      <OutgoingCallerIds>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/OutgoingCallerIds</OutgoingCallerIds>
+      <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings</Recordings>
+      <Sandbox>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Sandbox</Sandbox>
+      <SMSMessages>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages</SMSMessages>
+      <Transcriptions>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions</Transcriptions>
+    </SubresourceUris>
+  </Account>
+----
+
+[[Accounts_List]]
+== Account List Resource
+
+* Account List Resource URI. */2012-04-24/Accounts*
+
+=== Supported Operations
+
+**HTTP GET**. Returns the list representation of all the *Sub-Account* resources for this **Account**, including the properties above. 
+
+**HTTP POST**. Creates a new Sub-Account and returns the representation of the Sub-Account resource, including the properties above. Below you will find a list of required and optional parameters.  
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|==============================================================================================================================================================================================================================
+|Parameter |Description
+|EmailAddress(Required) |The email address to use for this account.
+|FriendlyName |A description of this account, up to 64 characters long. Default, is your email address.
+|Status |The status of this account. Default is active, possible values are active, suspended, and closed.
+|Password(Required) |A password that will be used to generate the AuthToken for the new Account resource.
+|Role(Required) |The security role that this Account resource will use. If no role is provided then the role of the account resource creating this will be inherited to the new Account resource and may compromise the system.
+|==============================================================================================================================================================================================================================
+
+
+[[sub-accounts]]
+== Sub-Accounts
+
+You can read more about Sub-Accounts and Multi-tenancy http://docs.telestax.com/restcomm-multi-tenancy-and-managing-sub-accounts/[HERE]
+
+
+----
+curl -X GET http://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/[secondarySid]/
+----
+
+=== Get a list of all current accounts
+
+----
+curl -X GET http://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/
+----
+
+Here is an example of how to createa a **sub-account**. The sub-account will inherit the same permissions has the Administrator's account.
+
+....
+curl -X POST http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm"
+....
+
+
+=== Supported Operations
+
+NOTE: the **SID**, Email and the *AuthToken* (see output below) of the sub-account can now be used instead of the Administrator's account  
+
+----
+<RestcommResponse>
+  <Account>
+    <Sid>AC3b8f0dd2e5026abde018446cbb3b185d</Sid>
+    <FriendlyName>MySubAccount</FriendlyName>
+    <Status>active</Status>
+    <Type>Full</Type>
+    <DateCreated>2013-10-16T09:22:28.708-06:00</DateCreated>
+    <DateUpdated>2013-10-16T09:22:28.712-06:00</DateUpdated>
+    <AuthToken>53134d7a9914e2b47c8435ebdb50ded3</AuthToken>
+    <Uri>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d</Uri>
+    <SubresourceUris>
+      <AvailablePhoneNumbers>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/AvailablePhoneNumbers</AvailablePhoneNumbers>
+      <Calls>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Calls</Calls>
+      <Conferences>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Conferences</Conferences>
+      <IncomingPhoneNumbers>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/IncomingPhoneNumbers</IncomingPhoneNumbers>
+      <Notifications>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Notifications</Notifications>
+      <OutgoingCallerIds>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/OutgoingCallerIds</OutgoingCallerIds>
+      <Recordings>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Recordings</Recordings>
+      <Sandbox>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Sandbox</Sandbox>
+      <SMSMessages>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/SMS/Messages</SMSMessages>
+      <Transcriptions>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Transcriptions</Transcriptions>
+    </SubresourceUris>
+  </Account>
+----
+
+[[delete-sub-accounts]]
+=== Delete Sub-Accounts
+
+----
+curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts/<Sub-Account-SID>
+----
