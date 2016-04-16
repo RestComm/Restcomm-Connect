@@ -151,9 +151,9 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
 
     protected void writeGeolocationType(final Geolocation.GeolocationType geolocationType, final JsonObject object) {
         if (geolocationType != null) {
-            object.addProperty("geo_location_type", geolocationType.toString());
+            object.addProperty("geolocation_type", geolocationType.toString());
         } else {
-            object.add("geo_location_type", JsonNull.INSTANCE);
+            object.add("geolocation_type", JsonNull.INSTANCE);
         }
     }
 
@@ -495,8 +495,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         }
     }
 
-    protected void writeLastGeolocationResponse(final String lastGeolocationResponse,
-            final HierarchicalStreamWriter writer) {
+    protected void writeLastGeolocationResponse(final String lastGeolocationResponse, final HierarchicalStreamWriter writer) {
         if (lastGeolocationResponse != null) {
             writer.startNode("LastGeolocationResponse");
             writer.setValue(lastGeolocationResponse.toString());
@@ -527,6 +526,5 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
             object.add("cause", JsonNull.INSTANCE);
         }
     }
-
 
 }

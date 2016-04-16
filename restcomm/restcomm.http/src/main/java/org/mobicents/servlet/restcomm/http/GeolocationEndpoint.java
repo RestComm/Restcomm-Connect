@@ -151,7 +151,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         // *** Source can not be null ***/
         try {
             if (!data.containsKey("Source")) {
-                return rejectedGeolocationRequest(accountSid, data, glType, "Source value con not be null");
+                return rejectedGeolocationRequest(accountSid, data, glType, "Source value can not be null");
             }
         } catch (Exception exception) {
             System.out.println("Exception: " + exception.getMessage());
@@ -301,12 +301,12 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         // *** LocationTimestamp must be API compliant: DateTime format only***/
         try {
             if (data.containsKey("LocationTimestamp")) {
+                @SuppressWarnings("unused")
                 DateTime locationTimestamp = getDateTime("LocationTimestamp", data);
-                System.out.println("locationTimestamp value: " + locationTimestamp);
             }
         } catch (Exception exception) {
             System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "LocationTimestamp value not API compliant");
+            return rejectedGeolocationRequest(accountSid, data, glType, "LocationTimestamp value is not API compliant");
         }
 
         // *** All parameters with specified values validations passed *** //
@@ -321,7 +321,6 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         String geoloctype = glType.toString();
         builder.setSid(sid);
         DateTime currentDateTime = DateTime.now();
-        System.out.println("GeolocationEndpoint buildGeolocation, currentDateTime: " + currentDateTime);
         builder.setDateUpdated(currentDateTime);
         builder.setAccountSid(accountSid);
         builder.setSource(data.getFirst("Source"));
