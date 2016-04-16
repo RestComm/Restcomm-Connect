@@ -1,0 +1,27 @@
+= Restcomm RCML – Reject
+
+[[reject]]
+== Reject
+The *<Reject>* verb rejects an incoming call to your Restcomm endpoint. This is useful for blocking unwanted calls. If the first verb in a RCML response is **<Reject>**, Restcomm will not pick up the call. The call ends with a status of 'busy' or 'no-answer', depending on the verb's 'reason' attribute. Any verbs after *<Reject>* are unreachable and ignored.  
+
+=== Reject Attributes
+
+[cols=",,",options="header",]
+|===================================
+|Name |Allowed Values |Default Value
+|reason |rejected, busy |rejected
+|===================================
+
+* *reason.* The reason attribute takes the values "rejected" and "busy." This tells RestComm what message to play when rejecting a call. Selecting "busy" will play a busy signal to the caller, while selecting "rejected" will play a standard not-in-service response.
+
+=== Nesting
+The *<Reject>* verb can not have any other verbs or nouns nested.
+
+=== Examples
+For an example of how to use the <Reject> verb see below.
+
+----
+<Response>
+    <Reject reason="busy"/>
+</Response>
+----

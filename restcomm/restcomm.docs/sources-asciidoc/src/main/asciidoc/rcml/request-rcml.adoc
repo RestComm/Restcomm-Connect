@@ -1,0 +1,23 @@
+= Restcomm RCML – Restcomm Request
+
+[[restcomm_request]]
+== Restcomm Request
+
+How Restcomm Passes Data to Your Application. The way Restcomm passes data to you application depends on the request method for the given **UR**I. If the request method is *GET* then the data is passed in the query string or the part after the question mark. If the request method is *POST* then the data is sent a multi-part form data just like when a browser submits a form.
+
+Restcomm Voice Request. Any time RestComm makes a request to you applications it will include the following data as request parameters.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|=================================================================================================================================
+|Parameter |Description
+|CallSid |The unique identifier for this call.
+|AccountSid |Your account id.
+|From |The phone number of the originator of the call.
+|To |The phone number of the call recipient.
+|CallStatus |The status of the call. The possible values are queued, ringing, in-progress, completed, busy, failed, and no-answer.
+|ApiVersion |The version of the RestComm API used to handle this call.
+|Direction |The direction of the call. The possible values are inbound and outbound-dial.
+|CallerName |The caller ID for the caller in the case of inbound calls.
+|=================================================================================================================================

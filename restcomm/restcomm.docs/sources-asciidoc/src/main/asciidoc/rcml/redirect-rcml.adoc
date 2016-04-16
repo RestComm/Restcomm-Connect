@@ -1,0 +1,27 @@
+= Restcomm RCML – Redirect
+
+[[redirect]]
+== Redirect
+The *<Redirect>* verb transfers control of a call to the RCML at a different URL. All verbs after *<Redirect>* are unreachable and ignored.  
+
+=== Redirect Attributes
+
+[cols=",,",options="header",]
+|===================================
+|Name |Allowed Values |Default Value
+|method |GET, POST |POST
+|===================================
+
+* *method.* The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the URL via HTTP GET or POST.
+
+=== Nesting
+The *<Redirect>* verb can not have any other verbs or nouns nested.
+
+=== Examples
+For an example of how to use the <Redirect> verb see below.
+
+----
+<Response>
+    <Redirect>http://foobar.com/instructions</Redirect>
+</Response>
+----

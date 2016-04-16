@@ -1,0 +1,44 @@
+= Restcomm API – Transcriptions
+
+[[Transcriptions]]
+== Transcriptions
+
+A Transcription resource represents a transcription of a recording. A transcription is a text version of a recording produced using automatic speech recognition.
+
+=== Transcription Resource
+
+==== Transcription Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/Transcriptions/\{TranscriptionSid}*
+
+==== Resource Properties
+
+[cols=",",options="header",]
+|======================================================================================================================
+|Property |Description
+|Sid |A string that uniquely identifies this transcription.
+|DateCreated |The date that this transcription was created.
+|DateUpdated |The date that this transcription was last updated.
+|AccountSid |The unique id of the Account that created this transcription.
+|Status |A string representing the status of the transcription. Possible values are in-progress, completed, and failed.
+|RecordingSid |The unique id of the Recording this Transcription was made of.
+|Duration |The duration of the transcribed audio, in seconds.
+|TranscriptionText |The text content of the transcription.
+|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|======================================================================================================================
+
+==== Supported Operations
+
+**HTTP GET**. Returns the representation of a Transcription resource, including the properties above. 
+
+**HTTP DELETE**. Removes the Transcription from the account.
+
+=== Transcription List Resource
+
+==== Transcription List Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/Transcriptions*
+
+==== Supported Operations
+
+**HTTP GET**. Returns the list representation of all the Transcription resources for this Account, including the properties above.
