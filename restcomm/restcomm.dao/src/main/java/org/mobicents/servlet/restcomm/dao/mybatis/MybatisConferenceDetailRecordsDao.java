@@ -67,10 +67,10 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public ConferenceDetailRecord getConferenceDetailRecord(Sid conferenceSid) {
+    public ConferenceDetailRecord getConferenceDetailRecord(Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getConferenceDetailRecord", conferenceSid.toString());
+            final Map<String, Object> result = session.selectOne(namespace + "getConferenceDetailRecord", sid.toString());
             if (result != null) {
                 return toConferenceDetailRecord(result);
             } else {
@@ -173,7 +173,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     private ConferenceDetailRecord toConferenceDetailRecord(final Map<String, Object> map) {
-        final Sid conferenceSid = readSid(map.get("conference_sid"));
+        final Sid sid = readSid(map.get("sid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final Sid accountSid = readSid(map.get("account_sid"));
@@ -183,12 +183,12 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String friendlyName = readString(map.get("friendly_name"));
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
-        return new ConferenceDetailRecord(conferenceSid, dateCreated, dateUpdated, accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
         final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("conference_sid", writeSid(cdr.getConferenceSid()));
+        map.put("sid", writeSid(cdr.getSid()));
         map.put("date_created", writeDateTime(cdr.getDateCreated()));
         map.put("date_updated", writeDateTime(cdr.getDateUpdated()));
         map.put("account_sid", writeSid(cdr.getAccountSid()));

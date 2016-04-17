@@ -30,7 +30,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
  */
 @Immutable
 public final class ConferenceDetailRecord {
-    private final Sid conferenceSid;
+    private final Sid sid;
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
     private final Sid accountSid;
@@ -41,10 +41,10 @@ public final class ConferenceDetailRecord {
     private final String apiVersion;
     private final URI uri;
 
-    public ConferenceDetailRecord(final Sid conferenceSid, final DateTime dateCreated, final DateTime dateUpdated,
+    public ConferenceDetailRecord(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
             final Sid accountSid, final String status, final DateTime startTime, final DateTime endTime, final String friendlyName, final String apiVersion, final URI uri) {
         super();
-        this.conferenceSid = conferenceSid;
+        this.sid = sid;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.accountSid = accountSid;
@@ -60,8 +60,8 @@ public final class ConferenceDetailRecord {
         return new Builder();
     }
 
-    public Sid getConferenceSid() {
-        return conferenceSid;
+    public Sid getSid() {
+        return sid;
     }
 
     public DateTime getDateCreated() {
@@ -101,20 +101,20 @@ public final class ConferenceDetailRecord {
     }
 
     public ConferenceDetailRecord setStatus(final String status) {
-        return new ConferenceDetailRecord(conferenceSid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
     }
 
     public ConferenceDetailRecord setStartTime(final DateTime startTime) {
-        return new ConferenceDetailRecord(conferenceSid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
     }
 
     public ConferenceDetailRecord setEndTime(final DateTime endTime) {
-        return new ConferenceDetailRecord(conferenceSid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
     }
 
     @NotThreadSafe
     public static final class Builder {
-        private Sid conferenceSid;
+        private Sid sid;
         private DateTime dateCreated;
         private DateTime dateUpdated;
         private Sid accountSid;
@@ -127,7 +127,7 @@ public final class ConferenceDetailRecord {
 
         private Builder() {
             super();
-            conferenceSid = null;
+            sid = null;
             dateCreated = null;
             dateUpdated = DateTime.now();
             accountSid = null;
@@ -140,12 +140,12 @@ public final class ConferenceDetailRecord {
         }
 
         public ConferenceDetailRecord build() {
-            return new ConferenceDetailRecord(conferenceSid, dateCreated, DateTime.now(), accountSid,
+            return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid,
                     status, startTime, endTime, friendlyName, apiVersion, uri);
         }
 
-        public void setConferenceSid(final Sid conferenceSid) {
-            this.conferenceSid = conferenceSid;
+        public void setSid(final Sid sid) {
+            this.sid = sid;
         }
 
         public void setDateCreated(final DateTime dateCreated) {
