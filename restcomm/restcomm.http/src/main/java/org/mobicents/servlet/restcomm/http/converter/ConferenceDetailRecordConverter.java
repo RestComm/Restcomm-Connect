@@ -53,7 +53,7 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
     public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
         final ConferenceDetailRecord cdr = (ConferenceDetailRecord) object;
         writer.startNode("Conference");
-        writeSid(cdr.getConferenceSid(), writer);
+        writeSid(cdr.getSid(), writer);
         writeDateCreated(cdr.getDateCreated(), writer);
         writeDateUpdated(cdr.getDateUpdated(), writer);
         writeAccountSid(cdr.getAccountSid(), writer);
@@ -70,7 +70,7 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
     @Override
     public JsonElement serialize(final ConferenceDetailRecord cdr, Type type, final JsonSerializationContext context) {
         final JsonObject object = new JsonObject();
-        writeSid(cdr.getConferenceSid(), object);
+        writeSid(cdr.getSid(), object);
         writeDateCreated(cdr.getDateCreated(), object);
         writeDateUpdated(cdr.getDateUpdated(), object);
         writeAccountSid(cdr.getAccountSid(), object);

@@ -5,12 +5,12 @@
 	namespace="org.mobicents.servlet.sip.restcomm.dao.ConferenceDetailRecordsDao">
 
     <insert id="addConferenceDetailRecord" parameterType="map">
-        INSERT INTO restcomm_conference_detail_records (conference_sid, date_created, date_updated, account_sid, status,
-        start_time, end_time, friendly_name, api_version, uri) VALUES (#{conference_sid},
+        INSERT INTO restcomm_conference_detail_records (sid, date_created, date_updated, account_sid, status,
+        start_time, end_time, friendly_name, api_version, uri) VALUES (#{sid},
 		#{date_created}, #{date_updated}, #{account_sid}, #{status}, #{start_time}, #{end_time}, #{friendly_name}, #{api_version}, #{uri});
     </insert>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
-		SELECT * FROM restcomm_conference_detail_records WHERE conference_sid=#{conferenceSid};
+		SELECT * FROM restcomm_conference_detail_records WHERE sid=#{sid};
 	</select>
 	<select id="getConferenceDetailRecords" parameterType="string" resultType="hashmap">
         SELECT * FROM restcomm_conference_detail_records WHERE account_sid=#{account_sid};
@@ -59,13 +59,13 @@
 	</select>
   
     <delete id="removeConferenceDetailRecord" parameterType="string">
-        DELETE FROM restcomm_conference_detail_records WHERE conference_sid=#{conference_sid};
+        DELETE FROM restcomm_conference_detail_records WHERE sid=#{sid};
     </delete>
     <delete id="removeConferenceDetailRecords" parameterType="string">
         DELETE FROM restcomm_conference_detail_records WHERE account_sid=#{account_sid};
     </delete>
     <update id="updateConferenceDetailRecord" parameterType="map">
-        UPDATE restcomm_conference_detail_records SET date_updated=#{date_updated}, status=#{status} WHERE conference_sid=#{conference_sid};
+        UPDATE restcomm_conference_detail_records SET date_updated=#{date_updated}, status=#{status} WHERE sid=#{sid};
     </update>
 
 </mapper>

@@ -123,7 +123,7 @@ public final class ConferenceDetailRecordListConverter extends AbstractConverter
     }
 
     private String getNextPageUri(ConferenceDetailRecordList list) {
-        String lastSid = (page == getTotalPages()) ? "null" : list.getConferenceDetailRecords().get(pageSize - 1).getConferenceSid().toString();
+        String lastSid = (page == getTotalPages()) ? "null" : list.getConferenceDetailRecords().get(pageSize - 1).getSid().toString();
         return (page == getTotalPages()) ? "null" : pathUri + "?Page=" + (page + 1) + "&PageSize=" + pageSize + "&AfterSid="
                 + lastSid;
     }

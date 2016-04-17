@@ -32,14 +32,14 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 @Immutable
 public final class ConferenceInfo {
 
-    private final Sid conferenceSid;
+    private final Sid sid;
     private final List<ActorRef> participants;
     private final ConferenceStateChanged.State state;
     private final String name;
 
-    public ConferenceInfo(final Sid conferenceSid, final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name) {
+    public ConferenceInfo(final Sid sid, final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name) {
         super();
-        this.conferenceSid = conferenceSid;
+        this.sid = sid;
         this.participants = participants;
         this.state = state;
         this.name = name;
@@ -57,8 +57,8 @@ public final class ConferenceInfo {
         return name;
     }
 
-    public Sid conferenceSid() {
-        return conferenceSid;
+    public Sid sid() {
+        return sid;
     }
 
 }

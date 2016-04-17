@@ -30,7 +30,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author maria-farooq@live.com (Maria Farooq)
  */
 public interface ConferenceDetailRecordsDao {
-    ConferenceDetailRecord getConferenceDetailRecord(Sid conferenceSid);
+    ConferenceDetailRecord getConferenceDetailRecord(Sid sid);
 
     List<ConferenceDetailRecord> getConferenceDetailRecords(Sid accountSid);
 

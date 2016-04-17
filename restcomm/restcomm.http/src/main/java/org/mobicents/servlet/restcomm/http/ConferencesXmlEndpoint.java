@@ -41,16 +41,16 @@ public final class ConferencesXmlEndpoint extends ConferencesEndpoint {
         super();
     }
 
-    @Path("/{conferenceSid}.json")
+    @Path("/{sid}.json")
     @GET
-    public Response getConferenceAsJson(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid) {
-        return getConference(accountSid, conferenceSid, APPLICATION_JSON_TYPE);
+    public Response getConferenceAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getConference(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
-    @Path("/{conferenceSid}")
+    @Path("/{sid}")
     @GET
-    public Response getConferenceAsXml(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid) {
-        return getConference(accountSid, conferenceSid, APPLICATION_XML_TYPE);
+    public Response getConferenceAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getConference(accountSid, sid, APPLICATION_XML_TYPE);
     }
 
     @GET

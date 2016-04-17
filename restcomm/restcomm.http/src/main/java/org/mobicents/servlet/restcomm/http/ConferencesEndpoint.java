@@ -94,14 +94,14 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
         xstream.registerConverter(listConverter);
     }
 
-    protected Response getConference(final String accountSid, final String conferenceSid, final MediaType responseType) {
+    protected Response getConference(final String accountSid, final String sid, final MediaType responseType) {
         try {
             secure(daoManager.getAccountsDao().getAccount(accountSid), "RestComm:Read:Conferences");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         final ConferenceDetailRecordsDao dao = daoManager.getConferenceDetailRecordsDao();
-        final ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(new Sid(conferenceSid));
+        final ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(new Sid(sid));
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {

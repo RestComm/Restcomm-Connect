@@ -134,7 +134,7 @@ CREATE TABLE "restcomm_call_detail_records" (
 );
 
 CREATE TABLE "restcomm_conference_detail_records" (
-"conference_sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATETIME NOT NULL,
 "date_updated" DATETIME NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
