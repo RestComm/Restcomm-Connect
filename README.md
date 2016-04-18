@@ -1,6 +1,8 @@
 RestComm
 ========
 
+[![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 The Open Source Cloud Communications Platform
 
 [![RestComm for Mobile Providers](http://img.youtube.com/vi/tIlxoeZO8qc/0.jpg)](http://www.youtube.com/watch?v=tIlxoeZO8qc)
