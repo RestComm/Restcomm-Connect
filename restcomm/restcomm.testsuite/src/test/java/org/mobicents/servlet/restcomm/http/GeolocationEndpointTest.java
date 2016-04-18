@@ -25,10 +25,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -88,10 +86,10 @@ public class GeolocationEndpointTest {
         // Test create Notification type of Geolocation via POST (only mandatory parameters)
         // Parameter values Assignment
         MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
-        geolocationParams.add("Source", source = "geoTestSource");
-        geolocationParams.add("DeviceIdentifier", deviceIdentifier = "geoTestDevId");
-        geolocationParams.add("EventGeofenceLatitude", eventGeofenceLatitude = "-33.426280");
-        geolocationParams.add("EventGeofenceLongitude", eventGeofenceLongitude = "-70.566560");
+        geolocationParams.add("Source", source = "TestSource4Notif");
+        geolocationParams.add("DeviceIdentifier", deviceIdentifier = "TestDevId4Notif");
+        geolocationParams.add("EventGeofenceLatitude", eventGeofenceLatitude = "45.426280");
+        geolocationParams.add("EventGeofenceLongitude", eventGeofenceLongitude = "-80.566560");
         geolocationParams.add("GeofenceRange", "300");
         geolocationParams.add("GeofenceEvent", "in");
         geolocationParams.add("DesiredAccuracy", "High");
@@ -138,9 +136,9 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Test asserts via GET to a Geolocation list
-        JsonArray geolocationsListJson = RestcommGeolocationsTool.getInstance().getGeolocations(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, adminAccountSid);
-        geolocationJson = geolocationsListJson.get(0).getAsJsonObject();
+        JsonArray notificationGeolocationsListJson = RestcommGeolocationsTool.getInstance()
+                .getGeolocations(deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid);
+        geolocationJson = notificationGeolocationsListJson.get(1).getAsJsonObject();
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -148,24 +146,10 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("source").getAsString().equals(source));
         assertTrue(geolocationJson.get("device_identifier").getAsString().equals(deviceIdentifier));
         assertTrue(geolocationJson.get("geolocation_type").getAsString().equals(NotificationGT));
-        assertTrue(geolocationJson.get("response_status") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("cell_id") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("location_area_code") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("mobile_country_code") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("mobile_network_code") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("network_entity_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("location_age") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("device_latitude") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("device_longitude") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("accuracy") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("internet_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("physical_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("formatted_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("location_timestamp") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("radius") == null);
-        assertTrue(geolocationJson.get("geolocation_positioning_type") == null);
-        assertTrue(geolocationJson.get("last_geolocation_response") == null);
-        assertTrue(geolocationJson.get("cause") == null);
+        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("event_geofence_latitude").getAsString()
+                .equals(eventGeofenceLatitude));
+        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("event_geofence_longitude").getAsString()
+                .equals(eventGeofenceLongitude));
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
     }
@@ -183,8 +167,8 @@ public class GeolocationEndpointTest {
         // Create Notification type of Geolocation via POST
         // Parameter values Assignment
         MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
-        geolocationParams.add("Source", "geoTestSource");
-        geolocationParams.add("DeviceIdentifier", "geoTestDevId");
+        geolocationParams.add("Source", "TestSource");
+        geolocationParams.add("DeviceIdentifier", "TestDevId");
         geolocationParams.add("GeolocationType", "Notification");
         geolocationParams.add("EventGeofenceLatitude", "-33.426280");
         geolocationParams.add("EventGeofenceLongitude", "-70.566560");
@@ -199,14 +183,14 @@ public class GeolocationEndpointTest {
 
         // Define new values to the application attributes (POST test)
         MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
-        geolocationParamsUpdate.add("Source", source = "geoTestSource");
-        geolocationParamsUpdate.add("DeviceIdentifier", deviceIdentifier = "geoTestDevId");
+        geolocationParamsUpdate.add("Source", source = "TestSource");
+        geolocationParamsUpdate.add("DeviceIdentifier", deviceIdentifier = "TestDevId");
         geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "-33.426280");
-        geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "-70.566560");
+        geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "-71.566560");
         geolocationParamsUpdate.add("GeofenceRange", "200");
         geolocationParamsUpdate.add("GeofenceEvent", "in-out");
         geolocationParamsUpdate.add("DesiredAccuracy", "High");
-        geolocationParamsUpdate.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
+        geolocationParamsUpdate.add("StatusCallback", "http://192.1.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         geolocationParamsUpdate.add("ResponseStatus", responseStatus = "successfull");
         geolocationParamsUpdate.add("CellId", cellId = "12345");
         geolocationParamsUpdate.add("LocationAreaCode", locationAreaCode = "321");
@@ -220,7 +204,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "2001:0:9d38:6ab8:30a5:1c9d:58c6:5898");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "D8-97-BA-19-02-D8");
         geolocationParamsUpdate.add("FormattedAddress", formattedAddress = "Avenida Brasil 2681, 11500, Montevideo, Uruguay");
-        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-15");
+        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:28:40.690-03:00");
         geolocationParamsUpdate.add("Radius", radius = "200");
         geolocationParamsUpdate.add("GeolocationPositioningType", geolocationPositioningType = "Network");
         geolocationParamsUpdate.add("LastGeolocationResponse", lastGeolocationResponse = "false");
@@ -233,11 +217,8 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getNotificationGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date location_timestamp = sdf.parse(locationTimestamp);
+        locationTimestamp = "Sun, 17 Apr 2016 20:28:40 -0300";
         SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
-        locationTimestamp = df.format(location_timestamp);
-
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -287,7 +268,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("GeofenceRange", "50");
         geolocationParamsUpdate.add("GeofenceEvent", "in");
         geolocationParamsUpdate.add("DesiredAccuracy", "Average");
-        geolocationParamsUpdate.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
+        geolocationParamsUpdate.add("StatusCallback", "http://192.1.2.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         geolocationParamsUpdate.add("ResponseStatus", responseStatus = "partially-successfull");
         geolocationParamsUpdate.add("CellId", cellId = "55777");
         geolocationParamsUpdate.add("LocationAreaCode", locationAreaCode = "707");
@@ -301,7 +282,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
         geolocationParamsUpdate.add("FormattedAddress", formattedAddress = "Avenida Italia 2681, 11100, Montevideo, Uruguay");
-        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-15");
+        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:28:42.771-03:00");
         geolocationParamsUpdate.add("Radius", radius = "100");
         geolocationParamsUpdate.add("GeolocationPositioningType", geolocationPositioningType = "GPS");
         geolocationParamsUpdate.add("LastGeolocationResponse", lastGeolocationResponse = "true");
@@ -314,8 +295,7 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getNotificationGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        location_timestamp = sdf.parse(locationTimestamp);
-        locationTimestamp = df.format(location_timestamp);
+        locationTimestamp = "Sun, 17 Apr 2016 20:28:42 -0300";
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -346,6 +326,7 @@ public class GeolocationEndpointTest {
                 .equals(physicalAddress));
         assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("formatted_address").getAsString()
                 .equals(formattedAddress));
+
         assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("location_timestamp").getAsString()
                 .equals(locationTimestamp));
         assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("event_geofence_latitude").getAsString()
@@ -366,8 +347,8 @@ public class GeolocationEndpointTest {
         // Create Notification type of Geolocation via POST
         // Parameter values Assignment
         MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
-        geolocationParams.add("Source", "geoTestSource");
-        geolocationParams.add("DeviceIdentifier", "geoTestDevId");
+        geolocationParams.add("Source", "TestSource");
+        geolocationParams.add("DeviceIdentifier", "TestDevId");
         geolocationParams.add("EventGeofenceLatitude", "-33.426280");
         geolocationParams.add("EventGeofenceLongitude", "-70.566560");
         geolocationParams.add("GeofenceRange", "300");
@@ -387,7 +368,7 @@ public class GeolocationEndpointTest {
         geolocationParams.add("InternetAddress", "194.87.1.127");
         geolocationParams.add("PhysicalAddress", "D8-97-BA-19-02-D8");
         geolocationParams.add("FormattedAddress", "Avenida Brasil 2681, 11500, Montevideo, Uruguay");
-        geolocationParams.add("LocationTimestamp", "2016-04-15");
+        geolocationParams.add("LocationTimestamp", "2016-04-17T20:28:40.690-03:00");
         geolocationParams.add("Radius", "200");
         geolocationParams.add("GeolocationPositioningType", "GPS");
         geolocationParams.add("LastGeolocationResponse", "true");
@@ -417,8 +398,8 @@ public class GeolocationEndpointTest {
         // Test create Immediate type of Geolocation via POST (only mandatory parameters)
         // Parameter values Assignment
         MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
-        geolocationParams.add("Source", source = "geoTestSource");
-        geolocationParams.add("DeviceIdentifier", deviceIdentifier = "geoTestDevId");
+        geolocationParams.add("Source", source = "TestSource4Immediate");
+        geolocationParams.add("DeviceIdentifier", deviceIdentifier = "TestDevId4Immediate");
         geolocationParams.add("DesiredAccuracy", "High");
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         // HTTP POST Geolocation creation with given parameters values
@@ -461,35 +442,16 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Test asserts via GET to a Geolocation list
-        JsonArray geolocationsListJson = RestcommGeolocationsTool.getInstance().getGeolocations(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, adminAccountSid);
-        geolocationJson = geolocationsListJson.get(0).getAsJsonObject();
+        JsonArray immediateGeolocationsListJson = RestcommGeolocationsTool.getInstance()
+                .getGeolocations(deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid);
+        geolocationJson = immediateGeolocationsListJson.get(0).getAsJsonObject();
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
         assertTrue(geolocationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(geolocationJson.get("source").getAsString().equals(source));
         assertTrue(geolocationJson.get("device_identifier").getAsString().equals(deviceIdentifier));
-        assertTrue(geolocationJson.get("response_status") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("cell_id") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("location_area_code") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("mobile_country_code") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("mobile_network_code") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("network_entity_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("location_age") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("device_latitude") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("device_longitude") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("accuracy") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("internet_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("physical_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("formatted_address") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("location_timestamp") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("event_geofence_latitude") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("event_geofence_longitude") == null);
-        assertTrue(geolocationJson.get("geolocation_data").getAsJsonObject().get("radius") == null);
-        assertTrue(geolocationJson.get("geolocation_positioning_type") == null);
-        assertTrue(geolocationJson.get("last_geolocation_response") == null);
-        assertTrue(geolocationJson.get("cause") == null);
+        assertTrue(geolocationJson.get("geolocation_type").getAsString().equals(ImmediateGT));
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
     }
@@ -506,8 +468,8 @@ public class GeolocationEndpointTest {
         // Create Immediate type of Geolocation via POST
         // Parameter values Assignment
         MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
-        geolocationParams.add("Source", "geoTestSource");
-        geolocationParams.add("DeviceIdentifier", "geoTestDevId");
+        geolocationParams.add("Source", "TestSource");
+        geolocationParams.add("DeviceIdentifier", "TestDevId");
         geolocationParams.add("GeolocationType", "Immediate");
         geolocationParams.add("DesiredAccuracy", "High");
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
@@ -518,8 +480,8 @@ public class GeolocationEndpointTest {
 
         // Define new values to the application attributes (POST test)
         MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
-        geolocationParamsUpdate.add("Source", source = "geoTestSource");
-        geolocationParamsUpdate.add("DeviceIdentifier", deviceIdentifier = "geoTestDevId");
+        geolocationParamsUpdate.add("Source", source = "TestSource");
+        geolocationParamsUpdate.add("DeviceIdentifier", deviceIdentifier = "TestDevId");
         geolocationParamsUpdate.add("DesiredAccuracy", "High");
         geolocationParamsUpdate.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         geolocationParamsUpdate.add("ResponseStatus", responseStatus = "successfull");
@@ -535,7 +497,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "2001:0:9d38:6ab8:30a5:1c9d:58c6:5898");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "D8-97-BA-19-02-D8");
         geolocationParamsUpdate.add("FormattedAddress", formattedAddress = "Avenida Brasil 2681, 11500, Montevideo, Uruguay");
-        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-05");
+        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:28:40.690-03:00");
         geolocationParamsUpdate.add("Radius", "200");
         geolocationParamsUpdate.add("GeolocationPositioningType", geolocationPositioningType = "Network");
         geolocationParamsUpdate.add("LastGeolocationResponse", lastGeolocationResponse = "false");
@@ -548,10 +510,8 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date location_timestamp = sdf.parse(locationTimestamp);
+        locationTimestamp = "Sun, 17 Apr 2016 20:28:40 -0300";
         SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
-        locationTimestamp = df.format(location_timestamp);
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -594,8 +554,8 @@ public class GeolocationEndpointTest {
 
         // Define new values for the Geolocation attributes (PUT test)
         geolocationParamsUpdate = new MultivaluedMapImpl();
-        geolocationParamsUpdate.add("DesiredAccuracy", "Average");
-        geolocationParamsUpdate.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
+        geolocationParamsUpdate.add("DesiredAccuracy", "High");
+        geolocationParamsUpdate.add("StatusCallback", "http://192.1.2.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         geolocationParamsUpdate.add("ResponseStatus", responseStatus = "successfull");
         geolocationParamsUpdate.add("CellId", cellId = "55777");
         geolocationParamsUpdate.add("LocationAreaCode", locationAreaCode = "707");
@@ -609,7 +569,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
         geolocationParamsUpdate.add("FormattedAddress", formattedAddress = "Avenida Italia 2681, 11100, Montevideo, Uruguay");
-        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-06");
+        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:31:27.790-03:00");
         geolocationParamsUpdate.add("Radius", "100");
         geolocationParamsUpdate.add("GeolocationPositioningType", geolocationPositioningType = "GPS");
         geolocationParamsUpdate.add("LastGeolocationResponse", lastGeolocationResponse = "true");
@@ -622,8 +582,7 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        location_timestamp = sdf.parse(locationTimestamp);
-        locationTimestamp = df.format(location_timestamp);
+        locationTimestamp = "Sun, 17 Apr 2016 20:31:27 -0300";
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -672,8 +631,8 @@ public class GeolocationEndpointTest {
         // Create Immediate type of Geolocation via POST
         // Parameter values Assignment
         MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
-        geolocationParams.add("Source", "geoTestSource");
-        geolocationParams.add("DeviceIdentifier", "geoTestDevId");
+        geolocationParams.add("Source", "TestSource");
+        geolocationParams.add("DeviceIdentifier", "TestDevId");
         geolocationParams.add("GeolocationType", "Immediate");
         geolocationParams.add("DesiredAccuracy", "High");
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
