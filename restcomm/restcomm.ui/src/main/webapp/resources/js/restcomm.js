@@ -21,15 +21,47 @@ var rcMod = angular.module('rcApp', [
 // For all states that that have resolve sections that rely on a determined authorization status (AuthService.checkAccess()) and are children of 'restcomm' state, the 'authorize' value should be injected in the dependent 'resolve' values. See state 'restcomm.incoming-phone / localApps'.
 rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
   $stateProvider.state('public',{
-    templateUrl:'templates/public-state.html'
+    templateUrl:'templates/public-state.html',
   });
   $stateProvider.state('public.login',{
     url:"/login",
     templateUrl:'modules/login.html',
-    controller:'LoginCtrl'
+    controller:'LoginCtrl',
+    resolve: {
+        identity: function (IdentityConfig) {
+            return IdentityConfig.getIdentity();
+        }
+    }
+  });
+  $stateProvider.state('public.identity-registration',{
+    url:"/identity-registration",
+    templateUrl:'modules/identity-registration.html',
+    controller:'IdentityRegistrationCtrl',
+    resolve: {
+        identity: function (IdentityConfig, $state, Notifications,$q) {
+            var valueOrPromise = IdentityConfig.getIdentity();
+            if (valueOrPromise === null) // identity notion is not applicable - keycloak is not used
+                $state.go("restcomm.dashboard");
+            else {
+                valueOrPromise.then(function (registeredInstance) {
+                    var deferred = $q.defer();
+                    deferred.reject("KEYCLOAK_INSTANCE_ALREADY_REGISTERED");
+                    return deferred.promise;
+                }, function (value) {
+                    if (valueOrPromise != "KEYCLOAK_INSTANCE_NOT_REGISTERED" ) {
+                        console.log("WE shouldn't be here");
+                        $state.go("restcomm.dashboard");
+                    } else {
+                        // we shouldn't be here
+                        Notifications.danger('Invalid state error');
+                        return valueOrPromise; // returns the rejected promise
+                    }
+                });
+            }
+        }
+    }
   });
   $stateProvider.state('public.registerinstance',{
-    parent:'public'
   });
   // 'restcomm' state assumes (requires) an authorized restcomm Account to have been determined. Child states can take that for granted.
   $stateProvider.state('restcomm',{
@@ -38,6 +70,9 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     resolve: {
         authorize: function (AuthService) {
             return AuthService.checkAccess();
+        },
+        identity: function (IdentityConfig) {
+            return IdentityConfig.getIdentity();
         }
     }
   });
@@ -170,21 +205,6 @@ var keycloakLogout = function(){
     window.location = keycloakAuth.logoutUrl;
 };
 
-/*
-angular.element(document).ready(['$http',function ($http) {
-  var keycloak = new Keycloak({ url: "http://192.168.1.40:8080/auth", realm: "uirouter-test", clientId: "uirouter-test" });
-  keycloakAuth.loggedIn = false;
-  keycloak.init({ onLoad: 'login-required' }).success(function () {
-    keycloakAuth.loggedIn = true;
-    keycloakAuth.authz = keycloak;
-    keycloakAuth.logoutUrl = "http://192.168.1.40:8080/auth/realms/restcomm/tokens/logout?redirect_uri=" + window.location.origin + "/index.html";
-    angular.bootstrap(document, ["rcApp"]);
-  }).error(function (a, b) {
-    console.log("authentication failed");
-  });
-}]);
-*/
-
 angular.element(document).ready(['$http',function ($http) {
   // manually inject $q since it's not available
   var initInjector = angular.injector(["ng"]);
@@ -214,7 +234,7 @@ angular.element(document).ready(['$http',function ($http) {
   $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
     console.log("SuCCESS");
     // create a constant with keycloak server and instance identity configuration
-    var identityConfig = new IdentityConfig(responses[0],responses[1]);
+    var identityConfig = new IdentityConfig(responses[0],responses[1],$q);
     angular.module('rcApp').constant('IdentityConfig', identityConfig);
     angular.module('rcApp').factory('KeycloakAuth', function() {
       return keycloakAuth;

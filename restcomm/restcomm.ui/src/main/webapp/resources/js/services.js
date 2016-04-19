@@ -209,7 +209,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
 });
 
 // IdentityConfig service constructor. See restcomm.js. This service is created early before the rcMod angular module is initialized and is accessible as a 'constant' service.
-function IdentityConfig(server, instance) {
+function IdentityConfig(server, instance,$q) {
     var This = this;
     this.server = server;
     this.instance = instance;
@@ -226,12 +226,31 @@ function IdentityConfig(server, instance) {
     function securedByRestcomm() {
         return !identityServerConfigured();
     }
+    // returns identity instance if applicable (as a promise) or null if not (as null, not promise)
+    // Returns:
+    //  resolved:
+    //      - identity instance object
+    //  rejected:
+    //      - KEYCLOAK_INSTANCE_NOT_REGISTERED
+    //  not-applicable - Restcomm does not use keycloak for external authorization
+    //      - null
+    function getIdentity() {
+        if (!identityServerConfigured())
+            return null;
+        var deferred = $q.defer();
+        if (!!This.instance && !!This.instance.name)
+            deferred.resolve(This.instance);
+        else
+            deferred.reject("KEYCLOAK_INSTANCE_NOT_REGISTERED");
+        return deferred.promise;
+    }
 
     // Public interface
 
     this.identityServerConfigured = identityServerConfigured;
     this.securedByKeycloak = securedByKeycloak;
     this.securedByRestcomm = securedByRestcomm;
+    this.getIdentity = getIdentity;
 }
 
 // KeycloakAuth service is manually initialized in restcomm.js

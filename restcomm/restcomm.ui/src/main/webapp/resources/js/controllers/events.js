@@ -34,9 +34,14 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    else
 	    if (error == "MISSING_LOGGED_ACCOUNT") {
 	        $state.go("public.login");
-	    }
+	    } else
 	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
 	        console.log("Identity Instance not registered.");
+	        $state.go("public.identity-registration");
+	    } else
+	    if (error == "KEYCLOAK_INSTANCE_ALREADY_REGISTERED") {
+	        console.log("Identity Instance is already registered.");
+	        $state.go("restcomm.dashboard");
 	    }
 	});
 });

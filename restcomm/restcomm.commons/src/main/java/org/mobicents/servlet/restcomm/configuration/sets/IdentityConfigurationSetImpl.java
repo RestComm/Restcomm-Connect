@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.configuration.sets;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 
@@ -42,4 +43,10 @@ public class IdentityConfigurationSetImpl extends ConfigurationSetImpl implement
         return realmkey;
     }
 
+    @Override
+    public boolean externalAuthEnabled() {
+        if (StringUtils.isEmpty(authServerUrl))
+            return false;
+        return true;
+    }
 }
