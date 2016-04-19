@@ -19,5 +19,12 @@ public interface IdentityConfigurationSet {
 
     String getRealmkey();
 
+    /**
+     * Flags whether Keycloak (external) or Restcomm are used for authentication.
+     *
+     * @return
+     */
+    boolean externalAuthEnabled();
+
     String ADMINISTRATOR_ROLE = "Administrator"; // TODO is this really needed
 }
