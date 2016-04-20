@@ -3,6 +3,7 @@
 ## Descript+ion: Restcomm performance test script
 ## Author     : George Vagenas
 #
+
 export CURRENT_FOLDER=`pwd`
 echo "Current folder $CURRENT_FOLDER"
 export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp
@@ -31,7 +32,10 @@ fi
 
 case "$TEST_NAME" in
 "helloplay")
-    echo "Testing HelloPlay"
+    echo "Testing Hello-Play"
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm 
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
     $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
     echo $'\n********** Restcomm started\n'
     sleep 45
@@ -42,6 +46,9 @@ case "$TEST_NAME" in
     ;;
 "conference")
     echo "Testing Conference"
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm 
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
     cp $CURRENT_FOLDER/tests/conference/conference-app.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/conference-app.xml
     $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
     echo $'\n********** Restcomm started\n'
@@ -58,6 +65,9 @@ case "$TEST_NAME" in
     echo $'\n********** Restcomm stopped\n'
     ;;
 "helloplay-one-minute")
+	#In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm 
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
     echo "Testing Hello-Play One Minute"
     cp -ar $CURRENT_FOLDER/resource/audio/demo-prompt-one-minute.wav $RESTCOMM_HOME/standalone/deployments/restcomm.war/audio/demo-prompt.wav
     rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/cache/AC*
