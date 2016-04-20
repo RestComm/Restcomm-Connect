@@ -42,6 +42,9 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    if (error == "KEYCLOAK_INSTANCE_ALREADY_REGISTERED") {
 	        console.log("Identity Instance is already registered.");
 	        $state.go("restcomm.dashboard");
+	    } else
+	    if (error == "IDENTITY_REGISTRATION_NOT_AVAILABLE") { // we are trying to access restcomm registration view while in restcomm-authentication mode
+	        $state.go("restcomm.dashboard");
 	    }
 	});
 });

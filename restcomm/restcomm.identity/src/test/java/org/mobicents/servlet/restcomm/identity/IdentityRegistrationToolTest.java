@@ -48,7 +48,7 @@ public class IdentityRegistrationToolTest {
     @Test
     public void testClientCreationAndRemoval() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
         // create client
-        ClientEntity clientEntity = tool.registerClient("TEST-restcomm-rest", iat, new String[] {"http://192.168.1.39:8080"},"topsecret",null, null );
+        ClientEntity clientEntity = tool.registerClient("TEST-restcomm-rest", iat, "http://192.168.1.39:8080","topsecret",null, null );
         Assert.assertNotNull(clientEntity);
         // drop client
         Assert.assertNotNull(clientEntity.getRegistrationAccessToken());

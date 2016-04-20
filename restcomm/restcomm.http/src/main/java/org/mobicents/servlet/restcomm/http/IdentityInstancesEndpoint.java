@@ -67,12 +67,13 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, identityConfig.getRealm());
             IdentityInstance storedInstance;
             try {
-                IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, new String [] {redirectUrl}, clientSecret);
+                IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, redirectUrl, clientSecret);
                 instance.setOrganizationSid(getCurrentOrganizationSid());
                 identityInstancesDao.addIdentityInstance(instance);
                 storedInstance = identityInstancesDao.getIdentityInstanceByName(instance.getName());
             } catch (AuthServerAuthorizationError authServerAuthorizationError) {
-                return Response.status(Response.Status.FORBIDDEN).header("Content-Type", "application/json").build();
+                String errorResponse = "{\"error\":\"KEYCLOAK_ACCESS_ERROR\"}";
+                return Response.status(Response.Status.UNAUTHORIZED).entity(errorResponse).header("Content-Type", "application/json").build();
             }
             logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
             // TODO use a proper converter here
