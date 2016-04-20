@@ -52,6 +52,7 @@ import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
@@ -843,6 +844,11 @@ public final class CallManager extends UntypedActor {
                 SipURI outboundIntf = null;
                 final RegistrationsDao registrations = storage.getRegistrationsDao();
                 final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
+                if (registration != null && registration.isWebRTC() &&
+                        (registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
+                    logger.warning("Cannot create call for user agent: "+registration.getAddressOfRecord()+" since this is a webrtc client registered in another Restcomm instance");
+                    break;
+                }
                 if (registration != null && registration.getAddressOfRecord().contains("transport")) {
                     String transport = registration.getAddressOfRecord().split(";")[1].replace("transport=", "");
                     outboundIntf = outboundInterface(transport);
