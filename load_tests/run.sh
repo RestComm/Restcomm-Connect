@@ -33,6 +33,9 @@ fi
 case "$TEST_NAME" in
 "hello-play")
     echo "Testing Hello-Play"
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm 
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
     $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
     echo $'\n********** Restcomm started\n'
     sleep 45
@@ -43,6 +46,9 @@ case "$TEST_NAME" in
     ;;
 "conference")
     echo "Testing Conference"
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm 
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
     cp $CURRENT_FOLDER/tests/conference/conference-app.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/conference-app.xml
     $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
     echo $'\n********** Restcomm started\n'
