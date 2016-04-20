@@ -69,6 +69,6 @@ case "$TEST_NAME" in
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     echo $'\n********** Restcomm stopped\n'
     ;;
-*) echo "Not known test"
+*) echo "Not known test: $TEST_NAME"
    ;;
 esac
