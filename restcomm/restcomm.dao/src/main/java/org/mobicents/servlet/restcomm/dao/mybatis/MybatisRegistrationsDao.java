@@ -176,6 +176,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     private Map<String, Object> toMap(final Registration registration) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", writeSid(registration.getSid()));
+        map.put("instanceid", registration.getInstanceId());
         map.put("date_created", writeDateTime(registration.getDateCreated()));
         map.put("date_updated", writeDateTime(registration.getDateUpdated()));
         map.put("date_expires", writeDateTime(registration.getDateExpires()));
@@ -191,6 +192,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
 
     private Registration toPresenceRecord(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));
+        final String instanceId = readString(map.get("instanceid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final DateTime dateExpires = readDateTime(map.get("date_expires"));
@@ -201,7 +203,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final String userAgent = readString(map.get("user_agent"));
         final Integer timeToLive = readInteger(map.get("ttl"));
         final Boolean webRTC = readBoolean(map.get("webrtc"));
-        return new Registration(sid, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
+        return new Registration(sid, instanceId, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
                 timeToLive, location, webRTC);
     }
 }
