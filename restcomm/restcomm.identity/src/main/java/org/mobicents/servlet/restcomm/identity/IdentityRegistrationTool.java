@@ -20,6 +20,7 @@
 
 package org.mobicents.servlet.restcomm.identity;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import com.google.gson.Gson;
@@ -71,7 +72,7 @@ public class IdentityRegistrationTool {
      * @return the new IdentityInstance or null
      * @throws AuthServerAuthorizationError
      */
-    public IdentityInstance registerInstanceWithIAT(String iat, String[] redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError {
+    public IdentityInstance registerInstanceWithIAT(String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError {
         String instanceName = generateName();
         ClientEntity restcommRestClient;
         ClientEntity restcommUiClient;
@@ -79,7 +80,7 @@ public class IdentityRegistrationTool {
         ClientEntity rvdUiClient;
         try {
             restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
-            restcommUiClient = registerRestcommUiClient(instanceName,iat,null,restcommClientSecret,false,true);
+            restcommUiClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
             rvdRestClient = registerRvdRestClient(instanceName,iat,null,restcommClientSecret,false,false);
             rvdUiClient = registerRvdUiClient(instanceName,iat,null,restcommClientSecret,false,true);
         } catch (IdentityClientRegistrationError e) {
@@ -111,32 +112,37 @@ public class IdentityRegistrationTool {
         return UUID.randomUUID().toString().split("-")[0];
     }
 
-    ClientEntity registerRestcommRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
-        return registerClient(instanceName + "-" + RESTCOMM_REST_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
+    ClientEntity registerRestcommRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+        return registerClient(instanceName + "-" + RESTCOMM_REST_CLIENT_SUFFIX, iat, rootUrl, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRestcommUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
-        return registerClient(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
+    ClientEntity registerRestcommUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+        //return registerClient(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
+
+        ClientEntity repr = new ClientEntity();
+        repr.setClientId(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX);
+        repr.setProtocol("openid-connect");
+        repr.setBearerOnly(bearerOnly);
+        repr.setPublicClient(publicClient);
+        repr.setRedirectUris(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl+"/*"}));
+        repr.setWebOrigins(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl}));
+        repr.setBaseUrl(rootUrl);
+        return registerClient(iat,repr);
     }
 
-    ClientEntity registerRvdRestClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
-        return registerClient(instanceName + "-" + RVD_REST_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
+    ClientEntity registerRvdRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+        return registerClient(instanceName + "-" + RVD_REST_CLIENT_SUFFIX, iat, rootUrl, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRvdUiClient(String instanceName, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
-        return registerClient(instanceName + "-" + RVD_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
+    ClientEntity registerRvdUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+        return registerClient(instanceName + "-" + RVD_UI_CLIENT_SUFFIX, iat, rootUrl, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerClient(String clientId, String iat, String[] redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    ClientEntity registerClient(String iat, ClientEntity repr) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         // create the Keycloak Client entity (not related to the jersey client class)
         Client jersey = Client.create();
         WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl());
         // build a client representation as a JSON object
-        ClientEntity repr = new ClientEntity();
-        repr.setClientId(clientId);
-        repr.setProtocol("openid-connect");
-        repr.setBearerOnly(bearerOnly);
-        repr.setPublicClient(publicClient);
 
         Gson gson = new Gson();
         String json = gson.toJson(repr);
@@ -150,8 +156,18 @@ public class IdentityRegistrationTool {
         if (response.getStatus() == 403){
             throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
         } else {
-            throw new IdentityClientRegistrationError("Client registration for client '" + clientId + "' failed with status " + response.getStatus());
+            throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus());
         }
+    }
+
+    ClientEntity registerClient(String clientId, String iat, String redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+        // build a client representation as a JSON object
+        ClientEntity repr = new ClientEntity();
+        repr.setClientId(clientId);
+        repr.setProtocol("openid-connect");
+        repr.setBearerOnly(bearerOnly);
+        repr.setPublicClient(publicClient);
+        return registerClient(iat,repr);
     }
 
     Integer unregisterClient(String clientId, String registrationAccessToken) {

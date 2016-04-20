@@ -39,25 +39,24 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller:'IdentityRegistrationCtrl',
     resolve: {
         identity: function (IdentityConfig, $state, Notifications,$q) {
+            var deferred = $q.defer();
             var valueOrPromise = IdentityConfig.getIdentity();
             if (valueOrPromise === null) // identity notion is not applicable - keycloak is not used
-                $state.go("restcomm.dashboard");
+                deferred.reject('IDENTITY_REGISTRATION_NOT_AVAILABLE');
             else {
                 valueOrPromise.then(function (registeredInstance) {
-                    var deferred = $q.defer();
                     deferred.reject("KEYCLOAK_INSTANCE_ALREADY_REGISTERED");
-                    return deferred.promise;
                 }, function (value) {
-                    if (valueOrPromise != "KEYCLOAK_INSTANCE_NOT_REGISTERED" ) {
-                        console.log("WE shouldn't be here");
-                        $state.go("restcomm.dashboard");
+                    if (value == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
+                        deferred.resolve(null); // no instance registered - that's prefectly fine for this view
                     } else {
                         // we shouldn't be here
-                        Notifications.danger('Invalid state error');
-                        return valueOrPromise; // returns the rejected promise
+                        Notifications.error('Invalid state error');
+                        deferred.reject(value);
                     }
                 });
             }
+            return deferred.promise;
         }
     }
   });

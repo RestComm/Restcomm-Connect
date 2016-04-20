@@ -5,7 +5,7 @@
 // defining controllers module. Each module is defined at it's own file at resources/js/controllers/*.js
 angular.module('rcApp.controllers', ['ui.bootstrap','angular-datepicker']);
 
-// Shorter controllers are also defined here to creating too many files.
+// Shorter controllers are also defined here to avoid creating too many files.
 
 // Parent 'restcomm' state controller. This state assumes the availability of an authenticated user
 angular.module('rcApp.controllers').controller('RestcommCtrl', function ($scope,AuthService) {
@@ -13,7 +13,7 @@ angular.module('rcApp.controllers').controller('RestcommCtrl', function ($scope,
     $scope.sid = AuthService.getAccountSid();
 });
 
-angular.module('rcApp.controllers').controller('IdentityRegistrationCtrl', function ($scope, IdentityInstances) {
+angular.module('rcApp.controllers').controller('IdentityRegistrationCtrl', function ($scope, RCommIdentityInstances) {
     $scope.info = {
         InitialAccessToken: "",
         RedirectUrl: "",
@@ -25,7 +25,13 @@ angular.module('rcApp.controllers').controller('IdentityRegistrationCtrl', funct
     };
 
     $scope.registerInstance = function(info, accountInfo) {
-        IdentityInstances.register($.param(info));
+        var authHeader = "Basic " + btoa(accountInfo.username + ":" + accountInfo.password);
+        RCommIdentityInstances.register(info, authHeader).success(function (data, status) {
+            console.log("successfully registered instance");
+        }).error(function (data, status) {
+            console.log("error registering instance");
+        });
+
     }
 
 });

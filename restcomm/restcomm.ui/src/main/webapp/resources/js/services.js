@@ -650,6 +650,23 @@ rcServices.factory('RCommJMX', function($resource) {
   );
 });
 
+rcServices.factory('RCommIdentityInstances', function ($resource,$http) {
+    var instance = {};
+    instance.resource = $resource('/restcomm/2012-04-24/Identity/Instances');
+    instance.register = function (data, authorizationHeader) {
+        var headers =  {'Content-Type': 'application/x-www-form-urlencoded'};
+        if (authorizationHeader)
+            headers.Authorization = authorizationHeader;
+        return $http({
+            method:'POST',
+            url:'/restcomm/2012-04-24/Identity/Instances',
+            headers: headers,
+            data:$.param(data)
+        });
+    }
+    return instance;
+});
+
 /* 
  * RAS Services
  */

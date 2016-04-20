@@ -20,6 +20,8 @@
 
 package org.mobicents.servlet.restcomm.identity.entities;
 
+import java.util.List;
+
 /**
  * @author Orestis Tsakiridis
  */
@@ -29,6 +31,9 @@ public class ClientEntity {
     private Boolean bearerOnly;
     private Boolean publicClient;
     private String registrationAccessToken;
+    private List<String> redirectUris;
+    private List<String> webOrigins;
+    private String baseUrl;
 
     public String getClientId() {
         return clientId;
@@ -68,5 +73,29 @@ public class ClientEntity {
 
     public void setRegistrationAccessToken(String registrationAccessToken) {
         this.registrationAccessToken = registrationAccessToken;
+    }
+
+    public List<String> getWebOrigins() {
+        return webOrigins;
+    }
+
+    public void setWebOrigins(List<String> webOrigins) {
+        this.webOrigins = webOrigins;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    public List<String> getRedirectUris() {
+        return redirectUris;
+    }
+
+    public void setRedirectUris(List<String> redirectUris) {
+        this.redirectUris = redirectUris;
     }
 }

@@ -20,6 +20,7 @@
 
 package org.mobicents.servlet.restcomm.identity.mocks;
 
+import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.configuration.sets.IdentityConfigurationSet;
 
 /**
@@ -45,6 +46,13 @@ public class IdentityConfigurationSetMock implements IdentityConfigurationSet {
     @Override
     public String getRealmkey() {
         return realmKey;
+    }
+
+    @Override
+    public boolean externalAuthEnabled() {
+        if (StringUtils.isEmpty(authServerUrl))
+            return false;
+        return true;
     }
 
     @Override
