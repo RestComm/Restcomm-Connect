@@ -3,7 +3,6 @@
 ## Descript+ion: Restcomm performance test script
 ## Author     : George Vagenas
 #
-
 export CURRENT_FOLDER=`pwd`
 echo "Current folder $CURRENT_FOLDER"
 export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp
@@ -31,8 +30,8 @@ if [ $# -lt 6 ]; then
 fi
 
 case "$TEST_NAME" in
-"hello-play")
-    echo "Testing Hello-Play"
+"helloplay")
+    echo "Testing HelloPlay"
     $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
     echo $'\n********** Restcomm started\n'
     sleep 45
@@ -54,6 +53,18 @@ case "$TEST_NAME" in
     echo ""
     sleep 15
     $CURRENT_FOLDER/tests/conference/conference.sh
+    sleep 45
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    echo $'\n********** Restcomm stopped\n'
+    ;;
+"helloplay-one-minute")
+    echo "Testing Hello-Play One Minute"
+    cp -ar $CURRENT_FOLDER/resource/audio/demo-prompt-one-minute.wav $RESTCOMM_HOME/standalone/deployments/restcomm.war/audio/demo-prompt.wav
+    rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/cache/AC*
+    $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+    echo $'\n********** Restcomm started\n'
+    sleep 45
+    $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
     sleep 45
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     echo $'\n********** Restcomm stopped\n'

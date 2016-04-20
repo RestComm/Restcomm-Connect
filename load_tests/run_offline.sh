@@ -5,7 +5,7 @@
 #
 
 export CURRENT_FOLDER=`pwd`
-export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/Restcomm-JBoss-AS7-7.6.0.861
+export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/Restcomm-JBoss-AS7-7.6.0.866
 export WARMUP=true
 
 export RESTCOMM_ADDRESS=$1
