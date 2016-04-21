@@ -843,11 +843,18 @@ public final class CallManager extends UntypedActor {
             case CLIENT: {
                 SipURI outboundIntf = null;
                 final RegistrationsDao registrations = storage.getRegistrationsDao();
-                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
+                final String client = request.to().replaceFirst("client:", "");
+                Registration registration = registrations.getRegistration(client);
                 if (registration != null && registration.isWebRTC() &&
                         (registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
-                    logger.warning("Cannot create call for user agent: "+registration.getAddressOfRecord()+" since this is a webrtc client registered in another Restcomm instance");
-                    break;
+                    registration = registrations.getRegistrationByInstanceId(client, RestcommConfiguration.getInstance().getMain().getInstanceId());
+                    if (registration == null) {
+                        logger.warning("Cannot create call for user agent: "+registration.getAddressOfRecord()+" since this is a webrtc client registered in another Restcomm instance.");
+                        break;
+                    }
+
+                } else {
+                    logger.info("Will proceed to create call for client: "+registration.getAddressOfRecord()+" registration instanceId: "+registration.getInstanceId()+" own InstanceId: "+RestcommConfiguration.getInstance().getMain().getInstanceId());
                 }
                 if (registration != null && registration.getAddressOfRecord().contains("transport")) {
                     String transport = registration.getAddressOfRecord().split(";")[1].replace("transport=", "");
