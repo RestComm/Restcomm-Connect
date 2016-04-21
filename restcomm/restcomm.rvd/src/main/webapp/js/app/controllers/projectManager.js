@@ -44,6 +44,10 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		}).error(function (data, status, headers, config) {
 			if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
+			if (status == 401){
+				notifications.put({type:'danger',message:"You have been logged out! Please, log-in using the same Account in RVD and Adminitration console.",timeout:0});
+				authentication.doLogout();
+			}
 		});
 	}
 	
@@ -127,9 +131,12 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	    	  $scope.refreshProjectList();
 	    	  notifications.put({message:"Project imported successfully", type:"success"});
 	      }).error(function(data, status, headers, config) {
-	    	  if (status == 400) {// BAD REQUEST
+	    	  if (status == 400 && data && data.exception && data.exception.className == "UnsupportedProjectVersion") {
 	    		  console.log(data.exception.message);
-	    		  notifications.put({message:"Error importing project", type:"danger"});
+	    		  notifications.put({message:"Cannot import project. " + data.exception.message, type:"danger"});
+	    	  } else {
+                  console.log(data);
+	    	      notifications.put({message:"Error importing project", type:"danger"});
 	    	  }
 	      });
 	    }

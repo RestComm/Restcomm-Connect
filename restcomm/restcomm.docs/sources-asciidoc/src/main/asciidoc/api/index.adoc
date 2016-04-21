@@ -1,0 +1,31 @@
+= Restcomm Rest API
+
+The Restcomm REST API allows you to query meta-data about your account, phone numbers, calls, text messages, and recordings. You can also do some communications control like initiate outbound calls and send text messages.
+
+== Base URL
+
+All URLs referenced in the documentation have the following base:
+
+https://cloud.restcomm.com/2012-04-24
+
+The Restcomm REST API is served over HTTPS. To ensure data privacy, unencrypted HTTP is not supported.
+
+== Subresources
+
+Restcomm Accounts have the following subresources. Click on a link to read the API documentation for accessing or modifying each resource:
+
+* <<account-api.adoc#account,Restcomm API – Account>>
+* <<applications-api.adoc#applications,Restcomm API – Applications>>
+* <<available-phone-numbers-api.adoc#available-phone-numbers,Restcomm API – AvailablePhoneNumbers>>
+* <<calls-api.adoc#calls,Restcomm API – Calls>>
+* <<clients-api.adoc#clients,Restcomm API – Clients>>
+* <<email-api.adoc#email,Restcomm API – Email>>
+* <<gateway-api.adoc#gateways,Restcomm API – Gateway>>
+* <<incoming-phone-numbers-api.adoc#incoming-phone-numbers,Restcomm API – IncomingPhoneNumbers>>
+* <<notifications-api.adoc#notifications,Restcomm API – Notifications>>
+* <<outbound-proxy-api.adoc#outbound-proxy,Restcomm API – OutboundProxy>>
+* <<recordings-api.adoc#recordings,Restcomm API – Recordings>>
+* <<sms-api.adoc#sms,Restcomm API – SMS>>
+* <<transcriptions-api.adoc#transcriptions,Restcomm API – Transcriptions>>
+* <<usage-records-api.adoc#records,Restcomm API – Usage Records>>
+* <<ussd-push-api.adoc#uss-push,Restcomm API – UssdPush>>

@@ -1,0 +1,52 @@
+= Restcomm RCML – Gather
+
+[[gather]]
+== Gather
+The *<Gather>* verb "gathers" digits that a caller enters into his or her telephone keypad. When the caller is done entering digits, RestComm submits that digits to the provided 'action' URL in an HTTP GET or POST request. If no input is received before timeout, *<Gather>* falls through to the next verb in the RestComm document. You may optionally nest **<Say>, <Play>**, and *<Pause>* verbs within a *<Gather>* verb while waiting for input. This allows you to read menu options to the caller while letting her enter a menu selection at any time. After the first digit is received the audio will stop playing.
+
+=== Gather Attributes
+
+[cols=",,",options="header",]
+|======================================================
+|Name |Allowed Values |Default Value
+|action |relative or absolute URL |current document URL
+|method |GET, POST |POST
+|timeout |positive integer |5 seconds
+|finishOnKey |any digit, #, * |#
+|numDigits |integer >= 1 |unlimited
+|======================================================
+
+* *action.* The 'action' attribute takes an absolute or relative URL as a value. When the caller has finished entering digits RestComm will make a GET or POST request to this URL including the parameters below. If no 'action' is provided, RestComm will by default make a POST request to the current document's URL.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|=======================================================================
+|Parameter |Description
+|Digits |The digits the caller pressed, excluding the finishOnKey digit.
+|=======================================================================
+ 
+* *method.* The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action' URL via HTTP GET or POST.
+* *timeout.* The 'timeout' attribute sets the limit in seconds that RestComm will wait for the caller to press another digit before moving on and making a request to the 'action' URL. For example, if 'timeout' is '10', RestComm will wait ten seconds for the caller to press another key before submitting the previously entered digits to the 'action' URL. RestComm waits until completing the execution of all nested verbs before beginning the timeout period.
+* *finishOnKey.* The 'finishOnKey' attribute lets you choose one value that submits the received data when entered. For example, if you set 'finishOnKey' to '\#' and the user enters '1234#', RestComm will immediately stop waiting for more input when the '\#' is received and will submit "Digits=1234" to the 'action' URL. Note that the 'finishOnKey' value is not sent. The allowed values are the digits 0-9, '#', '*' and the empty string (set 'finishOnKey' to ''). If the empty string is used, <Gather> captures all input and no key will end the <Gather> when pressed. In this case RestComm will submit the entered digits to the 'action' URL only after the timeout has been reached. The value can only be a single character.
+* *numDigits.* The 'numDigits' attribute lets you set the number of digits you are expecting, and submits the data to the 'action' URL once the caller enters that number of digits.
+
+=== Nesting
+You can nest the following verbs within <Gather>: <Say>, <Play>, <Pause>
+
+=== Examples
+For an example of how to use the *<Gather>* verb see below.
+
+----
+<Response>
+                <Gather action="handle-user-input.php" numDigits="1">
+                    <Say>Welcome to TPS.</Say>
+                    <Say>For store hours, press 1.</Say>
+                    <Say>To speak to an agent, press 2.</Say>
+                    <Say>To check your package status, press 3.</Say>
+                </Gather>
+                <!-- If customer doesn't input anything, prompt and try again. -->
+                <Say>Sorry, I didn't get your response.</Say>
+                <Redirect>handle-incoming-call.xml</Redirect>
+            </Response>
+----

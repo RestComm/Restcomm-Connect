@@ -1,0 +1,89 @@
+= Restcomm API – Email
+
+== Email
+
+Using the RestComm API, you can send Emails through a simple request.
+
+=== Email resource URI
+*/2012-04-24/Accounts/\{AccountSid}**/Email/Messages***
+
+=== Resource Properties
+
+[cols=",",options="header",]
+|======================================================================
+|Property |Description
+|DateSent |The date that this Email Message was send.
+|AccountSid |The unique id of the Account that sent this Email message.
+|From |The Email address that initiated the message.
+|To |The Email address of the recipient.
+|Body |The text body of the email message.
+|Subject |The subject of the email message.
+|======================================================================
+
+=== Supported Operations
+
+**HTTP POST.** Sends a new Email  message and returns the representation of the Email message resource, including the properties above. Below you will find a list of required and optional parameters.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|==========================================================================================================
+|Parameter |Description
+|From(Required) |The Email address to use as sender address.
+|To(Required) |The destination Email address.
+|Body(Required) |The body of the Email message.
+|Subject(Required) |The subject of the Email message.(Max. 160 chars.)
+|BCC |The Blind Carbon Copy feature (Bcc).  (Hide addresses when sending an Email to various recipients)
+|CC |The Carbon Copy (Cc). (The list of CCed recipients is visible to all other recipients of the message.)
+|==========================================================================================================
+
+== Using Email
+You need to configure Restcomm to send Email messages. For the necessary configuration please refer to this http://docs.telestax.com/restcomm-sending-email-via-restcomm-email-verb/[post] 
+
+=== Send Email Messages
+
+From a bash terminal, you can run the command below:
+
+....
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Email/Messages -d "To=email@hotmail.com" -d "From=email@gmail.com" -d "Body=This is a test from RestComm" -d "Subject=Test Email"
+....
+
+[[example-post-response---xml-and-json]]
+Example POST Response - XML and JSON
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* XML POST Response
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Email/Messages -d "To=email@hotmail.com" -d "From=email@gmail.com" -d "Body=This is a test from RestComm" -d "Subject=Test Email"
+---- 
+
+
+----
+<RestcommResponse>
+  <EmailMessage>
+    <DateSent>2016-02-07T23:43:03.910Z</DateSent>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <From>email@gmail.com</From>
+    <To>email@hotmail.com</To>
+    <Body>This is a test from RestComm</Body>
+    <Subject>Test Email</Subject>
+  </EmailMessage>
+----
+
+* JSON POST Response
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Email/Messages.json -d "To=email@hotmail.com" -d "From=email@gmail.com" -d "Body=This is a test from RestComm" -d "Subject=Test Email"
+----
+
+
+----
+{
+  "date_sent": "2016-02-07T23:54:41.293Z",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "from": "email@gmail.com",
+  "to": "email@hotmail.com",
+  "body": "This is a test from RestComm",
+  "subject": "Test Email"
+}
+----

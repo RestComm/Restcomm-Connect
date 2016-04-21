@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Email step",
+  "type": "object",
+  "properties": {
+    "name":{"type": "string"},
+    "kind": {"enum": ["email"]},
+    "label": {"type": "string"},
+    "title": {"type": "string"},
+    "text": {"type": "string"},
+    "next": { "$ref": "rvdproject-schema.json#/nullOrString" },
+    "to": {"type": "string"},
+    "from": {"type": "string"},
+    "cc": {"type": "string"},
+    "bcc": {"type": "string"},
+    "subject": {"type": "string"},
+    "method": {"enum": ["GET","POST"]},
+    "statusCallback": {"type": "string"}
+  },
+  "required": ["name","kind","label","title","text","from","to","subject"]
+}
+

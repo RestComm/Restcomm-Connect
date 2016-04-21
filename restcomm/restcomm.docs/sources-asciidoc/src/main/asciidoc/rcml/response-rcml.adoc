@@ -1,0 +1,18 @@
+= Restcomm RCML – Restcomm Response
+
+[[restcomm_response]]
+== Restcomm Response
+
+In your response to the request from RestComm you want to provide RCML that will instruct RestComm on how to handle the current call.
+
+**MIME Types. **RestComm supports the MIME types described in the table below.
+
+=== Supported MIME Types
+
+[cols=",",options="header",]
+|===============================================================================================
+|Parameter |Description
+|text/xml, application/xml |RestComm interprets the returned document as an XML instruction set.
+|===============================================================================================
+
+NOTE: When your application returns the RCML document the root element of the document must always be <Response> or the parser will complain.

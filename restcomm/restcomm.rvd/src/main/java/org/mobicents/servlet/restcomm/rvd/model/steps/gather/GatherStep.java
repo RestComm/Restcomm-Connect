@@ -38,7 +38,7 @@ public class GatherStep extends Step {
     }
 
     public static class Mapping {
-        private Integer digits;
+        private String digits;
         private String next;
     }
     public final class Validation {
@@ -79,7 +79,8 @@ public class GatherStep extends Step {
         if ("menu".equals(gatherType)) {
             boolean handled = false;
             for (Mapping mapping : menu.mappings) {
-                Integer digits = Integer.parseInt( digitsString );
+                String digits = digitsString;
+                //Integer digits = Integer.parseInt( digitsString );
                 logger.debug("checking digits: " + mapping.digits + " - " + digits);
 
                 if (mapping.digits != null && mapping.digits.equals(digits)) {

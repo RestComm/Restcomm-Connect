@@ -70,9 +70,21 @@ public final class MybatisAccountsDao implements AccountsDao {
         Account account = null;
 
         account = getAccount(namespace + "getAccountByFriendlyName", name);
-        if (account == null){
+        if (account == null) {
             account = getAccount(namespace + "getAccountByEmail", name);
         }
+        if (account == null) {
+            account = getAccount(namespace + "getAccount", name);
+        }
+
+        return account;
+    }
+
+    @Override
+    public Account getAccountToAuthenticate(final String name) {
+        Account account = null;
+
+        account = getAccount(namespace + "getAccountByEmail", name);
         if (account == null) {
             account = getAccount(namespace + "getAccount", name);
         }

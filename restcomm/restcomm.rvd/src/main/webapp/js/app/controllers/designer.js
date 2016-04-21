@@ -113,13 +113,7 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 		return '';
 	}
 	$scope.addGatherMapping = function( gatherStep ) {
-		// first find max inserted digit
-		var max = 0;
-		for (var i = 0; i < gatherStep.menu.mappings.length; i ++ )
-			if ( gatherStep.menu.mappings[i].digits > max )
-				max = gatherStep.menu.mappings[i].digits;
-
-		gatherStep.menu.mappings.push({digits:max+1, next:""});
+		gatherStep.menu.mappings.push({digits:"", next:""});
 	};
 	$scope.removeGatherMapping = function (gatherStep, mapping) {
 		gatherStep.menu.mappings.splice( gatherStep.menu.mappings.indexOf(mapping), 1 );
