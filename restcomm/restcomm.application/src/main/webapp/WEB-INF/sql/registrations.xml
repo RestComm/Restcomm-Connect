@@ -18,7 +18,11 @@
   <select id="getRegistration" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_registrations" WHERE "user_name"=#{user_name};
   </select>
-  
+
+  <select id="getRegistrationByInstanceId" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_registrations" WHERE "user_name"=#{user_name} AND "instanceid"=#{instanceid};
+  </select>
+
   <select id="hasRegistration" parameterType="map" resultType="int">
     SELECT COUNT(*) FROM "restcomm_registrations" WHERE "address_of_record"=#{address_of_record} AND 
     "display_name"=#{display_name} AND "location"=#{location} AND "user_agent"=#{user_agent};
