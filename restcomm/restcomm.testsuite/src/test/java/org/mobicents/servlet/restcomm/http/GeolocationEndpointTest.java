@@ -261,7 +261,9 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getNotificationGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        locationTimestamp = "Sun, 17 Apr 2016 20:28:40 -0300";
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        DateTime dateTime = dtf.parseDateTime(locationTimestamp);
+        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
@@ -339,7 +341,8 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getNotificationGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        locationTimestamp = "Sun, 17 Apr 2016 20:28:42 -0300";
+        dateTime = dtf.parseDateTime(locationTimestamp);
+        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -444,7 +447,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
         geolocationParamsUpdate.add("FormattedAddress", formattedAddress = "Avenida Brasil 2681, 11300, Montevideo, Uruguay");
-        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:32:29.488-03:00");
+        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:32:29.488-07:00");
         geolocationParamsUpdate.add("Radius", radius = "5");
         geolocationParamsUpdate.add("GeolocationPositioningType", geolocationPositioningType = "GPS");
         geolocationParamsUpdate.add("LastGeolocationResponse", lastGeolocationResponse = "true");
@@ -458,7 +461,8 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getNotificationGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        locationTimestamp = "Sun, 17 Apr 2016 20:32:29 -0300";
+        dateTime = dtf.parseDateTime(locationTimestamp);
+        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -736,7 +740,9 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        locationTimestamp = "Sun, 17 Apr 2016 20:28:40 -0300";
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        DateTime dateTime = dtf.parseDateTime(locationTimestamp);
+        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
@@ -795,7 +801,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
         geolocationParamsUpdate.add("FormattedAddress", formattedAddress = "Avenida Italia 2681, 11100, Montevideo, Uruguay");
-        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:31:27.790-03:00");
+        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:31:27.790-08:00");
         geolocationParamsUpdate.add("Radius", "100");
         geolocationParamsUpdate.add("GeolocationPositioningType", geolocationPositioningType = "Network");
         geolocationParamsUpdate.add("LastGeolocationResponse", lastGeolocationResponse = "true");
@@ -808,7 +814,8 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        locationTimestamp = "Sun, 17 Apr 2016 20:31:27 -0300";
+        dateTime = dtf.parseDateTime(locationTimestamp);
+        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -905,7 +912,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
         geolocationParamsUpdate.add("FormattedAddress", formattedAddress = "Avenida Italia 2681, 11100, Montevideo, Uruguay");
-        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:31:28.388-03:00");
+        geolocationParamsUpdate.add("LocationTimestamp", locationTimestamp = "2016-04-17T20:31:28.388-05:00");
         geolocationParamsUpdate.add("Radius", "5");
         geolocationParamsUpdate.add("GeolocationPositioningType", geolocationPositioningType = "GPS");
         geolocationParamsUpdate.add("LastGeolocationResponse", lastGeolocationResponse = "true");
@@ -919,7 +926,8 @@ public class GeolocationEndpointTest {
         geolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
-        locationTimestamp = "Sun, 17 Apr 2016 20:31:28 -0300";
+        dateTime = dtf.parseDateTime(locationTimestamp);
+        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
