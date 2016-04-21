@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-        
+
 package org.mobicents.servlet.restcomm.http;
 
 import static org.junit.Assert.assertTrue;
@@ -232,8 +232,8 @@ public class GeolocationEndpointTest {
         MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
         geolocationParamsUpdate.add("Source", source = "TestSource");
         geolocationParamsUpdate.add("DeviceIdentifier", deviceIdentifier = "TestDevId");
-        geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "34°38'19.39''N");
-        geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "55°28'59.33''E");
+        geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "34\u00b038'19.39''N");
+        geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "55\u00b028'59.33''E");
         geolocationParamsUpdate.add("GeofenceRange", "200");
         geolocationParamsUpdate.add("GeofenceEvent", "in-out");
         geolocationParamsUpdate.add("DesiredAccuracy", "High");
@@ -266,8 +266,8 @@ public class GeolocationEndpointTest {
 
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         DateTime dateTime = dtf.parseDateTime(locationTimestamp);
-        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
+        locationTimestamp = df.format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -345,7 +345,7 @@ public class GeolocationEndpointTest {
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
         dateTime = dtf.parseDateTime(locationTimestamp);
-        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
+        locationTimestamp = df.format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -444,8 +444,8 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("MobileNetworkCode", mobileNetworkCode = "05");
         geolocationParamsUpdate.add("NetworkEntityAddress", networkEntityAddress = "598003245703");
         geolocationParamsUpdate.add("LocationAge", ageOfLocationInfo = "0");
-        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "172°38'19.39''N");
-        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "169°28'44.07''E");
+        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "172\u00b038'19.39''N");
+        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "169\u00b028'44.07''E");
         geolocationParamsUpdate.add("Accuracy", accuracy = "25");
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
@@ -465,7 +465,7 @@ public class GeolocationEndpointTest {
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
         dateTime = dtf.parseDateTime(locationTimestamp);
-        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
+        locationTimestamp = df.format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -745,8 +745,8 @@ public class GeolocationEndpointTest {
 
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         DateTime dateTime = dtf.parseDateTime(locationTimestamp);
-        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
         SimpleDateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
+        locationTimestamp = df.format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -818,7 +818,7 @@ public class GeolocationEndpointTest {
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
         dateTime = dtf.parseDateTime(locationTimestamp);
-        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
+        locationTimestamp = df.format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);
@@ -909,8 +909,8 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("MobileNetworkCode", mobileNetworkCode = "01");
         geolocationParamsUpdate.add("NetworkEntityAddress", networkEntityAddress = "598003245702");
         geolocationParamsUpdate.add("LocationAge", ageOfLocationInfo = "1");
-        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "43°38'19.39''S");
-        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "169°28'49.07''E");
+        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "43\u00b038'19.39''S");
+        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "169\u00b028'49.07''E");
         geolocationParamsUpdate.add("Accuracy", accuracy = "25");
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
@@ -930,7 +930,7 @@ public class GeolocationEndpointTest {
                 adminUsername, adminAuthToken, adminAccountSid, geolocationSid.toString());
 
         dateTime = dtf.parseDateTime(locationTimestamp);
-        locationTimestamp = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.US).format(dateTime.toDate());
+        locationTimestamp = df.format(dateTime.toDate());
         assertTrue(df.parse(geolocationJson.get("date_created").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_updated").getAsString()) != null);
         assertTrue(df.parse(geolocationJson.get("date_executed").getAsString()) != null);

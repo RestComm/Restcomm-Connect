@@ -731,7 +731,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private boolean validateWGS84(String coordinates) {
 
-        String degrees = "°";
+        String degrees = "\\u00b0";
         String minutes = "'";
         Boolean WGS84_validation;
         Boolean pattern1 = coordinates.matches("[NWSE]{1}\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
