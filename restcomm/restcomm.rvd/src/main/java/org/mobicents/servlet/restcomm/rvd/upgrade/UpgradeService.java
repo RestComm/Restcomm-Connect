@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.rvd.upgrade;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -21,6 +22,13 @@ import com.google.gson.JsonParser;
 public class UpgradeService {
     static final Logger logger = Logger.getLogger(UpgradeService.class.getName());
 
+    public enum UpgradabilityStatus {
+        UPGRADABLE, NOT_NEEDED, NOT_SUPPORTED
+    }
+
+    static final String[] versionPath = new String[] {"rvd714","1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6"};
+    static final List<String> upgradesPath = Arrays.asList(new String [] {"1.0","1.6"});
+
     private WorkspaceStorage workspaceStorage;
 
     public UpgradeService(WorkspaceStorage workspaceStorage) {
@@ -34,7 +42,12 @@ public class UpgradeService {
      * @return
      * @throws InvalidProjectVersion
      */
-    public static boolean checkBackwardCompatible(String referenceProjectVersion, String checkedProjectVesion) throws InvalidProjectVersion {
+    public static boolean checkBackwardCompatible(String checkedProjectVesion, String referenceProjectVersion) throws InvalidProjectVersion {
+        if ( "1.6".equals(referenceProjectVersion)) {
+            if ( "1.6".equals(checkedProjectVesion) )
+                return true;
+            return false;
+        } else
         if ( "1.5".equals(referenceProjectVersion) ) {
             if ( "1.5".equals(checkedProjectVesion) || "1.4".equals(checkedProjectVesion) || "1.3".equals(checkedProjectVesion) || "1.2".equals(checkedProjectVesion) || "1.1".equals(checkedProjectVesion) || "1.0".equals(checkedProjectVesion) )
                 return true;
@@ -80,17 +93,42 @@ public class UpgradeService {
             throw new InvalidProjectVersion("Invalid version identifier: " + referenceProjectVersion);
     }
 
+    public static UpgradabilityStatus checkUpgradability(String projectVersion, String rvdProjectVersion) throws InvalidProjectVersion {
+        int projectIndex = -1;
+        int rvdIndex = -1;
+        for ( int i = 0; i < versionPath.length; i ++ ) {
+            if (versionPath[i].equals(projectVersion) )
+                projectIndex = i;
+            if (versionPath[i].equals(rvdProjectVersion))
+                rvdIndex = i;
+        }
+        if (rvdIndex == -1)
+            throw new IllegalStateException("RVD project version not found in the versionPath.");
+        if (projectIndex == -1)
+            return UpgradabilityStatus.NOT_SUPPORTED;
+
+        // ok, we have the version path. Is there any upgrade there ?
+        int i = projectIndex + 1;
+        boolean upgradesInvolved = false;
+        while (i <= rvdIndex) {
+            if (upgradesPath.contains(versionPath[i]))
+                upgradesInvolved = true;
+            i ++;
+        }
+        if (upgradesInvolved)
+            return UpgradabilityStatus.UPGRADABLE;
+        else
+            return UpgradabilityStatus.NOT_NEEDED;
+    }
+
     /**
      * Upgrades a project to current RVD supported version
      * @param projectName
-     * @return false for projects already upgraded or older supported projects. true for projects that were indeed upgraded
+     * @return null for projects already upgraded or older supported projects. For projects that were indeed upgraded it returns the root JsonElement
      * @throws StorageException
      * @throws UpgradeException
      */
-    public boolean upgradeProject(String projectName) throws StorageException, UpgradeException {
-
-        String[] versionPath = new String[] {"rvd714","1.0"};
-
+    public JsonElement upgradeProject(String projectName) throws StorageException, UpgradeException {
         StateHeader header = null;
         String startVersion = null;
         try {
@@ -102,10 +140,10 @@ public class UpgradeService {
         }
 
         if ( startVersion.equals(RvdConfiguration.getRvdProjectVersion()) )
-            return false;
-        if ( checkBackwardCompatible(RvdConfiguration.getRvdProjectVersion(), startVersion) ) {
+            return null;
+        if ( checkBackwardCompatible(startVersion, RvdConfiguration.getRvdProjectVersion()) ) {
             //logger.warn("Project '" + projectName + "' is old but compatible. No need to upgrade.");
-            return false;
+            return null;
         }
 
         logger.info("Upgrading '" + projectName + "' from version " + startVersion);
@@ -135,7 +173,7 @@ public class UpgradeService {
 
         FsProjectStorage.backupProjectState(projectName,workspaceStorage);
         FsProjectStorage.updateProjectState(projectName, root.toString(), workspaceStorage);
-        return true;
+        return root;
     }
     /**
      * Upgrades all projects inside the project workspace to the version supported by current RVD
@@ -150,7 +188,7 @@ public class UpgradeService {
         List<String> projectNames = FsProjectStorage.listProjectNames(workspaceStorage);
         for ( String projectName : projectNames ) {
             try {
-                if ( upgradeProject(projectName) ) {
+                if ( upgradeProject(projectName) != null ) {
                     upgradedCount ++;
                     logger.info("project '" + projectName + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion() );
                     try {

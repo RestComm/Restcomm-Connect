@@ -8,12 +8,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.exceptions.RvdException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.packaging.PackagingException;
-import org.mobicents.servlet.restcomm.rvd.exceptions.ras.RasException;
+import org.mobicents.servlet.restcomm.rvd.exceptions.project.UnsupportedProjectVersion;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.RestcommAppAlreadyExists;
 import org.mobicents.servlet.restcomm.rvd.exceptions.ras.UnsupportedRasApplicationVersion;
 import org.mobicents.servlet.restcomm.rvd.model.ModelMarshaler;
 import org.mobicents.servlet.restcomm.rvd.model.RappItem;
-import org.mobicents.servlet.restcomm.rvd.model.client.ProjectState;
 import org.mobicents.servlet.restcomm.rvd.model.client.WavItem;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.Rapp;
 import org.mobicents.servlet.restcomm.rvd.model.packaging.RappBinaryInfo;
@@ -24,6 +23,7 @@ import org.mobicents.servlet.restcomm.rvd.storage.FsPackagingStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
+import org.mobicents.servlet.restcomm.rvd.upgrade.UpgradeService;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 import org.mobicents.servlet.restcomm.rvd.utils.Unzipper;
 import org.mobicents.servlet.restcomm.rvd.utils.Zipper;
@@ -135,67 +135,43 @@ public class RasService {
         Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
 
-        RappInfo info = workspaceStorage.loadModelFromXMLFile( tempDir.getPath() + "/app/" + "info.xml", RappInfo.class );
-        //RappConfig config = storageBase.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
-        RappConfig config = workspaceStorage.loadModelFromFile( tempDir.getPath() + "/app/" + "config", RappConfig.class );
-
-        int effectivePackageVersion = 1;
-        if (info.getRasVersion() != null)
+        String newProjectName;
         try {
-            effectivePackageVersion = Integer.parseInt(info.getRasVersion());
-        } catch (NumberFormatException e) {
-            //effectivePackageVersion = 1; // already done
-        }
-
-        int runtimePackageVersion = Integer.parseInt(RvdConfiguration.getRasApplicationVersion());
-
-        if (runtimePackageVersion < effectivePackageVersion)
-            throw new UnsupportedRasApplicationVersion("Incompatible application package. Version " + effectivePackageVersion + " is not supported");
-
-
-        // Reject applications with no unique id.
-        // TODO At some point control this check using a flag
-        //if ( RvdUtils.isEmpty(info.getId()) ) {
-        //    throw new InvalidRestcommAppPackage("No unique id specified");
-        //}
-
-        // Make sure no such restcomm app already exists (single instance limitation)
-        //List<RappItem> rappItems = projectStorage.listRapps( projectStorage.listProjectNames() );
-        List<RappItem> rappItems = FsProjectStorage.listRapps( FsProjectStorage.listProjectNames(workspaceStorage), workspaceStorage, projectService );
-        for ( RappItem rappItem : rappItems )
-            if ( rappItem.getRappInfo() != null && rappItem.getRappInfo().getId() != null && rappItem.getRappInfo().getId().equals(info.getId()) )
-                throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.getRappInfo().getId() + "  already exists. Cannot import " + info.getName() + " app");
-
-        // create a project placeholder with the application name specified in the package. This should be a default. The user should be able to override it
-        String newProjectName = FsProjectStorage.getAvailableProjectName(info.getName(), workspaceStorage);
-        FsProjectStorage.createProjectSlot(applicationSid, workspaceStorage);
-
-        // add project state
-        ProjectState projectState = workspaceStorage.loadModelFromFile(tempDir.getPath() + "/app/rvd/state", ProjectState.class);
-        projectState.getHeader().setOwner( RvdUtils.isEmpty(loggedUser) ? null : loggedUser );
-        FsProjectStorage.storeProject(true, projectState, applicationSid, workspaceStorage);
-        //projectStorage.storeProject(newProjectName, projectState, true);
-
-        // and wav files one-by-one (if any)
-        File wavDir = new File(tempDir.getPath() + "/app/rvd/wavs");
-        if ( wavDir.exists() ) {
-            File[] wavFiles = wavDir.listFiles();
-            for ( File wavFile : wavFiles ) {
-                FsProjectStorage.storeWav(applicationSid, wavFile.getName(), wavFile, workspaceStorage);
+            RappInfo info = workspaceStorage.loadModelFromXMLFile(tempDir.getPath() + "/app/" + "info.xml", RappInfo.class);
+            RappConfig config = workspaceStorage.loadModelFromFile(tempDir.getPath() + "/app/" + "config", RappConfig.class);
+            // check project version from info.xml
+            if ( ! UpgradeService.checkBackwardCompatible(info.getRvdAppVersion(), RvdConfiguration.getRvdProjectVersion()) && UpgradeService.checkUpgradability(info.getRvdAppVersion(), RvdConfiguration.getRvdProjectVersion()) != UpgradeService.UpgradabilityStatus.UPGRADABLE ) {
+                throw new UnsupportedProjectVersion("Project version " + info.getRvdAppVersion() + " is not supported");
             }
+            // check ras package version
+            int effectivePackageVersion = 1;
+            if (info.getRasVersion() != null) {
+                try {
+                    effectivePackageVersion = Integer.parseInt(info.getRasVersion());
+                } catch (NumberFormatException e) {
+                    //effectivePackageVersion = 1; // already done
+                }
+            }
+            int runtimePackageVersion = Integer.parseInt(RvdConfiguration.getRasApplicationVersion());
+            if (runtimePackageVersion < effectivePackageVersion)
+                throw new UnsupportedRasApplicationVersion("Incompatible application package. Version " + effectivePackageVersion + " is not supported");
+            // Make sure no such restcomm app already exists (single instance limitation)
+            List<RappItem> rappItems = FsProjectStorage.listRapps(FsProjectStorage.listProjectNames(workspaceStorage), workspaceStorage, projectService);
+            for (RappItem rappItem : rappItems)
+                if (rappItem.getRappInfo() != null && rappItem.getRappInfo().getId() != null && rappItem.getRappInfo().getId().equals(info.getId()))
+                    throw new RestcommAppAlreadyExists("A restcomm application with id " + rappItem.getRappInfo().getId() + "  already exists. Cannot import " + info.getName() + " app");
+            // all seems fine, do import
+            File tempProjectDir = new File(tempDir.getPath() + "/app/rvd");
+            projectService.importProject(tempProjectDir, applicationSid, loggedUser);
+            newProjectName = info.getName();
+
+            // Store rapp for later usage
+            Rapp rapp = new Rapp(info, config);
+            FsProjectStorage.storeRapp(rapp, applicationSid, workspaceStorage);
+        } finally {
+            // now remove temporary directory
+            FileUtils.deleteQuietly(tempDir);
         }
-
-        // Store rapp for later usage
-        Rapp rapp = new Rapp(info, config);
-        FsProjectStorage.storeRapp(rapp, applicationSid, workspaceStorage);
-
-        // now remove temporary directory
-        try {
-            FileUtils.deleteDirectory(tempDir);
-        } catch (IOException e) {
-            logger.warn(new RasException("Error removing temporary directory after importing project '" + newProjectName + "'"));
-        }
-
         return newProjectName;
     }
 

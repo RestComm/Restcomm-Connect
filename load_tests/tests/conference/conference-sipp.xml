@@ -62,7 +62,7 @@ Content-Length: 0
 <!-- Simulate sending RTP traffic. -->
 <nop>
 <action>
-<exec rtp_stream="../../resources/pcap/demo-prompt.wav"/>
+<exec rtp_stream="./resources/pcap/demo-prompt.wav"/>
 </action>
 </nop>
 
@@ -71,7 +71,7 @@ Content-Length: 0
 <!-- Simulate sending RTP traffic. -->
 <nop>
 <action>
-<exec rtp_stream="../../resources/pcap/demo-prompt.wav"/>
+<exec rtp_stream="./resources/pcap/demo-prompt.wav"/>
 </action>
 </nop>
 
@@ -80,7 +80,7 @@ Content-Length: 0
 <!-- Simulate sending RTP traffic. -->
 <nop>
 <action>
-<exec rtp_stream="../../resources/pcap/demo-prompt.wav"/>
+<exec rtp_stream="./resources/pcap/demo-prompt.wav"/>
 </action>
 </nop>
 

@@ -155,10 +155,15 @@ public final class SmsService extends UntypedActor {
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
             // Tell the sender we received the message okay.
             logger.info("Message to :" + toUser + " matched to one of the hosted applications");
-            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
+
+            //this is used to send a reply back to SIP client when a Restcomm App forwards inbound sms to a Restcomm client ex. Alice
             final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
             messageAccepted.send();
+
+            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
+
             return;
+
         }
         if (client != null) {
             // try to see if the request is destined to another registered client
@@ -169,7 +174,7 @@ public final class SmsService extends UntypedActor {
                 // to the b2bua
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     // if all goes well with proxying the SIP MESSAGE on to the target client
-                    // then we can end further processing of this request
+                    // then we can end further processing of this request and send response to sender
                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
                             + toClient.getLogin());
                     monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request
@@ -179,39 +184,40 @@ public final class SmsService extends UntypedActor {
                     return;
                 }
             } else {
-            // Since toUser is null, try to route the message outside using the SMS Aggregator
-            logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
-            ActorRef session = session();
-            // Create an SMS detail record.
-            final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
-            final SmsMessage.Builder builder = SmsMessage.builder();
-            builder.setSid(sid);
-            builder.setAccountSid(client.getAccountSid());
-            builder.setApiVersion(client.getApiVersion());
-            builder.setRecipient(toUser);
-            builder.setSender(client.getLogin());
-            builder.setBody(new String(request.getRawContent()));
-            builder.setDirection(Direction.OUTBOUND_CALL);
-            builder.setStatus(Status.RECEIVED);
-            builder.setPrice(new BigDecimal("0.00"));
-            // TODO implement currency property to be read from Configuration
-            builder.setPriceUnit(Currency.getInstance("USD"));
-            final StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(client.getApiVersion()).append("/Accounts/");
-            buffer.append(client.getAccountSid().toString()).append("/SMS/Messages/");
-            buffer.append(sid.toString());
-            final URI uri = URI.create(buffer.toString());
-            builder.setUri(uri);
-            final SmsMessage record = builder.build();
-            final SmsMessagesDao messages = storage.getSmsMessagesDao();
-            messages.addSmsMessage(record);
-            // Store the sms record in the sms session.
-            session.tell(new SmsSessionAttribute("record", record), self());
-            // Send the SMS.
-            final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),
-                    null);
-            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
-            session.tell(sms, self());
+                // Since toUser is null, try to route the message outside using the SMS Aggregator
+                logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
+                final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
+                trying.send();
+                ActorRef session = session();
+                // Create an SMS detail record.
+                final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
+                final SmsMessage.Builder builder = SmsMessage.builder();
+                builder.setSid(sid);
+                builder.setAccountSid(client.getAccountSid());
+                builder.setApiVersion(client.getApiVersion());
+                builder.setRecipient(toUser);
+                builder.setSender(client.getLogin());
+                builder.setBody(new String(request.getRawContent()));
+                builder.setDirection(Direction.OUTBOUND_CALL);
+                builder.setStatus(Status.RECEIVED);
+                builder.setPrice(new BigDecimal("0.00"));
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(client.getApiVersion()).append("/Accounts/");
+                buffer.append(client.getAccountSid().toString()).append("/SMS/Messages/");
+                buffer.append(sid.toString());
+                final URI uri = URI.create(buffer.toString());
+                builder.setUri(uri);
+                final SmsMessage record = builder.build();
+                final SmsMessagesDao messages = storage.getSmsMessagesDao();
+                messages.addSmsMessage(record);
+                // Store the sms record in the sms session.
+                session.tell(new SmsSessionAttribute("record", record), self());
+                // Send the SMS.
+                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),request, null);
+                monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
+                session.tell(sms, self());
                 // Update presence info
                 PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
             }
@@ -219,11 +225,11 @@ public final class SmsService extends UntypedActor {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
             response.send();
             // We didn't find anyway to handle the SMS.
-            String errMsg = "Restcomm cannot process this SMS because the destination number cannot be found. To: "+toUser;
+            String errMsg = "Restcomm cannot process this SMS because the destination number is not hosted locally. To: "+toUser;
             sendNotification(errMsg, 11005, "error", true);
             monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.NOT_FOUND), self);
-        }
-    }
+        }}
+
 
     /**
      *
@@ -282,38 +288,6 @@ public final class SmsService extends UntypedActor {
                     }
                     interpreter = builder.build();
                 }
-                // else {
-                // appUri = number.getVoiceUrl();
-                // if (appUri != null) {
-                // final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
-                // builder.setConfiguration(configuration);
-                // builder.setStorage(storage);
-                // builder.setCallManager(self);
-                // builder.setSmsService(self);
-                // builder.setAccount(number.getAccountSid());
-                // builder.setVersion(number.getApiVersion());
-                // final Account account = accounts.getAccount(number.getAccountSid());
-                // builder.setEmailAddress(account.getEmailAddress());
-                // final Sid sid = number.getVoiceApplicationSid();
-                // if (sid != null) {
-                // final Application application = applications.getApplication(sid);
-                // builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, application.getVoiceUrl()));
-                // builder.setMethod(application.getVoiceMethod());
-                // builder.setFallbackUrl(application.getVoiceFallbackUrl());
-                // builder.setFallbackMethod(application.getVoiceFallbackMethod());
-                // builder.setStatusCallback(application.getStatusCallback());
-                // builder.setStatusCallbackMethod(application.getStatusCallbackMethod());
-                // } else {
-                // builder.setUrl(UriUtils.resolve(request.getLocalAddr(), 8080, number.getVoiceUrl()));
-                // builder.setMethod(number.getVoiceMethod());
-                // builder.setFallbackUrl(number.getVoiceFallbackUrl());
-                // builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                // builder.setStatusCallback(number.getStatusCallback());
-                // builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                // }
-                // interpreter = builder.build();
-                // }
-                // }
                 final ActorRef session = session();
                 session.tell(request, self);
                 final StartInterpreter start = new StartInterpreter(session);
@@ -353,6 +327,7 @@ public final class SmsService extends UntypedActor {
             final String method = request.getMethod();
             if ("MESSAGE".equalsIgnoreCase(method)) {
                 response(message);
+
             }
         }
     }
@@ -366,13 +341,20 @@ public final class SmsService extends UntypedActor {
             return;
         }
         final SipApplicationSession application = response.getApplicationSession();
-        final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
-        session.tell(response, self);
-        final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
-        if (origRequest != null && origRequest.getSession().isValid()) {
-            origRequest.createResponse(response.getStatus(), response.getReasonPhrase()).send();
+
+        //handle SIP application session and make sure it has not being invalidated
+        logger.info("Is SipApplicationSession valid: "+application.isValid());
+        if(application != null){
+            final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
+            session.tell(response, self);
+            final SipServletRequest origRequest = (SipServletRequest) application.getAttribute(SipServletRequest.class.getName());
+            if (origRequest != null && origRequest.getSession().isValid()) {
+                SipServletResponse responseToOriginator = origRequest.createResponse(response.getStatus(), response.getReasonPhrase());
+                responseToOriginator.send();
+            }
         }
     }
+
 
     @SuppressWarnings("unchecked")
     private SipURI outboundInterface() {
@@ -393,8 +375,7 @@ public final class SmsService extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                Configuration smsConfiguration = configuration.subset("sms-aggregator");
-                return new SmsSession(smsConfiguration, sipFactory, outboundInterface(), storage, monitoringService);
+                return new SmsSession(configuration, sipFactory, outboundInterface(), storage, monitoringService, servletContext);
             }
         }));
     }
@@ -425,13 +406,13 @@ public final class SmsService extends UntypedActor {
     private Notification notification(final int log, final int error, final String message) {
         String version = configuration.subset("runtime-settings").getString("api-version");
         Sid accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
-//        Sid callSid = new Sid("CA00000000000000000000000000000000");
+        //        Sid callSid = new Sid("CA00000000000000000000000000000000");
         final Notification.Builder builder = Notification.builder();
         final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
         builder.setSid(sid);
         // builder.setAccountSid(accountId);
         builder.setAccountSid(accountId);
-//        builder.setCallSid(callSid);
+        //        builder.setCallSid(callSid);
         builder.setApiVersion(version);
         builder.setLog(log);
         builder.setErrorCode(error);
@@ -467,5 +448,4 @@ public final class SmsService extends UntypedActor {
         builder.setUri(uri);
         return builder.build();
     }
-
 }

@@ -71,6 +71,7 @@ import gov.nist.javax.sip.message.MessageExt;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  * @author jean.deruelle@telestax.com
  */
+@Ignore //Moved all tests to DialTest1, DialTest2, DialTest2
 @RunWith(Arquillian.class)
 public class DialTest {
     private final static Logger logger = Logger.getLogger(DialTest.class.getName());
@@ -220,7 +221,7 @@ public class DialTest {
         Thread.sleep(1000);
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialConference() throws InterruptedException {
         deployer.deploy("DialTest");
 
@@ -288,7 +289,7 @@ public class DialTest {
         }
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialConferenceWithContactHeaderPortNull() throws InterruptedException {
         deployer.deploy("DialTest");
 
@@ -356,7 +357,7 @@ public class DialTest {
         }
     }
 
-    @Test
+    @Test @Ignore
     // Non regression test for
     // https://bitbucket.org/telestax/telscale-restcomm/issue/113/when-restcomm-cannot-find-an-app-url-it
     public synchronized void testDialApplicationInvalidURL() throws InterruptedException, ParseException {
@@ -387,7 +388,7 @@ public class DialTest {
         assertTrue(lastResponse.getStatusCode() == 503);
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialUriAliceHangup() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -440,7 +441,7 @@ public class DialTest {
         }
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialUriBobHangup() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -513,7 +514,7 @@ public class DialTest {
         assertTrue((cdrsArray.size() - initialCdrSize )== 2);
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialUriBobHangupCheckCDRs() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -593,7 +594,7 @@ public class DialTest {
         assertTrue((cdrsArray.size() - initialCdrSize) == 2);
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialClientAlice() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -646,7 +647,7 @@ public class DialTest {
     }
 
     final String screeningResponse = "<Response></Response>";
-    @Test
+    @Test @Ignore
     public synchronized void testDialClientAliceWithScreeningAbsoluteURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/screening"))
@@ -705,7 +706,7 @@ public class DialTest {
         }
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialClientAliceWithScreeningRelativeURL() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -812,8 +813,11 @@ public class DialTest {
         }
     }
 
+
+    //DialTest1 up to here
+
     //Test for issue RESTCOMM-617
-    @Test
+    @Test @Ignore
     public synchronized void testDialClientAliceToBigDID() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -865,7 +869,7 @@ public class DialTest {
         }
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialClientAliceWithRecord() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -932,7 +936,7 @@ public class DialTest {
     }
 
 
-    @Test //Test case for issue 320
+    @Test  @Ignore //Test case for issue 320
     public synchronized void testDialClientAliceWithRecordAndStatusCallbackForApp() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -1022,7 +1026,7 @@ public class DialTest {
         }
     }
 
-    @Test //Test case for issue 320
+    @Test @Ignore //Test case for issue 320
     public synchronized void testDialClientAliceWithRecordAndStatusCallbackForAppForThreeCalls() throws InterruptedException, ParseException, MalformedURLException {
         deployer.deploy("DialTest");
 
@@ -1228,7 +1232,7 @@ public class DialTest {
         }
     }
 
-    @Test
+    @Test @Ignore
     public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
         
@@ -1281,7 +1285,7 @@ public class DialTest {
     }
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
-    @Test
+    @Test @Ignore
     public synchronized void testDialNumberGeorge_403Forbidden() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
 
@@ -1325,7 +1329,7 @@ public class DialTest {
     }
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
-    @Test
+    @Test @Ignore
     public synchronized void testDialNumberGeorge_404_OnBye() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
         
@@ -1374,7 +1378,7 @@ public class DialTest {
     final String dialNumberNoCallerId = "<Response><Dial><Number url=\"http://127.0.0.1:8080/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
 //Test for Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
 //Bob callerId should pass to the call created by Dial Number
-@Test
+@Test @Ignore
 public synchronized void testDialNumberGeorgePassInitialCallerId() throws InterruptedException, ParseException {
     stubFor(get(urlPathEqualTo("/1111"))
             .willReturn(aResponse()
@@ -1430,7 +1434,7 @@ public synchronized void testDialNumberGeorgePassInitialCallerId() throws Interr
     }
 }
 
-@Test
+@Test @Ignore
 public synchronized void testDialFork() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -1517,7 +1521,7 @@ public synchronized void testDialFork() throws InterruptedException, ParseExcept
     }
 }
 
-@Test
+@Test @Ignore
 public synchronized void testDialForkWithStatusCallback() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -1629,7 +1633,7 @@ public synchronized void testDialForkWithStatusCallback() throws InterruptedExce
 }
 
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
-@Test
+@Test @Ignore
 public synchronized void testDialForkNoAnswerButFromHenrique() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -1715,7 +1719,7 @@ public synchronized void testDialForkNoAnswerButFromHenrique() throws Interrupte
 }
 
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
-@Test
+@Test @Ignore
 public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -1801,8 +1805,10 @@ public synchronized void testDialForkNoAnswerButFromGeorgePSTN() throws Interrup
     }
 }
 
+    //DialTest2 up to here
+
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
-@Test
+@Test @Ignore
 public synchronized void testDialForkNoAnswerButFromAliceClient() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -1889,7 +1895,7 @@ public synchronized void testDialForkNoAnswerButFromAliceClient() throws Interru
 }
 
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
-@Test
+@Test @Ignore
 public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -1990,7 +1996,7 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
 //    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 private String rcmlToReturn = "<Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
-@Test
+@Test @Ignore
 public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -2095,7 +2101,7 @@ public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL()
 
 //    private String rcmlToReturn = "<Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5060</Uri></Dial>";
 //Non regression test for https://github.com/Mobicents/RestComm/issues/612
-@Test
+@Test @Ignore
 public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
 
@@ -2157,7 +2163,7 @@ public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURL() throws I
 
 private String sayRcml = "<Response><Say>Hello</Say></Response>";
 //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
-@Test
+@Test @Ignore
 public synchronized void testDialWithCustomHeaders() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
     //Received request: GET /rcml?CallSid=CA154c8c93d7eb439989a6ea42915b6c1b&AccountSid=ACae6e420f425248d6a26948c17a9e2acf&From=bob&To=%2B17778&
@@ -2202,7 +2208,7 @@ public synchronized void testDialWithCustomHeaders() throws InterruptedException
     assertTrue(bobCall.respondToDisconnect());
 }
 
-@Test
+@Test @Ignore
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
 public synchronized void testDialSip() throws InterruptedException, ParseException {
     deployer.deploy("DialTest");
@@ -2353,7 +2359,7 @@ public synchronized void testDialSipAuth() throws InterruptedException, ParseExc
     }
 }
 
-@Test
+@Test @Ignore
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
 // with URL screening
 public synchronized void testDialSipTagScreening() throws InterruptedException, ParseException {
@@ -2420,7 +2426,7 @@ public synchronized void testDialSipTagScreening() throws InterruptedException, 
     }
 }
 
-@Test
+@Test @Ignore
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
 // with Dial Action screening
 public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
@@ -2486,7 +2492,7 @@ public synchronized void testDialSipDialTagScreening() throws InterruptedExcepti
     }
 }
 
-@Test
+@Test @Ignore
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
 // with Dial Action screening
 public synchronized void testDialSipDialTagScreening180Decline() throws InterruptedException, ParseException {

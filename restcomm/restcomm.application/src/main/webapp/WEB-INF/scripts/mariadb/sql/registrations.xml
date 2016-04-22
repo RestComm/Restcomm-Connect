@@ -6,17 +6,21 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao">
   <insert id="addRegistration" parameterType="map">
     INSERT INTO restcomm_registrations (sid, date_created, date_updated, date_expires, address_of_record, display_name,
-    user_name, user_agent, ttl,  location, webrtc)
+    user_name, user_agent, ttl,  location, webrtc, instanceid)
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{date_expires}, #{address_of_record}, #{display_name}, #{user_name}, #{user_agent},
-    #{ttl}, #{location}, #{webrtc});
+    #{ttl}, #{location}, #{webrtc}, #{instanceid});
   </insert>
-  
+
   <select id="getRegistrations" resultType="hashmap">
     SELECT * FROM restcomm_registrations;
   </select>
   
   <select id="getRegistration" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_registrations WHERE user_name=#{user_name};
+  </select>
+
+  <select id="getRegistrationByInstanceId" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_registrations WHERE user_name=#{user_name} AND instanceid=#{instanceid};
   </select>
   
   <select id="hasRegistration" parameterType="map" resultType="int">
@@ -29,7 +33,7 @@
   </delete>
   
   <update id="updateRegistration" parameterType="map">
-    UPDATE restcomm_registrations SET ttl=#{ttl}, date_expires=#{date_expires} WHERE address_of_record=#{address_of_record} AND 
+    UPDATE restcomm_registrations SET ttl=#{ttl}, date_expires=#{date_expires}, date_updated=#{date_updated} WHERE address_of_record=#{address_of_record} AND
     display_name=#{display_name} AND location=#{location} AND user_agent=#{user_agent};
   </update>
 </mapper>

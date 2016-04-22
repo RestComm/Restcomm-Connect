@@ -52,6 +52,7 @@ import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
@@ -267,7 +268,7 @@ public final class CallManager extends UntypedActor {
         ActorRef call = request.call();
         if (call != null) {
             logger.info("About to destroy call: "+request.call().path());
-            context.stop(request.call());
+            context.stop(call);
         }
     }
 
@@ -568,7 +569,7 @@ public final class CallManager extends UntypedActor {
     private boolean redirectToClientVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
             final ApplicationsDao applications, final Client client) {
         URI clientAppVoiceUril = client.getVoiceUrl();
-        boolean isClientManaged = (clientAppVoiceUril != null);
+        boolean isClientManaged = (clientAppVoiceUril != null && !clientAppVoiceUril.toString().isEmpty() &&  !clientAppVoiceUril.toString().equals(""));
         if (isClientManaged) {
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
@@ -846,7 +847,19 @@ public final class CallManager extends UntypedActor {
             case CLIENT: {
                 SipURI outboundIntf = null;
                 final RegistrationsDao registrations = storage.getRegistrationsDao();
-                final Registration registration = registrations.getRegistration(request.to().replaceFirst("client:", ""));
+                final String client = request.to().replaceFirst("client:", "");
+                Registration registration = registrations.getRegistration(client);
+                if (registration != null && registration.isWebRTC() &&
+                        (registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
+                    registration = registrations.getRegistrationByInstanceId(client, RestcommConfiguration.getInstance().getMain().getInstanceId());
+                    if (registration == null) {
+                        logger.warning("Cannot create call for user agent: "+registration.getAddressOfRecord()+" since this is a webrtc client registered in another Restcomm instance.");
+                        break;
+                    }
+
+                } else {
+                    logger.info("Will proceed to create call for client: "+registration.getAddressOfRecord()+" registration instanceId: "+registration.getInstanceId()+" own InstanceId: "+RestcommConfiguration.getInstance().getMain().getInstanceId());
+                }
                 if (registration != null && registration.getAddressOfRecord().contains("transport")) {
                     String transport = registration.getAddressOfRecord().split(";")[1].replace("transport=", "");
                     outboundIntf = outboundInterface(transport);

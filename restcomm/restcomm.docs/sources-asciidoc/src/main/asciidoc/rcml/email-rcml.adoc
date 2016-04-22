@@ -1,0 +1,35 @@
+= Restcomm RCML – Email
+
+[[email]]
+== Email
+The <Email> verb sends an Email message, during a phone call. Email Attributes:
+
+[cols=",,,",]
+|================================================================
+|Name |Allowed Values |Default Value |State
+|to |Email address of  receiver |None |obligatory
+|cc |Multiple Email addresses |None |optional
+|Bcc |Multiple Email addresses |None |optional
+|from |Email address of sender |None * |obligatory
+|Subject |Text of the subject |“Restcomm Email Service” |optional
+|================================================================
+
+** *to* The ‘to’ attribute takes a valid email address as a value. RestComm will send an EMAIL message to this address. There is not a default value at the moment. If “to” is not set, an exception will be thrown, there is not a default value. 
+
+** *cc* The ‘cc’ attribute permits to send multiple emails to various email addresses as CC. RestComm will send an EMAIL message to each address. The 'cc' attribute is optional. Using cc, displays the email addresses of the various recipients. Example: *"someone2@localhost.com, test@localhost.com, test3@localhost.com"*
+  
+** *Bcc* The ‘Bcc’ attribute permits to send multiple emails to various email addresses as BCC. RestComm will send an EMAIL message to each address. The 'Bcc' attribute is optional. Using Bcc, hides the email addresses of the various recipients. Example: *"someone2@localhost.com, test@localhost.com, test3@localhost.com"*
+
+** *from* The ‘from’ attribute takes a valid Email address.  Restcomm, uses this attribute to set the “from” argument for the email session used to send the email. In some email services (e.g. Mailgun -  http://www.mailgun.com/[http://www.mailgun.com/] )  is possible to associate various email addresses to the same service account. This attribute is used to annotate which address to use  for the “from” email session. If “from” is not set, an exception will be thrown, there is not a default value. 
+
+** *Nesting* The <Email> verb can not have any other verbs or nouns nested. RCML Example, of how to use the <Email> verb, see below:
+
+----
+<Response>
+<Email from=“****@gmail.com” to=“****@hotmail.com” cc=“someone2@localhost.com, test@localhost.com, test3@localhost.com” subject=“This is the subject”>
+        This is the body!!
+</Email>
+</Response>
+----
+
+   

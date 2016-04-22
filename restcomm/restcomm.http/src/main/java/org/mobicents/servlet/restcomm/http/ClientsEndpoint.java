@@ -100,8 +100,16 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         builder.setLogin(data.getFirst("Login"));
         builder.setPassword(data.getFirst("Password"));
         builder.setStatus(getStatus(data));
-        builder.setVoiceUrl(getUrl("VoiceUrl", data));
-        builder.setVoiceMethod(getMethod("VoiceMethod", data));
+        URI voiceUrl = getUrl("VoiceUrl", data);
+        if (voiceUrl != null && voiceUrl.toString().equals("")) {
+            voiceUrl=null;
+        }
+        builder.setVoiceUrl(voiceUrl);
+        String method = getMethod("VoiceMethod", data);
+        if (method == null || method.isEmpty() || method.equals("")) {
+            method = "POST";
+        }
+        builder.setVoiceMethod(method);
         builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
         builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         // skip null/empty VoiceApplicationSid's (i.e. leave null)

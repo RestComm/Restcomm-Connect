@@ -34,6 +34,18 @@ public interface AccountsDao {
 
     Account getAccount(String name);
 
+    /**
+     * Created to separate the method used to authenticate from
+     * the method used to obtain an account from the database, using a ordinary
+     * String parameter.
+     * Once authentication cannot allow friendly name as username, this
+     * method can be similar to getAccount(String name), but without
+     * 'getAccountByFriendlyName' selector.
+     * @param name
+     * @return Account to authenticate
+     */
+    Account getAccountToAuthenticate(String name);
+
     List<Account> getAccounts(Sid sid);
 
     void removeAccount(Sid sid);

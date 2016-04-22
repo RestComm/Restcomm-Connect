@@ -40,9 +40,6 @@ public class BuildService {
      * Breaks the project state from a big JSON object to separate files per node/step. The resulting files will be easily
      * processed from the interpreter when the application is run.
      *
-     * @param projectStateJson string representation of a big JSON object representing the project's state in the client
-     * @param projectPath absolute filesystem path of the project. This is where the generated files will be stored
-     * @throws IOException
      * @throws StorageException
      */
     public void buildProject(String projectName, ProjectState projectState) throws StorageException {
@@ -67,13 +64,11 @@ public class BuildService {
         FsProjectStorage.storeProjectOptions(projectOptions, projectName, workspaceStorage);
     }
 
-    /**
-     *
-     * @param node
-     * @param projectPath
-     * @throws StorageException
-     * @throws IOException
-     */
+    public void buildProject(String projectName) throws StorageException {
+        ProjectState state = FsProjectStorage.loadProject(projectName, workspaceStorage);
+        buildProject(projectName, state);
+    }
+
     private void buildNode(Node node, String projectName) throws StorageException {
         logger.debug("Building module " + node.getName() );
 
