@@ -34,9 +34,6 @@ import org.mobicents.servlet.restcomm.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -44,6 +41,8 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
 import com.telestax.servlet.MonitoringService;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 /**
  *
@@ -163,6 +162,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 result = uri;
             }
         }
+
         return result;
     }
 
@@ -321,6 +321,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             GenerateInstanceId generateInstanceId = null;
             InstanceId instanceId = null;
             try {
+                SipURI sipURI = outboundInterface(getServletContext(), "udp");
+                context.setAttribute("INSTANCE_ID_HOST_IP", sipURI.getHost());
                 generateInstanceId = new GenerateInstanceId(context);
                 instanceId = generateInstanceId.instanceId();
             } catch (UnknownHostException e) {
