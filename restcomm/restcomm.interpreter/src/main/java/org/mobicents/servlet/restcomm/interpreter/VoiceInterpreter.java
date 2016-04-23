@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.interpreter;
 
 import static akka.pattern.Patterns.ask;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
@@ -31,7 +32,6 @@ import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
 import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -59,13 +59,13 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
-import org.mobicents.servlet.restcomm.api.EmailResponse;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -80,8 +80,8 @@ import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
 import org.mobicents.servlet.restcomm.interpreter.rcml.End;
 import org.mobicents.servlet.restcomm.interpreter.rcml.GetNextVerb;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Nouns;
-import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.interpreter.rcml.ParserFailed;
+import org.mobicents.servlet.restcomm.interpreter.rcml.Tag;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Play;
@@ -96,6 +96,7 @@ import org.mobicents.servlet.restcomm.telephony.AddParticipant;
 import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.BridgeManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.BridgeStateChanged;
+import org.mobicents.servlet.restcomm.telephony.CallFail;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
@@ -122,9 +123,9 @@ import org.mobicents.servlet.restcomm.telephony.RemoveParticipant;
 import org.mobicents.servlet.restcomm.telephony.StartBridge;
 import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
-import org.mobicents.servlet.restcomm.telephony.CallFail;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -982,6 +983,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    @Override
     List<NameValuePair> parameters() {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
@@ -1684,7 +1686,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
-        if (!dialActionExecuted && verb != null) {
+        if (!dialActionExecuted && verb != null && dial.equals(verb.name())) {
             logger.info("Proceeding to execute Dial Action attribute");
             this.dialActionExecuted = true;
             final List<NameValuePair> parameters = parameters();
@@ -1695,7 +1697,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 try {
                     logger.info("Trying to get inbound call Info");
                     final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
-                    Future<Object> future = (Future<Object>) ask(call, new GetCallInfo(), expires);
+                    Future<Object> future = ask(call, new GetCallInfo(), expires);
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                             Duration.create(10, TimeUnit.SECONDS));
                     callInfo = callResponse.get();
@@ -1708,7 +1710,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 try {
                     logger.info("Trying to get outboundCall Info");
                     final Timeout expires = new Timeout(Duration.create(10, TimeUnit.SECONDS));
-                    Future<Object> future = (Future<Object>) ask(outboundCall, new GetCallInfo(), expires);
+                    Future<Object> future = ask(outboundCall, new GetCallInfo(), expires);
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                             Duration.create(10, TimeUnit.SECONDS));
                     outboundCallInfo = callResponse.get();
@@ -2298,10 +2300,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
-                if (!dialActionExecuted)
-                    executeDialAction(message, outboundCall);
+            if (!dialActionExecuted) {
+                executeDialAction(message, outboundCall);
                 callback(true);
-
+            }
             // XXX review bridge cleanup!!
 
             // Cleanup bridge
@@ -2498,9 +2500,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (child != null && child.attribute("url") != null) {
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
+
                 try {
                     Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-                    Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
+                    Future<Object> future = ask(interpreter, start, expires);
                     Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
 
                     if (!End.class.equals(object.getClass())) {
@@ -2521,6 +2524,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Stop ringing from inbound call
             final StopMediaGroup stop = new StopMediaGroup();
             call.tell(stop, super.source);
+
 
             // Wait for a Media Group Response to finally ask Bridge to join calls
             // Check method onReceive() for MediaGroupResponse
