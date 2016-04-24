@@ -5,8 +5,13 @@
 #
 
 export CURRENT_FOLDER=`pwd`
-export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/Restcomm-JBoss-AS7-7.6.0.866
+export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/Restcomm-JBoss-AS7-7.6.0.875
 export WARMUP=true
+
+export RESULTS_FOLDER=$CURRENT_FOLDER/results
+if [ ! -d "$RESULTS_FOLDER" ]; then
+  mkdir $RESULTS_FOLDER
+fi
 
 export RESTCOMM_ADDRESS=$1
 export LOCAL_ADDRESS=$2
