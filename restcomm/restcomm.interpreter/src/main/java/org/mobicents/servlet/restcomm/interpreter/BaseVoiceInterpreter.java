@@ -443,7 +443,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
     void callback(boolean ask) {
         if (statusCallback != null) {
-            logger.info("About to execute statusCallback: "+statusCallback.toString());
+        	if(logger.isInfoEnabled())
+        	{
+        		logger.info("About to execute statusCallback: "+statusCallback.toString());
+        	}
             if (statusCallbackMethod == null) {
                 statusCallbackMethod = "POST";
             }
@@ -462,7 +465,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
         } else {
-            logger.info("status callback is null");
+        	if(logger.isInfoEnabled())
+        	{
+        		logger.info("status callback is null");
+        	}
         }
     }
 
@@ -1501,7 +1507,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             Attribute attribute = verb.attribute("action");
             String digits = collectedDigits.toString();
             collectedDigits = new StringBuffer();
-            logger.info("Digits collected: "+digits);
+            if(logger.isInfoEnabled())
+            {
+            	logger.info("Digits collected: "+digits);
+            }
             if (digits.equals(finishOnKey)) {
                 digits = "";
             }
@@ -1558,7 +1567,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
             }
-            logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
+            if(logger.isInfoEnabled())
+            {
+            	logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
+            }
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
             parser.tell(next, source);
@@ -1704,7 +1716,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
             } else {
-                logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
+            	if(logger.isDebugEnabled())
+            	{
+            		logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
+            	}
             }
             final Recording.Builder builder = Recording.builder();
             builder.setSid(recordingSid);

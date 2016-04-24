@@ -78,14 +78,20 @@ public class S3AccessTool {
         AWSCredentials credentials =new BasicAWSCredentials(accessKey, securityKey);
         AmazonS3 s3client = new AmazonS3Client(credentials);
         s3client.setRegion(Region.getRegion(Regions.fromName(bucketRegion)));
-        logger.info("S3 Region: "+bucketRegion.toString());
+        if(logger.isInfoEnabled())
+        {
+        	logger.info("S3 Region: "+bucketRegion.toString());
+        }
         try {
             StringBuffer bucket = new StringBuffer();
             bucket.append(bucketName);
             if (folder != null && !folder.isEmpty())
                 bucket.append("/").append(folder);
             URI fileUri = URI.create(fileToUpload);
-            logger.info("File to upload to S3: "+fileUri.toString());
+            if(logger.isInfoEnabled())
+            {
+            	logger.info("File to upload to S3: "+fileUri.toString());
+            }
             File file = new File(fileUri);
 //            while (!file.exists()){}
 //            logger.info("File exist: "+file.exists());
@@ -147,7 +153,10 @@ public class S3AccessTool {
 
     private void removeLocalFile(final File file) {
         if (!file.delete()) {
-            logger.info("Error while trying to delete the file: "+file.toString());
+        	if(logger.isInfoEnabled())
+            {
+        		logger.info("Error while trying to delete the file: "+file.toString());
+            }
         }
     }
 }

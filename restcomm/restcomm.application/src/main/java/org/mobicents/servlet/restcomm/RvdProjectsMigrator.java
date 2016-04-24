@@ -223,7 +223,10 @@ public class RvdProjectsMigrator {
             if (error) {
                 logger.error(message);
             } else {
-                logger.info(message);
+            	if(logger.isInfoEnabled())
+                {
+            		logger.info(message);
+                }
             }
         }
         // Write to migration log, but use server log if embedded migration
@@ -234,7 +237,10 @@ public class RvdProjectsMigrator {
                 if (error) {
                     logger.error(message);
                 } else {
-                    logger.info(message);
+                	if(logger.isInfoEnabled())
+                    {
+                		logger.info(message);
+                    }
                 }
             }
         }
