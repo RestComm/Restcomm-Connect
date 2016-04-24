@@ -79,6 +79,28 @@ case "$TEST_NAME" in
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     echo $'\n********** Restcomm stopped\n'
     ;;
+"dialclient")
+#In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+  $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+  sleep 5
+  echo "Testing Dial Client Application"
+  cp -ar $CURRENT_FOLDER/tests/dialclient/DialClientApp.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/
+  sed -i "s/SIPP_SERVER_IP_HERE/$LOCAL_ADDRESS/g" $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/DialClientApp.xml
+  $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+  echo $'\n********** Restcomm started\n'
+  sleep 45
+  echo $'\nChange default administrator password\n'
+  curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+  echo $'\nAdd new IncomingPhoneNumber 2222 for DialClient application\n'
+  curl -X POST  http://administrator%40company.com:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=2222" -d "VoiceUrl=/restcomm/demos/DialClientApp.xml" -d "isSIP=true"
+  #First run the server script that is the client that will listen for Restcomm calls
+  screen -dmS 'dialclient-server' $CURRENT_FOLDER/tests/dialclient/dialclient-server.sh
+  #Next run the client script that will initiate callls to Restcomm
+  $CURRENT_FOLDER/tests/dialclient/dialclient-client.sh
+  sleep 45
+  $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+  echo $'\n********** Restcomm stopped\n'
+  ;;
 *) echo "Not known test: $TEST_NAME"
    ;;
 esac
