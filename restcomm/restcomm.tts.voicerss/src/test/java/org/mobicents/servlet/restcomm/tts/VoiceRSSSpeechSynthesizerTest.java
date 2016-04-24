@@ -75,7 +75,14 @@ public final class VoiceRSSSpeechSynthesizerTest {
         cache = cache("/tmp/cache", "http://127.0.0.1:8080/restcomm/cache");
         // Fix for MacOS systems: only append "/" to temporary path if it doesnt end with it - hrosa
         String tmpDir = System.getProperty("java.io.tmpdir");
-        tempSystemDirectory = "file:" + tmpDir + (tmpDir.endsWith("/") ? "" : "/");
+        // Fix for Windows system: replace "\" by "/" and add "/" after "file:" - ZAHID
+        if(System.getProperty("os.name").startsWith("Windows"))
+        {
+        	tmpDir=tmpDir.replace('\\', '/');
+        	tempSystemDirectory = "file:/" + tmpDir + (tmpDir.endsWith("/") ? "" : "/");
+        }
+        else
+        	tempSystemDirectory = "file:" + tmpDir + (tmpDir.endsWith("/") ? "" : "/");
     }
 
     @After
@@ -209,7 +216,6 @@ public final class VoiceRSSSpeechSynthesizerTest {
                 final DiskCacheResponse diskCacheResponse = this.expectMsgClass(FiniteDuration.create(30, TimeUnit.SECONDS),
                         DiskCacheResponse.class);
                 assertTrue(diskCacheResponse.succeeded());
-
                 assertEquals(tempSystemDirectory + hash + ".wav", response.get().toString());
                 assertEquals("http://127.0.0.1:8080/restcomm/cache/" + hash + ".wav", diskCacheResponse.get().toString());
 
