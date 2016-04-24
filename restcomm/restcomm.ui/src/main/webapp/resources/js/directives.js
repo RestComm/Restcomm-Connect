@@ -94,20 +94,29 @@ rcDirectives.directive('rcEndpointUrl', function() {
             $scope.sidVar = '';
         }
 
+        function setApplicationTarget(scope) {
+			scope.targetVar = 'Application';
+			if (!!scope.apps) {
+				for (var i=0; i<scope.apps.length; i++) {
+				  var app = scope.apps[i];
+				  if(app.sid == scope.sidVar){
+					scope.appNameVar = app.projectName;
+					scope.urlVal = '';
+					break;
+				  }
+				}
+			}
+		}
+
         $scope.initTarget = function() {
             if($scope.sidVar){
-                $scope.targetVar = 'Application';
-                for (var i=0; i<$scope.apps.length; i++) {
-                  var app = $scope.apps[i];
-                  if(app.sid == $scope.sidVar){
-                    $scope.appNameVar = app.projectName;
-                    $scope.urlVal = '';
-                    break;
-                  }
-                }
-            } else {
+                setApplicationTarget($scope);
+            } else
+            if ($scope.urlVar) {
                 $scope.targetVar = 'URL';
-            }
+            } else {
+				setApplicationTarget($scope);
+			}
         }
 
         $scope.clearSelectedApp = function() {
