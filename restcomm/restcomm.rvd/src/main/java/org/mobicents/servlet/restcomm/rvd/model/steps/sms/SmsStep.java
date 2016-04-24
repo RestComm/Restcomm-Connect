@@ -91,7 +91,10 @@ public class SmsStep extends Step {
 
     @Override
     public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
-        logger.info("handling sms action");
+        if(logger.isInfoEnabled())
+        {
+        	logger.info("handling sms action");
+        }
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );
 

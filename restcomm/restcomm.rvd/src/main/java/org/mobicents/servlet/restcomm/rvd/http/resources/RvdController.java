@@ -113,8 +113,10 @@ public class RvdController extends RestService {
                 rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
             rcmlResponse = Interpreter.rcmlOnException();
         }
-
-        logger.debug(rcmlResponse);
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug(rcmlResponse);
+    	}
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
     }
 
@@ -126,14 +128,18 @@ public class RvdController extends RestService {
         try {
             rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
             init(rvdContext);
-
-            logger.info("Received Restcomm GET request");
+        	if(logger.isInfoEnabled())
+        	{
+        		logger.info("Received Restcomm GET request");
+        	}
             Enumeration<String> headerNames = (Enumeration<String>) httpRequest.getHeaderNames();
             while (headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
             }
-
+        	if(logger.isInfoEnabled())
+        	{
             logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+        	}
             MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
             return runInterpreter(appname, httpRequest, requestParams);
@@ -153,10 +159,15 @@ public class RvdController extends RestService {
             rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
             init(rvdContext);
 
-            logger.info("Received Restcomm POST request");
-            logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
-            logger.debug("POST Params: " + requestParams.toString());
-
+        	if(logger.isInfoEnabled())
+        	{
+        		logger.info("Received Restcomm POST request");
+        	}
+        	if(logger.isDebugEnabled())
+        	{
+	            logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+	            logger.debug("POST Params: " + requestParams.toString());
+        	}
             return runInterpreter(appname, httpRequest, requestParams);
         } catch (StorageException e) {
             logger.error(e, e);
@@ -195,8 +206,10 @@ public class RvdController extends RestService {
 
     private RestcommCreateCallResponse executeAction(String projectName, HttpServletRequest request, String toParam,
                                                      String fromParam, String accessToken, UriInfo ui, String basicAuthUsername, String basicAuthPassword, String accountSid) throws StorageException, CallControlException {
-
-        logger.info( "WebTrigger: Application '" + projectName + "' initiated. User request URL: " + ui.getRequestUri().toString());
+    	if(logger.isInfoEnabled())
+    	{
+    		logger.info( "WebTrigger: Application '" + projectName + "' initiated. User request URL: " + ui.getRequestUri().toString());
+    	}
         if (rvdContext.getProjectSettings().getLogging())
             rvdContext.getProjectLogger().log("WebTrigger incoming request: " + ui.getRequestUri().toString(),false).tag("app", projectName).tag("WebTrigger").done();
 
@@ -243,8 +256,10 @@ public class RvdController extends RestService {
         } catch (RestcommClient.RestcommClientInitializationException e) {
             throw new CallControlException("WebTrigger",e);
         }
-
-        logger.debug("WebTrigger: reaching restcomm at '" + restcommBaseUri + "'");
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug("WebTrigger: reaching restcomm at '" + restcommBaseUri + "'");
+    	}
 
         String rcmlUrl = info.lanes.get(0).startPoint.rcmlUrl;
         // use the existing application for RCML if none has been given
@@ -274,8 +289,11 @@ public class RvdController extends RestService {
             throw new CallControlException("Error copying user supplied parameters to rcml url", e);
         }
 
-        logger.debug("WebTrigger: rcmlUrl: " + rcmlUrl);
-
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug("WebTrigger: rcmlUrl: " + rcmlUrl);
+    	}
+        
         // to
         String to = toParam;
         if (RvdUtils.isEmpty(to))
@@ -310,8 +328,11 @@ public class RvdController extends RestService {
             RestcommCreateCallResponse response = restcommClient.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
                     .addParam("From", from).addParam("To", to).addParam("Url", rcmlUrl)
                     .done(marshaler.getGson(), RestcommCreateCallResponse.class);
-
-            logger.info("WebTrigger: joined " + to + " with " + rcmlUrl);
+        	
+            if(logger.isInfoEnabled())
+        	{
+            	logger.info("WebTrigger: joined " + to + " with " + rcmlUrl);
+        	}
             return response;
         } catch (AccessApiException e) {
             throw new CallControlException(e.getMessage(), e).setStatusCode(e.getStatusCode());

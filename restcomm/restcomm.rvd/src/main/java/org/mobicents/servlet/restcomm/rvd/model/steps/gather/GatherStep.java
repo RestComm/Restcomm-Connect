@@ -68,7 +68,10 @@ public class GatherStep extends Step {
     }
 
     public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
-        logger.info("handling gather action");
+        if(logger.isInfoEnabled())
+        {
+        	logger.info("handling gather action");
+        }
 
         String digitsString = interpreter.getRequestParams().getFirst("Digits");
         if ( digitsString != null )
@@ -81,11 +84,17 @@ public class GatherStep extends Step {
             for (Mapping mapping : menu.mappings) {
                 String digits = digitsString;
                 //Integer digits = Integer.parseInt( digitsString );
-                logger.debug("checking digits: " + mapping.digits + " - " + digits);
+                if(logger.isDebugEnabled())
+                {
+                	logger.debug("checking digits: " + mapping.digits + " - " + digits);
+                }
 
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
                     // seems we found out menu selection
-                    logger.debug("seems we found out menu selection");
+                	if(logger.isDebugEnabled())
+                	{
+                		logger.debug("seems we found out menu selection");
+                	}
                     interpreter.interpret(mapping.next,null, null, originTarget);
                     handled = true;
                 }
@@ -121,22 +130,34 @@ public class GatherStep extends Step {
 
                 if (effectivePattern != null ) {
                     doValidation = true;
-                    logger.debug("Validating '" + variableValue + "' against " + effectivePattern);
+                    if(logger.isDebugEnabled())
+                    {
+                    	logger.debug("Validating '" + variableValue + "' against " + effectivePattern);
+                    }
                     if ( !variableValue.matches(effectivePattern) )
                         valid = false;
                 }
             }
 
             if ( doValidation && !valid ) {
-                logger.debug("Invalid input for gather/collectdigits. Will say the validation message and rerun the gather");
+            	if(logger.isDebugEnabled())
+            	{
+            		logger.debug("Invalid input for gather/collectdigits. Will say the validation message and rerun the gather");
+            	}
             } else {
                 // is this an application-scoped variable ?
                 if ( "application".equals(collectdigits.scope) ) {
-                    logger.debug("'" + variableName + "' is application scoped");
+                	if(logger.isDebugEnabled())
+                	{
+                		logger.debug("'" + variableName + "' is application scoped");
+                	}
                     interpreter.putStickyVariable(variableName, variableValue);
                 } else
                 if ( "module".equals(collectdigits.scope) ) {
-                    logger.debug("'" + variableName + "' is module scoped");
+                	if(logger.isDebugEnabled())
+                	{
+                		logger.debug("'" + variableName + "' is module scoped");
+                	}
                     interpreter.putModuleVariable(variableName, variableValue);
                 }
 

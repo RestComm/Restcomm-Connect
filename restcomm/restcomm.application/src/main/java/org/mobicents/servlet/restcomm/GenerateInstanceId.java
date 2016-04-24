@@ -53,11 +53,17 @@ public class GenerateInstanceId {
     public InstanceId instanceId() {
         InstanceId instanceId = instanceIdDao.getInstanceIdByHost(host);
         if (instanceId != null) {
-            logger.info("Restcomm Instance ID: "+instanceId.toString());
+        	if(logger.isInfoEnabled())
+            {
+        		logger.info("Restcomm Instance ID: "+instanceId.toString());
+            }
         } else {
             instanceId = new InstanceId(Sid.generate(Sid.Type.INSTANCE), host, DateTime.now(), DateTime.now());
             instanceIdDao.addInstancecId(instanceId);
-            logger.info("Restcomm Instance ID created: "+instanceId.toString());
+            if(logger.isInfoEnabled())
+            {
+            	logger.info("Restcomm Instance ID created: "+instanceId.toString());
+            }
         }
         servletContext.setAttribute(InstanceId.class.getName(), instanceId);
         return instanceId;

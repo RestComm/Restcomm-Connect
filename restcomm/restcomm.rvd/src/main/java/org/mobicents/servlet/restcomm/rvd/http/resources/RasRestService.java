@@ -106,8 +106,10 @@ public class RasRestService extends RestService {
     @Path("/packaging/app")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAppConfig(@QueryParam("applicationSid") String applicationSid) throws StorageException, ProjectDoesNotExist {
-        logger.debug("retrieving app package for project " + applicationSid);
-
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug("retrieving app package for project " + applicationSid);
+    	}
         if (!FsPackagingStorage.hasPackaging(applicationSid, workspaceStorage))
             return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
 
@@ -128,7 +130,10 @@ public class RasRestService extends RestService {
     @POST
     @Path("/packaging/app/save")
     public Response saveApp(@Context HttpServletRequest request, @QueryParam("applicationSid") String applicationSid) {
-        logger.info("saving restcomm app '" + applicationSid + "'");
+    	if(logger.isInfoEnabled())
+    	{
+    		logger.info("saving restcomm app '" + applicationSid + "'");
+    	}
         try {
             String rappData;
             rappData = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
@@ -162,8 +167,10 @@ public class RasRestService extends RestService {
     @Path("/packaging/app/prepare")
     @Produces(MediaType.APPLICATION_JSON)
     public Response preparePackage(@QueryParam("applicationSid") String applicationSid) {
-        logger.debug("preparig app zip for project " + applicationSid);
-
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug("preparig app zip for project " + applicationSid);
+    	}
         try {
             if (FsPackagingStorage.hasPackaging(applicationSid, workspaceStorage)) {
                 RvdProject project = projectService.load(applicationSid);
@@ -190,7 +197,10 @@ public class RasRestService extends RestService {
     @Path("/packaging/binary/info")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBinaryStatus(@QueryParam("applicationSid") String applicationSid) {
-        logger.debug("getting binary info for project " + applicationSid);
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug("getting binary info for project " + applicationSid);
+    	}
 
         RappBinaryInfo binaryInfo = rasService.getBinaryInfo(applicationSid);
         return buildOkResponse(binaryInfo);
@@ -200,8 +210,10 @@ public class RasRestService extends RestService {
     @RvdAuth
     @Path("/packaging/download")
     public Response downloadPackage(@QueryParam("projectName") String projectName, @QueryParam("applicationSid") String applicationSid) {
-        logger.debug("downloading app zip for project " + applicationSid);
-
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug("downloading app zip for project " + applicationSid);
+    	}
         try {
             if (FsPackagingStorage.hasPackaging(applicationSid, workspaceStorage)) {
                 //Validator validator = new RappConfigValidator();
@@ -281,8 +293,10 @@ public class RasRestService extends RestService {
     @POST
     @Path("apps")
     public Response newRasApp(@Context HttpServletRequest request) {
-        logger.info("uploading new ras app");
-
+    	if(logger.isInfoEnabled())
+    	{
+    		logger.info("uploading new ras app");
+    	}
         BuildService buildService = new BuildService(workspaceStorage);
         //String loggedUser = securityContext.getUserPrincipal() == null ? null : securityContext.getUserPrincipal().getName();
         RvdUser loggedUser = (RvdUser) securityContext.getUserPrincipal();
@@ -350,7 +364,10 @@ public class RasRestService extends RestService {
             }
         } catch ( RestcommAppAlreadyExists e ) {
             logger.warn(e);
-            logger.debug(e,e);
+        	if(logger.isDebugEnabled())
+        	{
+        		logger.debug(e,e);
+        	}
             return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
         } catch ( UnsupportedRasApplicationVersion | UnsupportedProjectVersion e ) {
             logger.error(e.getMessage(), e);
@@ -399,7 +416,10 @@ public class RasRestService extends RestService {
     @GET
     @Path("apps/{applicationSid}")
     public Response getRapp(@PathParam("applicationSid") String applicationSid) throws StorageException {
-        logger.info("getting info for " + applicationSid);
+    	if(logger.isInfoEnabled())
+    	{
+    		logger.info("getting info for " + applicationSid);
+    	}
         try {
             Rapp rapp;
             if (FsProjectStorage.hasPackagingInfo(applicationSid, workspaceStorage))
