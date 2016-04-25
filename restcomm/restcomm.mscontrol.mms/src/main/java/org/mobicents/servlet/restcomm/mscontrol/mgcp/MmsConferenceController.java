@@ -172,8 +172,11 @@ public final class MmsConferenceController extends MediaServerController {
         final ActorRef self = self();
         final State state = fsm.state();
 
-        logger.info(" ********** Conference Controller Current State: " + state.toString());
-        logger.info(" ********** Conference Controller Processing Message: " + klass.getName());
+        if(logger.isInfoEnabled())
+    	{
+        	logger.info(" ********** Conference Controller Current State: " + state.toString());
+        	logger.info(" ********** Conference Controller Processing Message: " + klass.getName());
+    	}
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);

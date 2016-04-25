@@ -590,7 +590,10 @@ public class SmppInterpreter extends UntypedActor  {
                     if ((type != null && content != null) && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
                         parser = parser(content);
                     } else {
-                        logger.info("DownloaderResponse getContentType is null: "+response);
+                    	if(logger.isInfoEnabled())
+                    	{
+                    		logger.info("DownloaderResponse getContentType is null: "+response);
+                    	}
                         final NotificationsDao notifications = storage.getNotificationsDao();
                         final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                         notifications.addNotification(notification);
