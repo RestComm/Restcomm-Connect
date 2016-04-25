@@ -142,9 +142,11 @@ public class Bridge extends UntypedActor {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** Bridge " + self.path() + " State: \"" + state.toString());
-        logger.info("********** Bridge " + self.path() + " Processing: \"" + klass.getName() + " Sender: " + sender.path());
-
+        if(logger.isInfoEnabled())
+    	{
+        	logger.info("********** Bridge " + self.path() + " State: \"" + state.toString());
+        	logger.info("********** Bridge " + self.path() + " Processing: \"" + klass.getName() + " Sender: " + sender.path());
+    	}
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
