@@ -46,7 +46,8 @@ public class GenerateInstanceId {
 
     public GenerateInstanceId(ServletContext servletContext, final SipURI sipURI) throws UnknownHostException {
         this.servletContext = servletContext;
-        host = sipURI.getHost();
+        host = sipURI.getHost()+":"+sipURI.getPort();
+        logger.info("Host for InstanceId: "+host);
         instanceIdDao = ((DaoManager) servletContext.getAttribute(DaoManager.class.getName())).getInstanceIdDao();
     }
 
