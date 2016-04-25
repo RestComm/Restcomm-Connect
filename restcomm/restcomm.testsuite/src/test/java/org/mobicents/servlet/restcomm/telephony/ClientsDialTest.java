@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.telephony;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
@@ -77,6 +78,7 @@ public class ClientsDialTest {
     private static SipStackTool tool3;
     private static SipStackTool tool4;
     private static SipStackTool tool5;
+    private static SipStackTool tool6;
 
     private String pstnNumber = "+151261006100";
 
@@ -107,6 +109,11 @@ public class ClientsDialTest {
     private SipPhone georgePhone;
     private String georgeContact = "sip:"+pstnNumber+"@127.0.0.1:5070";
 
+    private SipStack clientWithAppSipStack;
+    private SipPhone clientWithAppPhone;
+    private String clientWithAppContact = "sip:clientWithApp@127.0.0.1:5095";
+    private String clientWithAppClientSid;
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -117,6 +124,7 @@ public class ClientsDialTest {
         tool3 = new SipStackTool("ClientsDialTest3");
         tool4 = new SipStackTool("ClientsDialTest4");
         tool5 = new SipStackTool("ClientsDialTest5");
+        tool6 = new SipStackTool("ClientsDialTest6");
     }
 
     @Before
@@ -137,9 +145,12 @@ public class ClientsDialTest {
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
 
+        clientWithAppSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
+        clientWithAppPhone = clientWithAppSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, clientWithAppContact);
+
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234", null);
         dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "dimitri", "1234", null);
-
+        clientWithAppClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "clientWithApp", "1234", "http://127.0.0.1:8090/1111");
     }
 
     @After
@@ -170,6 +181,13 @@ public class ClientsDialTest {
         }
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
+        }
+
+        if (clientWithAppPhone != null) {
+            clientWithAppPhone.dispose();
+        }
+        if (clientWithAppSipStack != null) {
+            clientWithAppSipStack.dispose();
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
@@ -744,6 +762,61 @@ public class ClientsDialTest {
 
         assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+    }
+
+    private String clientWithAppHostedAppRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Number>+151261006100</Number></Dial></Response>";
+    @Test
+    public synchronized void testClientWithHostedApplication() throws InterruptedException, ParseException {
+        stubFor(post(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(clientWithAppHostedAppRcml)));
+
+        assertNotNull(clientWithAppClientSid);
+
+        SipURI uri = clientWithAppSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(clientWithAppPhone.register(uri, "clientWithApp", "1234", clientWithAppContact, 3600, 3600));
+        Credential c = new Credential("127.0.0.1", "clientWithApp", "1234");
+        clientWithAppPhone.addUpdateCredential(c);
+
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        SipCall clientWithAppCall = clientWithAppPhone.createSipCall();
+        clientWithAppCall.initiateOutgoingCall(clientWithAppContact, "sip:3090909090@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(clientWithAppCall);
+        assertTrue(clientWithAppCall.waitForAuthorisation(5000));
+        assertTrue(clientWithAppCall.waitOutgoingCallResponse(5000));
+        final int response = clientWithAppCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(clientWithAppCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, clientWithAppCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(clientWithAppCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, clientWithAppCall.getLastReceivedResponse().getStatusCode());
+
+        clientWithAppCall.sendInviteOkAck();
+        assertTrue(!(clientWithAppCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null,
+                null));
+        assertTrue(georgeCall.waitForAck(50 * 1000));
+
+        Thread.sleep(3000);
+
+        // hangup.
+        clientWithAppCall.disconnect();
+
+        georgeCall.listenForDisconnect();
+        assertTrue(georgeCall.waitForDisconnect(30 * 1000));
+        assertTrue(georgeCall.respondToDisconnect());
     }
 
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)
