@@ -46,14 +46,14 @@ echo "Restcomm IP Address: $RESTCOMM_ADDRESS - Local IP Address: $LOCAL_ADDRESS"
 if [[ "$WARMUP" == "true" ]]; then
   echo "Warm up, SIMULTANEOUS_CALLS_WARMUP: $SIMULTANEOUS_CALLS_WARMUP, MAXIMUM_CALLS_WARMUP: $MAXIMUM_CALLS_WARMUP, CALL_RATE_WARMUP: $CALL_RATE_WARMUP"
   sleep 3
-  $SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/conference/conference-sipp.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS_WARMUP -m $MAXIMUM_CALLS_WARMUP -r $CALL_RATE_WARMUP -recv_timeout 10000 -t un -nr
+  $SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/conference/conference-sipp.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS -l $SIMULTANEOUS_CALLS_WARMUP -m $MAXIMUM_CALLS_WARMUP -r $CALL_RATE_WARMUP -recv_timeout 10000 -t un -nr
   echo "Warmup finished"
   sleep 2m
 fi
 
 echo "About to launch rocket... SIMULTANEOUS_CALLS: $SIMULTANEOUS_CALLS, MAXIMUM_CALLS: $MAXIMUM_CALLS, CALL_RATE: $CALL_RATE"
 sleep 3
-$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/conference/conference-sipp.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/conference-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/conference-$DATE-screens.log
+$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/conference/conference-sipp.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/conference-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/conference-$DATE-screens.log
 echo $?
 
 

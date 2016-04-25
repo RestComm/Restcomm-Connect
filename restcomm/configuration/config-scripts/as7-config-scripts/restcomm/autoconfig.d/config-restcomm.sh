@@ -368,7 +368,7 @@ configSMPPAccount() {
 	peerPort="$6"
 
 
-	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE 
+	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
 
 	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
 		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
@@ -377,10 +377,10 @@ configSMPPAccount() {
 			N
 			N
 			N; s|<systemid>.*</systemid>|<systemid>$systemID</systemid>|
-			N; s|<peerip>.*/peerip>|<peerip>$peerIP</peerip>|
+			N; s|<peerip>.*</peerip>|<peerip>$peerIP</peerip>|
 			N; s|<peerport>.*</peerport>|<peerport>$peerPort</peerport>|
 			N
-			N 
+			N
 			N; s|<password>.*</password>|<password>$password</password>|
 			N; s|<systemtype>.*</systemtype>|<systemtype>$systemType</systemtype>|
 		}" $FILE > $FILE.bak
@@ -395,10 +395,10 @@ configSMPPAccount() {
 			N
 			N
 			N; s|<systemid>.*</systemid>|<systemid></systemid>|
-			N; s|<peerip>.*/peerip>|<peerip></peerip>|
+			N; s|<peerip>.*</peerip>|<peerip></peerip>|
 			N; s|<peerport>.*</peerport>|<peerport></peerport>|
 			N
-			N 
+			N
 			N; s|<password>.*</password>|<password></password>|
 			N; s|<systemtype>.*</systemtype>|<systemtype></systemtype>|
 		}" $FILE > $FILE.bak
@@ -419,7 +419,38 @@ configMediaServerMSaddress() {
 	fi
 }
 
+configRestCommURIs() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
+	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
+		if [ "$DISABLE_HTTP" = "true" ]; then
+            REMOTEADD="$STATIC_ADDRESS"
+            PORT=8443
+			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>https://$REMOTEADD:$PORT/restcomm/audio<\/prompts-uri>|" \
+		    -e "s|<cache-uri>.*</cache-uri>|<cache-uri>https://$REMOTEADD/restcomm/cache</cache-uri>|" \
+			-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>https://$REMOTEADD/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
+
+		else
+			PORT=8080
+			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>http://$BIND_ADDRESS:$PORT/restcomm/audio<\/prompts-uri>|" \
+		    -e "s|<cache-uri>.*/cache-uri>|<cache-uri>http://$BIND_ADDRESS/restcomm/cache</cache-uri>|" \
+			-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>http://$BIND_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
+		fi
+		mv $FILE.bak $FILE
+		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
+	fi
+}
+
+
+updateRecordingsPath() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+	if [ -n "$RECORDINGS_PATH" ]; then
+		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://${RECORDINGS_PATH}<\/recordings-path>|" $FILE > $FILE.bak
+		echo "Updated RECORDINGS_PATH "
+		mv $FILE.bak $FILE
+	fi
+}
 
 # MAIN
 echo 'Configuring RestComm...'
@@ -436,4 +467,6 @@ configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$
 configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
 configMediaServerMSaddress "$BIND_ADDRESS"
+configRestCommURIs
+updateRecordingsPath
 echo 'Configured RestComm!'

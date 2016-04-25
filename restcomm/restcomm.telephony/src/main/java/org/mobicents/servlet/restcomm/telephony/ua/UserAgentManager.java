@@ -27,6 +27,7 @@ import akka.event.LoggingAdapter;
 import com.telestax.servlet.MonitoringService;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
@@ -346,7 +347,7 @@ public final class UserAgentManager extends UntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        final Registration registration = new Registration(sid, now, now, aor, name, user, ua, ttl, address, webRTC);
+        final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
