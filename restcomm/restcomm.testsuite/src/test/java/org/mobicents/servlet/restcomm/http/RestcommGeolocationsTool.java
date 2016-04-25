@@ -26,6 +26,8 @@ import java.io.IOException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -41,6 +43,8 @@ public class RestcommGeolocationsTool {
 
     private static RestcommGeolocationsTool instance;
     private static String geolocationsUrl;
+    private static final Logger logger = Logger.getLogger(RestcommGeolocationsTool.class);
+    private static final String apiVersionAccounts = "/2012-04-24/Accounts/";
 
     public static RestcommGeolocationsTool getInstance() {
         if (instance == null) {
@@ -50,10 +54,8 @@ public class RestcommGeolocationsTool {
     }
 
     private String getGeolocationsUrl(String deploymentUrl, String accountSid, Boolean xml) {
-        if (deploymentUrl.endsWith("/")) {
-            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-        }
-        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation";
+        deploymentUrl = evaluateDeploymentUrl(deploymentUrl);
+        geolocationsUrl = deploymentUrl + apiVersionAccounts + accountSid + "/Geolocation";
         if (!xml) {
             geolocationsUrl += ".json";
         }
@@ -61,10 +63,8 @@ public class RestcommGeolocationsTool {
     }
 
     private String getImmediateGeolocationsUrl(String deploymentUrl, String accountSid, Boolean xml) {
-        if (deploymentUrl.endsWith("/")) {
-            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-        }
-        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Immediate";
+        deploymentUrl = evaluateDeploymentUrl(deploymentUrl);
+        geolocationsUrl = deploymentUrl + apiVersionAccounts + accountSid + "/Geolocation/Immediate";
         if (!xml) {
             geolocationsUrl += ".json";
         }
@@ -72,10 +72,8 @@ public class RestcommGeolocationsTool {
     }
 
     private String getNotificationGeolocationsUrl(String deploymentUrl, String accountSid, Boolean xml) {
-        if (deploymentUrl.endsWith("/")) {
-            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-        }
-        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Notification";
+        deploymentUrl = evaluateDeploymentUrl(deploymentUrl);
+        geolocationsUrl = deploymentUrl + apiVersionAccounts + accountSid + "/Geolocation/Notification";
         if (!xml) {
             geolocationsUrl += ".json";
         }
@@ -83,10 +81,8 @@ public class RestcommGeolocationsTool {
     }
 
     private String getImmediateGeolocationUrl(String deploymentUrl, String accountSid, String geolocationSid, Boolean xml) {
-        if (deploymentUrl.endsWith("/")) {
-            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-        }
-        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Immediate/" + geolocationSid;
+        deploymentUrl = evaluateDeploymentUrl(deploymentUrl);
+        geolocationsUrl = deploymentUrl + apiVersionAccounts + accountSid + "/Geolocation/Immediate/" + geolocationSid;
 
         if (!xml) {
             geolocationsUrl += ".json";
@@ -95,10 +91,8 @@ public class RestcommGeolocationsTool {
     }
 
     private String getNotificationGeolocationUrl(String deploymentUrl, String accountSid, String geolocationSid, Boolean xml) {
-        if (deploymentUrl.endsWith("/")) {
-            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-        }
-        geolocationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Geolocation/Notification/" + geolocationSid;
+        deploymentUrl = evaluateDeploymentUrl(deploymentUrl);
+        geolocationsUrl = deploymentUrl + apiVersionAccounts + accountSid + "/Geolocation/Notification/" + geolocationSid;
 
         if (!xml) {
             geolocationsUrl += ".json";
@@ -107,9 +101,7 @@ public class RestcommGeolocationsTool {
     }
 
     private String getEndpoint(String deploymentUrl) {
-        if (deploymentUrl.endsWith("/")) {
-            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-        }
+        deploymentUrl = evaluateDeploymentUrl(deploymentUrl);
         return deploymentUrl;
     }
 
@@ -150,7 +142,7 @@ public class RestcommGeolocationsTool {
             JsonParser parser = new JsonParser();
             jsonResponse = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            logger.info(e.getMessage());
         }
         return jsonResponse;
     }
@@ -168,7 +160,7 @@ public class RestcommGeolocationsTool {
             JsonParser parser = new JsonParser();
             jsonResponse = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            logger.info(e.getMessage());
         }
         return jsonResponse;
     }
@@ -239,6 +231,13 @@ public class RestcommGeolocationsTool {
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
         WebResource webResource = jerseyClient.resource(url);
         webResource.accept(MediaType.APPLICATION_JSON).delete();
+    }
+
+    private String evaluateDeploymentUrl(String deploymentUrl) {
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+        }
+        return deploymentUrl;
     }
 
 }

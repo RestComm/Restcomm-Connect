@@ -60,7 +60,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 @RunWith(Arquillian.class)
 public class GeolocationEndpointTest {
 
-    private final static Logger logger = Logger.getLogger(GeolocationEndpointTest.class);
+    private static final Logger logger = Logger.getLogger(GeolocationEndpointTest.class);
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
     private static final String ImmediateGT = Geolocation.GeolocationType.Immediate.toString();
     private static final String NotificationGT = Geolocation.GeolocationType.Notification.toString();
@@ -431,8 +431,8 @@ public class GeolocationEndpointTest {
 
         // Define new values for the Geolocation attributes (PUT test)
         geolocationParamsUpdate = new MultivaluedMapImpl();
-        geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "N172 42 62.80");
-        geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "E170 56 65.60");
+        geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "172 42 62.80N");
+        geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "170 56 65.60E");
         geolocationParamsUpdate.add("GeofenceRange", "50");
         geolocationParamsUpdate.add("GeofenceEvent", "out");
         geolocationParamsUpdate.add("DesiredAccuracy", "High");
@@ -725,7 +725,7 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("NetworkEntityAddress", networkEntityAddress = "5980042343201");
         geolocationParamsUpdate.add("LocationAge", ageOfLocationInfo = "0");
         geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "-34.908134");
-        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "-34.908134");
+        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "-55.908134");
         geolocationParamsUpdate.add("Accuracy", accuracy = "75");
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "2001:0:9d38:6ab8:30a5:1c9d:58c6:5898");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "D8-97-BA-19-02-D8");
@@ -798,8 +798,8 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("MobileNetworkCode", mobileNetworkCode = "03");
         geolocationParamsUpdate.add("NetworkEntityAddress", networkEntityAddress = "598003245701");
         geolocationParamsUpdate.add("LocationAge", ageOfLocationInfo = "1");
-        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "N43 38 19.39");
-        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "W170 21 10.02");
+        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "43 38 19.39");
+        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "-170 21 10.02");
         geolocationParamsUpdate.add("Accuracy", accuracy = "25");
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");
@@ -909,8 +909,8 @@ public class GeolocationEndpointTest {
         geolocationParamsUpdate.add("MobileNetworkCode", mobileNetworkCode = "01");
         geolocationParamsUpdate.add("NetworkEntityAddress", networkEntityAddress = "598003245702");
         geolocationParamsUpdate.add("LocationAge", ageOfLocationInfo = "1");
-        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "43\u00b038'19.39''S");
-        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "169\u00b028'49.07''E");
+        geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "S43\u00b038'19.39''");
+        geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "E169\u00b028'49.07''");
         geolocationParamsUpdate.add("Accuracy", accuracy = "25");
         geolocationParamsUpdate.add("InternetAddress", internetAddress = "180.7.2.141");
         geolocationParamsUpdate.add("PhysicalAddress", physicalAddress = "A8-77-CA-29-32-D1");

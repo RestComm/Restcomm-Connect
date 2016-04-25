@@ -88,7 +88,7 @@ public class GeolocationConverter extends AbstractConverter implements JsonSeria
         writeDeviceIdentifier(geolocation.getDeviceIdentifier(), object);
         writeGeolocationType(geolocation.getGeolocationType(), object);
         writeResponseStatus(geolocation.getResponseStatus(), object);
-        writeGeolocationData(geolocation, object); /*** GeolocationData Json ***/
+        writeGeolocationData(geolocation, object); /*** GeolocationData JSON ***/
         writeGeolocationPositioningType(geolocation.getGeolocationPositioningType(), object);
         writeLastGeolocationResponse(geolocation.getLastGeolocationResponse(), object);
         writeCause(geolocation.getCause(), object);

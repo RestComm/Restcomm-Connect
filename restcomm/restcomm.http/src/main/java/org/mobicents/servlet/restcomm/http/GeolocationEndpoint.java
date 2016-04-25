@@ -42,6 +42,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
@@ -76,6 +77,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
+    private static final Logger logger = Logger.getLogger(GeolocationEndpoint.class);
+    private static final String ImmediateGT = Geolocation.GeolocationType.Immediate.toString();
+    private static final String NotificationGT = Geolocation.GeolocationType.Notification.toString();
 
     public GeolocationEndpoint() {
         super();
@@ -110,8 +114,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return status(UNAUTHORIZED).build();
         }
         try {
-            if (!geolocationType.toString().equalsIgnoreCase("Immediate")
-                    && !geolocationType.toString().equalsIgnoreCase("Notification")) {
+            if (!geolocationType.toString().equals(ImmediateGT) && !geolocationType.toString().equals(NotificationGT)) {
                 validateGeolocationType(data);
             }
         } catch (final NullPointerException exception) {
@@ -121,7 +124,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
 
         if (geolocation.getResponseStatus() != null && geolocation.getResponseStatus().equalsIgnoreCase("rejected")) {
-            System.out.println("Geolocation ResponseStatus rejected or unauthorized for that Sid");
+            logger.info("Geolocation ResponseStatus rejected or unauthorized for that Sid");
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -147,171 +150,17 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private Geolocation createFrom(final Sid accountSid, final MultivaluedMap<String, String> data,
             Geolocation.GeolocationType glType) {
+
         // *** Validation of not null and specific formatted parameters *** //
-        // *** Source can not be null ***/
-        try {
-            if (!data.containsKey("Source")) {
-                return rejectedGeolocationRequest(accountSid, data, glType, "Source value can not be null");
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for Source value");
+        Geolocation gl = validateCreateParams(accountSid, data, glType);
+
+        if (gl == null) {
+            gl = buildGeolocation(accountSid, data, glType); // *** All parameters with specified values validations passed ***
+            return gl;
+        } else {
+            return gl;
         }
 
-        // *** DeviceIdentifier can not be null ***/
-        try {
-            if (!data.containsKey("DeviceIdentifier")) {
-                return rejectedGeolocationRequest(accountSid, data, glType, "DeviceIdentifier value con not be null");
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceIdentifier value");
-        }
-
-        // *** StatusCallback can not be null ***/
-        try {
-            if (!data.containsKey("StatusCallback")) {
-                return rejectedGeolocationRequest(accountSid, data, glType, "StatusCallback value con not be null");
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for StatusCallback value");
-        }
-
-        // *** DesiredAccuracy can not be null and must be API compliant: High, Average or Low***/
-        try {
-            if (data.containsKey("DesiredAccuracy")) {
-                String desiredAccuracy = data.getFirst("DesiredAccuracy");
-                if (!desiredAccuracy.equalsIgnoreCase("High") && !desiredAccuracy.equalsIgnoreCase("Average")
-                        && !desiredAccuracy.equalsIgnoreCase("Low")) {
-                    return rejectedGeolocationRequest(accountSid, data, glType, "DesiredAccuracy value not API compliant");
-                }
-            } else {
-                return rejectedGeolocationRequest(accountSid, data, glType, "DesiredAccuracy can not be null");
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DesiredAccuracy value");
-        }
-
-        // *** DeviceLatitude must be API compliant: High, Average or Low***/
-        try {
-            if (data.containsKey("DeviceLatitude")) {
-                String deviceLat = data.getFirst("DeviceLatitude");
-                Boolean devLatWGS84 = validateWGS84(deviceLat);
-                if (!devLatWGS84) {
-                    return failedGeolocationRequest(accountSid, data, glType, "DeviceLatitude not WGS84 compliant");
-                }
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceLatitude value");
-        }
-
-        // *** DeviceLongitude must be API compliant: High, Average or Low***/
-        try {
-            if (data.containsKey("DeviceLongitude")) {
-                String deviceLong = data.getFirst("DeviceLongitude");
-                Boolean devLongWGS84 = validateWGS84(deviceLong);
-                if (!devLongWGS84) {
-                    return failedGeolocationRequest(accountSid, data, glType, "DeviceLongitude not WGS84 compliant");
-                }
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceLatitude value");
-        }
-
-        // *** GeofenceEvent must belong to Notification type of Geolocation, not null and API compliant: in, out or in-out***/
-        try {
-            if (!data.containsKey("GeofenceEvent") && glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "GeofenceEvent value con not be null for Notification type of Geolocation");
-            } else if (data.containsKey("GeofenceEvent") && !glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "GeofenceEvent only applies for Notification type of Geolocation");
-            } else if (data.containsKey("GeofenceEvent") && glType.toString().equalsIgnoreCase("Notification")) {
-                String geofenceEvent = data.getFirst("GeofenceEvent");
-                if (!geofenceEvent.equalsIgnoreCase("in") && !geofenceEvent.equalsIgnoreCase("out")
-                        && !geofenceEvent.equalsIgnoreCase("in-out")) {
-                    return rejectedGeolocationRequest(accountSid, data, glType, "GeofenceEvent value not API compliant");
-                }
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for GeofenceEvent value");
-        }
-
-        // *** EventGeofenceLatitude must belong to Notification type of Geolocation, not null and API compliant: WGS84 only***/
-        try {
-            if (!data.containsKey("EventGeofenceLatitude") && glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "EventGeofenceLatitude value con not be null for Notification type of Geolocation");
-            } else if (data.containsKey("EventGeofenceLatitude") && !glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "EventGeofenceLatitude only applies for Notification type of Geolocation");
-            } else if (data.containsKey("EventGeofenceLatitude") && glType.toString().equalsIgnoreCase("Notification")) {
-                String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
-                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLat);
-                if (!eventGeofenceLongWGS84) {
-                    return rejectedGeolocationRequest(accountSid, data, glType,
-                            "EventGeofenceLatitude value not WGS84 compliant");
-                }
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLatitude value");
-        }
-
-        // *** EventGeofenceLongitude must belong to Notification type of Geolocation and must be API compliant: WGS84 only ***/
-        try {
-            if (!data.containsKey("EventGeofenceLongitude") && glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "EventGeofenceLongitude value con not be null for Notification type of Geolocation");
-            } else if (data.containsKey("EventGeofenceLongitude") && !glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "EventGeofenceLongitude only applies for Notification type of Geolocation");
-            } else if (data.containsKey("EventGeofenceLongitude") && glType.toString().equalsIgnoreCase("Notification")) {
-                String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
-                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
-                if (!eventGeofenceLongWGS84) {
-                    return rejectedGeolocationRequest(accountSid, data, glType,
-                            "EventGeofenceLongitude value not WGS84 compliant");
-                }
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLongitude value");
-        }
-
-        // *** GeofenceRange can not be null in Notification type of Geolocation***/
-        try {
-            if (!data.containsKey("GeofenceRange") && glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "GeofenceRange value con not be null for Notification type of Geolocation");
-            } else if (data.containsKey("GeofenceRange") && !glType.toString().equalsIgnoreCase("Notification")) {
-                return rejectedGeolocationRequest(accountSid, data, glType,
-                        "GeofenceRange only applies for Notification type of Geolocation");
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for GeofenceRange value");
-        }
-
-        // *** LocationTimestamp must be API compliant: DateTime format only***/
-        try {
-            if (data.containsKey("LocationTimestamp")) {
-                @SuppressWarnings("unused")
-                DateTime locationTimestamp = getDateTime("LocationTimestamp", data);
-            }
-        } catch (Exception exception) {
-            System.out.println("Exception: " + exception.getMessage());
-            return rejectedGeolocationRequest(accountSid, data, glType, "LocationTimestamp value is not API compliant");
-        }
-
-        // *** All parameters with specified values validations passed *** //
-        Geolocation gl = buildGeolocation(accountSid, data, glType);
-        return gl;
     }
 
     private Geolocation buildGeolocation(final Sid accountSid, final MultivaluedMap<String, String> data,
@@ -423,6 +272,174 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return buildIncorrectGeolocationUpdateRequest(accountSid, sid, data, glType, builder);
     }
 
+    private Geolocation validateCreateParams(final Sid accountSid, final MultivaluedMap<String, String> data,
+            Geolocation.GeolocationType glType) {
+        // *** Validation of not null and specific formatted parameters *** //
+        // *** Source can not be null ***/
+        try {
+            if (!data.containsKey("Source")) {
+                return rejectedGeolocationRequest(accountSid, data, glType, "Source value can not be null");
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for Source value");
+        }
+
+        // *** DeviceIdentifier can not be null ***/
+        try {
+            if (!data.containsKey("DeviceIdentifier")) {
+                return rejectedGeolocationRequest(accountSid, data, glType, "DeviceIdentifier value con not be null");
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceIdentifier value");
+        }
+
+        // *** StatusCallback can not be null ***/
+        try {
+            if (!data.containsKey("StatusCallback")) {
+                return rejectedGeolocationRequest(accountSid, data, glType, "StatusCallback value con not be null");
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for StatusCallback value");
+        }
+
+        // *** DesiredAccuracy can not be null and must be API compliant: High, Average or Low***/
+        try {
+            if (data.containsKey("DesiredAccuracy")) {
+                String desiredAccuracy = data.getFirst("DesiredAccuracy");
+                if (!desiredAccuracy.equalsIgnoreCase("High") && !desiredAccuracy.equalsIgnoreCase("Average")
+                        && !desiredAccuracy.equalsIgnoreCase("Low")) {
+                    return rejectedGeolocationRequest(accountSid, data, glType, "DesiredAccuracy value not API compliant");
+                }
+            } else {
+                return rejectedGeolocationRequest(accountSid, data, glType, "DesiredAccuracy can not be null");
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DesiredAccuracy value");
+        }
+
+        // *** DeviceLatitude must be API compliant: High, Average or Low***/
+        try {
+            if (data.containsKey("DeviceLatitude")) {
+                String deviceLat = data.getFirst("DeviceLatitude");
+                Boolean devLatWGS84 = validateWGS84(deviceLat);
+                if (!devLatWGS84) {
+                    return failedGeolocationRequest(accountSid, data, glType, "DeviceLatitude not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceLatitude value");
+        }
+
+        // *** DeviceLongitude must be API compliant: High, Average or Low***/
+        try {
+            if (data.containsKey("DeviceLongitude")) {
+                String deviceLong = data.getFirst("DeviceLongitude");
+                Boolean devLongWGS84 = validateWGS84(deviceLong);
+                if (!devLongWGS84) {
+                    return failedGeolocationRequest(accountSid, data, glType, "DeviceLongitude not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for DeviceLatitude value");
+        }
+
+        // *** GeofenceEvent must belong to Notification type of Geolocation, not null and API compliant: in, out or in-out***/
+        try {
+            if (!data.containsKey("GeofenceEvent") && glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceEvent value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("GeofenceEvent") && !glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceEvent only applies for Notification type of Geolocation");
+            } else if (data.containsKey("GeofenceEvent") && glType.toString().equals(NotificationGT)) {
+                String geofenceEvent = data.getFirst("GeofenceEvent");
+                if (!geofenceEvent.equalsIgnoreCase("in") && !geofenceEvent.equalsIgnoreCase("out")
+                        && !geofenceEvent.equalsIgnoreCase("in-out")) {
+                    return rejectedGeolocationRequest(accountSid, data, glType, "GeofenceEvent value not API compliant");
+                }
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for GeofenceEvent value");
+        }
+
+        // *** EventGeofenceLatitude must belong to Notification type of Geolocation, not null and API compliant: WGS84 only***/
+        try {
+            if (!data.containsKey("EventGeofenceLatitude") && glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLatitude value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLatitude") && !glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLatitude only applies for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLatitude") && glType.toString().equals(NotificationGT)) {
+                String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
+                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLat);
+                if (!eventGeofenceLongWGS84) {
+                    return rejectedGeolocationRequest(accountSid, data, glType,
+                            "EventGeofenceLatitude value not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLatitude value");
+        }
+
+        // *** EventGeofenceLongitude must belong to Notification type of Geolocation and must be API compliant: WGS84 only ***/
+        try {
+            if (!data.containsKey("EventGeofenceLongitude") && glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLongitude value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLongitude") && !glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "EventGeofenceLongitude only applies for Notification type of Geolocation");
+            } else if (data.containsKey("EventGeofenceLongitude") && glType.toString().equals(NotificationGT)) {
+                String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
+                Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
+                if (!eventGeofenceLongWGS84) {
+                    return rejectedGeolocationRequest(accountSid, data, glType,
+                            "EventGeofenceLongitude value not WGS84 compliant");
+                }
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for EventGeofenceLongitude value");
+        }
+
+        // *** GeofenceRange can not be null in Notification type of Geolocation***/
+        try {
+            if (!data.containsKey("GeofenceRange") && glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceRange value con not be null for Notification type of Geolocation");
+            } else if (data.containsKey("GeofenceRange") && !glType.toString().equals(NotificationGT)) {
+                return rejectedGeolocationRequest(accountSid, data, glType,
+                        "GeofenceRange only applies for Notification type of Geolocation");
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "Exception for GeofenceRange value");
+        }
+
+        // *** LocationTimestamp must be API compliant: DateTime format only***/
+        try {
+            if (data.containsKey("LocationTimestamp")) {
+                @SuppressWarnings("unused")
+                DateTime locationTimestamp = getDateTime("LocationTimestamp", data);
+            }
+        } catch (Exception exception) {
+            logger.info("Exception: " + exception.getMessage());
+            return rejectedGeolocationRequest(accountSid, data, glType, "LocationTimestamp value is not API compliant");
+        }
+
+        return null;
+
+    }
+
     protected Response getGeolocation(final String accountSid, final String sid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
@@ -514,21 +531,26 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     private Geolocation update(final Geolocation geolocation, final MultivaluedMap<String, String> data) {
 
-        Geolocation updatedGeolocation = geolocation;
+        Geolocation updatedGeolocation = validateAndUpdateParams(geolocation, data);
+        return updatedGeolocation;
+    }
 
+    private Geolocation validateAndUpdateParams(Geolocation geolocation, final MultivaluedMap<String, String> data) {
+
+        Geolocation updatedGeolocation = geolocation;
         // *** Set of parameters with provided data for Geolocation update***//
         if (data.containsKey("Source")) {
             try {
                 updatedGeolocation = updatedGeolocation.setSource(data.getFirst("Source"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Source: " + exception.getMessage());
+                logger.info("Exception in updating Source: " + exception.getMessage());
             }
         }
         if (data.containsKey("DeviceIdentifier")) {
             try {
                 updatedGeolocation = updatedGeolocation.setDeviceIdentifier(data.getFirst("DeviceIdentifier"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Source: " + exception.getMessage());
+                logger.info("Exception in updating Source: " + exception.getMessage());
             }
         }
         if (data.containsKey("ResponseStatus")) {
@@ -557,42 +579,42 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             try {
                 updatedGeolocation = updatedGeolocation.setCellId(data.getFirst("CellId"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating CellId: " + exception.getMessage());
+                logger.info("Exception in updating CellId: " + exception.getMessage());
             }
         }
         if (data.containsKey("LocationAreaCode")) {
             try {
                 updatedGeolocation = updatedGeolocation.setLocationAreaCode(data.getFirst("LocationAreaCode"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Location Area Code: " + exception.getMessage());
+                logger.info("Exception in updating Location Area Code: " + exception.getMessage());
             }
         }
         if (data.containsKey("MobileCountryCode")) {
             try {
                 updatedGeolocation = updatedGeolocation.setMobileCountryCode(getInteger("MobileCountryCode", data));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Mobile Country Code: " + exception.getMessage());
+                logger.info("Exception in updating Mobile Country Code: " + exception.getMessage());
             }
         }
         if (data.containsKey("MobileNetworkCode")) {
             try {
                 updatedGeolocation = updatedGeolocation.setMobileNetworkCode(data.getFirst("MobileNetworkCode"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Mobile Network Code: " + exception.getMessage());
+                logger.info("Exception in updating Mobile Network Code: " + exception.getMessage());
             }
         }
         if (data.containsKey("NetworkEntityAddress")) {
             try {
                 updatedGeolocation = updatedGeolocation.setNetworkEntityAddress(getLong("NetworkEntityAddress", data));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Network Entity Address: " + exception.getMessage());
+                logger.info("Exception in updating Network Entity Address: " + exception.getMessage());
             }
         }
         if (data.containsKey("LocationAge")) {
             try {
                 updatedGeolocation = updatedGeolocation.setAgeOfLocationInfo(getInteger("LocationAge", data));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Age of Location Info: " + exception.getMessage());
+                logger.info("Exception in updating Age of Location Info: " + exception.getMessage());
             }
         }
         if (data.containsKey("DeviceLatitude")) {
@@ -606,7 +628,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                     updatedGeolocation = updatedGeolocation.setDeviceLatitude(deviceLat);
                 }
             } catch (Exception exception) {
-                System.out.println("Exception in updating device latitude: " + exception.getMessage());
+                logger.info("Exception in updating device latitude: " + exception.getMessage());
             }
         }
         if (data.containsKey("DeviceLongitude")) {
@@ -622,35 +644,35 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
                 }
             } catch (Exception exception) {
-                System.out.println("Exception in updating device longitude: " + exception.getMessage());
+                logger.info("Exception in updating device longitude: " + exception.getMessage());
             }
         }
         if (data.containsKey("Accuracy")) {
             try {
                 updatedGeolocation = updatedGeolocation.setAccuracy(getLong("Accuracy", data));
             } catch (Exception exception) {
-                System.out.println("Exception in updating accuracy: " + exception.getMessage());
+                logger.info("Exception in updating accuracy: " + exception.getMessage());
             }
         }
         if (data.containsKey("PhysicalAddress")) {
             try {
                 updatedGeolocation = updatedGeolocation.setPhysicalAddress(data.getFirst("PhysicalAddress"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating physical address: " + exception.getMessage());
+                logger.info("Exception in updating physical address: " + exception.getMessage());
             }
         }
         if (data.containsKey("InternetAddress")) {
             try {
                 updatedGeolocation = updatedGeolocation.setInternetAddress(data.getFirst("InternetAddress"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating Internet address: " + exception.getMessage());
+                logger.info("Exception in updating Internet address: " + exception.getMessage());
             }
         }
         if (data.containsKey("FormattedAddress")) {
             try {
                 updatedGeolocation = updatedGeolocation.setFormattedAddress(data.getFirst("FormattedAddress"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating formatted address: " + exception.getMessage());
+                logger.info("Exception in updating formatted address: " + exception.getMessage());
             }
         }
         if (data.containsKey("LocationTimestamp")) {
@@ -661,8 +683,7 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 updatedGeolocation = updatedGeolocation.setLocationTimestamp(locTimestamp);
             }
         }
-        if (data.containsKey("EventGeofenceLatitude")
-                && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
+        if (data.containsKey("EventGeofenceLatitude") && geolocation.getGeolocationType().toString().equals(NotificationGT)) {
             try {
                 String eventGeofenceLat = data.getFirst("EventGeofenceLatitude");
                 Boolean eventGeofenceLatWGS84 = validateWGS84(eventGeofenceLat);
@@ -675,13 +696,12 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
                 }
             } catch (Exception exception) {
-                System.out.println("Exception in updating event geofence latitude for notification geolocation: "
+                logger.info("Exception in updating event geofence latitude for notification geolocation: "
                         + exception.getMessage());
             }
 
         }
-        if (data.containsKey("EventGeofenceLongitude")
-                && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
+        if (data.containsKey("EventGeofenceLongitude") && geolocation.getGeolocationType().toString().equals(NotificationGT)) {
             try {
                 String eventGeofenceLong = data.getFirst("EventGeofenceLongitude");
                 Boolean eventGeofenceLongWGS84 = validateWGS84(eventGeofenceLong);
@@ -692,15 +712,15 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                     updatedGeolocation = updatedGeolocation.setEventGeofenceLongitude(eventGeofenceLong);
                 }
             } catch (Exception exception) {
-                System.out.println("Exception in updating event geofence longlitude for notification geolocation: "
+                logger.info("Exception in updating event geofence longlitude for notification geolocation: "
                         + exception.getMessage());
             }
         }
-        if (data.containsKey("Radius") && geolocation.getGeolocationType().toString().equalsIgnoreCase("Notification")) {
+        if (data.containsKey("Radius") && geolocation.getGeolocationType().toString().equals(NotificationGT)) {
             try {
                 updatedGeolocation = updatedGeolocation.setRadius(getLong("Radius", data));
             } catch (Exception exception) {
-                System.out.println("Exception in updating radius for notification geolocation: " + exception.getMessage());
+                logger.info("Exception in updating radius for notification geolocation: " + exception.getMessage());
             }
         }
         if (data.containsKey("GeolocationPositioningType")) {
@@ -708,14 +728,14 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
                 updatedGeolocation = updatedGeolocation
                         .setGeolocationPositioningType(data.getFirst("GeolocationPositioningType"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating geolocation positioning type: " + exception.getMessage());
+                logger.info("Exception in updating geolocation positioning type: " + exception.getMessage());
             }
         }
         if (data.containsKey("LastGeolocationResponse")) {
             try {
                 updatedGeolocation = updatedGeolocation.setLastGeolocationResponse(data.getFirst("LastGeolocationResponse"));
             } catch (Exception exception) {
-                System.out.println("Exception in updating last geolocation response: " + exception.getMessage());
+                logger.info("Exception in updating last geolocation response: " + exception.getMessage());
             }
         }
         DateTime thisDateTime = DateTime.now();
@@ -730,17 +750,21 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     }
 
     private boolean validateWGS84(String coordinates) {
-
+        // validation of geographic coordinates to WGS84
         String degrees = "\\u00b0";
         String minutes = "'";
         Boolean WGS84_validation;
         Boolean pattern1 = coordinates.matches("[NWSE]{1}\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
-        Boolean pattern2 = coordinates.matches("\\d{1,3}[" + degrees + "]\\d{1,3}[" + minutes + "]\\d{1,2}\\.\\d{1,2}["
+        Boolean pattern2 = coordinates.matches("\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}[NWSE]{1}$");
+        Boolean pattern3 = coordinates.matches("\\d{1,3}[" + degrees + "]\\d{1,3}[" + minutes + "]\\d{1,2}\\.\\d{1,2}["
                 + minutes + "][" + minutes + "][NWSE]{1}$");
-        Boolean pattern3 = coordinates.matches("\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
-        Boolean pattern4 = coordinates.matches("-?\\d+(\\.\\d+)?");
+        Boolean pattern4 = coordinates.matches("[NWSE]{1}\\d{1,3}[" + degrees + "]\\d{1,3}[" + minutes + "]\\d{1,2}\\.\\d{1,2}["
+                + minutes + "][" + minutes + "]$");
+        Boolean pattern5 = coordinates.matches("\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
+        Boolean pattern6 = coordinates.matches("-?\\d{1,3}\\s\\d{1,2}\\s\\d{1,2}\\.\\d{1,2}$");
+        Boolean pattern7 = coordinates.matches("-?\\d+(\\.\\d+)?");
 
-        if (pattern1 || pattern2 || pattern3 || pattern4) {
+        if (pattern1 || pattern2 || pattern3 || pattern4 || pattern5 || pattern6 || pattern7) {
             WGS84_validation = true;
             return WGS84_validation;
         } else {

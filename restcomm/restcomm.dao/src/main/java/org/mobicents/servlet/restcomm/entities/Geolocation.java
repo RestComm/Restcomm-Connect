@@ -30,7 +30,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
  * @author fernando.mendioroz@telestax.com (Fernando Mendioroz)
  *
  */
-public class Geolocation {
+public final class Geolocation {
 
     private final Sid sid;
     private final DateTime dateCreated;
@@ -63,14 +63,13 @@ public class Geolocation {
     private final String apiVersion;
     private final URI uri;
 
-
     public Geolocation(Sid sid, DateTime dateCreated, DateTime dateUpdated, DateTime dateExecuted, Sid accountSid,
             String source, String deviceIdentifier, GeolocationType geolocationType, String responseStatus, String cellId,
             String locationAreaCode, Integer mobileCountryCode, String mobileNetworkCode, Long networkEntityAddress,
             Integer ageOfLocationInfo, String deviceLatitude, String deviceLongitude, Long accuracy, String physicalAddress,
             String internetAddress, String formattedAddress, DateTime locationTimestamp, String eventGeofenceLatitude,
-            String eventGeofenceLongitude, Long radius, String geolocationPositioningType,
-            String lastGeolocationResponse, String cause, String apiVersion, URI uri) {
+            String eventGeofenceLongitude, Long radius, String geolocationPositioningType, String lastGeolocationResponse,
+            String cause, String apiVersion, URI uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -632,7 +631,7 @@ public class Geolocation {
         }
 
         public void setRadius(Long radius) {
-            if (geolocationType.toString().equalsIgnoreCase("Notification")) {
+            if (geolocationType.toString().equals(GeolocationType.Notification)) {
                 this.radius = radius;
             } else {
                 this.radius = null;
@@ -670,7 +669,5 @@ public class Geolocation {
         }
 
     }
-
-
 
 }
