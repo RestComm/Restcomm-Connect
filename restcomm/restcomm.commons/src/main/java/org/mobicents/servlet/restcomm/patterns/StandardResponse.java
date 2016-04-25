@@ -31,6 +31,14 @@ public abstract class StandardResponse<T> {
     private final String message;
     private final T object;
 
+    public StandardResponse() {
+        super();
+        this.succeeded = true;
+        this.cause = null;
+        this.message = null;
+        this.object = null;
+    }
+
     public StandardResponse(final T object) {
         super();
         this.succeeded = true;

@@ -657,7 +657,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (CallManagerResponse.class.equals(klass)) {
-            final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>) message;
+            final CallManagerResponse<Object> response = (CallManagerResponse<Object>) message;
             if (response.succeeded()) {
                 if (startDialing.equals(state)) {
                     fsm.transition(message, processingDialChildren);
@@ -665,7 +665,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, processingDialChildren);
                 }
             } else {
-                fsm.transition(message, hangingUp);
+                if (dialChildren != null && dialChildren.size() > 1) {
+                    fsm.transition(message, processingDialChildren);
+                } else {
+                    fsm.transition(message, hangingUp);
+                }
             }
         } else if (StartForking.class.equals(klass)) {
             fsm.transition(message, processingDialChildren);
@@ -1503,15 +1507,28 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             Class<?> klass = message.getClass();
-            if (CallManagerResponse.class.equals(klass)) {
-                final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>) message;
-                final ActorRef branch = response.get();
-                dialBranches.add(branch);
+            if (CallManagerResponse.class.equals(klass) && ((CallManagerResponse)message).succeeded()) {
                 Tag child = dialChildren.get(0);
-                if (child.hasAttributes()) {
-                    dialChildrenWithAttributes.put(branch, child);
+                final CallManagerResponse<Object> response = (CallManagerResponse<Object>) message;
+                if (response.get() instanceof List) {
+                    List<ActorRef> calls = (List<ActorRef>) response.get();
+                    for (ActorRef branch: calls) {
+                        dialBranches.add(branch);
+                        if (child.hasAttributes()) {
+                            dialChildrenWithAttributes.put(branch, child);
+                        }
+                    }
+                } else {
+                    final ActorRef branch = (ActorRef) response.get();
+                    dialBranches.add(branch);
+                    if (child.hasAttributes()) {
+                        dialChildrenWithAttributes.put(branch, child);
+                    }
                 }
                 dialChildren.remove(child);
+            }
+            else if (CallManagerResponse.class.equals(klass) && !((CallManagerResponse)message).succeeded()) {
+                dialChildren.remove(0);
             }
             if (!dialChildren.isEmpty()) {
                 CreateCall create = null;
