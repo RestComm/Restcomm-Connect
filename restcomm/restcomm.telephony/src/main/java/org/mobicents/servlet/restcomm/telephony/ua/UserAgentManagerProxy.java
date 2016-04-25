@@ -81,7 +81,10 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
 
     @Override
     protected void doErrorResponse(final SipServletResponse response) throws ServletException, IOException {
-        logger.debug("Error response: \n"+response.toString()+"\n");
+    	if(logger.isDebugEnabled())
+    	{
+    		logger.debug("Error response: \n"+response.toString()+"\n");
+    	}
         manager.tell(response, null);
     }
 

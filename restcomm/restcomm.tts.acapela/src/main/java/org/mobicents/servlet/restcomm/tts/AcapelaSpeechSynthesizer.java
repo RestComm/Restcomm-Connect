@@ -215,7 +215,10 @@ public final class AcapelaSpeechSynthesizer extends UntypedActor {
         final String text = request.text();
         final String speaker = speaker(gender, language);
         if (speaker == null) {
-            logger.info("There is no suitable speaker to synthesize " + request.language());
+        	if(logger.isInfoEnabled())
+        	{
+        		logger.info("There is no suitable speaker to synthesize " + request.language());
+        	}
             throw new IllegalArgumentException("There is no suitable speaker to synthesize " + request.language());
         }
         final List<NameValuePair> query = new ArrayList<NameValuePair>();
@@ -232,19 +235,28 @@ public final class AcapelaSpeechSynthesizer extends UntypedActor {
         if (status == HttpStatus.SC_OK) {
             final Map<String, String> results = HttpUtils.toMap(response.getEntity());
             if ("OK".equals(results.get("res"))) {
-                logger.info("AcapelaSpeechSynthesizer success!");
+            	if(logger.isInfoEnabled())
+            	{
+            		logger.info("AcapelaSpeechSynthesizer success!");
+            	}
                 String ret = results.get("snd_url") + "#hash=" + HashGenerator.hashMessage(gender, language, text);
                 return URI.create(ret);
             } else {
-                logger.info("AcapelaSpeechSynthesizer error code: " + results.get("err_code") + " error message: "
-                        + results.get("err_msg"));
+            	if(logger.isInfoEnabled())
+            	{
+            		logger.info("AcapelaSpeechSynthesizer error code: " + results.get("err_code") + " error message: "
+            				+ results.get("err_msg"));
+            	}
                 final StringBuilder buffer = new StringBuilder();
                 buffer.append(results.get("err_code")).append(" ").append(results.get("err_msg"));
                 throw new SpeechSynthesizerException(buffer.toString());
             }
         } else {
-            logger.info("AcapelaSpeechSynthesizer error, status code: " + line.getStatusCode() + (" reason phrase: ")
-                    + line.getReasonPhrase());
+        	if(logger.isInfoEnabled())
+        	{
+	        	logger.info("AcapelaSpeechSynthesizer error, status code: " + line.getStatusCode() + (" reason phrase: ")
+	                    + line.getReasonPhrase());
+        	}
             final StringBuilder buffer = new StringBuilder();
             buffer.append(line.getStatusCode()).append(" ").append(line.getReasonPhrase());
             throw new SpeechSynthesizerException(buffer.toString());
