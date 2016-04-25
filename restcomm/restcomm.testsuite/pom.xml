@@ -173,9 +173,16 @@
 			<groupId>com.cloudhopper</groupId>
 			<artifactId>ch-commons-gsm</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.cloudhopper</groupId>
 			<artifactId>ch-smpp</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cloudhopper</groupId>
+			<artifactId>ch-commons-util</artifactId>
+			<version>${ch-commons-util.version}</version>
 		</dependency>
 
 		<dependency>

@@ -27,6 +27,9 @@ import org.mobicents.servlet.restcomm.patterns.StandardResponse;
  */
 @Immutable
 public final class CallManagerResponse<T> extends StandardResponse<T> {
+
+    private CreateCall createCall;
+
     public CallManagerResponse(final T object) {
         super(object);
     }
@@ -37,5 +40,14 @@ public final class CallManagerResponse<T> extends StandardResponse<T> {
 
     public CallManagerResponse(final Throwable cause, final String message) {
         super(cause, message);
+    }
+
+    public CallManagerResponse(final Throwable cause, final CreateCall createCall) {
+        super(cause);
+        this.createCall = createCall;
+    }
+
+    public CreateCall getCreateCall() {
+        return createCall;
     }
 }

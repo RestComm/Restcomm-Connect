@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.http;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -99,6 +101,34 @@ public class AccountsEndpointTest {
         assertTrue(createAccountResponse.get("auth_token").equals(getAccountResponse.get("auth_token")));
         String userPasswordHashed = new Md5Hash(userPassword).toString();
         assertTrue(getAccountResponse.get("auth_token").getAsString().equals(userPasswordHashed));
+    }
+
+    @Test
+    public void testCreateAdministratorAccount() {
+        if (!accountUpdated) {
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        }
+        JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, newAdminAuthToken, "administrator@company.com", "1234");
+        assertNull(createAccountResponse);
+    }
+
+    @Test
+    public void testCreateAccountTwice() {
+        if (!accountUpdated) {
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        }
+        if (!accountCreated) {
+            JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                    adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+            accountCreated = true;
+            assertNotNull(createAccountResponse);
+        }
+        JsonObject createAccountResponseSecondTime = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+        assertNull(createAccountResponseSecondTime);
     }
 
     @Test

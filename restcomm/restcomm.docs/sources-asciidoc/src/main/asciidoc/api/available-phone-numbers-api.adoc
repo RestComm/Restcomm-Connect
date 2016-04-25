@@ -1,0 +1,177 @@
+= Restcomm API – Available Phone Numbers
+
+== AvailablePhoneNumbers
+
+The *AvailablePhoneNumbers* subresources let you search for incoming local and toll-free phone numbers that are available for you to purchase from a Telestax partner. *AvailablePhoneNumbers* List Resource URI. */2012-04-24/Accounts/\{AccountSid}/AvailablePhoneNumbers/US/Local* Searching For Numbers. When using RestComm the way to search for new phone numbers is by searching the *AvailablePhoneNumbers* list resource and providing the desired area code as a filter.
+
+=== Resource Properties
+
+The following properties are available for phone numbers from the US and Canada:
+
+[cols=",",options="header",]
+|===============================================================================================================================================================================================================================
+|Property |Description
+|FriendlyName |A nicely-formatted version of the phone number.
+|PhoneNumber |The phone number, in E.164 (i.e. "+1") format.
+|Lata |The LATA of this phone number.
+|RateCenter |The rate center of this phone number.
+|Latitude |The latitude coordinate of this phone number.
+|Longitude |The longitude coordinate of this phone number.
+|Region |The two-letter state or province abbreviation of this phone number.
+|PostalCode |The postal (zip) code of this phone number.
+|IsoCountry |The http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2[ISO country code] of this phone number.
+|Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are `Voice`, `SMS`, and `MMS` with each having a value of either `true` or `false`.
+|AddressRequirements |This indicates whether the phone number requires you or your customer to have an Address registered with Restcomm. Possible values are `none`, `any`, `local`, or `foreign`.
+|Beta |Phone numbers new to the Restcomm platform are marked as beta. Possible values are either `true` or `false`.
+|===============================================================================================================================================================================================================================
+
+The following properties are available for phone numbers outside the US and Canada:
+
+[cols=",",options="header",]
+|=================================================================================================================================================================================================================================================
+|Property |Description
+|FriendlyName |A nicely-formatted version of the phone number.
+|PhoneNumber |The phone number, in https://www.twilio.com/docs/api/rest/response#phone-numbers[E.164] (i.e. "+44") format.
+|IsoCountry |The http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2[ISO country code] of this phone number.
+|Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are `Voice`, `SMS`, and `MMS` with each having a value of either `true` or `false`.
+|AddressRequirements |This indicates whether the phone number requires you or your customer to have an https://www.twilio.com/docs/api/rest/addresses[Address] registered with Restcomm. Possible values are `none`, `any`, `local`, or `foreign`.
+|Beta |Phone numbers new to the Restcomm platform are marked as beta. Possible values are either `true` or `false`.
+|=================================================================================================================================================================================================================================================
+
+[[address-requirement-values]]
+=== Address Requirement Values
+
+The following are the possible values for the `address_required` property.
+
+[cols=",",options="header",]
+|==============================================================================
+|Status |Description
+|none |An Address is not required for this phone number.
+|any |Your account must have an Address, but it can be anywhere in the world.
+|local |Your account must have an Address within the phone number's country.
+|foreign |Your account must have an Address outside the phone number's country.
+|==============================================================================
+
+[[toll-free-instance]]
+== AvailablePhoneNumber Toll-Free Instance Resource
+
+Some DID providers allow toll-free numbers from the US, Canada, and the UK.
+
+[[toll-free-instance-uri]]
+=== Resource URI
+
+An AvailablePhoneNumber toll-free instance resource has no URI. You cannot make requests directly to AvailablePhoneNumber instance resources. Instead, make a request to the toll-free list subresource and then choose a number from the list.
+
+[[toll-free-instance-properties]]
+=== Resource Properties
+
+[cols=",",options="header",]
+|===============================================================================================================================================================================================================================
+|Property |Description
+|FriendlyName |A nicely-formatted version of the phone number.
+|PhoneNumber |The phone number, in E.164 (i.e. "+1") format.
+|IsoCountry |The http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2[ISO country code] of this phone number.
+|Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are `Voice`, `SMS`, and `MMS` with each having a value of either `true` or `false`.
+|AddressRequirements |This indicates whether the phone number requires you or your customer to have an Address registered with Restcomm. Possible values are `none`, `any`, `local`, or `foreign`.
+|===============================================================================================================================================================================================================================
+
+[[mobile-instance]]
+== AvailablePhoneNumber Mobile Instance Resource
+
+[[toll-free-instance-uri]]
+=== Resource URI
+
+An AvailablePhoneNumber mobile instance resource has no URI. You cannot make requests directly to AvailablePhoneNumber instance resources. Instead, make a request to the mobile list subresource and then choose a number from the list.
+
+[[mobile-instance-properties]]
+=== Resource Properties
+
+[cols=",",options="header",]
+|===============================================================================================================================================================================================================================
+|Property |Description
+|FriendlyName |A nicely-formatted version of the phone number.
+|PhoneNumber |The phone number, in E.164 (i.e. "+1") format.
+|IsoCountry |The http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2[ISO country code] of this phone number.
+|Capabilities |This is a set of boolean properties that indicate whether a phone number can receive calls or messages. Possible capabilities are `Voice`, `SMS`, and `MMS` with each having a value of either `true` or `false`.
+|AddressRequirements |This indicates whether the phone number requires you or your customer to have an Address registered with Restcomm. Possible values are `none`, `any`, `local`, or `foreign`.
+|===============================================================================================================================================================================================================================
+
+[[local]]
+== AvailablePhoneNumbers Local List Subresource
+
+[[local-uri]]
+=== Resource URI
+
+----
+/2012-04-24//Accounts/{AccountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Local
+----
+
+\{IsoCountryCode} is a country code in ISO 3166-1 alpha-2 format. For example, the IsoCountryCode for Canada is `CA`. See Supported Countries for a full list of countries and IsoCountryCodes supported by Restcomm.
+
+[[local-get]]
+=== HTTP GET
+
+Returns a list of local AvailablePhoneNumber resource representations that match the specified filters, each representing a phone number that is currently available for provisioning within your account.
+
+[[local-get-basic-filters]]
+=== Basic List Filters
+
+The following basic GET query string parameters allow you to filter the list of numbers returned by Restcomm. Note, parameters are case-sensitive.
+
+[cols=",",options="header",]
+|===============================================================================================================================================================================================================================================================================
+|Parameter |Description
+|AreaCode |Find phone numbers in the specified area code. (US and Canada only)
+|Contains |A pattern to match phone numbers on. Valid characters are `'*'` and `[0-9a-zA-Z]`. The `'*'` character will match any single digit.
+|SmsEnabled |This indicates whether the phone numbers can receive text messages. Possible values are `true` or `false`.
+|MmsEnabled |This indicates whether the phone numbers can receive MMS messages. Possible values are `true` or `false`.
+|VoiceEnabled |This indicates whether the phone numbers can receive calls. Possible values are `true` or `false`.
+|ExcludeAllAddressRequired |Indicates whether the response includes phone numbers which require any Address. Possible values are `true` or `false`. If not specified, the default is `false`, and results could include phone numbers with an Address required.
+|ExcludeLocalAddressRequired |Indicates whether the response includes phone numbers which require a local Address. Possible values are `true` or `false`. If not specified, the default is `false`, and results could include phone numbers with a local Address required.
+|ExcludeForeignAddressRequired |Indicates whether the response includes phone numbers which require a foreign Address. Possible values are `true` or `false`. If not specified, the default is `false`, and results could include phone numbers with a foreign Address required.
+|Beta |Include phone numbers new to theRestcomm platform. Possible values are either `true` or `false`. Default is `true`.
+|===============================================================================================================================================================================================================================================================================
+
+=== Supported Operations
+
+==== HTTP GET. 
+
+Returns the representation of an *AvailablePhoneNumber* resource, including the properties above.
+
+===== Request Parameters
+
+[cols=",",options="header",]
+|=================================================
+|Property |Description
+|AreaCode |A three digit area code inside the U.S.
+|=================================================
+
+== Querying Available Phone Numbers
+
+NOTE: You need to be using Restcomm Cloud or setup the DID Provider in Restcomm in order to be able to use this feature. See the Tutorial section. 
+
+Here is an example, the *AreaCode* is any valid United States Code
+
+....
+curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<Elastic_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/AvailablePhoneNumbers/US/Local -d "AreaCode=305"
+....
+
+The *AvailablePhoneNumbers* subresources let you search for incoming local and toll-free phone numbers that are available for you to purchase from a Telestax partner.
+
+* AvailablePhoneNumbers List Resource URI. /**2012-04-24/Accounts/\{AccountSid}/AvailablePhoneNumbers/US/Local**
+
+Searching For Numbers. When using Restcomm the way to search for new phone numbers is by searching the *AvailablePhoneNumbers* list resource and providing the desired area code as a filter.
+
+=== Supported Operations
+
+==== HTTP GET
+
+Returns the representation of an *AvailablePhoneNumber* resource, including the properties above.
+
+==== Request Parameters
+
+[cols=",",options="header",]
+|=================================================
+|Property |Description
+|AreaCode |A three digit area code inside the U.S.
+|=================================================
