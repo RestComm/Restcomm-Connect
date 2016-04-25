@@ -28,7 +28,7 @@ import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 import javax.servlet.ServletContext;
-import java.net.InetAddress;
+import javax.servlet.sip.SipURI;
 import java.net.UnknownHostException;
 
 /**
@@ -44,9 +44,9 @@ public class GenerateInstanceId {
     private final InstanceIdDao instanceIdDao;
     private final String host;
 
-    public GenerateInstanceId(ServletContext servletContext) throws UnknownHostException {
+    public GenerateInstanceId(ServletContext servletContext, final SipURI sipURI) throws UnknownHostException {
         this.servletContext = servletContext;
-        host = InetAddress.getLocalHost().getHostAddress();
+        host = sipURI.getHost();
         instanceIdDao = ((DaoManager) servletContext.getAttribute(DaoManager.class.getName())).getInstanceIdDao();
     }
 

@@ -339,7 +339,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             GenerateInstanceId generateInstanceId = null;
             InstanceId instanceId = null;
             try {
-                generateInstanceId = new GenerateInstanceId(context);
+                generateInstanceId = new GenerateInstanceId(context, outboundInterface(context,"udp"));
                 instanceId = generateInstanceId.instanceId();
             } catch (UnknownHostException e) {
                 logger.error("UnknownHostException during the generation of InstanceId: "+e);
