@@ -305,7 +305,10 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void startRecordingCall() throws Exception {
-        logger.info("Start recording call");
+    	if(logger.isInfoEnabled())
+    	{
+    		logger.info("Start recording call");
+    	}
         String finishOnKey = "1234567890*#";
         int maxLength = 3600;
         int timeout = 5;
@@ -319,7 +322,10 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void stopRecordingCall(Stop message) throws Exception {
-        logger.info("Stop recording call");
+    	if(logger.isInfoEnabled())
+    	{
+    		logger.info("Stop recording call");
+    	}
         if (this.mediaGroup != null) {
             // Tell media group to stop recording
             mediaGroup.tell(message, null);
@@ -334,11 +340,17 @@ public class MmsCallController extends MediaServerController {
                     duration = 0.0;
                 }
                 if (duration.equals(0.0)) {
-                    logger.info("Call wraping up recording. File doesn't exist since duration is 0");
-                    final DateTime end = DateTime.now();
+                	if(logger.isInfoEnabled())
+                	{
+                		logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                	}
+                	final DateTime end = DateTime.now();
                     duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
                 } else {
-                    logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+                	if(logger.isInfoEnabled())
+                	{
+                		logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+                	}
                 }
                 final Recording.Builder builder = Recording.builder();
                 builder.setSid(recordingSid);
@@ -356,7 +368,10 @@ public class MmsCallController extends MediaServerController {
                 recordsDao.addRecording(recording);
             }
         } else {
-            logger.info("Tried to stop recording but group was null.");
+        	if(logger.isInfoEnabled())
+        	{
+        		logger.info("Tried to stop recording but group was null.");
+        	}
         }
     }
 
@@ -370,9 +385,12 @@ public class MmsCallController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** Call Controller Current State: \"" + state.toString());
-        logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
-
+        if(logger.isInfoEnabled())
+    	{
+        	logger.info("********** Call Controller Current State: \"" + state.toString());
+        	logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+    	}
+        
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
@@ -853,16 +871,25 @@ public class MmsCallController extends MediaServerController {
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
 
             if (self().path().toString().equalsIgnoreCase("akka://RestComm/user/$j")) {
-                logger.info("Initializing Internal Link for the Outbound call");
+            	if(logger.isInfoEnabled())
+            	{
+            		logger.info("Initializing Internal Link for the Outbound call");
+            	}
             }
 
             if (bridgeEndpoint != null) {
-                logger.info("##################### $$ Bridge for Call " + self().path() + " is terminated: "
-                        + bridgeEndpoint.isTerminated());
+            	if(logger.isInfoEnabled())
+            	{
+	                logger.info("##################### $$ Bridge for Call " + self().path() + " is terminated: "
+	                        + bridgeEndpoint.isTerminated());
+            	}
                 if (bridgeEndpoint.isTerminated()) {
                     // fsm.transition(message, acquiringMediaGatewayInfo);
                     // return;
-                    logger.info("##################### $$ Call :" + self().path() + " bridge is terminated.");
+                	if(logger.isInfoEnabled())
+                	{
+                		logger.info("##################### $$ Call :" + self().path() + " bridge is terminated.");
+                	}
                     // final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
                     // Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new
                     // CreateBridgeEndpoint(session), expires);
@@ -1052,7 +1079,10 @@ public class MmsCallController extends MediaServerController {
         }
 
         protected void cleanup() {
-            logger.info("De-activating Call Controller");
+        	if(logger.isInfoEnabled())
+        	{
+        		logger.info("De-activating Call Controller");
+        	}
 
             if (mediaGroup != null) {
                 mediaGroup.tell(new StopObserving(super.source), super.source);
@@ -1074,8 +1104,11 @@ public class MmsCallController extends MediaServerController {
             }
 
             if (bridgeEndpoint != null) {
-                logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridgeEndpoint.path());
-                mediaGateway.tell(new DestroyEndpoint(bridgeEndpoint), source);
+            	if(logger.isInfoEnabled())
+            	{
+            		logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridgeEndpoint.path());
+            	}
+            	mediaGateway.tell(new DestroyEndpoint(bridgeEndpoint), source);
                 context().stop(bridgeEndpoint);
                 bridgeEndpoint = null;
             }
