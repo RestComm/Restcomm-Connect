@@ -323,49 +323,52 @@ public final class Call extends UntypedActor {
         // 3. If contact header address != real ip address
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
-        String realIP = message.getInitialRemoteAddr();
-        Integer realPort = message.getInitialRemotePort();
-        if (realPort == null || realPort == -1)
-            realPort = 5060;
+        SipURI uri = null;
+        try {
+            String realIP = message.getInitialRemoteAddr();
+            Integer realPort = message.getInitialRemotePort();
+            if (realPort == null || realPort == -1)
+                realPort = 5060;
 
-        final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
-        final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
+            final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
+            final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
 
-        InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-        InetAddress inetAddress = InetAddress.getByName(realIP);
+            InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
+            InetAddress inetAddress = InetAddress.getByName(realIP);
 
-        int remotePort = message.getRemotePort();
-        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
-        String remoteAddress = message.getRemoteAddr();
+            int remotePort = message.getRemotePort();
+            int contactPort = ((SipURI) contactAddr.getURI()).getPort();
+            String remoteAddress = message.getRemoteAddr();
 
-        // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
-        final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-        String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
-        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
+            // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+            final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+            String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+            String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
 
         SipURI uri = null;
-
-        if (initialIpBeforeLB != null) {
-            if (initialPortBeforeLB == null)
-                initialPortBeforeLB = "5060";
+            if (initialIpBeforeLB != null) {
+                if (initialPortBeforeLB == null)
+                    initialPortBeforeLB = "5060";
             if(logger.isInfoEnabled())
         	{
-            	logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
-            			+ initialPortBeforeLB + " to the session for later use");
+                logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
+                        + initialPortBeforeLB + " to the session for later use");
         	}
-            realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
-            uri = factory.createSipURI(null, realIP);
-        } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
-                && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
+                realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                uri = factory.createSipURI(null, realIP);
+            } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                    && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
         	if(logger.isInfoEnabled())
         	{
-        		logger.info("Contact header address " + contactAddr.toString()
-                    + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
-                    + " to the session for later use");
+                logger.info("Contact header address " + contactAddr.toString()
+                        + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
+                        + " to the session for later use");
         	}
-        	
-            realIP = realIP + ":" + realPort;
-            uri = factory.createSipURI(null, realIP);
+                realIP = realIP + ":" + realPort;
+                uri = factory.createSipURI(null, realIP);
+            }
+        } catch (Exception e) {
+            logger.warning("Exception whule trying to get the Initial IP Address and Port");
         }
         return uri;
     }
@@ -378,11 +381,11 @@ public final class Call extends UntypedActor {
         final State state = fsm.state();
         if(logger.isInfoEnabled())
     	{
-        	logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString()+" direction: "+direction);
-        	logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
+        logger.info("********** Call's " + self().path() + " Current State: \"" + state.toString()+" direction: "+direction);
+        logger.info("********** Call " + self().path() + " Processing Message: \"" + klass.getName() + " sender : "
                 + sender.path().toString());
     	}
-        
+
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
@@ -669,7 +672,7 @@ public final class Call extends UntypedActor {
                 } catch (IllegalStateException exception) {
                 	if(logger.isDebugEnabled())
                 	{
-                		logger.debug("Exception while creating 180 response to inbound invite request");
+                    logger.debug("Exception while creating 180 response to inbound invite request");
                 	}
                     fsm.transition(message, canceled);
                 }
@@ -741,9 +744,9 @@ public final class Call extends UntypedActor {
             if (outgoingCallRecord != null && isOutbound()) {
             	if(logger.isInfoEnabled())
             	{
-            		logger.info("Going to update CDR to CANCEL, call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction);
+                logger.info("Going to update CDR to CANCEL, call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction);
             	}
-            	outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
+                outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
             fsm.transition(message, completed);
@@ -783,7 +786,7 @@ public final class Call extends UntypedActor {
         public void execute(Object message) throws Exception {
         	if(logger.isInfoEnabled())
         	{
-        		logger.info("Call moves to failing state because no answer");
+            logger.info("Call moves to failing state because no answer");
         	}
             fsm.transition(message, noAnswer);
         }
@@ -957,9 +960,9 @@ public final class Call extends UntypedActor {
             if (externalSipUri != null) {
             	if(logger.isInfoEnabled())
             	{
-            		logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
+                logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
             	}
-            	externalIp = externalSipUri.getHost().toString();
+                externalIp = externalSipUri.getHost().toString();
             } else {
                 externalIp = sipMessage.getInitialRemoteAddr();
                 logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
@@ -1002,8 +1005,8 @@ public final class Call extends UntypedActor {
                             && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
                     	if(logger.isInfoEnabled())
                     	{
-                    		logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-                    		+ " as a request uri of the ACK");
+                        logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                                + " as a request uri of the ACK");
                     	}
                         ack.setRequestURI(realInetUri);
                     }
@@ -1011,8 +1014,8 @@ public final class Call extends UntypedActor {
                 ack.send();
                 if(logger.isInfoEnabled())
             	{
-                	logger.info("Just sent out ACK : " + ack.toString());
-            	}
+                logger.info("Just sent out ACK : " + ack.toString());
+            }
             }
 
             //Set Call created time, only for "Talk time".
@@ -1118,9 +1121,9 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
         	if(logger.isInfoEnabled())
         	{
-        		logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
+            logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
         	}
-        	
+
             //In the case of canceled that reach the completed method, don't change the external state
             if (!external.equals(CallStateChanged.State.CANCELED)) {
                 // Notify the observers.
@@ -1133,9 +1136,9 @@ public final class Call extends UntypedActor {
 
             if(logger.isInfoEnabled())
         	{
-            	logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
+            logger.info("Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" new external state: "+external);
         	}
-            
+
             // Record call data
             if (outgoingCallRecord != null && isOutbound()) {
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
@@ -1146,13 +1149,13 @@ public final class Call extends UntypedActor {
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 if(logger.isDebugEnabled())
             	{
-	                logger.debug("Start: " + outgoingCallRecord.getStartTime());
-	                logger.debug("End: " + outgoingCallRecord.getEndTime());
-	                logger.debug("Duration: " + seconds);
-	                logger.debug("Just updated CDR for completed call");
-            	}
+                logger.debug("Start: " + outgoingCallRecord.getStartTime());
+                logger.debug("End: " + outgoingCallRecord.getEndTime());
+                logger.debug("Duration: " + seconds);
+                logger.debug("Just updated CDR for completed call");
             }
         }
+    }
     }
 
     /*
@@ -1225,9 +1228,8 @@ public final class Call extends UntypedActor {
                 observerNext.tell(stopObservingMessage, self);
                 if(logger.isInfoEnabled())
             	{
-                	logger.info("Sent stop observing for call, from: "+from+" to: "+to+" direction: "+direction+" to observer: "+observerNext.path()+" observer is terminated: "+observerNext.isTerminated());
+                logger.info("Sent stop observing for call, from: "+from+" to: "+to+" direction: "+direction+" to observer: "+observerNext.path()+" observer is terminated: "+observerNext.isTerminated());
             	}
-
 //                this.observers.remove(observerNext);
             }
             this.observers.clear();
@@ -1280,7 +1282,7 @@ public final class Call extends UntypedActor {
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
     	if(logger.isInfoEnabled())
     	{
-    		logger.info("Got CANCEL for Call, from: "+from+" to: "+to+" state: "+fsm.state());
+        logger.info("Got CANCEL for Call, from: "+from+" to: "+to+" state: "+fsm.state());
     	}
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             fsm.transition(message, canceling);
@@ -1294,10 +1296,10 @@ public final class Call extends UntypedActor {
         } else {
         	if(logger.isInfoEnabled())
         	{
-	            logger.info("Call : "+self().path()+" isTerminated(): "+self().isTerminated()+" timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
-	                    + " Direction: " + direction + " From: " + from + " To: " + to);
-        	}
+            logger.info("Call : "+self().path()+" isTerminated(): "+self().isTerminated()+" timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+                    + " Direction: " + direction + " From: " + from + " To: " + to);
         }
+    }
     }
 
     private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
@@ -1327,8 +1329,8 @@ public final class Call extends UntypedActor {
                     recording = false;
                     if(logger.isInfoEnabled())
                 	{
-                    	logger.info("Call Direction: " + direction);
-                    	logger.info("Initial Call - Will stop recording now");
+                    logger.info("Call Direction: " + direction);
+                    logger.info("Initial Call - Will stop recording now");
                 	}
                     msController.tell(new Stop(false), self);
                     // VoiceInterpreter will take care to prepare the Recording object
@@ -1352,7 +1354,7 @@ public final class Call extends UntypedActor {
             if (isInbound() && is(initializing)) {
             	if(logger.isInfoEnabled())
             	{
-            		logger.info("ACK received moving state to inProgress");
+                logger.info("ACK received moving state to inProgress");
             	}
                 fsm.transition(message, inProgress);
             }
@@ -1373,9 +1375,9 @@ public final class Call extends UntypedActor {
                 if (!is(ringing)) {
                 	if(logger.isInfoEnabled())
                 	{
-                		logger.info("Got 180 Ringing for Call: "+self().path()+" To: "+to+" sender: "+sender.path()+" observers size: "+observers.size());
+                    logger.info("Got 180 Ringing for Call: "+self().path()+" To: "+to+" sender: "+sender.path()+" observers size: "+observers.size());
                 	}
-                	fsm.transition(message, ringing);
+                    fsm.transition(message, ringing);
                 }
                 break;
             }
@@ -1448,7 +1450,7 @@ public final class Call extends UntypedActor {
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
     	if(logger.isDebugEnabled())
     	{
-    		logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state());
+        logger.debug("Got Hangup for Call, from: "+from+" to: "+to+" state: "+fsm.state());
     	}
         if (is(updatingMediaSession) || is(ringing) || is(queued) || is(dialing) || is(inProgress)) {
             if (!receivedBye) {
@@ -1461,7 +1463,7 @@ public final class Call extends UntypedActor {
                 recording = false;
                 if(logger.isInfoEnabled())
             	{
-                	logger.info("Call - Will stop recording now");
+                logger.info("Call - Will stop recording now");
             	}
                 msController.tell(new Stop(true), self);
             }
@@ -1534,9 +1536,9 @@ public final class Call extends UntypedActor {
             if (invite.getHeader("X-Sip-Balancer") != null) {
             	if(logger.isInfoEnabled())
             	{
-            		logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
+                logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
             	}
-            	recordRouteList.next();
+                recordRouteList.next();
                 recordRouteList.remove();
                 recordRouteList.next();
                 recordRouteList.remove();
@@ -1544,31 +1546,31 @@ public final class Call extends UntypedActor {
             if (recordRouteList.hasNext()) {
             	if(logger.isInfoEnabled())
             	{
-            		logger.info("Record Route is set, wont change the Request URI");
+                logger.info("Record Route is set, wont change the Request URI");
             	}
             } else {
             	if(logger.isInfoEnabled())
             	{
-            		logger.info("Checking RURI, realInetUri: " + realInetUri + " byeRURI: " + byeRURI);
+                logger.info("Checking RURI, realInetUri: " + realInetUri + " byeRURI: " + byeRURI);
             	}
             	if(logger.isDebugEnabled())
             	{
-	                logger.debug("byeRURI.isSiteLocalAddress(): " + byeRURI.isSiteLocalAddress());
-	                logger.debug("byeRURI.isAnyLocalAddress(): " + byeRURI.isAnyLocalAddress());
-	                logger.debug("byeRURI.isLoopbackAddress(): " + byeRURI.isLoopbackAddress());
+                logger.debug("byeRURI.isSiteLocalAddress(): " + byeRURI.isSiteLocalAddress());
+                logger.debug("byeRURI.isAnyLocalAddress(): " + byeRURI.isAnyLocalAddress());
+                logger.debug("byeRURI.isLoopbackAddress(): " + byeRURI.isLoopbackAddress());
             	}
                 if (realInetUri != null && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
                 	if(logger.isInfoEnabled())
                 	{
-	                	logger.info("Using the real ip address of the sip client " + realInetUri.toString()
-	                            + " as a request uri of the BYE request");
+                    logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                            + " as a request uri of the BYE request");
                 	}
                     bye.setRequestURI(realInetUri);
                 }
             }
             if(logger.isInfoEnabled())
         	{
-            	logger.info("Will sent out BYE to: " + bye.getRequestURI());
+            logger.info("Will sent out BYE to: " + bye.getRequestURI());
         	}
             bye.send();
         }
@@ -1643,8 +1645,8 @@ public final class Call extends UntypedActor {
                     } else {
                     	if(logger.isInfoEnabled())
                     	{
-                    		logger.info("current state: "+fsm.state()+" , will wait for ACK to move to inProgress");
-                    	}
+                        logger.info("current state: "+fsm.state()+" , will wait for ACK to move to inProgress");
+                    }
                     }
 
                 }
@@ -1762,7 +1764,7 @@ public final class Call extends UntypedActor {
         } catch (Exception exception) {
         	if(logger.isInfoEnabled())
         	{
-        		logger.info("Exception during Call postStop while trying to remove observers: "+exception);
+            logger.info("Exception during Call postStop while trying to remove observers: "+exception);
         	}
         }
         super.postStop();

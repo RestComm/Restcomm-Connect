@@ -599,8 +599,17 @@ public final class CallManager extends UntypedActor {
      */
     private boolean redirectToClientVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
                                              final ApplicationsDao applications, final Client client) {
-        URI clientAppVoiceUril = client.getVoiceUrl();
-        boolean isClientManaged = (clientAppVoiceUril != null && !clientAppVoiceUril.toString().isEmpty() &&  !clientAppVoiceUril.toString().equals(""));
+        Sid applicationSid = client.getVoiceApplicationSid();
+        URI clientAppVoiceUrl = null;
+        if (applicationSid != null) {
+            final Application application = applications.getApplication(applicationSid);
+            clientAppVoiceUrl = UriUtils.resolve(application.getRcmlUrl());
+        }
+        if (clientAppVoiceUrl == null) {
+            clientAppVoiceUrl = client.getVoiceUrl();
+        }
+        boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
+                (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
@@ -614,13 +623,7 @@ public final class CallManager extends UntypedActor {
             final Account account = accounts.getAccount(client.getAccountSid());
             builder.setEmailAddress(account.getEmailAddress());
             final Sid sid = client.getVoiceApplicationSid();
-            if (sid != null) {
-                final Application application = applications.getApplication(sid);
-                builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
-            } else {
-                URI url = UriUtils.resolve(clientAppVoiceUril);
-                builder.setUrl(url);
-            }
+            builder.setUrl(clientAppVoiceUrl);
             builder.setMethod(client.getVoiceMethod());
             URI uri = client.getVoiceFallbackUrl();
             if (uri != null)
