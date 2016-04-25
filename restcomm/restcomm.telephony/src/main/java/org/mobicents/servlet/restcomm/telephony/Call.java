@@ -323,42 +323,45 @@ public final class Call extends UntypedActor {
         // 3. If contact header address != real ip address
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
-        String realIP = message.getInitialRemoteAddr();
-        Integer realPort = message.getInitialRemotePort();
-        if (realPort == null || realPort == -1)
-            realPort = 5060;
-
-        final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
-        final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
-
-        InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-        InetAddress inetAddress = InetAddress.getByName(realIP);
-
-        int remotePort = message.getRemotePort();
-        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
-        String remoteAddress = message.getRemoteAddr();
-
-        // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
-        final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-        String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
-        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
-
         SipURI uri = null;
+        try {
+            String realIP = message.getInitialRemoteAddr();
+            Integer realPort = message.getInitialRemotePort();
+            if (realPort == null || realPort == -1)
+                realPort = 5060;
 
-        if (initialIpBeforeLB != null) {
-            if (initialPortBeforeLB == null)
-                initialPortBeforeLB = "5060";
-            logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
-                    + initialPortBeforeLB + " to the session for later use");
-            realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
-            uri = factory.createSipURI(null, realIP);
-        } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
-                && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
-            logger.info("Contact header address " + contactAddr.toString()
-                    + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
-                    + " to the session for later use");
-            realIP = realIP + ":" + realPort;
-            uri = factory.createSipURI(null, realIP);
+            final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
+            final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
+
+            InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
+            InetAddress inetAddress = InetAddress.getByName(realIP);
+
+            int remotePort = message.getRemotePort();
+            int contactPort = ((SipURI) contactAddr.getURI()).getPort();
+            String remoteAddress = message.getRemoteAddr();
+
+            // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+            final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+            String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+            String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
+
+            if (initialIpBeforeLB != null) {
+                if (initialPortBeforeLB == null)
+                    initialPortBeforeLB = "5060";
+                logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
+                        + initialPortBeforeLB + " to the session for later use");
+                realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                uri = factory.createSipURI(null, realIP);
+            } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                    && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
+                logger.info("Contact header address " + contactAddr.toString()
+                        + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
+                        + " to the session for later use");
+                realIP = realIP + ":" + realPort;
+                uri = factory.createSipURI(null, realIP);
+            }
+        } catch (Exception e) {
+            logger.warning("Exception whule trying to get the Initial IP Address and Port");
         }
         return uri;
     }
