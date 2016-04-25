@@ -1,0 +1,19 @@
+= Restcomm RCML – Hangup
+
+[[hangup]]
+== Hangup
+In Restcomm Communication Language (RCML) **<Hangup>** verb ends a call.
+
+=== Nesting
+The **Hangup** verb can not have any other verbs or nouns nested.
+
+=== Examples
+For an example of how to use the Hangup verb see below.
+
+----
+<Response>
+    <Hangup/>
+</Response>
+----
+
+ 

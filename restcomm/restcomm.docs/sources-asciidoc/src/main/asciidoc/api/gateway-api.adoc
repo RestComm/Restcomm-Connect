@@ -1,0 +1,63 @@
+= Restcomm API – Gateways
+
+[[gateways]]
+== Gateways
+
+The Gateways subresources let you create sip accounts that Restcomm will use to register itself to the Gateway and receive incoming traffic. This feature is similar to when a SIP phone registers to a Proxy Server and receives inbound calls/messages. In this cases, Restcomm will act as the SIP client initiating the register connection to the Proxy Server. 
+
+=== Gateway List Resource URI
+**/2012-04-24/Accounts/\{AccountSid}/Management/Gateways**
+
+=== Register Restcomm instance to a SIP Gateway. 
+You might need to register Restcomm instance to a SIP Gateway and receive incoming traffic from that Gateway. For that you need to use Gateway REST endpoint
+
+=== Resource Properties
+
+[cols=",",options="header",]
+|====================================================================
+|Property |Description
+|FriendlyName |A friendly version of the gateway.
+|UserName |The username that will be used to register to this gateway
+|Password |The password that will be used to register to this gateway
+|Proxy |The proxy address of the gateway
+|Register |Boolean flag to register or not the gateway
+|TTL |Time to live for the Register
+|====================================================================
+
+[[supported-operations]]
+=== Supported Operations
+
+**HTTP GET** Returns the representation of a Gateway resource, including the properties above. Resource URI: /2010-04-01/Accounts/\{AccountSid}/Management/Gateways/\{GatewaySid} 
+
+**HTTP POST** Creates a new Gateway resource and returns the representation of the resource, including the properties above. Resource URI: /2010-04-01/Accounts/\{AccountSid}/Management/Gateways 
+
+**HTTP POST/PUT** Update a Gateway resource and returns the representation of the resource, including the properties above. Resource URI: /2010-04-01/Accounts/\{AccountSid}/Management/Gateways/\{GatewaySid} 
+
+**HTTP DELETE** Deletes a Gateway resource. Resource URI: /2010-04-01/Accounts/\{AccountSid}/Management/Gateways/\{GatewaySid}
+
+[[examples]]
+== Examples
+
+=== Create a new Gateway
+
+....
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways -d "FriendlyName=mygateway" -d "UserName=username" -d "Password=password" -d "Proxy=my.gateway.com" -d "Register=true" -d "TTL=3600"
+....
+
+=== Get a list of available Gateways.
+
+....
+curl -G http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways
+....
+
+=== Update an existing Gateway.
+
+....
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways/GW106bc6f34bd24790a435eaeccc1aed72 -d "FriendlyName=MyGatewayNewName" -d "UserName=newUserName"
+....
+
+=== Delete an existing Gateway.
+
+....
+curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@<RESTCOMM_IP>:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Management/Gateways/GW1cffb069192a45f2b5f5af2e76489550
+....

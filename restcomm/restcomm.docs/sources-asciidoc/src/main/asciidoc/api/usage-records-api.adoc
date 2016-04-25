@@ -1,0 +1,206 @@
+= Restcomm API – Usage Records
+
+[[usage-records]]
+== Usage Records
+
+The UsageRecords REST resource provides a simple API to retrieve usage made by your Restcomm account during any time period and by any usage category. This makes it easy to build reporting and analytics tools for your application. UsageRecords used in combination with Subaccounts created for each of your end-users make it possible to build recurring usage-based billing systems on top of Restcomm's API with just a few simple API calls. 
+
+You can also set up usage triggers to notify your application when a particular category of usage reaches a threshold on a daily, monthly, yearly, or all-time basis. Triggers can help determine if your users have reached a cap on usage, or if your application may have runaway requests. For more on usage triggers, see the Usage Triggers documentation.
+
+[[list]]
+=== UsageRecords List Resource
+
+[[list-uri]]
+==== Resource URI
+*/2012-04-24/Accounts/{AccountSid}/Usage/Records*
+
+[[instance-properties]]
+==== Resource Properties
+
+This resource and its subresources always return a list of UsageRecords. Each UsageRecord is represented by the following properties:
+
+[cols=",",options="header",]
+|==============================================================================================================================================================================================================================================================
+|Property |Description
+|Category |The category of usage. See Usage Categories below.
+|Description |A human-readable description of the usage category.
+|AccountSid |The Account that accrued the usage.
+|StartDate |The first date for which usage is included in this UsageRecord, formatted as YYYY-MM-DD. All dates are in GMT.
+|EndDate |The last date for which usage is included in this UsageRecord, formatted as YYYY-MM-DD. All dates are in GMT.
+|Usage |The amount of usage (e.g. the number of call minutes). This is frequently the same as `Count`, but may be different for certain usage categories like calls, where `Count` represents the number of calls and `Usage` represents the number of minutes.
+|UsageUnit |The units in which `Usage` is measured. For example `minutes` for calls, `messages` for SMS.
+|Count |The number of usage events (e.g. the number of calls).
+|CountUnit |The units in which `Count` is measured. For example `calls` for calls, `messages` for SMS.
+|Price |The total price of the usage, in the currency associated with the account.
+|PriceUnit |The currency in which `Price` is measured, in ISO 4127 format (e.g. `usd`, `eur`, `jpy`).
+|Uri |The URI that returns only this UsageRecord, relative to `http://Restcomm_IP_ADDRESS`
+|SubresourceUris |Subresource Uris for this UsageRecord. See List Subresources.
+|==============================================================================================================================================================================================================================================================
+
+[[usage-count-price]]
+==== Usage, Count, and Price
+
+Each UsageRecord contains three amounts: `Usage`, `Count`, and `Price`. `Usage` is the primary way usage is measured for that category: `minutes` for calls, `messages` for SMS, etc. `Count` is the number of usage events: `calls` for calls, etc. And `Price` is the price of the usage in the currency associated with the account. Each UsageRecord also has fields that show the units in which each amount is measured: `Usage` is measured in units of `UsageUnit`, for instance. These fields make it easy to build usage dashboards. For example, you can always display human-readable strings describing usage with "`$Usagz`
+
+[[usage-categories]]
+==== Usage Categories
+
+A UsageRecord's `Category` defines the type of usage it represents. The full list of all categories is link:#usage-all-categories[here], but you'll usually focus on just a few common categories:
+
+[cols=",",options="header",]
+|==================================================================================================================================================================================================================================================================================
+|             Category |Description
+|calls |All voice calls. `Count` is the number of calls and `Usage` is the number of minutes.
+|sms |All SMS messages. `Count` and `Usage` are both the number of messages sent.
+|phonenumbers |All phone numbers owned by the account.
+|recordings |Recordings of voice calls. `Count` is the number of recordings and `Usage` is the number of recorded minutes. Note that Restcomm doesn't charge for making recordings (only storing them long term) so `Price` will always be 0.
+|transcriptions |Transcriptions of voice calls. `Count` is the number of transcriptions and `Usage` is the number of transcribed minutes.
+|totalprice |Total price of all usage. `Usage` will be the same as `Price`, and `Count` will be empty. Note that because some Restcomm costs may not be included in any usage category, the sum of the `Price` of all UsageRecords may not be equal to the `Price` of `TotalPrice`.
+|==================================================================================================================================================================================================================================================================================
+
+[[list-get]]
+==== HTTP GET
+
+Returns *UsageRecords* for all usage categories. The list includes paging information.
+
+[[list-get-filters]]
+===== List Filters
+
+By default, the UsageRecords resource will return one UsageRecord for each `Category`, representing all usage accrued all-time for the account. You can filter the usage `Category` or change the date-range over which usage is counted using optional GET query parameters. Note that query parameters are case-sensitive:
+
+[cols=",",options="header",]
+|===========================================================================================================================================================================================================================================================
+|Parameter |Description
+|Category |Only include usage of this usage category.
+|StartDate |Only include usage that has occurred on or after this date. Format is YYYY-MM-DD. All dates are in GMT. As a convenience, you can also specify offsets to today. For example, `StartDate=-30days` will make `StartDate` be 30 days before today.
+|EndDate |Only include usage that has occurred on or before this date. Format is YYYY-MM-DD. All dates are in GMT. As a convenience, you can also specify offsets to today. For example, `EndDate=+30days` will make `EndDate` be 30 days from today.
+|===========================================================================================================================================================================================================================================================
+
+For example, you might request all usage records for the month of April, 2012. In this case, the query string would be *`StartDate=2012-04-01&EndDate=2012-04-30`.* This would return one *UsageRecord* for each *usage-type* summarizing the usage during April. The list includes paging information. It's also possible to group usage by day, by month, or by year using the subresources described below.
+
+[[list-subresources]]
+==== List Subresources
+
+The main UsageRecords list resource supports a variety of convenience subresources. In general these take the form:
+
+----
+/2010-04-01/Accounts/{AccountSid}/Usage/Records/{Subresource}
+----
+
+Supported subresources are:
+
+[cols=",",options="header",]
+|=================================================================================================================================================================
+|Subresource |Description
+|Daily |Return multiple UsageRecords for each usage category, each representing usage over a daily time-interval.
+|Monthly |Return multiple UsageRecords for each usage category, each representing usage over a monthly time-interval.
+|Yearly |Return multple UsageRecords for each usage category, each representing usage over a yearly time-interval.
+|AllTime |Return a single UsageRecord for each usage category, each representing usage over the date-range specified. This is the same as the root /Usage/Records.
+|Today |Return a single UsageRecord per usage category, for today's usage only.
+|Yesterday |Return a single UsageRecord per usage category, for yesterday's usage only.
+|ThisMonth |Return a single UsageRecord per usage category, for this month's usage only.
+|LastMonth |Return a single UsageRecord per usage category, for last month's usage only.
+|=================================================================================================================================================================
+
+These convenience subresources can be used to draw a graph of daily calls, display dashboards of monthly usage across all usage categories, or build a simple usage-based billing system based on last month's usage totals. All subresources support the same list filters as the root UsageCounters resource.
+
+[[list-post]]
+HTTP POST
+++++++++
+
+Not supported.
+
+[[list-put]]
+HTTP PUT
+++++++++
+
+Not supported.
+
+[[list-delete]]
+HTTP DELETE
++++++++++++
+
+Not supported.
+
+[[usage-all-categories]]
+==== Full List of All Usage Categories
+
+The full list of supported usage categories are:
+
+[cols=",",options="header",]
+|=========================================================================================================================================================================================================================================================================================
+|             Category |Description
+|calls |All voice calls, inbound & outbound. `Count` is the number of calls and `Usage` is the number of minutes.
+|calls-inbound |All inbound voice calls, to both toll-free and local numbers.
+|calls-inbound-local |All inbound voice calls to local numbers.
+|calls-inbound-tollfree |All inbound voice calls to toll-free numbers.
+|calls-outbound |All outbound voice calls.
+|calls-client |All Restcomm Client voice calls.
+|calls-sip |All SIP calls.
+|sms |All SMS messages, both inbound and outbound. `Count` and `Usage` are both the number of messages sent.
+|sms-inbound |All inbound SMS messages, to both short-codes and long-codes.
+|sms-inbound-shortcode |All inbound SMS messages to short-codes.
+|sms-inbound-longcode |All inbound SMS messages to long-codes.
+|sms-outbound |All outbound SMS messages, from both short-codes and long-codes.
+|sms-outbound-shortcode |All outbound SMS messages from short-codes.
+|sms-outbound-longcode |All outbound SMS messages from long-codes.
+|phonenumbers |All phone numbers owned by the account, toll-free and local.
+|phonenumbers-tollfree |All toll-free phone numbers owned by the account.
+|phonenumbers-local |All local phone numbers owned by the account.
+|shortcodes |All ShortCodes owned by the account, of all types.
+|shortcodes-vanity |All vanity ShortCodes owned by the account.
+|shortcodes-random |All randomly-assigned ShortCodes owned by the account.
+|shortcodes-customerowned |All ShortCodes owned by the account that are leased from another provider.
+|calleridlookups |CallerID (CallerName) lookups.
+|recordings |Recordings of voice calls. `Count` is the number of recordings and `Usage` is the number of recorded minutes. Note that Restcomm doesn't charge for making recordings (only storing them long term) so `Price` will always be 0.
+|transcriptions |Transcriptions of voice calls. `Count` is the number of transcriptions and `Usage` is the number of transcribed minutes.
+|recordingstorage |Amount of storage used by call recordings stored for the account. `Count` is the number of stored recordings, `Usage` is the number of stored recorded minutes, and `Price` is the price of storing the recordings.
+|totalprice |Total price of all usage. `Usage` will be the same as `Price`, and `Count` will be empty. Note that because some Restcomm costs may not be included in any usage category, the sum of the `Price` in all UsageRecords may or may not be equal to the `Price` of `TotalPrice`.
+|=========================================================================================================================================================================================================================================================================================
+
+[[instance]]
+=== UsageRecords Instance Resource
+
+You cannot make requests directly to a UsageRecord resource. Instead, make a request to the UsageRecords list resource or one of its
+
+[[example-of-getting-daily-calls-stats]]
+== Example of Getting Daily Calls Stats
+
+----
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Daily
+----
+
+
+----
+<RestcommResponse>
+  <UsageRecords>
+    <UsageRecord>
+      <Category>calls</Category>
+      <Description>Total Calls</Description>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <StartDate>2016-01-01</StartDate>
+      <EndDate>2016-01-01</EndDate>
+      <Usage>4</Usage>
+      <UsageUnit>minutes</UsageUnit>
+      <Count>2</Count>
+      <CountUnit>calls</CountUnit>
+      <Price>0.0</Price>
+      <PriceUnit>USD</PriceUnit>
+      <Uri>/todo</Uri>
+    </UsageRecord>
+    <UsageRecord>
+      <Category>calls</Category>
+      <Description>Total Calls</Description>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <StartDate>2016-01-04</StartDate>
+      <EndDate>2016-01-04</EndDate>
+      <Usage>0</Usage>
+      <UsageUnit>minutes</UsageUnit>
+      <Count>1</Count>
+      <CountUnit>calls</CountUnit>
+      <Price>0.0</Price>
+      <PriceUnit>USD</PriceUnit>
+      <Uri>/todo</Uri>
+    </UsageRecord>
+  </UsageRecords>
+----

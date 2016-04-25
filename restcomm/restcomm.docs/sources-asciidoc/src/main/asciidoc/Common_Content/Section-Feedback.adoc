@@ -1,0 +1,16 @@
+
+= Provide feedback to the authors!
+(((feedback)))
+
+If you find a typographical error in this manual, or if you have thought of a way to make this manual better, we would love to hear from you! Please submit a report in the the {this-issue.tracker.ur}, against the product {this-platform} {this-application}`   `, or contact the authors.
+
+When submitting a bug report, be sure to mention the manual's identifier: {this-platform} {this-application}
+
+If you have a suggestion for improving the documentation, try to be as specific as possible when describing it.
+If you have found an error, please include the section number and some of the surrounding text so we can find it easily.
+
+ifdef::backend-docbook[]
+[index]
+== Index
+// Generated automatically by the DocBook toolchain.
+endif::backend-docbook[]

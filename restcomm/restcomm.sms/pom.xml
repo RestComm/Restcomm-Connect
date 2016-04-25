@@ -114,7 +114,13 @@
 			<groupId>com.cloudhopper</groupId>
 			<artifactId>ch-smpp</artifactId>
 		</dependency>
-    </dependencies>
+
+		<dependency>
+			<groupId>com.cloudhopper</groupId>
+			<artifactId>ch-commons-util</artifactId>
+			<version>${ch-commons-util.version}</version>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>
