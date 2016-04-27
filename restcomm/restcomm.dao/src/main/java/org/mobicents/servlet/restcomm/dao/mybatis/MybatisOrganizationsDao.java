@@ -86,10 +86,10 @@ public class MybatisOrganizationsDao implements OrganizationsDao {
     }
 
     @Override
-    public List<Organization> getOrganizations(Sid accountSid) {
+    public List<Organization> getAllOrganizations() {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getOrganizations", accountSid.toString());
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAllOrganizations");
             final List<Organization> organizations = new ArrayList<Organization>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -130,10 +130,9 @@ public class MybatisOrganizationsDao implements OrganizationsDao {
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final String friendlyName = readString(map.get("friendly_name"));
         final String namespace = readString(map.get("namespace"));
-        final Sid accountSid = readSid(map.get("account_sid"));
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
-        return new Organization(sid, dateCreated, dateUpdated, friendlyName, namespace, accountSid, apiVersion, uri);
+        return new Organization(sid, dateCreated, dateUpdated, friendlyName, namespace, apiVersion, uri);
     }
 
     private Map<String, Object> toMap(final Organization organization) {
@@ -143,7 +142,6 @@ public class MybatisOrganizationsDao implements OrganizationsDao {
         map.put("date_updated", writeDateTime(organization.getDateUpdated()));
         map.put("friendly_name", organization.getFriendlyName());
         map.put("namespace", organization.getNamespace());
-        map.put("account_sid", writeSid(organization.getAccountSid()));
         map.put("api_version", organization.getApiVersion());
         map.put("uri", writeUri(organization.getUri()));
         return map;

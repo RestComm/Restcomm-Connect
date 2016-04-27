@@ -27,9 +27,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -40,11 +44,14 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.subject.Subject;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.OrganizationList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -95,26 +102,25 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    protected Organization createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
+    protected Organization createFrom(final MultivaluedMap<String, String> data) {
         final Organization.Builder builder = Organization.builder();
         final Sid sid = Sid.generate(Sid.Type.ORGANIZATION);
         builder.setSid(sid);
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setNamespace(data.getFirst("Namespace"));
-        builder.setAccountSid(accountSid);
         builder.setApiVersion(getApiVersion(data));
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
-        buffer.append(rootUri).append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
-                .append("/Organizations/").append(sid.toString());
+        buffer.append(rootUri).append(getApiVersion(data)).append("/Organizations/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
         return builder.build();
     }
 
-    protected Response getOrganization(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getOrganization(final String sid, final MediaType responseType) {
+        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Organizations");
+            secure(account, "RestComm:Read:Organizations");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -128,7 +134,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(organization.getAccountSid()));
+                secureLevelControlOrganizations(account, organization, false);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -143,14 +149,21 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getOrganizations(final String accountSid, final MediaType responseType) {
+    protected Response getOrganizations(final MediaType responseType) {
+        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Organizations");
-            secureLevelControl(accountsDao, accountSid, null);
+            secure(account, "RestComm:Read:Organizations");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final List<Organization> organizations = dao.getOrganizations(new Sid(accountSid));
+        List<Organization> organizations = new ArrayList<Organization>();
+        final Subject subject = SecurityUtils.getSubject();
+        if (subject.hasRole("Administrator")) {
+            organizations = dao.getAllOrganizations();
+        } else {
+            Organization organization = dao.getOrganization(account.getOrganizationSid());
+            organizations.add(organization); // Always be only one Organization, but list is used to keep the response standard
+        }
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new OrganizationList(organizations));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -161,14 +174,8 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response putOrganization(final String accountSid, final MultivaluedMap<String, String> data,
+    protected Response putOrganization(final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Organizations");
-            secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -176,9 +183,9 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
         Organization organization = dao.getOrganization(data.getFirst("Namespace"));
         if (organization == null) {
-            organization = createFrom(new Sid(accountSid), data);
+            organization = createFrom(data);
             dao.addOrganization(organization);
-        } else if (!organization.getAccountSid().toString().equals(accountSid)) {
+        } else {
             return status(CONFLICT)
                     .entity("A organization with the same namespace was already created by another account. Please, choose a different namespace and try again.")
                     .build();
@@ -193,6 +200,22 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
     }
 
+    protected Response deleteOrganization(final String sid) {
+        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
+        try {
+            secure(account, "RestComm:Delete:Organizations");
+            Organization organization = dao.getOrganization(new Sid(sid));
+            if (organization != null) {
+                secureLevelControlOrganizations(account, organization, true);
+            }
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        accountsDao.migrateToDefaultOrganization(new Sid(sid));
+        dao.removeOrganization(new Sid(sid));
+        return ok().build();
+    }
+
     private void validate(final MultivaluedMap<String, String> data) throws RuntimeException {
         if (!data.containsKey("FriendlyName")) {
             throw new NullPointerException("FriendlyName can not be null.");
@@ -202,10 +225,11 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response updateOrganization(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
+    protected Response updateOrganization(final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Organizations");
+            secure(account, "RestComm:Modify:Organizations");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -214,7 +238,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(organization.getAccountSid()));
+                secureLevelControlOrganizations(account, organization, true);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -239,6 +263,32 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             result = result.setNamespace(data.getFirst("Namespace"));
         }
         return result;
+    }
+
+    protected boolean secureLevelControlOrganizations(Account account, Organization organization, boolean adminRoleRequired) {
+        final Subject subject = SecurityUtils.getSubject();
+        final boolean isRestCommAdmin = subject.hasRole("Administrator");
+        final boolean isOrganizationAdmin = subject.hasRole("Organization Administrator");
+        if (adminRoleRequired) {
+            if (!(isRestCommAdmin || isOrganizationAdmin)) {
+                throw new AuthorizationException();
+            }
+            if (isOrganizationAdmin) {
+                return isAccountOfOrganization(account, organization);
+            }
+        } else if (!isRestCommAdmin) {
+            return isAccountOfOrganization(account, organization);
+        }
+        return true;
+    }
+
+    private boolean isAccountOfOrganization(Account account, Organization organization) {
+        String organizationSid = String.valueOf(organization.getSid());
+        String accountSid = String.valueOf(account.getOrganizationSid());
+        if (!organizationSid.equalsIgnoreCase(accountSid)) {
+            throw new AuthorizationException();
+        }
+        return true;
     }
 
 }

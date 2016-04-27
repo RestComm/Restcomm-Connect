@@ -94,6 +94,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
         validate(data);
 
+
         final DateTime now = DateTime.now();
         final String emailAddress = data.getFirst("EmailAddress");
 
@@ -118,8 +119,9 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         Sid organizationSid = null;
-        if (data.containsKey("OrganizationSid")) {
-            organizationSid = new Sid(data.getFirst("OrganizationSid"));
+        if (accountSid != null) {
+            Account master = dao.getAccount(accountSid);
+            organizationSid = master.getOrganizationSid();
         }
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri,
                 organizationSid);
@@ -274,9 +276,6 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         if (data.containsKey("Auth_Token")) {
             result = result.setAuthToken(data.getFirst("Auth_Token"));
         }
-        if (data.containsKey("OrganizationSid")) {
-            result = result.setOrganizationSid(getSid("OrganizationSid", data));
-        }
         return result;
     }
 
@@ -292,7 +291,19 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
             try {
                 if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
                         || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
-                    dao.updateAccount(account);
+                    boolean isUpdateOrganization = data.containsKey("OrganizationSid");
+                    boolean isMasterAccount = account.getAccountSid() == null;
+                    if (isUpdateOrganization && !isMasterAccount) {
+                        return status(CONFLICT)
+                                .entity("Update Organization attribute is not allowed for sub accounts (allowed for master accounts only).")
+                                .build();
+                    } else if (isUpdateOrganization && isMasterAccount) {
+                        account = account.setOrganizationSid(getSid("OrganizationSid", data));
+                        dao.updateAccount(account);
+                        dao.updateSubaccountsOrganization(account.getSid(), account.getOrganizationSid());
+                    } else {
+                        dao.updateAccount(account);
+                    }
                 } else {
                     return status(UNAUTHORIZED).build();
                 }

@@ -61,14 +61,12 @@ public class OrganizationsDaoTest {
 
     @Test
     public void createReadUpdateDelete() {
-        final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid sid = Sid.generate(Sid.Type.ORGANIZATION);
         URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final Organization.Builder builder = Organization.builder();
         builder.setSid(sid);
         builder.setFriendlyName("Organization Test");
         builder.setNamespace("test");
-        builder.setAccountSid(account);
         builder.setApiVersion("2012-04-24");
         builder.setUri(url);
         Organization organization = builder.build();
@@ -81,7 +79,6 @@ public class OrganizationsDaoTest {
         assertTrue(result.getSid().equals(organization.getSid()));
         assertTrue(result.getFriendlyName().equals(organization.getFriendlyName()));
         assertTrue(result.getNamespace().equals(organization.getNamespace()));
-        assertTrue(result.getAccountSid().equals(organization.getAccountSid()));
         assertTrue(result.getApiVersion().equals(organization.getApiVersion()));
         assertTrue(result.getUri().equals(organization.getUri()));
         // Update the application
@@ -94,7 +91,6 @@ public class OrganizationsDaoTest {
         assertTrue(result.getSid().equals(organization.getSid()));
         assertTrue(result.getFriendlyName().equals(organization.getFriendlyName()));
         assertTrue(result.getNamespace().equals(organization.getNamespace()));
-        assertTrue(result.getAccountSid().equals(organization.getAccountSid()));
         assertTrue(result.getApiVersion().equals(organization.getApiVersion()));
         assertTrue(result.getUri().equals(organization.getUri()));
         // Delete the organization

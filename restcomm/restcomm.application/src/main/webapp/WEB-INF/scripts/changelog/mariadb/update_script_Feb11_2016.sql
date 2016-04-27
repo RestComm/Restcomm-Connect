@@ -20,11 +20,11 @@ sid VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL, 
 date_updated DATETIME NOT NULL, 
 friendly_name VARCHAR(64) NOT NULL, 
-namespace VARCHAR(30) NOT NULL, 
-account_sid VARCHAR(34) NOT NULL, 
+namespace VARCHAR(30) NOT NULL,  
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
+INSERT INTO restcomm_organizations VALUES('ORec3515ebea5243b6bde0444d84b05b80','2016-08-04 11:37:00.000000000','2016-08-04 11:37:00.000000000','Default Organization','default','2012-04-24','/restcomm/2012-04-24/Organizations/ORec3515ebea5243b6bde0444d84b05b80');
 END IF;
 
 SELECT IFNULL(column_name, '') INTO @colName
@@ -68,5 +68,10 @@ SELECT
   organization_sid as organization_sid
 FROM restcomm_accounts;
 DROP TABLE restcomm_accounts;
+/* Set Default Organization */
+UPDATE temp_table SET organization_sid = 'ORec3515ebea5243b6bde0444d84b05b80' WHERE organization_sid IS NULL;
+/* Alter table to not allow nulls in organization column */
+ALTER TABLE temp_table MODIFY organization_sid VARCHAR(34) NOT NULL;
+/* Restore from temp structure */ 
 ALTER TABLE temp_table RENAME restcomm_accounts;
 END IF;

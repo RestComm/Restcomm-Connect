@@ -7,6 +7,16 @@ date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL
 );
 
+CREATE TABLE restcomm_organizations (
+sid VARCHAR(34) NOT NULL PRIMARY KEY, 
+date_created DATETIME NOT NULL, 
+date_updated DATETIME NOT NULL, 
+friendly_name VARCHAR(64) NOT NULL, 
+namespace VARCHAR(30) NOT NULL,
+api_version VARCHAR(10) NOT NULL,
+uri MEDIUMTEXT NOT NULL
+);
+
 CREATE TABLE restcomm_accounts (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
@@ -19,7 +29,7 @@ status VARCHAR(16) NOT NULL,
 auth_token VARCHAR(32) NOT NULL,
 role VARCHAR(64) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
-organization_sid VARCHAR(34)
+organization_sid VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE restcomm_announcements (
@@ -275,16 +285,8 @@ ttl INT NOT NULL,
 uri MEDIUMTEXT NOT NULL
 );
 
-CREATE TABLE restcomm_organizations (
-sid VARCHAR(34) NOT NULL PRIMARY KEY, 
-date_created DATETIME NOT NULL, 
-date_updated DATETIME NOT NULL, 
-friendly_name VARCHAR(64) NOT NULL, 
-namespace VARCHAR(30) NOT NULL, 
-account_sid VARCHAR(34) NOT NULL,
-api_version VARCHAR(10) NOT NULL,
-uri MEDIUMTEXT NOT NULL
-);
+/* Default Organization */
+INSERT INTO restcomm_organizations VALUES('ORec3515ebea5243b6bde0444d84b05b80','2016-08-04 11:37:00.000000000','2016-08-04 11:37:00.000000000','Default Organization','default','2012-04-24','/restcomm/2012-04-24/Organizations/ORec3515ebea5243b6bde0444d84b05b80')
 
 INSERT INTO restcomm_accounts VALUES (
 "ACae6e420f425248d6a26948c17a9e2acf",
@@ -298,7 +300,7 @@ null,
 "77f8c12cc7b8f8423e5c38b035249166",
 "Administrator",
 "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf",
-null);
+"ORec3515ebea5243b6bde0444d84b05b80");
 
 /* Create demo Applications */
 INSERT INTO restcomm_applications VALUES('AP73926e7113fa4d95981aa96b76eca854','2015-09-23 06:56:04.108000','2015-09-23 06:56:04.108000','rvdCollectVerbDemo','ACae6e420f425248d6a26948c17a9e2acf','2012-04-24',FALSE,'/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854','/restcomm-rvd/services/apps/rvdCollectVerbDemo/controller','voice');
