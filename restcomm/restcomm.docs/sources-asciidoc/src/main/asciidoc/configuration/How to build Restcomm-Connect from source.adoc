@@ -1,6 +1,7 @@
-[big red]*How to build Restcomm-Connect from source*
+[[build-from-source]]
+*How to build Restcomm-Connect from source*
 
-[black]*Requirements*
+*Requirements*
 
 * You must have *git* installed on your computer
 * You must have *ant* installed on your computer
@@ -8,7 +9,7 @@
 * You must be running *maven* version 3.x.x on your computer
 
 
-[big black]*Step 1*
+*Step 1*
 
 * Go to  https://github.com/RestComm/Restcomm-Connect.git
 You will see the page like this one below. Copy the URL in the *HTTPS* field.
@@ -16,7 +17,7 @@ The URL should look like this: https://github.com/RestComm/Restcomm-Connect.git
 
 image::images/1.png[]
 
-[big black]*Step 2*
+*Step 2*
 
 In the bash window of your local computer create a directory where you should clone Restcomm-Connect:
 

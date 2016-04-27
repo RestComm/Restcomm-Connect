@@ -1,13 +1,14 @@
-[big red]*Starting Restcomm-Connect*
+[[start-restcomm-connect]]
+*Starting Restcomm-Connect*
 
-[black]*Requirements*
+*Requirements*
 
 *  Install the GNU screen (it is optional but recommended)
 
 * Install IPCalc
 * You must have *JDK - 7* installed on your computer
 
-[big black]*Step 1 – Download and unzip Restcomm binary*
+*Step 1 – Download and unzip Restcomm binary*
 
 _If you you have already installed Restcomm you can skip the Step 1 and move to Step 2._
 
@@ -19,7 +20,7 @@ where <xxx> is the release version number.
 *Restcomm-JBoss-AS7-7.6.0.869.zip*.
   Further we shall refer to this above Restcomm directory as the *$RESTCOMM_HOME*.
 
-[big black]*Step 2 – Configure Restcomm IP information and Text-to-speech*
+*Step 2 – Configure Restcomm IP information and Text-to-speech*
 
 * Go to the directory *$RESTCOMM_HOME/bin/restcomm*.
 * Open the file *restcomm.conf*.
@@ -39,7 +40,7 @@ image::images/10.png[]
 
 image::images/9.png[]
 
-[black]*Add your Text-to-Speech Key*
+*Add your Text-to-Speech Key*
 
 * Register at *www.voicerss.org* and get your personal VoiceRSS API key. It is for free.
 
@@ -51,7 +52,7 @@ image::images/11.png[]
 
 * Save and exit the restcomm.conf file.
 
-[big black]*Step 3 – Start Restcomm and Open the Admin GUI*
+*Step 3 – Start Restcomm and Open the Admin GUI*
 
 * Go to the *$RESTCOMM_HOME/bin/restcomm/* directory.
 
@@ -68,7 +69,7 @@ Then you should change the default password.
 
 * If you need to stop the Restcomm you need to run *$RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh* command.
 
-[big black]*Step 4 – Making Test SIP Calls using the Demo Apps*
+*Step 4 – Making Test SIP Calls using the Demo Apps*
 
 * Open any SIP phone of your choice.
 You may use link:http://www.linphone.org/downloads-for-desktop.html[Linphone] which doesn’t require registration.
