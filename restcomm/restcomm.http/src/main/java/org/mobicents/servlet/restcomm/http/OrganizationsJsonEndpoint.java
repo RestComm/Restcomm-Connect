@@ -26,7 +26,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -35,7 +34,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 /**
  * @author guilherme.jansen@telestax.com
  */
-@Path("/Accounts/{accountSid}/Organizations.json")
+@Path("/Organizations.json")
 @ThreadSafe
 public class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
     public OrganizationsJsonEndpoint() {
@@ -43,13 +42,13 @@ public class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
     }
 
     @GET
-    public Response getOrganizations(@PathParam("accountSid") final String accountSid) {
-        return getOrganizations(accountSid, APPLICATION_JSON_TYPE);
+    public Response getOrganizations() {
+        return getOrganizations(APPLICATION_JSON_TYPE);
     }
 
     @POST
-    public Response putOrganization(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putOrganization(accountSid, data, APPLICATION_JSON_TYPE);
+    public Response putOrganization(final MultivaluedMap<String, String> data) {
+        return putOrganization(data, APPLICATION_JSON_TYPE);
     }
 
 }

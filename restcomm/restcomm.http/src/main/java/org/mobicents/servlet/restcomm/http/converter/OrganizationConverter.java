@@ -58,7 +58,6 @@ public class OrganizationConverter extends AbstractConverter implements JsonSeri
         writeDateUpdated(organization.getDateUpdated(), writer);
         writeFriendlyName(organization.getFriendlyName(), writer);
         writeNamespace(organization, writer);
-        writeAccountSid(organization.getAccountSid(), writer);
         writeApiVersion(organization.getApiVersion(), writer);
         writeUri(organization.getUri(), writer);
         writer.endNode();
@@ -72,7 +71,6 @@ public class OrganizationConverter extends AbstractConverter implements JsonSeri
         writeDateUpdated(organization.getDateUpdated(), object);
         writeFriendlyName(organization.getFriendlyName(), object);
         writeNamespace(organization, object);
-        writeAccountSid(organization.getAccountSid(), object);
         writeApiVersion(organization.getApiVersion(), object);
         writeUri(organization.getUri(), object);
         return object;

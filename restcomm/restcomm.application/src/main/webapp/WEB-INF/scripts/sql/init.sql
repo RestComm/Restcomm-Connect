@@ -1,3 +1,14 @@
+CREATE TABLE "restcomm_organizations" (
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY, 
+"date_created" DATETIME NOT NULL, 
+"date_updated" DATETIME NOT NULL, 
+"friendly_name" VARCHAR(64) NOT NULL, 
+"namespace" VARCHAR(30) NOT NULL, 
+"account_sid" VARCHAR(34) NOT NULL, 
+"api_version" VARCHAR(10) NOT NULL,
+"uri" LONGVARCHAR NOT NULL
+);
+
 CREATE TABLE "restcomm_accounts" (
 "sid" VARCHAR(34) NOT NULL PRIMARY KEY,
 "date_created" DATETIME NOT NULL,
@@ -10,7 +21,7 @@ CREATE TABLE "restcomm_accounts" (
 "auth_token" VARCHAR(32) NOT NULL,
 "role" VARCHAR(64) NOT NULL,
 "uri" LONGVARCHAR NOT NULL,
-"organization_sid" VARCHAR(34)
+"organization_sid" VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE "restcomm_announcements" (
@@ -261,16 +272,5 @@ CREATE TABLE "restcomm_gateways" (
 "proxy" LONGVARCHAR NOT NULL,
 "register" BOOLEAN NOT NULL,
 "ttl" INT NOT NULL,
-"uri" LONGVARCHAR NOT NULL
-);
-
-CREATE TABLE "restcomm_organizations" (
-"sid" VARCHAR(34) NOT NULL PRIMARY KEY, 
-"date_created" DATETIME NOT NULL, 
-"date_updated" DATETIME NOT NULL, 
-"friendly_name" VARCHAR(64) NOT NULL, 
-"namespace" VARCHAR(30) NOT NULL, 
-"account_sid" VARCHAR(34) NOT NULL, 
-"api_version" VARCHAR(10) NOT NULL,
 "uri" LONGVARCHAR NOT NULL
 );

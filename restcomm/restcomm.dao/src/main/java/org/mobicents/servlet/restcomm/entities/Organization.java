@@ -38,19 +38,17 @@ public class Organization {
     private DateTime dateUpdated;
     private String friendlyName;
     private String namespace;
-    private Sid accountSid;
     private String apiVersion;
     private URI uri;
 
     public Organization(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
-            final String namespace, final Sid accountSid, final String apiVersion, final URI uri) {
+            final String namespace, final String apiVersion, final URI uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.friendlyName = friendlyName;
         this.namespace = namespace;
-        this.accountSid = accountSid;
         this.apiVersion = apiVersion;
         this.uri = uri;
     }
@@ -79,10 +77,6 @@ public class Organization {
         return namespace;
     }
 
-    public Sid getAccountSid() {
-        return accountSid;
-    }
-
     public String getApiVersion() {
         return apiVersion;
     }
@@ -92,23 +86,19 @@ public class Organization {
     }
 
     public Organization setFriendlyName(String friendlyName) {
-        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, accountSid, apiVersion, uri);
+        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, apiVersion, uri);
     }
 
     public Organization setNamespace(String namespace) {
-        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, accountSid, apiVersion, uri);
-    }
-
-    public Organization setAccountSid(Sid accountSid) {
-        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, accountSid, apiVersion, uri);
+        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, apiVersion, uri);
     }
 
     public Organization setApiVersion(String apiVersion) {
-        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, accountSid, apiVersion, uri);
+        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, apiVersion, uri);
     }
 
     public Organization setUri(URI uri) {
-        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, accountSid, apiVersion, uri);
+        return new Organization(sid, dateCreated, DateTime.now(), friendlyName, namespace, apiVersion, uri);
     }
 
     @NotThreadSafe
@@ -116,7 +106,6 @@ public class Organization {
         private Sid sid;
         private String friendlyName;
         private String namespace;
-        private Sid accountSid;
         private String apiVersion;
         private URI uri;
 
@@ -126,7 +115,7 @@ public class Organization {
 
         public Organization build() {
             final DateTime now = DateTime.now();
-            return new Organization(sid, now, now, friendlyName, namespace, accountSid, apiVersion, uri);
+            return new Organization(sid, now, now, friendlyName, namespace, apiVersion, uri);
         }
 
         public void setSid(final Sid sid) {
@@ -139,10 +128,6 @@ public class Organization {
 
         public void setNamespace(final String namespace) {
             this.namespace = namespace;
-        }
-
-        public void setAccountSid(final Sid accountSid) {
-            this.accountSid = accountSid;
         }
 
         public void setApiVersion(final String apiVersion) {

@@ -127,6 +127,31 @@ public final class MybatisAccountsDao implements AccountsDao {
     }
 
     @Override
+    public void migrateToDefaultOrganization(Sid organizationSid) {
+        final SqlSession session = sessions.openSession();
+        try{
+            session.update(namespace + "migrateToDefaultOrganization", organizationSid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateSubaccountsOrganization(Sid accountSid, Sid organizationSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("account_sid", writeSid(accountSid));
+            map.put("organization_sid", writeSid(organizationSid));
+            session.update(namespace + "updateSubaccountsOrganization", map);
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void updateAccount(final Account account) {
         updateAccount(namespace + "updateAccount", account);
     }

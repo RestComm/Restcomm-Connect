@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.entities.shiro;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -38,11 +40,12 @@ import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.DomainPermission;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
@@ -68,7 +71,7 @@ public final class Realm extends AuthorizingRealm {
         set.add(roleName);
         final SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo(set);
         final SimpleRole role = getRole(roleName);
-        if (role != null) {
+        if (role != null && isOrganizationCompliant(account, null)) {
             authorizationInfo.setObjectPermissions(role.getPermissions());
         }
         return authorizationInfo;
@@ -95,7 +98,7 @@ public final class Realm extends AuthorizingRealm {
                 sid = account.getSid();
             }
 
-            if (account != null) {
+            if (account != null && isOrganizationCompliant(account, null)) {
                 authToken = account.getAuthToken();
                 return new SimpleAuthenticationInfo(sid.toString(), authToken.toCharArray(), getName());
             } else {
@@ -124,7 +127,7 @@ public final class Realm extends AuthorizingRealm {
 
     private void loadSecurityRoles(final Configuration configuration) {
         @SuppressWarnings("unchecked")
-        final List<String> roleNames = (List<String>) configuration.getList("role[@name]");
+        final List<String> roleNames = configuration.getList("role[@name]");
         final int numberOfRoles = roleNames.size();
         if (numberOfRoles > 0) {
             for (int roleIndex = 0; roleIndex < numberOfRoles; roleIndex++) {
@@ -150,4 +153,30 @@ public final class Realm extends AuthorizingRealm {
             }
         }
     }
+
+    private boolean isOrganizationCompliant(Account account, URI requestUrl) {
+        if (requestUrl != null) {
+            final InetAddressValidator addressValidator = InetAddressValidator.getInstance();
+            String host = requestUrl.getHost();
+            if (host.contains("[") || host.contains("]"))
+                // Remove ipv6 brackets if present
+                host = host.replace("[", "").replace("]", "");
+            if (!addressValidator.isValidInet4Address(host) && !addressValidator.isValidInet6Address(host)) {
+                // Assuming host as a domain name, proceed extracting namespace and validating Organizations
+                final String namespace = host.split("\\.")[0];
+                final ShiroResources services = ShiroResources.getInstance();
+                final DaoManager daos = services.get(DaoManager.class);
+                final OrganizationsDao organizationsDao = daos.getOrganizationsDao();
+                final Organization accountOrganization = organizationsDao.getOrganization(account.getOrganizationSid());
+                final Organization namespaceOrganization = organizationsDao.getOrganization(namespace);
+                final String accountOrganizationSid = String.valueOf(accountOrganization.getSid());
+                final String namespaceOrganizationSid = String.valueOf(namespaceOrganization.getSid());
+                if (!accountOrganizationSid.equalsIgnoreCase(namespaceOrganizationSid)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 }

@@ -23,9 +23,6 @@ package org.mobicents.servlet.restcomm.http;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,96 +33,75 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.entities.Organization;
-import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
-@Path("/Accounts/{accountSid}/Organizations")
+@Path("/Organizations")
 @ThreadSafe
 public class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     public OrganizationsXmlEndpoint() {
         super();
     }
 
-    private Response deleteOrganization(final String accountSid, final String sid) {
-        try {
-            secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Organizations");
-            Organization organization = dao.getOrganization(new Sid(sid));
-            if (organization != null) {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(organization.getAccountSid()));
-            }
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
-        dao.removeOrganization(new Sid(sid));
-        return ok().build();
-    }
-
     @Path("/{sid}.json")
     @DELETE
-    public Response deleteOrganizationAsJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return deleteOrganization(accountSid, sid);
+    public Response deleteOrganizationAsJson(@PathParam("sid") final String sid) {
+        return deleteOrganization(sid);
     }
 
     @Path("/{sid}")
     @DELETE
-    public Response deleteOrganizationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteOrganization(accountSid, sid);
+    public Response deleteOrganizationAsXml(@PathParam("sid") final String sid) {
+        return deleteOrganization(sid);
     }
 
     @Path("/{sid}.json")
     @GET
-    public Response getOrganizationAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getOrganization(accountSid, sid, APPLICATION_JSON_TYPE);
+    public Response getOrganizationAsJson(@PathParam("sid") final String sid) {
+        return getOrganization(sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
     @GET
-    public Response getOrganizationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getOrganization(accountSid, sid, APPLICATION_XML_TYPE);
+    public Response getOrganizationAsXml(@PathParam("sid") final String sid) {
+        return getOrganization(sid, APPLICATION_XML_TYPE);
     }
 
     @GET
-    public Response getOrganizations(@PathParam("accountSid") final String accountSid) {
-        return getOrganizations(accountSid, APPLICATION_XML_TYPE);
+    public Response getOrganizations() {
+        return getOrganizations(APPLICATION_XML_TYPE);
     }
 
     @POST
-    public Response putOrganization(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putOrganization(accountSid, data, APPLICATION_XML_TYPE);
+    public Response putOrganization(final MultivaluedMap<String, String> data) {
+        return putOrganization(data, APPLICATION_XML_TYPE);
     }
 
     @Path("/{sid}.json")
     @POST
-    public Response updateOrganizationAsJsonPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateOrganization(accountSid, sid, data, APPLICATION_JSON_TYPE);
+    public Response updateOrganizationAsJsonPost(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateOrganization(sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}.json")
     @PUT
-    public Response updateOrganizationAsJsonPut(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateOrganization(accountSid, sid, data, APPLICATION_JSON_TYPE);
+    public Response updateOrganizationAsJsonPut(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateOrganization(sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
     @POST
-    public Response updateOrganizationAsXmlPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateOrganization(accountSid, sid, data, APPLICATION_XML_TYPE);
+    public Response updateOrganizationAsXmlPost(@PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
+        return updateOrganization(sid, data, APPLICATION_XML_TYPE);
     }
 
     @Path("/{sid}")
     @PUT
-    public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+    public Response updateClientAsXmlPut(@PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
-        return updateOrganization(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateOrganization(sid, data, APPLICATION_XML_TYPE);
     }
 
 }

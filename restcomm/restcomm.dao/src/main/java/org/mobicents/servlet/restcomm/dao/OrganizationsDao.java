@@ -37,7 +37,7 @@ public interface OrganizationsDao {
 
     Organization getOrganization(String namespace);
 
-    List<Organization> getOrganizations(Sid accountSid);
+    List<Organization> getAllOrganizations();
 
     void updateOrganization(Organization organization);
 
