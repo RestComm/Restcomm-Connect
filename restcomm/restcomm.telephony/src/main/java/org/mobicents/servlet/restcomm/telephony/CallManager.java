@@ -523,7 +523,12 @@ public final class CallManager extends UntypedActor {
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                 }
-                builder.setMethod(number.getVoiceMethod());
+                final String voiceMethod = number.getVoiceMethod();
+                if (voiceMethod == null || voiceMethod.isEmpty()) {
+                    builder.setMethod("POST");
+                } else {
+                    builder.setMethod(voiceMethod);
+                }
                 URI uri = number.getVoiceFallbackUrl();
                 if (uri != null)
                     builder.setFallbackUrl(UriUtils.resolve(uri));
