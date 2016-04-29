@@ -276,7 +276,12 @@ public final class SmsService extends UntypedActor {
                     } else {
                         builder.setUrl(UriUtils.resolve(appUri));
                     }
-                    builder.setMethod(number.getSmsMethod());
+                    final String smsMethod = number.getSmsMethod();
+                    if (smsMethod == null || smsMethod.isEmpty()) {
+                        builder.setMethod("POST");
+                    } else {
+                        builder.setMethod(smsMethod);
+                    }
                     URI appFallbackUrl = number.getSmsFallbackUrl();
                     if (appFallbackUrl != null) {
                         builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
