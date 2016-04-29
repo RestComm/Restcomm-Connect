@@ -1,14 +1,14 @@
 [[start-restcomm-connect]]
-*Starting Restcomm-Connect*
+= Starting Restcomm-Connect
 
-*Requirements*
+== Requirements
 
 *  Install the GNU screen (it is optional but recommended)
 
 * Install IPCalc
 * You must have *JDK - 7* installed on your computer
 
-*Step 1 – Download and unzip Restcomm binary*
+== Download and unzip Restcomm binary
 
 _If you you have already installed Restcomm you can skip the Step 1 and move to Step 2._
 
@@ -20,13 +20,22 @@ where <xxx> is the release version number.
 *Restcomm-JBoss-AS7-7.6.0.869.zip*.
   Further we shall refer to this above Restcomm directory as the *$RESTCOMM_HOME*.
 
-*Step 2 – Configure Restcomm IP information and Text-to-speech*
+== Configure Restcomm IP information and Text-to-speech
 
 * Go to the directory *$RESTCOMM_HOME/bin/restcomm*.
 * Open the file *restcomm.conf*.
-* Go to the section *# Network configuration*.
+* Go to the section *# Network configuration*
 
-image::images/7.png[]
+[source,bash]
+----
+# Network configuration
+NET_INTERFACE=''
+PRIVATE_IP=''
+SUBNET_MASK=''
+NETWORK=''
+BROADCAST_ADDRESS=''
+----
+
 * In order to get the details of your server you should run the *ifconfig* command in the terminal.
 You will see something like this:
 
@@ -38,9 +47,17 @@ image::images/10.png[]
 
 * Configure the following variables with the network configuration details of your server:
 
-image::images/9.png[]
+[source,bash]
+----
+# Network configuration
+NET_INTERFACE='wlx60e32716068a'
+PRIVATE_IP='172.21.0.107'
+SUBNET_MASK='255.255.255.0'
+NETWORK='172.21.0.0'
+BROADCAST_ADDRESS='172.21.0.255'
+----
 
-*Add your Text-to-Speech Key*
+=== Add your Text-to-Speech Key
 
 * Register at *www.voicerss.org* and get your personal VoiceRSS API key. It is for free.
 
@@ -48,11 +65,15 @@ image::images/9.png[]
 
 * Go to the  *# VoiceRSS variable declarations* section. Add your VoiceRSS API key to the *VOICERSS_KEY* variable:
 
-image::images/11.png[]
+[source,bash]
+----
+# VoiceRSS variable declarations
+#VOICERSS_KEY='797e69a254fc431b818bb37f35fb62df'
+----
 
 * Save and exit the restcomm.conf file.
 
-*Step 3 – Start Restcomm and Open the Admin GUI*
+== Start Restcomm and Open the Admin GUI
 
 * Go to the *$RESTCOMM_HOME/bin/restcomm/* directory.
 
@@ -69,7 +90,7 @@ Then you should change the default password.
 
 * If you need to stop the Restcomm you need to run *$RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh* command.
 
-*Step 4 – Making Test SIP Calls using the Demo Apps*
+== Making Test SIP Calls using the Demo Apps
 
 * Open any SIP phone of your choice.
 You may use link:http://www.linphone.org/downloads-for-desktop.html[Linphone] which doesn’t require registration.
