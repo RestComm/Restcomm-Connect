@@ -1,12 +1,12 @@
 [[restcomm-connect-mysql]]
-*How to get started with Restcomm-Connect and Mysql*
+= How to get started with Restcomm-Connect and Mysql
 
-*Requirements*
+== Requirements
 
 * Install Restcomm using our previous guides
 * Install MySQL - 5.1.38
 
-*Step 1 – Configuring the mybatis.xml file to use Mysql*
+== Configuring the mybatis.xml file to use Mysql
 
 
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/* directory.
@@ -15,6 +15,8 @@
 * Add the MariaDB configuration environment tag as shown below.
 Make sure that you have indicated the correct MySQL username, password
 and IP of the computer where the database is located (it is 172.21.0.107 in the example).
+
+[source,bash]
 ----
 <environment id="mariadb">
 <transactionManager type="JDBC"/>
@@ -28,10 +30,10 @@ and IP of the computer where the database is located (it is 172.21.0.107 in the 
 ----
 * Save and exit the mybatis.xml file.
 
-*Step 2 – Start Mysql and Create the Restcomm database*
+== Start Mysql and Create the Restcomm database
 
 * Start Mysql by running the command *sudo /etc/init.d/mysql start*.
-* Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb* directory. There will be the *init.sql* file and sql directory:
+* Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb* directory. There will be the *init.sql* file and *sql* directory:
 
 image::images/13.png[]
 
@@ -41,11 +43,13 @@ image::images/13.png[]
 If the process was successful you will see the following:
 
 image::images/14.png[]
-*Step 3 – Edit the restcomm.xml file to point the DAO to MySQL*
+== Edit the restcomm.xml file to point the DAO to MySQL
 
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/*.
 Open the *restcomm.xml* file.
 * Find the dao-manager tag and change the sql-files path to mariadb as shown below:
+
+[source,bash]
 ----
 <dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
   <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
@@ -53,7 +57,7 @@ Open the *restcomm.xml* file.
   <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
 </dao-manager>
 ----
-*Step 4 – Download Mysql Java Client Driver*
+== Download Mysql Java Client Driver
 
 * Download the latest MySQL Java Connector from http://mvnrepository.com/artifact/mysql/mysql-connector-java.
 * Put the jar file in

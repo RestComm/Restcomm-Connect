@@ -1,15 +1,14 @@
 [[build-from-source]]
-*How to build Restcomm-Connect from source*
+= How to build Restcomm-Connect from source
 
-*Requirements*
+== Requirements
 
 * You must have *git* installed on your computer
 * You must have *ant* installed on your computer
 * You must have *JDK - 7* installed on your computer
 * You must be running *maven* version 3.x.x on your computer
 
-
-*Step 1*
+== Obtaining git URL
 
 * Go to  https://github.com/RestComm/Restcomm-Connect.git
 You will see the page like this one below. Copy the URL in the *HTTPS* field.
@@ -17,7 +16,7 @@ The URL should look like this: https://github.com/RestComm/Restcomm-Connect.git
 
 image::images/1.png[]
 
-*Step 2*
+== Restcomm-Connect cloning
 
 In the bash window of your local computer create a directory where you should clone Restcomm-Connect:
 
@@ -28,10 +27,13 @@ The content of the directory should contain the following:
 
 image::images/6.png[]
 
+== Restcomm-Connect building
+
 * You will need to create a script to build Restcomm-Connect.
 Copy the script below into a bash script on your local directory at the root of the RestComm-Connect.
 In this tutorial, the script below is stored in the file *restcomm-connect-build.sh*.
 
+[source,bash]
 ----
 #!/bin/bash
 export RESTCOMM_HOME=/home/yuliachornobrivets/Restcomm-Connect
@@ -56,6 +58,8 @@ image::images/4.png[]
 * Now, run the build script as follows: *./restcomm-connect-build.sh*
 
 This may take a while to build. If the build is successful, you should see this output at the end of the build:
+
+[source,bash]
 ----
 make-final-zip:
 
