@@ -43,7 +43,7 @@ public class AccountsEndpointTest {
     private String newAdminAuthToken = "8e70383c69f7a3b7ea3f71b02f3e9731";
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
-    private String organizationSid = "OR8dd6563c99ce45a0ac5b3cb61bf1aec9";
+    private String organizationSid = "ORec3515ebea5243b6bde0444d84b05b80";
 
     @After
     public void after() throws InterruptedException {

@@ -34,7 +34,7 @@ AND column_name = 'organization_sid';
 
 IF @colName = '' THEN 
     -- ALTER COMMAND GOES HERE --
-#Modify table "restcomm_accounts", move column cost to the end of the table schema
+#Modify table "restcomm_accounts", move column organization_sid to the end of the table schema
 CREATE TABLE temp_table LIKE restcomm_accounts;
 ALTER TABLE temp_table DROP organization_sid;
 ALTER TABLE temp_table ADD organization_sid VARCHAR(34);

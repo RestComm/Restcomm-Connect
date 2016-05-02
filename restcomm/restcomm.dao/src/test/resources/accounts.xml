@@ -29,6 +29,14 @@
     DELETE FROM "restcomm_accounts" WHERE "sid"=#{sid};
   </delete>
   
+  <select id="migrateToDefaultOrganization" parameterType="string">
+    UPDATE "restcomm_accounts" SET "organization_sid"='ORec3515ebea5243b6bde0444d84b05b80' WHERE "organization_sid"=#{organization_sid};
+  </select>
+  
+  <select id="updateSubaccountsOrganization" parameterType="map">
+    UPDATE "restcomm_accounts" SET "organization_sid"=#{organization_sid} WHERE "account_sid"=#{account_sid};
+  </select>
+  
   <update id="updateAccount" parameterType="map">
     UPDATE "restcomm_accounts" SET "date_updated"=#{date_updated}, "email_address"=#{email_address}, "friendly_name"=#{friendly_name},
     "type"=#{type}, "status"=#{status}, "auth_token"=#{auth_token}, "role"=#{role}, "organization_sid"=#{organization_sid} WHERE "sid"=#{sid};
