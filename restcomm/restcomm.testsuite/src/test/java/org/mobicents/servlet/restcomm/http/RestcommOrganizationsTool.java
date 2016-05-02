@@ -46,22 +46,22 @@ public class RestcommOrganizationsTool {
         return instance;
     }
 
-    private String getOrganizationsUrl(String deploymentUrl, String accountSid, Boolean xml) {
+    private String getOrganizationsUrl(String deploymentUrl, Boolean xml) {
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
-        organizationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Organizations";
+        organizationsUrl = deploymentUrl + "/2012-04-24/Organizations";
         if (!xml) {
             organizationsUrl += ".json";
         }
         return organizationsUrl;
     }
 
-    private String getOrganizationUrl(String deploymentUrl, String accountSid, String organizationSid, Boolean xml) {
+    private String getOrganizationUrl(String deploymentUrl, String organizationSid, Boolean xml) {
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
-        organizationsUrl = deploymentUrl + "/2012-04-24/Accounts/" + accountSid + "/Organizations/" + organizationSid;
+        organizationsUrl = deploymentUrl + "/2012-04-24/Organizations/" + organizationSid;
 
         if (!xml) {
             organizationsUrl += ".json";
@@ -80,7 +80,7 @@ public class RestcommOrganizationsTool {
             String adminAuthToken, MultivaluedMap<String, String> organizationParams) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getOrganizationsUrl(deploymentUrl, adminAccountSid, false);
+        String url = getOrganizationsUrl(deploymentUrl, false);
         WebResource webResource = jerseyClient.resource(url);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, organizationParams);
         JsonParser parser = new JsonParser();
@@ -92,7 +92,7 @@ public class RestcommOrganizationsTool {
             String adminAccountSid, String organizationSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getOrganizationUrl(deploymentUrl, adminAccountSid, organizationSid, false);
+        String url = getOrganizationUrl(deploymentUrl, organizationSid, false);
         WebResource webResource = jerseyClient.resource(url);
         String response = null;
         JsonObject jsonResponse = null;
@@ -109,7 +109,7 @@ public class RestcommOrganizationsTool {
     public JsonArray getOrganizations(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getOrganizationsUrl(deploymentUrl, adminAccountSid, false);
+        String url = getOrganizationsUrl(deploymentUrl, false);
         WebResource webResource = jerseyClient.resource(url);
         String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
@@ -121,7 +121,7 @@ public class RestcommOrganizationsTool {
             String adminAccountSid, String organizationSid, MultivaluedMap<String, String> organizationParams, boolean usePut) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getOrganizationUrl(deploymentUrl, adminAccountSid, organizationSid, false);
+        String url = getOrganizationUrl(deploymentUrl, organizationSid, false);
         WebResource webResource = jerseyClient.resource(url);
         String response = "";
         if (usePut) {
@@ -137,7 +137,7 @@ public class RestcommOrganizationsTool {
     public void deleteOrganization(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
             String organizationSid) {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
-        String url = getOrganizationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint, adminAccountSid,
+        String url = getOrganizationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
                 organizationSid, false);
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));

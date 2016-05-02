@@ -86,7 +86,6 @@ public class OrganizationsEndpointTest {
         assertTrue(df.parse(organizationJson.get("date_updated").getAsString()) != null);
         assertTrue(organizationJson.get("friendly_name").getAsString().equals(friendlyName));
         assertTrue(organizationJson.get("namespace").getAsString().equals(namespace));
-        assertTrue(organizationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(organizationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Test asserts via GET to a organization list
@@ -97,7 +96,6 @@ public class OrganizationsEndpointTest {
         assertTrue(df.parse(organizationJson.get("date_updated").getAsString()) != null);
         assertTrue(organizationJson.get("friendly_name").getAsString().equals(friendlyName));
         assertTrue(organizationJson.get("namespace").getAsString().equals(namespace));
-        assertTrue(organizationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(organizationJson.get("api_version").getAsString().equals("2012-04-24"));
     }
 
@@ -106,7 +104,7 @@ public class OrganizationsEndpointTest {
         // Create organization
         MultivaluedMap<String, String> organizationParams = new MultivaluedMapImpl();
         organizationParams.add("FriendlyName", "Organization Test Inc");
-        organizationParams.add("Namespace", "test");
+        organizationParams.add("Namespace", "organization");
         JsonObject organizationJson = RestcommOrganizationsTool.getInstance().createOrganization(deploymentUrl.toString(),
                 adminAccountSid, adminUsername, adminAuthToken, organizationParams);
         Sid organizationSid = new Sid(organizationJson.get("sid").getAsString());
@@ -131,7 +129,6 @@ public class OrganizationsEndpointTest {
         assertTrue(df.parse(organizationJson.get("date_updated").getAsString()) != null);
         assertTrue(organizationJson.get("friendly_name").getAsString().equals(friendlyName));
         assertTrue(organizationJson.get("namespace").getAsString().equals(namespace));
-        assertTrue(organizationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(organizationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Define new values to the organization attributes (PUT test)
@@ -151,7 +148,6 @@ public class OrganizationsEndpointTest {
         assertTrue(df.parse(organizationJson.get("date_updated").getAsString()) != null);
         assertTrue(organizationJson.get("friendly_name").getAsString().equals(friendlyName));
         assertTrue(organizationJson.get("namespace").getAsString().equals(namespace));
-        assertTrue(organizationJson.get("account_sid").getAsString().equals(adminAccountSid));
         assertTrue(organizationJson.get("api_version").getAsString().equals("2012-04-24"));
     }
 

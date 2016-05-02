@@ -66,7 +66,7 @@ public class OrganizationsDaoTest {
         final Organization.Builder builder = Organization.builder();
         builder.setSid(sid);
         builder.setFriendlyName("Organization Test");
-        builder.setNamespace("test");
+        builder.setNamespace("organization");
         builder.setApiVersion("2012-04-24");
         builder.setUri(url);
         Organization organization = builder.build();
@@ -83,7 +83,7 @@ public class OrganizationsDaoTest {
         assertTrue(result.getUri().equals(organization.getUri()));
         // Update the application
         organization = organization.setFriendlyName("Test Organization");
-        organization = organization.setNamespace("tset");
+        organization = organization.setNamespace("test");
         organizations.updateOrganization(organization);
         // Read the updated application from the data store
         result = organizations.getOrganization(sid);
