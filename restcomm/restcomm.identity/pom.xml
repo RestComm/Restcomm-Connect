@@ -1,0 +1,197 @@
+<!--suppress MavenModelInspection -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.telestax.servlet</groupId>
+		<artifactId>restcomm</artifactId>
+		<version>7.5.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>restcomm.identity</artifactId>
+	<name>restcomm.identity</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-as7-adapter</artifactId>
+		</dependency>			
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>		
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-client</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-servlet</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.commons</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.dao</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>		
+		
+	</dependencies>
+	<profiles>
+		<profile>
+			<id>manageKeycloak</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.7</version>
+						<executions>
+							<execution>
+								<id>start-keycloak</id>
+								<phase>pre-integration-test</phase>
+								<configuration>
+									<!--<skip>${skip-keycloak-launch}</skip>-->
+									<target>
+										<!--<echo message="STARTING KEYCLOAK ${basedir}/../../release/keycloak/bin/"/>-->
+										<exec executable="./standalone.sh"
+											  dir="${basedir}/../../keycloak/bin/"
+											  spawn="true">
+											<arg value="-b"/>
+											<arg value="127.0.0.1"/>
+											<arg value="-Djboss.http.port=8081"/>
+											<arg value="-Djboss.https.port=8444"/>
+											<arg value="-Djboss.management.http.port=9980"/>
+											<arg value="-Djboss.management.https.port=9983"/>
+											<arg value="-Djboss.ajp.port=8010"/>
+											<arg value="-Dkeycloak.migration.action=import"/>
+											<arg value="-Dkeycloak.migration.provider=singleFile"/>
+											<arg value="-Dkeycloak.migration.file=${basedir}/../../release/master-realm-for-testing.json"/>
+											<arg value="-Dkeycloak.migration.strategy=OVERWRITE_EXISTING"/>
+											<arg value="--server-config"/>
+											<arg value="standalone-for-identity-proxy.xml"/>
+										</exec>
+
+									</target>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>wait-keycloak-to-start</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<!--<skip>${skip-keycloak-launch}</skip>-->
+									<target>
+										<echo message="WAITING FOR KEYCLOAK TO START" />
+										<!--<sleep seconds="60"/> -->
+										<waitfor maxwait="2" maxwaitunit="minute" checkevery="1000">
+											<http url="http://127.0.0.1:8081/auth"/>
+										</waitfor>
+									</target>
+								</configuration>
+							</execution>
+
+							<execution>
+								<id>stop-keycloak</id>
+								<phase>post-integration-test</phase>
+								<configuration>
+									<!--<skip>${skip-keycloak-launch}</skip>-->
+									<target>
+										<!--<echo message="STOPPING KEYCLOAK" />-->
+										<exec executable="./jboss-cli.sh"
+											  dir="${basedir}/../../keycloak/bin/"
+											  spawn="false">
+											<arg value='--commands=connect localhost:9980,shutdown'/>
+										</exec>
+									</target>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<version>2.19</version>
+						<configuration>
+							<includes>**/*Test.java</includes>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>integration-test</goal>
+									<goal>verify</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>2.17</version>
+						<configuration>
+							<excludes>
+								<exclude>**/*Test.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+</project>

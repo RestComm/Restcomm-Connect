@@ -57,7 +57,7 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class ClientsEndpoint extends AbstractEndpoint {
+public abstract class ClientsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -137,7 +137,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+               // secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -155,7 +155,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     protected Response getClients(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -192,7 +192,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -235,7 +235,7 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+              //  secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

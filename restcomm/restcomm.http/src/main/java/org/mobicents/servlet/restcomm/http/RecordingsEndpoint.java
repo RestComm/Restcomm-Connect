@@ -39,7 +39,6 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.Recording;
@@ -54,14 +53,13 @@ import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class RecordingsEndpoint extends AbstractEndpoint {
+public abstract class RecordingsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
     protected RecordingsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
 
     public RecordingsEndpoint() {
         super();
@@ -74,7 +72,6 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getRecordingsDao();
-        accountsDao = storage.getAccountsDao();
         final RecordingConverter converter = new RecordingConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Recording.class, converter);
@@ -98,7 +95,7 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(recording.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(recording.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -116,7 +113,7 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
     protected Response getRecordings(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

@@ -143,6 +143,16 @@ public abstract class AbstractConverter implements Converter {
         object.addProperty("friendly_name", friendlyName);
     }
 
+    protected void writeEmailAddress(final String emailAddress, final JsonObject object) {
+        object.addProperty("email_address", emailAddress);
+    }
+
+    protected void writeEmailAddress(final String emailAddress, final HierarchicalStreamWriter writer) {
+        writer.startNode("EmailAddress");
+        writer.setValue(emailAddress);
+        writer.endNode();
+    }
+
     protected void writeFrom(final String from, final HierarchicalStreamWriter writer) {
         writer.startNode("From");
         writer.setValue(from);
