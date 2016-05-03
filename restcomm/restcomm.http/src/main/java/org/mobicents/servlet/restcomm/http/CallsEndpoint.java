@@ -91,7 +91,7 @@ import com.thoughtworks.xstream.XStream;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @NotThreadSafe
-public abstract class CallsEndpoint extends AbstractEndpoint {
+public abstract class CallsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -154,7 +154,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+               // secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -175,7 +175,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -294,7 +294,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         final Sid accountId = new Sid(accountSid);
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

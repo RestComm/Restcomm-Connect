@@ -68,7 +68,7 @@ import scala.concurrent.duration.Duration;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class SupervisorEndpoint extends AbstractEndpoint{
+public class SupervisorEndpoint extends SecuredEndpoint{
     private static Logger logger = Logger.getLogger(SupervisorEndpoint.class);
 
     @Context

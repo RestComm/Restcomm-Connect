@@ -36,7 +36,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -83,7 +82,7 @@ import static javax.ws.rs.core.Response.status;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
+public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected ActorSystem system;
@@ -92,7 +91,6 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     protected SmsMessagesDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
 
     private boolean normalizePhoneNumbers;
 
@@ -106,7 +104,6 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         dao = storage.getSmsMessagesDao();
-        accountsDao = storage.getAccountsDao();
         aggregator = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.sms.SmsService");
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         super.init(configuration);
@@ -135,7 +132,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(smsMessage.getAccountSid()));
+               // secureLevelControl(accountsDao, accountSid, String.valueOf(smsMessage.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -153,7 +150,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     protected Response getSmsMessages(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -196,7 +193,7 @@ public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
             final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
