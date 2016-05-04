@@ -1,0 +1,195 @@
+= Restcomm API – Applications
+
+[[applications]]
+== Applications
+
+An Application instance resource represents a RCML set of instructions used by a RestComm interpreter to process an on-going call, SMS or USSD. 
+
+RestComm stores only part of the metadata for this Application, which contains as one of its attributes the URL with the address of the application server where the RCML can be retrieved. 
+
+Currently there are 3 types of Applications that are supported: Voice, SMS and USSD. Each type of Application will be used by its specific interpreter. 
+
+Considering the access control executed by multi-tenancy, each Application can be created, read, updated or deleted by its owner solely. Any attempt of access to an Application using an account different than its owner will be denied.
+
+=== Applications Resource URI
+
+*2012-04-24/Accounts/\{AccountSid}/Applications/\{ApplicationSid}*
+
+=== Resource Properties
+
+[cols=",",]
+|=========================================================================================================
+|PROPERTY |DESCRIPTION
+|Sid |A string that uniquely identifies this Application.
+|DateCreated |The date when this Application was created.
+|DateUpdated |The date wher this Application was last updated.
+|FriendlyName |A friendly name for this Application.
+|AccountSid |The unique ID of the Account that owns this Application.
+|ApiVersion |Version of the API applied to this Application.
+|HasVoiceCallerIdLookup |Look up the caller’s caller-ID name from the CNAM database. Either true or false.
+|Uri |The URI for this Application, relative to http://localhost:port/restcomm.
+|RcmlUrl |The HTTP address that RestComm will use to get the RCML of this Application.
+|Kind |The kind of this Application. (Supported values: voice, sms or ussd)
+|=========================================================================================================
+
+=== Supported Operations
+
+*HTTP GET* Returns the representation of an Application resource, including the properties described on the table "Resource Properties". 
+
+*HTTP POST and PUT*   Modifies an Application resource and returns the representation, including the properties described on the table "Resource Properties". The table below describes a list of optional parameters. 
+
+==== Request Parameters
+
+You may specify one or more of the following parameters to update this Application’s respective properties:
+
+[cols=",",]
+|======================================================================================================
+|PROPERTY |DESCRIPTION
+|FriendlyName |A friendly name for this Application.
+|VoiceCallerIdLookup |Look up the caller’s caller-ID name from the CNAM database. Either true or false.
+|RcmlUrl |The HTTP address that RestComm will use to get the RCML of this Application.
+|Kind |The kind of this Application. (Supported values: voice, sms or ussd)
+|======================================================================================================
+
+*HTTP DELETE* 
+
+Remove the Application from RestComm's database. This Application will not be displayed anymore at the list of available applications while using AdminUI, consequently, not possible to be assigned to a RestComm Number or Client. If successful, returns an HTTP 204 response with no body. 
+
+== Applications List
+
+=== Applications List Resource URI
+
+*2012-04-24/Accounts/\{AccountSid}/Applications*
+
+=== Supported Operations
+
+*HTTP GET* Returns a list of Applications resource representations, each representing a application given to your account. 
+
+*List Filters* Given the rules of multi-tenancy, the list of applications is automatically filtered using the informed account to authenticate, returning all the applications owned by this account. No additional filters are currently supported. 
+
+*HTTP POST* Create a new Application resource with the information provided by the required and optional parameters described by the tables below. 
+
+=== Required Parameters
+
+Your request must include exactly the following parameters:
+
+[cols=",",]
+|===================================================
+|PROPERTY |DESCRIPTION
+|FriendlyName |A friendly name for this Application.
+|===================================================
+
+=== Optional Parameters
+
+Your request may include the following parameters:
+
+[cols=",",]
+|=========================================================================================================
+|PROPERTY |DESCRIPTION
+|ApiVersion |Version of the API applied to this Application.
+|HasVoiceCallerIdLookup |Look up the caller’s caller-ID name from the CNAM database. Either true or false.
+|RcmlUrl |The HTTP address that RestComm will use to get the RCML of this Application.
+|Kind |The kind of this Application. (Supported values: voice, sms or ussd)
+|=========================================================================================================
+
+*HTTP PUT* Not supported. 
+
+*HTTP DELETE* Not supported. 
+
+== Create an Application
+
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:f8b593f84593130c39700c11ee996c0e@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications -d "FriendlyName=Application FooBar" -d "ApiVersion=2012-04-24" -d "HasVoiceCallerIdLookup=false" -d "RcmlUrl=http://127.0.0.1:8080/restcomm-rvd/services/apps/foobar/controller" -d "Kind=voice"
+----
+
+The output of the command will be similar to the one below
+
+[source,lang:xhtml,decode:true]
+----
+<RestcommResponse>
+  <Application>
+    <Sid>APdc46145309d14e97b62230cd3f269ed4</Sid>
+    <DateCreated>Wed, 27 Jan 2016 11:23:54 -0200</DateCreated>
+    <DateUpdated>Wed, 27 Jan 2016 11:23:54 -0200</DateUpdated>
+    <FriendlyName>Application FooBar</FriendlyName>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <ApiVersion>2012-04-24</ApiVersion>
+    <VoiceCallerIdLookup>false</VoiceCallerIdLookup>
+    <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4</Uri>
+    <RcmlUrl>http://127.0.0.1:8080/restcomm-rvd/services/apps/foobar/controller</RcmlUrl>
+    <Kind>voice</Kind>
+  </Application>
+</RestcommResponse>
+----
+
+== Update a Application
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:f8b593f84593130c39700c11ee996c0e@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4 -d "FriendlyName=Application X"
+----
+
+The output of the command will be similar to the one below
+
+[source,lang:xhtml,decode:true]
+----
+<RestcommResponse>
+  <Application>
+    <Sid>APdc46145309d14e97b62230cd3f269ed4</Sid>
+    <DateCreated>Wed, 27 Jan 2016 11:23:54 -0200</DateCreated>
+    <DateUpdated>Wed, 27 Jan 2016 12:50:18 -0200</DateUpdated>
+    <FriendlyName>Application X</FriendlyName>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <ApiVersion>2012-04-24</ApiVersion>
+    <VoiceCallerIdLookup>false</VoiceCallerIdLookup>
+    <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4</Uri>
+    <RcmlUrl>http://127.0.0.1:8080/restcomm-rvd/services/apps/foobar/controller</RcmlUrl>
+    <Kind>voice</Kind>
+  </Application>
+</RestcommResponse>
+----
+
+== Delete a Application
+
+----
+curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:f8b593f84593130c39700c11ee996c0e@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/APdc46145309d14e97b62230cd3f269ed4
+----
+
+No output for DELETE operation.
+
+Get a List of available Applications
+
+----
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:f8b593f84593130c39700c11ee996c0e@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications.json
+----
+
+The output of the command will be similar to the one below
+
+----
+[
+  {
+    "sid": "AP73926e7113fa4d95981aa96b76eca854",
+    "date_created": "Wed, 23 Sep 2015 06:56:04 -0300",
+    "date_updated": "Wed, 23 Sep 2015 06:56:04 -0300",
+    "friendly_name": "rvdCollectVerbDemo",
+    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+    "api_version": "2012-04-24",
+    "voice_caller_id_lookup": false,
+    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP73926e7113fa4d95981aa96b76eca854.json",
+    "rcml_url": "/restcomm-rvd/services/apps/PR7addb947898443329cf50913103f77a2/controller",
+    "kind": "voice"
+  },
+  {
+    "sid": "AP81cf45088cba4abcac1261385916d582",
+    "date_created": "Wed, 23 Sep 2015 06:56:17 -0300",
+    "date_updated": "Wed, 23 Sep 2015 06:56:17 -0300",
+    "friendly_name": "rvdESDemo",
+    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+    "api_version": "2012-04-24",
+    "voice_caller_id_lookup": false,
+    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP81cf45088cba4abcac1261385916d582.json",
+    "rcml_url": "/restcomm-rvd/services/apps/PR2cbed2a2a56947cdbeaa8b0af8a6c02d/controller",
+    "kind": "voice"
+  }
+ ]
+----

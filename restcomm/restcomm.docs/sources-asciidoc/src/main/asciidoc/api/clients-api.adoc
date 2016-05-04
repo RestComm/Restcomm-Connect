@@ -1,0 +1,228 @@
+= Restcomm API – Clients
+
+== Clients
+
+An Client instance resource represents a user agent registered with RestComm.
+
+=== Client Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/Clients/\{ClientSid}*
+
+* Using SIP User Agents. 
+When using RestComm to handle SIP user agent you have to create a new Client resource, this resource acts as an account for your user agent and also dictates how calls made by the user agent should be handled. 
+
+* Client without VoiceUrl 
+Restcomm has a new implied behavior when VoiceUrl is not provided for a Client account. Restcomm will proxy calls from such Clients to the destination Client (only if registered) or to the destination Application DID. 
+
+Only registered Clients are allowed to use the *B2BUA/P2P/Proxy* functionalities of Restcomm. Proxying and P2P calls are only allowed between registered(authenticated) Clients. 
+
+=== Resource Properties
+
+[cols=",",options="header",]
+|===============================================================================================================================================================================
+|Property |Description
+|Sid |A string that uniquely identifies this client.
+|DateCreated |The date that this client was created.
+|DateUpdated |The date that this clientr was last updated.
+|FriendlyName |A friendly name for this client.
+|AccountSid |The unique id of the Account that owns this phone number.
+|ApiVersion |Calls to this phone number will create a new RCML session with this API version.
+|Login |The name that is used inside the <Client> noun. This is also used by the user agent as the user name used for registration and outbound dialing.
+|Password |The password used by the user agent during registration and outbound dialing.
+|Status |The client status the possible values are 0 for disabled and 1 for enabled.
+|VoiceUrl |The URL RestComm will request when this client makes an outbound call.
+|VoiceMethod |The HTTP method RestComm will use when requesting the above Url. Either GET or POST.
+|VoiceFallbackUrl |The URL that RestComm will request if execution of VoiceUrl fails for any reason.
+|VoiceFallbackMethod |The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.
+|VoiceApplicationSid |If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs and use the voice URLs specified by the voice application.
+|StatusCallback |The URL that RestComm will request to pass status parameters (such as the call state) to your application.
+|StatusCallbackMethod |The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.
+|Uri |The URI for this Client, relative to http://localhost:port/restcomm.
+|===============================================================================================================================================================================
+
+=== Supported Operations
+
+*HTTP GET.* Returns the representation of an Client resource, including the properties above. 
+
+*HTTP POST/PUT.* Modifies a Client resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===============================================================================================================================================================================
+|Parameter |Description
+|FriendlyName |A formatted version of this phone number.
+|Password |The password used by the user agent during registration and outbound dialing.
+|Status |The client status the possible values are 0 for disabled and 1 for enabled.
+|VoiceUrl |The URL RestComm will request when this phone number receives a call.
+|VoiceMethod |The HTTP method RestComm will use when requesting the above Url. Either GET or POST.
+|VoiceFallbackUrl |The URL that RestComm will request if execution of VoiceUrl fails for any reason.
+|VoiceFallbackMethod |The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.
+|VoiceApplicationSid |If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs and use the voice URLs specified by the voice application.
+|StatusCallback |The URL that RestComm will request to pass status parameters (such as the call state) to your application.
+|StatusCallbackMethod |The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.
+|===============================================================================================================================================================================
+
+*HTTP DELETE.* Deletes a Client from the user's Account.
+
+== Client List Resource
+
+=== Client List Resource URI. 
+
+*/2012-04-24/Accounts/\{AccountSid}/Clients*
+
+=== Supported Operations
+*HTTP GET.* Returns the list representation of all the Client resources for this Account, including the properties above. 
+*HTTP POST*. Creates a new Client and returns the representation of the resource, including the properties above. Below you will find a list of required and optional parameters.
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===============================================================================================================================================================================
+|Parameter |Description
+|FriendlyName |A formatted version of this phone number.
+|Login |The name that is used inside the <Client> noun. This is also used by the user agent as the user name used for registration and outbound dialing.
+|Password |The password used by the user agent during registration and outbound dialing.
+|Status |The client status the possible values are 0 for disabled and 1 for enabled.
+|VoiceUrl |The URL RestComm will request when this phone number receives a call.
+|VoiceMethod |The HTTP method RestComm will use when requesting the above Url. Either GET or POST.
+|VoiceFallbackUrl |The URL that RestComm will request if execution of VoiceUrl fails for any reason.
+|VoiceFallbackMethod |The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.
+|VoiceApplicationSid |If this entry contains an Sid to a voice application then RestComm will ignore these voice URLs and use the voice URLs specified by the voice application.
+|StatusCallback |The URL that RestComm will request to pass status parameters (such as the call state) to your application.
+|StatusCallbackMethod |The HTTP method RestComm will use to make requests to the StatusCallback URL. Either GET or POST.
+|===============================================================================================================================================================================
+
+== Create a Client
+
+The client name will be Alice as shown below
+
+....
+ curl -X POST  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=test" 
+....
+
+The output of the command will be similar to the one below
+
+....
+{
+  "sid": "CL4e10e3b56a614414bcc1eeca5d96effe",
+  "date_created": "2013-10-16T08:51:32.460-06:00",
+  "date_updated": "2013-10-16T08:51:32.460-06:00",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "api_version": "2012-04-24",
+  "friendly_name": "alice",
+  "login": "alice",
+  "password": "test",
+  "status": "1",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe.json"
+....
+
+== Delete a Client
+
+You must use the Client SID
+
+....
+curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe
+....
+
+== Change Client's Password
+
+You must use the Client SID as shown below:
+
+....
+curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe -d "Password=NewPassword"
+....
+
+== Get List of available Clients
+
+The command below shows all Clients created using the default Admin Account
+
+....
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/
+....
+
+
+----
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:R3stC0mm@54.204.90.224:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients
+----
+
+XML GET Response
+
+[source,lang:xml,decode:true]
+----
+<RestcommResponse>
+  <Clients>
+    <Client>
+      <Sid>CL3003328d0de04ba68f38de85b732ed56</Sid>
+      <DateCreated>Mon, 4 Nov 2013 16:33:39 -0500</DateCreated>
+      <DateUpdated>Mon, 4 Nov 2013 16:33:39 -0500</DateUpdated>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <ApiVersion>2012-04-24</ApiVersion>
+      <FriendlyName>bob</FriendlyName>
+      <Login>bob</Login>
+      <Password>i-1c8468a2</Password>
+      <Status>1</Status>
+      <VoiceMethod>POST</VoiceMethod>
+      <VoiceFallbackMethod>POST</VoiceFallbackMethod>
+      <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56</Uri>
+    </Client>
+    <Client>
+      <Sid>CLa2b99142e111427fbb489c3de357f60a</Sid>
+      <DateCreated>Mon, 4 Nov 2013 12:52:44 -0500</DateCreated>
+      <DateUpdated>Mon, 4 Nov 2013 12:52:44 -0500</DateUpdated>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <ApiVersion>2012-04-24</ApiVersion>
+      <FriendlyName>alice</FriendlyName>
+      <Login>alice</Login>
+      <Password>i-1c8468a2</Password>
+      <Status>1</Status>
+      <VoiceMethod>POST</VoiceMethod>
+      <VoiceFallbackMethod>POST</VoiceFallbackMethod>
+      <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a</Uri>
+    </Client>
+  </Clients>
+</RestcommResponse>
+----
+
+
+
+----
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:R3stC0mm@54.204.90.224:8080/restcomm/2012-04-24f425248d6a26948c17a9e2acf/Clients.json
+----
+
+JSON GET Response
+
+----
+[
+  {
+    "sid": "CL3003328d0de04ba68f38de85b732ed56",
+    "date_created": "Mon, 4 Nov 2013 16:33:39 -0500",
+    "date_updated": "Mon, 4 Nov 2013 16:33:39 -0500",
+    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+    "api_version": "2012-04-24",
+    "friendly_name": "bob",
+    "login": "bob",
+    "password": "i-1c8468a2",
+    "status": "1",
+    "voice_method": "POST",
+    "voice_fallback_method": "POST",
+    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL3003328d0de04ba68f38de85b732ed56.json"
+  },
+  {
+    "sid": "CLa2b99142e111427fbb489c3de357f60a",
+    "date_created": "Mon, 4 Nov 2013 12:52:44 -0500",
+    "date_updated": "Mon, 4 Nov 2013 12:52:44 -0500",
+    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+    "api_version": "2012-04-24",
+    "friendly_name": "alice",
+    "login": "alice",
+    "password": "i-1c8468a2",
+    "status": "1",
+    "voice_method": "POST",
+    "voice_fallback_method": "POST",
+    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CLa2b99142e111427fbb489c3de357f60a.json"
+  }
+]
+----

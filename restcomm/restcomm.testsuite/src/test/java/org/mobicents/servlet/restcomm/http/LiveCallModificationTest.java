@@ -120,7 +120,7 @@ public class LiveCallModificationTest {
         String to = bobContact;
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
         String callSid = callResult.get("sid").getAsString();
@@ -172,7 +172,7 @@ public class LiveCallModificationTest {
         String to = bobContact;
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry-lcm.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
         String callSid = callResult.get("sid").getAsString();
@@ -219,7 +219,7 @@ public class LiveCallModificationTest {
         String to = bobContact;
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
         String callSid = callResult.get("sid").getAsString();
@@ -296,7 +296,7 @@ public class LiveCallModificationTest {
         String to = bobContact;
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
         String callSid = callResult.get("sid").getAsString();
