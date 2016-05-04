@@ -19,39 +19,12 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static akka.pattern.Patterns.ask;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -125,16 +98,41 @@ import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
+
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -651,7 +649,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (CallManagerResponse.class.equals(klass)) {
-            final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>) message;
+            final CallManagerResponse<Object> response = (CallManagerResponse<Object>) message;
             if (response.succeeded()) {
                 if (startDialing.equals(state)) {
                     fsm.transition(message, processingDialChildren);
@@ -659,7 +657,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     fsm.transition(message, processingDialChildren);
                 }
             } else {
-                fsm.transition(message, hangingUp);
+                if (dialChildren != null && dialChildren.size() > 1) {
+                    fsm.transition(message, processingDialChildren);
+                } else {
+                    fsm.transition(message, hangingUp);
+                }
             }
         } else if (StartForking.class.equals(klass)) {
             fsm.transition(message, processingDialChildren);
@@ -983,7 +985,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    @Override
     List<NameValuePair> parameters() {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
@@ -1498,15 +1499,28 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             Class<?> klass = message.getClass();
-            if (CallManagerResponse.class.equals(klass)) {
-                final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>) message;
-                final ActorRef branch = response.get();
-                dialBranches.add(branch);
+            if (CallManagerResponse.class.equals(klass) && ((CallManagerResponse)message).succeeded()) {
                 Tag child = dialChildren.get(0);
-                if (child.hasAttributes()) {
-                    dialChildrenWithAttributes.put(branch, child);
+                final CallManagerResponse<Object> response = (CallManagerResponse<Object>) message;
+                if (response.get() instanceof List) {
+                    List<ActorRef> calls = (List<ActorRef>) response.get();
+                    for (ActorRef branch: calls) {
+                        dialBranches.add(branch);
+                        if (child.hasAttributes()) {
+                            dialChildrenWithAttributes.put(branch, child);
+                        }
+                    }
+                } else {
+                    final ActorRef branch = (ActorRef) response.get();
+                    dialBranches.add(branch);
+                    if (child.hasAttributes()) {
+                        dialChildrenWithAttributes.put(branch, child);
+                    }
                 }
                 dialChildren.remove(child);
+            }
+            else if (CallManagerResponse.class.equals(klass) && !((CallManagerResponse)message).succeeded()) {
+                dialChildren.remove(0);
             }
             if (!dialChildren.isEmpty()) {
                 CreateCall create = null;
@@ -1697,7 +1711,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 try {
                     logger.info("Trying to get inbound call Info");
                     final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
-                    Future<Object> future = ask(call, new GetCallInfo(), expires);
+                    Future<Object> future = (Future<Object>) ask(call, new GetCallInfo(), expires);
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                             Duration.create(10, TimeUnit.SECONDS));
                     callInfo = callResponse.get();
@@ -1710,7 +1724,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 try {
                     logger.info("Trying to get outboundCall Info");
                     final Timeout expires = new Timeout(Duration.create(10, TimeUnit.SECONDS));
-                    Future<Object> future = ask(outboundCall, new GetCallInfo(), expires);
+                    Future<Object> future = (Future<Object>) ask(outboundCall, new GetCallInfo(), expires);
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
                             Duration.create(10, TimeUnit.SECONDS));
                     outboundCallInfo = callResponse.get();
@@ -2500,10 +2514,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (child != null && child.attribute("url") != null) {
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
-
                 try {
                     Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
-                    Future<Object> future = ask(interpreter, start, expires);
+                    Future<Object> future = (Future<Object>) ask(interpreter, start, expires);
                     Object object = Await.result(future, Duration.create(6000 * 10, TimeUnit.SECONDS));
 
                     if (!End.class.equals(object.getClass())) {
@@ -2524,7 +2537,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // Stop ringing from inbound call
             final StopMediaGroup stop = new StopMediaGroup();
             call.tell(stop, super.source);
-
 
             // Wait for a Media Group Response to finally ask Bridge to join calls
             // Check method onReceive() for MediaGroupResponse

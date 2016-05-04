@@ -1,0 +1,12 @@
+= Restcomm Configuration
+
+If you don't use the hosted version of Restcomm, then you will need to install Restcomm in a local environment. The various guides below will guide you on how to do that and install, configure and start Restcomm to fit your local environment
+
+== Configuration Resources
+
+* <<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
+* <<How to get started with Restcomm-Connect and Mysql.adoc#restcomm-connect-mysql,How to get started with Restcomm-Connect and Mysql>>
+
+== Developer Resources
+
+* <<How to build Restcomm-Connect from source.adoc#build-from-source,How to build Restcomm-Connect from source>>

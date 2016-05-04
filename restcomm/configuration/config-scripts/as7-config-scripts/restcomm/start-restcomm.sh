@@ -105,7 +105,6 @@ echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
 source $BASEDIR/restcomm.conf
 source $BASEDIR/proxy.conf
-source $BASEDIR/smpp.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
@@ -180,6 +179,8 @@ fi
 source $BASEDIR/autoconfigure.sh
 
 # start restcomm in selected run mode
-startMediaServer
+if [ "${MS_EXTERNAL^^}" = "FALSE"  ]; then
+	startMediaServer
+fi
 startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
 exit 0

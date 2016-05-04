@@ -1,0 +1,467 @@
+= Restcomm API – Calls
+
+== Calls
+
+A *Call* represents a connection between a phone or user agent and RestComm. This may be inbound or outbound. The Calls list resource represents the set of phone calls originated and terminated from an account.
+
+=== Call Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/Calls/\{CallSid}*
+
+=== Resource Properties
+
+[cols=",",options="header",]
+|======================================================================================================================================================================
+|Property |Description
+|Sid |A string that uniquely identifies this call.
+|ParentCallSid |A string that uniquely identifies the call that created this leg.
+|DateCreated |The date that this call was created.
+|DateUpdated |The date that this call was last updated.
+|AccountSid |The unique id of the Account that created this call.
+|To |The phone number or identifier that will be the recipient of this call.
+|From |The phone number or identifier that originated this call.
+|PhoneNumberSid |If the call was inbound, this is the Sid of the IncomingPhoneNumber that received the call.
+|Status |A string representing the status of the call. Possible values are queued, ringing, in-progress, completed, failed, busy and no-answer.
+|StartTime |The start time of the call. Empty if the call has not yet been started.
+|EndTime |The end time of the call. Empty if the call has not ended..
+|Duration |The length of the call in seconds.
+|Price |The charge for this call, in the currency associated with the account. Populated after the call is completed.
+|Direction |A string describing the direction of the call. Possible values are inbound, outbound-api, and outbound-dial
+|AnsweredBy |If this call was initiated with answering machine detection, either human or machine. Empty otherwise.
+|ApiVersion |Displays the current API version
+|ForwardFrom |If this call was an incoming call forwarded from another number, the forwarding phone number (depends on carrier supporting forwarding). Empty otherwise.
+|CallerName |If this call was an incoming call, the caller's name. Empty otherwise.
+|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|======================================================================================================================================================================
+
+=== Supported Operations
+**HTTP GET**. Returns the representation of a Call resource, including the properties above. 
+
+== Call List Resource URI
+
+**/2012-04-24/Accounts/\{AccountSid}/Calls** 
+
+=== Supported Operations
+**HTTP GET**. Returns the list representation of all the Call resources for this Account, including the properties above. 
+**HTTP POST**. Makes a new Call and returns the representation of the Call resource, including the properties above. Below you will find a list of required and optional parameters.  
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|==========================================================================================================================================
+|Parameter |Description
+|From(Required) |The phone number to use as the caller id.
+|To(Required) |The phone number to call.
+|Url(Required) |The fully qualified URL that should be executed when the call connects.
+|Method |The HTTP method RestComm should use when making its request to the above Url. Defaults to POST.
+|FallbackUrl |The URL that RestComm will request if execution of Url fails for any reason.
+|FallbackMethod |The HTTP method that RestComm should use to request the FallbackUrl. Must be either GET or POST. Defaults to POST.
+|StatusCallback |A URL that RestComm will request when the call ends to notify your app.
+|StatusCallbackMethod |The HTTP method RestComm should use when requesting the above StatusCallback. Defaults to POST.
+|Timeout |The number of seconds that RestComm should allow the phone to ring before assuming there is no answer. The default is 60 seconds.
+|==========================================================================================================================================
+
+== Making a call to a SIP account
+
+Restcomm will make a call to any SIP account that is reachable. It the example below, the *SIP* account is listening on port **5060**. When you make the call, the SIP phone on which Alice is registered will ring and the hello-play.xml file will be played.
+
+....
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5060" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+....
+
+== Making a call to a Restcomm client
+
+You must first create a RestComm client. In the example below, the Restcomm client created is called Alice. When you make the call, the SIP phone on which Alice is registered will ring and the *hello-play.xml* file will be played.
+
+....
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+....
+
+== Calling a DID number
+
+The above example shows how to make a call to a SIP number. If you want to make a call to a DID number, you must can connect Restcomm to a DID provisioning service provider. The quickest way is to use RestComm AMI on Amazon Cloud. Get a list of all available calls. This will return all the available calls linked to the account SID
+
+== Working on a production server
+Using filter is a good practice on a server with thousands or millions of calls
+
+....
+curl -X GET  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls
+....
+
+If the system hasn't received any calls, you will see the the output below
+
+[source,lang:xml,decode:true]
+----
+<RestcommResponse>
+  <Calls page="0" numpages="0" pagesize="50" total="0" start="0" end="0" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50"/>
+----
+
+== Modifying Live Calls
+Real time call modification allows you to interrupt an in-progress call and terminate it or have it begin processing *RCML* from a new URL. This is useful for any application where you want to asynchronously change the behavior of a running call. For example: hold music, call queues, transferring calls, forcing hangup, etc.
+
+*HTTP POST* to a Call
+
+To redirect or terminate a live call, you make an *HTTP POST* request to an in­-progress Call instance resource URI: 
+
+*/2012­04­24/Accounts/\{AccountSid}/Calls/\{CallSid}* 
+
+or 
+
+*/2012­04­24/Accounts/\{AccountSid}/Calls.json/\{CallSid}* 
+
+The following parameters are available for you to *POST* request when modifying a phone call:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===================================================================================================================================================================================================================================================
+|Parameter |Description
+|Url |A valid URL that returns RCMLL. Restcomm will immediately redirect the call to the new RCML.
+|Method |The HTTP method Restcomm should use when requesting the above URL. Defaults to POST.
+|Status |Either *canceled* or completed. Specifying canceled will attempt to hangup calls that are queued or ringing but not affect calls already in progress. Specifying completed will attempt to hang up a call even if it's already in progress.
+|===================================================================================================================================================================================================================================================
+
+=== Call in-Progress
+
+Note that any call which is currently ringing within a Dial verb is in-progress from the point of view of Restcomm, and thus you must use '**Status=completed**' to cancel it.
+
+==== Optional Parameters
+
+You may *POST* the following parameters:
+
+==== Request Parameters
+
+[cols=",",options="header",]
+|==================================================================================================================================
+|Parameter |Description
+|FallbackUrl |A URL that Restcomm will request if an error occurs requesting or executing the RCMLL at Url.
+|FallbackMethod |The HTTP method that Restcomm should use to request the FallbackUrl. Must be either GET or POST. Defaults to POST.
+|StatusCallback |A URL that Restcomm will request when the call ends to notify your app.
+|StatusCallbackMethod |The HTTP method Restcomm should use when requesting the above URL. Defaults to POST.
+|MoveConnectedCallLeg |If True, Restcomm will move both call legs to the new URL
+|==================================================================================================================================
+
+=== Description 
+
+Prerequisite for the Live Call Modification API is to know the *CallSid* ​of the call. The **CallSid**​ is generated by Restcomm for every incoming or outgoing call. When we create an outgoing call using the Calls REST API, Restcomm will generate the **CallSid** ​and the response will contain the **CallSid**​. For an Incoming call, Restcomm will generate the **CallSid**​, and will include it in the parameters of the *GET* or *POST* request to download the RCML from the application server. So the application server, will get the *CallSid* ​for this incoming call and can store it for later use.
+
+[[steps-for-an-incoming-call-are-the-following]]
+==== Steps for an incoming call are the following:
+
+* New incoming call to Restcomm
+* Restcomm generates CallSid and other parameters for this call
+* Restcomm prepares GET/POST request and attaches the previously prepared parameters
+* Restcomm sends the GET/POST request to the URL assigned to the DID called
+* Application server receives the GET/POST request
+* Application server should store the CallSid along with the rest of the parameters for later use
+* Application server prepares the response with the appropriate RCML for the given DID and send it back to Restcomm to process it
+
+Given that we have the *CallSid* ​available, ​the next step to modify a live call is to prepare the new *POST* request to Restcomm with the URL of the new destination application. 
+
+Lets assume that initially the Application server prepared an RCML that will connect the incoming call to Bob and that later Bob wants this call to be transferred to Alice. Application Server will have to prepare a new RCML that will dial to Alice, and using the Live Call Modification API, will ask Restcomm to process this new RCML for the incoming call and thus will connect it to Alice. 
+
+Here are the steps:
+
+* Incoming call -­ CallSid (1234567890)
+* Applcation server: - Store CallSid and other parameters - Prepare and send RCML that connects the call to Bob (using Dial verb)
+* Restcomm process the given RCML and connects incoming call to Bob
+* Bob wants to transfer the call to Alice and sends the request to Controller (application server)
+* Application server: - Prepares new RCML with a given URL: http://app.server/CallToAlice that using Dial will dial to Alice - Uses Live Call Modification prepares a new POST request: http://RESTCOMM_IP:8080/restcomm/2012­04­24/Accounts/\{AccountSid/Calls/YOUR_CALL_SID - in the POST requests adds the following parameters: Url=http://app.server/CallToAlice
+* Restcomm process this Live Call Modification request and redirects the incoming call to the new RCML application (to the new URL)
+* Eventually the incoming call will be connected to Alice.
+
+Similar, application server can change an incoming call to Bob to a conference call where more participants can be added later. Given that application server already knows the CallSid for the incoming call to Bob
+
+* Will prepare a new RCML for the Dial Conference
+* Will prepare new POST Live Call Modification request for the incoming call to be connected to the new url (that will dial to the conference)
+* Will then prepare new outgoing call request, using the Calls Rest API that will connect Bob to the conference application URL: - http://RESTCOMM_IP:8080/restcomm/2012­04­24/Accounts/\{AccountSid}/Calls - will pass the following parameters: **From**=INCOMING_CALL_ID **To**=client:bob **Url**=CONFERENCE_APPLICATION_URL
+* Later application server can create more outgoing call requests, similar to the one above, to invite other clients or sip URLs or PSTN numbers to this conference call
+
+[[examples]]
+== Examples
+
+=== Redirect Call to a new RCML
+Live Call Modification POST request URL : *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAd62f17e7c7f149ac8095f7574495d988*
+
+==== Parameters:
+
+**Url**=http://127.0.0.1:8080/restcomm/dial­alice.xml
+
+----
+curl ­X POST
+http://ACae6e420f425248d6a26948c17a9e2acf:dcd25094354d425c8ab85b6621083d20@192.168.1.151:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAccccfd3a0c394cc1993803af785abc60 ­-d
+"Url=http://192.168.1.151:8080/restcomm/demos/dial­alice.xml"
+----
+
+=== Redirect Call to a new RCML and connect both call legs
+Live Call Modification POST request URL: *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAd62f17e7c7f149ac8095f7574495d988* 
+
+==== Parameters
+
+**Url**=http://127.0.0.1:8080/restcomm/conference.xml
+
+----
+curl ­X POST
+http://ACae6e420f425248d6a26948c17a9e2acf:dcd25094354d425c8ab85b6621083d20@192.168.1.151:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAccccfd3a0c394cc1993803af785abc60 ­-d
+"Url=http://192.168.1.151:8080/restcomm/demos/conference.xml" ­-d
+"MoveConnectedCallLeg=true"
+----
+
+=== Terminate In Progress call
+Live Call Modification POST request URL: *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAe29bf33b54ba43dc952f0d3eb331567c* 
+
+==== Parameters: 
+**Status**=completed
+
+=== Terminate Ringing call
+Live Call Modification POST request URL: *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CA312824ebd262419dbd4c00b057448d57*  
+
+==== Parameters:
+**Status**=canceled   
+
+== Modifying Live Calls - Example
+
+* In order to accomplish this, you need to create a client called alice
+* Start a *SIP* phone and register alice
+* From the terminal run the following curl command
+* Make sure alice is using the port *5061*
+* The "**From=**" could be any number of your choice
+* The *Url* is the default sample example provided with Restcomm
+
+Modifying a Live Call 
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5061" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+----
+
+You will see an output similar to the one below:
+
+----
+{
+  "sid": "CAfa51b104354440b09213d04752f50271",
+  "date_created": "2013-11-01T03:41:14.488-06:00",
+  "date_updated": "2013-11-01T03:41:14.488-06:00",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "to": "alice",
+  "from": "+16175551212",
+  "status": "queued",
+  "start_time": "2013-11-01T03:41:14.488-06:00",
+  "price": "0.0",
+  "direction": "outbound-api",
+  "api_version": "2012-04-24",
+  "uri": "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271.json",
+  "subresource_uris": {
+    "notifications": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271/Notifications",
+    "recordings": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271/Recordings"
+  }
+----
+
+Notice the "sid": "CAfa51b104354440b09213d04752f50271",
+This Call ID is what you must use to interact with the current call.
+You can now redirect the current call to another application as shown below
+Notice that the Call ID is referenced
+The call will now be redirected to the Url specified(hello-world.xml)
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-world.xml"
+----
+
+The output showing the same Call ID
+
+----
+<RestcommResponse>
+  <Call>
+    <Sid>CAfa51b104354440b09213d04752f50271</Sid>
+    <DateCreated>2013-11-01T03:41:14.488-06:00</DateCreated>
+    <DateUpdated>2013-11-01T03:41:14.488-06:00</DateUpdated>
+    <ParentCallSid/>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <To>alice</To>
+    <From>+16175551212</From>
+    <PhoneNumberSid/>
+       ..... TRUNCATED
+----
+
+You can still redirect the current call back to the previous application
+
+----
+curl -X POST http://ACae6e420f425248d6f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+----
+
+The output showing the same Call ID
+
+----
+<RestcommResponse>
+  <Call>
+    <Sid>CAfa51b104354440b09213d04752f50271</Sid>
+    <DateCreated>2013-11-01T03:41:14.488-06:00</DateCreated>
+    <DateUpdated>2013-11-01T03:41:14.488-06:00</DateUpdated>
+    <ParentCallSid/>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <To>alice</To>
+    <From>+16175551212</From>
+    <PhoneNumberSid/>
+   ..... TRUNCATED
+----
+
+You can end the call using the Status=completed command as shown below
+
+----
+curl -X POST http://ACae6e420f425248d6f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Status=completed"
+----
+
+The output showing the same Call ID
+
+----
+<RestcommResponse>
+  <Call>
+    <Sid>CAfa51b104354440b09213d04752f50271</Sid>
+    <DateCreated>2013-11-01T03:41:14.488-06:00</DateCreated>
+    <DateUpdated>2013-11-01T03:41:14.488-06:00</DateUpdated>
+    <ParentCallSid/>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <To>alice</To>
+    <From>+16175551212</From>
+    <PhoneNumberSid/>
+   ..... TRUNCATED
+----
+ 
+
+== List Filter
+
+**HTTP GET**. The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|===========================================================================================================================================================================================================================================================================
+|Parameter |Description
+|To |Only show calls to this phone number or Client identifier.
+|From |Only show calls from this phone number or Client identifier.
+|Status |Only show calls currently in this status. May be queued, ringing, in-progress, canceled, completed, failed, busy, or no-answer.
+|StartTime |Only show calls that started on this date, given as YYYY-MM-DD. Also supports inequalities, such as StartTime=YYYY-MM-DD for calls that started at or before midnight on a date, and StartTime=YYYY-MM-DD for calls that started at or after midnight on a date.
+|ParentCallSid |Only show calls spawned by the call with this Sid.
+|===========================================================================================================================================================================================================================================================================
+
+ 
+
+=== Filter using the From parameter.
+
+he example below will only return Calls made from client Alice
+
+....
+ curl -X GET  http://administrator%40company.com:77f8c12cc7166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?From=alice
+....
+
+The result will be similar to the one below
+
+[source,lang:xml,decode:true]
+----
+<RestcommResponse>
+  <Calls page="0" numpages="0" pagesize="50" total="0" start="0" end="1" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50">
+    <Call>
+      <Sid>CAc0fb839632cf444f9066876d5de741e0</Sid>
+      <DateCreated>2013-10-18T04:51:47.643-06:00</DateCreated>
+      <DateUpdated>2013-10-18T04:51:49.174-06:00</DateUpdated>
+      <ParentCallSid/>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <To>1234</To>
+      <From>alice</From>
+      <PhoneNumberSid/>
+      <Status>completed</Status>
+      <StartTime>2013-10-18T04:51:47.671-06:00</StartTime>
+      <EndTime>2013-10-18T04:51:49.174-06:00</EndTime>
+      <Duration>1</Duration>
+      <Price>0.00</Price>
+      <Direction>inbound</Direction>
+      <AnsweredBy/>
+      <ApiVersion>2012-04-24</ApiVersion>
+      <ForwardedFrom/>
+      <CallerName/>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0</Uri>
+      <SubresourceUris>
+        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Notifications</Notifications>
+        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAc0fb839632cf444f9066876d5de741e0/Recordings</Recordings>
+      </SubresourceUris>
+    </Call>
+  </Calls>
+----
+
+== Paging Information
+
+*HTTP GET.* The following GET query string parameters allow you to limit the list returned. Note, parameters are case-sensitive:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|=======================================================================
+|PParameter |Description
+|Page |The current page number. Zero-indexed, so the first page is 0.
+|NumPages |The total number of pages.
+|PageSize |How many items are in each page
+|Total |The total number of items in the list.
+|Start |The position in the overall list of the first item in this page.
+|End |The position in the overall list of the last item in this page.
+|=======================================================================
+
+ 
+
+=== Example. 
+
+The command below will return a single item from the list of calls using the PageSize parameter
+
+....
+curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?PageSize=1
+....
+
+The result of the *PageSize* parameter
+
+[source,lang:xml,decode:true]
+----
+<RestcommResponse>
+  <Calls page="0" numpages="7" pagesize="1" total="7" start="0" end="0" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=1" previouspageuri="null" nextpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=1&amp;PageSize=1&amp;AfterSid=CA4049cf008d6b4277b92ab863fd4ec7c8" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=7&amp;PageSize=1">
+    <Call>
+      <Sid>CA4049cf008d6b4277b92ab863fd4ec7c8</Sid>
+      <DateCreated>2013-10-18T04:49:45.942-06:00</DateCreated>
+      <DateUpdated>2013-10-18T04:49:46.272-06:00</DateUpdated>
+      <ParentCallSid/>
+      <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+      <To>1235</To>
+      <From>bob</From>
+      <PhoneNumberSid/>
+      <Status>completed</Status>
+      <StartTime>2013-10-18T04:49:45.994-06:00</StartTime>
+      <EndTime>2013-10-18T04:49:46.272-06:00</EndTime>
+      <Duration>0</Duration>
+      <Price>0.00</Price>
+      <Direction>inbound</Direction>
+      <AnsweredBy/>
+      <ApiVersion>2012-04-24</ApiVersion>
+      <ForwardedFrom/>
+      <CallerName/>
+      <Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8</Uri>
+      <SubresourceUris>
+        <Notifications>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Notifications</Notifications>
+        <Recordings>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CA4049cf008d6b4277b92ab863fd4ec7c8/Recordings</Recordings>
+      </SubresourceUris>
+    </Call>
+  </Calls>
+----
+
+ 
+
+== Additional Paging Information.
+
+The API returns URIs to the next, previous, first and last pages of the returned list as shown in the table below:
+
+=== Request Parameters
+
+[cols=",",options="header",]
+|============================================================
+|Parameter |Description
+|Uri |The URI of the current page.
+|Firstpageuri |The URI for the first page of this list.
+|Nextpageuri |The URI for the next page of this list.
+|Previouspageuri |The URI for the previous page of this list.
+|Lastpageuri |The URI for the last page of this list.
+|============================================================
