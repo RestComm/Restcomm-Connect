@@ -199,9 +199,9 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (application == null) {
             application = createFrom(new Sid(accountSid), data);
             dao.addApplication(application);
-        } else if (!application.getAccountSid().toString().equals(account.getSid().toString())) {
-            return status(CONFLICT)
-                    .entity("A application with the same name was already created by another account. Please, choose a different name and try again.")
+        } else {
+            return status(CONFLICT).entity(
+                    "A application with the same name was already created. Please, choose a different name and try again.")
                     .build();
         }
 
