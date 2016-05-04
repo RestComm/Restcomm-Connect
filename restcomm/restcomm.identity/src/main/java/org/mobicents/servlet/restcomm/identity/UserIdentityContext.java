@@ -30,7 +30,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 
 /**
  * A per-request security context providing access to Oauth tokens or Account API Keys.

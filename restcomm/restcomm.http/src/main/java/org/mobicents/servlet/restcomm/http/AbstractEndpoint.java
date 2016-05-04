@@ -21,16 +21,9 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.net.URI;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
-import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
-import org.mobicents.servlet.restcomm.endpoints.Outcome;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -44,15 +37,9 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
  */
 @NotThreadSafe
 public abstract class AbstractEndpoint {
-    protected Logger logger = Logger.getLogger(AbstractEndpoint.class);
     private String defaultApiVersion;
     protected Configuration configuration;
-    protected RestcommConfiguration newConfiguration;
     protected String baseRecordingsPath;
-    @Context
-    protected ServletContext context;
-    @Context
-    HttpServletRequest request;
 
     public AbstractEndpoint() {
         super();
@@ -62,7 +49,6 @@ public abstract class AbstractEndpoint {
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
         defaultApiVersion = configuration.getString("api-version");
-        newConfiguration = RestcommConfiguration.getInstance();
     }
 
     protected String getApiVersion(final MultivaluedMap<String, String> data) {
@@ -119,7 +105,6 @@ public abstract class AbstractEndpoint {
     }
 
 /*
-    TODO compatibility  check for multitenenancy
     protected void secure(final Account account, final String permission) throws AuthorizationException {
         final Subject subject = SecurityUtils.getSubject();
         if (account != null && account.getSid() != null) {
@@ -135,21 +120,7 @@ public abstract class AbstractEndpoint {
             throw new AuthorizationException();
         }
     }
-
-    protected void secureLevelControl(AccountsDao accountsDao, String accountSid, String referenceAccountSid) {
-        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
-        if (!sidPrincipal.equals(accountSid)) {
-            Account account = accountsDao.getAccount(new Sid(accountSid));
-            if (!sidPrincipal.equals(String.valueOf(account.getAccountSid()))) {
-                throw new AuthorizationException();
-            } else if (referenceAccountSid != null && !accountSid.equals(referenceAccountSid)) {
-                throw new AuthorizationException();
-            }
-        } else if (referenceAccountSid != null && !sidPrincipal.equals(referenceAccountSid)) {
-            throw new AuthorizationException();
-        }
-    }
-*/
+    */
 
     // A general purpose method to test incoming parameters for meaningful data
     protected boolean isEmpty(Object value) {
@@ -158,9 +129,5 @@ public abstract class AbstractEndpoint {
         if ( value.equals("") )
             return true;
         return false;
-    }
-
-    protected Response toResponse(Outcome outcome) {
-        return Response.status(Outcome.toHttpStatus(outcome)).build();
     }
 }

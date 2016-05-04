@@ -1,11 +1,10 @@
-<!--suppress MavenModelInspection -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.telestax.servlet</groupId>
 		<artifactId>restcomm</artifactId>
-		<version>7.5.0-SNAPSHOT</version>
+		<version>7.7.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm.identity</artifactId>
@@ -28,10 +27,12 @@
 			<artifactId>slf4j-log4j12</artifactId>
 		</dependency>
 		
+		<!--
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-as7-adapter</artifactId>
-		</dependency>			
+		</dependency>
+		-->
 
 		<dependency>
 			<groupId>com.google.code.gson</groupId>

@@ -144,11 +144,12 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-//            try {
-//                secureLevelControlApplications(accountSid, application);
-//            } catch (AuthorizationException e) {
-//                return status(UNAUTHORIZED).build();
-//            }
+            try {
+                //secureLevelControlApplications(accountSid, application);
+                secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
+            } catch (AuthorizationException e) {
+                return status(UNAUTHORIZED).build();
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(application);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -163,8 +164,8 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     protected Response getApplications(final String accountSid, final MediaType responseType) {
         Account account;
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
-            //secureLevelControlApplications(accountSid, null);
+            account = accountsDao.getAccount(accountSid);
+            secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -183,8 +184,8 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         Account account;
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Applications");
-            //secureLevelControlApplications(accountSid, null);
+            account = accountsDao.getAccount(accountSid);
+            secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -232,11 +233,12 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-//            try {
-//                secureLevelControlApplications(accountSid, application);
-//            } catch (AuthorizationException e) {
-//                return status(UNAUTHORIZED).build();
-//            }
+            try {
+                //secureLevelControlApplications(accountSid, application);
+                secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
+            } catch (AuthorizationException e) {
+                return status(UNAUTHORIZED).build();
+            }
             final Application applicationUpdate = update(application, data);
             dao.updateApplication(applicationUpdate);
             if (APPLICATION_XML_TYPE == responseType) {
@@ -267,15 +269,4 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         return result;
     }
 
-    /*
-    protected boolean secureLevelControlApplications(String accountSid, Application app) {
-        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
-        if (!sidPrincipal.equals(String.valueOf(accountSid))) {
-            throw new AuthorizationException();
-        } else if (app != null && app.getAccountSid() != null && !sidPrincipal.equals(String.valueOf(app.getAccountSid()))) {
-            throw new AuthorizationException();
-        }
-        return true;
-    }
-    */
 }
