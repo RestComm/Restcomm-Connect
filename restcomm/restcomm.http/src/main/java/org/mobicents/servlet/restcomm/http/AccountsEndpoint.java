@@ -72,7 +72,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
-        //identityConfiguration = RestcommConfiguration.getInstance().getIdentity();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -103,10 +102,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if (data.containsKey("Status")) {
             status = Account.Status.valueOf(data.getFirst("Status"));
         }
-        Boolean linked = false;
-        if (data.containsKey("Linked")) {
-            linked = Boolean.parseBoolean(data.getFirst("Linked"));
-        }
         final String password = data.getFirst("Password");
         final String authToken = new Md5Hash(password).toString();
         final String role = data.getFirst("Role");
@@ -115,7 +110,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, linked);
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -140,11 +135,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }
 
         try {
-            if ((hasAccountRole("Administrator") && secureLevelControlAccounts(account))
-                    || isSecured(account,"RestComm:Modify:Accounts")) {
-            } else {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT );
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -164,15 +155,18 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response deleteAccount(final String operatedSid) {
+        // TODO what if effectiveAccount is null ??
+        final Sid accountSid = userIdentityContext.getEffectiveAccount().getSid();
         final Sid sidToBeRemoved = new Sid(operatedSid);
+
         try {
             Account removedAccount = accountsDao.getAccount(sidToBeRemoved);
-            secure(removedAccount, "RestComm:Delete:Accounts");
+            secure(removedAccount, "RestComm:Delete:Accounts", SecuredType.SECURED_ACCOUNT);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        // Prevent removal of Logged account
-        if (operatedSid.equalsIgnoreCase(userIdentityContext.getEffectiveAccount().getSid().toString()))
+        // Prevent removal of Administrator account
+        if (operatedSid.equalsIgnoreCase(accountSid.toString()))
             return status(BAD_REQUEST).build();
 
         if (accountsDao.getAccount(sidToBeRemoved) == null)
@@ -216,23 +210,15 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }
 
         // If Account already exists don't add it again
-<<<<<<< HEAD
-        if (dao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
-            final Account parent = dao.getAccount(sid);
-            if (parent.getStatus().equals(Account.Status.ACTIVE)
-                    && (subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts")))) {
-                if (!subject.hasRole("Administrator") || !data.containsKey("Role")) {
-=======
-        if (accountsDao.getAccount(account.getSid()) == null) {
+        /*
+            Accoutn creation rule:
+            - either be Administrator or have the following permission: RestComm:Create:Accounts
+            - only Administrators can choose a role when creating. Other users will create accounts with the same role as theirs
+         */
+        if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
             final Account parent = accountsDao.getAccount(sid);
-            if (parent.getStatus().equals(Account.Status.ACTIVE) ) {
-                try {
-                    secure("RestComm:Create:Accounts");
-                } catch (AuthorizationException e) {
-                    return status(UNAUTHORIZED).build();
-                }
-                if (!hasAccountRole("Administrator") || !data.containsKey("Role")) {
->>>>>>> sso
+            if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecured("RestComm:Create:Accounts")) {
+                if (hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
                 }
                 accountsDao.addAccount(account);
@@ -287,12 +273,8 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } else {
             account = update(account, data);
             try {
-                if ((hasAccountRole("Administrator") && secureLevelControlAccounts(account))
-                        || isSecured(account,"RestComm:Modify:Accounts")) {
-                    accountsDao.updateAccount(account);
-                } else {
-                    return status(UNAUTHORIZED).build();
-                }
+                secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT );
+                accountsDao.updateAccount(account);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -315,22 +297,4 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-    /**
-     * Checks if the subject account is the same as the reference account or is a parent. If not it throws an error.
-     *
-     * @param reference
-     * @return
-     */
-    private boolean secureLevelControlAccounts(Account reference) {
-        Account subjectAccount = userIdentityContext.getEffectiveAccount();
-        Account referenceAccount = reference;
-        if (subjectAccount == null || reference == null)
-            throw new AuthorizationException();
-        if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getSid()))) {
-            if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getAccountSid()))) {
-                throw new AuthorizationException();
-            }
-        }
-        return true;
-    }
 }
