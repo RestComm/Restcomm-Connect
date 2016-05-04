@@ -251,6 +251,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
         transitions.add(new Transition(this.inProgress, this.leaving));
+        transitions.add(new Transition(this.inProgress, this.failed));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.stopping));
         transitions.add(new Transition(this.joining, this.failed));
@@ -889,6 +890,9 @@ public final class Call extends UntypedActor {
                         resp.addHeader("Reason", reason);
                 }
                 resp.send();
+            } else {
+                if (message instanceof CallFail)
+                    sendBye(new Hangup(((CallFail) message).getReason()));
             }
 
             // Notify the observers.

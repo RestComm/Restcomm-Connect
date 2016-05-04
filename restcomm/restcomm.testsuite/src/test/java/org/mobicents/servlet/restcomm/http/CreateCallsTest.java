@@ -276,6 +276,40 @@ public class CreateCallsTest {
     }
 
     @Test
+    // Create a call to a Restcomm Client for wrong RCML url
+    public void createCallClientTestWrongRcmlUrl() throws InterruptedException, ParseException {
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "client:alice";
+        String rcmlUrl = "/restcomm/dial-number-entry.xml";
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        assertTrue(aliceCall.respondToDisconnect());
+    }
+
+    @Test
     //Create call to client with multiple registrations. Client Alice has two registrations (2 locations) and both should ring
     public void createCallClientTestWithMultipleRegistrations() throws InterruptedException, ParseException {
 
