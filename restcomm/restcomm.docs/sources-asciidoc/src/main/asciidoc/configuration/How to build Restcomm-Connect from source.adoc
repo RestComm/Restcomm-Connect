@@ -20,9 +20,9 @@ image::images/1.png[]
 
 In the bash window of your local computer create a directory where you should clone Restcomm-Connect:
 
-* run the command : *git clone https://github.com/RestComm/Restcomm-Connect.git*.
+* run the command : [source,bash]`git clone https://github.com/RestComm/Restcomm-Connect.git`
 This command will create a new directory called RestComm-Connect. Go to this directory entering the command:
- *cd Restcomm-Connect*.
+ [source,bash]`cd Restcomm-Connect`
 The content of the directory should contain the following:
 
 image::images/6.png[]
@@ -49,13 +49,13 @@ ant release -f ./release/build.xml -Drestcomm.release.version=$MAJOR_VERSION_NUM
 ----
 
 * Change the restcomm-connect-build.sh permission to make it executable as follows:
-  *chmod +x ./restcomm-connect-build.sh*.
+  [source,bash]`chmod +x ./restcomm-connect-build.sh`
     The RestComm directory should now display the following content:
 
 
 image::images/4.png[]
 
-* Now, run the build script as follows: *./restcomm-connect-build.sh*
+* Now, run the build script as follows: [source,bash]`./restcomm-connect-build.sh`
 
 This may take a while to build. If the build is successful, you should see this output at the end of the build:
 
