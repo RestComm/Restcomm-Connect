@@ -105,6 +105,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     /**
      * Grants access by permission. If the effective account has a role that resolves
      * to the specified permission (accoording to mappings of restcomm.xml) access is granted.
+     * Administrator is granted access regardless of permissions.
      *
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
@@ -215,6 +216,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     /**
      * Low level permission checking. roleNames are checked for neededPermissionString permission using permission
      * mappings contained in restcomm.xml. The permission mappings are stored in RestcommRoles.
+     *
+     * Note: Administrator is granted access with eyes closed
 
      * @param neededPermissionString
      * @param roleNames
@@ -331,7 +334,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             // administrator can also operate on child accounts
             if (!String.valueOf(operatingAccount.getSid()).equals(String.valueOf(operatedAccount.getSid()))) {
                 if (!String.valueOf(operatingAccount.getSid()).equals(String.valueOf(operatedAccount.getAccountSid()))) {
-                    throw new AuthorizationException();
+                    return AuthOutcome.FAILED;
                 }
             }
         } else { // non-administrators

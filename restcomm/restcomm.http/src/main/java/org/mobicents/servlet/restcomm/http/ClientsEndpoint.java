@@ -48,6 +48,7 @@ import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.ClientList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.ClientConverter;
 import org.mobicents.servlet.restcomm.http.converter.ClientListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -127,8 +128,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getClient(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
+            secure(operatedAccount, "RestComm:Read:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -138,6 +140,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         } else {
             try {
                // secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+                secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -225,8 +228,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
 
     protected Response updateClient(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Clients");
+            secure(operatedAccount, "RestComm:Modify:Clients");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -235,7 +239,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-              //  secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+                //  secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+                secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

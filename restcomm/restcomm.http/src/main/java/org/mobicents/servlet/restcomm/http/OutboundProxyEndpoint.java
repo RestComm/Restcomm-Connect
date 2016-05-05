@@ -41,7 +41,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -69,7 +68,6 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     protected ServletContext context;
     protected Configuration configuration;
     private ActorRef callManager;
-    private DaoManager daos;
     private Gson gson;
     private GsonBuilder builder;
     private XStream xstream;
@@ -83,7 +81,6 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
-        daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         super.init(configuration);
         builder = new GsonBuilder();
         builder.setPrettyPrinting();

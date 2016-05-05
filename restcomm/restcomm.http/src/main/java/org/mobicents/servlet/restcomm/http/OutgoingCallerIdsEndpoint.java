@@ -53,6 +53,7 @@ import org.mobicents.servlet.restcomm.entities.OutgoingCallerId;
 import org.mobicents.servlet.restcomm.entities.OutgoingCallerIdList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.OutgoingCallerIdConverter;
 import org.mobicents.servlet.restcomm.http.converter.OutgoingCallerIdListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -117,8 +118,9 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getCallerId(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
+            secure(operatedAccount, "RestComm:Read:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -128,6 +130,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         } else {
             try {
                 //secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+                secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -187,8 +190,9 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
 
     protected Response updateOutgoingCallerId(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:OutgoingCallerIds");
+            secure(operatedAccount, "RestComm:Modify:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -198,6 +202,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         } else {
             try {
                 //secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+                secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

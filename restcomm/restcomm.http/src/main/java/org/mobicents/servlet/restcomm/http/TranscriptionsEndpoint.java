@@ -45,6 +45,7 @@ import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.Transcription;
 import org.mobicents.servlet.restcomm.entities.TranscriptionList;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.converter.TranscriptionConverter;
 import org.mobicents.servlet.restcomm.http.converter.TranscriptionListConverter;
@@ -85,8 +86,9 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getTranscription(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
+            secure(operatedAccount, "RestComm:Read:Transcriptions");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -96,6 +98,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
         } else {
             try {
                 //secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
+                secure(operatedAccount, transcription.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
