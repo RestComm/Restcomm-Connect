@@ -54,6 +54,7 @@ import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesConverter;
 import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesList;
 import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverter;
@@ -220,8 +221,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secure(operatedAccount, "RestComm:Read:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -231,6 +233,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         } else {
             try {
                 //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+                secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (AuthorizationException e) {
                 return status(UNAUTHORIZED).build();
             }
@@ -341,14 +344,16 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:IncomingPhoneNumbers");
+            secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
             //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD );
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }
@@ -482,14 +487,16 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
+            secure(operatedAccount, "RestComm:Delete:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
             //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }

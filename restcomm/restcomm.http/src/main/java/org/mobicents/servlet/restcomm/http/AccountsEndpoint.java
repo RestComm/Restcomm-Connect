@@ -182,7 +182,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Account account = userIdentityContext.getEffectiveAccount(); // uses either oauth token or APIKey specified account
+        final Account account = userIdentityContext.getEffectiveAccount();
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
@@ -201,6 +201,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
+        // TODO what if effectiveAccount is null ?
         Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
         try {
@@ -211,14 +212,14 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
         // If Account already exists don't add it again
         /*
-            Accoutn creation rule:
+            Account creation rules:
             - either be Administrator or have the following permission: RestComm:Create:Accounts
-            - only Administrators can choose a role when creating. Other users will create accounts with the same role as theirs
+            - only Administrators can choose a role for newly created accounts. Normal users will create accounts with the same role as their own.
          */
         if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
             final Account parent = accountsDao.getAccount(sid);
             if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecured("RestComm:Create:Accounts")) {
-                if (hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
+                if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
                 }
                 accountsDao.addAccount(account);
@@ -256,11 +257,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if (data.containsKey("Auth_Token")) {
             result = result.setAuthToken(data.getFirst("Auth_Token"));
         }
-        // TODO apply proper security restrictions here. Marking an account as 'linked' is a sensitive operation
-        if (data.containsKey("Linked")) {
-            result = result.setAuthToken(data.getFirst("Linked"));
-        }
-
         return result;
     }
 

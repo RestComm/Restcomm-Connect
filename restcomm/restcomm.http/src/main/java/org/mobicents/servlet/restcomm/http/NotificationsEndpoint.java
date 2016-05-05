@@ -45,6 +45,7 @@ import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.NotificationList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.NotificationConverter;
 import org.mobicents.servlet.restcomm.http.converter.NotificationListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -85,8 +86,9 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getNotification(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
+            secure(operatedAccount, "RestComm:Read:Notifications");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -96,6 +98,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
         } else {
             try {
                 //secureLevelControl(accountsDao, accountSid, String.valueOf(notification.getAccountSid()));
+                secure(operatedAccount, notification.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

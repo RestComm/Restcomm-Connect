@@ -43,6 +43,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
 import org.mobicents.servlet.restcomm.entities.SmsMessage.Status;
 import org.mobicents.servlet.restcomm.entities.SmsMessageList;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.converter.SmsMessageConverter;
 import org.mobicents.servlet.restcomm.http.converter.SmsMessageListConverter;
@@ -122,8 +123,9 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     protected Response getSmsMessage(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
+            secure(operatedAccount, "RestComm:Read:SmsMessages");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -132,7 +134,8 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-               // secureLevelControl(accountsDao, accountSid, String.valueOf(smsMessage.getAccountSid()));
+                // secureLevelControl(accountsDao, accountSid, String.valueOf(smsMessage.getAccountSid()));
+                secure(operatedAccount, smsMessage.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

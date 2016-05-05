@@ -45,6 +45,7 @@ import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.RecordingList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.RecordingConverter;
 import org.mobicents.servlet.restcomm.http.converter.RecordingListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -85,8 +86,9 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecording(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+            secure(operatedAccount, "RestComm:Read:Recordings");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -96,6 +98,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         } else {
             try {
                 //secureLevelControl(accountsDao, accountSid, String.valueOf(recording.getAccountSid()));
+                secure(operatedAccount, recording.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
