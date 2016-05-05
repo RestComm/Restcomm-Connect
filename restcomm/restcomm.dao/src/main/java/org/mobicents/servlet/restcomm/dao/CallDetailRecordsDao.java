@@ -44,7 +44,13 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByStartTime(DateTime startTime);
 
+    List<CallDetailRecord> getCallDetailRecordsByEndTime(DateTime endTime);
+
+    List<CallDetailRecord> getCallDetailRecordsByStarTimeAndEndTime(DateTime endTime);
+
     List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parentCallSid);
+
+    List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
 
     void removeCallDetailRecord(Sid sid);
 

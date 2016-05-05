@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.http;
 
+import java.io.StringReader;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -40,13 +41,11 @@ public class RestcommCallsTool {
     }
 
     private String getAccountsUrl(String deploymentUrl, String username, Boolean json) {
-        if (accountsUrl == null) {
-            if (deploymentUrl.endsWith("/")) {
-                deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-            }
-
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls" + ((json) ? ".json" : "");
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
+
+        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Calls" + ((json) ? ".json" : "");
 
         return accountsUrl;
     }
@@ -197,7 +196,7 @@ public class RestcommCallsTool {
         return jsonObject;
     }
 
-    public JsonObject createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -214,9 +213,11 @@ public class RestcommCallsTool {
         // webResource = webResource.queryParams(params);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
         JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
-
-        return jsonObject;
+        if (response.startsWith("[")) {
+            return parser.parse(response).getAsJsonArray();
+        } else {
+            return parser.parse(response).getAsJsonObject();
+        }
     }
 
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,

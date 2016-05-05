@@ -44,6 +44,7 @@
  import org.apache.log4j.Logger;
  import org.joda.time.DateTime;
  import org.mobicents.javax.servlet.sip.SipSessionExt;
+ import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
  import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
  import org.mobicents.servlet.restcomm.dao.DaoManager;
  import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
@@ -83,6 +84,7 @@
      public static boolean redirectToB2BUA(final SipServletRequest request, final Client client, Client toClient,
              DaoManager storage, SipFactory sipFactory, final boolean patchForNat) throws IOException {
          request.getSession().setAttribute("lastRequest", request);
+
          if (logger.isInfoEnabled()) {
              logger.info("B2BUA (p2p proxy): Got request:\n" + request.getMethod());
              logger.info(String.format("B2BUA: Proxying a session between %s and %s", client.getLogin(), toClient.getLogin()));
@@ -144,13 +146,16 @@
                  request.createResponse(100).send();
                  // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                  request.getSession().setAttribute("toInetUri", to);
-                 ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
-                 ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+                     ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
+                     ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 }
                  outRequest.send();
                  outRequest.getSession().setAttribute("fromInetUri", from);
 
                  final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                  builder.setSid(Sid.generate(Sid.Type.CALL));
+                 builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                  builder.setDateCreated(DateTime.now());
                  builder.setAccountSid(client.getAccountSid());
                  builder.setTo(toClient.getFriendlyName());
@@ -262,8 +267,10 @@
              // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
              request.getSession().setAttribute("toInetUri", to);
              if (callToSipUri) {
-                 ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
-                 ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+                     ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
+                     ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
+                 }
              }
              outRequest.send();
              Address originalFromAddress = request.getFrom();
@@ -277,6 +284,7 @@
 
              final CallDetailRecord.Builder builder = CallDetailRecord.builder();
              builder.setSid(Sid.generate(Sid.Type.CALL));
+             builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
              builder.setDateCreated(DateTime.now());
              builder.setAccountSid(fromClient.getAccountSid());
              builder.setTo(to.toString());
@@ -371,6 +379,7 @@
      }
 
      public static SipSession getLinkedSession(SipServletMessage message) {
+
          SipSession sipSession = null;
          if (message.getSession().isValid()) {
              sipSession = (SipSession) message.getSession().getAttribute(B2BUA_LINKED_SESSION);
@@ -505,7 +514,7 @@
 
          // Update CallDetailRecord
          if (message instanceof SipServletResponse) {
-             request = (SipServletRequest) getLinkedSession((SipServletResponse) message).getAttribute(B2BUA_LAST_REQUEST);
+             request = (SipServletRequest) getLinkedSession(message).getAttribute(B2BUA_LAST_REQUEST);
          } else if (message instanceof SipServletRequest) {
              request = (SipServletRequest) message;
          }

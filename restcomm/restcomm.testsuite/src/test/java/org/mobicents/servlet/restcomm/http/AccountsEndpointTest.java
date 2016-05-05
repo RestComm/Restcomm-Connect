@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.http;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -14,10 +16,12 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -35,8 +39,10 @@ public class AccountsEndpointTest {
     @ArquillianResource
     URL deploymentUrl;
     static boolean accountUpdated = false;
+    static boolean accountCreated = false;
 
     private String adminUsername = "administrator@company.com";
+    private String adminFriendlyName = "Default Administrator Account";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String newAdminPassword = "mynewpassword";
@@ -44,6 +50,12 @@ public class AccountsEndpointTest {
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
     private String organizationSid = "ORec3515ebea5243b6bde0444d84b05b80";
+
+//    @Before
+//    public void before() {
+//        RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+//                adminUsername, newAdminPassword, adminAccountSid, null);
+//    }
 
     @After
     public void after() throws InterruptedException {
@@ -60,12 +72,27 @@ public class AccountsEndpointTest {
     }
 
     @Test
+    public void testGetAccountByFriendlyName() {
+        // Try to get Account using admin friendly name and user email address
+        int code = 0;
+        try {
+            JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                    adminFriendlyName, adminAuthToken, adminUsername);
+        } catch (UniformInterfaceException e) {
+            code = e.getResponse().getStatus();
+        }
+        // Logins using friendly name are not allowed anymore
+        assertTrue(code == 401);
+    }
+
+    @Test
     public void testCreateAccount() {
         RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
                 adminUsername, newAdminPassword, adminAccountSid, null);
         accountUpdated = true;
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
                 adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
+        accountCreated = true;
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 newAdminAuthToken, userEmailAddress);
 
@@ -79,14 +106,45 @@ public class AccountsEndpointTest {
     }
 
     @Test
-    public void testGetAccounts() {
+    public void testCreateAdministratorAccount() {
+        if (!accountUpdated) {
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        }
+        JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, newAdminAuthToken, "administrator@company.com", "1234", organizationSid);
+        assertNull(createAccountResponse);
+    }
+
+    @Test
+    public void testCreateAccountTwice() {
+        if (!accountUpdated) {
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        }
+        if (!accountCreated) {
+            JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                    adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
+            accountCreated = true;
+            assertNotNull(createAccountResponse);
+        }
+        JsonObject createAccountResponseSecondTime = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
+        assertNull(createAccountResponseSecondTime);
+    }
+
+    @Test
+    public void testGetAccounts() throws InterruptedException {
         if (!accountUpdated){
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
                     adminUsername, newAdminPassword, adminAccountSid, null);
         }
-        // Create account
-        RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
-                userEmailAddress, userPassword, organizationSid);
+
+        if (!accountCreated) {
+            // Create account
+            RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
+                    userEmailAddress, userPassword, organizationSid);
+        }
         // Get Account using admin email address and user email address
         JsonObject account1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 newAdminAuthToken, userEmailAddress);

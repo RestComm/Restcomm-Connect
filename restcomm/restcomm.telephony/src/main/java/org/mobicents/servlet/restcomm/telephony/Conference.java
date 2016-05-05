@@ -103,7 +103,9 @@ public final class Conference extends UntypedActor {
         transitions.add(new Transition(initializing, failed));
         transitions.add(new Transition(waiting, running));
         transitions.add(new Transition(waiting, evicting));
+        transitions.add(new Transition(waiting, stopping));
         transitions.add(new Transition(running, evicting));
+        transitions.add(new Transition(running, stopping));
         transitions.add(new Transition(evicting, stopping));
         transitions.add(new Transition(stopping, stopped));
         transitions.add(new Transition(stopping, failed));
@@ -362,30 +364,22 @@ public final class Conference extends UntypedActor {
 
     private void onRemoveParticipant(RemoveParticipant message, ActorRef self, ActorRef sender) throws Exception {
         if (isRunning()) {
+            // Kindly ask participant to leave
             final ActorRef call = message.call();
-            logger.info("################################## CONFERENCE CALLS: " + calls.size());
-            if (calls.contains(message.call()) && calls.size() == 1) {
-                // Only participant is leaving the conference
-                // Evict him and stop the conference
-                fsm.transition(message, evicting);
-            } else {
-                // More participants are present in the conference
-                // Kindly ask him to leave and let conference continue
-                final Leave leave = new Leave();
-                call.tell(leave, self);
-            }
+            final Leave leave = new Leave();
+            call.tell(leave, self);
         }
     }
 
     private void onLeft(Left message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(running) || is(waiting)) {
+        if (is(running) || is(waiting) || is(evicting)) {
             // Participant successfully left the conference.
-            // Simply update participants list
-            calls.remove(sender);
-        } else if (is(evicting)) {
-            // Another participant has been evicted.
+            boolean removed = calls.remove(sender);
+            int participantsNr = calls.size();
+            logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
+
             // Stop the conference when ALL participants have been evicted
-            if (calls.remove(sender) && calls.isEmpty()) {
+            if (removed && calls.isEmpty()) {
                 fsm.transition(message, stopping);
             }
         }

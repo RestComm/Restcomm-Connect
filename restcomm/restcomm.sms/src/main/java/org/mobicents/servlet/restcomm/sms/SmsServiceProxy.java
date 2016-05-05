@@ -31,6 +31,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 
 import akka.actor.ActorRef;
@@ -38,6 +39,8 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import org.mobicents.servlet.restcomm.sms.smpp.SmppMessageHandler;
+import org.mobicents.servlet.restcomm.sms.smpp.SmppService;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -45,10 +48,12 @@ import akka.actor.UntypedActorFactory;
  */
 public final class SmsServiceProxy extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
+    private static Logger logger = Logger.getLogger(SmsServiceProxy.class);
 
     private ActorSystem system;
     private ActorRef service;
-
+    private ActorRef smppService;
+    private ActorRef smppMessageHandler;
     private ServletContext context;
 
     public SmsServiceProxy() {
@@ -65,11 +70,6 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         service.tell(response, null);
     }
 
-//    @Override
-//    public void init(final ServletConfig config) throws ServletException {
-//        Configuration configuration = (Configuration) config.getServletContext().getAttribute(Configuration.class.getName());
-//        configuration.setProperty(ServletConfig.class.getName(), config);
-//    }
 
     private ActorRef service(final Configuration configuration, final SipFactory factory, final DaoManager storage) {
         return system.actorOf(new Props(new UntypedActorFactory() {
@@ -82,17 +82,46 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
         }));
     }
 
+    private ActorRef smppService(final Configuration configuration, final SipFactory factory, final DaoManager storage,
+                                 final ServletContext context, final ActorRef smppMessageHandler) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new SmppService(system, configuration, factory, storage, context, smppMessageHandler);
+            }
+        }));
+    }
+
+    private ActorRef smppMessageHandler () {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new SmppMessageHandler(context);
+            }
+        }));
+    }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(SmsServiceProxy.class)) {
             context = event.getServletContext();
             final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
             Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());
-            //        configuration = configuration.subset("sms-aggregator");
             final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
             service = service(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
+            if (configuration.subset("smpp").getString("[@activateSmppConnection]", "false").equalsIgnoreCase("true")) {
+                logger.info("Will initialize SMPP");
+                smppMessageHandler = smppMessageHandler();
+                smppService = smppService(configuration,factory,storage,context, smppMessageHandler);
+                context.setAttribute(SmppService.class.getName(), smppService);
+                context.setAttribute(SmppMessageHandler.class.getName(), smppMessageHandler);
+            }
         }
     }
 }

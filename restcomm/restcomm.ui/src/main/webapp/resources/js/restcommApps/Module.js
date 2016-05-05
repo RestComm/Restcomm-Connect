@@ -9,13 +9,13 @@ angular.module("rcApp.restcommApps", []).config([ '$routeProvider',  function($r
 			localApps: function (rappService) { return rappService.refreshLocalApps();}
 		} 
 	})
-	.when('/ras/config/:projectName/:mode?', {
+	.when('/ras/config/:applicationSid=:projectName/:mode?', {
 		templateUrl: 'modules/rappmanager-config.html', 
 		controller: 'RappManagerConfigCtrl', 
 		resolve: { 
-			rappConfig : function (rappService, $route) { return rappService.getAppConfig($route.current.params.projectName);}, //, $route.current.params.mode); },
-			rapp: function (rappService, $route) {return rappService.getApp($route.current.params.projectName);},
-			bootstrapObject : function (rappService, $route) { return rappService.getBoostrapObject($route.current.params.projectName); }
+			rappConfig : function (rappService, $route) { return rappService.getAppConfig($route.current.params.applicationSid);}, //, $route.current.params.mode); },
+			rapp: function (rappService, $route) {return rappService.getApp($route.current.params.applicationSid);},
+			bootstrapObject : function (rappService, $route) { return rappService.getBoostrapObject($route.current.params.applicationSid); }
 		}
 	});
 }]);

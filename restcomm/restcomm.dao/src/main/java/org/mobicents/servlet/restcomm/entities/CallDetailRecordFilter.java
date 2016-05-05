@@ -18,12 +18,19 @@ public class CallDetailRecordFilter {
     private final String sender;
     private final String status;
     private final Date startTime;  // to initialize it pass string arguments with  yyyy-MM-dd format
+    private final Date endTime;
     private final String parentCallSid;
     private final Integer limit;
     private final Integer offset;
+    private final String instanceid;
 
-    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime,
-            String parentCallSid, Integer limit, Integer offset) throws ParseException {
+    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
+                                  String parentCallSid, Integer limit, Integer offset) throws ParseException {
+        this(accountSid,recipient,sender,status,startTime,endTime,parentCallSid,limit,offset,null);
+    }
+
+    public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
+            String parentCallSid, Integer limit, Integer offset, String instanceId) throws ParseException {
         this.accountSid = accountSid;
 
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -45,6 +52,19 @@ public class CallDetailRecordFilter {
             this.startTime = date;
         } else
             this.startTime = null;
+
+        if (endTime != null) {
+            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = parser.parse(endTime);
+            this.endTime = date;
+        } else {
+            this.endTime = null;
+        }
+        if (instanceId != null && !instanceId.isEmpty()) {
+            this.instanceid = instanceId;
+        } else {
+            this.instanceid = null;
+        }
     }
 
     public String getSid() {
@@ -67,6 +87,10 @@ public class CallDetailRecordFilter {
         return startTime;
     }
 
+    public Date getEndTime() {
+        return endTime;
+    }
+
     public String getParentCallSid() {
         return parentCallSid;
     }
@@ -79,4 +103,5 @@ public class CallDetailRecordFilter {
         return offset;
     }
 
+    public String getInstanceid() { return instanceid; }
 }

@@ -72,6 +72,11 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
         writeSmsFallbackUrl(incomingPhoneNumber.getSmsFallbackUrl(), writer);
         writeSmsFallbackMethod(incomingPhoneNumber.getSmsFallbackMethod(), writer);
         writeSmsApplicationSid(incomingPhoneNumber.getSmsApplicationSid(), writer);
+        writeUssdUrl(incomingPhoneNumber.getUssdUrl(), writer);
+        writeUssdMethod(incomingPhoneNumber.getUssdMethod(), writer);
+        writeUssdFallbackUrl(incomingPhoneNumber.getUssdFallbackUrl(), writer);
+        writeUssdFallbackMethod(incomingPhoneNumber.getUssdFallbackMethod(), writer);
+        writeUssdApplicationSid(incomingPhoneNumber.getUssdApplicationSid(), writer);
         writeCapabilities(incomingPhoneNumber.isVoiceCapable(), incomingPhoneNumber.isSmsCapable(), incomingPhoneNumber.isMmsCapable(), incomingPhoneNumber.isFaxCapable(), writer);
         writeApiVersion(incomingPhoneNumber.getApiVersion(), writer);
         writeUri(incomingPhoneNumber.getUri(), writer);
@@ -101,6 +106,11 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
         writeSmsFallbackUrl(incomingPhoneNumber.getSmsFallbackUrl(), object);
         writeSmsFallbackMethod(incomingPhoneNumber.getSmsFallbackMethod(), object);
         writeSmsApplicationSid(incomingPhoneNumber.getSmsApplicationSid(), object);
+        writeUssdUrl(incomingPhoneNumber.getUssdUrl(), object);
+        writeUssdMethod(incomingPhoneNumber.getUssdMethod(), object);
+        writeUssdFallbackUrl(incomingPhoneNumber.getUssdFallbackUrl(), object);
+        writeUssdFallbackMethod(incomingPhoneNumber.getUssdFallbackMethod(), object);
+        writeUssdApplicationSid(incomingPhoneNumber.getUssdApplicationSid(), object);
         writeCapabilities(incomingPhoneNumber.isVoiceCapable(), incomingPhoneNumber.isSmsCapable(), incomingPhoneNumber.isMmsCapable(), incomingPhoneNumber.isFaxCapable(), object);
         writeApiVersion(incomingPhoneNumber.getApiVersion(), object);
         writeUri(incomingPhoneNumber.getUri(), object);
@@ -120,6 +130,22 @@ public final class IncomingPhoneNumberConverter extends AbstractConverter implem
             object.addProperty("sms_application_sid", smsApplicationSid.toString());
         } else {
             object.add("sms_application_sid", JsonNull.INSTANCE);
+        }
+    }
+
+    private void writeUssdApplicationSid(final Sid ussdApplicationSid, final HierarchicalStreamWriter writer) {
+        if (ussdApplicationSid != null) {
+            writer.startNode("UssdApplicationSid");
+            writer.setValue(ussdApplicationSid.toString());
+            writer.endNode();
+        }
+    }
+
+    private void writeUssdApplicationSid(final Sid ussdApplicationSid, final JsonObject object) {
+        if (ussdApplicationSid != null) {
+            object.addProperty("ussd_application_sid", ussdApplicationSid.toString());
+        } else {
+            object.add("ussd_application_sid", JsonNull.INSTANCE);
         }
     }
 }

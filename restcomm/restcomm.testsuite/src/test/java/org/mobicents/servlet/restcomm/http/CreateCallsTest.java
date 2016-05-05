@@ -11,6 +11,8 @@ import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
 import javax.sip.message.Response;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -52,6 +54,7 @@ public class CreateCallsTest {
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
+    private static SipStackTool tool4;
 
     private SipStack bobSipStack;
     private SipPhone bobPhone;
@@ -67,11 +70,16 @@ public class CreateCallsTest {
     private SipPhone alicePhone;
     private String aliceContact = "sip:alice@127.0.0.1:5091";
 
+    private SipStack alice2SipStack;
+    private SipPhone alice2Phone;
+    private String alice2Contact = "sip:alice@127.0.0.1:5092";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("CreateCalls1");
-        tool2 = new SipStackTool("CreaeCalls2");
-        tool3 = new SipStackTool("CreaeCalls3");
+        tool2 = new SipStackTool("CreateCalls2");
+        tool3 = new SipStackTool("CreateCalls3");
+        tool4 = new SipStackTool("CreateCalls4");
     }
 
     @Before
@@ -84,6 +92,9 @@ public class CreateCallsTest {
 
         aliceSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+
+        alice2SipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
+        alice2Phone = alice2SipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, alice2Contact);
     }
 
     @After
@@ -108,6 +119,13 @@ public class CreateCallsTest {
         if (alicePhone != null) {
             alicePhone.dispose();
         }
+
+        if (alice2SipStack != null) {
+            alice2SipStack.dispose();
+        }
+        if (alice2Phone != null) {
+            alice2Phone.dispose();
+        }
     }
 
     @Test
@@ -127,7 +145,7 @@ public class CreateCallsTest {
         String to = bobContact;
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
 
@@ -173,7 +191,7 @@ public class CreateCallsTest {
         String to = bobContact;
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
 
@@ -228,7 +246,7 @@ public class CreateCallsTest {
         String to = "client:alice";
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
 
@@ -237,6 +255,96 @@ public class CreateCallsTest {
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
                 null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(3000);
+
+        aliceCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        assertTrue(aliceCall.respondToDisconnect());
+    }
+
+    @Test
+    // Create a call to a Restcomm Client for wrong RCML url
+    public void createCallClientTestWrongRcmlUrl() throws InterruptedException, ParseException {
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "client:alice";
+        String rcmlUrl = "/restcomm/dial-number-entry.xml";
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+
+        aliceCall.listenForDisconnect();
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        assertTrue(aliceCall.respondToDisconnect());
+    }
+
+    @Test
+    //Create call to client with multiple registrations. Client Alice has two registrations (2 locations) and both should ring
+    public void createCallClientTestWithMultipleRegistrations() throws InterruptedException, ParseException {
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alice2Phone.register(uri, "alice", "1234", alice2Contact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+        SipCall alice2Call = alice2Phone.createSipCall();
+        alice2Call.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "client:alice";
+        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+
+        JsonArray callResult = (JsonArray) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(alice2Call.waitForIncomingCall(5000));
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        assertTrue(alice2Call.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Here-Alice-2", 3600));
+
 
         // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
 
@@ -278,7 +386,7 @@ public class CreateCallsTest {
         String to = "131313";
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
 
@@ -323,7 +431,7 @@ public class CreateCallsTest {
         String to = "131313";
         String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
 
-        JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
         assertNotNull(callResult);
 

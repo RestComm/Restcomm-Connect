@@ -23,12 +23,12 @@
 					<li>
 						<button ng-click="showGraph = !showGraph" class="btn navbar-link navbar-btn"><i class="fa fa-code-fork"> &nbsp;</i>Diagram <i ng-show="showGraph" class="fa fa-check"></i></button>
 					</li>
-					<li><a ng-click="showWebTrigger(projectName);" class="rvd-clickable-text">{{'designerWebTriggerLink' | translate}}</a></li>
+					<li><a ng-click="showWebTrigger(applicationSid);" class="rvd-clickable-text">{{'designerWebTriggerLink' | translate}}</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{'designerExportLink' | translate}} <b class="caret"></b></a>
 						<ul class="dropdown-menu">
-							<li><a href='#/packaging/{{projectName}}'><i class='fa fa-shopping-cart'></i>&nbsp;&nbsp;&nbsp;{{'designerApplicationStoreLink' | translate}}</a></li>
-							<li><a href="/restcomm-rvd/services/projects/{{projectName}}/archive"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;{{'designerZipFileLink' | translate}}</a></li>
+							<li><a href='#/packaging/{{applicationSid}}={{projectName}}'><i class='fa fa-shopping-cart'></i>&nbsp;&nbsp;&nbsp;{{'designerApplicationStoreLink' | translate}}</a></li>
+							<li><a href="/restcomm-rvd/services/projects/{{applicationSid}}/archive?projectName={{projectName}}"><i class='fa fa-download'></i>&nbsp;&nbsp;&nbsp;{{'designerZipFileLink' | translate}}</a></li>
 						</ul>
 					</li>
 					<li><a class='rvd-clickable-text' ng-click='onSavePressed()'><i ng-hide="saveSpinnerShown" class='fa fa-save'></i><i ng-show="saveSpinnerShown" class="fa fa-spinner fa-spin"></i> &nbsp; {{'designerSaveLink' | translate}}</a></li>
@@ -37,8 +37,8 @@
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="{{'designerProjectSettingsTitle' | translate}}"><i class="fa fa-cog"></i> <b class="caret"></b></a>
 						<ul class="dropdown-menu">
-							<li><a ng-click="showProjectSettings(projectName);" class="rvd-clickable-text">{{'designerProjectSettingsLink' | translate}}</a></li>
-							<li ng-show="getProjectSettings().logging"><a href="#/designer/{{projectName}}/log" target="_blank" class="rvd-clickable-text disabled">{{'designerApplicationLogLink' | translate}}</a></li>
+							<li><a ng-click="showProjectSettings(applicationSid, projectName);" class="rvd-clickable-text">{{'designerProjectSettingsLink' | translate}}</a></li>
+							<li ng-show="getProjectSettings().logging"><a href="#/designer/{{applicationSid}}={{projectName}}/log" target="_blank" class="rvd-clickable-text disabled">{{'designerApplicationLogLink' | translate}}</a></li>
 							<li ng-hide="getProjectSettings().logging" class="disabled"><a>{{'designerApplicationLogLink' | translate}}</a></li>
 						</ul>
 					</li>
