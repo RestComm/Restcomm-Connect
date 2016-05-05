@@ -309,8 +309,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
-        final String from = data.getFirst("From");
-        final String to = data.getFirst("To");
+        final String from = data.getFirst("From").trim();
+        final String to = data.getFirst("To").trim();
         final String username = data.getFirst("Username");
         final String password = data.getFirst("Password");
         final Integer timeout = getTimeout(data);
