@@ -10,17 +10,44 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 
 	
 	$scope.refreshProjectList = function() {
-		$http({url: 'services/projects',
+		var restcommApps;
+		var projectList = [];
+		$http({
+			url: '/restcomm/2012-04-24/Accounts/' + $scope.authInfo.username + '/Applications.json',
+			method: 'GET'
+		}).success(function (data, status, headers, config) {
+			restcommApps = data;
+			$http({url: 'services/projects',
 				method: "GET"
-		})
-		.success(function (data, status, headers, config) {
-			$scope.projectList = data;
-			for ( var i=0; i < $scope.projectList.length; i ++)
-				$scope.projectList[i].viewMode = 'view';
-		})
-		.error(function (data, status, headers, config) {
+			}).success(function (data, status, headers, config) {
+				for (var i in restcommApps) {
+					var currentApp = restcommApps[i];
+					var applicationSid = currentApp.sid;
+					for ( var i=0; i < data.length; i ++){
+						if(data[i].name === applicationSid){
+							var project = {};
+							project.applicationSid = applicationSid;
+							project.name = currentApp.friendly_name;
+							project.startUrl = currentApp.rcml_url;
+							project.kind = currentApp.kind;
+							project.viewMode = 'view';
+							projectList.push(project);
+							break;
+						}
+					}
+				}
+				$scope.projectList = projectList;
+			}).error(function (data, status, headers, config) {
+				if (status == 500)
+				notifications.put({type:'danger',message:"Internal server error"});
+			});
+		}).error(function (data, status, headers, config) {
 			if (status == 500)
 				notifications.put({type:'danger',message:"Internal server error"});
+			if (status == 401){
+				notifications.put({type:'danger',message:"You have been logged out! Please, log-in using the same Account in RVD and Adminitration console.",timeout:0});
+				authentication.doLogout();
+			}
 		});
 	}
 	
@@ -30,7 +57,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		})
 		.success(function (data, status, headers, config) {
 			console.log( "project created");
-			$location.path("/designer/" + name);
+			$location.path("/designer/" + data.sid + "=" + name);
 		 })
 		 .error(function (data, status, headers, config) {
 			if (status == 409) {
@@ -59,7 +86,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/projects/' + projectItem.name + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
+		$http({ method: "PUT", url: 'services/projects/' + projectItem.applicationSid + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -75,7 +102,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.deleteProject = function(projectItem, ticket) {
-		$http({ method: "DELETE", url: 'services/projects/' + projectItem.name + "?ticket=" + ticket})
+		$http({ method: "DELETE", url: 'services/projects/' + projectItem.applicationSid + "?ticket=" + ticket})
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
@@ -104,9 +131,12 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	    	  $scope.refreshProjectList();
 	    	  notifications.put({message:"Project imported successfully", type:"success"});
 	      }).error(function(data, status, headers, config) {
-	    	  if (status == 400) {// BAD REQUEST
+	    	  if (status == 400 && data && data.exception && data.exception.className == "UnsupportedProjectVersion") {
 	    		  console.log(data.exception.message);
-	    		  notifications.put({message:"Error importing project", type:"danger"});
+	    		  notifications.put({message:"Cannot import project. " + data.exception.message, type:"danger"});
+	    	  } else {
+                  console.log(data);
+	    	      notifications.put({message:"Error importing project", type:"danger"});
 	    	  }
 	      });
 	    }

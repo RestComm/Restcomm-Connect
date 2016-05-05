@@ -30,6 +30,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public final class Registration implements Comparable<Registration> {
     private final Sid sid;
+    private final String instanceId;
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
     private final DateTime dateExpires;
@@ -41,18 +42,19 @@ public final class Registration implements Comparable<Registration> {
     private final String userAgent;
     private final boolean webrtc;
 
-    public Registration(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String addressOfRecord,
+    public Registration(final Sid sid, final String instanceId, final DateTime dateCreated, final DateTime dateUpdated, final String addressOfRecord,
             final String displayName, final String userName, final String userAgent, final int timeToLive,
             final String location, final boolean webRTC) {
-        this(sid, dateCreated, dateUpdated, DateTime.now().plusSeconds(timeToLive), addressOfRecord, displayName, userName,
+        this(sid, instanceId, dateCreated, dateUpdated, DateTime.now().plusSeconds(timeToLive), addressOfRecord, displayName, userName,
                 userAgent, timeToLive, location, webRTC);
     }
 
-    public Registration(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateExpires,
+    public Registration(final Sid sid, final String instanceId, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateExpires,
             final String addressOfRecord, final String displayName, final String userName, final String userAgent,
             final int timeToLive, final String location, final boolean webRTC) {
         super();
         this.sid = sid;
+        this.instanceId = instanceId;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.dateExpires = dateExpires;
@@ -68,6 +70,8 @@ public final class Registration implements Comparable<Registration> {
     public Sid getSid() {
         return sid;
     }
+
+    public String getInstanceId() { return instanceId; }
 
     public DateTime getDateCreated() {
         return dateCreated;
@@ -111,8 +115,13 @@ public final class Registration implements Comparable<Registration> {
 
     public Registration setTimeToLive(final int timeToLive) {
         final DateTime now = DateTime.now();
-        return new Registration(sid, dateCreated, now, now.plusSeconds(timeToLive), addressOfRecord, displayName, userName,
+        return new Registration(sid, instanceId, dateCreated, now, now.plusSeconds(timeToLive), addressOfRecord, displayName, userName,
                 userAgent, timeToLive, location, webrtc);
+    }
+
+    public Registration updated() {
+        final DateTime now = DateTime.now();
+        return new Registration(sid, instanceId, dateCreated, now, dateExpires, addressOfRecord, displayName, userName, userAgent, timeToLive, location, webrtc);
     }
 
     @Override

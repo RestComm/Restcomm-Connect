@@ -34,6 +34,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 @Immutable
 public final class CallDetailRecord {
     private final Sid sid;
+    private final String instanceId;
     private final Sid parentCallSid;
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
@@ -57,13 +58,14 @@ public final class CallDetailRecord {
 
     private final String callPath;
 
-    public CallDetailRecord(final Sid sid, final Sid parentCallSid, final DateTime dateCreated, final DateTime dateUpdated,
+    public CallDetailRecord(final Sid sid, final String instanceId, final Sid parentCallSid, final DateTime dateCreated, final DateTime dateUpdated,
             final Sid accountSid, final String to, final String from, final Sid phoneNumberSid, final String status,
             final DateTime startTime, final DateTime endTime, final Integer duration, final BigDecimal price,
             final Currency priceUnit, final String direction, final String answeredBy, final String apiVersion,
             final String forwardedFrom, final String callerName, final URI uri, final String callPath,final Integer ringDuration) {
         super();
         this.sid = sid;
+        this.instanceId = instanceId;
         this.parentCallSid = parentCallSid;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
@@ -94,6 +96,8 @@ public final class CallDetailRecord {
     public Sid getSid() {
         return sid;
     }
+
+    public String getInstanceId() { return instanceId; }
 
     public Sid getParentCallSid() {
         return parentCallSid;
@@ -180,43 +184,43 @@ public final class CallDetailRecord {
     }
 
     public CallDetailRecord setStatus(final String status) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setStartTime(final DateTime startTime) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setEndTime(final DateTime endTime) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setDuration(final Integer duration) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath,ringDuration);
     }
 
     public CallDetailRecord setRingDuration(final Integer ringDuration) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
 
     public CallDetailRecord setPrice(final BigDecimal price) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath,ringDuration);
     }
 
     public CallDetailRecord setAnsweredBy(final String answeredBy) {
-        return new CallDetailRecord(sid, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                 callerName, uri, callPath, ringDuration);
     }
@@ -224,6 +228,7 @@ public final class CallDetailRecord {
     @NotThreadSafe
     public static final class Builder {
         private Sid sid;
+        private String instanceId;
         private Sid parentCallSid;
         private DateTime dateCreated;
         private DateTime dateUpdated;
@@ -250,6 +255,7 @@ public final class CallDetailRecord {
         private Builder() {
             super();
             sid = null;
+            instanceId = null;
             parentCallSid = null;
             dateCreated = null;
             dateUpdated = DateTime.now();
@@ -273,7 +279,7 @@ public final class CallDetailRecord {
         }
 
         public CallDetailRecord build() {
-            return new CallDetailRecord(sid, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid,
+            return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid,
                     status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
                     callerName, uri, callPath,ringDuration);
         }
@@ -281,6 +287,8 @@ public final class CallDetailRecord {
         public void setSid(final Sid sid) {
             this.sid = sid;
         }
+
+        public void setInstanceId(final String instanceId) { this.instanceId = instanceId; }
 
         public void setParentCallSid(final Sid parentCallSid) {
             this.parentCallSid = parentCallSid;

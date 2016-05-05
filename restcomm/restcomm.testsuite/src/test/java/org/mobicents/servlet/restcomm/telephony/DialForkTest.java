@@ -11,6 +11,7 @@ import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.impl.client.deployment.ThreadContext;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -838,6 +839,117 @@ public class DialForkTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
+    private String dialForkWithTimeout15 = "<Response><Dial timeout=\"15\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:5092</Sip><Number>+131313</Number></Dial></Response>";
+
+    @Test
+    public synchronized void testDialForkNoAnswerWith183() throws InterruptedException, ParseException, MalformedURLException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialForkWithTimeout15)));
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        //Prepare Fotini phone to receive a call
+        final SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
+        assertTrue(georgeCall.sendIncomingCallResponse(183, "Ringing-George", 600));
+        assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
+        assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Alice", 600));
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(100, "Trying-Henrique", 600));
+
+        //No one will answer the call and Bob will receive disconnect
+        assertTrue(georgeCall.listenForCancel());
+        assertTrue(aliceCall.listenForCancel());
+        assertTrue(henriqueCall.listenForCancel());
+
+        assertTrue(bobCall.listenForDisconnect());
+
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
+        assertNotNull(georgeCancelTransaction);
+        assertNotNull(aliceCancelTransaction);
+        assertNotNull(henriqueCancelTransaction);
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
+        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
+
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls == 0);
+        assertTrue(liveCallsArraySize == 0);
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+    }
+
+
+
     private String dialForkWithActionUrl = "<Response><Dial timeLimit=\"1000\" timeout=\"2\" action=\"http://127.0.0.1:8090/test\">" +
             "<Number>+131313</Number><Uri>sip:henrique@127.0.0.1:5092</Uri><Client>alice</Client></Dial></Response>";
     private String rcmlToReturn = "<Response><Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:5093</Uri></Dial></Response>";
@@ -1311,6 +1423,97 @@ public class DialForkTest {
         alicePhone.unregister(aliceContact, 3600);
 
         Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+    }
+
+    private String dialSequential = "<Response><Dial timeout=\"5\"><Sip>sip:nonexistent@127.0.0.1:5566</Sip></Dial><Dial timeout=\"5\"><Sip>sip:nonexistent2@127.0.0.1:6655</Sip></Dial><Dial><Sip>sip:henrique@127.0.0.1:5092</Sip></Dial></Response>";
+
+    @Test
+    public synchronized void testDialSequentialFirstCallTimeouts() throws InterruptedException, ParseException, MalformedURLException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialSequential)));
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        Thread.sleep(9000);
+
+        assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying-Henrique", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique", 3600));
+
+
+        String receivedBody = new String(henriqueCall.getLastReceivedRequest().getRawContent());
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(henriqueCall.waitForAck(50 * 1000));
+
+        //Wait to cancel the other branches
+        Thread.sleep(2000);
+
+        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls == 1);
+        assertTrue(liveCallsArraySize == 1);
+
+        henriqueCall.listenForDisconnect();
+
+        Thread.sleep(8000);
+
+        // hangup.
+
+        bobCall.disconnect();
+
+        assertTrue(henriqueCall.waitForDisconnect(30 * 1000));
+
+        alicePhone.unregister(aliceContact, 3600);
+
+        Thread.sleep(10 * 1000);
+
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));

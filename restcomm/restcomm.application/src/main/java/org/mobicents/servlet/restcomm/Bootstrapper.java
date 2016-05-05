@@ -305,14 +305,33 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             context.setAttribute(MediaServerControllerFactory.class.getName(), mscontrollerFactory);
 
+            Boolean rvdMigrationEnabled = new Boolean(xml.subset("runtime-settings").getString("rvd-workspace-migration-enabled", "true"));
+            if (rvdMigrationEnabled) {
+                //Replicate RVD Projects as database entities
+                try {
+                    RvdProjectsMigrator rvdProjectMigrator = new RvdProjectsMigrator(context, xml);
+                    rvdProjectMigrator.executeMigration();
+                } catch (Exception exception) {
+                    logger.error("RVD Porjects migration failed during initialization: ", exception);
+                }
+            }
+
             //Last, print Version and send PING if needed
             Version.printVersion();
-            GenerateInstanceId generateInstanceId = new GenerateInstanceId(context);
-            InstanceId instanceId = generateInstanceId.instanceId();
+            GenerateInstanceId generateInstanceId = null;
+            InstanceId instanceId = null;
+            try {
+                generateInstanceId = new GenerateInstanceId(context, outboundInterface(context,"udp"));
+                instanceId = generateInstanceId.instanceId();
+            } catch (UnknownHostException e) {
+                logger.error("UnknownHostException during the generation of InstanceId: "+e);
+            }
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
-            Ping ping = new Ping(xml, context);
-            ping.sendPing();
+            RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
+            //Depreciated
+//            Ping ping = new Ping(xml, context);
+//            ping.sendPing();
         }
     }
 }

@@ -3,12 +3,16 @@
 <!-- @author thomas.quintana@telestax.com (Thomas Quintana) -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.InstanceIdDao">
 	<insert id="addInstanceId" parameterType="map">
-		INSERT INTO restcomm_instance_id (instance_id, date_created, date_updated)
-		VALUES(#{instance_id}, #{date_created}, #{date_updated});
+		INSERT INTO restcomm_instance_id (instance_id, host, date_created, date_updated)
+		VALUES(#{instance_id}, #{host},  #{date_created}, #{date_updated});
 	</insert>
 
 	<select id="getInstanceId" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_instance_id;
+	</select>
+
+	<select id="getInstanceIdByHost" parameterType="string" resultType="hashmap">
+		SELECT * FROM restcomm_instance_id where host=#{host};
 	</select>
 
 	<update id="updateInstanceId" parameterType="map">

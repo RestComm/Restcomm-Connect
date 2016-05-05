@@ -33,6 +33,7 @@
   
   <update id="updateApplication" parameterType="map">
     UPDATE "restcomm_applications" SET "friendly_name"=#{friendly_name}, "date_updated"=#{date_updated}, 
-    "voice_caller_id_lookup"=#{voice_caller_id_lookup}, "rcml_url"=#{rcml_url}, "kind"=#{kind} WHERE "sid"=#{sid};
+    "voice_caller_id_lookup"=#{voice_caller_id_lookup}, "rcml_url"=#{rcml_url}, "kind"=#{kind} 
+    WHERE "sid"=#{sid};
   </update>
 </mapper>

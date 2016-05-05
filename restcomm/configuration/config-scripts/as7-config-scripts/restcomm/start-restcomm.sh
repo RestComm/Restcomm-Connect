@@ -158,10 +158,13 @@ echo "Looking for the IP Address, subnet, network and broadcast_address"
 fi
 BIND_ADDRESS="$PRIVATE_IP"
 
-MEDIASERVER_EXTERNAL_ADDRESS="$STATIC_ADDRESS"
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	MEDIASERVER_EXTERNAL_ADDRESS="\<null\/\>"
 	STATIC_ADDRESS=$BIND_ADDRESS
+fi
+
+if [[ -z "$MEDIASERVER_EXTERNAL_ADDRESS" ]]; then
+   MEDIASERVER_EXTERNAL_ADDRESS="$STATIC_ADDRESS"
 fi
 
 if [[ -z "$PUBLIC_IP" ]]; then
@@ -176,6 +179,8 @@ fi
 source $BASEDIR/autoconfigure.sh
 
 # start restcomm in selected run mode
-startMediaServer
+if [ "${MS_EXTERNAL^^}" = "FALSE"  ]; then
+	startMediaServer
+fi
 startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
 exit 0

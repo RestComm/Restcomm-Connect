@@ -67,6 +67,7 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   } // or registering a new one ?
   else {
     // start optional items collapsed
+    $scope.clientDetails = {};
     $scope.isCollapsed = true;
 
     $scope.closeRegisterSIPClient = function () {
@@ -75,7 +76,7 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   }
 
   // query for available apps
-  $scope.availableApps = RCommApps.query();
+  //$scope.availableApps = RCommApps.query();
 
   var createSIPClientParams = function(client) {
     var params = {};
@@ -93,10 +94,11 @@ var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
     if (client.friendly_name) {
       params["FriendlyName"] = client.friendly_name;
     }
-    if (client.voice_url || client.voice_url === "" ) {
-      params["VoiceUrl"] = client.voice_url;
-      params["VoiceMethod"] = client.voice_method;
-    }
+    // Always send, value consistency controlled by actions performed by user
+    params["VoiceApplicationSid"] = client.voice_application_sid;
+    params["VoiceUrl"] = client.voice_url;
+    params["VoiceMethod"] = client.voice_method;
+    
     if (client.voice_fallback_url || client.voice_fallback_url === "") {
       params["VoiceFallbackUrl"] = client.voice_fallback_url;
       params["VoiceFallbackMethod"] = client.voice_fallback_method;

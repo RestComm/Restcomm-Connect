@@ -1,0 +1,28 @@
+= Restcomm RCML – Number
+
+[[number]]
+== Number
+The *<Number>* noun specifies a phone number to dial. You can use multiple *<Number>* nouns within a *<Dial>* verb to simultaneously call all of them at once. The first call to pick up is connected to the current call and the rest are hung up.
+
+=== Number Attributes
+
+[cols=",,",options="header",]
+|===================================
+|Name |Allowed Values |Default Value
+|sendDigits |any digits |none
+|url |any url |none
+|===================================
+
+* *sendDigits.* The 'sendDigits' attribute tells RestComm to play DTMF tones when the call is answered. This is useful when dialing a phone number and an extension. RestComm will dial the number, and when the automated system picks up, send the DTMF tones to connect to the extension.
+* *url.* The 'url' attribute allows you to specify a url for a RCML document that will run on the called party's end, after he/she answers, but before the parties are connected. You can use this RCML to privately play or say information to the called party, or provide a chance to decline the phone call using <Gather> and <Hangup>. The current caller will continue to hear ringing while the RCML document executes on the other end. RCML documents executed in this manner are not allowed to contain the <Dial> verb.
+
+=== Examples 
+For an example of how to use the *<Number>* noun see below.
+
+----
+<Response>
+    <Dial>
+    <Number sendDigits="wwww1234">1-444-555-6666</Number>
+    </Dial>
+</Response>
+----

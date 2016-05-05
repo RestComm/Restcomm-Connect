@@ -139,7 +139,7 @@ public final class Downloader extends UntypedActor {
             try {
                 response = new DownloaderResponse(fetch(request));
             } catch (final Exception exception) {
-                logger.info("Exception while trying to download RCML, exception: "+exception);
+                logger.error("Exception while trying to download RCML, exception: "+exception);
                 response = new DownloaderResponse(exception, "Exception while trying to download RCML");
             }
             if (sender != null) {
@@ -199,5 +199,11 @@ public final class Downloader extends UntypedActor {
             builder.setIsChunked(entity.isChunked());
         }
         return builder.build();
+    }
+
+    @Override
+    public void postStop() {
+        logger.debug("Downloader at post stop");
+        super.postStop();
     }
 }

@@ -9,15 +9,15 @@
   <property location="${release.dir}/docs/restcomm" name="restcomm.docs.dir"/>
   <property location="${release.tomcat.dir}/docs/restcomm" name="restcomm.docs.tomcat.dir"/>
   <property location="${release.as7.dir}/docs/restcomm" name="restcomm.docs.as7.dir"/>
-  <property name="olympus.build" value="7"/>
+  <property name="olympus.build" value="12"/>
   <property location="${workspace.restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="668"/>
+  <property name="sipservlets-build" value="695"/>
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-  <property name="restcomm-media.version" value="3.0.2.Final"/>
-  <property name="restcomm-media.build" value="33"/>
+  <property name="restcomm-media.version" value="4.1.0"/>
+  <property name="restcomm-media.build" value="59"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
@@ -102,7 +102,7 @@
   <!--Media-->
   <available file="${restcomm-media.distro.zip.path}" property="got.restcomm-media"/>
   <target name="get-restcomm-media" unless="got.restcomm-media">
-    <echo>Downloading Restcomm Media version: ${restcomm-media.version}</echo>
+    <echo>Downloading Restcomm Media version: ${restcomm-media.version}.${restcomm-media.build}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-media.download.url}"/>
     </exec>
@@ -206,6 +206,16 @@
     <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/webrtc.war"/>
     <copy failonerror="true" file="${configuration.directory}/olympus.war" tofile="${release.as7.dir}/standalone/deployments/olympus.war"/>
     <touch file="${release.as7.dir}/standalone/deployments/olympus.war.dodeploy"/>
+
+    <!-- Replace old MGCP driver with the new one from RMS -->
+    <delete failonerror="true">
+      <fileset dir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/" includes="mgcp-driver*"/>
+    </delete>
+    <copy failonerror="true" todir="${release.as7.dir}/standalone/deployments/restcomm.war/WEB-INF/lib/">
+      <fileset dir="${release.as7.dir}/mediaserver/lib/">
+         <include name="mgcp-driver-*"/>
+      </fileset>
+    </copy>
   </target>
 
   <target name="copy-docs">

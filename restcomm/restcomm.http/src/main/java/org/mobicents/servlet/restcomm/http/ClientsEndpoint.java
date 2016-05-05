@@ -100,11 +100,23 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         builder.setLogin(data.getFirst("Login"));
         builder.setPassword(data.getFirst("Password"));
         builder.setStatus(getStatus(data));
-        builder.setVoiceUrl(getUrl("VoiceUrl", data));
-        builder.setVoiceMethod(getMethod("VoiceMethod", data));
+        URI voiceUrl = getUrl("VoiceUrl", data);
+        if (voiceUrl != null && voiceUrl.toString().equals("")) {
+            voiceUrl=null;
+        }
+        builder.setVoiceUrl(voiceUrl);
+        String method = getMethod("VoiceMethod", data);
+        if (method == null || method.isEmpty() || method.equals("")) {
+            method = "POST";
+        }
+        builder.setVoiceMethod(method);
         builder.setVoiceFallbackUrl(getUrl("VoiceFallbackUrl", data));
         builder.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
-        builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        // skip null/empty VoiceApplicationSid's (i.e. leave null)
+        if (data.containsKey("VoiceApplicationSid")) {
+            if ( ! org.apache.commons.lang.StringUtils.isEmpty( data.getFirst("VoiceApplicationSid") ) )
+                builder.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+        }
         String rootUri = configuration.getString("root-uri");
         rootUri = StringUtils.addSuffixIfNotPresent(rootUri, "/");
         final StringBuilder buffer = new StringBuilder();
@@ -273,7 +285,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
             result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
-            result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("VoiceApplicationSid"))) {
+                result = result.setVoiceApplicationSid(null);
+            } else {
+                result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+            }
         }
         return result;
     }

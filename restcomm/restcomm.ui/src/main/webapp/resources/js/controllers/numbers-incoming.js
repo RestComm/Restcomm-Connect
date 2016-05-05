@@ -25,7 +25,8 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
   };
 
   // add incoming number -----------------------------------------------------
-
+/*
+// no modal is used for number registration any more
   $scope.showRegisterIncomingNumberModal = function () {
     var registerIncomingNumberModal = $modal.open({
       controller: NumberDetailsCtrl,
@@ -43,6 +44,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
       }
     );
   };
+  */
 
   // delete incoming number --------------------------------------------------
 
@@ -76,7 +78,7 @@ var NumberDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $mod
   //}
 
   // query for available apps
-  $scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
+  //$scope.availableApps = RCommApps.query({account:AuthService.getEmailAddress()});
   $scope.localApps = localApps;
 
   //$scope.countries = countries;
@@ -301,17 +303,24 @@ var createNumberParams = function(number, isSIP) {
 
   // Optional fields
   params["FriendlyName"] = number.friendly_name || number.friendlyName;
+  params["VoiceApplicationSid"] = number.voice_application_sid; // || number.voiceApplicationSid;
   params["VoiceUrl"] = number.voice_url; // || number.voiceUrl; - return "" as "". It will help the server clear values.
   params["VoiceMethod"] = number.voice_method || number.voiceMethod;
   params["VoiceFallbackUrl"] = number.voice_fallback_url; // || number.voiceFallbackUrl;
   params["VoiceFallbackMethod"] = number.voice_fallback_method || number.voiceFallbackMethod;
   params["StatusCallback"] = number.status_callback; // || number.statusCallback;
   params["StatusCallbackMethod"] = number.status_callback_method || number.statusCallbackMethod;
+  params["SmsApplicationSid"] = number.sms_application_sid; // || number.smsApplicationSid;
   params["SmsUrl"] = number.sms_url; // || number.smsUrl;
   params["SmsMethod"] = number.sms_method || number.smsMethod;
   params["SmsFallbackUrl"] = number.sms_fallback_url; // || number.smsFallbackUrl;
   params["SmsFallbackMethod"] = number.sms_fallback_method || number.smsFallbackMethod;
   params["VoiceCallerIdLookup"] = number.voice_caller_id_lookup || number.voiceCallerIdLookup;
+  params["UssdUrl"] = number.ussd_url;
+  params["UssdMethod"] = number.ussd_method;
+  params["UssdFallbackUrl"] = number.ussd_fallback_url;
+  params["UssdFallbackMethod"] = number.ussd_fallback_method;
+  params["UssdApplicationSid"] = number.ussd_application_sid;
   if(isSIP) {
 	  params["isSIP"] = "true";
   }

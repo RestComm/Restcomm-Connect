@@ -1,10 +1,12 @@
 package org.mobicents.servlet.restcomm.rvd.security;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
+import com.google.gson.Gson;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -14,11 +16,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityException;
 
 public class AuthenticationService {
     static final Logger logger = Logger.getLogger(AuthenticationService.class.getName());
-    RvdConfiguration rvdSettings;
     String authenticationToken;
     String baseRestcommUrl;
 
@@ -26,7 +28,16 @@ public class AuthenticationService {
         this.baseRestcommUrl = RvdConfiguration.getInstance().getRestcommBaseUri().toString();
     }
 
-    public boolean authenticate(String username, String password) throws RvdSecurityException {
+    /**
+     * Authenticates a username against restcomm. If successfull, the account is returned. Otherwise
+     * null is returned.
+     *
+     * @param username
+     * @param password
+     * @return A RestcommAccountInfoResponse object or null
+     * @throws RvdSecurityException
+     */
+    public RestcommAccountInfoResponse authenticate(String username, String password) throws RvdSecurityException {
         logger.debug("Authenticating " + username + " on Restcomm");
         String restcommAuthUrl = baseRestcommUrl;
 
@@ -55,13 +66,21 @@ public class AuthenticationService {
             throw new RvdSecurityException("Error authenticating on restcomm", e);
         }
 
-        // Header[] cookieHeaders = response.getHeaders("Set-Cookie");
-
         int status = response.getStatusLine().getStatusCode();
-        if (status == 200)
-            return true;
-        else
-            return false;
+        if (status == 200) {
+            InputStreamReader reader = null;
+            try {
+                reader = new InputStreamReader(response.getEntity().getContent());
+            } catch (IOException e) {
+                throw new RvdSecurityException("Error authenticating on restcomm. Authenticated account seems invalid.", e);
+            }
+            Gson gson = new Gson();
+            RestcommAccountInfoResponse accountInfo = gson.fromJson(reader, RestcommAccountInfoResponse.class);
+            if (accountInfo.getStatus().equalsIgnoreCase("active")) {
+                return accountInfo;
+            }
+        }
+        return null;
     }
 
     public String getAuthenticationToken() {

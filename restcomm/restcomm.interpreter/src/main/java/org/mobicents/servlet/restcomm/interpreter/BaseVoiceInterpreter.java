@@ -597,6 +597,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final UntypedActorContext context = getContext();
             context.stop(self());
         }
+        if (downloader != null && !downloader.isTerminated()) {
+            getContext().stop(downloader);
+        }
     }
 
     void sendMail(final Notification notification) {
@@ -793,10 +796,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         public void execute(final Object message) throws Exception {
             final SpeechSynthesizerResponse<SpeechSynthesizerInfo> response = (SpeechSynthesizerResponse<SpeechSynthesizerInfo>) message;
             synthesizerInfo = response.get();
-            call.tell(new Observe(source), source);
-            //Enable Monitoring Service for the call
-            if (monitoring != null)
-               call.tell(new Observe(monitoring), source);
+//            call.tell(new Observe(source), source);
+//            //Enable Monitoring Service for the call
+//            if (monitoring != null)
+//               call.tell(new Observe(monitoring), source);
             call.tell(new GetCallInfo(), source);
         }
     }

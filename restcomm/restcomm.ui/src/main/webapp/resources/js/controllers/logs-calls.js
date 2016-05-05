@@ -28,7 +28,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
   };
 
   $scope.getCallsList = function(page) {
-    var params = $scope.search ? createSearchParams($scope.search) : {};
+    var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsCalls.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.callsLogsList = data.calls;
       $scope.totalCalls = data.total;
@@ -62,6 +62,9 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $modal, 
     }
     if(search.status) {
       params["Status"] = search.status;
+    }
+    if(search.local_only) {
+      params["LocalOnly"] = search.local_only;
     }
 
     return params;

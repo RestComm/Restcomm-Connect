@@ -83,6 +83,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 		for (var i=0; i<localApps.length; i++) {
 			var localApp = localApps[i];
 			var app = {};
+			app.sid = localApp.sid;
 			app.title = localApp.projectName;
 			app.projectName = localApp.projectName;
 			app.isLocal = true;
@@ -213,7 +214,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	      .error( function (data, status, headers) {
 	    	  if (status == 409)
 	    		  Notifications.warn("This application is already installed");
-	    	  else if (status == 500 && data && data.exception && data.exception.className == "UnsupportedRasApplicationVersion")
+	    	  else if (status == 400 && data && data.exception && (data.exception.className == "UnsupportedRasApplicationVersion" || data.exception.className == "UnsupportedProjectVersion") )
 				Notifications.error(data.exception.message);
 	    	  else
 	    		  Notifications.error("Cannot import application package");
