@@ -6,15 +6,19 @@
 *  Install the GNU screen (it is optional but recommended)
 
 * Install IPCalc
+* Install MySQL
 * You must have *JDK - 7* installed on your computer
 
 == Download and unzip Restcomm binary
 
-_If you you have already installed Restcomm you can skip the Step 1 and move to Step 2._
+_If you you have already installed Restcomm you can <<Configure Restcomm IP information and Text-to-speech>> at once_
 
-* Go to a local directory on your computer and run the following command:
-*wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/Mobicents-Restcomm-JBoss-AS7-<xxx>.zip*,
-where <xxx> is the release version number.
+* Go to a local directory on your computer and run the following command ( <xxx> is the release version number):
+
+[source,bash]
+----
+wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifact/Mobicents-Restcomm-JBoss-AS7-<xxx>.zip
+----
 
 * Unzip the binary to a local directory. It should be similar to this one:
 *Restcomm-JBoss-AS7-7.6.0.869.zip*.
@@ -36,12 +40,12 @@ NETWORK=''
 BROADCAST_ADDRESS=''
 ----
 
-* In order to get the details of your server you should run the *ifconfig* command in the terminal.
+* In order to get the details of your server you should run the [source,bash]`ifconfig` command in the terminal.
 You will see something like this:
 
 image::images/8.png[]
 
-* Run the command *netstat -r* to get the Network address of your computer:
+* Run the command [source,bash]`netstat -r` to get the Network address of your computer:
 
 image::images/10.png[]
 
@@ -59,7 +63,11 @@ BROADCAST_ADDRESS='172.21.0.255'
 
 === Add your Text-to-Speech Key
 
-* Register at *www.voicerss.org* and get your personal VoiceRSS API key. It is for free.
+_Text-to-Speech (TTS) is the technology which enables mobile, desktop and web applications
+to read text aloud. Voice RSS provides free Text-to-Speech API as web service.
+This TTS API key allows to convert the text to speech without installation of special software._
+
+* Register at link:http://www.voicerss.org[voicerss.org] and get your personal *VoiceRSS API key*. It is for free.
 
 * Go to *$RESTCOMM_HOME/bin/restcomm* and open *restcomm.conf* file.
 
@@ -77,10 +85,10 @@ BROADCAST_ADDRESS='172.21.0.255'
 
 * Go to the *$RESTCOMM_HOME/bin/restcomm/* directory.
 
-* To start Restcomm and media server run the following command: *./start-restcomm.sh*
+* To start Restcomm and media server run the following command: [source,bash]`./start-restcomm.sh`
 
-* To see the Restcomm startup process run *screen -r restcomm* (only works if you have screen installed).
-To see the MMS startup process run the *screen -r mms* command.
+* To see the Restcomm startup process run [source,bash]`screen -r restcomm` (only works if you have screen installed).
+To see the Restcomm Media Server startup process run the [source,bash]`screen -r mms` command.
 
 * Open your web browser and go to the url – *http://IP:8080*.
 Instead of "IP" you should put your IP.
@@ -88,15 +96,14 @@ Instead of "IP" you should put your IP.
 * Log in with the *administrator@company.com* username and the *RestComm* password.
 Then you should change the default password.
 
-* If you need to stop the Restcomm you need to run *$RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh* command.
+* If you need to stop the Restcomm you need to go to *$RESTCOMM_HOME/bin/restcomm*
+directory and run the [source,bash]`./stop-restcomm.sh` command.
 
 == Making Test SIP Calls using the Demo Apps
 
 * Open any SIP phone of your choice.
-You may use link:http://www.linphone.org/downloads-for-desktop.html[Linphone] which doesn’t require registration.
+You may use *Olympus*. Here you can find link:http://docs.telestax.com/how-to-use-olympus-with-restcomm[how to use Olympus with Restcomm].
 
-* Make sip calls at the following numbers. Take into account that first you should put you IP instead of "Restcomm_IP":
+* Go to the *Contacts* and make a test call at +1234 number.
 
-- 1234@Restcomm_IP:5080 – you will hear a welcome message
-- 1235@Restcomm_IP:5080 – you will hear an hello world message in 3 languages
-- 1236@Restcomm_IP:5080 – this will test the collect verb
+image::images/15.png[]

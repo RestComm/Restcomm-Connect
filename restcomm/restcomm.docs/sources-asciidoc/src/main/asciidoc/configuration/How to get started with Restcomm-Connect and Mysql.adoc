@@ -1,6 +1,12 @@
 [[restcomm-connect-mysql]]
 = How to get started with Restcomm-Connect and Mysql
 
+_When working with the binary version of Restcomm, the default database is hsqlDB.
+This is of course not suitable for production but it is provided as a way for you
+to conveniently and quickly start up Restcomm.
+For those who would like to run Restcomm on a local server or on another cloud based system,
+the following tutorial will show how to get started with Restcomm and Mysql._
+
 == Requirements
 
 * Install Restcomm using our previous guides
@@ -11,7 +17,7 @@
 
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/* directory.
  Open the *mybatis.xml*. $RESTCOMM_HOME is conventional name for unzipped *Restcomm-JBoss-AS7-7.6.0.869* directory.
-* Change the <environments default="production"> to <environments default="mariadb">
+* Change the [source,bash]`<environments default="production">` to [source,bash]`<environments default="mariadb">`
 * Add the MariaDB configuration environment tag as shown below.
 Make sure that you have indicated the correct MySQL username, password
 and IP of the computer where the database is located (it is 172.21.0.107 in the example).
@@ -32,14 +38,14 @@ and IP of the computer where the database is located (it is 172.21.0.107 in the 
 
 == Start Mysql and Create the Restcomm database
 
-* Start Mysql by running the command *sudo /etc/init.d/mysql start*.
+* Start Mysql by running the command [source,bash]`sudo /etc/init.d/mysql start`
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb* directory. There will be the *init.sql* file and *sql* directory:
 
 image::images/13.png[]
 
 * Create the Restcomm database running the following command:
-*mysql -u root -p < init.sql*
-* Log into Mysql and make sure the Restcomm database was created by running the *show databases;* command.
+[source,bash]`mysql -u root -p < init.sql`
+* Log into Mysql and make sure the Restcomm database was created by running the [source,bash]`show databases;` command.
 If the process was successful you will see the following:
 
 image::images/14.png[]
@@ -59,6 +65,6 @@ Open the *restcomm.xml* file.
 ----
 == Download Mysql Java Client Driver
 
-* Download the latest MySQL Java Connector from http://mvnrepository.com/artifact/mysql/mysql-connector-java.
+* Download the latest *MySQL Java Connector* from http://mvnrepository.com/artifact/mysql/mysql-connector-java.
 * Put the jar file in
 *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/*.
