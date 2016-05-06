@@ -82,7 +82,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new AccountListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        // Make sure there is an authenticated account present when this endoint is used
+        // Make sure there is an authenticated account present when this endpoint is used
         secure();
     }
 
@@ -157,7 +157,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response deleteAccount(final String operatedSid) {
-        // TODO what if effectiveAccount is null ??
+        // what if effectiveAccount is null ?? - no need to check since we secure() in AccountsEndoint.init()
         final Sid accountSid = userIdentityContext.getEffectiveAccount().getSid();
         final Sid sidToBeRemoved = new Sid(operatedSid);
 
@@ -203,7 +203,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        // TODO what if effectiveAccount is null ?
+        // what if effectiveAccount is null ?? - no need to check since we secure() in AccountsEndoint.init()
         Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
         try {
