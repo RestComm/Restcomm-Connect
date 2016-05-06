@@ -24,7 +24,7 @@ public class AccountKey {
     public AccountKey(String sid, String key, AccountsDao dao) {
         this.challengedSid = sid; // store there for future reference, maybe we need the raw data
         this.challengedKey = key;
-        account = dao.getAccount(sid);
+        account = dao.getAccountToAuthenticate(sid); // We don't just retrieve an account, we're authenticating. Friendly names as authentnication tokens should be prevented
         verify(dao);
     }
 
