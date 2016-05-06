@@ -29,7 +29,6 @@ import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 import javax.sip.Dialog;
 import javax.sip.SipException;
 import javax.sip.address.SipURI;
-import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
