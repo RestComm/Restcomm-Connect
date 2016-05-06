@@ -1778,9 +1778,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // If action is present redirect to the action URI.
+            String action = null;
             attribute = verb.attribute("action");
             if (attribute != null) {
-                String action = attribute.value();
+                action = attribute.value();
                 if (action != null && !action.isEmpty()) {
                     URI target = null;
                     try {
@@ -1834,6 +1835,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
+                        if (logger.isInfoEnabled())
+                            logger.info("About to execute Record action to: "+uri);
                         downloader.tell(request, self());
                         // A little clean up.
                         recordingSid = null;
@@ -1842,7 +1845,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, null);
+                        if (logger.isInfoEnabled())
+                            logger.info("About to execute Record action to: "+uri);
+                        downloader.tell(request, self());
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
@@ -1851,8 +1856,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 //                    source.tell(stop, source);
                 }
             }
-            if (CallStateChanged.class.equals(klass)) {
-                source.tell(new StopInterpreter(), source);
+            if (CallStateChanged.class.equals(klass) ) {
+                if (action == null || action.isEmpty()) {
+                    source.tell(new StopInterpreter(), source);
+                }
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
