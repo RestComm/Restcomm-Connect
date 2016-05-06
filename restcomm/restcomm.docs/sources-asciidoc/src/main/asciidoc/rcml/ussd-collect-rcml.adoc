@@ -1,0 +1,61 @@
+= Restcomm RCML – USSD Collect
+
+[[sms]]
+== USSDCollect
+The *UssdCollect* verb is a USSD integration with Restcomm resource. When fully configured with a USSD gateway, Restcomm will send all UssdMessage to the configured gateway  
+
+=== Example
+For an example of how to use the USSDCollect verb see below.
+
+----
+<Response>
+    <UssdCollect action="http://my.controller.net">
+        <UssdMessage> 1 for first option</UssdMessage>
+        <UssdMessage> 2 for first option</UssdMessage>
+        <UssdMessage> 3 for first option</UssdMessage>
+    </UssdCollect>
+</Response>
+----
+
+== UssdMessage
+
+NOTE: Before you can send an USSD message you must first configure the restcomm.xml with the USSD gateway information. See “UssdPush” section for more information.
+
+The UssdMessage verb contains the message that Restcomm will send to the USSD gateway
+
+=== Nesting 
+The *UssdMessage* can be nested inside of the USSDCollect verb.
+
+=== Examples
+For an example of how to use the USSDCollect verb see below.
+
+----
+<Response>
+    <UssdMessage>Test USSD Message</UssdMessage></UssdCollect>
+</Response>
+----
+
+== Language
+
+The *language* noun let you specify the language of the USSD message that is sent to the USSD gateway
+
+=== Language Attributes
+
+[cols=",,",options="header",]
+|======================================================================================================
+|Name |Allowed Values |Default Value
+|Language |bf, bp, en, en-gb,cf, cs, dan, fi es, fr, de, el, it, nl, no, pl, pt, ru, ar, ca, sv, tr |en
+|======================================================================================================
+
+=== Nesting
+The Language noun cannot be nested. If not specified, English language is default
+
+=== Examples
+For an example of how to use the USSD Language noun see below.
+
+----
+<Response>
+    <Language>fr</Language>
+    <UssdMessage>Test USSD Message</UssdMessage></UssdCollect>
+</Response>
+----

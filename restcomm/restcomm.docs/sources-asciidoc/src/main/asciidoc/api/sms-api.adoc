@@ -1,0 +1,209 @@
+= Restcomm API – SMS
+
+[[SMS]]
+== SMS
+
+A *SMS Message* resource represents an inbound or outbound SMS message.
+
+=== SMS Message Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/SMS/Messages/\{SMSMessageSid}*
+
+==== Resource Properties
+
+[cols=",",options="header",]
+|========================================================================================================
+|Property |Description
+|Sid |A string that uniquely identifies this SMS Message.
+|DateCreated |The date that this SMS Message was created.
+|DateUpdated |The date that this SMS Message was last updated.
+|DateSent |The date that the SMS was sent or received by RestComm.
+|AccountSid |The unique id of the Account that sent or received this SMS message.
+|From |The phone number or short code that initiated the message.
+|To |The phone number or short code that received the message.
+|Body |The text body of the SMS message. Up to 160 characters long.
+|Status |The status of this SMS message. Possible values are queued, sending, sent, failed, and received.
+|Direction |The direction of this SMS message. Possible values are incoming, outbound-api, outbound-call.
+|ApiVersion |The API version RestComm used to handle the SMS message.
+|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|========================================================================================================
+
+==== Supported Operations
+
+**HTTP GET**. Returns the representation of an SMS Message resource, including the properties above. SMS Message List Resource
+
+=== SMS Message List Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/SMS/Messages*
+
+==== Supported Operations
+
+===== HTTP GET
+
+Returns the list representation of all the Call resources for this Account, including the properties above.   
+
+===== HTTP POST
+
+Sends a new SMS Message and returns the representation of the SMS Message resource, including the properties above. Below you will find a list of required and optional parameters.
+
+====== Request Parameters
+
+Description A phone number that is enabled for SMS. The destination phone number in E.164 format. The text of the message you want to send, limited to 160 characters.
+
+Parameter
+
+From(Required)
+
+To(Required)
+
+Body(Required)
+
+== Using SMS and making DID calls
+
+You need to configure Restcomm to send SMS messages and DID phone calls to a Service Provider for provisioning. In the *restcomm.xml* file, the outbound-proxy-uri and the SMS outbound-endpoint must point to the Service Provider IP address. You may also decide to use Restcomm AMI. 
+
+== Send SMS Messages
+
+Note the encoding used *%2B13216549878* instead of the **+13216549878**  The *+* sign is encoded to to send SMS from the command line. "**From**" DID number The "**From**" number should be the DID SMS enabled number from VoIP Innovations. From the bash terminal, you can run the command below:
+
+....
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
+....
+
+== Get list of SMS Messages
+
+This will display list of message sent
+
+From the bash terminal, you can run the command below:
+
+....
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages  
+....
+
+[[example-post-response---xml-and-json]]
+== Example POST Response - XML and JSON
+
+=== XML POST Response
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:myPWD@my_IP:8080/restcomm/2012-04-24/Accounts/ACae6e0f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
+---- 
+
+
+----
+<RestcommResponse>
+  <SMSMessage>
+    <Sid>SM55ce5cf07b9649c283cbacab4dae56a9</Sid>
+    <DateCreated>Thu, 19 Nov 2015 07:21:24 -0500</DateCreated>
+    <DateUpdated>Thu, 19 Nov 2015 07:21:24 -0500</DateUpdated>
+    <DateSent/>
+    <AccountSid>ACae6e420f425248d6a26948c17a9e2acf</AccountSid>
+    <From>+1654123987</From>
+    <To>+1321654879</To>
+    <Body>This is a test from RestComm</Body>
+    <Status>sending</Status>
+    <Direction>outbound-api</Direction>
+    <Price>0</Price>
+    <PriceUnit>USD</PriceUnit>
+    <ApiVersion>2012-04-24</ApiVersion>
+    <Uri>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9</Uri>
+  </SMSMessage>
+----
+
+=== JSON POST Response
+
+----
+curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:myPWD@my_IP:8080/restcomm/2012-04-20f425248d6a26948c17a9e2acf/SMS/Messages.json -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
+----
+
+
+----
+{
+  "sid": "SM5dd70f7ea54e47f1a49749debeec3f7f",
+  "date_created": "Thu, 19 Nov 2015 07:21:35 -0500",
+  "date_updated": "Thu, 19 Nov 2015 07:21:35 -0500",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "from": "+1654123987",
+  "to": "+1321654879",
+  "body": "This is a test from RestComm",
+  "status": "sending",
+  "direction": "outbound-api",
+  "price": "0",
+  "price_unit": "USD",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM5dd70f7ea54e47f1a49749debeec3f7f.json"
+----
+
+[[example-get-response]]
+== Example GET Response
+
+=== JSON GET Response
+
+----
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:my_PWD@my_IP:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json 
+----
+
+
+----
+[
+  {
+    "sid": "SM55ce5cf07b9649c283cbacab4dae56a9",
+    "date_created": "Thu, 19 Nov 2015 07:21:24 -0500",
+    "date_updated": "Thu, 19 Nov 2015 07:21:24 -0500",
+    "date_sent": "2015-11-19T07:21:24.000-05:00",
+    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+    "from": "+19876543212",
+    "to": "+13216549878",
+    "body": "This is a test from RestComm",
+    "status": "sent",
+    "direction": "outbound-api",
+    "price": "0",
+    "price_unit": "USD",
+    "api_version": "2012-04-24",
+    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json"
+  },
+  {
+    "sid": "SM5dd70f7ea54e47f1a49749debeec3f7f",
+    "date_created": "Thu, 19 Nov 2015 07:21:35 -0500",
+    "date_updated": "Thu, 19 Nov 2015 07:21:35 -0500",
+    "date_sent": "2015-11-19T07:21:35.000-05:00",
+    "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+    "from": "+19876543212",
+    "to": "+13216549878",
+    "body": "This is a test from RestComm",
+    "status": "sent",
+    "direction": "outbound-api",
+    "price": "0",
+    "price_unit": "USD",
+    "api_version": "2012-04-24",
+    "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM5dd70f7ea54e47f1a49749debeec3f7f.json"
+  }
+]
+----
+
+[[get-response-using-sms-sid]]
+== Get Response Using SMS SID
+
+----
+curl -X GET http://ACae6e420f425248d6a26948c17a9e2acf:my_PWD@my_IP:8080/restcomm/2012-04-24/Accounts/ACae6e42f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json 
+----
+
+
+----
+{
+  "sid": "SM55ce5cf07b9649c283cbacab4dae56a9",
+  "date_created": "Thu, 19 Nov 2015 07:21:24 -0500",
+  "date_updated": "Thu, 19 Nov 2015 07:21:24 -0500",
+  "date_sent": "2015-11-19T07:21:24.000-05:00",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "from": "+19876543212",
+  "to": "+13216549878",
+  "body": "This is a test from RestComm",
+  "status": "sent",
+  "direction": "outbound-api",
+  "price": "0",
+  "price_unit": "USD",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json"
+}
+----

@@ -321,8 +321,8 @@ public class RvdProjectsMigrationHelper {
                                     did.getCost(), did.getApiVersion(), did.hasVoiceCallerIdLookup(), did.getVoiceUrl(),
                                     did.getVoiceMethod(), did.getVoiceFallbackUrl(), did.getVoiceFallbackMethod(),
                                     did.getStatusCallback(), did.getStatusCallbackMethod(), did.getVoiceApplicationSid(), null,
-                                    null, did.getSmsFallbackUrl(), did.getSmsFallbackMethod(), smsApplicationSid, did.getUri(),
-                                    did.getUssdUrl(), did.getUssdMethod(), did.getUssdFallbackUrl(),
+                                    did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(), smsApplicationSid,
+                                    did.getUri(), did.getUssdUrl(), did.getUssdMethod(), did.getUssdFallbackUrl(),
                                     did.getUssdFallbackMethod(), did.getUssdApplicationSid(), did.isVoiceCapable(),
                                     did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateSmsDid);
@@ -342,9 +342,10 @@ public class RvdProjectsMigrationHelper {
                                     did.getVoiceMethod(), did.getVoiceFallbackUrl(), did.getVoiceFallbackMethod(),
                                     did.getStatusCallback(), did.getStatusCallbackMethod(), did.getVoiceApplicationSid(),
                                     did.getSmsUrl(), did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(),
-                                    did.getSmsApplicationSid(), did.getUri(), null, null, did.getUssdFallbackUrl(),
-                                    did.getUssdFallbackMethod(), ussdApplicationSid, did.isVoiceCapable(), did.isSmsCapable(),
-                                    did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
+                                    did.getSmsApplicationSid(), did.getUri(), null, did.getUssdMethod(),
+                                    did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), ussdApplicationSid,
+                                    did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
+                                    did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateUssdDid);
                             dids.set(i, updateUssdDid);
                             amountUpdated++;
@@ -358,13 +359,14 @@ public class RvdProjectsMigrationHelper {
                             Sid voiceApplicationSid = new Sid(applicationSid);
                             IncomingPhoneNumber updateVoiceDid = new IncomingPhoneNumber(did.getSid(), did.getDateCreated(),
                                     did.getDateUpdated(), did.getFriendlyName(), did.getAccountSid(), did.getPhoneNumber(),
-                                    did.getCost(), did.getApiVersion(), did.hasVoiceCallerIdLookup(), null, null,
-                                    did.getVoiceFallbackUrl(), did.getVoiceFallbackMethod(), did.getStatusCallback(),
-                                    did.getStatusCallbackMethod(), voiceApplicationSid, did.getSmsUrl(), did.getSmsMethod(),
-                                    did.getSmsFallbackUrl(), did.getSmsFallbackMethod(), did.getSmsApplicationSid(),
-                                    did.getUri(), did.getUssdUrl(), did.getUssdMethod(), did.getUssdFallbackUrl(),
-                                    did.getUssdFallbackMethod(), did.getUssdApplicationSid(), did.isVoiceCapable(),
-                                    did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
+                                    did.getCost(), did.getApiVersion(), did.hasVoiceCallerIdLookup(), null,
+                                    did.getVoiceMethod(), did.getVoiceFallbackUrl(), did.getVoiceFallbackMethod(),
+                                    did.getStatusCallback(), did.getStatusCallbackMethod(), voiceApplicationSid,
+                                    did.getSmsUrl(), did.getSmsMethod(), did.getSmsFallbackUrl(), did.getSmsFallbackMethod(),
+                                    did.getSmsApplicationSid(), did.getUri(), did.getUssdUrl(), did.getUssdMethod(),
+                                    did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), did.getUssdApplicationSid(),
+                                    did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
+                                    did.isPureSip());
                             didsDao.updateIncomingPhoneNumber(updateVoiceDid);
                             dids.set(i, updateVoiceDid);
                             amountUpdated++;
@@ -415,7 +417,6 @@ public class RvdProjectsMigrationHelper {
                     if (hasUrlReference(client.getVoiceUrl(), currentApplication.getFriendlyName())) {
                         Sid voiceApplicationSid = new Sid(applicationSid);
                         client = client.setVoiceApplicationSid(voiceApplicationSid);
-                        client = client.setVoiceMethod(null);
                         client = client.setVoiceUrl(null);
                         clientsDao.updateClient(client);
                         clients.set(i, client);

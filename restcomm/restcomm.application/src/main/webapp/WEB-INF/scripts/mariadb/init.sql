@@ -4,7 +4,8 @@ USE restcomm;
 CREATE TABLE restcomm_instance_id ( 
 instance_id VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
-date_updated DATETIME NOT NULL
+date_updated DATETIME NOT NULL,
+host VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE restcomm_accounts (
@@ -138,7 +139,8 @@ forwarded_from VARCHAR(30),
 caller_name VARCHAR(50),
 uri MEDIUMTEXT NOT NULL,
 call_path VARCHAR(255),
-ring_duration INT
+ring_duration INT,
+instanceid VARCHAR(255)
 );
 
 CREATE TABLE restcomm_clients (
@@ -170,7 +172,8 @@ user_name VARCHAR(64) NOT NULL,
 user_agent MEDIUMTEXT,
 ttl INT NOT NULL,
 location MEDIUMTEXT NOT NULL,
-webrtc BOOLEAN NOT NULL DEFAULT FALSE
+webrtc BOOLEAN NOT NULL DEFAULT FALSE,
+instanceid VARCHAR(255)
 );
 
 CREATE TABLE restcomm_short_codes (

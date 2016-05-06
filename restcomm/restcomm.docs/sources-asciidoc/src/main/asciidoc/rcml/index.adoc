@@ -1,0 +1,46 @@
+= RCML - The Restcomm Markup Language
+
+== Overview
+RCML is a set of instructions you can use to tell Restcomm what to do when you receive an incoming call or SMS.
+
+When someone makes a call or sends an SMS to one of your Restcomm numbers#, Restcomm will look up the URL associated with that phone number and make a request to that URL. Restcomm will read RCML instructions at that URL to determine what to do: record the call#, play a message for the caller#, prompt the caller to press digits on their keypad#, etc.
+
+For example#, the following will say a short message#, and then record the caller's voice:
+
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="woman">Please leave a message after the tone.</Say>
+    <Record maxLength="20" />
+</Response>
+----
+
+RCML is similar to HTML. Only one RCML document is rendered to the caller at once#, but many documents can be linked together to build complex interactive voice applications.
+
+Calls from a Twilio number to an outside number are controlled using RCML in the same manner as incoming calls. The initial URL for the call is provided as a parameter to the Twilio REST API request you make to initiate the call.
+
+== The RCML Verbs
+
+You can use different combinations of the verbs below to create all kinds of interactive voice and messaging applications.
+
+* <<dial-rcml.adoc#dial,Dial - Add another party to the call>>
+** <<client-rcml.adoc#client,Client>>
+** <<conference-rcml.adoc#conference,Conference>>
+** <<number-rcml.adoc#number,Number>>
+* <<email-rcml.adoc#email,Email- Send an Email>>
+* <<fax-rcml.adoc#fax,Fax- Send a Fax>>
+* <<gather-rcml.adoc#gather,Gather - Collect digits the caller types on their keypad>>
+* <<hangup-rcml.adoc#hangup,Hangup - Hang up the call>>
+* <<pause-rcml.adoc#pause,Pause - Wait before executing more instructions>>
+* <<play-rcml.adoc#play,Play - Play an audio file for the caller>>
+* <<record-rcml.adoc#record,Record - Record the caller's voice>>
+* <<redirect-rcml.adoc#redirect,Redirect - Redirect call flow to a different TwiML document.>>
+* <<reject-rcml.adoc#reject,Reject - Decline an incoming call without being billed.>>
+* <<say-rcml.adoc#say,Say - Read text to the caller>>
+* <<sms-rcml.adoc#sms,SMS - Send an SMS message during a phone call>>
+* <<ussd-collect-rcml.adoc#ussd-collect,USSD Collect - Collect USSD>>
+
+== How Twilio Interacts with Your Application
+
+* <<request-rcml.adoc#,Requests>>
+* <<response-rcml.adoc#,Responses>>
