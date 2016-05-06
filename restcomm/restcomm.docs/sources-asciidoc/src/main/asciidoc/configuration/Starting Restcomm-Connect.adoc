@@ -40,12 +40,22 @@ NETWORK=''
 BROADCAST_ADDRESS=''
 ----
 
-* In order to get the details of your server you should run the [source,bash]`ifconfig` command in the terminal.
+* In order to get the details of your server you should run the following command:
+
+[source,bash]
+----
+ifconfig
+----
 You will see something like this:
 
 image::images/8.png[]
 
-* Run the command [source,bash]`netstat -r` to get the Network address of your computer:
+* In order to get the Network address of your computer run the command:
+
+[source,bash]
+----
+ netstat -r
+----
 
 image::images/10.png[]
 
@@ -85,10 +95,23 @@ This TTS API key allows to convert the text to speech without installation of sp
 
 * Go to the *$RESTCOMM_HOME/bin/restcomm/* directory.
 
-* To start Restcomm and media server run the following command: [source,bash]`./start-restcomm.sh`
+* To start Restcomm and media server run the following command:
+[source,bash]
+----
+./start-restcomm.sh
+----
 
-* To see the Restcomm startup process run [source,bash]`screen -r restcomm` (only works if you have screen installed).
-To see the Restcomm Media Server startup process run the [source,bash]`screen -r mms` command.
+* To see the Restcomm startup process run the following command (only works if you have screen installed):
+[source,bash]
+----
+screen -r restcomm
+----
+
+* To see the Restcomm Media Server startup process run the command:
+[source,bash]
+----
+screen -r mms
+----
 
 * Open your web browser and go to the url – *http://IP:8080*.
 Instead of "IP" you should put your IP.
@@ -97,8 +120,11 @@ Instead of "IP" you should put your IP.
 Then you should change the default password.
 
 * If you need to stop the Restcomm you need to go to *$RESTCOMM_HOME/bin/restcomm*
-directory and run the [source,bash]`./stop-restcomm.sh` command.
-
+directory and run
+[source,bash]
+----
+./stop-restcomm.sh
+----
 == Making Test SIP Calls using the Demo Apps
 
 * Open any SIP phone of your choice.
