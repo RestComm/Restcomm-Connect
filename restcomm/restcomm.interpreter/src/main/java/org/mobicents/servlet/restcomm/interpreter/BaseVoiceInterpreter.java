@@ -42,9 +42,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.api.EmailRequest;
-import org.mobicents.servlet.restcomm.api.EmailResponse;
-import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.asr.AsrInfo;
 import org.mobicents.servlet.restcomm.asr.AsrRequest;
 import org.mobicents.servlet.restcomm.asr.AsrResponse;
@@ -60,6 +57,9 @@ import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
+import org.mobicents.servlet.restcomm.api.EmailRequest;
+import org.mobicents.servlet.restcomm.api.EmailResponse;
+import org.mobicents.servlet.restcomm.api.Mail;
 import org.mobicents.servlet.restcomm.email.EmailService;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
@@ -109,9 +109,11 @@ import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 import org.mobicents.servlet.restcomm.util.WavUtils;
 
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -121,11 +123,9 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -452,14 +452,11 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (!ask) {
                 downloader.tell(requestCallback, null);
             } else if (ask) {
-                final Timeout timeout = new Timeout(Duration.create(5,
-                        TimeUnit.SECONDS));
-                Future<Object> future = ask(downloader, requestCallback, timeout);
+                final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                Future<Object> future = (Future<Object>) ask(downloader, requestCallback, timeout);
                 DownloaderResponse downloaderResponse = null;
                 try {
-                    downloaderResponse = (DownloaderResponse) Await.result(
-                            future, Duration.create(10, TimeUnit.SECONDS));
-
+                    downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
                 } catch (Exception e) {
                     logger.error("Exception during callback with ask pattern");
                 }
@@ -1781,9 +1778,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // If action is present redirect to the action URI.
+            String action = null;
             attribute = verb.attribute("action");
             if (attribute != null) {
-                String action = attribute.value();
+                action = attribute.value();
                 if (action != null && !action.isEmpty()) {
                     URI target = null;
                     try {
@@ -1837,10 +1835,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-
-                        // downloader.tell(request, self());
-
-                        final Timeout timeout = new Timeout(Duration.create(5,
+                        if (logger.isInfoEnabled())
+                            logger.info("About to execute Record action to: "+uri);
+                        //downloader.tell(request, self());
+ final Timeout timeout = new Timeout(Duration.create(5,
                                 TimeUnit.SECONDS));
                         Future<Object> future = ask(downloader, request,
                                 timeout);
@@ -1855,15 +1853,16 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         } catch (Exception e) {
                             logger.error("DownloaderResponse callback Exception when processing");
                         }
-
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
-                        // return;
+                        return;
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, null);
+                        if (logger.isInfoEnabled())
+                            logger.info("About to execute Record action to: "+uri);
+                        downloader.tell(request, self());
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
@@ -1872,8 +1871,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 //                    source.tell(stop, source);
                 }
             }
-            if (CallStateChanged.class.equals(klass)) {
-                source.tell(new StopInterpreter(), source);
+            if (CallStateChanged.class.equals(klass) ) {
+                if (action == null || action.isEmpty()) {
+                    source.tell(new StopInterpreter(), source);
+                }
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();
