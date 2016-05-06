@@ -1,61 +1,41 @@
 package org.mobicents.servlet.restcomm.identity;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
-import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
- * Represents authorization information for an Account API Key i.e. SID, key, roles etc.
- * @author "Tsakiridis Orestis"
+ * Represents authorization information for an Account. When a request initially arrives carrying basic HTTP auth
+ * credentials an AccountKey is created. It carries the challenged credentials and the verification result.
  *
+ * - use isVerified() to check the verification result.
+ *  -use getAccount() to check if the account in the credentials actually exists (may not be verified)
+ *
+ * @author "Tsakiridis Orestis"
  */
 public class AccountKey {
 
-    private Sid sid;
-    private String key;
-    private Set<String> roles = new HashSet<String>();
-    private Account account;
+    private String challengedSid;
+    private String challengedKey;
+    private Account account;    // Having this set does not mean it is verified. It just means that the (account) challengedSid exists.
     private boolean verified = false;
 
 
     public AccountKey(String sid, String key, AccountsDao dao) {
-        super();
+        this.challengedSid = sid; // store there for future reference, maybe we need the raw data
+        this.challengedKey = key;
         account = dao.getAccount(sid);
-        if (account != null) {
-            this.sid = account.getSid();
-            this.key = key;
-        }
         verify(dao);
     }
 
     private void verify(AccountsDao dao) {
         if ( account != null ) {
-            if ( key != null )
+            if ( challengedKey != null )
                 // Compare both the plaintext version of the token and md5'ed version of it
-                if ( key.equals(account.getAuthToken()) || DigestUtils.md5Hex(key).equals(account.getAuthToken())  ) {
+                if ( challengedKey.equals(account.getAuthToken()) || DigestUtils.md5Hex(challengedKey).equals(account.getAuthToken())  ) {
                     verified = true;
-                    String role = account.getRole();
-                    if ( ! StringUtils.isEmpty(role) )
-                        roles.add(role);
                 }
         }
-    }
-
-    public Sid getSid() {
-        return sid;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public Set<String> getRoles() {
-        return roles;
     }
 
     public Account getAccount() {
@@ -65,7 +45,5 @@ public class AccountKey {
     public boolean isVerified() {
         return verified;
     }
-
-
 
 }
