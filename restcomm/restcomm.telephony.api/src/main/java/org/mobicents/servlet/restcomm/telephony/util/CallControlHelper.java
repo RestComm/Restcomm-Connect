@@ -104,7 +104,7 @@ public class CallControlHelper {
         map.put("scheme", header.substring(0, endOfScheme).trim());
         final String[] tokens = header.substring(endOfScheme + 1).split(",");
         for (final String token : tokens) {
-            final String[] values = token.trim().split("=");
+            final String[] values = token.trim().split("=",2); //Issue #935, split only for first occurrence of "="
             map.put(values[0].toLowerCase(), values[1].replace("\"", ""));
         }
 

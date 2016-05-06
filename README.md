@@ -27,7 +27,8 @@ Read the [Online RestComm Documentation](http://docs.telestax.com/restcomm-pages
 
 Want to Contribute ? 
 ========
-[See our Contributors Guide](https://github.com/RestComm/RestComm/wiki/Contribute-to-RestComm) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/)
+[See our Contributors Guide](https://github.com/RestComm/RestComm/wiki/Contribute-to-RestComm) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 Issue Tracking and Roadmap
 ========
@@ -35,7 +36,8 @@ Issue Tracking and Roadmap
 
 Questions ?
 ========
-Please ask your question on [StackOverflow](http://stackoverflow.com/questions/tagged/restcomm) or the Google [public forum](http://groups.google.com/group/restcomm)
+Please ask your question on [StackOverflow](http://stackoverflow.com/questions/tagged/restcomm) or the Google [public forum](http://groups.google.com/group/restcomm) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 License
 ========
@@ -50,4 +52,7 @@ Continuous Integration and Delivery
 
 Acknowledgements
 ========
+Java Profiler sponsored by YourKit 
+[![YourKit The Industry Leader in .NET & Java Profiling](https://www.yourkit.com/images/yk_logo.png)](https://www.yourkit.com/)
+
 [See who has been contributing to RestComm](http://www.telestax.com/opensource/acknowledgments/)

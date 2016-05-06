@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -63,12 +64,14 @@ public class CallDetailRecordsDaoTest {
     @Test
     public void createReadUpdateDelete() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -130,12 +133,14 @@ public class CallDetailRecordsDaoTest {
     @Test
     public void testReadDeleteByAccount() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -166,12 +171,14 @@ public class CallDetailRecordsDaoTest {
 
     public void testReadByRecipient() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -202,12 +209,14 @@ public class CallDetailRecordsDaoTest {
 
     public void testReadBySender() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -238,12 +247,14 @@ public class CallDetailRecordsDaoTest {
 
     public void testReadByStatus() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -275,12 +286,14 @@ public class CallDetailRecordsDaoTest {
     @Test
     public void testReadByStartTime() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -313,12 +326,14 @@ public class CallDetailRecordsDaoTest {
     @Test
     public void testReadByEndTime() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);
@@ -351,12 +366,14 @@ public class CallDetailRecordsDaoTest {
 
     public void testReadByParentCall() {
         final Sid sid = Sid.generate(Sid.Type.CALL);
+        final String instanceId = Sid.generate(Sid.Type.INSTANCE).toString();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         final Sid parent = Sid.generate(Sid.Type.CALL);
         final Sid phone = Sid.generate(Sid.Type.PHONE_NUMBER);
         final URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
         final CallDetailRecord.Builder builder = CallDetailRecord.builder();
         builder.setSid(sid);
+        builder.setInstanceId(instanceId);
         builder.setParentCallSid(parent);
         builder.setDateCreated(DateTime.now());
         builder.setAccountSid(account);

@@ -90,17 +90,20 @@ public final class CallDetailRecordListConverter extends AbstractConverter imple
             array.add(context.serialize(cdr));
         }
 
-        result.addProperty("page", page);
-        result.addProperty("num_pages", getTotalPages());
-        result.addProperty("page_size", pageSize);
-        result.addProperty("total", total);
-        result.addProperty("start", getFirstIndex());
-        result.addProperty("end", getLastIndex(cdrList));
-        result.addProperty("uri", pathUri);
-        result.addProperty("first_page_uri", getFirstPageUri());
-        result.addProperty("previous_page_uri", getPreviousPageUri());
-        result.addProperty("next_page_uri", getNextPageUri(cdrList));
-        result.addProperty("last_page_uri", getLastPageUri());
+        if (total != null && pageSize != null && page != null) {
+            result.addProperty("page", page);
+            result.addProperty("num_pages", getTotalPages());
+            result.addProperty("page_size", pageSize);
+            result.addProperty("total", total);
+            result.addProperty("start", getFirstIndex());
+            result.addProperty("end", getLastIndex(cdrList));
+            result.addProperty("uri", pathUri);
+            result.addProperty("first_page_uri", getFirstPageUri());
+            result.addProperty("previous_page_uri", getPreviousPageUri());
+            result.addProperty("next_page_uri", getNextPageUri(cdrList));
+            result.addProperty("last_page_uri", getLastPageUri());
+        }
+
         result.add("calls", array);
 
         return result;

@@ -130,7 +130,7 @@ public class OutboudProxyCallsTest {
 
         for (int i = 0; i < 20; i++) {
 
-            JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+            JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                     adminAuthToken, from, to, rcmlUrl);
             assertNotNull(callResult);
 
@@ -147,7 +147,7 @@ public class OutboudProxyCallsTest {
 
         for (int i = 0; i < 20; i++) {
 
-            JsonObject callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+            JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                     adminAuthToken, from, to, rcmlUrl);
             assertNotNull(callResult);
 

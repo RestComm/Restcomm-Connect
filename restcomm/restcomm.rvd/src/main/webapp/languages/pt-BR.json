@@ -472,6 +472,7 @@
 	"webTriggerModalAccessTokenHelp2": "token",
 	"webTriggerModalAccessTokenHelp3": "quando fizer a chamada HTTP. Deixe em branco para permitir livre acesso.",
 	"webTriggerModalAccessTokenInput": "Token de acesso",
+	"webTriggerMissingAccessTokenWarn": "TRANSLATE: Access token is empty! Your trigger may only be accessed using HTTP basic authentication.",
 	"webTriggerModalFallbackParamLabel": "Parâmetros de retorno",
 	"webTriggerModalFallbackParamHelp1": "Você pode opcionalmente fornecer retorno",
 	"webTriggerModalFallbackParamTitle1": "Origem da chamada de saída",
