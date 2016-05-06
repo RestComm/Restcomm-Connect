@@ -27,6 +27,7 @@ import akka.event.LoggingAdapter;
 import com.telestax.servlet.MonitoringService;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
@@ -156,8 +157,13 @@ public final class UserAgentManager extends UntypedActor {
             if ("REGISTER".equalsIgnoreCase(method)) {
                 if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
-                    if (authorization != null && permitted(authorization, method)) {
-                        register(message);
+                    if (authorization != null) {
+                      if (permitted(authorization, method)) {
+                          register(message);
+                      } else {
+                          SipServletResponse response = ((SipServletRequest) message).createResponse(javax.servlet.sip.SipServletResponse.SC_FORBIDDEN); //Issue #935, Send 403 FORBIDDEN instead of issuing 407 again and again
+                          response.send();
+                      }
                     } else {
                         authenticate(message);
                     }
@@ -306,8 +312,7 @@ public final class UserAgentManager extends UntypedActor {
         final SipURI uri = (SipURI) contact.getURI();
         final String ip = request.getInitialRemoteAddr();
         final int port = request.getInitialRemotePort();
-        final String transport = uri.getTransportParam();
-
+        final String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
         //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
         final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
@@ -342,7 +347,7 @@ public final class UserAgentManager extends UntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        final Registration registration = new Registration(sid, now, now, aor, name, user, ua, ttl, address, webRTC);
+        final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
@@ -408,7 +413,7 @@ public final class UserAgentManager extends UntypedActor {
         map.put("scheme", header.substring(0, endOfScheme).trim());
         final String[] tokens = header.substring(endOfScheme + 1).split(",");
         for (final String token : tokens) {
-            final String[] values = token.trim().split("=");
+            final String[] values = token.trim().split("=",2); //Issue #935, split only for first occurrence of "="
             map.put(values[0].toLowerCase(), values[1].replace("\"", ""));
         }
         return map;

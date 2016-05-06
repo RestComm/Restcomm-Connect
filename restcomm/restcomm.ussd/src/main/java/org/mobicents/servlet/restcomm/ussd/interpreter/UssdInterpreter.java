@@ -47,6 +47,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
@@ -606,6 +607,7 @@ public class UssdInterpreter extends UntypedActor {
                     // Create a call detail record for the call.
                     final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                     builder.setSid(callInfo.sid());
+                    builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                     builder.setDateCreated(callInfo.dateCreated());
                     builder.setAccountSid(accountId);
                     builder.setTo(callInfo.to());

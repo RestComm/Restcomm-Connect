@@ -31,9 +31,11 @@ public class InstanceId {
     private Sid instanceId;
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
+    private final String host;
 
-    public InstanceId(final Sid instanceId, final DateTime dateCreated, final DateTime dateUpdated) {
+    public InstanceId(final Sid instanceId, final String host, final DateTime dateCreated, final DateTime dateUpdated) {
         this.instanceId = instanceId;
+        this.host = host;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
     }
@@ -41,6 +43,8 @@ public class InstanceId {
     public Sid getId() {
         return instanceId;
     }
+
+    public String getHost() { return host; }
 
     public DateTime getDateCreated() {
         return dateCreated;
@@ -50,7 +54,12 @@ public class InstanceId {
         return dateUpdated;
     }
 
-    public InstanceId setInstanceId(Sid instanceId) {
-        return new InstanceId(instanceId, this.dateCreated, DateTime.now());
+    public InstanceId setInstanceId(final Sid instanceId, final String host) {
+        return new InstanceId(instanceId, host, this.dateCreated, DateTime.now());
+    }
+
+    @Override
+    public String toString() {
+        return this.instanceId+"/"+this.host;
     }
 }

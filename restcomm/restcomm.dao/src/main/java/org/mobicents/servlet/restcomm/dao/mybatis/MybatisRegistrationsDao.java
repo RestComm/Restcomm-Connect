@@ -97,6 +97,37 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     }
 
     @Override
+    public Registration getRegistrationByInstanceId(String user, String instanceId) {
+        final SqlSession session = sessions.openSession();
+        try {
+            // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
+            // we get all registrations and sort them by latest updated date so that we target the device where the user last
+            // updated the registration
+
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("user_name", user);
+            map.put("instanceid", instanceId);
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistrationByInstanceId", map);
+            final List<Registration> records = new ArrayList<Registration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    records.add(toPresenceRecord(result));
+                }
+                if (records.isEmpty()) {
+                    return null;
+                } else {
+                    Collections.sort(records);
+                    return records.get(0);
+                }
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public List<Registration> getRegistrations(String user) {
         final SqlSession session = sessions.openSession();
         try {
@@ -176,6 +207,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     private Map<String, Object> toMap(final Registration registration) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", writeSid(registration.getSid()));
+        map.put("instanceid", registration.getInstanceId());
         map.put("date_created", writeDateTime(registration.getDateCreated()));
         map.put("date_updated", writeDateTime(registration.getDateUpdated()));
         map.put("date_expires", writeDateTime(registration.getDateExpires()));
@@ -191,6 +223,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
 
     private Registration toPresenceRecord(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));
+        final String instanceId = readString(map.get("instanceid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final DateTime dateExpires = readDateTime(map.get("date_expires"));
@@ -201,7 +234,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final String userAgent = readString(map.get("user_agent"));
         final Integer timeToLive = readInteger(map.get("ttl"));
         final Boolean webRTC = readBoolean(map.get("webrtc"));
-        return new Registration(sid, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
+        return new Registration(sid, instanceId, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
                 timeToLive, location, webRTC);
     }
 }
