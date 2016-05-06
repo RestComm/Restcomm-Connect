@@ -1,5 +1,7 @@
 package org.mobicents.servlet.restcomm.http;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -19,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -39,6 +42,7 @@ public class AccountsEndpointTest {
     static boolean accountCreated = false;
 
     private String adminUsername = "administrator@company.com";
+    private String adminFriendlyName = "Default Administrator Account";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String newAdminPassword = "mynewpassword";
@@ -65,7 +69,21 @@ public class AccountsEndpointTest {
         assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
 
     }
-    
+
+    @Test
+    public void testGetAccountByFriendlyName() {
+        // Try to get Account using admin friendly name and user email address
+        int code = 0;
+        try {
+            JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                    adminFriendlyName, adminAuthToken, adminUsername);
+        } catch (UniformInterfaceException e) {
+            code = e.getResponse().getStatus();
+        }
+        // Logins using friendly name are not allowed anymore
+        assertTrue(code == 401);
+    }
+
     @Test
     public void testCreateAccount() {
         RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
@@ -83,6 +101,34 @@ public class AccountsEndpointTest {
         assertTrue(createAccountResponse.get("auth_token").equals(getAccountResponse.get("auth_token")));
         String userPasswordHashed = new Md5Hash(userPassword).toString();
         assertTrue(getAccountResponse.get("auth_token").getAsString().equals(userPasswordHashed));
+    }
+
+    @Test
+    public void testCreateAdministratorAccount() {
+        if (!accountUpdated) {
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        }
+        JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, newAdminAuthToken, "administrator@company.com", "1234");
+        assertNull(createAccountResponse);
+    }
+
+    @Test
+    public void testCreateAccountTwice() {
+        if (!accountUpdated) {
+            RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                    adminUsername, newAdminPassword, adminAccountSid, null);
+        }
+        if (!accountCreated) {
+            JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                    adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+            accountCreated = true;
+            assertNotNull(createAccountResponse);
+        }
+        JsonObject createAccountResponseSecondTime = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+        assertNull(createAccountResponseSecondTime);
     }
 
     @Test

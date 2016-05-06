@@ -164,7 +164,8 @@ public final class Link extends UntypedActor {
         } else if (OpenLink.class.equals(klass)) {
             fsm.transition(message, opening);
         } else if (UpdateLink.class.equals(klass)) {
-            fsm.transition(message, modifying);
+            if (!closed.equals(state))
+                fsm.transition(message, modifying);
         } else if (CloseLink.class.equals(klass)) {
             if (!closingPrimary.equals(state))
                 fsm.transition(message, closingPrimary);

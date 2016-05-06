@@ -222,6 +222,8 @@ public final class Call extends UntypedActor {
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.ringing));
         transitions.add(new Transition(this.uninitialized, this.queued));
+        transitions.add(new Transition(this.uninitialized, this.canceled));
+        transitions.add(new Transition(this.uninitialized, this.completed));
         transitions.add(new Transition(this.queued, this.canceled));
         transitions.add(new Transition(this.queued, this.initializing));
         transitions.add(new Transition(this.ringing, this.busy));
@@ -249,6 +251,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.inProgress, this.stopping));
         transitions.add(new Transition(this.inProgress, this.joining));
         transitions.add(new Transition(this.inProgress, this.leaving));
+        transitions.add(new Transition(this.inProgress, this.failed));
         transitions.add(new Transition(this.joining, this.inProgress));
         transitions.add(new Transition(this.joining, this.stopping));
         transitions.add(new Transition(this.joining, this.failed));
@@ -321,42 +324,45 @@ public final class Call extends UntypedActor {
         // 3. If contact header address != real ip address
         // Finally, if all of the above are true, create a SIP URI using the realIP address and the SIP port
         // and store it to the sip session to be used as request uri later
-        String realIP = message.getInitialRemoteAddr();
-        Integer realPort = message.getInitialRemotePort();
-        if (realPort == null || realPort == -1)
-            realPort = 5060;
-
-        final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
-        final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
-
-        InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
-        InetAddress inetAddress = InetAddress.getByName(realIP);
-
-        int remotePort = message.getRemotePort();
-        int contactPort = ((SipURI) contactAddr.getURI()).getPort();
-        String remoteAddress = message.getRemoteAddr();
-
-        // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
-        final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-        String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
-        String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
-
         SipURI uri = null;
+        try {
+            String realIP = message.getInitialRemoteAddr();
+            Integer realPort = message.getInitialRemotePort();
+            if (realPort == null || realPort == -1)
+                realPort = 5060;
 
-        if (initialIpBeforeLB != null) {
-            if (initialPortBeforeLB == null)
-                initialPortBeforeLB = "5060";
-            logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
-                    + initialPortBeforeLB + " to the session for later use");
-            realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
-            uri = factory.createSipURI(null, realIP);
-        } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
-                && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
-            logger.info("Contact header address " + contactAddr.toString()
-                    + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
-                    + " to the session for later use");
-            realIP = realIP + ":" + realPort;
-            uri = factory.createSipURI(null, realIP);
+            final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
+            final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
+
+            InetAddress contactInetAddress = InetAddress.getByName(((SipURI) contactAddr.getURI()).getHost());
+            InetAddress inetAddress = InetAddress.getByName(realIP);
+
+            int remotePort = message.getRemotePort();
+            int contactPort = ((SipURI) contactAddr.getURI()).getPort();
+            String remoteAddress = message.getRemoteAddr();
+
+            // Issue #332: https://telestax.atlassian.net/browse/RESTCOMM-332
+            final String initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+            String initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+            String contactAddress = ((SipURI) contactAddr.getURI()).getHost();
+
+            if (initialIpBeforeLB != null) {
+                if (initialPortBeforeLB == null)
+                    initialPortBeforeLB = "5060";
+                logger.info("We are behind load balancer, storing Initial Remote Address " + initialIpBeforeLB + ":"
+                        + initialPortBeforeLB + " to the session for later use");
+                realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                uri = factory.createSipURI(null, realIP);
+            } else if (contactInetAddress.isSiteLocalAddress() && !recordRouteHeaders.hasNext()
+                    && !contactInetAddress.toString().equalsIgnoreCase(inetAddress.toString())) {
+                logger.info("Contact header address " + contactAddr.toString()
+                        + " is a private network ip address, storing Initial Remote Address " + realIP + ":" + realPort
+                        + " to the session for later use");
+                realIP = realIP + ":" + realPort;
+                uri = factory.createSipURI(null, realIP);
+            }
+        } catch (Exception e) {
+            logger.warning("Exception whule trying to get the Initial IP Address and Port");
         }
         return uri;
     }
@@ -526,6 +532,7 @@ public final class Call extends UntypedActor {
                 if (cdr == null) {
                     final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                     builder.setSid(id);
+                    builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                     builder.setDateCreated(created);
                     builder.setAccountSid(accountId);
                     builder.setTo(to.getUser());
@@ -648,10 +655,15 @@ public final class Call extends UntypedActor {
                 to = (SipURI) invite.getTo().getURI();
                 timeout = -1;
                 direction = INBOUND;
-                // Send a ringing response.
-                final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
-                ringing.addHeader("X-Call-Sid",id.toString());
-                ringing.send();
+                try {
+                    // Send a ringing response
+                    final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
+                    ringing.addHeader("X-RestComm-CallSid", id.toString());
+                    ringing.send();
+                } catch (IllegalStateException exception) {
+                    logger.debug("Exception while creating 180 response to inbound invite request");
+                    fsm.transition(message, canceled);
+                }
 
                 SipURI initialInetUri = getInitialIpAddressPort(invite);
 
@@ -878,15 +890,9 @@ public final class Call extends UntypedActor {
                         resp.addHeader("Reason", reason);
                 }
                 resp.send();
-            }
-
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid()) {
-                invite.getSession().setInvalidateWhenReady(true);
-            }
-
-            if (invite.getApplicationSession().isValid()) {
-                invite.getApplicationSession().setInvalidateWhenReady(true);
+            } else {
+                if (message instanceof CallFail)
+                    sendBye(new Hangup(((CallFail) message).getReason()));
             }
 
             // Notify the observers.
@@ -933,8 +939,16 @@ public final class Call extends UntypedActor {
             msController.tell(command, source);
         }
 
-        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException {
-            final String externalIp = sipMessage.getInitialRemoteAddr();
+        private CreateMediaSession generateRequest(SipServletMessage sipMessage) throws IOException, SdpException, ServletParseException {
+            String externalIp = null;
+            final SipURI externalSipUri = (SipURI) sipMessage.getSession().getAttribute("realInetUri");
+            if (externalSipUri != null) {
+                logger.info("ExternalSipUri stored in the sip session : "+externalSipUri.toString()+" will use host: "+externalSipUri.getHost().toString());
+                externalIp = externalSipUri.getHost().toString();
+            } else {
+                externalIp = sipMessage.getInitialRemoteAddr();
+                logger.info("ExternalSipUri stored in the session was null, will use the message InitialRemoteAddr: "+externalIp);
+            }
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
             return new CreateMediaSession("sendrecv", offer, false, webrtc);
@@ -1083,15 +1097,6 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             logger.info("Completing Call sid: "+id+" from: "+from+" to: "+to+" direction: "+direction+" current external state: "+external);
 
-            // Explicitly invalidate the application session.
-            if (invite.getSession().isValid()) {
-                invite.getSession().invalidate();
-            }
-
-            if (invite.getApplicationSession().isValid()) {
-                invite.getApplicationSession().invalidate();
-            }
-
             //In the case of canceled that reach the completed method, don't change the external state
             if (!external.equals(CallStateChanged.State.CANCELED)) {
                 // Notify the observers.
@@ -1219,8 +1224,10 @@ public final class Call extends UntypedActor {
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(ringing)) {
-            fsm.transition(message, initializing);
+        if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
+                fsm.transition(message, initializing);
+        } else {
+            fsm.transition(message, canceled);
         }
     }
 
@@ -1263,7 +1270,7 @@ public final class Call extends UntypedActor {
             if (is(initializing)) {
                 fsm.transition(message, canceling);
             } else if (is(ringing) && isInbound()) {
-                fsm.transition(message, canceled);
+                fsm.transition(message, canceling);
             }
             // XXX can receive SIP cancel any other time?
         } else if ("BYE".equalsIgnoreCase(method)) {
@@ -1529,7 +1536,7 @@ public final class Call extends UntypedActor {
                         // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
                         answer = SdpUtils.endWithNewLine(answer);
                         okay.setContent(answer, "application/sdp");
-                        okay.addHeader("X-Call-Sid",id.toString());
+                        okay.addHeader("X-RestComm-CallSid",id.toString());
                         okay.send();
                         waitForAck = true;
                     } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {

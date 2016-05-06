@@ -196,7 +196,7 @@ public class RestcommCallsTool {
         return jsonObject;
     }
 
-    public JsonObject createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
+    public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -213,9 +213,11 @@ public class RestcommCallsTool {
         // webResource = webResource.queryParams(params);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
         JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(response).getAsJsonObject();
-
-        return jsonObject;
+        if (response.startsWith("[")) {
+            return parser.parse(response).getAsJsonArray();
+        } else {
+            return parser.parse(response).getAsJsonObject();
+        }
     }
 
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,

@@ -1,11 +1,9 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
@@ -48,18 +46,6 @@ import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.mobicents.servlet.restcomm.provisioning.number.vi.IncomingPhoneNumbersEndpointTestUtils;
 import org.mobicents.servlet.restcomm.tools.MonitoringServiceTool;
 
 /**
@@ -83,8 +69,10 @@ public class ClientsDialTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    static boolean accountUpdated = false;
-    
+
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -171,7 +159,6 @@ public class ClientsDialTest {
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234", null);
         dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "dimitri", "1234", null);
         clientWithAppClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "clientWithApp", "1234", "http://127.0.0.1:8090/1111");
-        
         receiverSipStack = tool7.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5071", "127.0.0.1:5080");
     }
 
@@ -204,6 +191,7 @@ public class ClientsDialTest {
         if (georgeSipStack != null) {
             georgeSipStack.dispose();
         }
+
         if (clientWithAppPhone != null) {
             clientWithAppPhone.dispose();
         }
@@ -217,7 +205,7 @@ public class ClientsDialTest {
         wireMockRule.resetRequests();
         Thread.sleep(2000);
     }
- 
+
     @Test
     public void testRegisterClients() throws ParseException, InterruptedException {
 
@@ -842,7 +830,7 @@ public class ClientsDialTest {
         assertTrue(georgeCall.waitForDisconnect(30 * 1000));
         assertTrue(georgeCall.respondToDisconnect());
     }
-   
+
     //Non regression test for issue #600.
     @Test
     public void testClientDialToNumber() throws ParseException, InterruptedException, InvalidArgumentException {
@@ -988,14 +976,13 @@ public class ClientsDialTest {
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm_AvailablePhoneNumbers_Test.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-conference-entry.xml");
         archive.addAsWebResource("dial-fork-entry.xml");
         archive.addAsWebResource("dial-uri-entry.xml");
         archive.addAsWebResource("dial-client-entry.xml");
         archive.addAsWebResource("dial-number-entry.xml");
-        archive.addAsWebResource("hello-play.xml");
         return archive;
     }
 
