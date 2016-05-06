@@ -82,6 +82,8 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new AccountListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+        // Make sure there is an authenticated account present when this endoint is used
+        secure();
     }
 
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
