@@ -1695,7 +1695,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 records.updateCallDetailRecord(callRecord);
                 // Update the application.
-                // callback();
+//                callback();
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
@@ -1837,22 +1837,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         request = new HttpRequestDescriptor(uri, method, parameters);
                         if (logger.isInfoEnabled())
                             logger.info("About to execute Record action to: "+uri);
-                        //downloader.tell(request, self());
- final Timeout timeout = new Timeout(Duration.create(5,
-                                TimeUnit.SECONDS));
-                        Future<Object> future = ask(downloader, request,
-                                timeout);
-                        DownloaderResponse downloaderResponse = null;
-                        try {
-
-                            downloaderResponse = (DownloaderResponse) Await
-                                    .result(future, Duration.create(10,
-                                            TimeUnit.SECONDS));
-
-
-                        } catch (Exception e) {
-                            logger.error("DownloaderResponse callback Exception when processing");
-                        }
+                        downloader.tell(request, self());
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
