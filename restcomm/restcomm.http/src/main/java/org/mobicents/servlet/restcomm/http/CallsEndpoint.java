@@ -19,32 +19,16 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.*;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-
-import java.net.URI;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-//import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -55,15 +39,15 @@ import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
-import org.mobicents.servlet.restcomm.entities.RestCommResponse;
-import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.RecordingList;
+import org.mobicents.servlet.restcomm.entities.RestCommResponse;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordConverter;
 import org.mobicents.servlet.restcomm.http.converter.CallDetailRecordListConverter;
+import org.mobicents.servlet.restcomm.http.converter.RecordingConverter;
 import org.mobicents.servlet.restcomm.http.converter.RecordingListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
-import org.mobicents.servlet.restcomm.http.converter.RecordingConverter;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallManagerResponse;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
@@ -73,19 +57,38 @@ import org.mobicents.servlet.restcomm.telephony.GetCall;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
 import org.mobicents.servlet.restcomm.telephony.Hangup;
 import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.util.Timeout;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+
+//import org.joda.time.DateTime;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -186,9 +189,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         boolean localInstanceOnly = true;
         try {
             String localOnly = info.getQueryParameters().getFirst("localOnly");
-            if (localOnly!= null && localOnly.equalsIgnoreCase("false"))
+            if (localOnly != null && localOnly.equalsIgnoreCase("false"))
                 localInstanceOnly = false;
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
@@ -308,8 +312,8 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
-        final String from = data.getFirst("From");
-        final String to = data.getFirst("To");
+        final String from = data.getFirst("From").trim();
+        final String to = data.getFirst("To").trim();
         final String username = data.getFirst("Username");
         final String password = data.getFirst("Password");
         final Integer timeout = getTimeout(data);
@@ -335,61 +339,60 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             if (CallManagerResponse.class.equals(klass)) {
                 final CallManagerResponse<ActorRef> managerResponse = (CallManagerResponse<ActorRef>) object;
                 if (managerResponse.succeeded()) {
-                    final ActorRef call = managerResponse.get();
-                    future = (Future<Object>) ask(call, new GetCallInfo(), expires);
-                    object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
-                    klass = object.getClass();
-                    if (CallResponse.class.equals(klass)) {
-                        final CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) object;
-                        if (callResponse.succeeded()) {
-                            final CallInfo callInfo = callResponse.get();
-                            // Execute the call script.
-                            final String version = getApiVersion(data);
-                            final URI url = getUrl("Url", data);
-                            final String method = getMethod("Method", data);
-                            final URI fallbackUrl = getUrl("FallbackUrl", data);
-                            final String fallbackMethod = getMethod("FallbackMethod", data);
-                            final URI callback = getUrl("StatusCallback", data);
-                            final String callbackMethod = getMethod("StatusCallbackMethod", data);
-                            final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
-                                    fallbackUrl, fallbackMethod, callback, callbackMethod);
-                            callManager.tell(execute, null);
-                            // Create a call detail record for the call.
-                            //                            final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                            //                            builder.setSid(callInfo.sid());
-                            //                            builder.setDateCreated(callInfo.dateCreated());
-                            //                            builder.setAccountSid(accountId);
-                            //                            builder.setTo(to);
-                            //                            builder.setCallerName(callInfo.fromName());
-                            //                            builder.setFrom(from);
-                            //                            builder.setForwardedFrom(callInfo.forwardedFrom());
-                            //                            builder.setStatus(callInfo.state().toString());
-                            //                            final DateTime now = DateTime.now();
-                            //                            builder.setStartTime(now);
-                            //                            builder.setDirection(callInfo.direction());
-                            //                            builder.setApiVersion(version);
-                            //                            final StringBuilder buffer = new StringBuilder();
-                            //                            buffer.append("/").append(version).append("/Accounts/");
-                            //                            buffer.append(accountId.toString()).append("/Calls/");
-                            //                            buffer.append(callInfo.sid().toString());
-                            //                            final URI uri = URI.create(buffer.toString());
-                            //                            builder.setUri(uri);
-
-                            CallDetailRecord cdr = daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid());
-                            //
-                            //                            builder.setCallPath(call.path().toString());
-                            //
-                            //                            final CallDetailRecord cdr = builder.build();
-                            //                            daos.getCallDetailRecordsDao().addCallDetailRecord(cdr);
-                            if (APPLICATION_JSON_TYPE == responseType) {
-                                return ok(gson.toJson(cdr), APPLICATION_JSON).build();
-                            } else if (APPLICATION_XML_TYPE == responseType) {
-                                return ok(xstream.toXML(new RestCommResponse(cdr)), APPLICATION_XML).build();
-                            } else {
-                                return null;
+                    List<ActorRef> dialBranches;
+                    if (managerResponse.get() instanceof List) {
+                        dialBranches = (List<ActorRef>) managerResponse.get();
+                    } else {
+                        dialBranches = new CopyOnWriteArrayList<ActorRef>();
+                        dialBranches.add(managerResponse.get());
+                    }
+                    List<CallDetailRecord> cdrs = new CopyOnWriteArrayList<CallDetailRecord>();
+                    for (ActorRef call : dialBranches) {
+                        future = (Future<Object>) ask(call, new GetCallInfo(), expires);
+                        object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                        klass = object.getClass();
+                        if (CallResponse.class.equals(klass)) {
+                            final CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) object;
+                            if (callResponse.succeeded()) {
+                                final CallInfo callInfo = callResponse.get();
+                                // Execute the call script.
+                                final String version = getApiVersion(data);
+                                final URI url = getUrl("Url", data);
+                                final String method = getMethod("Method", data);
+                                final URI fallbackUrl = getUrl("FallbackUrl", data);
+                                final String fallbackMethod = getMethod("FallbackMethod", data);
+                                final URI callback = getUrl("StatusCallback", data);
+                                final String callbackMethod = getMethod("StatusCallbackMethod", data);
+                                final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
+                                        fallbackUrl, fallbackMethod, callback, callbackMethod);
+                                callManager.tell(execute, null);
+                                cdrs.add(daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid()));
                             }
                         }
                     }
+                    if (APPLICATION_XML_TYPE == responseType) {
+                        if (cdrs.size()==1) {
+                            return ok(xstream.toXML(cdrs.get(0)), APPLICATION_XML).build();
+                        } else {
+                            final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
+                            return ok(xstream.toXML(response), APPLICATION_XML).build();
+                        }
+                    } else if (APPLICATION_JSON_TYPE == responseType) {
+                        if (cdrs.size()==1) {
+                            return ok(gson.toJson(cdrs.get(0)), APPLICATION_JSON).build();
+                        } else {
+                            return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
+                        }
+                    } else {
+                        return null;
+                    }
+//                    if (APPLICATION_JSON_TYPE == responseType) {
+//                        return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
+//                    } else if (APPLICATION_XML_TYPE == responseType) {
+//                        return ok(xstream.toXML(new RestCommResponse(cdrs)), APPLICATION_XML).build();
+//                    } else {
+//                        return null;
+//                    }
                 } else {
                     return status(INTERNAL_SERVER_ERROR).entity(managerResponse.cause() + " : " + managerResponse.error()).build();
                 }
