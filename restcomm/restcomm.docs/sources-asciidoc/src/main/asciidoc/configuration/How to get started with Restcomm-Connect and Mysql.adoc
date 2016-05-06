@@ -9,15 +9,25 @@ the following tutorial will show how to get started with Restcomm and Mysql._
 
 == Requirements
 
-* Install Restcomm using our previous guides
-* Install MySQL - 5.1.38
+* Install Restcomm using our link:https://mobicents.ci.cloudbees.com/job/RestComm-Documentation/ws/connect/configuration/How%20to%20build%20Restcomm-Connect%20from%20source.html[previous guide].
+* Install link:http://dev.mysql.com/doc/refman/5.7/en/installing.html[MySQL].
 
 == Configuring the mybatis.xml file to use Mysql
 
 
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/* directory.
  Open the *mybatis.xml*. $RESTCOMM_HOME is conventional name for unzipped *Restcomm-JBoss-AS7-7.6.0.869* directory.
-* Change the [source,bash]`<environments default="production">` to [source,bash]`<environments default="mariadb">`
+* Change the
+
+[source,bash]
+----
+<environments default="production">
+----
+to
+[source,bash]
+----
+<environments default="mariadb">
+----
 * Add the MariaDB configuration environment tag as shown below.
 Make sure that you have indicated the correct MySQL username, password
 and IP of the computer where the database is located (it is 172.21.0.107 in the example).
@@ -38,14 +48,31 @@ and IP of the computer where the database is located (it is 172.21.0.107 in the 
 
 == Start Mysql and Create the Restcomm database
 
-* Start Mysql by running the command [source,bash]`sudo /etc/init.d/mysql start`
+* Start Mysql by running the command
+
+[source,bash]
+----
+sudo /etc/init.d/mysql start
+----
+
+Or use link:http://dev.mysql.com/doc/refman/5.7/en/windows-start-command-line.html[MySQL guide].
+
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb* directory. There will be the *init.sql* file and *sql* directory:
 
 image::images/13.png[]
 
 * Create the Restcomm database running the following command:
-[source,bash]`mysql -u root -p < init.sql`
-* Log into Mysql and make sure the Restcomm database was created by running the [source,bash]`show databases;` command.
+
+[source,bash]
+----
+mysql -u root -p < init.sql
+----
+* Log into Mysql and make sure the Restcomm database was created by running the command:
+
+[source,bash]
+----
+show databases;
+----
 If the process was successful you will see the following:
 
 image::images/14.png[]
@@ -68,3 +95,21 @@ Open the *restcomm.xml* file.
 * Download the latest *MySQL Java Connector* from http://mvnrepository.com/artifact/mysql/mysql-connector-java.
 * Put the jar file in
 *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/*.
+
+* Go to the $RESTCOMM_HOME/bin/restcomm/ directory.
+
+In order to check whether the setup was successful you need to do the following:
+
+* To start Restcomm and media server run the following command:
+
+[source,bash]
+----
+./start-restcomm.sh
+----
+
+* Open your web browser and go to the url – http://IP:8080. Instead of "IP" you should put your IP.
+
+* Log in with the administrator@company.com username and the RestComm password. Then you should change the default password.
+If you have changed the default password before, you should insert your own password at once.
+
+Here you can read the detailed information on link:https://mobicents.ci.cloudbees.com/job/RestComm-Documentation/ws/connect/configuration/Starting%20Restcomm-Connect.html[how to start Restcomm-Connect].
