@@ -1695,7 +1695,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 records.updateCallDetailRecord(callRecord);
                 // Update the application.
-                callback();
+//                callback();
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
