@@ -230,7 +230,12 @@ public class UssdCallManager extends UntypedActor {
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getUssdUrl()));
                 }
-                builder.setMethod(number.getUssdMethod());
+                final String ussdMethod = number.getUssdMethod();
+                if (ussdMethod == null || ussdMethod.isEmpty()) {
+                    builder.setMethod("POST");
+                } else {
+                    builder.setMethod(ussdMethod);
+                }
                 if (number.getUssdFallbackUrl() != null)
                     builder.setFallbackUrl(number.getUssdFallbackUrl());
                 builder.setFallbackMethod(number.getUssdFallbackMethod());

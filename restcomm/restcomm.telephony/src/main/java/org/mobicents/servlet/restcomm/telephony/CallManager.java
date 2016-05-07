@@ -523,7 +523,12 @@ public final class CallManager extends UntypedActor {
                 } else {
                     builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                 }
-                builder.setMethod(number.getVoiceMethod());
+                final String voiceMethod = number.getVoiceMethod();
+                if (voiceMethod == null || voiceMethod.isEmpty()) {
+                    builder.setMethod("POST");
+                } else {
+                    builder.setMethod(voiceMethod);
+                }
                 URI uri = number.getVoiceFallbackUrl();
                 if (uri != null)
                     builder.setFallbackUrl(UriUtils.resolve(uri));
@@ -566,8 +571,17 @@ public final class CallManager extends UntypedActor {
      */
     private boolean redirectToClientVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
                                              final ApplicationsDao applications, final Client client) {
-        URI clientAppVoiceUril = client.getVoiceUrl();
-        boolean isClientManaged = (clientAppVoiceUril != null && !clientAppVoiceUril.toString().isEmpty() &&  !clientAppVoiceUril.toString().equals(""));
+        Sid applicationSid = client.getVoiceApplicationSid();
+        URI clientAppVoiceUrl = null;
+        if (applicationSid != null) {
+            final Application application = applications.getApplication(applicationSid);
+            clientAppVoiceUrl = UriUtils.resolve(application.getRcmlUrl());
+        }
+        if (clientAppVoiceUrl == null) {
+            clientAppVoiceUrl = client.getVoiceUrl();
+        }
+        boolean isClientManaged =( (applicationSid != null && !applicationSid.toString().isEmpty() && !applicationSid.toString().equals("")) ||
+                (clientAppVoiceUrl != null && !clientAppVoiceUrl.toString().isEmpty() &&  !clientAppVoiceUrl.toString().equals("")));
         if (isClientManaged) {
             final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
             builder.setConfiguration(configuration);
@@ -581,13 +595,7 @@ public final class CallManager extends UntypedActor {
             final Account account = accounts.getAccount(client.getAccountSid());
             builder.setEmailAddress(account.getEmailAddress());
             final Sid sid = client.getVoiceApplicationSid();
-            if (sid != null) {
-                final Application application = applications.getApplication(sid);
-                builder.setUrl(UriUtils.resolve(application.getRcmlUrl()));
-            } else {
-                URI url = UriUtils.resolve(clientAppVoiceUril);
-                builder.setUrl(url);
-            }
+            builder.setUrl(clientAppVoiceUrl);
             builder.setMethod(client.getVoiceMethod());
             URI uri = client.getVoiceFallbackUrl();
             if (uri != null)
@@ -936,32 +944,36 @@ public final class CallManager extends UntypedActor {
         final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
 
         if (uri != null) {
-            to = sipFactory.createSipURI(request.to(), uri);
-            String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
-            outboundIntf = outboundInterface(transport);
-            final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
-                    "outboudproxy-user-at-from-header");
-            if (request.from() != null && request.from().contains("@")) {
-                // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
-                // to use it directly
-                from = (SipURI) sipFactory.createURI(request.from());
-            } else if (useLocalAddressAtFromHeader) {
-                from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
-            } else {
-                if (outboudproxyUserAtFromHeader) {
-                    // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
-                    // of the sip uri for the From header
-                    from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
-                } else {
-                    from = sipFactory.createSipURI(request.from(), uri);
-                }
-            }
-            if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
-                if (uri != null) {
-                    from = sipFactory.createSipURI(request.from(), uri);
-                } else {
+            try {
+                to = sipFactory.createSipURI(request.to(), uri);
+                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+                outboundIntf = outboundInterface(transport);
+                final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
+                        "outboudproxy-user-at-from-header");
+                if (request.from() != null && request.from().contains("@")) {
+                    // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
+                    // to use it directly
                     from = (SipURI) sipFactory.createURI(request.from());
+                } else if (useLocalAddressAtFromHeader) {
+                    from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                } else {
+                    if (outboudproxyUserAtFromHeader) {
+                        // https://telestax.atlassian.net/browse/RESTCOMM-633. Use the outbound proxy username as the userpart
+                        // of the sip uri for the From header
+                        from = (SipURI) sipFactory.createSipURI(proxyUsername, uri);
+                    } else {
+                        from = sipFactory.createSipURI(request.from(), uri);
+                    }
                 }
+                if (((SipURI) from).getUser() == null || ((SipURI) from).getUser() == "") {
+                    if (uri != null) {
+                        from = sipFactory.createSipURI(request.from(), uri);
+                    } else {
+                        from = (SipURI) sipFactory.createURI(request.from());
+                    }
+                }
+            } catch (Exception exception) {
+                sender.tell(new CallManagerResponse<ActorRef>(exception, this.createCallRequest), self());
             }
             if (from == null || to == null) {
                 //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
