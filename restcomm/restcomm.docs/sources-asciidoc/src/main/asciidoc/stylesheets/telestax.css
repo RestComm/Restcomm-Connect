@@ -188,8 +188,8 @@ p { font-family: inherit; font-weight: normal; font-size: 1em; line-height: 1.5;
 p aside { font-size: 0.875em; line-height: 1.35; font-style: italic; }
 
 /* Default header styles */
-h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6 { font-family: "Varela Round", sans-serif; font-weight: 400; font-style: normal; color: #00326b; text-rendering: optimizeLegibility; margin-top: 0.8em; margin-bottom: 0.5em; line-height: 1.0625em; }
-h1 small, h2 small, h3 small, #toctitle small, .sidebarblock > .content > .title small, h4 small, h5 small, h6 small {color: #057aff; line-height: 0; }
+h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6 { font-family: "Varela Round", sans-serif; font-weight: 400; font-style: normal; color: #f25f33; text-rendering: optimizeLegibility; margin-top: 0.8em; margin-bottom: 0.5em; line-height: 1.0625em; }
+h1 small, h2 small, h3 small, #toctitle small, .sidebarblock > .content > .title small, h4 small, h5 small, h6 small {color: #f36f47; line-height: 0; }
 
 h1 { font-size: 2.125em; }
 
@@ -829,7 +829,7 @@ img{
 }
 
 h1,h2,h3,h4,h5,h6{
-    color: #303030;
+    color: #f25f33;
 }
 
 h1{
