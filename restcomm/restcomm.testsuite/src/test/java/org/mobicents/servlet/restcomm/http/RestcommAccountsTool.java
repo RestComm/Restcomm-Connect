@@ -97,9 +97,13 @@ public class RestcommAccountsTool {
         params.add("Password", password);
         params.add("Role", "Administartor");
 
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
-        JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+        JsonObject jsonResponse = null;
+
+        try {
+            String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            JsonParser parser = new JsonParser();
+            jsonResponse = parser.parse(response).getAsJsonObject();
+        } catch (Exception e) {}
 
         return jsonResponse;
     }
