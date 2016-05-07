@@ -80,7 +80,7 @@ public class OrganizationConverter extends AbstractConverter implements JsonSeri
         if (organization.getNamespace() != null) {
             writer.startNode("Namespace");
             writer.setValue(organization.getNamespace());
-            writer.close();
+            writer.endNode();
         }
     }
 

@@ -242,9 +242,10 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
-            dao.updateOrganization(update(organization, data));
+            Organization updatedOrganization = update(organization, data);
+            dao.updateOrganization(updatedOrganization);
             if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(organization);
+                final RestCommResponse response = new RestCommResponse(updatedOrganization);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(organization), APPLICATION_JSON).build();

@@ -21,6 +21,7 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 |Status |The status of this account. Possible values are active, suspended, and closed.
 |AuthToken |The authorization token for this account. This should not be shared.
 |Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|OrganizationSid |A string that uniquely identifies the Organization that this Account belongs to.
 |=========================================================================================================================
 
 === Supported Operations
@@ -39,7 +40,10 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 |FriendlyName |A description of this account, up to 64 characters long.
 |Status |The status of this account. Possible values are active, suspended, and closed.
 |Password |A password that will be used to generate the AuthToken for the new Account resource.
+|OrganizationSid |A valid Organization identifier (SID)
 |==============================================================================================
+
+(Note: If the OrganizationSid is informed, all the sub accounts related to this Account will have their OrganizationSid attribute updated as well.)
 
 **Get information about the default account.**
 
@@ -85,6 +89,7 @@ The above commands will print an output similar to the one below:
       <SMSMessages>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages</SMSMessages>
       <Transcriptions>/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Transcriptions</Transcriptions>
     </SubresourceUris>
+    <OrganizationSid>ORec3515ebea5243b6bde0444d84b05b80</OrganizationSid>
   </Account>
 ----
 
@@ -162,6 +167,7 @@ NOTE: the **SID**, Email and the *AuthToken* (see output below) of the sub-accou
       <SMSMessages>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/SMS/Messages</SMSMessages>
       <Transcriptions>/restcomm/2012-04-24/Accounts/AC3b8f0dd2e5026abde018446cbb3b185d/Transcriptions</Transcriptions>
     </SubresourceUris>
+    <OrganizationSid>ORec3515ebea5243b6bde0444d84b05b80</OrganizationSid>
   </Account>
 ----
 
