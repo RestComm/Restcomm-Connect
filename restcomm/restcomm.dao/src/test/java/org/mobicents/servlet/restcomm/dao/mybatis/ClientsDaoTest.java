@@ -99,6 +99,7 @@ public final class ClientsDaoTest {
         assertTrue(result.getVoiceFallbackMethod().equals(client.getVoiceFallbackMethod()));
         assertTrue(result.getVoiceApplicationSid().equals(client.getVoiceApplicationSid()));
         assertTrue(result.getUri().equals(client.getUri()));
+        assertNull(result.getLatestAppearance());
         // Update the client.
         application = Sid.generate(Sid.Type.APPLICATION);
         url = URI.create("http://127.0.0.1:8080/restcomm/demos/world-hello.xml");

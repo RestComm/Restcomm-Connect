@@ -59,6 +59,7 @@ import org.mobicents.servlet.restcomm.interpreter.StartInterpreter;
 import org.mobicents.servlet.restcomm.telephony.TextMessage;
 import org.mobicents.servlet.restcomm.telephony.util.B2BUAHelper;
 import org.mobicents.servlet.restcomm.telephony.util.CallControlHelper;
+import org.mobicents.servlet.restcomm.telephony.util.PresenceControlHelper;
 import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
@@ -176,16 +177,17 @@ public final class SmsService extends UntypedActor {
                     // then we can end further processing of this request and send response to sender
                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
                             + toClient.getLogin());
-                    monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
+                    monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request
+                            .getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
+                    // Update presence info
+                    PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
                     return;
                 }
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
                 logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
-
                 final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
                 trying.send();
-
                 ActorRef session = session();
                 // Create an SMS detail record.
                 final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
@@ -216,6 +218,8 @@ public final class SmsService extends UntypedActor {
                 final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()),request, null);
                 monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
                 session.tell(sms, self());
+                // Update presence info
+                PresenceControlHelper.updateClientPresence(client.getLogin(), storage.getClientsDao());
             }
         } else {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);

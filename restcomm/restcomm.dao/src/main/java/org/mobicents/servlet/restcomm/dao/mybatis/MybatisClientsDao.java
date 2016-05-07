@@ -102,6 +102,11 @@ public final class MybatisClientsDao implements ClientsDao {
     }
 
     @Override
+    public Client getClientPresence(final Sid sid){
+        return cleanPresenceAuxiliarAttributes(getClient(namespace + "getClientPresence", sid.toString()));
+    }
+
+    @Override
     public List<Client> getAllClients() {
         final SqlSession session = sessions.openSession();
         try {
@@ -149,6 +154,17 @@ public final class MybatisClientsDao implements ClientsDao {
         }
     }
 
+    @Override
+    public void updateClientPresence(final Client client){
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateClientPresence", toMap(client));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
     private Client toClient(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
@@ -158,15 +174,16 @@ public final class MybatisClientsDao implements ClientsDao {
         final String friendlyName = readString(map.get("friendly_name"));
         final String login = readString(map.get("login"));
         final String password = readString(map.get("password"));
-        final int status = readInteger(map.get("status"));
+        final Integer status = readInteger(map.get("status"));
         final URI voiceUrl = readUri(map.get("voice_url"));
         final String voiceMethod = readString(map.get("voice_method"));
         final URI voiceFallbackUrl = readUri(map.get("voice_fallback_url"));
         final String voiceFallbackMethod = readString(map.get("voice_fallback_method"));
         final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
         final URI uri = readUri(map.get("uri"));
+        final DateTime latestAppearance = readDateTime(map.get("latest_appearance"));
         return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, latestAppearance);
     }
 
     private Map<String, Object> toMap(final Client client) {
@@ -186,6 +203,27 @@ public final class MybatisClientsDao implements ClientsDao {
         map.put("voice_fallback_method", client.getVoiceFallbackMethod());
         map.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
         map.put("uri", writeUri(client.getUri()));
+        map.put("latest_appearance", writeDateTime(client.getLatestAppearance()));
         return map;
+    }
+
+    /**
+     * Evaluates informed {@link Client} object to deal properly with the
+     * difference between a non existent {@link Client} and a {@link Client}
+     * with <b>null</b> presence attribute.
+     * This method was originally created to support the persistence layer,
+     * where the result from a single column/line select may be considered as <b>null</b>,
+     * when actually only the column value is <b>null</b>.
+     * For more info, see MyBatis setting <b>callSettersOnNulls</b>.
+     * @param client
+     * @return The instance of {@link Client} with the presence attribute if the client was found,
+     * and <b>null</b> if there is no such client on database.
+     */
+    private Client cleanPresenceAuxiliarAttributes(Client client){
+        if (client != null) {
+            return new Client(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                    client.getLatestAppearance());
+        }
+        return null;
     }
 }

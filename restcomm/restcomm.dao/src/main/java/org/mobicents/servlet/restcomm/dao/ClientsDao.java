@@ -36,6 +36,8 @@ public interface ClientsDao {
 
     List<Client> getClients(Sid accountSid);
 
+    Client getClientPresence(Sid sid);
+
     List<Client> getAllClients();
 
     void removeClient(Sid sid);
@@ -43,4 +45,7 @@ public interface ClientsDao {
     void removeClients(Sid accountSid);
 
     void updateClient(Client client);
+
+    void updateClientPresence(Client client);
+
 }
