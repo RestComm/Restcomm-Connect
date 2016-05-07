@@ -79,12 +79,10 @@ public class ClientsDialTest {
     private static SipStackTool tool4;
     private static SipStackTool tool5;
     private static SipStackTool tool6;
-    private static SipStackTool tool7;
 
     private String pstnNumber = "+151261006100";
 
     // Maria is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
-    private SipStack receiverSipStack;
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
     private String mariaContact = "sip:maria@127.0.0.1:5092";
@@ -118,11 +116,6 @@ public class ClientsDialTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    private String adminUsername = "administrator@company.com";
-    private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/";
-    
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -132,7 +125,6 @@ public class ClientsDialTest {
         tool4 = new SipStackTool("ClientsDialTest4");
         tool5 = new SipStackTool("ClientsDialTest5");
         tool6 = new SipStackTool("ClientsDialTest6");
-        tool7 = new SipStackTool("ClientsDialTest7");
     }
 
     @Before
@@ -159,7 +151,6 @@ public class ClientsDialTest {
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234", null);
         dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "dimitri", "1234", null);
         clientWithAppClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "clientWithApp", "1234", "http://127.0.0.1:8090/1111");
-        receiverSipStack = tool7.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5071", "127.0.0.1:5080");
     }
 
     @After
@@ -197,9 +188,6 @@ public class ClientsDialTest {
         }
         if (clientWithAppSipStack != null) {
             clientWithAppSipStack.dispose();
-        }
-        if (receiverSipStack != null) {
-            receiverSipStack.dispose();
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
@@ -831,140 +819,6 @@ public class ClientsDialTest {
         assertTrue(georgeCall.respondToDisconnect());
     }
 
-    //Non regression test for issue #600.
-    @Test
-    public void testClientDialToNumber() throws ParseException, InterruptedException, InvalidArgumentException {
-        
-        stubFor(post(urlPathEqualTo("/test"))
-                .withRequestBody(containing("queryDID"))
-                .withRequestBody(containing("23456789"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-
-        stubFor(post(urlPathEqualTo("/test"))
-                .withRequestBody(containing("assignDID"))
-                .withRequestBody(containing("23456789"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        
-        stubFor(post(urlPathEqualTo("/test"))
-                .withRequestBody(containing("queryDID"))
-                .withRequestBody(containing("7654321"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-
-        stubFor(post(urlPathEqualTo("/test"))
-                .withRequestBody(containing("assignDID"))
-                .withRequestBody(containing("7654321"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-
-        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData.add("PhoneNumber", "+123456789");
-        formData.add("VoiceUrl", "/restcomm/demos/hello-play.xml");
-        formData.add("FriendlyName", "My Company Line");
-        formData.add("VoiceMethod", "POST");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).post(ClientResponse.class, formData);
-        int status = clientResponse.getStatus();
-        
-        MultivaluedMap<String, String> formData2 = new MultivaluedMapImpl();
-        formData2.add("PhoneNumber", "987654321");
-        formData2.add("VoiceUrl", "/restcomm/demos/hello-play.xml");
-        formData2.add("FriendlyName", "My Company Line");
-        formData2.add("VoiceMethod", "POST");
-        ClientResponse clientResponse2 = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).post(ClientResponse.class, formData2);
-        int status2 = clientResponse2.getStatus();
-
-        String testNumber1 = "123456789";
-        String testNumber2 = "+987654321";
-        
-        SipPhone receiverSipPhone1 = receiverSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+testNumber1+"@127.0.0.1:5071");
-        SipPhone receiverSipPhone2 = receiverSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+testNumber2+"@127.0.0.1:5071");
-        
-        assertNotNull(mariaRestcommClientSid);
-        
-        // Register Maria Restcomm client 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 14400, 3600));
-        Thread.sleep(3000);
-        Credential c = new Credential("127.0.0.1", "maria", "1234");
-        mariaPhone.addUpdateCredential(c);
-        Thread.sleep(1000);
-
-        //Initiate first call
-        SipCall mariaCall = mariaPhone.createSipCall();
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:" + testNumber1 + "@127.0.0.1:5071", null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(mariaCall);
-        assertTrue(mariaCall.waitForAuthorisation(3000));
-
-        // Prepare first client to receive call
-        SipCall testCall1 = receiverSipPhone1.createSipCall();
-        testCall1.listenForIncomingCall();
-        testCall1.waitForIncomingCall(5 * 1000);
-        testCall1.sendIncomingCallResponse(Response.RINGING, "RINGING-Test1", 3600);
-
-        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
-        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
-
-        if (responseMaria == Response.TRYING) {
-            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(mariaCall.sendInviteOkAck());
-
-        Thread.sleep(3000);
-        receiverSipPhone1.dispose();
-        assertTrue(mariaCall.disconnect());
-       
-        Thread.sleep(3000);
-
-        //Initiate second call
-        mariaCall.initiateOutgoingCall(mariaContact, "sip:" + testNumber2 + "@127.0.0.1:5071", null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(mariaCall);
-        assertTrue(mariaCall.waitForAuthorisation(3000));
-        
-        // Prepare second client to receive call
-        SipCall testCall2 = receiverSipPhone2.createSipCall();
-        testCall2.listenForIncomingCall();
-        testCall2.waitForIncomingCall(5 * 1000);
-        testCall2.sendIncomingCallResponse(Response.RINGING, "RINGING-Test2", 3600);
-
-        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
-        int responseMaria2 = mariaCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseMaria2 == Response.TRYING || responseMaria2 == Response.RINGING);
-
-        if (responseMaria2 == Response.TRYING) {
-            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(mariaCall.sendInviteOkAck());
-
-        Thread.sleep(3000);
-        receiverSipPhone2.dispose();
-        assertTrue(mariaCall.disconnect());
-        
- }
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");

@@ -309,7 +309,6 @@ public final class CallManager extends UntypedActor {
         // registered
 
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
-        
         final String ruri = ((SipURI) request.getRequestURI()).getHost();
         final String toHost = ((SipURI) request.getTo().getURI()).getHost();
         final String toHostIpAddress = InetAddress.getByName(toHost).getHostAddress();
@@ -497,28 +496,21 @@ public final class CallManager extends UntypedActor {
         try {
             // Try to find an application defined for the phone number.
             final IncomingPhoneNumbersDao numbers = storage.getIncomingPhoneNumbersDao();
-            if(phone.charAt(0)== '+'){
-                //check if incomming number is formated (+1xxxxxx)
-                number = numbers.getIncomingPhoneNumber(formatedPhone);
-                if(number == null){ 
-                  number = numbers.getIncomingPhoneNumber(phone);
+            number = numbers.getIncomingPhoneNumber(formatedPhone);
+            if (number == null) {
+                number = numbers.getIncomingPhoneNumber(phone);
+            }
+            if(number == null){
+                if (phone.startsWith("+")) {
+                    //remove the (+) and check if exists
+                    phone= phone.replaceFirst("\\+","");
+                    number = numbers.getIncomingPhoneNumber(phone);
+                } else {
+                    //Add "+" add check if number exists
+                    phone = "+".concat(phone);
+                    number = numbers.getIncomingPhoneNumber(phone);
                 }
-                if(number == null){
-                  //remove the (+) and check if exists
-                  phone=phone.substring(1, phone.length());
-                  number = numbers.getIncomingPhoneNumber(phone);
-                }
-            } else { //check if incoming number is (1xxxxxx)
-                number = numbers.getIncomingPhoneNumber(formatedPhone);
-                if(number == null){ 
-                  number = numbers.getIncomingPhoneNumber(phone);
-                }
-                if(number == null){
-                  //add the (+) and check if exists
-                  phone = "+" + phone.substring(0, phone.length());
-                  number = numbers.getIncomingPhoneNumber(phone);
-                }
-            } 
+            }
             if (number == null) {
                 // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
                 number = numbers.getIncomingPhoneNumber("*");
