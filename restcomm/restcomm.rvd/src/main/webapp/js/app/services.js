@@ -1,9 +1,9 @@
 angular.module('Rvd')
 .service('notifications', ['$rootScope', '$timeout', function($rootScope, $timeout) {
 	var notifications = {data:[]};
-	
+
 	$rootScope.notifications = notifications;
-	
+
 	notifications.put = function (notif) {
 		notifications.data.push(notif);
 
@@ -18,7 +18,7 @@ angular.module('Rvd')
             }, timeout);
 		}
 	}
-	
+
 	notifications.remove = function (removedIndex) {
 		notifications.data.splice(removedIndex, 1);
 	}
@@ -26,32 +26,32 @@ angular.module('Rvd')
 	notifications.clear = function () {
 	    notifications.data = [];
 	}
-	
+
 	return notifications;
 }]);
 
 /*
 angular.module('Rvd').service('projectModules', [function () {
 	var serviceInstance = {moduleData: []};
-	
+
 	serviceInstance.addModule = function (module) {
 		serviceInstance.moduleData.push({name:module.name, label:module.label});
 	}
-	
+
 	serviceInstance.removeModule = function (module) {
 		serviceInstance.moduleData.splice(serviceInstance.moduleData.indexOf(module),1);
 	}
-	
+
 	serviceInstance.getModuleSummary = function () {
 		return serviceInstance.moduleData;
 	}
-	
+
 	serviceInstance.log = function () {
 		for (var i = 0; i < serviceInstance.moduleData.length; i++) {
 			console.log(serviceInstance.moduleData[i]);
 		}
 	}
-	
+
 	return serviceInstance;
 }]);
 */
@@ -60,7 +60,7 @@ angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', '$lo
 	//console.log("Creating authentication service");
 	var serviceInstance = {};
 	var authInfo = {};
-	
+
 	function refresh() {
 		authInfo.rvdticket = undefined;
 		authInfo.username = undefined;
@@ -69,8 +69,8 @@ angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', '$lo
 			authInfo.rvdticket = matches[2];
 			authInfo.username = matches[1];
 		}
-	}	
-	
+	}
+
 	function doLogin(username, password) {
 		var deferred = $q.defer();
 		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
@@ -86,7 +86,7 @@ angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', '$lo
 		return deferred.promise;
 	}
 	serviceInstance.doLogin = doLogin;
-	
+
 	function doLogout() {
 		var deferred = $q.defer();
 		Idle.unwatch(); // stop checking for idleness
@@ -100,30 +100,30 @@ angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', '$lo
 			console.log("error logging out");
 			deferred.reject(data);
 			$location.path("/login");
-		});		
+		});
 		return deferred.promise;
 	}
 	serviceInstance.doLogout = doLogout;
-	
+
 	serviceInstance.getAuthInfo = function () {
 		return authInfo;
 	}
-	
+
 	serviceInstance.clearTicket = function () {
 		$cookies.remove("rvdticket");
 		authInfo.rvdticket = undefined;
 		authInfo.username = undefined;
 	}
-	
+
 	serviceInstance.looksAuthenticated = function () {
 		refresh();
 		if ( !authInfo.rvdticket )
 			return false;
 		return true;
 	}
-	
-	
-	
+
+
+
 	serviceInstance.authResolver = function() {
 		var deferred = $q.defer();
 		if ( !this.looksAuthenticated() ) {
@@ -133,28 +133,28 @@ angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', '$lo
 		}
 		return deferred.promise;
 	}
-	
+
 	return serviceInstance;
-	
-	
+
+
 }]);
 
 angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', '$resource', function ($http,$q,$modal,$resource) {
 	//console.log("Creating projectSettigsService");
 	var service = {};
 	var cachedProjectSettings = {};
-	
+
 	// returns project settings from cache
 	service.getProjectSettings = function () {
 		return cachedProjectSettings;
 	}
-	
+
 	// refreshes cachedProjectSettings asynchronously
 	service.refresh = function (applicationSid) {
 		var resource = $resource('services/projects/:applicationSid/settings');
 		cachedProjectSettings = resource.get({applicationSid:applicationSid});
 	}
-	
+
 	service.retrieve = function (applicationSid) {
 		var deferred = $q.defer();
 		$http({method:'GET', url:'services/projects/'+applicationSid+'/settings'})
@@ -172,7 +172,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 		});
 		return deferred.promise;
 	}
-	
+
 	service.save = function (applicationSid, projectSettings) {
 		var deferred = $q.defer();
 		$http({method:'POST',url:'services/projects/'+applicationSid+'/settings',data:projectSettings})
@@ -180,17 +180,17 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 		.error(function (data,status) {deferred.reject('ERROR_SAVING_PROJECT_SETTINGS')});
 		return deferred.promise;
 	}
-	
+
 	function projectSettingsModelCtrl ($scope, projectSettings, projectSettingsService, applicationSid, projectName, $modalInstance, notifications) {
 		//console.log("in projectSettingsModelCtrl");
 		$scope.projectSettings = projectSettings;
 		$scope.projectName = projectName;
 		$scope.applicationSid = applicationSid;
-		
+
 		$scope.save = function (applicationSid, data) {
 			//console.log("saving projectSettings for " + name);
 			service.save(applicationSid, data).then(
-				function () {$modalInstance.close()}, 
+				function () {$modalInstance.close()},
 				function () {notifications.put("Error saving project settings")}
 			);
 		}
@@ -204,7 +204,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 			}
 		}
 	}
-	
+
 	service.showModal = function(applicationSid, projectName) {
 		var modalInstance = $modal.open({
 			  templateUrl: 'templates/projectSettingsModal.html',
@@ -233,9 +233,9 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 			modalInstance.result.then(function (projectSettings) {
 				service.refresh(applicationSid);
 				console.log(projectSettings);
-			}, function () {});	
+			}, function () {});
 	}
-	
+
 	return service;
 }]);
 
@@ -255,7 +255,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		});
 		return deferred.promise;
 	}
-	
+
 	service.save = function (applicationSid, ccInfo) {
 		var deferred = $q.defer();
 		$http({method:'POST',url:'services/projects/'+applicationSid+'/cc',data:ccInfo})
@@ -263,15 +263,15 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		.error(function (data,status) {deferred.reject('ERROR_SAVING_PROJECT_CC')});
 		return deferred.promise;
 	}
-	
+
 	function webTriggerModalCtrl ($scope, ccInfo, applicationSid, rvdSettings, $modalInstance, notifications, $location) {
 		console.log("in webTriggerModalCtrl");
 		console.log(rvdSettings);
-				
+
 		$scope.save = function (applicationSid, data) {
 			//console.log("saving ccInfo for " + name);
 			service.save(applicationSid, data).then(
-				function () {$modalInstance.close()}, 
+				function () {$modalInstance.close()},
 				function () {notifications.put("Error saving project ccInfo")}
 			);
 		}
@@ -282,7 +282,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		$scope.enableWebTrigger = function () {
 			if ($scope.ccInfo == null)
 				$scope.ccInfo = createCcInfo();
-		}	
+		}
 		$scope.getWebTriggerUrl = function () {
 			return $location.protocol() + "://" + $location.host() + ":" +  $location.port() + "/restcomm-rvd/services/apps/" +  applicationSid + '/start<span class="text-muted">?from=12345&amp;to=+1231231231&amp;token=mysecret</span>';
 		};
@@ -292,7 +292,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 		$scope.getRvdPort = function() {
 			return $location.port();
 		}
-			
+
 		function createCcInfo() {
 			return {lanes:[{startPoint:{to:"",from:""}}]};
 		}
@@ -303,7 +303,7 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 				$scope.disableWebTrigger();
 		}
 		$scope.setWebTriggerStatus = setWebTriggerStatus;
-		
+
 		if (ccInfo == null) {
 			ccInfo = {};
 			$scope.webTriggerEnabled = false;
@@ -311,11 +311,11 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 			$scope.webTriggerEnabled = true;
 		$scope.ccInfo = ccInfo;
 		setWebTriggerStatus($scope.webTriggerEnabled);
-			
+
 		$scope.applicationSid = applicationSid;
 		$scope.rvdSettings = rvdSettings;
 	}
-	
+
 	service.showModal = function(applicationSid) {
 		var modalInstance = $modal.open({
 			  templateUrl: 'templates/webTriggerModal.html',
@@ -345,9 +345,9 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 
 			modalInstance.result.then(function (ccInfo) {
 				console.log(ccInfo);
-			}, function () {});	
+			}, function () {});
 	}
-	
+
 	return service;
 }]);
 
@@ -378,22 +378,22 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 			//notifications.put({type:'danger',message:'Cannot reset '+$routeParams.projectName+' log'});
 			deferred.reject();
 		});
-		return deferred.promise;		
+		return deferred.promise;
 	}
-	
+
 	return service;
-}]); 
+}]);
 
 angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q) {
 	var service = {data:{}};
 	var defaultSettings = {appStoreDomain:"apps.restcomm.com"};
 	var effectiveSettings = {};
-	
+
 	function updateEffectiveSettings (retrievedSettings) {
 		angular.copy(defaultSettings,effectiveSettings);
-		angular.extend(effectiveSettings,retrievedSettings);		
+		angular.extend(effectiveSettings,retrievedSettings);
 	}
-	
+
 	service.saveSettings = function (settings) {
 		var deferred = $q.defer();
 		$http.post("services/settings", settings, {headers: {'Content-Type': 'application/data'}}).success( function () {
@@ -405,7 +405,7 @@ angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q
 		});
 		return deferred.promise;
 	}
-	
+
 	/* retrieves the settings from the server and updates stores them in an internal service object */
 	service.refresh = function () {
 		var deferred = $q.defer();
@@ -424,16 +424,16 @@ angular.module('Rvd').service('rvdSettings', ['$http', '$q', function ($http, $q
 				deferred.reject();
 			}
 		});
-		return deferred.promise;		
+		return deferred.promise;
 	}
-	
+
 	service.getEffectiveSettings = function () {
 		return effectiveSettings;
 	}
 	service.getDefaultSettings = function () {
 		return defaultSettings;
 	}
-	
+
 	return service;
 }]);
 
@@ -442,22 +442,22 @@ angular.module('Rvd').service('variableRegistry', [function () {
 		lastVariableId: 0,
 		variables: []
 	};
-	
+
 	service.newId = function () {
 		service.lastVariableId ++;
 		return service.lastVariableId;
 	}
-	
+
 	service.addVariable = function (varInfo) {
 		//console.log('adding variable' + varInfo.id)
 		service.variables.push(varInfo);
 	}
-	
+
 	service.removeVariable = function (varInfo) {
 		//console.log('removing variable' + varInfo.id);
 		service.variables.splice(service.variables.indexOf(varInfo), 1);
 	}
-	
+
 	function registerVariable(name) {
 		var newid = service.newId();
 		service.addVariable({id:newid, name:name});
@@ -468,8 +468,8 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	}
 	service.listAll = function () {
 		return service.variables;
-	}	
-	
+	}
+
 	registerVariable("core_To");
 	registerVariable("core_From");
 	registerVariable("core_CallSid");
@@ -478,6 +478,7 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	registerVariable("core_ApiVersion");
 	registerVariable("core_Direction");
 	registerVariable("core_CallerName");
+    registerVariable("core_CallTimestamp");
 	// after collect, record, ussdcollect
 	registerVariable("core_Digits");
 	// after dial
@@ -499,8 +500,8 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	registerVariable("core_FaxStatus");
 	// SMS project
 	registerVariable("core_Body");
-	
-	
+
+
 	return service;
 }]);
 
@@ -525,7 +526,7 @@ angular.module('Rvd').service('communications', [function () {
 			angular.forEach(nodeRemovedHandlers, function (handler) {
 				handler(data);
 			});
-		}		
+		}
 	}
 }]);
 
@@ -534,21 +535,21 @@ angular.module('Rvd').service('editedNodes', ['communications', function (commun
 		nodes: [],
 		activeNodeIndex : -1 // no node is active (visible)
 	}
-	
+
 	// makes a node edited. The node should already exist in the registry (this is not verified)
 	function addEditedNode(nodeName) {
 		// maybe check if the node exists
 		if ( getNodeIndex(nodeName) == -1 ) {
 			service.nodes.push({name:nodeName});
-		} 
+		}
 	}
-	
+
 	// a new node has been added to the registry
 	function onNewNodeHandler(nodeName) {
 		console.log("editedNodes: new node created: " + nodeName );
 		addEditedNode(nodeName);
 	}
-	
+
 	// Finds the node's index by name. Returns -1 if not found
 	function getNodeIndex(nodeName) {
 		for (var i=0; i<service.nodes.length; i++) {
@@ -559,25 +560,25 @@ angular.module('Rvd').service('editedNodes', ['communications', function (commun
 		}
 		return -1;
 	}
-	
+
 	function setActiveNode(nodeName) {
 		service.activeNodeIndex = getNodeIndex(nodeName);
 	}
-	
+
 	function isNodeActive(nodeName) {
 		var i = getNodeIndex(nodeName);
 		if ( i != -1 && i == service.activeNodeIndex )
 			return true;
 		return false;
 	}
-	
+
 	function getActiveNode(nodeName) {
 		if ( service.activeNodeIndex != -1 )
 			return service.nodes[service.activeNodeIndex].name;
 		// else return undefined
 	}
-	
-	
+
+
 	// triggered when a node will be removed form the registry. We remove this editedNode and update actieNodeIndex accordingly
 	function onNodeRemovedHandler(nodeName) {
 		// if this is the active node, activate the next one
@@ -585,7 +586,7 @@ angular.module('Rvd').service('editedNodes', ['communications', function (commun
 
 		if ( i != -1 ) {
 			service.nodes.splice(i,1);
-			
+
 			if ( i < service.activeNodeIndex )
 				service.activeNodeIndex --;
 			if (i >= service.nodes.length)
@@ -594,21 +595,21 @@ angular.module('Rvd').service('editedNodes', ['communications', function (commun
 			console.log("Error removing module " + nodeName +". It does not exist");
 
 	}
-	
+
 	function getEditedNodes() {
 		return service.nodes;
 	}
-	
+
 	function clear() {
 		service.nodes = [];
 		service.activeNodeIndex = -1;
 	}
-		
-	
+
+
 	// event handlers
 	communications.subscribeNewNodeEvent(onNewNodeHandler);
 	communications.subscribeNodeRemovedEvent(onNodeRemovedHandler);
-	
+
 	// public interface
 	service.setActiveNode = setActiveNode;
 	service.getActiveNode = getActiveNode;
@@ -617,7 +618,7 @@ angular.module('Rvd').service('editedNodes', ['communications', function (commun
 	service.isNodeActive = isNodeActive;
 	service.clear = clear;
 	service.removeEditedNode = onNodeRemovedHandler;
-	
+
 	return service;
 }]);
 
@@ -628,12 +629,12 @@ angular.module('Rvd').service('nodeRegistry', ['communications', function (commu
 		nodes: [],
 		nodesByName : {}
 	};
-	
+
 	function newName() {
 		var id = ++service.lastNodeId;
 		return "module" + id;
 	}
-	
+
 	// Pushes a new node in the registry If it doesn't have an id it assigns one to it
 	function addNode(node) {
 		if (node.name) {
@@ -644,11 +645,11 @@ angular.module('Rvd').service('nodeRegistry', ['communications', function (commu
 			// else ...
 		} else {
 			var name = newName();
-			node.setName(name);	
+			node.setName(name);
 		}
 		service.nodes.push(node);
 		service.nodesByName[node.name] = node;
-		
+
 		//communications.publishNewNodeEvent(node.name);
 	}
 	function removeNode(nodeName) {
@@ -685,7 +686,7 @@ angular.module('Rvd').service('nodeRegistry', ['communications', function (commu
 		service.nodes = [];
 		service.nodesByName = {};
 	}
-	
+
 	// public interface
 	service.addNode = addNode;
 	service.removeNode = removeNode;
@@ -693,7 +694,7 @@ angular.module('Rvd').service('nodeRegistry', ['communications', function (commu
 	service.getNodes = getNodes;
 	service.reset = reset;
 	service.clear = clear;
-	
+
 	return service;
 }]);
 
@@ -701,12 +702,12 @@ angular.module('Rvd').factory('stepService', [function() {
 	var stepService = {
 		serviceName: 'stepService',
 		lastStepId: 0,
-			 
+
 		newStepName: function () {
 			return 'step' + (++this.lastStepId);
-		}		 
+		}
 	};
-	
+
 	return stepService;
 }]);
 
