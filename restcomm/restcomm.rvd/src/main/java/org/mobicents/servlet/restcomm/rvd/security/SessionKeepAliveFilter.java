@@ -33,7 +33,7 @@ public class SessionKeepAliveFilter implements ResourceFilter, ContainerResponse
         MultivaluedMap<String, String> cookiesMap = request.getCookieNameValueMap();
         List<String> cookies = cookiesMap.get("Cookie");
         List<String> ticketCookies = cookiesMap.get(RvdConfiguration.TICKET_COOKIE_NAME);
-        if ( ticketCookies != null  &&  ticketCookies.size() > 0 ) {
+        if ( ticketCookies != null  &&  !ticketCookies.isEmpty() ) {
             // If there is a valid ticket cookie in the request, extend its expiration time. Invalid ticket cookes are removed from the request by the Authentication filter which should have already run
             String ticketRaw = ticketCookies.get(0);
             NewCookie newCookie = SecurityUtils.createTicketCookieRaw(ticketRaw);

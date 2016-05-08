@@ -212,7 +212,7 @@ public class UpgradeService {
             logger.info("" + failedCount + " RVD projects failed upgrade");
         if ( upgradedCount > 0 )
             logger.info("" + upgradedCount + " RVD projects upgraded");
-        if ( projectNames.size() > 0 && failedCount == 0)
+        if ( !projectNames.isEmpty() && failedCount == 0)
             logger.info("--- All RVD projects are up to date");
         //if ( upgradedCount  0 && projectNames.size() > 0 )
           //  logger.info("All RVD projects are up-to-date" );

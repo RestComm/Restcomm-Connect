@@ -285,7 +285,7 @@ public class ExternalServiceStep extends Step {
             }
 
             // Parse the response if (a) there are assignments or (b) there is dynamic or mapped routing
-            if ( getAssignments() != null && getAssignments().size() > 0
+            if ( getAssignments() != null && !getAssignments().isEmpty()
                     || getDoRouting() && ("responseBased".equals(getNextType()) || "mapped".equals(getNextType())) ) {
                 HttpEntity entity = response.getEntity();
                 if ( entity != null ) {
