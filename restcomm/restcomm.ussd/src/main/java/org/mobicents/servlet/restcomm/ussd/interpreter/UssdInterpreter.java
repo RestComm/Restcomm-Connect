@@ -765,7 +765,7 @@ public class UssdInterpreter extends UntypedActor {
                     ussdRestcommResponse.setMessageLength(nonEnglishLength);
                 }
 
-                StringBuffer ussdText = processUssdMessageTags(ussdMessageTags);
+                StringBuilder ussdText = processUssdMessageTags(ussdMessageTags);
 
                 if (ussdCollectTag != null) {
                     hasCollect = true;
@@ -789,7 +789,7 @@ public class UssdInterpreter extends UntypedActor {
                         sendMail(notification);
                     }
                     logger.info(errorString);
-                    ussdText = new StringBuffer();
+                    ussdText = new StringBuilder();
                     ussdText.append("Error while preparing the response.\nMessage length exceeds the maximum.");
                 }
 
@@ -827,8 +827,8 @@ public class UssdInterpreter extends UntypedActor {
         }
     }
 
-    private StringBuffer processUssdMessageTags(Queue<Tag> messageTags) {
-        StringBuffer message = new StringBuffer();
+    private StringBuilder processUssdMessageTags(Queue<Tag> messageTags) {
+        StringBuilder message = new StringBuilder();
         while (!messageTags.isEmpty()) {
             Tag tag = messageTags.poll();
             if (tag != null) {

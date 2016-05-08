@@ -324,7 +324,7 @@ public final class UserAgentManager extends UntypedActor {
             patch(uri, ip, port);
         }
 
-        final StringBuffer buffer = new StringBuffer();
+        final StringBuilder buffer = new StringBuilder();
         buffer.append("sip:").append(user).append("@").append(uri.getHost()).append(":").append(uri.getPort());
         // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
         if (transport != null) {

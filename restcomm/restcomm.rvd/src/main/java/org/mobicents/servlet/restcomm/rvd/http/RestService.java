@@ -78,7 +78,7 @@ public class RestService {
     }
 
     protected Response buildWebTriggerHtmlResponse(String title, String action, String outcome, String description, Integer status ) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("<html><body>");
         if (title != null)
             buffer.append("<h1>").append(title).append("</h1>");

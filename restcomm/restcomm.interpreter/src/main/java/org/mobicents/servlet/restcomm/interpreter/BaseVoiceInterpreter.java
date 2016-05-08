@@ -244,7 +244,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     Boolean dtmfReceived = false;
     String finishOnKey;
     int numberOfDigits = Short.MAX_VALUE;
-    StringBuffer collectedDigits;
+    StringBuilder collectedDigits;
     //Monitoring service
     ActorRef monitoring;
 
@@ -1485,7 +1485,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             gatherChildren = null;
             gatherPrompts = null;
             dtmfReceived = false;
-            collectedDigits = new StringBuffer("");
+            collectedDigits = new StringBuilder("");
         }
     }
 
@@ -1500,7 +1500,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             final NotificationsDao notifications = storage.getNotificationsDao();
             Attribute attribute = verb.attribute("action");
             String digits = collectedDigits.toString();
-            collectedDigits = new StringBuffer();
+            collectedDigits = new StringBuilder();
             logger.info("Digits collected: "+digits);
             if (digits.equals(finishOnKey)) {
                 digits = "";
