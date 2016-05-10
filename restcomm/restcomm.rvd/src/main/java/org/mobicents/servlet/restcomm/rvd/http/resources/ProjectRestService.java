@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -76,8 +75,6 @@ public class ProjectRestService extends SecuredRestService {
 
     static final Logger logger = Logger.getLogger(ProjectRestService.class.getName());
 
-    @Context
-    ServletContext servletContext;
     @Context
     HttpServletRequest request;
 

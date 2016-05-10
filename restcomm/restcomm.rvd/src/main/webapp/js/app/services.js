@@ -198,6 +198,7 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
     function doLogout() {
         storage.clearCredentials();
         setAccount(null);
+        $state.go('root.public.login');
     }
 
     // public interface
@@ -821,4 +822,5 @@ function IdentityConfig(server, instance,$q) {
     this.securedByRestcomm = securedByRestcomm;
     this.getIdentity = getIdentity;
 }
+
 

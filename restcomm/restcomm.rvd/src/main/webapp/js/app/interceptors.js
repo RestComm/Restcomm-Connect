@@ -38,11 +38,23 @@ angular.module('Rvd').config(['$httpProvider', function($httpProvider) {
 }]);
 
 // injects authentication credentials when Restcomm authentication is used
-angular.module('Rvd').factory('RestcommAuthenticationInterceptor', function ($state) {
+angular.module('Rvd').factory('RestcommAuthenticationInterceptor', function ($injector) {
     function request(config) {
-        console.log("outgoing request!");
-        return config;
-    }
+        return $injector.invoke(function ($state, authentication) {
+            if (config.url.startsWith('services/') || config.url.startsWith('/restcomm-rvd/services/')) {
+                if (authentication.getAuthHeader()) {
+                    // if the request is targeted towards RVD add authorization header
+                    config.headers.authorization = authentication.getAuthHeader();
+                }
+            } else
+            if (config.url.startsWith('/restcomm/2012-04-24/')) {
+                if (authentication.getAuthHeader()) {
+                    config.headers.authorization = authentication.getAuthHeader();
+                }
+            }
+            return config;
+        });
+    } // returns the $injector.invokve() return value
 
     // public interface
     return {

@@ -24,7 +24,7 @@ public class RestService {
     @Context
     protected HttpServletRequest request;
     @Context
-    protected ServletContext context;
+    protected ServletContext servletContext;
 
     protected Response buildErrorResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, RvdException exception) {
         RvdResponse rvdResponse = new RvdResponse(rvdStatus).setException(exception);
