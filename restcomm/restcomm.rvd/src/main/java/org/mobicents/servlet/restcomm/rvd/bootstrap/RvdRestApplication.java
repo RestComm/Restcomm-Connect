@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm.rvd.bootstrap;
 
 import javax.ws.rs.core.Application;
 
+import org.mobicents.servlet.restcomm.rvd.http.AuthorizationExceptionMapper;
 import org.mobicents.servlet.restcomm.rvd.http.ProjectDoesNotExistMapper;
 import org.mobicents.servlet.restcomm.rvd.http.StorageExceptionMapper;
 import org.mobicents.servlet.restcomm.rvd.http.resources.DesignerRestService;
@@ -32,6 +33,7 @@ public class RvdRestApplication extends Application {
         classes.add(DesignerRestService.class);
         classes.add(ProjectDoesNotExistMapper.class);
         classes.add(StorageExceptionMapper.class);
+        classes.add(AuthorizationExceptionMapper.class);
         return classes;
     }
 

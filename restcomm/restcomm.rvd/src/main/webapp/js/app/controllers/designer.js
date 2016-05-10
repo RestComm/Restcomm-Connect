@@ -1,4 +1,4 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routeParams, $location, stepService, $http, $timeout, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, $anchorScroll, bundledWavs) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $stateParams, $location, stepService, $http, $timeout, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, $anchorScroll, bundledWavs) {
 
 	$scope.project = project;
 	$scope.visibleNodes = editedNodes.getEditedNodes();
@@ -180,8 +180,8 @@ var designerCtrl = App.controller('designerCtrl', function($scope, $q, $routePar
 
 	// State variables
 	$scope.projectError = null; // SET when opening a project fails
-	$scope.projectName = $routeParams.projectName;
-	$scope.applicationSid = $routeParams.applicationSid;
+	$scope.projectName = $stateParams.projectName;
+	$scope.applicationSid = $stateParams.applicationSid;
 
 	//$scope.nodes = [];
 	//$scope.activeNode = 0 	// contains the currently active node for all kinds
