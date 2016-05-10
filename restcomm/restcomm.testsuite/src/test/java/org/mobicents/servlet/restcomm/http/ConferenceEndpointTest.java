@@ -72,6 +72,11 @@ public class ConferenceEndpointTest {
     public void getConferences() {
     	
     }
+    
+    @Test
+    public void getParticipants() {
+    	
+    }
 
     @Test
     public void getConferencesFilteredByStatus() {
