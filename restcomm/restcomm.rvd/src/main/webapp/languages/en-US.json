@@ -501,7 +501,6 @@
 	"webTriggerModalAccessTokenHelp2": "token",
 	"webTriggerModalAccessTokenHelp3": "parameter when making the HTTP call. Leave it blank to allow free access.",
 	"webTriggerModalAccessTokenInput": "Access token",
-	"webTriggerMissingAccessTokenWarn": "Access token is empty! Your trigger may only be accessed using HTTP basic authentication.",
 	"webTriggerModalFallbackParamLabel": "Fallback parameters",
 	"webTriggerModalFallbackParamHelp1": "You can optionally provide fallback",
 	"webTriggerModalFallbackParamTitle1": "Origin of the outgoing call",

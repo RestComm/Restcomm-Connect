@@ -36,3 +36,21 @@ var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('Unauthorize
 angular.module('Rvd').config(['$httpProvider', function($httpProvider) {
     $httpProvider.interceptors.push('UnauthorizedResponseInterceptor');
 }]);
+
+// injects authentication credentials when Restcomm authentication is used
+angular.module('Rvd').factory('RestcommAuthenticationInterceptor', function ($state) {
+    function request(config) {
+        console.log("outgoing request!");
+        return config;
+    }
+
+    // public interface
+    return {
+        request: request
+    }
+});
+// enable the interceptor above only if we do use Restcomm for authentication
+angular.module('Rvd').config( function($httpProvider, IdentityConfig) {
+    if (IdentityConfig.securedByRestcomm())
+        $httpProvider.interceptors.push('RestcommAuthenticationInterceptor');
+});
