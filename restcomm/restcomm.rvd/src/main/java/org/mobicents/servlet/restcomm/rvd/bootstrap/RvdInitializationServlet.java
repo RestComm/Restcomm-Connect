@@ -31,9 +31,6 @@ public class RvdInitializationServlet extends HttpServlet {
         } catch (StorageException e) {
             logger.error("Error upgrading workspace at " + rvdConfiguration.getWorkspaceBasePath(), e);
         }
-        // initialize AccountProvider in the context
-        //AccountProvider accountProvider = new AccountProvider();
-        //config.getServletContext().setAttribute(accountProvider.getClass().getName(), accountProvider);
     }
 
     public RvdInitializationServlet() {

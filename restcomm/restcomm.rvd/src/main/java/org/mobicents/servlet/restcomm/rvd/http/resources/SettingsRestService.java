@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -34,7 +33,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -59,10 +57,6 @@ import com.google.gson.JsonSyntaxException;
 public class SettingsRestService extends SecuredRestService {
     static final Logger logger = Logger.getLogger(RasRestService.class.getName());
 
-    @Context
-    ServletContext servletContext;
-    @Context
-    SecurityContext securityContext;
     RvdConfiguration settings;
     ModelMarshaler marshaler;
     WorkspaceStorage workspaceStorage;
@@ -85,7 +79,7 @@ public class SettingsRestService extends SecuredRestService {
             SettingsModel settingsForm = marshaler.toModel(data, SettingsModel.class);
             // update user profile
             ProfileDao profileDao = new FsProfileDao(workspaceStorage);
-            String loggedUsername = securityContext.getUserPrincipal().getName();
+            String loggedUsername = getLoggedUsername();
             UserProfile profile = profileDao.loadUserProfile(loggedUsername);
             if (profile == null)
                 profile = new UserProfile();
@@ -108,7 +102,7 @@ public class SettingsRestService extends SecuredRestService {
         secure();
         // load user profile
         ProfileDao profileDao = new FsProfileDao(workspaceStorage);
-        String loggedUsername = securityContext.getUserPrincipal().getName();
+        String loggedUsername = getLoggedUsername();
         UserProfile profile = profileDao.loadUserProfile(loggedUsername);
 
         SettingsModel settingsForm = new SettingsModel();

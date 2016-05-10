@@ -75,10 +75,12 @@ App.config(['$stateProvider','$urlRouterProvider', '$translateProvider', functio
         templateUrl : 'templates/designer.html',
         controller : 'designerCtrl',
         resolve: {
-            project: function(designerService, $stateParams, $state) {
+            project: function(designerService, $stateParams, $state,authorize) {
                 return designerService.openProject($stateParams.applicationSid);
             },
-            bundledWavs: function(designerService) { return designerService.getBundledWavs()}
+            bundledWavs: function(designerService,authorize) {
+                return designerService.getBundledWavs()
+            }
         }
 
     });
@@ -178,7 +180,7 @@ angular.element(document).ready(['$http',function ($http) {
   });
   // when both responses are received do sth...
   $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
-    console.log("SuCCESS");
+    console.log("Received restcomm configuration");
     // create a constant with keycloak server and instance identity configuration
     var identityConfig = new IdentityConfig(responses[0],responses[1],$q);
     angular.module('Rvd').constant('IdentityConfig', identityConfig);

@@ -3,13 +3,11 @@ package org.mobicents.servlet.restcomm.rvd.http.resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -21,7 +19,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -66,13 +63,6 @@ import com.google.gson.JsonObject;
 @Path("ras")
 public class RasRestService extends SecuredRestService {
     static final Logger logger = Logger.getLogger(RasRestService.class.getName());
-
-    @Context
-    ServletContext servletContext;
-    @Context
-    SecurityContext securityContext;
-    @Context
-    HttpServletRequest request;
 
     private RvdConfiguration settings;
     private RasService rasService;
@@ -220,11 +210,10 @@ public class RasRestService extends SecuredRestService {
     @Path("apps")
     public Response listRapps(@Context HttpServletRequest request) {
         secure();
-        Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
         List<String> projectNames = new ArrayList<String>();
         try {
-            items = projectService.getAvailableProjectsByOwner(loggedUser.getName());
+            items = projectService.getAvailableProjectsByOwner(getLoggedUsername());
             for (ProjectItem project : items) {
                 projectNames.add(project.getName());
             }
@@ -248,11 +237,10 @@ public class RasRestService extends SecuredRestService {
         } catch (IOException e) {
             throw new RvdException("Internal error while retrieving project Sids", e);
         }
-        Principal loggedUser = securityContext.getUserPrincipal();
         List<ProjectItem> items;
         List<String> projectNames = new ArrayList<String>();
         try {
-            items = projectService.getAvailableProjectsByOwner(loggedUser.getName());
+            items = projectService.getAvailableProjectsByOwner(getLoggedUsername());
             for (ProjectItem project : items) {
                 if (applicationSids.contains(project.getName())) {
                     projectNames.add(project.getName());

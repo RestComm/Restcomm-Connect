@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.util.Enumeration;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -62,11 +61,6 @@ import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 @Path("apps")
 public class RvdController extends SecuredRestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
-
-    @Context
-    ServletContext servletContext;
-    @Context
-    HttpServletRequest request;
 
     private RvdConfiguration rvdSettings;
     private ProjectAwareRvdContext rvdContext;
