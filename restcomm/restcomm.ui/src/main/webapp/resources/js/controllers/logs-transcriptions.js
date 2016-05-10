@@ -70,9 +70,9 @@ $scope.sortBy = function(field) {
 
 });
 
-rcMod.controller('LogsTranscriptionsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, SessionService, RCommLogsTranscriptions, transcriptionSid) {
+rcMod.controller('LogsTranscriptionsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsTranscriptions, transcriptionSid) {
   $scope.sid = SessionService.get("sid");
-  $scope.transcriptionSid = $routeParams.transcriptionSid || transcriptionSid;
+  $scope.transcriptionSid = $stateParams.transcriptionSid || transcriptionSid;
 
   $scope.closeTranscriptionDetails = function () {
     $modalInstance.dismiss('cancel');

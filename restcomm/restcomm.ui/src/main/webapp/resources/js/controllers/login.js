@@ -13,28 +13,27 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
   };
 
   $scope.login = function() {
-    AuthService.login($scope.credentials).
-      success(function(data, status, headers, config) {
-        if (data.status && data.status == 'suspended') {
-          showAccountSuspended($dialog);
-          return;
-        }
-        // Success may come in many forms...
-        if (status == 200) {
-          if(AuthService.getWaitingReset(data)) {
+    AuthService.login($scope.credentials).then(function (loginStatus) {
+        // SUCCESS
+        if (loginStatus == 'UNINITIALIZED' )
             $scope.updatePassword = true;
-          }
-          else {
+        else
             $location.path('/dashboard');
-          }
+    }, function (errorStatus) {
+        // ERROR
+        if (errorStatus == 'SUSPENDED')
+            showAccountSuspended($dialog);
+        else
+        if (errorStatus == "AUTH_ERROR") {
+            Notifications.error('Login failed. Please confirm your username and password.');
+            // FIXME: Use ng-animate...
+            $scope.loginFailed = true;
+            $timeout(function() { $scope.loginFailed = false; }, 1000);
         }
-        else {
-          Notifications.error('Login failed. Please confirm your username and password.')
-          // FIXME: Use ng-animate...
-          $scope.loginFailed = true;
-          $timeout(function() { $scope.loginFailed = false; }, 1000);
-        }
-      });
+        else
+        //if (errorStatus == 'UNKNOWN_ERROR')
+            Notifications.error('Unknown error');
+    });
   };
 
   $scope.closeAlert = function(index) {
