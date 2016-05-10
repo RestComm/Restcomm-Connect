@@ -35,13 +35,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  */
 @Path("/Accounts/{accountSid}/Conferences/{conferenceSid}/Participants.json")
 @ThreadSafe
-public final class ParticipantsJsonEndpoint extends CallsEndpoint {
+public final class ParticipantsJsonEndpoint extends ParticipantsEndpoint {
     public ParticipantsJsonEndpoint() {
         super();
     }
 
     @GET
-    public Response getParticipants(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getCalls(accountSid, info, APPLICATION_JSON_TYPE);
+    public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
+    	return getParticipants(accountSid, conferenceSid, info, APPLICATION_JSON_TYPE);
     }
 }

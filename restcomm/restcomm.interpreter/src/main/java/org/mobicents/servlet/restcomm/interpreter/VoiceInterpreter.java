@@ -2108,37 +2108,36 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, source);
             }
+            final Sid conferenceSid = conferenceInfo.sid();
+
+            //Adding conference record in DB
+            final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
+            conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
+            if(conferenceDetailRecord == null){
+                final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+                conferenceBuilder.setSid(conferenceSid);
+                conferenceBuilder.setDateCreated(callRecord.getDateCreated());
+                conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
+                conferenceBuilder.setStatus(conferenceState.name());
+                conferenceBuilder.setApiVersion(version);
+                final StringBuilder UriBuffer = new StringBuilder();
+                UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
+                UriBuffer.append(conferenceSid);
+                final URI uri = URI.create(UriBuffer.toString());
+                conferenceBuilder.setUri(uri);
+
+                IncomingPhoneNumbersDao incomingPhoneNumbersDao = storage.getIncomingPhoneNumbersDao();
+                IncomingPhoneNumber incomingPhoneNumber = incomingPhoneNumbersDao.getIncomingPhoneNumber(callRecord.getTo());
+                if(incomingPhoneNumbersDao != null)
+                    conferenceBuilder.setFriendlyName(incomingPhoneNumber.getFriendlyName());
+                conferenceDetailRecord = conferenceBuilder.build();
+                conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
+            }
             //updating conferenceSid in cdr and adding new record in conference table
             if (callRecord != null) {
-                final Sid conferenceSid = conferenceInfo.sid();
                 callRecord = callRecord.setConferenceSid(conferenceSid);
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 records.updateCallDetailRecord(callRecord);
-
-                //Adding conference record in DB
-                final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
-                //TODO: maria thinks following line is an expensive operation, can be replaced with a cheaper condition
-                conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
-                if(conferenceDetailRecord == null){
-                    final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                    conferenceBuilder.setSid(conferenceSid);
-                    conferenceBuilder.setDateCreated(callRecord.getDateCreated());
-                    conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
-                    conferenceBuilder.setStatus(conferenceState.name());
-                    conferenceBuilder.setApiVersion(version);
-                    final StringBuilder UriBuffer = new StringBuilder();
-                    UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
-                    UriBuffer.append(conferenceSid);
-                    final URI uri = URI.create(UriBuffer.toString());
-                    conferenceBuilder.setUri(uri);
-
-                    IncomingPhoneNumbersDao incomingPhoneNumbersDao = storage.getIncomingPhoneNumbersDao();
-                    IncomingPhoneNumber incomingPhoneNumber = incomingPhoneNumbersDao.getIncomingPhoneNumber(callRecord.getTo());
-                    if(incomingPhoneNumbersDao != null)
-                        conferenceBuilder.setFriendlyName(incomingPhoneNumber.getFriendlyName());
-                    conferenceDetailRecord = conferenceBuilder.build();
-                    conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
-                }
             }
         }
     }
