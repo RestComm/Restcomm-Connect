@@ -1472,11 +1472,9 @@ public final class Call extends UntypedActor {
             // Route: <sip:10.13.169.214:5080;transport=udp;lr>
             // Content-Length: 340
 
-            invite.getHeaders(RecordRouteHeader.NAME);
+            ListIterator<String> recordRouteList = invite.getHeaders(RecordRouteHeader.NAME);
 
-            ListIterator<String> recordRouteList = bye.getHeaders(RecordRouteHeader.NAME);
-
-            if (invite.getHeader("X-Sip-Balancer") != null) {
+            if (invite.getHeader("X-Sip-Balancer-InitialRemoteAddr") != null) {
                 logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
                 recordRouteList.next();
                 recordRouteList.remove();
