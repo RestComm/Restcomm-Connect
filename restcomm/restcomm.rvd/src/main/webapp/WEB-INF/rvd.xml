@@ -13,6 +13,14 @@
 		Required: yes
 	-->
 	<workspaceLocation>workspace</workspaceLocation>
+	
+	<!-- Absolute or relative path on which the workspace backups will be created.
+	The value of the element "workspaceBackupLocation" must be different than the value of the
+	element "workspaceLocation", since the backup will use the directory informed in "workspaceLocation" 
+	as source and the directory informed in "workspaceBackupLocation" as target, to perform the copy operation.
+	If left as blank, rvd's context root path will be used by default.
+	-->
+	<workspaceBackupLocation></workspaceBackupLocation>
 
 	<!--
 		Override automatic restcomm address resolution.
