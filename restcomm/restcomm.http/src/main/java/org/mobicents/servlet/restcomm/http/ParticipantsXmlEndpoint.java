@@ -36,26 +36,26 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
  */
 @Path("/Accounts/{accountSid}/Conferences/{conferenceSid}/Participants")
 @ThreadSafe
-public final class ParticipantsXmlEndpoint extends CallsEndpoint {
+public final class ParticipantsXmlEndpoint extends ParticipantsEndpoint {
     public ParticipantsXmlEndpoint() {
         super();
     }
 
     @Path("/{callSid}.json")
     @GET
-    public Response getParticipantAsJson(@PathParam("accountSid") final String accountSid, @PathParam("callSid") final String callSid) {
+    public Response getParticipantAsJson(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid) {
         return getCall(accountSid, callSid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{callSid}")
     @GET
-    public Response getParticipantAsXml(@PathParam("accountSid") final String accountSid, @PathParam("callSid") final String callSid) {
+    public Response getParticipantAsXml(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid) {
         return getCall(accountSid, callSid, APPLICATION_XML_TYPE);
     }
 
     @GET
-    public Response getParticipants(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getCalls(accountSid, info, APPLICATION_XML_TYPE);
+    public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
+    	return getParticipants(accountSid, conferenceSid, info, APPLICATION_XML_TYPE);
     }
 
 }
