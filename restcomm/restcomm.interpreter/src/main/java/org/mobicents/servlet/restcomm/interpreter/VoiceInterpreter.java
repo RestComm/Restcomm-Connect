@@ -1008,6 +1008,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         parameters.add(new BasicNameValuePair("CallerName", callerName));
         final String forwardedFrom = (callInfo.forwardedFrom() == null || callInfo.forwardedFrom().isEmpty()) ? "null" : callInfo.forwardedFrom();
         parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+        parameters.add(new BasicNameValuePair("CallTimestamp", callInfo.dateCreated().toString()));
         // logger.info("Type " + callInfo.type());
         SipServletResponse lastResponse = callInfo.lastResponse();
         if (CreateCall.Type.SIP == callInfo.type()) {
@@ -1700,7 +1701,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
-        if (!dialActionExecuted && verb != null) {
+        if (!dialActionExecuted && verb != null && dial.equals(verb.name())) {
             logger.info("Proceeding to execute Dial Action attribute");
             this.dialActionExecuted = true;
             final List<NameValuePair> parameters = parameters();
@@ -2314,10 +2315,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
-                if (!dialActionExecuted)
-                    executeDialAction(message, outboundCall);
+            if (!dialActionExecuted) {
+                executeDialAction(message, outboundCall);
                 callback(true);
-
+            }
             // XXX review bridge cleanup!!
 
             // Cleanup bridge

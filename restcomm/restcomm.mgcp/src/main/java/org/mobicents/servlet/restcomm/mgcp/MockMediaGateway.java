@@ -25,7 +25,6 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
-
 import jain.protocol.ip.mgcp.JainMgcpCommandEvent;
 import jain.protocol.ip.mgcp.JainMgcpResponseEvent;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
@@ -43,12 +42,11 @@ import jain.protocol.ip.mgcp.message.parms.EventName;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
-
-import java.net.InetAddress;
-
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.mobicents.servlet.restcomm.util.RevolvingCounter;
+
+import java.net.InetAddress;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -336,11 +334,32 @@ public final class MockMediaGateway extends UntypedActor {
     private void notificationResponse(final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final NotificationRequest rqnt = (NotificationRequest) message;
+        EventName[] events = rqnt.getSignalRequests();
+        //Thread sleep for the maximum recording length to simulate recording from RMS side
+        int sleepTime = 0;
+        //Only check for the Recording Length Timer parameter if the RQNT is about PlayRecord request
+        if (events != null && events.length > 0 && events[0].getEventIdentifier() != null && events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+            String[] paramsArray = ((EventName) events[0]).getEventIdentifier().getParms().split(" ");
+            for (String param : paramsArray) {
+                if (param.startsWith("rlt")) {
+                    sleepTime = Integer.parseInt(param.replace("rlt=", ""));
+                }
+            }
+            if (sleepTime == 3600000) {
+                //If maxLength is not set, rlt will be rlt=3600000
+                //In that case don't sleep at all
+                sleepTime = 0;
+            }
+        }
         System.out.println(rqnt.toString());
         final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
         final JainMgcpResponseEvent response = new NotificationRequestResponse(self, code);
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+        }
         System.out.println(response.toString());
         sender.tell(response, self);
     }
@@ -349,7 +368,7 @@ public final class MockMediaGateway extends UntypedActor {
         final ActorRef self = self();
         final NotificationRequest request = (NotificationRequest) message;
         final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
-        final EventName[] events = { new EventName(AUPackage.AU, event) };
+        final EventName[] events = {new EventName(AUPackage.AU, event)};
         final Notify notify = new Notify(this, request.getEndpointIdentifier(), request.getRequestIdentifier(), events);
         notify.setTransactionHandle((int) transactionIdPool.get());
         System.out.println(notify.toString());
