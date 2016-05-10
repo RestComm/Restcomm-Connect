@@ -67,7 +67,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 			})
 		}).error(function(){
 			console.log("Error receiving apps from Restcomm");
-			deffered.reject("error");
+			deferred.reject("error");
 		});
 	}
 	// returns "a promise to return local apps"
