@@ -120,6 +120,9 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
             JsonObject applicationJson = RestcommRvdProjectsMigratorTool.getInstance().getEntity(deploymentUrl.toString(),
                     adminUsername, adminAuthToken, adminAccountSid, applicationSid,
                     RestcommRvdProjectsMigratorTool.Endpoint.APPLICATIONS);
+            assertTrue(!incomingPhoneNumberJson.get("voice_method").isJsonNull());
+            assertTrue(!incomingPhoneNumberJson.get("sms_method").isJsonNull());
+            assertTrue(!incomingPhoneNumberJson.get("ussd_method").isJsonNull());
             assertTrue(applicationJson != null);
             assertTrue(!applicationJson.isJsonNull());
             assertTrue(applicationJson.get("sid").getAsString().equals(applicationSid));
@@ -133,6 +136,7 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
         for (int i = 0; i < clientsListJson.size(); i++) {
             JsonObject clientJson = clientsListJson.get(i).getAsJsonObject();
             assertTrue(clientJson.get("voice_url") == null || clientJson.get("voice_url").isJsonNull());
+            assertTrue(!clientJson.get("voice_method").isJsonNull());
             assertTrue(clientJson.get("voice_application_sid") == null || clientJson.get("voice_application_sid").isJsonNull());
         }
     }

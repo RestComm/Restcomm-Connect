@@ -176,7 +176,7 @@ p.lead, .paragraph.lead > p, #preamble > .sectionbody > .paragraph:first-of-type
 .subheader, .admonitionblock td.content > .title, .audioblock > .title, .exampleblock > .title, .imageblock > .title, .listingblock > .title, .literalblock > .title, .stemblock > .title, .openblock > .title, .paragraph > .title, .quoteblock > .title, table.tableblock > .title, .verseblock > .title, .videoblock > .title, .dlist > .title, .olist > .title, .ulist > .title, .qlist > .title, .hdlist > .title { line-height: 1.25; color: #002c5e; font-weight: 300; margin-top: 0.2em; margin-bottom: 0.5em; }
 
 /* Typography resets */
-div, dl, dt, dd, ul, ol, li, h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6, pre, form, p, blockquote, th, td { margin: 0; padding: 0; direction: ltr; }
+div, dl, dt, dd, ul, ol, li, h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6, pre, form, p, blockquote, th, td { margin: 0; padding: 0; direction: ltr; list-style: disc }
 
 /* Default Link Styles */
 a { color: #005580; text-decoration: underline; line-height: inherit; }
