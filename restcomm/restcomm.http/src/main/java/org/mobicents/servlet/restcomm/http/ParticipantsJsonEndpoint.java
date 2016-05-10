@@ -42,6 +42,6 @@ public final class ParticipantsJsonEndpoint extends ParticipantsEndpoint {
 
     @GET
     public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
-    	return getParticipants(accountSid, conferenceSid, info, APPLICATION_JSON_TYPE);
+        return getParticipants(accountSid, conferenceSid, info, APPLICATION_JSON_TYPE);
     }
 }
