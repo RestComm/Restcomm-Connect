@@ -19,6 +19,8 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import static org.junit.Assert.assertTrue;
+
 import java.net.URL;
 
 import org.apache.log4j.Logger;
@@ -31,6 +33,9 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author Maria
@@ -70,7 +75,16 @@ public class ConferenceEndpointTest {
     
     @Test
     public void getConferences() {
-    	
+        JsonObject page = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken);
+        int totalSize = page.get("total").getAsInt();
+        JsonArray firstPageConferenceArray = page.get("conferences").getAsJsonArray();
+        int firstPageConferenceArraySize = firstPageConferenceArray.size();
+        assertTrue(firstPageConferenceArraySize == 3);
+        assertTrue(page.get("start").getAsInt() == 0);
+        assertTrue(page.get("end").getAsInt() == 3);
+
+        assertTrue(totalSize == 3);
     }
     
     @Test
