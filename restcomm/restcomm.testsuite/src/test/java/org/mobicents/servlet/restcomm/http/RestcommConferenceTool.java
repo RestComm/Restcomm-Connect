@@ -21,9 +21,20 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.log4j.Logger;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordList;
+
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author Maria
@@ -60,7 +71,53 @@ public class RestcommConferenceTool {
 
     public JsonObject getConferences(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize,
             Boolean json) {
-        return null;
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+
+        String url = getAccountsUrl(deploymentUrl, username, json);
+
+        WebResource webResource = jerseyClient.resource(url);
+
+        String response = null;
+
+        if (page != null || pageSize != null) {
+            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+
+            if (page != null)
+                params.add("Page", String.valueOf(page));
+            if (pageSize != null)
+                params.add("PageSize", String.valueOf(pageSize));
+
+            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+                    .get(String.class);
+        } else {
+            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        }
+
+        JsonParser parser = new JsonParser();
+
+        if (json) {
+            JsonObject jsonObject = null;
+            try {
+                JsonElement jsonElement = parser.parse(response);
+                if (jsonElement.isJsonObject()) {
+                    jsonObject = jsonElement.getAsJsonObject();
+                } else {
+                    logger.info("JsonElement: " + jsonElement.toString());
+                }
+            } catch (Exception e) {
+                logger.info("Exception during JSON response parsing, exception: "+e);
+                logger.info("JSON response: "+response);
+            }
+            return jsonObject;
+        } else {
+            XStream xstream = new XStream();
+            xstream.alias("cdrlist", ConferenceDetailRecordList.class);
+            JsonObject jsonObject = parser.parse(xstream.toXML(response)).getAsJsonObject();
+            return jsonObject;
+        }
+
     }
 
     public JsonObject getConference(String deploymentUrl, String username, String authToken, String sid){
