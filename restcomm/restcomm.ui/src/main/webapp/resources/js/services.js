@@ -17,6 +17,24 @@ rcServices.factory('SessionService', function() {
     rename: function(oldKey, newKey) {
       sessionStorage.setItem(newKey, sessionStorage.getItem(oldKey));
       this.unset(oldKey);
+    },
+    // *storedCredentials() functions are used in restcomm auth mode only
+    // returns {sid:__, token:__}
+    getStoredCredentials: function() {
+        var sid = sessionStorage.getItem('sid');
+        var auth_token = sessionStorage.getItem('auth_token');
+        if (!!sid && !!auth_token)
+            return {sid:sid, token:auth_token};
+    },
+    setStoredCredentials: function(account) {
+        if (!account)
+            return;
+        sessionStorage.setItem('sid', account.sid);
+        sessionStorage.setItem('auth_token',account.auth_token);
+    },
+    clearStoredCredentials: function() {
+        sessionStorage.removeItem('sid');
+        sessionStorage.removeItem('auth_token');
     }
   }
 });
@@ -42,6 +60,12 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         return "";
     }
 
+    // creates an auth header using a username (or sid) and a plaintext password (not already md5ed)
+    function basicAuthHeader(username, password, skipHash) {
+        var auth_header = "Basic " + btoa(username + ":" + (skipHash ? password : md5.createHash(password)));
+        return auth_header;
+    }
+
     // Checks access for typical restcomm operations. It resolves to a valid, authorized restcomm Account.
     // It Returns a promise.
     //
@@ -49,51 +73,68 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //      MISSING_ACCOUNT_SID,
     //      KEYCLCOAK_NO_LINKED_ACCOUNT
     //      KEYCLOAK_INSTANCE_NOT_REGISTERED
-    //      MISSING_LOGGED_ACCOUNT - no Account is stored in the JS application and cookie authentication is not supported (no shiro). Applies when using Restcomm authentication, not keycloak.
+    //      RESTCOMM_ACCOUNT_NOT_INITIALIZED - applies to Restcomm auth mode
+    //      RESTCOMM_AUTH_FAILED - could not authenticate to Restcomm
+    //      RESTCOMM_NOT_AUTHENTICATED - the user is not authenticated and there are no cached credentials. Applies to restcomm auth mode
+    //      UNKNOWN_ERROR - an unknown server error has occured
     //
     //  - resolved: returns a valid Restcomm account for the logged user
     function checkAccess() {
         //var role; // undefined - it should be provided as a function parameter
-        var deferred = $q.defer();
-
         if (IdentityConfig.securedByKeycloak()) {
             if (!KeycloakAuth.loggedIn) {
-                deferred.reject("KEYCLOAK_NOT_LOGGED_IN"); // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
-                return deferred.promise;
+                throw "KEYCLOAK_NOT_LOGGED_IN"; // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
             }
             var username = getUsername();  // since we're logged in, there MUST be a username available
             var promisedAccount = $q.defer();
             if (!account) {
                 $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
                 .success(function (data,status) {
+                    // TODO we need to handle UNINITIALIZED accounts
                     promisedAccount.resolve(data);
                 })
                 .error(function (data,status) {
-                    deferred.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
-                    promisedAccount.reject();
+                    promisedAccount.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
                 });
             } else {
                 promisedAccount.resolve(account);
             }
 
             // when the account becomes available, make sure the username/email_address match
-            promisedAccount.promise.then(function (fetchedAccount) {
+            return promisedAccount.promise.then(function (fetchedAccount) {
                 if (username.toLowerCase() == fetchedAccount.email_address.toLowerCase()) {
                     setActiveAccount(fetchedAccount);
-                    deferred.resolve();
                 }
-            }
-                // do nothing if promise is rejected
-            );
+            });
+            // if chained promisedAccount is rejected the returned promise is rejected too since to error callback was defined
+
         } else
         if (IdentityConfig.securedByRestcomm()) {
-            if (!!getAccountSid()) // get account sid from js application (not from session storage) - if F5 is pressed this is lost
-                deferred.resolve();
-            else
-                deferred.reject("MISSING_LOGGED_ACCOUNT");
+            if (!!getAccountSid()) { // get account sid from js application (not from session storage) - if F5 is pressed this is lost
+                if (!isUninitialized())
+                    return;
+                 else
+                    throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
+            } else {
+                // maybe we have stored the credentials in the session storage
+                var creds = SessionService.getStoredCredentials();
+                if (creds) {
+                    return login(creds.sid, creds.password, true).then(function (status) {
+                        if (status == 'OK')
+                            return account;
+                        else if (status == 'UNINITIALIZED')
+                            throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
+                        else
+                            throw 'UNKNOWN_ERROR';
+                    }, function (status) {
+                        throw 'RESTCOMM_AUTH_FAILED';
+                    });
+                } else
+                    throw 'RESTCOMM_NOT_AUTHENTICATED';
+            }
         } else {
             // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
-            deferred.reject("KEYCLOAK_INSTANCE_NOT_REGISTERED");
+            throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
         }
         return deferred.promise;
     }
@@ -101,7 +142,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // updates all necessary state
     function setActiveAccount(newAccount) {
         account = newAccount;
-        SessionService.set('sid',newAccount.sid);
+        SessionService.setStoredCredentials(newAccount);
         if (account && account.status == 'uninitialized')
             uninitialized = true;
         else
@@ -109,7 +150,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     }
 
     function clearActiveAccount() {
-        SessionService.unset('sid');
+        SessionService.clearStoredCredentials();
         account = null;
         uninitialized = null;
     }
@@ -121,16 +162,13 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     // Returns a promise.
     //  - resolved: OK, UNINITIALIZED
     //  - rejected: SUSPENDED, UNKNOWN_ERROR, AUTH_ERROR
-    function login(credentials) {
+    function login(username, password, skipHashing) {
       var deferred = $q.defer();
-      // TEMPORARY... FIXME!
-      //var apiPath = $location.protocol() + "://" + credentials.sid.replace("@", "%40") + ":" + md5.createHash(credentials.token) + "@" + credentials.host + "/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid ;
-      var auth_header = credentials.sid + ":" + md5.createHash(credentials.token);
-      auth_header = "Basic " + btoa(auth_header);
+      var auth_header = basicAuthHeader(username, password, skipHashing);
       var login = $http({
         method:"GET",
-        url:"/restcomm/2012-04-24/Accounts" + ".json/" + credentials.sid,
-        headers:{authorization: auth_header}
+        url:"/restcomm/2012-04-24/Accounts.json/" + encodeURIComponent(username),
+        headers:{Authorization: auth_header}
       }).success(function(data, status, headers, config) {
           if (status == 200) {
             //if(data.date_created && data.date_created == data.date_updated) {
@@ -167,16 +205,42 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     }
 
     function logout() {
-          SessionService.unset('sid');
-          account = null;
-          // uninitialized = ???
-          if (IdentityConfig.securedByKeycloak())
+        clearActiveAccount();
+        if (IdentityConfig.securedByKeycloak())
             keycloakLogout(); // keycloak logout - defined in restcomm.js
-          else {
+        else {
             $http.get('/restcomm/2012-04-24/Logout'); // TODO should we wait for a response before moving to login view ?
-            $state.go("public.login");
-          }
+        }
     }
+
+    // Returns a promise
+    // resolved: nothing returned
+    // rejected: PASSWORD_UPDATE_FAILED
+    // Call it when authenticated and in Restcomm auth mode
+    function updatePassword(newPassword) {
+        var deferred = $q.defer();
+        var apiPath = "/restcomm/2012-04-24/Accounts/" + account.sid + ".json";
+        var auth_header = basicAuthHeader(account.sid, account.auth_token, true)
+        var params = {Auth_Token: md5.createHash(newPassword)};
+        var update = $http({
+        method: 'PUT',
+        url: apiPath,
+        data: $.param(params),
+        headers: {
+            Authorization: auth_header,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }}).
+        success(function(account) {
+          setActiveAccount(account);
+          deferred.resolve();
+        }).
+        error(function(data) {
+          clearActiveAccount();
+          deferred.reject('PASSWORD_UPDATE_FAILED');
+        });
+        return deferred.promise;
+    }
+
 
     // applies to Restcomm authorization (not keycloak)
     function onAuthError() {
@@ -204,7 +268,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         getFrientlyName: getFriendlyName,
         checkAccess: checkAccess,
         isUninitialized: isUninitialized,
-        onAuthError: onAuthError
+        onAuthError: onAuthError,
+        updatePassword: updatePassword
     }
 });
 

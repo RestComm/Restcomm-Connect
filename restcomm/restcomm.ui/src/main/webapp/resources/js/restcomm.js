@@ -33,6 +33,20 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         }
     }
   });
+  $stateProvider.state('public.uninitialized',{
+    url:"/uninitialized",
+    templateUrl: 'modules/uninitialized.html',
+    controller:'UninitializedCtrl',
+    resolve: {
+        identity: function (IdentityConfig) {
+            return IdentityConfig.getIdentity();
+        },
+        uninitialized: function (AuthService) {
+            if (!AuthService.isUninitialized())
+                throw 'ACCOUNT_ALREADY_INITIALIZED';
+        }
+    }
+  });
   $stateProvider.state('public.identity-registration',{
     url:"/identity-registration",
     templateUrl:'modules/identity-registration.html',
@@ -362,15 +376,17 @@ rcMod.
       request: function(config) {
           var restcomm_prefix = "/restcomm/"
     	  var rvd_prefix = "/restcomm-rvd/";
-    	  if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
-    		  var AuthService = $injector.get('AuthService');
-    		  var account = AuthService.getAccount();
-    		  if (!!account) {
-                  var auth_header = account.email_address + ":" + account.auth_token;
-                  auth_header = "Basic " + btoa(auth_header);
-                  config.headers.authorization = auth_header;
-		      }
-    	  }
+    	  if ( ! config.headers.Authorization ) { // if no header is already present
+              if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
+                  var AuthService = $injector.get('AuthService');
+                  var account = AuthService.getAccount();
+                  if (!!account) {
+                      var auth_header = account.email_address + ":" + account.auth_token;
+                      auth_header = "Basic " + btoa(auth_header);
+                      config.headers.Authorization = auth_header;
+                  }
+              }
+          }
 		  return config;
 	    },
       response: function(response){

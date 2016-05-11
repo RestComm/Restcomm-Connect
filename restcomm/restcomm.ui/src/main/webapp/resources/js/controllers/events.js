@@ -32,7 +32,7 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    if (error == "MISSING_ACCOUNT_SID")
 	        $state.go("public.login");
 	    else
-	    if (error == "MISSING_LOGGED_ACCOUNT") {
+	    if (error == 'RESTCOMM_AUTH_FAILED' || error == 'RESTCOMM_NOT_AUTHENTICATED') {
 	        $state.go("public.login");
 	    } else
 	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
@@ -45,6 +45,12 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    } else
 	    if (error == "IDENTITY_REGISTRATION_NOT_AVAILABLE") { // we are trying to access restcomm registration view while in restcomm-authentication mode
 	        $state.go("restcomm.dashboard");
+	    } else
+	    if (error == 'RESTCOMM_ACCOUNT_NOT_INITIALIZED') {
+	        $state.go('public.uninitialized');
+	    }
+	    if (error == 'UNKWNOWN_ERROR') {
+	        console.log('internal error');
 	    }
 	});
 });

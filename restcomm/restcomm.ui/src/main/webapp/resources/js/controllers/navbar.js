@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, Notifications, RCommAccounts) {
+rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, Notifications, RCommAccounts, $state) {
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
@@ -22,6 +22,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
   $scope.logout = function() {
     AuthService.logout();
+    $state.go('public.login');
   };
 
   //if(AuthService.isLoggedIn()) {
