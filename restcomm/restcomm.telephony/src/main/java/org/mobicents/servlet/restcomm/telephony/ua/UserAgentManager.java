@@ -41,6 +41,7 @@ import scala.concurrent.duration.Duration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
+import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletMessage;
@@ -185,21 +186,24 @@ public final class UserAgentManager extends UntypedActor {
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
         String host = ((SipURI)sipServletMessage.getTo().getURI()).getHost();
         String port = String.valueOf(((SipURI)sipServletMessage.getTo().getURI()).getPort());
+        String transport = ((SipURI) sipServletMessage.getTo().getURI()).getTransportParam();
         logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration");
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
         if (registrations != null) {
             Iterator<Registration> iter = registrations.iterator();
+            SipURI regLocation = null;
             while (iter.hasNext()) {
                 Registration reg = iter.next();
-                String locationToRemove = "sip:" + user + "@" + host + ":" + port;
+                try {
+                    regLocation = (SipURI) factory.createURI(reg.getLocation());
+                } catch (ServletParseException e) {}
 
-                if (reg.getAddressOfRecord().equalsIgnoreCase(locationToRemove)) {
+                if (regLocation != null && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
                     logger.info("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
                     regDao.removeRegistration(reg);
                     monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
                 }
-
             }
         }
     }
