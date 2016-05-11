@@ -617,7 +617,9 @@ public final class Call extends UntypedActor {
             session.setHandler("CallManager");
             // Issue: https://telestax.atlassian.net/browse/RESTCOMM-608
             // If this is a call to Restcomm client or SIP URI bypass LB
-            if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+            if (logger.isInfoEnabled())
+                logger.info("bypassLoadBalancer is set to: "+RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
+            if (RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
                 if (type.equals(CreateCall.Type.CLIENT) || type.equals(CreateCall.Type.SIP)) {
                     ((SipSessionExt) session).setBypassLoadBalancer(true);
                     ((SipSessionExt) session).setBypassProxy(true);
