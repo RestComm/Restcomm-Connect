@@ -19,18 +19,6 @@
  */
 package org.mobicents.servlet.restcomm.telephony.ua;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.net.URL;
-import java.text.ParseException;
-
-import javax.sip.RequestEvent;
-import javax.sip.address.SipURI;
-import javax.sip.message.MessageFactory;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -49,6 +37,19 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.tools.MonitoringServiceTool;
+
+import javax.sip.RequestEvent;
+import javax.sip.address.SipURI;
+import javax.sip.message.MessageFactory;
+import javax.sip.message.Request;
+import javax.sip.message.Response;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.logging.Logger;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 //import org.mobicents.servlet.restcomm.telephony.Version;
 
 /**
@@ -58,6 +59,7 @@ import org.mobicents.servlet.restcomm.tools.MonitoringServiceTool;
 
 @RunWith(Arquillian.class)
 public final class UserAgentManagerTest {
+    private static Logger logger = Logger.getLogger(UserAgentManagerTest.class.getName());
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
@@ -68,9 +70,15 @@ public final class UserAgentManagerTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
-    private static SipStackTool tool;
+    private static SipStackTool tool1;
     private SipStack sipStack;
     private SipPhone phone;
+    private String aliceContact = "sip:alice@127.0.0.1:5070;transport=udp";
+
+    private static SipStackTool tool2;
+    private SipStack sipStack2;
+    private SipPhone phone2;
+    private String bobContact = "sip:bob@127.0.0.1:5090";
 
     public UserAgentManagerTest() {
         super();
@@ -78,13 +86,17 @@ public final class UserAgentManagerTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        tool = new SipStackTool("UserAgentTest");
+        tool1 = new SipStackTool("UserAgentTest1");
+        tool2 = new SipStackTool("UserAgentTest2");
     }
 
     @Before
     public void before() throws Exception {
-        sipStack = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        phone = sipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:alice@127.0.0.1:5070");
+        sipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
+        phone = sipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+
+        sipStack2 = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
+        phone2 = sipStack2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
     }
 
     @After
@@ -161,20 +173,23 @@ public final class UserAgentManagerTest {
         // it should still make sense.
         boolean timedOut = false;
         RequestEvent event = null;
+        phone.listenRequestMessage();
         do {
-            phone.listenRequestMessage();
             // Wait for an incoming request.
             event = phone.waitRequest(75 * 1000);
             if (event == null) {
+                logger.info("Event is null, will timeout");
                 timedOut = true;
             } else {
                 final String method = event.getRequest().getMethod();
                 if ("REGISTER".equalsIgnoreCase(method)) {
+                    logger.info("Event is REGISTER, will timeout");
                     event = null;
                     continue;
                 } else {
                     // Validate the request.
                     assertTrue("OPTIONS".equalsIgnoreCase(method));
+                    logger.info("Event is OPTIONS, will timeout");
                     // Send the OK response.
                     final MessageFactory factory = sipStack.getMessageFactory();
                     final Request request = event.getRequest();
@@ -207,6 +222,26 @@ public final class UserAgentManagerTest {
         sipStack.dispose();
         phone = null;
         sipStack = null;
+
+        Thread.sleep(100000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    @Test
+    public void registerUserAgentWithExceptionOnOptionsPingForGeorge() throws ParseException, InterruptedException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Credential c = new Credential("127.0.0.1","bob", "1234");
+        phone2.addUpdateCredential(c);
+        assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
+        Thread.sleep(500);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack2.dispose();
+        phone2 = null;
+        sipStack2 = null;
 
         Thread.sleep(100000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
