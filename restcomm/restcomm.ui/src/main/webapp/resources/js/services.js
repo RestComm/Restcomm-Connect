@@ -119,7 +119,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
                 // maybe we have stored the credentials in the session storage
                 var creds = SessionService.getStoredCredentials();
                 if (creds) {
-                    return login(creds.sid, creds.password, true).then(function (status) {
+                    return login(creds.sid, creds.token, true).then(function (status) {
                         if (status == 'OK')
                             return account;
                         else if (status == 'UNINITIALIZED')
@@ -196,7 +196,6 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
           return;
         }).
         error(function(data) {
-          Notifications.error("Login failed! Please confirm your credentials.");
           clearActiveAccount();
           deferred.reject('AUTH_ERROR');
           return;

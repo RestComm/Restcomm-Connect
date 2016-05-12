@@ -222,8 +222,11 @@ angular.element(document).ready(['$http',function ($http) {
   // manually inject $q since it's not available
   var initInjector = angular.injector(["ng"]);
   var $q = initInjector.get("$q");
+
   // try to retrieve Identity server configuration
   var serverPromise = $q.defer();
+  // disable until organizations/keycloak in place
+  /*
   $http.get("/restcomm/2012-04-24/Identity/Server").success(function (serverConfig) {
     console.log(serverConfig);
     serverPromise.resolve(serverConfig);
@@ -233,8 +236,13 @@ angular.element(document).ready(['$http',function ($http) {
     else
         serverPromise.reject();
   });
+  */
+  serverPromise.resolve(null);
+
   // try to retrieve IdentityInstance
   var instancePromise = $q.defer();
+  // disable until organizations/keycloak in place
+  /*
   $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
     instancePromise.resolve(instance);
   }).error(function (response) {
@@ -242,10 +250,12 @@ angular.element(document).ready(['$http',function ($http) {
       instancePromise.resolve(null);
     else
       instancePromise.reject();
-  });
+  });*/
+  instancePromise.resolve(null);
+
   // when both responses are received do sth...
   $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
-    console.log("SuCCESS");
+    //console.log("SUCCESS");
     // create a constant with keycloak server and instance identity configuration
     var identityConfig = new IdentityConfig(responses[0],responses[1],$q);
     angular.module('rcApp').constant('IdentityConfig', identityConfig);
