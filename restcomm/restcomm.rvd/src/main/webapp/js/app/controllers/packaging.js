@@ -67,34 +67,25 @@ rvdMod.controller('packagingCtrl', function ($scope, $stateParams, Rapp, ConfigO
 	$scope.effectiveSettings = rvdSettings.getEffectiveSettings();
 });
 
-var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function ($scope, binaryInfo, $stateParams) {
+var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function ($scope, binaryInfo, $stateParams, fileRetriever) {
 	$scope.test = binaryInfo;
 	$scope.binaryInfo = binaryInfo;
 	$scope.projectName = $stateParams.projectName;
 	$scope.applicationSid = $stateParams.applicationSid;
+	$scope.download = function(applicationSid, projectName) {
+        var downloadUrl = '/restcomm-rvd/services/ras/packaging/download?applicationSid=' + applicationSid + '&projectName=' + projectName;
+        fileRetriever.download(downloadUrl, projectName + ".ras.zip").catch(function () {
+            notifications.put({message:'Error downloading application package', type:"danger"});
+        });
+	}
 });
 
-packagingDownloadCtrl.getBinaryInfo = function ($q, $http, $stateParams) {
-	var deferred = $q.defer();
-	$http({
-		url: 'services/ras/packaging/binary/info?applicationSid=' + $stateParams.applicationSid,
-		method: 'GET'
-	})
-	.success(function (data, status) {
-		console.log("Package is ready for download");
-		deferred.resolve(data.payload); // this is binaryInfo
-	})
-	.error(function () {deferred.reject("error reading binary package information")});
-	return deferred.promise;
-}
-
-
-rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$stateParams', '$location', function ($http, $q, Rapp, $stateParams, $rootScope) {
+rvdMod.factory('RappService', ['$http', '$q', 'Rapp', function ($http, $q, Rapp) {
 	var serviceFunctions = {
-		getRapp : function () {
+		getRapp : function (params) {
 			var deferred = $q.defer();
 			$http({
-				url:  'services/ras/packaging/app?applicationSid=' + $stateParams.applicationSid,
+				url:  'services/ras/packaging/app?applicationSid=' + params.applicationSid,
 				method: 'GET',
 			})
 			.success(function (data, status, headers, config) {
@@ -111,7 +102,20 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$stateParams', '$location
 				}
 			});
 			return deferred.promise;
-		}
+		},
+		getBinaryInfo : function (params) {
+        	var deferred = $q.defer();
+        	$http({
+        		url: 'services/ras/packaging/binary/info?applicationSid=' + params.applicationSid,
+        		method: 'GET'
+        	})
+        	.success(function (data, status) {
+        		console.log("Package is ready for download");
+        		deferred.resolve(data.payload); // this is binaryInfo
+        	})
+        	.error(function () {deferred.reject("error reading binary package information")});
+        	return deferred.promise;
+        }
 	}
 	return serviceFunctions;
 }])

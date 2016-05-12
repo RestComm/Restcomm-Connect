@@ -1,7 +1,14 @@
-var designerCtrl = App.controller('designerCtrl', function($scope, $q, $stateParams, $location, stepService, $http, $timeout, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, $anchorScroll, bundledWavs) {
+var designerCtrl = App.controller('designerCtrl', function($scope, $q, $stateParams, $location, stepService, $http, $timeout, $injector, stepRegistry, stepPacker, $modal, notifications, ModelBuilder, projectSettingsService, webTriggerService, nodeRegistry, editedNodes, project, designerService, $filter, $anchorScroll, bundledWavs, fileRetriever) {
 
 	$scope.project = project;
 	$scope.visibleNodes = editedNodes.getEditedNodes();
+
+	$scope.download = function (applicationSid,projectName) {
+	    var downloadUrl =  '/restcomm-rvd/services/projects/' + applicationSid + '/archive?projectName=' + projectName;
+	    fileRetriever.download(downloadUrl, projectName + ".zip").catch(function () {
+	        notifications.put({type:"danger", message:"Error downloading project archive"});
+	    });
+	}
 
 	$scope.getProjectSettings = function () {
 		return projectSettingsService.getProjectSettings(); // returns a $resource that will be filled up automatically
