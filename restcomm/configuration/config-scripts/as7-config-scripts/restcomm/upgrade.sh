@@ -37,7 +37,7 @@ if [ "$MYSQL_BACKUP" = "TRUE" ] || [ "$MYSQL_BACKUP" = "true" ]; then
   	exit 1
   fi
   echo "Will create backup $db_backup_folder/$db_backup_file.tgz"
-  mysqldump -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_IP_ADDRESS -P $MYSQL_PORT --add-drop-table --lock-tables $RESTCOMM_DB  -r $db_backup_folder/$db_backup_file
+  mysqldump -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_IP_ADDRESS -P $MYSQL_PORT --add-drop-table --lock-tables -B $RESTCOMM_DB  -r $db_backup_folder/$db_backup_file
   tar cvzf $db_backup_folder/$db_backup_file.tgz -C $db_backup_folder $db_backup_file
   rm $db_backup_folder/$db_backup_file
 fi
