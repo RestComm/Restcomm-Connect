@@ -53,7 +53,8 @@ public class RestcommAccountsTool {
         return accountsUrl;
     }
 
-    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password, String accountSid, String status) {
+    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
+            String password, String accountSid, String status, String organizationSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
@@ -67,6 +68,8 @@ public class RestcommAccountsTool {
         params.add("Role", "Administartor");
         if (status != null)
             params.add("Status", status);
+        if (organizationSid != null)
+            params.add("OrganizationSid", organizationSid);
 
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
         JsonParser parser = new JsonParser();

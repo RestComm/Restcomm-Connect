@@ -88,7 +88,7 @@ public class AccountsEndpointTest {
     @Test
     public void testCreateAccount() {
         RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                adminUsername, newAdminPassword, adminAccountSid, null);
+                adminUsername, newAdminPassword, adminAccountSid, null, null);
         accountUpdated = true;
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
                 adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
@@ -109,7 +109,7 @@ public class AccountsEndpointTest {
     public void testCreateAdministratorAccount() {
         if (!accountUpdated) {
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                    adminUsername, newAdminPassword, adminAccountSid, null);
+                    adminUsername, newAdminPassword, adminAccountSid, null, null);
         }
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
                 adminUsername, newAdminAuthToken, "administrator@company.com", "1234", organizationSid);
@@ -120,7 +120,7 @@ public class AccountsEndpointTest {
     public void testCreateAccountTwice() {
         if (!accountUpdated) {
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                    adminUsername, newAdminPassword, adminAccountSid, null);
+                    adminUsername, newAdminPassword, adminAccountSid, null, null);
         }
         if (!accountCreated) {
             JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
@@ -137,7 +137,7 @@ public class AccountsEndpointTest {
     public void testGetAccounts() throws InterruptedException {
         if (!accountUpdated){
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                    adminUsername, newAdminPassword, adminAccountSid, null);
+                    adminUsername, newAdminPassword, adminAccountSid, null, null);
         }
 
         if (!accountCreated) {

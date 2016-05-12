@@ -52,7 +52,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 @RunWith(Arquillian.class)
 public class OrganizationsEndpointTest {
 
-    private final static Logger logger = Logger.getLogger(ApplicationsEndpointTest.class);
+    private final static Logger logger = Logger.getLogger(OrganizationsEndpointTest.class);
     private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     @ArquillianResource
@@ -63,6 +63,13 @@ public class OrganizationsEndpointTest {
     private String adminUsername = "administrator@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String primaryUsername = "primary@company.com";
+    private String primaryAccountSid = "AC1ec5d14c34a421c7697e1ce5d4eac782";
+    private String primaryAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String defaultOrganization = "ORec3515ebea5243b6bde0444d84b05b80";
+    private String foobarOrganization = "ORec3515ebea5243b6bde0444d84b05b81";
+    private String organizationAccounts[] = { "primary@company.com", "subaccounta@company.com", "subaccountb@company.com",
+            "subaccountc@company.com" };
 
     @Test
     public void testCreateAndGetOrganization() throws ParseException {
@@ -152,8 +159,43 @@ public class OrganizationsEndpointTest {
     }
 
     @Test
+    public void testUpdateMasterAccountOrganization() {
+        // Ensure that sub accounts are using Foobar Organization before start the update
+        for (int i = 0; i < organizationAccounts.length; i++) {
+            final String username = organizationAccounts[i];
+            JsonObject accountJson = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), primaryAccountSid,
+                    primaryAuthToken, username);
+            assertTrue(accountJson.get("organization_sid").getAsString().equals(foobarOrganization));
+        }
+
+        // Update master Account's Organization
+        RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), primaryAccountSid, primaryAuthToken,
+                primaryUsername, primaryAuthToken, primaryAccountSid, null, defaultOrganization);
+
+        // Check if all sub accounts were updated just like the master Account
+        for (int i = 0; i < organizationAccounts.length; i++) {
+            final String username = organizationAccounts[i];
+            JsonObject accountJson = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), primaryAccountSid,
+                    primaryAuthToken, username);
+            assertTrue(accountJson.get("organization_sid").getAsString().equals(defaultOrganization));
+        }
+
+        // Rollback master Account's Organization for next tests
+        RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), primaryAccountSid, primaryAuthToken,
+                primaryUsername, primaryAuthToken, primaryAccountSid, null, foobarOrganization);
+
+        // Check if all sub accounts were updated just like the master Account
+        for (int i = 0; i < organizationAccounts.length; i++) {
+            final String username = organizationAccounts[i];
+            JsonObject accountJson = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), primaryAccountSid,
+                    primaryAuthToken, username);
+            assertTrue(accountJson.get("organization_sid").getAsString().equals(foobarOrganization));
+        }
+    }
+
+    @Test
     public void testDeleteOrganization() {
-        // Create aplication
+        // Create Organization
         MultivaluedMap<String, String> organizationParams = new MultivaluedMapImpl();
         organizationParams.add("FriendlyName", "Organization");
         organizationParams.add("Namespace", "organization");
@@ -161,7 +203,7 @@ public class OrganizationsEndpointTest {
                 adminAccountSid, adminUsername, adminAuthToken, organizationParams);
         Sid organizationSid = new Sid(organizationJson.get("sid").getAsString());
 
-        // Delete organization
+        // Delete Organization
         RestcommOrganizationsTool.getInstance().deleteOrganization(deploymentUrl.toString(), adminUsername, adminAuthToken,
                 adminAccountSid, organizationSid.toString());
 
@@ -170,6 +212,35 @@ public class OrganizationsEndpointTest {
                 adminAuthToken, adminAccountSid, organizationSid.toString());
 
         assertTrue(organizationJson == null);
+    }
+
+    @Test
+    public void testDeleteOrganizationWithAccounts() {
+        // Ensure that sub accounts are using Foobar Organization before delete the Organization
+        for (int i = 0; i < organizationAccounts.length; i++) {
+            final String username = organizationAccounts[i];
+            JsonObject accountJson = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), primaryAccountSid,
+                    primaryAuthToken, username);
+            assertTrue(accountJson.get("organization_sid").getAsString().equals(foobarOrganization));
+        }
+
+        // Delete Organization that still have Accounts
+        RestcommOrganizationsTool.getInstance().deleteOrganization(deploymentUrl.toString(), adminUsername, adminAuthToken,
+                adminAccountSid, foobarOrganization);
+
+        // Check if it was removed
+        JsonObject organizationJson = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, adminAccountSid, foobarOrganization);
+
+        assertTrue(organizationJson == null);
+
+        // Check if the Accounts of the Organization were migrated to Default Organization
+        for(int i = 0; i < organizationAccounts.length; i++){
+            final String username = organizationAccounts[i];
+            JsonObject accountJson = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), primaryAccountSid,
+                    primaryAuthToken, username);
+            assertTrue(accountJson.get("organization_sid").getAsString().equals(defaultOrganization));
+        }
     }
 
 
@@ -187,7 +258,7 @@ public class OrganizationsEndpointTest {
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_organizations", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }
