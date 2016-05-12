@@ -48,13 +48,14 @@ App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle, keepAli
     // you can change the title or display a warning dialog from here.
     // you can let them resume their session by calling Idle.watch()
     $scope.$on('IdleWarn', function(e, countdown) {
-        if (countdown == 10)
+        if (countdown == 15)
             notifications.put({type:"warning", message:"You appear idle. Your session will soon expire!"});
     });
     // the user has timed out (meaning idleDuration + timeout has passed without any activity)
     // this is where you'd log them
     $scope.$on('IdleTimeout', function() {
         authentication.doLogout();
+        $state.go('root.public.login');
         notifications.put({type:"danger", message:"Your session has expired!", timeout:0});
     });
     // the user has come back from AFK and is doing stuff. if you are warning them, you can use this to hide the dialog
