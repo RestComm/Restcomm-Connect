@@ -158,8 +158,11 @@ angular.element(document).ready(['$http',function ($http) {
   // manually inject $q since it's not available
   var initInjector = angular.injector(["ng"]);
   var $q = initInjector.get("$q");
+
   // try to retrieve Identity server configuration
   var serverPromise = $q.defer();
+  // Disable until keycloak/organizations are applied. For now resolve to null.
+  /*
   $http.get("/restcomm/2012-04-24/Identity/Server").success(function (serverConfig) {
     console.log(serverConfig);
     serverPromise.resolve(serverConfig);
@@ -168,9 +171,13 @@ angular.element(document).ready(['$http',function ($http) {
         serverPromise.resolve(null);
     else
         serverPromise.reject();
-  });
+  });*/
+  serverPromise.resolve(null);
+
   // try to retrieve IdentityInstance
   var instancePromise = $q.defer();
+  // Disable until keycloak/organizations are applied. For now resolve to null.
+  /*
   $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
     instancePromise.resolve(instance);
   }).error(function (response) {
@@ -179,6 +186,9 @@ angular.element(document).ready(['$http',function ($http) {
     else
       instancePromise.reject();
   });
+  */
+  instancePromise.resolve(null);
+
   // when both responses are received do sth...
   $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
     console.log("Received restcomm configuration");
