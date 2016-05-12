@@ -679,6 +679,11 @@ public final class Call extends UntypedActor {
 
                 // final UntypedActorContext context = getContext();
                 // context.setReceiveTimeout(Duration.Undefined());
+                SipURI initialInetUri = getInitialIpAddressPort(invite);
+
+                if (initialInetUri != null) {
+                    ((SipServletResponse)message).getSession().setAttribute("realInetUri", initialInetUri);
+                }
             }
 
             // Notify the observers.
@@ -984,10 +989,12 @@ public final class Call extends UntypedActor {
                         session.setAttribute("realInetUri", realInetUri);
                     }
                     final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                    final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
 
                     if (realInetUri != null
-                            && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
-                        logger.info("Using the real ip address of the sip client " + realInetUri.toString()
+                            && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())
+                            && (ackRURIPort != realInetUri.getPort())) {
+                        logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
                                 + " as a request uri of the ACK");
                         ack.setRequestURI(realInetUri);
                     }
