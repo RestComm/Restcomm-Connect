@@ -2281,7 +2281,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Destroy conference if state changed to completed (last participant in call)
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
-                	logger.info("********************************* Got conference in completed state ************************");
+                    logger.info("********************************* Got conference in completed state ************************");
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
                 }
