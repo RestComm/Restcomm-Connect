@@ -146,7 +146,9 @@
                  request.createResponse(100).send();
                  // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                  request.getSession().setAttribute("toInetUri", to);
-                 if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+                 if (logger.isInfoEnabled())
+                    logger.info("bypassLoadBalancer is set to: "+RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
+                 if (RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
                      ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
@@ -206,7 +208,7 @@
              boolean callToSipUri, final boolean patchForNat) {
          request.getSession().setAttribute("lastRequest", request);
          if (logger.isInfoEnabled()) {
-             logger.info("B2BUA (p2p proxy for DID and SIP URIs) - : Got request:\n" + request.getMethod());
+             logger.info("B2BUA (p2p proxy for DID and SIP URIs) - : Got request:\n" + request.getRequestURI().toString());
              logger.info(String.format("B2BUA: Proxying a session from %s to %s", from, to));
          }
 
@@ -267,7 +269,9 @@
              // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
              request.getSession().setAttribute("toInetUri", to);
              if (callToSipUri) {
-                 if (!RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
+                 if (logger.isInfoEnabled())
+                     logger.info("bypassLoadBalancer is set to: "+RestcommConfiguration.getInstance().getMain().getBypassLbForClients());
+                 if (RestcommConfiguration.getInstance().getMain().getBypassLbForClients()) {
                      ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
