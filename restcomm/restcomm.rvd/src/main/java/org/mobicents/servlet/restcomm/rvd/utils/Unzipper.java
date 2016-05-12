@@ -35,18 +35,16 @@ public class Unzipper {
 
               // create the destination directory if it does not exist (works for both file and dir entries)
               if (!destinationDir.exists()) {
-            	  if(logger.isDebugEnabled())
-            	  {
-            		  logger.debug("creating new directory from zip: " + pathname);
-            	  }
+                  if(logger.isDebugEnabled()) {
+                      logger.debug("creating new directory from zip: " + pathname);
+                  }
                   destinationDir.mkdirs();
               }
 
               if (!zipEntry.isDirectory()) {
-            	  if(logger.isDebugEnabled())
-            	  {
-            		  logger.debug("creating new file from zip: " + pathname);
-            	  }
+                  if(logger.isDebugEnabled()) {
+                      logger.debug("creating new file from zip: " + pathname);
+                  }
                   FileOutputStream fileEntryStream = new FileOutputStream(new File(pathname));
                   IOUtils.copy(zipInputStream, fileEntryStream);
                   fileEntryStream.close();

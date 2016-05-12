@@ -133,9 +133,8 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     }
 
     private void precache(final String text, final String gender, final String language) throws Exception {
-    	if(logger.isInfoEnabled())
-        {
-    		logger.info("Synthesizing announcement");
+        if(logger.isInfoEnabled()){
+             logger.info("Synthesizing announcement");
         }
         final SpeechSynthesizerRequest synthesize = new SpeechSynthesizerRequest(gender, language, text);
         Timeout expires = new Timeout(Duration.create(6000, TimeUnit.SECONDS));
@@ -146,9 +145,8 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
             uri = response.get();
         }
         final DiskCacheRequest request = new DiskCacheRequest(uri);
-        if(logger.isInfoEnabled())
-        {
-        	logger.info("Caching announcement");
+        if(logger.isInfoEnabled()){
+            logger.info("Caching announcement");
         }
         cache.tell(request, null);
     }
@@ -167,9 +165,8 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
         if (text != null) {
             precache(text, gender, language);
         }
-        if(logger.isInfoEnabled())
-        {
-        	logger.info("Creating annnouncement");
+        if(logger.isInfoEnabled()){
+            logger.info("Creating annnouncement");
         }
         Announcement announcement = new Announcement(sid, new Sid(accountSid), gender, language, text, uri);
         return announcement;
@@ -201,9 +198,8 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
 
     @PreDestroy
     private void cleanup() {
-    	if(logger.isInfoEnabled())
-        {
-    		logger.info("Stopping actors before endpoint destroy");
+        if(logger.isInfoEnabled()){
+            logger.info("Stopping actors before endpoint destroy");
         }
         system.stop(cache);
         system.stop(synthesizer);

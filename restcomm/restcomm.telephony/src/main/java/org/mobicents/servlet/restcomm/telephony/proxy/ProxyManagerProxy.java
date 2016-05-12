@@ -101,10 +101,9 @@ public final class ProxyManagerProxy extends SipServlet implements SipServletLis
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(ProxyManagerProxy.class)) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("ProxyManagerProxy sip servlet initialized. Will proceed to create ProxyManager");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("ProxyManagerProxy sip servlet initialized. Will proceed to create ProxyManager");
+            }
             context = event.getServletContext();
             final SipFactory factory = (SipFactory) context.getAttribute(SIP_FACTORY);
             Configuration configuration = (Configuration) context.getAttribute(Configuration.class.getName());

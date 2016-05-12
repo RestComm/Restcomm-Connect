@@ -75,10 +75,9 @@ public final class ProxyManager extends UntypedActor {
         final ActorContext context = context();
         context.setReceiveTimeout(Duration.create(60, TimeUnit.SECONDS));
         registerFirstTime();
-        if(logger.isInfoEnabled())
-    	{
-        	logger.info("Proxy Manager started.");
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("Proxy Manager started.");
+        }
     }
 
     private void authenticate(final Object message) {
@@ -171,10 +170,9 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private void registerFirstTime() {
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("First time registration for the gateways");
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("First time registration for the gateways");
+        }
         final GatewaysDao gateways = storage.getGatewaysDao();
         final List<Gateway> results = gateways.getGateways();
         for (final Gateway result : results) {
@@ -195,10 +193,9 @@ public final class ProxyManager extends UntypedActor {
     }
 
     private void register(final Gateway gateway) {
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("About to register gateway: "+gateway.getFriendlyName());
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("About to register gateway: "+gateway.getFriendlyName());
+        }
         register(gateway, null, null);
     }
 

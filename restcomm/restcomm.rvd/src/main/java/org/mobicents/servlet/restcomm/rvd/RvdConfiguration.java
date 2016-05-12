@@ -88,19 +88,17 @@ public class RvdConfiguration {
 
     private RvdConfiguration(ServletContext servletContext) {
         contextRootPath = servletContext.getRealPath("/");
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("contextRootPath: " + contextRootPath);
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("contextRootPath: " + contextRootPath);
+        }
         load();
     }
 
     private RvdConfiguration(String contextRootPath) {
         this.contextRootPath = contextRootPath;
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("contextRootPath: " + contextRootPath);
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("contextRootPath: " + contextRootPath);
+        }
         load();
     }
 
@@ -118,10 +116,9 @@ public class RvdConfiguration {
         this.workspaceBasePath = workspaceBasePath;
 
         restcommConfig = loadRestcommXmlConfig(contextRootPath + "../restcomm.war/WEB-INF/conf/restcomm.xml");
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("Using workspace at " + workspaceBasePath);
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("Using workspace at " + workspaceBasePath);
+        }
     }
 
     /**
@@ -233,10 +230,9 @@ public class RvdConfiguration {
                     throw new IllegalStateException();
                 }
             }
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Using Restcomm server at " + this.restcommBaseUri.toString());
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Using Restcomm server at " + this.restcommBaseUri.toString());
+            }
         }
         return restcommBaseUri;
     }

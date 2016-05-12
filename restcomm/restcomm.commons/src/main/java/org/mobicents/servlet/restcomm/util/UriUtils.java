@@ -77,9 +77,8 @@ public final class UriUtils {
                     String scheme = mbs.getAttribute(obj, "name").toString().replaceAll("\"", "");
                     Integer port = (Integer) mbs.getAttribute(obj, "boundPort");
                     String address = ((String)mbs.getAttribute(obj, "boundAddress")).replaceAll("\"", "");
-                    if(logger.isInfoEnabled())
-                    {
-                    	logger.info("Jboss Http Connector: "+scheme+"://"+address+":"+port);
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Jboss Http Connector: "+scheme+"://"+address+":"+port);
                     }
                     HttpConnector httpConnector = new HttpConnector(scheme, address, port, scheme.equalsIgnoreCase("https"));
                     endPoints.add(httpConnector);
@@ -90,9 +89,8 @@ public final class UriUtils {
                 String scheme = mbs.getAttribute(obj, "scheme").toString().replaceAll("\"", "");
                 String port = obj.getKeyProperty("port").replaceAll("\"", "");
                 String address = obj.getKeyProperty("address").replaceAll("\"", "");
-                if(logger.isInfoEnabled())
-                {
-                	logger.info("Tomcat Http Connector: "+scheme+"://"+address+":"+port);
+                if(logger.isInfoEnabled()){
+                    logger.info("Tomcat Http Connector: "+scheme+"://"+address+":"+port);
                 }
                 HttpConnector httpConnector = new HttpConnector(scheme, address, Integer.parseInt(port), scheme.equalsIgnoreCase("https"));
                 endPoints.add(httpConnector);

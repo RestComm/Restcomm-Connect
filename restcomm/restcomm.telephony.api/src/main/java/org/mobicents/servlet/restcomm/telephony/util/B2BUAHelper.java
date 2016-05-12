@@ -231,11 +231,9 @@
              }
              outRequest.setRequestURI(to);
 
-             if(logger.isInfoEnabled())
-         	{
-	             logger.info("Request: " + request.getMethod() + " content exists: " + request.getContent() != null
-	                     + " content type: " + request.getContentType());
-         	}
+             if(logger.isInfoEnabled()) {
+                 logger.info("Request: " + request.getMethod() + " content exists: " + request.getContent() != null+ " content type: " + request.getContentType());
+             }
 
              if (request.getContent() != null) {
                  final byte[] sdp = request.getRawContent();
@@ -333,12 +331,11 @@
      @SuppressWarnings("unchecked")
      private static String patch(final byte[] data, final String externalIp) throws UnknownHostException, SdpException {
          final String text = new String(data);
-         if(logger.isInfoEnabled())
-     	{
-        	 logger.info("About to patch ");
-        	 logger.info("SDP :" + text);
-        	 logger.info("Using externalIP: " + externalIp);
-     	}
+         if(logger.isInfoEnabled()){
+             logger.info("About to patch ");
+             logger.info("SDP :" + text);
+             logger.info("Using externalIP: " + externalIp);
+         }
          final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
          SessionName sessionName = SdpFactory.getInstance().createSessionName("Restcomm B2BUA");
          sdp.setSessionName(sessionName);
@@ -395,10 +392,9 @@
              sipSession = (SipSession) message.getSession().getAttribute(B2BUA_LINKED_SESSION);
          }
          if (sipSession == null) {
-        	 if(logger.isInfoEnabled())
-         	{
-        		 logger.info("SIP SESSION is NULL");
-         	}
+             if(logger.isInfoEnabled()) {
+                 logger.info("SIP SESSION is NULL");
+             }
          }
          return sipSession;
      }
@@ -426,10 +422,9 @@
              CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
 
              if (callRecord != null) {
-            	 if(logger.isInfoEnabled())
-             	{
-            		 logger.info("CDR found! Updating");
-             	}
+                 if(logger.isInfoEnabled()) {
+                     logger.info("CDR found! Updating");
+                 }
                  callRecord = callRecord.setStatus(CallStateChanged.State.CANCELED.name());
                  final DateTime now = DateTime.now();
                  callRecord = callRecord.setEndTime(now);
@@ -464,10 +459,9 @@
              contact = clonedResponse.getAddressHeader("Contact");
          } catch (ServletParseException e1) {}
          catch (NullPointerException e2) {}
-         if(logger.isInfoEnabled())
-     	{
-        	 logger.info("Contact: " + contact);
-     	}
+         if(logger.isInfoEnabled()) {
+             logger.info("Contact: " + contact);
+         }
          CallDetailRecord callRecord = records.getCallDetailRecord((Sid) linkedRequest.getSession().getAttribute(CDR_SID));
 
          if (response.getContent() != null) {
@@ -483,10 +477,9 @@
                      externalIp = callRecord.getTo().split(":")[1].split("@")[1];
                  }
                  try {
-                	 if(logger.isDebugEnabled())
-                 	{
-                		 logger.debug("Got original address from Registration :" + externalIp);
-                 	}
+                     if(logger.isDebugEnabled()) {
+                         logger.debug("Got original address from Registration :" + externalIp);
+                     }
                      offer = patch(sdp, externalIp);
                  } catch (SdpException e) {
                      logger.error("Unexpected exception while patching sdp ", e);
@@ -502,10 +495,9 @@
 
          // CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
          if (callRecord != null) {
-        	 if(logger.isInfoEnabled())
-         	{
-        		 logger.info("CDR found! Updating");
-         	}
+             if(logger.isInfoEnabled()) {
+                 logger.info("CDR found! Updating");
+             }
              if (!linkedRequest.getMethod().equalsIgnoreCase("BYE")) {
                  if (response.getStatus() == 100 || response.getStatus() == 180 || response.getStatus() == 183) {
                      callRecord = callRecord.setStatus(CallStateChanged.State.RINGING.name());
@@ -546,10 +538,9 @@
          CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
 
          if (callRecord != null) {
-        	 if(logger.isInfoEnabled())
-         	{
-        		 logger.info("CDR found! Updating");
-         	}
+             if(logger.isInfoEnabled()) {
+                 logger.info("CDR found! Updating");
+             }
              callRecord = callRecord.setStatus(state.name());
              final DateTime now = DateTime.now();
              callRecord = callRecord.setEndTime(now);

@@ -179,17 +179,13 @@ public class MmsBridgeController extends MediaServerController {
         }
 
         if (duration.equals(0.0)) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Call wraping up recording. File doesn't exist since duration is 0");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+            }
             final DateTime end = DateTime.now();
             duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-        } else {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
-        	}
+        } else  if(logger.isInfoEnabled()) {
+            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
         }
 
         final Recording.Builder builder = Recording.builder();
@@ -217,12 +213,11 @@ public class MmsBridgeController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        if(logger.isInfoEnabled())
-    	{
-        	logger.info("********** Bridge Controller " + self().path() + " State: \"" + state.toString());
-        	logger.info("********** Bridge Controller " + self().path() + " Processing: \"" + klass.getName() + " Sender: "
-        			+ sender.path());
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("********** Bridge Controller " + self().path() + " State: \"" + state.toString());
+            logger.info("********** Bridge Controller " + self().path() + " Processing: \"" + klass.getName() + " Sender: "
+                + sender.path());
+        }
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -348,10 +343,9 @@ public class MmsBridgeController extends MediaServerController {
 
     private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) {
         if (is(active) && !recording) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Start recording bridged call");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Start recording bridged call");
+            }
             String finishOnKey = "1234567890*#";
             int maxLength = 3600;
             int timeout = 5;

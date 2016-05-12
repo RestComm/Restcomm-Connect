@@ -398,9 +398,8 @@ public class FsProjectStorage {
 
     public static void storeWav(String projectName, String wavname, InputStream wavStream, WorkspaceStorage storage) throws StorageException {
         String wavPathname = getProjectWavsPath(projectName, storage) + File.separator + wavname;
-        if(logger.isDebugEnabled())
-        {
-        	logger.debug( "Writing wav file to " + wavPathname);
+        if(logger.isDebugEnabled()) {
+            logger.debug( "Writing wav file to " + wavPathname);
         }
         try {
             FileUtils.copyInputStreamToFile(wavStream, new File(wavPathname) );
@@ -469,12 +468,10 @@ public class FsProjectStorage {
     public static void deleteWav(String projectName, String wavname, WorkspaceStorage storage) throws WavItemDoesNotExist {
         String filepath = getProjectWavsPath(projectName, storage) + File.separator + wavname;
         File wavfile = new File(filepath);
-        if ( wavfile.delete() )
-        {
-        	if(logger.isDebugEnabled())
-        	{
-        		logger.info( "Deleted " + wavname + " from " + projectName + " app" );
-        	}
+        if ( wavfile.delete() ) {
+            if(logger.isDebugEnabled()) {
+                logger.info( "Deleted " + wavname + " from " + projectName + " app" );
+            }
         }
         else {
             //logger.warn( "Cannot delete " + wavname + " from " + projectName + " app" );

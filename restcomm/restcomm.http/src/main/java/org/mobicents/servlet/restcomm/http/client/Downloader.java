@@ -134,9 +134,8 @@ public final class Downloader extends UntypedActor {
         final ActorRef sender = sender();
         if (HttpRequestDescriptor.class.equals(klass)) {
             final HttpRequestDescriptor request = (HttpRequestDescriptor) message;
-            if(logger.isDebugEnabled())
-            {
-            	logger.debug("New HttpRequestDescriptor, method: "+request.getMethod()+" URI: "+request.getUri()+" parameters: "+request.getParametersAsString());
+            if(logger.isDebugEnabled()){
+                logger.debug("New HttpRequestDescriptor, method: "+request.getMethod()+" URI: "+request.getUri()+" parameters: "+request.getParametersAsString());
             }
             DownloaderResponse response = null;
             try {
@@ -206,9 +205,8 @@ public final class Downloader extends UntypedActor {
 
     @Override
     public void postStop() {
-    	if(logger.isDebugEnabled())
-        {
-    		logger.debug("Downloader at post stop");
+        if(logger.isDebugEnabled()){
+            logger.debug("Downloader at post stop");
         }
         super.postStop();
     }

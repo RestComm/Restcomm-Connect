@@ -200,10 +200,9 @@ public final class MybatisDaoManager implements DaoManager {
         String dataFiles = configuration.getString("data-files");
         String sqlFiles = configuration.getString("sql-files");
         // Fix for Windows system: replace "\" by "/" and add "/" at the beginning - ZAHID
-        if(System.getProperty("os.name").startsWith("Windows"))
-        {
-        	dataFiles="/"+dataFiles.replace('\\', '/');
-        	sqlFiles="/"+sqlFiles.replace('\\', '/');
+        if(System.getProperty("os.name").startsWith("Windows")){
+            dataFiles="/"+dataFiles.replace('\\', '/');
+            sqlFiles="/"+sqlFiles.replace('\\', '/');
         }
         properties.setProperty("data", dataFiles);
         properties.setProperty("sql", sqlFiles);
