@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappService, $state) {
+angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappService, $state, Notifications) {
 	//console.log("INSIDE EventsCtrl");
 	$rootScope.$on("incoming-number-updated", function (event, data) {
         //console.log("new incoming-number-updated event with the following data: ");
@@ -33,6 +33,7 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	        $state.go("public.login");
 	    else
 	    if (error == 'RESTCOMM_AUTH_FAILED' || error == 'RESTCOMM_NOT_AUTHENTICATED') {
+	        Notifications.error('Unauthorized access');
 	        $state.go("public.login");
 	    } else
 	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
