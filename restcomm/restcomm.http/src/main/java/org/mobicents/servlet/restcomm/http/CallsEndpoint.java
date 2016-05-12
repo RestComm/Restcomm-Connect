@@ -201,6 +201,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
+        String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
 
         if (pageSize == null) {
             pageSize = "50";
@@ -221,10 +222,10 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
             if (localInstanceOnly) {
                 filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, null, null);
+                        parentCallSid, conferenceSid, null, null);
             } else {
                 filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, null, null, instanceId);
+                        parentCallSid, conferenceSid, null, null, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -240,10 +241,10 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         try {
             if (localInstanceOnly) {
                 filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, limit, offset);
+                        parentCallSid, conferenceSid, limit, offset);
             } else {
                 filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, limit, offset, instanceId);
+                        parentCallSid, conferenceSid, limit, offset, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
