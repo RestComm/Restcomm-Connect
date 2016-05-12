@@ -245,9 +245,8 @@ public final class Connection extends UntypedActor {
                 buffer.append(" with ID ").append(connId.toString()).append(" ");
                 buffer.append("to an endpoint with ID ").append(endpointId.toString());
             }
-            if(logger.isDebugEnabled())
-            {
-            	logger.debug(buffer.toString());
+            if(logger.isDebugEnabled()) {
+                logger.debug(buffer.toString());
             }
         }
     }

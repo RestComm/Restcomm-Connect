@@ -39,9 +39,8 @@ public final class BridgeEndpoint extends GenericEndpoint {
     @Override
     public void postStop() {
         ActorRef sender = this.sender();
-        if(logger.isInfoEnabled())
-        {
-        logger.info("Bridge: " + self().path() + " bridge id: " + this.id + " at postStop, sender: " + sender.path());
+        if(logger.isInfoEnabled()) {
+            logger.info("Bridge: " + self().path() + " bridge id: " + this.id + " at postStop, sender: " + sender.path());
         }
     }
 

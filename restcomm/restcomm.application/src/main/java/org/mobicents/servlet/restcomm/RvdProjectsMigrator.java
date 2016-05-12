@@ -222,11 +222,8 @@ public class RvdProjectsMigrator {
         if (asServerLog) {
             if (error) {
                 logger.error(message);
-            } else {
-            	if(logger.isInfoEnabled())
-                {
-            		logger.info(message);
-                }
+            } else if(logger.isInfoEnabled()) {
+                logger.info(message);
             }
         }
         // Write to migration log, but use server log if embedded migration
@@ -236,11 +233,8 @@ public class RvdProjectsMigrator {
             } else if (!asServerLog) { // Prevent duplicated messages
                 if (error) {
                     logger.error(message);
-                } else {
-                	if(logger.isInfoEnabled())
-                    {
-                		logger.info(message);
-                    }
+                } else  if(logger.isInfoEnabled()) {
+                    logger.info(message);
                 }
             }
         }

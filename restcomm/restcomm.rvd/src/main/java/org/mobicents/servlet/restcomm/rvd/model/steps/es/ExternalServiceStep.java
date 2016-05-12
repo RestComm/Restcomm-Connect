@@ -186,10 +186,9 @@ public class ExternalServiceStep extends Step {
 
                 // if this is a relative url fill in missing fields from the request
                 if (uri_builder.getHost() == null ) {
-                	if(logger.isDebugEnabled())
-                	{
-                		logger.debug("External Service: Relative url is used. Will override from http request to RVD controller");
-                	}
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("External Service: Relative url is used. Will override from http request to RVD controller");
+                    }
                     uri_builder.setScheme(httpRequest.getScheme());
                     uri_builder.setHost(httpRequest.getServerName());
                     uri_builder.setPort(httpRequest.getServerPort());
@@ -215,13 +214,11 @@ public class ExternalServiceStep extends Step {
             int statusCode;
             JsonElement response_element = null;
 
-            if(logger.isInfoEnabled())
-            {
-            	logger.info("Requesting from url: " + url);
+            if(logger.isInfoEnabled()) {
+                logger.info("Requesting from url: " + url);
             }
-            if(logger.isDebugEnabled())
-            {
-            	logger.debug("Requesting from url: " + url);
+            if(logger.isDebugEnabled()) {
+                logger.debug("Requesting from url: " + url);
             }
             if ( interpreter.getRvdContext().getProjectSettings().getLogging() )
                 interpreter.getProjectLogger().log("Requesting from url: " + url).tag("app",interpreter.getAppName()).tag("ES").tag("REQUEST").done();
@@ -286,10 +283,9 @@ public class ExternalServiceStep extends Step {
 
             // In  case of error in the service no need to proceed. Just continue the "onException" module if set
             if ( statusCode >= 400 && statusCode < 600 ) {
-            	if(logger.isInfoEnabled())
-            	{
-            		logger.info("Remote service failed with: " + response.getStatusLine());
-            	}
+                if(logger.isInfoEnabled()) {
+                    logger.info("Remote service failed with: " + response.getStatusLine());
+                }
                 if ( ! RvdUtils.isEmpty( getExceptionNext()) )
                     return getExceptionNext();
                 else
@@ -309,8 +305,7 @@ public class ExternalServiceStep extends Step {
                         interpreter.getProjectLogger().log(entity_string).tag("app",interpreter.getAppName()).tag("ES").tag("RESPONSE").done();
                     response_element = parser.parse(entity_string);
                 }
-            } else if(logger.isDebugEnabled())
-            {
+            } else if(logger.isDebugEnabled()) {
                 logger.debug("ES: No parsing will be done to the response");
             }
 
@@ -341,9 +336,8 @@ public class ExternalServiceStep extends Step {
                 if ( "fixed".equals(getNextType()) && RvdUtils.isEmpty(next) ) {
                     throw new InterpreterException("No valid module could be found for ES routing"); // use a general exception for now.
                 }
-                if(logger.isInfoEnabled())
-                {
-                	logger.info( "Routing enabled. Chosen target: " + next);
+                if(logger.isInfoEnabled()) {
+                    logger.info( "Routing enabled. Chosen target: " + next);
                 }
             }
 
@@ -353,11 +347,10 @@ public class ExternalServiceStep extends Step {
             try {
                 if ( getDoRouting() && ("responseBased".equals(getNextType()) || "mapped".equals(getNextType())) ) {
                     for ( Assignment assignment : getAssignments() ) {
-                    	if(logger.isDebugEnabled())
-                    	{
-                    		logger.debug("working on variable " + assignment.getDestVariable() );
-                    		logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
-                    	}
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("working on variable " + assignment.getDestVariable() );
+                            logger.debug( "moduleNameScope: " + assignment.getModuleNameScope());
+                        }
                         if ( assignment.getModuleNameScope() == null || assignment.getModuleNameScope().equals(next) ) {
                             String value = null;
                             try {
@@ -373,17 +366,15 @@ public class ExternalServiceStep extends Step {
                                 interpreter.putModuleVariable(assignment.getDestVariable(), value);
 
                             //interpreter.putVariable(assignment.getDestVariable(), value );
-                        } else if(logger.isDebugEnabled())
-                        {
+                        } else if(logger.isDebugEnabled()) {
                             logger.debug("skipped assignment to " + assignment.getDestVariable() );
                         }
                     }
                 }  else {
                     for ( Assignment assignment : getAssignments() ) {
-                    	if(logger.isDebugEnabled())
-                    	{
-                    		logger.debug("working on variable " + assignment.getDestVariable() );
-                    	}
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("working on variable " + assignment.getDestVariable() );
+                        }
                         String value = null;
                         try {
                             value = interpreter.evaluateExtractorExpression(assignment.getValueExtractor(), response_element);
@@ -400,9 +391,8 @@ public class ExternalServiceStep extends Step {
                         //interpreter.putVariable(assignment.getDestVariable(), value );
                     }
                 }
-                if(logger.isDebugEnabled())
-                {
-                	logger.debug("variables after processing ExternalService step: " + interpreter.getVariables().toString() );
+                if(logger.isDebugEnabled()) {
+                    logger.debug("variables after processing ExternalService step: " + interpreter.getVariables().toString() );
                 }
             } catch (JsonSyntaxException e) {
                 throw new BadExternalServiceResponse("External Service request received a malformed JSON response" );

@@ -254,9 +254,8 @@ public class BandwidthNumberProvisioningManager implements PhoneNumberProvisioni
             logger.error("Phone Number Type: " + filters.getPhoneNumberTypeSearch().name() + " is not supported");
         }
         builder.addParameter("quantity", String.valueOf(filters.getRangeSize() == -1 ? 5 : filters.getRangeSize()));
-        if(logger.isDebugEnabled())
-        {
-        	logger.debug("building uri: " + builder.build().toString());
+        if(logger.isDebugEnabled()) {
+            logger.debug("building uri: " + builder.build().toString());
         }
         return builder.build().toString();
     }

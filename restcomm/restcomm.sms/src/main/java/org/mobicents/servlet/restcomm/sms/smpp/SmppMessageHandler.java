@@ -65,16 +65,14 @@ public class SmppMessageHandler extends UntypedActor  {
         final ActorRef sender = sender();
         final ActorRef self = self();
         if (message instanceof SmppInboundMessageEntity){
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("SmppMessageHandler processing Inbound Message");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("SmppMessageHandler processing Inbound Message");
+            }
             inbound((SmppInboundMessageEntity) message);
         }else if(message instanceof SmppOutboundMessageEntity ){
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("SmppMessageHandler processing Outbound Message");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("SmppMessageHandler processing Outbound Message");
+            }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof CreateSmsSession) {
             final ActorRef session = session();
@@ -95,11 +93,10 @@ public class SmppMessageHandler extends UntypedActor  {
         IncomingPhoneNumber number = numbers.getIncomingPhoneNumber(to);
 
         if( redirectToHostedSmsApp(self,request, storage.getAccountsDao(), storage.getApplicationsDao(),to  )){
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
-        	}
-        	return;
+            if(logger.isInfoEnabled()) {
+                logger.info("SMPP Message Accepted - A Restcomm Hosted App is Found for Number : " + number.getPhoneNumber() );
+            }
+            return;
         } else {
             logger.error("SMPP Message Rejected : No Restcomm Hosted App Found for inbound number : " + number.getPhoneNumber() );
         }
@@ -196,10 +193,9 @@ public class SmppMessageHandler extends UntypedActor  {
     }
 
     public void outbound(SmppOutboundMessageEntity request) throws SmppInvalidArgumentException, IOException {
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("Message is Received by the SmppSessionOutbound Class");
-    	}	
+        if(logger.isInfoEnabled()) {
+            logger.info("Message is Received by the SmppSessionOutbound Class");
+        }
 
         byte[] textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_GSM);
         int smppTonNpiValue =  Integer.parseInt(SmppService.getSmppTonNpiValue()) ;
@@ -210,11 +206,10 @@ public class SmppMessageHandler extends UntypedActor  {
         submit0.setDestAddress(new Address((byte)smppTonNpiValue, (byte)smppTonNpiValue, request.getSmppTo()));
         submit0.setShortMessage(textBytes);
         try {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("To : " + request.getSmppTo() + " From : " + request.getSmppFrom() );
-        	}
-        	SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
+            if(logger.isInfoEnabled()) {
+                logger.info("To : " + request.getSmppTo() + " From : " + request.getSmppFrom() );
+            }
+            SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
         } catch (RecoverablePduException | UnrecoverablePduException
                 | SmppTimeoutException | SmppChannelException
                 | InterruptedException e) {

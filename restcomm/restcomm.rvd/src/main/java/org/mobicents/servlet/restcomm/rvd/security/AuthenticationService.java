@@ -38,9 +38,8 @@ public class AuthenticationService {
      * @throws RvdSecurityException
      */
     public RestcommAccountInfoResponse authenticate(String username, String password) throws RvdSecurityException {
-        if(logger.isDebugEnabled())
-        {
-        	logger.debug("Authenticating " + username + " on Restcomm");
+        if(logger.isDebugEnabled()) {
+            logger.debug("Authenticating " + username + " on Restcomm");
         }
         String restcommAuthUrl = baseRestcommUrl;
 
