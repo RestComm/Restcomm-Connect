@@ -14,7 +14,8 @@ var App = angular.module('Rvd', [
 	'ngIdle',
 	'ui.router',
 	'ngStorage',
-	'angular-md5'
+	'angular-md5',
+	'ngFileSaver'
 ]);
 
 var rvdMod = App;
@@ -95,8 +96,8 @@ App.config(['$stateProvider','$urlRouterProvider', '$translateProvider', functio
         templateUrl : 'templates/packaging/form.html',
         controller : 'packagingCtrl',
         resolve: {
-            rappWrap: function(RappService) {return RappService.getRapp();},
-            rvdSettingsResolver: function (rvdSettings) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
+            rappWrap: function(RappService, $stateParams,authorize) {return RappService.getRapp($stateParams);},
+            rvdSettingsResolver: function (rvdSettings,authorize) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
         }
     });
     $stateProvider.state('root.rvd.packaging.download', {
@@ -104,7 +105,7 @@ App.config(['$stateProvider','$urlRouterProvider', '$translateProvider', functio
    		templateUrl : 'templates/packaging/download.html',
    		controller : 'packagingDownloadCtrl',
    		resolve: {
-   			binaryInfo: packagingDownloadCtrl.getBinaryInfo
+   			binaryInfo: function (RappService,$stateParams,authorize) { return RappService.getBinaryInfo($stateParams)}
    		}
     });
     // not sure what this state does. It should probably be removed
