@@ -262,7 +262,7 @@ public final class SmsService extends UntypedActor {
             if (number != null) {
                 URI appUri = number.getSmsUrl();
                 ActorRef interpreter = null;
-                if (appUri != null) {
+                if (appUri != null || number.getSmsApplicationSid() != null) {
                     final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
                     builder.setSmsService(self);
                     builder.setConfiguration(configuration);
