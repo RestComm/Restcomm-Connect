@@ -115,12 +115,13 @@ angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$stateParams', 'p
 	retrieveLog($scope.applicationSid);
 }]);
 
-App.controller('authMenuCtrl', ['$scope', 'authentication', '$location', '$modal','$q', '$http', function ($scope, authentication, $location, $modal, $q, $http) {
+App.controller('authMenuCtrl', function ($scope, authentication, $location, $modal, $q, $http, $state) {
 	$scope.authInfo = authentication.getAuthInfo();
 	//$scope.username = authentication.getTicket(); //"Testuser@test.com";
 
 	function logout() {
 		authentication.doLogout();
+		$state.go('root.public.login');
 	}
 	$scope.logout = logout;
 
@@ -165,11 +166,7 @@ App.controller('authMenuCtrl', ['$scope', 'authentication', '$location', '$modal
 		  // $log.info('Modal dismissed at: ' + new Date());
 		});
 	}
-
-
-
-
-}]);
+});
 
 App.controller('containerCtrl', function ($scope, authentication) {
     $scope.authInfo = authentication.getAuthInfo();
