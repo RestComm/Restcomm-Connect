@@ -36,6 +36,9 @@ if [ "$MYSQL_BACKUP" = "TRUE" ] || [ "$MYSQL_BACKUP" = "true" ]; then
   	echo "Debian/Ubuntu: apt-get install mysql-client"
   	exit 1
   fi
+  if [ ! -d "$db_backup_folder" ]; then
+    mkdir $db_backup_folder
+  fi
   echo "Will create backup $db_backup_folder/$db_backup_file.tgz"
   mysqldump -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_IP_ADDRESS -P $MYSQL_PORT --add-drop-table --lock-tables -B $RESTCOMM_DB  -r $db_backup_folder/$db_backup_file
   tar cvzf $db_backup_folder/$db_backup_file.tgz -C $db_backup_folder $db_backup_file
