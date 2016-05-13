@@ -166,7 +166,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     templateUrl: 'modules/logs-calls.html',
     controller: 'LogsCallsCtrl'
   });
-  $stateProvider.state('restcom.logs-call-details', {
+  $stateProvider.state('restcomm.logs-call-details', {
     url:'/logs/calls/:callSid',
     templateUrl: 'modules/logs-calls-details.html',
     controller: 'LogsCallsDetailsCtrl',
