@@ -9,12 +9,10 @@ the following tutorial will show how to get started with Restcomm and Mysql._
 
 == Requirements
 
-* Install Restcomm using our link:https://mobicents.ci.cloudbees.com/job/RestComm-Documentation/ws/connect/configuration/How%20to%20build%20Restcomm-Connect%20from%20source.html[previous guide].
-* Install link:http://dev.mysql.com/doc/refman/5.7/en/installing.html[MySQL].
+* Install Restcomm using our <<How to build Restcomm-Connect from source.adoc#requirements,previous guide>>.
+* Install link:http://dev.mysql.com/doc/refman/5.7/en/installing.html[MySQL]
 
 == Configuring the mybatis.xml file to use Mysql
-
-
 * Go to the *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/* directory.
  Open the *mybatis.xml*. $RESTCOMM_HOME is conventional name for unzipped *Restcomm-JBoss-AS7-7.6.0.869* directory.
 * Change the
@@ -98,9 +96,9 @@ Open the *restcomm.xml* file.
 
 * Go to the $RESTCOMM_HOME/bin/restcomm/ directory.
 
-In order to check whether the setup was successful you need to do the following:
+=== Checking whether the setup was successful
 
-* To start Restcomm and media server run the following command:
+* In order to check the setup first you have to start Restcomm and media server running the following command:
 
 [source,bash]
 ----
@@ -112,4 +110,4 @@ In order to check whether the setup was successful you need to do the following:
 * Log in with the administrator@company.com username and the RestComm password. Then you should change the default password.
 If you have changed the default password before, you should insert your own password at once.
 
-Here you can read the detailed information on link:https://mobicents.ci.cloudbees.com/job/RestComm-Documentation/ws/connect/configuration/Starting%20Restcomm-Connect.html[how to start Restcomm-Connect].
+Here you can read the detailed information on <<Starting Restcomm-Connect.adoc#configure-restcomm-iP-information-and-text-to-speech,Starting Restcomm-Connect>>.
