@@ -28,33 +28,25 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.DomainPermission;
-import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
 
 /**
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 public class RestcommRoles {
-    //private Logger logger = Logger.getLogger(RestcommRoles.class);
-    private volatile Map<String, SimpleRole> roles;
+    private Map<String, SimpleRole> roles;
 
+    /**
+     * Parses restcomm.xml configuration and builds a map out of roles from it.
+     *
+     * @param configuration - An apache configuration object based on the <security-roles/> element
+     */
     public RestcommRoles(Configuration configuration) {
+        roles = new HashMap<String, SimpleRole>();
         loadSecurityRoles(configuration);
     }
 
     public SimpleRole getRole(final String role) {
-        if (roles != null) {
-            return roles.get(role);
-        } else {
-            synchronized (this) {
-                if (roles == null) {
-                    roles = new HashMap<String, SimpleRole>();
-                    final ShiroResources services = ShiroResources.getInstance();
-                    final Configuration configuration = services.get(Configuration.class);
-                    loadSecurityRoles(configuration.subset("security-roles"));
-                }
-            }
-            return roles.get(role);
-        }
+        return roles.get(role);
     }
 
     private void loadSecurityRoles(final Configuration configuration) {

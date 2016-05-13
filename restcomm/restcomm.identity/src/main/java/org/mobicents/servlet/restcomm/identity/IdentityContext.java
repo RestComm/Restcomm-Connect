@@ -19,12 +19,13 @@
  */
 package org.mobicents.servlet.restcomm.identity;
 
+import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 
 
 /**
  * Identity Context holds all identity related entities whose lifecycle follows Restcomm lifecycle, such as
- * keycloak deployment and restcomm roles.
+ * keycloak deployment (to be added) and restcomm roles.
  *
  * In a typical use case you can  access to the IdentityContext from the ServletContext.
  *
@@ -33,7 +34,16 @@ import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 public class IdentityContext {
     RestcommRoles restcommRoles;
 
+    /**
+     * @param restcommConfiguration An apache configuration object representing <restcomm/> element of restcomm.xml
+     */
+    public IdentityContext(Configuration restcommConfiguration) {
+        this.restcommRoles = new RestcommRoles(restcommConfiguration.subset("runtime-settings").subset("security-roles"));
+    }
+
     public IdentityContext(RestcommRoles restcommRoles) {
+        if (restcommRoles == null)
+            throw  new IllegalArgumentException("Cannot create an IdentityContext object with null roles!");
         this.restcommRoles = restcommRoles;
     }
 
