@@ -3,11 +3,10 @@
 
 == Requirements
 
-*  Install the GNU screen (it is optional but recommended)
-
-* Install IPCalc
-* Install MySQL
-* You must have *JDK - 7* installed on your computer
+*  Install the link:https://www.linode.com/docs/networking/ssh/using-gnu-screen-to-manage-persistent-terminal-sessions[GNU screen] (it is optional but recommended)
+* Install link:http://linuxaria.com/howto/linux-subnet-calculator-cidr[IPCalc]
+* Install link:http://dev.mysql.com/doc/refman/5.7/en/installing.html[MySQL]
+* You must have link:http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html[JDK - 7] installed on your computer
 
 == Download and unzip Restcomm binary
 
@@ -25,10 +24,15 @@ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifac
   Further we shall refer to this above Restcomm directory as the *$RESTCOMM_HOME*.
 
 == Configure Restcomm IP information and Text-to-speech
+=== Add your IP address
+_A single host may have multiple IP addresses.
+To get Restcomm working properly it is important to indicate the right IP address.
+For local testing you can use localhost address (e.g. 127.0.0.1), in real working environment you will
+need to use your public IP address._
 
 * Go to the directory *$RESTCOMM_HOME/bin/restcomm*.
 * Open the file *restcomm.conf*.
-* Go to the section *# Network configuration*
+* Go to the section *# Network configuration*. You have to indicate the following information:
 
 [source,bash]
 ----
@@ -39,27 +43,51 @@ SUBNET_MASK=''
 NETWORK=''
 BROADCAST_ADDRESS=''
 ----
-
-* In order to get the details of your server you should run the following command:
-
-[source,bash]
-----
-ifconfig
-----
-You will see something like this:
-
-image::images/8.png[]
-
-* In order to get the Network address of your computer run the command:
+==== Obtaining the network interface
+* First you have to get the information on your network interface. Run the command:
 
 [source,bash]
 ----
  netstat -r
 ----
+* Picture below shows sample output for the command.
+Your *network interface* you can find in the Iface column in the same row where Gateway is indicated ( for example wlx60e32716068a ).
+
+* You will have multiple rows for the same network interface.
+One of the rows in the Destination column contains the *network address*. ( for example 172.21.0.0 )
 
 image::images/10.png[]
 
-* Configure the following variables with the network configuration details of your server:
+=== Obtaining the public IP
+* In order to get your public ip address you should run the following command:
+
+[source,bash]
+----
+ifconfig
+----
+* You will have to find the same network interface name.
+The information you will need can be found in the output:
+
+image::images/8.png[]
+
+* Your *IP address* ( for example 172.21.0.107 ) you will see in
+[source,bash]
+----
+inet addr
+----
+
+* Your *subnet mask* ( for example 255.255.255.0 ) you will see in
+[source,bash]
+----
+Mask
+----
+* Your *broadcast address* ( for example 172.21.0.255 ) you will see in
+[source,bash]
+----
+Bcast
+----
+=== Network configuration
+* Insert the network configuration details of your server in the following variables:
 
 [source,bash]
 ----
@@ -130,6 +158,6 @@ directory and run
 * Open any SIP phone of your choice.
 You may use *Olympus*. Here you can find link:http://docs.telestax.com/how-to-use-olympus-with-restcomm[how to use Olympus with Restcomm].
 
-* Go to the *Contacts* and make a test call at +1234 number.
+* Go to the *Contacts* and make a test call at +1234 number. You will hear the standard voice message that is 2-3 seconds long.
 
 image::images/15.png[]

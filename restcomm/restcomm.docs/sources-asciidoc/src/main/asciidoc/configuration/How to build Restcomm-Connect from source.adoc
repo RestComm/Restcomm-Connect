@@ -98,3 +98,5 @@ image::images/3.png[]
 
 Note that the zip file called *Restcomm-JBoss-AS7-7.6.2* is the binary for JBoss container.
 You can copy this zip file into a directory on your computer and unzip the content.
+
+Here you can read the detailed information on <<Starting Restcomm-Connect.adoc#configure-restcomm-iP-information-and-text-to-speech,Starting Restcomm-Connect>>.
