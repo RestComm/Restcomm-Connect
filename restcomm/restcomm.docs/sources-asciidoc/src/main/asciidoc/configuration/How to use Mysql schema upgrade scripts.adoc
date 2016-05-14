@@ -1,0 +1,52 @@
+[[mysql-schema-upgrade]]
+*How to use Mysql schema upgrade scripts*
+
+*Overview*
+
+The Mysql schema upgrade scripts will take care to upgrade the schema of existing
+Restcomm Mysql database to the latest schema.
+
+Before anything, scripts will create a backup of the existing database that will include schema and data.
+Database backup files are located at: **$RESTCOMM_HOME/bin/restcomm/upgrade_scripts/backups**
+
+*Requirements*
+
+* Install mysql-clients package
+
+*Step 1 – Edit uprgade.conf*
+
+Edit and save the **$RESTCOMM_HOME/bin/restcomm/upgrade.conf** and provide the following:
+
+- MySQL server ip address
+- MySQL server port
+- MySQL username
+- MySQL password
+- Restcomm DB name
+
+*Step2 - Run the upgrade.sh script*
+
+Run the **$RESTCOMM_HOME/bin/restcomm/upgrade.sh** script.
+
+The script will first create backup of the existing database and then will proceed to apply the sql upgrade scripts.
+
+At the end the script will report the result like:
+
+```
++---------+------------------------------------------------------+---------------------+---------+
+| Version | Description                                          | Installed on        | State   |
++---------+------------------------------------------------------+---------------------+---------+
+| 1       | << Flyway Baseline >>                                | 2016-05-12 18:25:31 | Baselin |
+| 7.5.1   | For 750 update instance id                           | 2016-05-12 18:25:32 | Success |
+| 7.5.2   | For 750 update restcomm incoming phone numbers table | 2016-05-12 18:25:33 | Success |
+| 7.5.3   | For 750 add instanceId to call details record table  | 2016-05-12 18:25:33 | Success |
+| 7.5.4   | For 750 add instanceid to registrations              | 2016-05-12 18:25:33 | Success |
+| 7.5.5   | For 750 update restcomm sms messages table           | 2016-05-12 18:25:33 | Success |
+| 7.5.6   | For 750 update restcomm application records          | 2016-05-12 18:25:34 | Success |
++---------+------------------------------------------------------+---------------------+---------+
+```
+
+*Troubleshooting*
+
+If you need to restore a backup run the following backup:
+
+mysql -u MYSQL_USER -pMYSQL_PASSWORD -h MYSQL_HOST -P MYSQL_PORT < RESTCOMM_BACKUP_FILE
