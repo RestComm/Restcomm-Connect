@@ -64,10 +64,9 @@ public class RasService {
 
 
     public InputStream createZipPackage(RvdProject project) throws RvdException {
-    	if(logger.isDebugEnabled())
-    	{
-    		logger.debug("Creating zip package for project " + project.getName());
-    	}
+        if(logger.isDebugEnabled()) {
+            logger.debug("Creating zip package for project " + project.getName());
+        }
         String projectName = project.getName();
 
         // extract info and config parts of a Rapp
@@ -111,10 +110,9 @@ public class RasService {
 
             FsPackagingStorage.storeRappBinary(tempFile, projectName, workspaceStorage);
             // TODO - if FsProjectStorage  is not used, the temporaty file should still be removed (in this case it is not moved) !!!
-        	if(logger.isDebugEnabled())
-        	{
-        		logger.debug("Zip package created for project " + projectName);
-        	}
+            if(logger.isDebugEnabled()) {
+                logger.debug("Zip package created for project " + projectName);
+            }
 
             return FsPackagingStorage.getRappBinary(projectName, workspaceStorage);
         } catch (IOException e) {
@@ -135,11 +133,10 @@ public class RasService {
     public String importAppToWorkspace(String applicationSid, InputStream packageZipStream, String loggedUser,
             ProjectService projectService) throws RvdException {
         File tempDir = RvdUtils.createTempDir();
-    	if(logger.isDebugEnabled())
-    	{
-    		logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
-    	}
-    	Unzipper unzipper = new Unzipper(tempDir);
+        if(logger.isDebugEnabled()) {
+            logger.debug("Unzipping ras package to temporary directory " + tempDir.getPath());
+        }
+        Unzipper unzipper = new Unzipper(tempDir);
         unzipper.unzip(packageZipStream);
 
         String newProjectName;

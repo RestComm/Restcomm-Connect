@@ -363,10 +363,9 @@ public final class SmsInterpreter extends UntypedActor {
                 }
             }
         }  else if (ParserFailed.class.equals(klass)) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("ParserFailed received. Will stop the call");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("ParserFailed received. Will stop the call");
+            }
             fsm.transition(message, finished);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
@@ -614,10 +613,9 @@ public final class SmsInterpreter extends UntypedActor {
                 if ((type != null && content != null) && (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html"))) {
                     parser = parser(content);
                 } else {
-                	if(logger.isInfoEnabled())
-                	{
-                		logger.info("DownloaderResponse getContentType is null: "+response);
-                	}
+                    if(logger.isInfoEnabled()) {
+                        logger.info("DownloaderResponse getContentType is null: "+response);
+                    }
                     final NotificationsDao notifications = storage.getNotificationsDao();
                     final Notification notification = notification(WARNING_NOTIFICATION, 12300, "Invalide content-type.");
                     notifications.addNotification(notification);

@@ -88,6 +88,15 @@
                 }
             }
 
+            #dropdown-list{
+            max-height: 500px;
+            overflow: auto;
+            position: relative;
+            left: 50px;
+            box-shadow:none;
+            }
+
+
 
         </style>
 
@@ -124,18 +133,18 @@
         <script type="text/javascript" src="resources/js/controllers/logs-transcriptions.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-incoming.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-outgoing.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>        
+        <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>
         <script type="text/javascript" src="resources/js/controllers/events.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
         <script type="text/javascript" src="resources/js/directives.js"></script>
-        
+
         <!-- Restcomm Apps dependencies -->
         <script type="text/javascript" src="resources/js/restcommApps/Module.js"></script>
         <script type="text/javascript" src="resources/js/restcommApps/appManager.js"></script>
         <script type="text/javascript" src="resources/js/restcommApps/appConfig.js"></script>
         <script type="text/javascript" src="resources/js/restcommApps/services.js"></script>
-        
+
     </head>
     <body>
         <div id="wrap">
@@ -171,7 +180,7 @@
                                 <li><a ng-href="/restcomm-rvd/" target="_blank"><i class="fa fa-pencil"></i> Visual Designer</a></li>
                                 <li class="divider-vertical"></li>
                                 <li><a ng-href="#/ras/" ><i class="fa fa-shopping-cart"></i> Restcomm Apps</a></li>
-                                <li class="divider-vertical"></li>  
+                                <li class="divider-vertical"></li>
                                 <!--<li><a ng-href="#/providers"><i class="fa fa-cogs"></i> Providers</a></li>-->
                                 <!--<li class="divider-vertical"></li>-->
                                 <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
@@ -181,11 +190,11 @@
                             <ul class="nav navbar-nav pull-right">
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ auth.getLoggedUser() }} <b class="caret"></b></a>
-                                    <ul id="rightMenu" class="dropdown-menu pull-right">
+                                    <ul id="dropdown-list" class="dropdown-menu">
                                         <li><a href="#/profile/{{ auth.getAccountSid() }}"><i class="fa fa-cog"></i> Account Settings</a></li>
                                         <li class="divider"></li>
                                         <li class="navbar-header text-muted" style="margin-left: 10px;">Sub Accounts</li>
-                                        <li ng-repeat="account in accountsList" ng-hide="account.sid == auth.getAccountSid()"><a href="#"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>
+                                        <li ng-repeat="account in accountsList" ng-hide="account.sid == auth.getAccountSid()"><a href="#/profile/{{account.sid}}"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>
                                         <li class="disabled"><a href="#"></a> </li>
                                         <li class="disabled"><a href="#"></a> </li>
                                         <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><i class="fa fa-plus"></i> Create New Account...</a> </li>

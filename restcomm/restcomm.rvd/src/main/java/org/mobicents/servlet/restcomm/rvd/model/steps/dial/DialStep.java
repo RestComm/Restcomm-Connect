@@ -52,9 +52,8 @@ public class DialStep extends Step {
 
     @Override
     public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
-        if(logger.isInfoEnabled())
-        {
-        	logger.info("handling dial action");
+        if(logger.isInfoEnabled()) {
+            logger.info("handling dial action");
         }
         if ( RvdUtils.isEmpty(nextModule) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );

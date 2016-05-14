@@ -242,10 +242,9 @@ public final class SmsSession extends UntypedActor {
         // 1. This SMS is not for a registered client
         // 2, SMPP is activated
         if (toClient == null && smppActivated) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + to );
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + to );
+            }
             if (sendUsingSmpp(from, to, body))
                 return;
         }
@@ -307,11 +306,10 @@ public final class SmsSession extends UntypedActor {
 
     private boolean sendUsingSmpp(String from, String to, String body) {
         if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
-        	}
-        	try {
+            if(logger.isInfoEnabled()) {
+                logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
+            }
+            try {
                 final String smppFrom = from ;
                 final String smppTo = to ;
                 final String smppContent = body;

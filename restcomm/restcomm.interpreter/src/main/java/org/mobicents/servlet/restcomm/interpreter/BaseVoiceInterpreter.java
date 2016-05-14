@@ -443,10 +443,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
     //Downloader finish with this callback before shutdown everything. Issue https://github.com/Mobicents/RestComm/issues/437
     void callback(boolean ask) {
         if (statusCallback != null) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("About to execute statusCallback: "+statusCallback.toString());
-        	}
+            if(logger.isInfoEnabled()){
+                logger.info("About to execute statusCallback: "+statusCallback.toString());
+            }
             if (statusCallbackMethod == null) {
                 statusCallbackMethod = "POST";
             }
@@ -464,12 +463,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     logger.error("Exception during callback with ask pattern");
                 }
             }
-        } else {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("status callback is null");
-        	}
+        } else if(logger.isInfoEnabled()){
+            logger.info("status callback is null");
         }
+
     }
 
     void callback() {
@@ -819,7 +816,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
         public void execute(final Object message) throws Exception {
             // final Class<?> klass = message.getClass();
             final DownloaderResponse response = (DownloaderResponse) message;
-            if (logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()){
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
             }
             final Notification notification = notification(WARNING_NOTIFICATION, 21402, "URL Not Found : "
@@ -1507,14 +1504,13 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             Attribute attribute = verb.attribute("action");
             String digits = collectedDigits.toString();
             collectedDigits = new StringBuffer();
-            if(logger.isInfoEnabled())
-            {
-            	logger.info("Digits collected: "+digits);
+            if(logger.isInfoEnabled()){
+                logger.info("Digits collected: "+digits);
             }
-            if (digits.equals(finishOnKey)) {
+            if (digits.equals(finishOnKey)){
                 digits = "";
             }
-            if (logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()){
                 logger.debug("Digits collected : " + digits);
             }
             // https://bitbucket.org/telestax/telscale-restcomm/issue/150/verb-is-looping-by-default-and-never
@@ -1567,9 +1563,8 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     return;
                 }
             }
-            if(logger.isInfoEnabled())
-            {
-            	logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
+            if(logger.isInfoEnabled()){
+                logger.info("Attribute, Action or Digits is null, FinishGathering failed, moving to the next available verb");
             }
             // Ask the parser for the next action to take.
             final GetNextVerb next = GetNextVerb.instance();
@@ -1707,7 +1702,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 records.updateCallDetailRecord(callRecord);
                 // Update the application.
-                callback();
+//                callback();
             }
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
@@ -1715,12 +1710,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             if (duration.equals(0.0)) {
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - callRecord.getStartTime().getMillis()) / 1000);
-            } else {
-            	if(logger.isDebugEnabled())
-            	{
-            		logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
-            	}
+            } else if(logger.isDebugEnabled()) {
+                logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
             }
+
             final Recording.Builder builder = Recording.builder();
             builder.setSid(recordingSid);
             builder.setAccountSid(accountId);
@@ -1793,9 +1786,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // If action is present redirect to the action URI.
+            String action = null;
             attribute = verb.attribute("action");
             if (attribute != null) {
-                String action = attribute.value();
+                action = attribute.value();
                 if (action != null && !action.isEmpty()) {
                     URI target = null;
                     try {
@@ -1849,6 +1843,9 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                         final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
                         parameters.add(new BasicNameValuePair("Digits", response.get()));
                         request = new HttpRequestDescriptor(uri, method, parameters);
+                        if (logger.isInfoEnabled()){
+                            logger.info("About to execute Record action to: "+uri);
+                        }
                         downloader.tell(request, self());
                         // A little clean up.
                         recordingSid = null;
@@ -1857,7 +1854,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                     } else if (CallStateChanged.class.equals(klass)) {
                         parameters.add(new BasicNameValuePair("Digits", "hangup"));
                         request = new HttpRequestDescriptor(uri, method, parameters);
-                        downloader.tell(request, null);
+                        if (logger.isInfoEnabled()) {
+                            logger.info("About to execute Record action to: "+uri);
+                        }
+                        downloader.tell(request, self());
                         // A little clean up.
                         recordingSid = null;
                         recordingUri = null;
@@ -1866,8 +1866,10 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
 //                    source.tell(stop, source);
                 }
             }
-            if (CallStateChanged.class.equals(klass)) {
-                source.tell(new StopInterpreter(), source);
+            if (CallStateChanged.class.equals(klass) ) {
+                if (action == null || action.isEmpty()) {
+                    source.tell(new StopInterpreter(), source);
+                }
             } else {
                 // Ask the parser for the next action to take.
                 final GetNextVerb next = GetNextVerb.instance();

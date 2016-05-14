@@ -112,9 +112,8 @@ public class AutheticationFilter implements ResourceFilter, ContainerRequestFilt
                 request.getCookies().remove(RvdConfiguration.TICKET_COOKIE_NAME);
         }
 
-        if(logger.isDebugEnabled())
-        {
-        	logger.debug("denied access for request ");
+        if(logger.isDebugEnabled()) {
+            logger.debug("denied access for request ");
         }
         RvdException e = new UserNotAuthenticated();
         RvdResponse rvdResponse = new RvdResponse(RvdResponse.Status.ERROR).setException(e);

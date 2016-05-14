@@ -172,10 +172,9 @@ public final class SmppService extends UntypedActor {
 
             this.smppList.add(smpp);
 
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("creating new SMPP connection " + smpp);
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("creating new SMPP connection " + smpp);
+            }
 
         }
 
@@ -225,10 +224,9 @@ public final class SmppService extends UntypedActor {
             this.smppClientOpsThread.scheduleConnect(smpp);
         }
 
-        if(logger.isInfoEnabled())
-    	{
-        	logger.info("SMPP Service started");
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("SMPP Service started");
+        }
     }
 
     private SipURI outboundInterface(String transport) {

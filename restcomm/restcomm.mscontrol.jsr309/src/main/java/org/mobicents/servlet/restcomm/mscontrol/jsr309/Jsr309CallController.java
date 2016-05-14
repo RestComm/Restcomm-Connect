@@ -253,12 +253,11 @@ public class Jsr309CallController extends MediaServerController {
         public void onEvent(SdpPortManagerEvent event) {
             EventType eventType = event.getEventType();
 
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            	logger.info("********** Call Controller Processing Event: \"SdpPortManagerEvent\" (type = " + eventType + ")");
-        	}
-            
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Call Controller Processing Event: \"SdpPortManagerEvent\" (type = " + eventType + ")");
+            }
+
             try {
                 if (event.isSuccessful()) {
                     if (is(initializing) || is(updatingMediaSession)) {
@@ -324,11 +323,10 @@ public class Jsr309CallController extends MediaServerController {
         public void onEvent(PlayerEvent event) {
             EventType eventType = event.getEventType();
 
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            	logger.info("********** Call Controller Processing Event: \"PlayerEvent\" (type = " + eventType + ")");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Call Controller Processing Event: \"PlayerEvent\" (type = " + eventType + ")");
+            }
             if (PlayerEvent.PLAY_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response;
                 if (event.isSuccessful()) {
@@ -353,12 +351,11 @@ public class Jsr309CallController extends MediaServerController {
         public void onEvent(SignalDetectorEvent event) {
             EventType eventType = event.getEventType();
 
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            	logger.info("********** Call Controller Processing Event: \"SignalDetectorEvent\" (type = " + eventType + ")");
-        	}
-            
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Call Controller Processing Event: \"SignalDetectorEvent\" (type = " + eventType + ")");
+            }
+
             if (SignalDetectorEvent.RECEIVE_SIGNALS_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response;
                 if (event.isSuccessful()) {
@@ -389,12 +386,11 @@ public class Jsr309CallController extends MediaServerController {
         public void onEvent(RecorderEvent event) {
             EventType eventType = event.getEventType();
 
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
-            	logger.info("********** Call Controller Processing Event: \"RecorderEvent\" (type = " + eventType + ")");
-        	}
-            
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Call Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Call Controller Processing Event: \"RecorderEvent\" (type = " + eventType + ")");
+            }
+
             if (RecorderEvent.RECORD_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response = null;
                 if (event.isSuccessful()) {
@@ -426,12 +422,11 @@ public class Jsr309CallController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        if(logger.isInfoEnabled())
-    	{
-        	logger.info("********** Call Controller Current State: \"" + state.toString());
-        	logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
-    	}
-        
+        if(logger.isInfoEnabled()) {
+            logger.info("********** Call Controller Current State: \"" + state.toString());
+            logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+        }
+
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
@@ -576,10 +571,9 @@ public class Jsr309CallController extends MediaServerController {
             this.recordingUri = message.getRecordingUri();
             this.recording = true;
 
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("Start recording call");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Start recording call");
+            }
             this.recordStarted = DateTime.now();
 
             // Tell media group to start recording
@@ -603,10 +597,9 @@ public class Jsr309CallController extends MediaServerController {
             }
 
             // Tell media group to stop recording
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("Stop recording call");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Stop recording call");
+            }
             onStop(new Stop(false), self, sender);
         }
     }
@@ -784,18 +777,16 @@ public class Jsr309CallController extends MediaServerController {
                         duration = 0.0;
                     }
                     if (duration.equals(0.0)) {
-                    	if(logger.isInfoEnabled())
-                    	{
-                    		logger.info("Call wraping up recording. File doesn't exist since duration is 0");
-                    	}
-                    	final DateTime end = DateTime.now();
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                        }
+                        final DateTime end = DateTime.now();
                         duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
                     } else {
-                    	if(logger.isInfoEnabled())
-                    	{
-	                        logger.info("Call wraping up recording. File already exists, length: "
-	                                + (new File(recordingUri).length()));
-                    	}
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Call wraping up recording. File already exists, length: "
+                                + (new File(recordingUri).length()));
+                        }
                     }
                     final Recording.Builder builder = Recording.builder();
                     builder.setSid(recordingSid);

@@ -142,10 +142,9 @@ public final class SmsService extends UntypedActor {
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     && !CallControlHelper.checkAuthentication(request, storage)) {
-            	if(logger.isInfoEnabled())
-            	{
-            		logger.info("Client " + client.getLogin() + " failed to authenticate");
-            	}
+                if(logger.isInfoEnabled()) {
+                    logger.info("Client " + client.getLogin() + " failed to authenticate");
+                }
                 // Since the client failed to authenticate, we will ignore the message and not process further
                 return;
             }
@@ -156,10 +155,9 @@ public final class SmsService extends UntypedActor {
         // Try to see if the request is destined for an application we are hosting.
         if (redirectToHostedSmsApp(self, request, accounts, applications, toUser)) {
             // Tell the sender we received the message okay.
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Message to :" + toUser + " matched to one of the hosted applications");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Message to :" + toUser + " matched to one of the hosted applications");
+            }
 
             //this is used to send a reply back to SIP client when a Restcomm App forwards inbound sms to a Restcomm client ex. Alice
             final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
@@ -180,21 +178,19 @@ public final class SmsService extends UntypedActor {
                 if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                     // if all goes well with proxying the SIP MESSAGE on to the target client
                     // then we can end further processing of this request and send response to sender
-                	if(logger.isInfoEnabled())
-                	{
-                		logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
-                			+ toClient.getLogin());
-                	}
+                    if(logger.isInfoEnabled()) {
+                        logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
+                            + toClient.getLogin());
+                    }
                     monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
                     return;
                 }
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
-            	if(logger.isInfoEnabled())
-            	{
-            		logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
-            	}
-            	
+                if(logger.isInfoEnabled()) {
+                    logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
+                }
+
                 final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
                 trying.send();
 
@@ -274,7 +270,7 @@ public final class SmsService extends UntypedActor {
             if (number != null) {
                 URI appUri = number.getSmsUrl();
                 ActorRef interpreter = null;
-                if (appUri != null) {
+                if (appUri != null || number.getSmsApplicationSid() != null) {
                     final SmsInterpreterBuilder builder = new SmsInterpreterBuilder(system);
                     builder.setSmsService(self);
                     builder.setConfiguration(configuration);
@@ -356,10 +352,9 @@ public final class SmsService extends UntypedActor {
         final SipApplicationSession application = response.getApplicationSession();
 
         //handle SIP application session and make sure it has not being invalidated
-        if(logger.isInfoEnabled())
-    	{
-        	logger.info("Is SipApplicationSession valid: "+application.isValid());
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("Is SipApplicationSession valid: "+application.isValid());
+        }
         if(application != null){
             final ActorRef session = (ActorRef) application.getAttribute(SmsSession.class.getName());
             session.tell(response, self);
@@ -414,10 +409,9 @@ public final class SmsService extends UntypedActor {
                 notifications.addNotification(notification);
             }
         } else if (errType == "info") {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info(errMessage); // send message to console
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info(errMessage); // send message to console
+            }
         }
 
     }

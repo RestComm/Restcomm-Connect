@@ -90,9 +90,8 @@ public class MonitoringService extends UntypedActor{
         textInboundToProxyOut = new AtomicInteger();
         textOutbound = new AtomicInteger();
         textNotFound = new AtomicInteger();
-        if(logger.isInfoEnabled())
-        {
-        	logger.info("Monitoring Service started");
+        if(logger.isInfoEnabled()){
+            logger.info("Monitoring Service started");
         }
     }
 
@@ -101,9 +100,8 @@ public class MonitoringService extends UntypedActor{
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
-        if(logger.isInfoEnabled())
-        {
-        	logger.info("MonitoringService Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self.isTerminated());
+        if(logger.isInfoEnabled()){
+            logger.info("MonitoringService Processing Message: \"" + klass.getName() + " sender : "+ sender.getClass()+" self is terminated: "+self.isTerminated());
         }
 
         if (InstanceId.class.equals(klass)) {
@@ -111,10 +109,9 @@ public class MonitoringService extends UntypedActor{
         } else if (Observing.class.equals(klass)) {
             onStartObserve((Observing) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Received stop observing");
-        	}
+            if(logger.isInfoEnabled()){
+                logger.info("Received stop observing");
+            }
             onStopObserving((StopObserving) message, self, sender);
         } else if (CallResponse.class.equals(klass)) {
             onCallResponse((CallResponse<CallInfo>)message, self, sender);
@@ -234,11 +231,8 @@ public class MonitoringService extends UntypedActor{
                 } else if (callState.equals(CallStateChanged.State.NOT_FOUND)) {
                     notFoundCalls.incrementAndGet();
                 }
-            } else {
-            	if(logger.isInfoEnabled())
-            	{
-            		logger.info("CallInfo was not in the store for Call: "+senderPath);
-            	}
+            } else if(logger.isInfoEnabled()){
+                logger.info("CallInfo was not in the store for Call: "+senderPath);
             }
         } else {
             logger.error("MonitoringService, SenderPath or storage is null.");
@@ -291,10 +285,9 @@ public class MonitoringService extends UntypedActor{
 
     @Override
     public void postStop() {
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("Monitoring Service at postStop()");
-    	}
+        if(logger.isInfoEnabled()){
+            logger.info("Monitoring Service at postStop()");
+        }
         super.postStop();
     }
 }

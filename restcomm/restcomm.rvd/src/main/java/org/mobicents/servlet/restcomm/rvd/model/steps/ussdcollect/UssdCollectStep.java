@@ -59,9 +59,8 @@ public class UssdCollectStep extends Step {
 
     @Override
     public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
-        if(logger.isDebugEnabled())
-        {
-        	logger.info("UssdCollect handler");
+        if(logger.isDebugEnabled()) {
+            logger.info("UssdCollect handler");
         }
         if ("menu".equals(gatherType)) {
 
@@ -70,17 +69,15 @@ public class UssdCollectStep extends Step {
                 // use a string for USSD collect. Alpha is supported too
                 String digits = interpreter.getRequestParams().getFirst("Digits");
 
-                if(logger.isDebugEnabled())
-                {
-                	logger.debug("checking digits: " + mapping.digits + " - " + digits);
+                if(logger.isDebugEnabled()) {
+                    logger.debug("checking digits: " + mapping.digits + " - " + digits);
                 }
 
                 if (mapping.digits != null && mapping.digits.equals(digits)) {
                     // seems we found out menu selection
-                	if(logger.isDebugEnabled())
-                	{
-                		logger.debug("seems we found our menu selection");
-                	}
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("seems we found our menu selection");
+                    }
                     interpreter.interpret(mapping.next,null,null, originTarget);
                     handled = true;
                 }
@@ -99,10 +96,9 @@ public class UssdCollectStep extends Step {
 
             // is this an application-scoped variable ?
             if ( "application".equals(collectdigits.scope) ) {
-            	if(logger.isDebugEnabled())
-            	{
-            		logger.debug("'" + variableName + "' is application scoped");
-            	}
+                if(logger.isDebugEnabled()) {
+                    logger.debug("'" + variableName + "' is application scoped");
+                }
                 // if it is, create a sticky_* variable named after it
                 interpreter.getVariables().put(RvdConfiguration.STICKY_PREFIX + variableName, variableValue);
             }
