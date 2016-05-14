@@ -689,6 +689,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     conferenceState = event.state();
                     conferenceStateModeratorPresent(message);
                     break;
+                case COMPLETED:
+                    conferenceState = event.state();
+                    // At this point i think we should call finishConferencing,
+                    // who will tell conference center to destroy the conference.
+                    // fsm.transition(message, finishConferencing);
+                    break;
                 default:
                     break;
             }
