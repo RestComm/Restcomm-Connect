@@ -319,6 +319,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(forking, finishDialing));
         transitions.add(new Transition(forking, hangingUp));
         transitions.add(new Transition(forking, finished));
+        transitions.add(new Transition(forking, ready));
         // transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
@@ -600,7 +601,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else
                     // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
                     if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
-                        fsm.transition(message, finishDialing);
+                        if (!sender.equals(call)) {
+                            removeDialBranch(message, sender);
+                        } else {
+                            fsm.transition(message, finishDialing);
+                        }
                     } else if (creatingRecording.equals(state)) {
                         // Ask callMediaGroup to stop recording so we have the recording file available
                         // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197

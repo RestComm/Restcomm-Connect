@@ -883,7 +883,7 @@ public final class CallManager extends UntypedActor {
                     if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
                         Registration webRtcRegistration = registrationsDao.getRegistrationByInstanceId(client, RestcommConfiguration.getInstance().getMain().getInstanceId());
                         if (webRtcRegistration == null) {
-                            logger.warning("Cannot create call for user agent: " + registration.getAddressOfRecord() + " since this is a webrtc client registered in another Restcomm instance.");
+                            logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
                             break;
                         } else {
                             registrationToDial.add(webRtcRegistration);
@@ -904,9 +904,9 @@ public final class CallManager extends UntypedActor {
         if (registrationToDial.size() > 0) {
             List<ActorRef> calls = new CopyOnWriteArrayList<>();
             for (Registration registration : registrationToDial) {
-                logger.info("Will proceed to create call for client: " + registration.getAddressOfRecord() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
-                if (registration.getAddressOfRecord().contains("transport")) {
-                    String transport = registration.getAddressOfRecord().split(";")[1].replace("transport=", "");
+                logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
+                if (registration.getLocation().contains("transport")) {
+                    String transport = registration.getLocation().split(";")[1].replace("transport=", "");
                     outboundIntf = outboundInterface(transport);
                 } else {
                     outboundIntf = outboundInterface("udp");
