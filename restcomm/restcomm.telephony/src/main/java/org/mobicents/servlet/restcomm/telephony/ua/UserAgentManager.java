@@ -316,7 +316,11 @@ public final class UserAgentManager extends UntypedActor {
         final SipURI uri = (SipURI) contact.getURI();
         final String ip = request.getInitialRemoteAddr();
         final int port = request.getInitialRemotePort();
-        final String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        if (transport == null && !request.getInitialTransport().equalsIgnoreCase("udp")) {
+            //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
+            transport = request.getInitialTransport();
+        }
         //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
         final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
