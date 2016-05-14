@@ -694,7 +694,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     conferenceStateModeratorPresent(message);
                     break;
                 case COMPLETED:
-                	conferenceState = event.state();
+                    conferenceState = event.state();
                 default:
                     break;
             }
