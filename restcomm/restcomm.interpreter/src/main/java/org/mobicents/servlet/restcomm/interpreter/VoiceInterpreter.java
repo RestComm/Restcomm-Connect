@@ -687,11 +687,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         } else if (ConferenceStateChanged.class.equals(klass)) {
             final ConferenceStateChanged event = (ConferenceStateChanged) message;
+            logger.info("ConferenceStateChanged caught with event state: "+event.state());
             switch (event.state()) {
                 case RUNNING_MODERATOR_PRESENT:
                     conferenceState = event.state();
                     conferenceStateModeratorPresent(message);
                     break;
+                case COMPLETED:
+                	conferenceState = event.state();
                 default:
                     break;
             }
@@ -2269,6 +2272,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
+            logger.info("FinishConferencing is called");
             if (message instanceof ReceiveTimeout) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -2278,11 +2282,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Clean up
             if (ConferenceStateChanged.class.equals(message)) {
-                logger.info("********************************* ConferenceStateChanged Got in FinishConferencing action ************************");
                 // Destroy conference if state changed to completed (last participant in call)
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
-                    logger.info("********************************* Got conference in completed state in FinishConferencing action ************************");
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
                 }
@@ -2432,7 +2434,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final Play play = new Play(uri, 1);
                     conference.tell(play, source);
                 }
-
+                logger.info("################## conferenceState.name(): "+conferenceState.name());
+                logger.info("endOnExit: "+endOnExit+"conferenceInfo.participants().isEmpty(): "+conferenceInfo.participants().isEmpty());
                 if (endOnExit) {
                     // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
@@ -2467,12 +2470,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Stop the interpreter.
             postCleanup();
+            logger.info("################## conferenceState.name(): "+conferenceState.name());
         }
     }
 
 
     @Override
     public void postStop() {
+        logger.info("################## conferenceState.name(): "+conferenceState.name());
         if (!fsm.state().equals(uninitialized)) {
             logger.info("VoiceIntepreter: " + self().path()
                     + "At the postStop() method. Will clean up Voice Interpreter. Keep calls: " + liveCallModification);
