@@ -45,10 +45,12 @@ public class RvdConfiguration {
     public static final String CORE_VARIABLE_PREFIX = "core_"; // a prefix for rvd variables that come from Restcomm parameters
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
     public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
-    private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"})); // the names of the parameters supplied by restcomm request when starting an application
+    // the names of the parameters supplied by restcomm request when starting an application
+    private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName","CallTimestamp"}));
     public static final String PROJECT_LOG_FILENAME = "projectLog";
     public static final String DEFAULT_APPSTORE_DOMAIN = "apps.restcomm.com";
-    public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName"}));
+    // TODO investigate duplicate static parameters restcommParameterNames VS builtinRestcommParameters
+    public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName","CallTimestamp"}));
     public static final String RESTCOMM_HEADER_PREFIX = "SipHeader_"; // the prefix added to HTTP headers from Restcomm
     public static final String RESTCOMM_HEADER_PREFIX_DIAL = "DialSipHeader_"; // another prefix
 
@@ -86,19 +88,17 @@ public class RvdConfiguration {
 
     private RvdConfiguration(ServletContext servletContext) {
         contextRootPath = servletContext.getRealPath("/");
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("contextRootPath: " + contextRootPath);
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("contextRootPath: " + contextRootPath);
+        }
         load();
     }
 
     private RvdConfiguration(String contextRootPath) {
         this.contextRootPath = contextRootPath;
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("contextRootPath: " + contextRootPath);
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("contextRootPath: " + contextRootPath);
+        }
         load();
     }
 
@@ -116,10 +116,9 @@ public class RvdConfiguration {
         this.workspaceBasePath = workspaceBasePath;
 
         restcommConfig = loadRestcommXmlConfig(contextRootPath + "../restcomm.war/WEB-INF/conf/restcomm.xml");
-    	if(logger.isInfoEnabled())
-    	{
-    		logger.info("Using workspace at " + workspaceBasePath);
-    	}
+        if(logger.isInfoEnabled()) {
+            logger.info("Using workspace at " + workspaceBasePath);
+        }
     }
 
     /**
@@ -231,10 +230,9 @@ public class RvdConfiguration {
                     throw new IllegalStateException();
                 }
             }
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("Using Restcomm server at " + this.restcommBaseUri.toString());
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("Using Restcomm server at " + this.restcommBaseUri.toString());
+            }
         }
         return restcommBaseUri;
     }

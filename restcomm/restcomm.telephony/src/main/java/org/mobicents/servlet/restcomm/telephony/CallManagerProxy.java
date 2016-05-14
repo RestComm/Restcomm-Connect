@@ -183,10 +183,9 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(CallManagerProxy.class)) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("CallManagerProxy sip servlet initialized. Will proceed to create CallManager and UssdManager");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("CallManagerProxy sip servlet initialized. Will proceed to create CallManager and UssdManager");
+            }
             context = event.getServletContext();
             configuration = (Configuration) context.getAttribute(Configuration.class.getName());
             sendTryingForInitalRequests = Boolean.parseBoolean(configuration.subset("runtime-settings").getString("send-trying-for-initial-requests", "false"));

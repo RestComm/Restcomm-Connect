@@ -156,10 +156,9 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
         final String text = request.text();
 
         if (language == null) {
-        	if(logger.isInfoEnabled())
-        	{
-        		logger.info("There is no suitable speaker to synthesize " + request.language());
-        	}
+            if(logger.isInfoEnabled()){
+                logger.info("There is no suitable speaker to synthesize " + request.language());
+            }
             throw new IllegalArgumentException("There is no suitable language to synthesize " + request.language());
         }
 
@@ -190,10 +189,9 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
                 throw new SpeechSynthesizerException(buffer.toString());
             }
 
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("VoiceRSSSpeechSynthesizer success!");
-        	}
+            if(logger.isInfoEnabled()){
+                logger.info("VoiceRSSSpeechSynthesizer success!");
+            }
             InputStream is = response.getEntity().getContent();
             File file = new File(System.getProperty("java.io.tmpdir") + File.separator + hash + ".wav");
             final OutputStream ostream = new FileOutputStream(file);
@@ -210,11 +208,10 @@ public final class VoiceRSSSpeechSynthesizer extends UntypedActor {
             is.close();
             return file.toURI();
         } else {
-        	if(logger.isInfoEnabled())
-        	{
-	        	logger.info("VoiceRSSSpeechSynthesizer error, status code: " + line.getStatusCode() + (" reason phrase: ")
-	                    + line.getReasonPhrase());
-        	}
+            if(logger.isInfoEnabled()){
+                logger.info("VoiceRSSSpeechSynthesizer error, status code: " + line.getStatusCode() + (" reason phrase: ")
+                    + line.getReasonPhrase());
+            }
             final StringBuilder buffer = new StringBuilder();
             buffer.append(line.getStatusCode()).append(" ").append(line.getReasonPhrase());
             throw new SpeechSynthesizerException(buffer.toString());

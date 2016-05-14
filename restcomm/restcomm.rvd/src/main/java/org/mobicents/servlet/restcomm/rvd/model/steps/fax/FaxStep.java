@@ -82,9 +82,8 @@ public class FaxStep extends Step {
 
     @Override
     public void handleAction(Interpreter interpreter, Target originTarget) throws InterpreterException, StorageException {
-        if(logger.isInfoEnabled())
-        {
-        	logger.info("handling fax action");
+        if(logger.isInfoEnabled()) {
+            logger.info("handling fax action");
         }
         if ( RvdUtils.isEmpty(getNext()) )
             throw new InterpreterException( "'next' module is not defined for step " + getName() );

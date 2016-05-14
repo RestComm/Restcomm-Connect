@@ -266,10 +266,9 @@ public class Interpreter {
             targetParam = projectOptions.getDefaultTarget();
             if (targetParam == null)
                 throw new UndefinedTarget();
-        	if(logger.isDebugEnabled())
-        	{
-        		logger.debug("override default target to " + targetParam);
-        	}
+            if(logger.isDebugEnabled()) {
+                logger.debug("override default target to " + targetParam);
+            }
         }
 
         processBootstrapParameters();
@@ -302,10 +301,9 @@ public class Interpreter {
 
     public String interpret(String targetParam, RcmlResponse rcmlModel, Step prependStep, Target originTarget ) throws InterpreterException, StorageException {
 
-    	if(logger.isDebugEnabled())
-    	{
-    		logger.debug("starting interpeter for " + targetParam);
-    	}
+        if(logger.isDebugEnabled()) {
+            logger.debug("starting interpeter for " + targetParam);
+        }
         if ( rvdContext.getProjectSettings().getLogging() )
             projectLogger.log("Running target: " + targetParam).tag("app",appName).done();
 
@@ -335,10 +333,9 @@ public class Interpreter {
             // Prepend step if required. Usually used for error messages
             if ( prependStep != null ) {
                 RcmlStep rcmlStep = prependStep.render(this);
-            	if(logger.isDebugEnabled())
-            	{
-            		logger.debug("Prepending say step: " + rcmlStep );
-            	}
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Prepending say step: " + rcmlStep );
+                }
                 rcmlModel.steps.add( rcmlStep );
             }
 
@@ -769,10 +766,9 @@ public class Interpreter {
                 if ( valueElement.isJsonPrimitive() && valueElement.getAsJsonPrimitive().isString() ) {
                     value = valueElement.getAsJsonPrimitive().getAsString();
                     getVariables().put(name, value);
-                	if(logger.isDebugEnabled())
-                	{
-                		logger.debug("Loaded bootstrap parameter: " + name + " - " + value);
-                	}
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Loaded bootstrap parameter: " + name + " - " + value);
+                    }
                 } else
                     logger.warn("Warning. Not-string bootstrap value found for parameter: " + name);
             }

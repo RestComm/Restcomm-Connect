@@ -376,10 +376,9 @@ public final class Conference extends UntypedActor {
             // Participant successfully left the conference.
             boolean removed = calls.remove(sender);
             int participantsNr = calls.size();
-            if(logger.isInfoEnabled())
-        	{
-            	logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
-        	}
+            if(logger.isInfoEnabled()) {
+                logger.info("################################## Conference " + name + " has " + participantsNr + " participants");
+            }
 
             // Stop the conference when ALL participants have been evicted
             if (removed && calls.isEmpty()) {
