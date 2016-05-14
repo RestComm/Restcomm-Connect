@@ -109,7 +109,7 @@
                  // create and send the outgoing invite and do the session linking
                  incomingSession.setAttribute(B2BUA_LAST_REQUEST, request);
                  SipServletRequest outRequest = sipFactory.createRequest(request.getApplicationSession(), request.getMethod(),
-                         request.getFrom().getURI(), request.getTo().getURI());
+                         from, to);
                  outRequest.setRequestURI(to);
 
                  if (request.getContent() != null) {
