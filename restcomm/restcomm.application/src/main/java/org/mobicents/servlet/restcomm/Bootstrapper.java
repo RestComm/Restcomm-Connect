@@ -129,24 +129,34 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
         // Configure the transport to be used by the connector
         final String mediaTransport = configuration.getString("media-server.transport", "udp");
-        logger.info("JSR 309 - media-server.transport: udp");
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - media-server.transport: udp");
+        }
         properties.setProperty("connector.sip.transport", mediaTransport);
 
         // Configure SIP connector using RestComm binding address
         SipURI sipURI = outboundInterface(getServletContext(), mediaTransport);
         properties.setProperty("connector.sip.address", sipURI.getHost());
-        logger.info("JSR 309 - connector.sip.address: " + sipURI.getHost());
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - connector.sip.address: " + sipURI.getHost());
+        }
         properties.setProperty("connector.sip.port", String.valueOf(sipURI.getPort()));
-        logger.info("JSR 309 - connector.sip.port: " + String.valueOf(sipURI.getPort()));
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - connector.sip.port: " + String.valueOf(sipURI.getPort()));
+        }
 
         // Configure Media Server address based on restcomm configuration file
         final String mediaAddress = configuration.getString("media-server.address", "127.0.0.1");
         properties.setProperty("mediaserver.sip.ipaddress", mediaAddress);
-        logger.info("JSR 309 - mediaserver.sip.ipaddress: " + mediaAddress);
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - mediaserver.sip.ipaddress: " + mediaAddress);
+        }
 
         final String mediaPort = configuration.getString("media-server.port", "5060");
         properties.setProperty("mediaserver.sip.port", mediaPort);
-        logger.info("JSR 309 - mediaserver.sip.port: " + mediaPort);
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - mediaserver.sip.port: " + mediaPort);
+        }
 
         // Let RestComm control call legs
         properties.setProperty("connector.conferenceControlLeg", "no");
@@ -289,7 +299,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ActorRef monitoring = monitoringService(xml, loader);
             if (monitoring != null) {
                 context.setAttribute(MonitoringService.class.getName(), monitoring);
-                logger.info("Monitoring Service created and stored in the context");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Monitoring Service created and stored in the context");
+                }
             } else {
                 logger.error("Monitoring Service is null");
             }

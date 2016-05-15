@@ -151,7 +151,9 @@ public class ProjectRestService extends SecuredRestService {
         secure();
         ProjectApplicationsApi applicationsApi = null;
         String applicationSid = null;
-        logger.info("Creating project " + name);
+        if(logger.isInfoEnabled()) {
+            logger.info("Creating project " + name);
+        }
         try {
             applicationsApi = new ProjectApplicationsApi(getUserIdentityContext());
             applicationSid = applicationsApi.createApplication(name, kind);
@@ -215,7 +217,9 @@ public class ProjectRestService extends SecuredRestService {
     public Response updateProject(@Context HttpServletRequest request, @PathParam("applicationSid") String applicationSid) {
         secure();
         if (applicationSid != null && !applicationSid.equals("")) {
-            logger.info("Saving project " + applicationSid);
+            if(logger.isInfoEnabled()) {
+                logger.info("Saving project " + applicationSid);
+            }
             try {
                 ProjectState existingProject = FsProjectStorage.loadProject(applicationSid, workspaceStorage);
 
@@ -323,11 +327,15 @@ public class ProjectRestService extends SecuredRestService {
             try {
                 UpgradeService upgradeService = new UpgradeService(workspaceStorage);
                 upgradeService.upgradeProject(applicationSid);
-                logger.info("project '" + applicationSid + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion());
+                if(logger.isInfoEnabled()) {
+                    logger.info("project '" + applicationSid + "' upgraded to version " + RvdConfiguration.getRvdProjectVersion());
+                }
                 // re-build project
                 BuildService buildService = new BuildService(workspaceStorage);
                 buildService.buildProject(applicationSid, activeProject);
-                logger.info("project '" + applicationSid + "' built");
+                if(logger.isInfoEnabled()) {
+                    logger.info("project '" + applicationSid + "' built");
+                }
                 return Response.ok().build();
             } catch (StorageException e) {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -368,7 +376,9 @@ public class ProjectRestService extends SecuredRestService {
             @QueryParam("projectName") String projectName)
             throws StorageException, ProjectDoesNotExist, UnsupportedEncodingException, EncoderException {
         secure();
-        logger.debug("downloading raw archive for project " + applicationSid);
+        if(logger.isDebugEnabled()) {
+            logger.debug("downloading raw archive for project " + applicationSid);
+        }
         assertProjectAvailable(applicationSid);
 
         InputStream archiveStream;
@@ -387,7 +397,9 @@ public class ProjectRestService extends SecuredRestService {
     // @Path("{name}/archive")
     public Response importProjectArchive(@Context HttpServletRequest request, @QueryParam("ticket") String ticket) {
         secure();
-        logger.info("Importing project from raw archive");
+        if(logger.isInfoEnabled()) {
+            logger.info("Importing project from raw archive");
+        }
         ProjectApplicationsApi applicationsApi = null;
         String applicationSid = null;
 
@@ -428,7 +440,9 @@ public class ProjectRestService extends SecuredRestService {
 
                             // Update application
                             applicationsApi.updateApplication(applicationSid, effectiveProjectName, null, projectKind);
-                            logger.info("Successfully imported project '" + applicationSid + "' from raw archive '" + item.getName() + "'");
+                            if(logger.isInfoEnabled()) {
+                                logger.info("Successfully imported project '" + applicationSid + "' from raw archive '" + item.getName() + "'");
+                            }
 
                         } catch (Exception e) {
                             applicationsApi.rollbackCreateApplication(applicationSid);
@@ -452,11 +466,15 @@ public class ProjectRestService extends SecuredRestService {
             }
         } catch (StorageException | UnsupportedProjectVersion e) {
             logger.warn(e, e);
-            logger.debug(e, e);
+            if(logger.isDebugEnabled()) {
+                logger.debug(e, e);
+            }
             return buildErrorResponse(Status.BAD_REQUEST, RvdResponse.Status.ERROR, e);
         } catch (ApplicationAlreadyExists e) {
             logger.warn(e, e);
-            logger.debug(e, e);
+            if(logger.isDebugEnabled()) {
+                logger.debug(e, e);
+            }
             try {
                 applicationsApi.rollbackCreateApplication(applicationSid);
             } catch (ApplicationsApiSyncException e1) {
@@ -494,7 +512,9 @@ public class ProjectRestService extends SecuredRestService {
     public Response uploadWavFile(@PathParam("applicationSid") String applicationSid, @Context HttpServletRequest request)
             throws StorageException, ProjectDoesNotExist {
         secure();
-        logger.info("running /uploadwav");
+        if(logger.isInfoEnabled()) {
+            logger.info("running /uploadwav");
+        }
         assertProjectAvailable(applicationSid);
         try {
             if (request.getHeader("Content-Type") != null
@@ -616,7 +636,9 @@ public class ProjectRestService extends SecuredRestService {
     @Path("{applicationSid}/settings")
     public Response saveProjectSettings(@PathParam("applicationSid") String applicationSid) {
         secure();
-        logger.info("saving project settings for " + applicationSid);
+        if(logger.isInfoEnabled()) {
+            logger.info("saving project settings for " + applicationSid);
+        }
         String data;
         try {
             data = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));

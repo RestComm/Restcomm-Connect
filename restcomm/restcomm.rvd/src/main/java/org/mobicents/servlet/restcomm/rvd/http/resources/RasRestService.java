@@ -94,8 +94,9 @@ public class RasRestService extends SecuredRestService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAppConfig(@QueryParam("applicationSid") String applicationSid) throws StorageException, ProjectDoesNotExist {
         secure();
-        logger.debug("retrieving app package for project " + applicationSid);
-
+        if(logger.isDebugEnabled()) {
+            logger.debug("retrieving app package for project " + applicationSid);
+        }
         if (!FsPackagingStorage.hasPackaging(applicationSid, workspaceStorage))
             return buildErrorResponse(Status.NOT_FOUND, RvdResponse.Status.OK, null);
 
@@ -116,7 +117,9 @@ public class RasRestService extends SecuredRestService {
     @Path("/packaging/app/save")
     public Response saveApp(@Context HttpServletRequest request, @QueryParam("applicationSid") String applicationSid) {
         secure();
-        logger.info("saving restcomm app '" + applicationSid + "'");
+        if(logger.isInfoEnabled()) {
+            logger.info("saving restcomm app '" + applicationSid + "'");
+        }
         try {
             String rappData;
             rappData = IOUtils.toString(request.getInputStream(), Charset.forName("UTF-8"));
@@ -150,8 +153,9 @@ public class RasRestService extends SecuredRestService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response preparePackage(@QueryParam("applicationSid") String applicationSid) {
         secure();
-        logger.debug("preparig app zip for project " + applicationSid);
-
+        if(logger.isDebugEnabled()) {
+            logger.debug("preparig app zip for project " + applicationSid);
+        }
         try {
             if (FsPackagingStorage.hasPackaging(applicationSid, workspaceStorage)) {
                 RvdProject project = projectService.load(applicationSid);
@@ -178,7 +182,9 @@ public class RasRestService extends SecuredRestService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBinaryStatus(@QueryParam("applicationSid") String applicationSid) {
         secure();
-        logger.debug("getting binary info for project " + applicationSid);
+        if(logger.isDebugEnabled()) {
+            logger.debug("getting binary info for project " + applicationSid);
+        }
 
         RappBinaryInfo binaryInfo = rasService.getBinaryInfo(applicationSid);
         return buildOkResponse(binaryInfo);
@@ -188,7 +194,9 @@ public class RasRestService extends SecuredRestService {
     @Path("/packaging/download")
     public Response downloadPackage(@QueryParam("projectName") String projectName, @QueryParam("applicationSid") String applicationSid) {
         secure();
-        logger.debug("downloading app zip for project " + applicationSid);
+        if(logger.isDebugEnabled()) {
+            logger.debug("downloading app zip for project " + applicationSid);
+        }
 
         try {
             if (FsPackagingStorage.hasPackaging(applicationSid, workspaceStorage)) {
@@ -267,8 +275,9 @@ public class RasRestService extends SecuredRestService {
     @Path("apps")
     public Response newRasApp(@Context HttpServletRequest request) {
         secure();
-        logger.info("uploading new ras app");
-
+        if(logger.isInfoEnabled()) {
+            logger.info("uploading new ras app");
+        }
         BuildService buildService = new BuildService(workspaceStorage);
         //RvdUser loggedUser = (RvdUser) securityContext.getUserPrincipal();
         ProjectApplicationsApi applicationsApi = null;
@@ -335,7 +344,9 @@ public class RasRestService extends SecuredRestService {
             }
         } catch ( RestcommAppAlreadyExists e ) {
             logger.warn(e);
-            logger.debug(e,e);
+            if(logger.isDebugEnabled()) {
+                logger.debug(e,e);
+            }
             return buildErrorResponse(Status.CONFLICT, RvdResponse.Status.ERROR, e);
         } catch ( UnsupportedRasApplicationVersion | UnsupportedProjectVersion e ) {
             logger.error(e.getMessage(), e);
@@ -384,7 +395,9 @@ public class RasRestService extends SecuredRestService {
     @Path("apps/{applicationSid}")
     public Response getRapp(@PathParam("applicationSid") String applicationSid) throws StorageException {
         secure();
-        logger.info("getting info for " + applicationSid);
+        if(logger.isInfoEnabled()) {
+            logger.info("getting info for " + applicationSid);
+        }
         try {
             Rapp rapp;
             if (FsProjectStorage.hasPackagingInfo(applicationSid, workspaceStorage))
