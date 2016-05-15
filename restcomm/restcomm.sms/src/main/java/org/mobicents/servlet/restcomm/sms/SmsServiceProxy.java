@@ -116,7 +116,9 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             service = service(configuration, factory, storage);
             context.setAttribute(SmsService.class.getName(), service);
             if (configuration.subset("smpp").getString("[@activateSmppConnection]", "false").equalsIgnoreCase("true")) {
-                logger.info("Will initialize SMPP");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Will initialize SMPP");
+                }
                 smppMessageHandler = smppMessageHandler();
                 smppService = smppService(configuration,factory,storage,context, smppMessageHandler);
                 context.setAttribute(SmppService.class.getName(), smppService);
