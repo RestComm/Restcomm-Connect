@@ -27,7 +27,7 @@ import java.util.Set;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
-import org.apache.shiro.authz.permission.DomainPermission;
+import org.apache.shiro.authz.permission.WildcardPermission;
 
 /**
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
@@ -67,7 +67,7 @@ public class RestcommRoles {
                         final SimpleRole role = new SimpleRole(name);
                         for (String permissionString: permissions) {
                             //logger.info("loading permission " + permissionString + " into " + name + " role");
-                            final Permission permission = new DomainPermission(permissionString);
+                            final Permission permission = new WildcardPermission(permissionString);
                             role.add(permission);
                         }
                         roles.put(name, role);
