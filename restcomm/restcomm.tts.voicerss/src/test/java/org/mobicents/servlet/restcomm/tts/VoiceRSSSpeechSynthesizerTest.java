@@ -75,7 +75,7 @@ public final class VoiceRSSSpeechSynthesizerTest {
         cache = cache("/tmp/cache", "http://127.0.0.1:8080/restcomm/cache");
         // Fix for MacOS systems: only append "/" to temporary path if it doesnt end with it - hrosa
         String tmpDir = System.getProperty("java.io.tmpdir");
-        tempSystemDirectory = "file:" + tmpDir + (tmpDir.endsWith("/") ? "" : "/");
+        	tempSystemDirectory = "file:" + tmpDir + (tmpDir.endsWith("/") ? "" : "/");
     }
 
     @After
