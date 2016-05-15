@@ -700,6 +700,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     break;
                 case COMPLETED:
                     conferenceState = event.state();
+                    fsm.transition(message, finishConferencing);
                 default:
                     break;
             }
