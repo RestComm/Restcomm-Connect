@@ -248,7 +248,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Load the RestComm configuration file.
             Configuration xml = null;
             try {
-                xml = new XMLConfiguration(path);
+                XMLConfiguration xmlConfiguration = new XMLConfiguration();
+                xmlConfiguration.setDelimiterParsingDisabled(true);
+                xmlConfiguration.setAttributeSplittingDisabled(true);
+                xmlConfiguration.load(path);
+                xml = xmlConfiguration;
             } catch (final ConfigurationException exception) {
                 logger.error(exception);
             }
