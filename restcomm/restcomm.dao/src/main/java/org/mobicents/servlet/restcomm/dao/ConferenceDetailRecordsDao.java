@@ -38,9 +38,9 @@ public interface ConferenceDetailRecordsDao {
 
     List<ConferenceDetailRecord> getConferenceDetailRecords(ConferenceDetailRecordFilter filter);
 
-    List<ConferenceDetailRecord> getConferenceDetailRecordsByStartTime(DateTime startTime);
+    List<ConferenceDetailRecord> getConferenceDetailRecordsByDateCreated(DateTime dateCreated);
 
-    List<ConferenceDetailRecord> getConferenceDetailRecordsByEndTime(DateTime endTime);
+    List<ConferenceDetailRecord> getConferenceDetailRecordsByDateUpdated(DateTime dateUpdated);
 
     Integer getTotalConferenceDetailRecords(ConferenceDetailRecordFilter filter);
 

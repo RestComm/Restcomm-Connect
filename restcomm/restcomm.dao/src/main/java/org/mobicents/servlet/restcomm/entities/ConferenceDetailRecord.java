@@ -35,22 +35,18 @@ public final class ConferenceDetailRecord {
     private final DateTime dateUpdated;
     private final Sid accountSid;
     private final String status;
-    private final DateTime startTime;
-    private final DateTime endTime;
     private final String friendlyName;
     private final String apiVersion;
     private final URI uri;
 
     public ConferenceDetailRecord(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
-            final Sid accountSid, final String status, final DateTime startTime, final DateTime endTime, final String friendlyName, final String apiVersion, final URI uri) {
+            final Sid accountSid, final String status, final String friendlyName, final String apiVersion, final URI uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.accountSid = accountSid;
         this.status = status;
-        this.startTime = startTime;
-        this.endTime = endTime;
         this.friendlyName = friendlyName;
         this.apiVersion = apiVersion;
         this.uri = uri;
@@ -80,14 +76,6 @@ public final class ConferenceDetailRecord {
         return status;
     }
 
-    public DateTime getStartTime() {
-        return startTime;
-    }
-
-    public DateTime getEndTime() {
-        return endTime;
-    }
-
     public String getFriendlyName() {
         return friendlyName;
     }
@@ -101,15 +89,15 @@ public final class ConferenceDetailRecord {
     }
 
     public ConferenceDetailRecord setStatus(final String status) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
     }
 
     public ConferenceDetailRecord setStartTime(final DateTime startTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
     }
 
     public ConferenceDetailRecord setEndTime(final DateTime endTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
     }
 
     @NotThreadSafe
@@ -119,8 +107,6 @@ public final class ConferenceDetailRecord {
         private DateTime dateUpdated;
         private Sid accountSid;
         private String status;
-        private DateTime startTime;
-        private DateTime endTime;
         private String friendlyName;
         private String apiVersion;
         private URI uri;
@@ -132,8 +118,6 @@ public final class ConferenceDetailRecord {
             dateUpdated = DateTime.now();
             accountSid = null;
             status = null;
-            startTime = null;
-            endTime = null;
             friendlyName = null;
             apiVersion = null;
             uri = null;
@@ -141,7 +125,7 @@ public final class ConferenceDetailRecord {
 
         public ConferenceDetailRecord build() {
             return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid,
-                    status, startTime, endTime, friendlyName, apiVersion, uri);
+                    status, friendlyName, apiVersion, uri);
         }
 
         public void setSid(final Sid sid) {
@@ -158,14 +142,6 @@ public final class ConferenceDetailRecord {
 
         public void setStatus(final String status) {
             this.status = status;
-        }
-
-        public void setStartTime(final DateTime startTime) {
-            this.startTime = startTime;
-        }
-
-        public void setEndTime(final DateTime endTime) {
-            this.endTime = endTime;
         }
 
         public void setFriendlyName(final String friendlyName) {

@@ -139,8 +139,6 @@ CREATE TABLE "restcomm_conference_detail_records" (
 "date_updated" DATETIME NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
 "status" VARCHAR(100) NOT NULL,
-"start_time" DATETIME,
-"end_time" DATETIME,
 "friendly_name" VARCHAR(60),
 "api_version" VARCHAR(10) NOT NULL,
 "uri" LONGVARCHAR NOT NULL
