@@ -157,6 +157,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
 var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, Notifications) {
 
   $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
+  $scope.newAccount = {role: 'Administrator'};
   $scope.createAccount = function(account) {
     if(account.email && account.password) {
       // Numbers.register({PhoneNumber:number.number});
@@ -165,7 +166,7 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
         {
           EmailAddress : account.email,
           Password: account.password,
-          //Role: account.role,
+          Role: account.role,
           Status: account.status,
           FriendlyName: account.friendlyName ? account.friendlyName : account.email
         }),
