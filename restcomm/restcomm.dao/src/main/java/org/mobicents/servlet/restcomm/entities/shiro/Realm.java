@@ -35,7 +35,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.authz.SimpleRole;
-import org.apache.shiro.authz.permission.DomainPermission;
+import org.apache.shiro.authz.permission.WildcardPermission;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
@@ -139,9 +139,10 @@ public final class Realm extends AuthorizingRealm {
                     if (numberOfPermissions > 0) {
                         final SimpleRole role = new SimpleRole(name);
                         for (int permissionIndex = 0; permissionIndex < numberOfPermissions; permissionIndex++) {
-                            buffer = new StringBuilder();
-                            buffer.append(prefix).append(".permission(").append(permissionIndex).append(")");
-                            final Permission permission = new DomainPermission(buffer.toString());
+                            String permissionName = permissions.get(permissionIndex);
+                            //buffer = new StringBuilder();
+                            //buffer.append(prefix).append(".permission(").append(permissionIndex).append(")");
+                            final Permission permission = new WildcardPermission(permissionName);
                             role.add(permission);
                         }
                         roles.put(name, role);

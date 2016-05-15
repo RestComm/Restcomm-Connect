@@ -6,6 +6,7 @@ If you don't use the hosted version of Restcomm, then you will need to install R
 
 * <<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
 * <<How to get started with Restcomm-Connect and Mysql.adoc#restcomm-connect-mysql,How to get started with Restcomm-Connect and Mysql>>
+* <<How to use Mysql schema upgrade scripts.adoc#mysql-schema-upgrade,How to use Mysql schema upgrade scripts>>
 
 == Developer Resources
 
