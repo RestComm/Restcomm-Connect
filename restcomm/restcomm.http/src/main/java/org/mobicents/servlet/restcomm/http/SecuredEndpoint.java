@@ -229,7 +229,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             return AuthOutcome.OK;
 
         // normalize the permission string
-        neededPermissionString = "domain:" + neededPermissionString;
+        //neededPermissionString = "domain:" + neededPermissionString;
 
         WildcardPermissionResolver resolver = new WildcardPermissionResolver();
         Permission neededPermission = resolver.resolvePermission(neededPermissionString);
@@ -339,7 +339,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             }
         } else { // non-administrators
 
-            if ( operatingAccount.getSid().equals(operatedAccount.getAccountSid()) )
+            if ( operatingAccount.getSid().equals(operatedAccount.getSid()) )
                 return AuthOutcome.OK;
             else
                 return AuthOutcome.FAILED;
