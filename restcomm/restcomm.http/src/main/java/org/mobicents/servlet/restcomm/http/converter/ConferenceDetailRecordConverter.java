@@ -58,8 +58,6 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
         writeDateUpdated(cdr.getDateUpdated(), writer);
         writeAccountSid(cdr.getAccountSid(), writer);
         writeStatus(cdr.getStatus(), writer);
-        writeStartTime(cdr.getStartTime(), writer);
-        writeEndTime(cdr.getEndTime(), writer);
         writeApiVersion(cdr.getApiVersion(), writer);
         writeFriendlyName(cdr.getFriendlyName(), writer);
         writeUri(cdr.getUri(), writer);
@@ -75,8 +73,6 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
         writeDateUpdated(cdr.getDateUpdated(), object);
         writeAccountSid(cdr.getAccountSid(), object);
         writeStatus(cdr.getStatus(), object);
-        writeStartTime(cdr.getStartTime(), object);
-        writeEndTime(cdr.getEndTime(), object);
         writeApiVersion(cdr.getApiVersion(), object);
         writeFriendlyName(cdr.getFriendlyName(), object);
         writeUri(cdr.getUri(), object);

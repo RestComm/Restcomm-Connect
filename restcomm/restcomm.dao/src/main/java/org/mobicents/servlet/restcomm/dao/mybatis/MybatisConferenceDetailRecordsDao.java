@@ -126,13 +126,13 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public List<ConferenceDetailRecord> getConferenceDetailRecordsByStartTime(final DateTime startTime) {
-        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByStartTime", startTime.toDate());
+    public List<ConferenceDetailRecord> getConferenceDetailRecordsByDateCreated(final DateTime dateCreated) {
+        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByDateCreated", dateCreated.toDate());
     }
 
     @Override
-    public List<ConferenceDetailRecord> getConferenceDetailRecordsByEndTime(final DateTime endTime) {
-        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByEndTime", endTime.toDate());
+    public List<ConferenceDetailRecord> getConferenceDetailRecordsByDateUpdated(final DateTime dateUpdated) {
+        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByDateUpdated", dateUpdated.toDate());
     }
 
     @Override
@@ -178,12 +178,10 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final Sid accountSid = readSid(map.get("account_sid"));
         final String status = readString(map.get("status"));
-        final DateTime startTime = readDateTime(map.get("start_time"));
-        final DateTime endTime = readDateTime(map.get("end_time"));
         final String friendlyName = readString(map.get("friendly_name"));
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, startTime, endTime, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -193,8 +191,6 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("date_updated", writeDateTime(cdr.getDateUpdated()));
         map.put("account_sid", writeSid(cdr.getAccountSid()));
         map.put("status", cdr.getStatus());
-        map.put("start_time", writeDateTime(cdr.getStartTime()));
-        map.put("end_time", writeDateTime(cdr.getEndTime()));
         map.put("friendly_name", cdr.getFriendlyName());
         map.put("api_version", cdr.getApiVersion());
         map.put("uri", writeUri(cdr.getUri()));

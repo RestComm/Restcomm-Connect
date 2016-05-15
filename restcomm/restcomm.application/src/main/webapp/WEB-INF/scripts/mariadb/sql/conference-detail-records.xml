@@ -6,8 +6,8 @@
 
     <insert id="addConferenceDetailRecord" parameterType="map">
         INSERT INTO restcomm_conference_detail_records (sid, date_created, date_updated, account_sid, status,
-        start_time, end_time, friendly_name, api_version, uri) VALUES (#{sid},
-		#{date_created}, #{date_updated}, #{account_sid}, #{status}, #{start_time}, #{end_time}, #{friendly_name}, #{api_version}, #{uri});
+        friendly_name, api_version, uri) VALUES (#{sid},
+		#{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri});
     </insert>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records WHERE sid=#{sid};
@@ -18,11 +18,11 @@
     <select id="getConferenceDetailRecordsByStatus" parameterType="string" resultType="hashmap">
        SELECT * FROM restcomm_conference_detail_records WHERE status=#{status};
     </select>
-    <select id="getConferenceDetailRecordsByStartTime" parameterType="date" resultType="hashmap">
-        SELECT * FROM restcomm_conference_detail_records WHERE start_time&gt;=#{start_time} AND start_time&lt;DATE_ADD(#{start_time},INTERVAL 1 DAY);
+    <select id="getConferenceDetailRecordsByDateCreated" parameterType="date" resultType="hashmap">
+        SELECT * FROM restcomm_conference_detail_records WHERE date_created&gt;=#{date_created} AND date_created&lt;DATE_ADD(#{date_created},INTERVAL 1 DAY);
     </select>
-	<select id="getConferenceDetailRecordsByEndTime" parameterType="date" resultType="hashmap">
-		SELECT * FROM restcomm_conference_detail_records WHERE end_time&gt;=#{end_time} AND end_time&lt;DATE_ADD(#{end_time},INTERVAL 1 DAY);
+	<select id="getConferenceDetailRecordsByDateUpdated" parameterType="date" resultType="hashmap">
+		SELECT * FROM restcomm_conference_detail_records WHERE date_updated&gt;=#{date_updated} AND date_updated&lt;DATE_ADD(#{date_updated},INTERVAL 1 DAY);
 	</select>
     <select id="getTotalConferenceDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter" resultType="int">
 		SELECT COUNT(*) FROM restcomm_conference_detail_records WHERE account_sid=#{accountSid}
@@ -32,11 +32,11 @@
 		<if test="friendlyName != null">
 			AND friendly_name like #{friendlyName}
 		</if>
-		<if test="startTime != null">
-		    AND start_time &gt;= #{startTime}
+		<if test="dateCreated != null">
+		    AND date_created &gt;= #{dateCreated}
 		</if>
-		<if test="endTime != null">
-			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY) order by start_time
+		<if test="dateUpdated != null">
+			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
 
 	</select>
@@ -48,11 +48,11 @@
 		<if test="friendlyName != null">
 			AND friendly_name like #{friendlyName}
 		</if>
-		<if test="startTime != null">
-		    AND start_time &gt;= #{startTime}
+		<if test="dateCreated != null">
+		    AND date_created &gt;= #{dateCreated}
 		</if>
-		<if test="endTime != null">
-			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY) order by start_time
+		<if test="dateUpdated != null">
+			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
 
 		LIMIT #{limit} OFFSET #{offset}
