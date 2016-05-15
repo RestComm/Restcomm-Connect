@@ -199,8 +199,10 @@ public class Jsr309ConferenceController extends MediaServerController {
         public void onEvent(PlayerEvent event) {
             EventType eventType = event.getEventType();
 
-            logger.info("********** Conference Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Conference Controller Processing Event: \"PlayerEvent\" (type = " + eventType + ")");
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Conference Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Conference Controller Processing Event: \"PlayerEvent\" (type = " + eventType + ")");
+            }
 
             if (PlayerEvent.PLAY_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response;
@@ -226,9 +228,11 @@ public class Jsr309ConferenceController extends MediaServerController {
         public void onEvent(AllocationEvent event) {
             EventType eventType = event.getEventType();
 
-            logger.info("********** Conference Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Conference Controller Processing Event: \"AllocationEventListener - Mixer\" (type = "
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Conference Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Conference Controller Processing Event: \"AllocationEventListener - Mixer\" (type = "
                     + eventType + ")");
+            }
 
             try {
                 if (AllocationEvent.ALLOCATION_CONFIRMED.equals(eventType)) {
@@ -265,9 +269,11 @@ public class Jsr309ConferenceController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** Conference Controller Current State: \"" + state.toString());
-        logger.info("********** Conference Controller Processing Message: \"" + klass.getName() + " sender : "
+        if(logger.isInfoEnabled()) {
+            logger.info("********** Conference Controller Current State: \"" + state.toString());
+            logger.info("********** Conference Controller Processing Message: \"" + klass.getName() + " sender : "
                 + sender.getClass());
+        }
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);

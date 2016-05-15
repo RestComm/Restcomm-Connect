@@ -61,7 +61,9 @@ public class LoginRestService extends RestService {
             RestcommAccountInfoResponse account = authService.authenticate(credentials.getUsername(), credentials.getPassword());
             if ( account != null ) {
                 String verifiedUsername = account.getEmail_address(); // in case Restcomm loosely authenticates with similar username, we need to have the exact username that exists in the database
-                logger.debug("User " + verifiedUsername + " authenticated");
+                if(logger.isDebugEnabled()) {
+                    logger.debug("User " + verifiedUsername + " authenticated");
+                }
 
                 // if authentication succeeds create a ticket for this user and return its id
                 TicketRepository tickets = TicketRepository.getInstance();
@@ -74,7 +76,9 @@ public class LoginRestService extends RestService {
                 return Response.ok().cookie( SecurityUtils.createTicketCookie(ticket) ).build();
             }
             else {
-                logger.debug("Authentication failed for user " + credentials.getUsername());
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Authentication failed for user " + credentials.getUsername());
+                }
                 return Response.status(Status.UNAUTHORIZED).build();
             }
         } catch (RvdSecurityException e) {
@@ -87,7 +91,9 @@ public class LoginRestService extends RestService {
     @Path("logout")
     public Response logout(@CookieParam(value = RvdConfiguration.TICKET_COOKIE_NAME) String ticketCookieValue) {
         TicketRepository tickets = TicketRepository.getInstance();
-        logger.debug("Invalidating ticket " + ticketCookieValue);
+        if(logger.isDebugEnabled()) {
+            logger.debug("Invalidating ticket " + ticketCookieValue);
+        }
         tickets.invalidateTicket(ticketCookieValue);
         // removing the cookie by setting the max-age to 0
         return Response.ok().cookie( SecurityUtils.createTicketCookie(null) ).build();
