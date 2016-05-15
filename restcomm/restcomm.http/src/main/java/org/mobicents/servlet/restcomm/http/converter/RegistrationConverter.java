@@ -98,7 +98,7 @@ public final class RegistrationConverter extends AbstractConverter implements Js
     }
 
     private void writeAddressOfRecord(final String addressOfRecord, final JsonObject object) {
-        object.addProperty("address_of_record", addressOfRecord.toString());
+        object.addProperty("address_of_record", addressOfRecord);
     }
 
     private void writeDisplayName(final String displayName, final HierarchicalStreamWriter writer) {
@@ -108,7 +108,7 @@ public final class RegistrationConverter extends AbstractConverter implements Js
     }
 
     private void writeDisplayName(final String displayName, final JsonObject object) {
-        object.addProperty("display_name", displayName.toString());
+        object.addProperty("display_name", displayName);
     }
 
     private void writeLocation(final String location, final HierarchicalStreamWriter writer) {
@@ -118,7 +118,7 @@ public final class RegistrationConverter extends AbstractConverter implements Js
     }
 
     private void writeLocation(final String location, final JsonObject object) {
-        object.addProperty("location", location.toString());
+        object.addProperty("location", location);
     }
 
     private void writeUserAgent(final String userAgent, final HierarchicalStreamWriter writer) {
@@ -128,6 +128,6 @@ public final class RegistrationConverter extends AbstractConverter implements Js
     }
 
     private void writeUserAgent(final String userAgent, final JsonObject object) {
-        object.addProperty("user_agent", userAgent.toString());
+        object.addProperty("user_agent", userAgent);
     }
 }
