@@ -151,6 +151,7 @@
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
+				<permission>RestComm:*:Geolocation</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>

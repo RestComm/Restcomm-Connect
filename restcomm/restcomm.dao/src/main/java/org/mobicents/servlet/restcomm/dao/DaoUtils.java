@@ -20,6 +20,7 @@
 package org.mobicents.servlet.restcomm.dao;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 import java.util.Currency;
 import java.util.Date;
@@ -27,6 +28,7 @@ import java.util.Date;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
+import org.mobicents.servlet.restcomm.entities.Geolocation;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -95,6 +97,14 @@ public final class DaoUtils {
         }
     }
 
+    public static BigInteger readBigInteger(final Object object) {
+        if (object != null) {
+            return (BigInteger) object;
+        } else {
+            return null;
+        }
+    }
+
     public static Long readLong(final Object object) {
         if (object != null) {
             return (Long) object;
@@ -138,6 +148,14 @@ public final class DaoUtils {
     public static Application.Kind readApplicationKind(final Object object) {
         if (object != null) {
             return Application.Kind.getValueOf((String) object);
+        } else {
+            return null;
+        }
+    }
+
+    public static Geolocation.GeolocationType readGeolocationType(final Object object) {
+        if (object != null) {
+            return Geolocation.GeolocationType.getValueOf((String) object);
         } else {
             return null;
         }
@@ -194,6 +212,14 @@ public final class DaoUtils {
     public static String writeApplicationKind(Application.Kind kind) {
         if (kind != null) {
             return kind.toString();
+        } else {
+            return null;
+        }
+    }
+
+    public static String writeGeolocationType(Geolocation.GeolocationType geolocationType) {
+        if (geolocationType != null) {
+            return geolocationType.toString();
         } else {
             return null;
         }

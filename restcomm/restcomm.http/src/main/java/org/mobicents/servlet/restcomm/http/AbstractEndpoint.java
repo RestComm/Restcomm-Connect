@@ -20,6 +20,7 @@
 package org.mobicents.servlet.restcomm.http;
 
 import java.net.URI;
+import java.math.BigInteger;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -27,6 +28,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -97,6 +99,46 @@ public abstract class AbstractEndpoint {
             uri = URI.create(data.getFirst(name));
         }
         return uri;
+    }
+
+    protected Integer getInteger(final String name, final MultivaluedMap<String, String> data) {
+        Integer integer = null;
+        if (data.containsKey(name)) {
+            integer = new Integer(data.getFirst(name));
+        }
+        return integer;
+    }
+
+    protected BigInteger getBigInteger(final String name, final MultivaluedMap<String, String> data) {
+        BigInteger bigInteger = null;
+        if (data.containsKey(name)) {
+            bigInteger = new BigInteger(data.getFirst(name));
+        }
+        return bigInteger;
+    }
+
+    protected Long getLong(final String name, final MultivaluedMap<String, String> data) {
+        Long l = null;
+        if (data.containsKey(name)) {
+            l = new Long(data.getFirst(name));
+        }
+        return l;
+    }
+
+    protected DateTime getDateTime(final String name, final MultivaluedMap<String, String> data) {
+        DateTime dateTime = null;
+        if (data.containsKey(name)) {
+            dateTime = new DateTime(data.getFirst(name));
+        }
+        return dateTime;
+    }
+
+    protected Boolean getBoolean(final String name, final MultivaluedMap<String, String> data) {
+        Boolean b = null;
+        if (data.containsKey(name)) {
+            b = new Boolean(data.getFirst(name));
+        }
+        return b;
     }
 
     protected boolean getHasVoiceCallerIdLookup(final MultivaluedMap<String, String> data) {

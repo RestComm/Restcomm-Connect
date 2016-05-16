@@ -16,7 +16,6 @@
     </environment>
   </environments>
   
-  
   <mappers>
     <mapper url="file://${sql}/accounts.xml"/>
     <mapper url="file://${sql}/applications.xml"/>
@@ -37,5 +36,6 @@
     <mapper url="file://${sql}/announcements.xml"/>
     <mapper url="file://${sql}/usage.xml"/>
     <mapper url="file://${sql}/instanceId.xml"/>
+    <mapper url="file://${sql}/geolocation.xml"/>
   </mappers>
 </configuration>
