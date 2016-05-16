@@ -18,7 +18,9 @@ public class TicketRepository {
 
     private TicketRepository() {
         lastRemovalCheckTime = new Date();
-        logger.debug("TicketRepository created at " + lastRemovalCheckTime );
+        if(logger.isDebugEnabled()) {
+            logger.debug("TicketRepository created at " + lastRemovalCheckTime );
+        }
     }
 
     public static TicketRepository getInstance() {
@@ -48,7 +50,9 @@ public class TicketRepository {
             String ticketId = SecurityUtils.getTicketIdFromTicketCookie(ticketCookie);
             Ticket ticket = tickets.get(ticketId);
             if (ticket != null) {
-                logger.debug("Invalidating ticket: " + ticket);
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Invalidating ticket: " + ticket);
+                }
                 tickets.remove(ticket.getTicketId());
                 //logger.debug(this.toString());
                 return;
@@ -77,19 +81,25 @@ public class TicketRepository {
      * @return how many stale tickets were removed
      */
     private int runStaleTicketRemovalJob(Date currentDate) {
-        logger.debug("Running stale ticket removal job...");
+        if(logger.isDebugEnabled()) {
+            logger.debug("Running stale ticket removal job...");
+        }
         int removedCount = 0;
         for (String ticketId : tickets.keySet()) {
             Ticket ticket = tickets.get(ticketId);
             Integer staleTicketIntervalMillis = STALE_TICKET_LIFETIME_MINUTES * 60 * 1000;
             if ( currentDate.getTime() - ticket.getTimeLastAccessed().getTime() >= staleTicketIntervalMillis ) {
-                logger.debug("Removing stale ticket " + ticket.toString());
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Removing stale ticket " + ticket.toString());
+                }
                 tickets.remove(ticketId);
                 removedCount ++;
             }
         }
         //this.toString();
-        logger.debug("" + removedCount + " tickets removed." + tickets.size() + " tickets still in TicketRepository");
+        if(logger.isDebugEnabled()) {
+            logger.debug("" + removedCount + " tickets removed." + tickets.size() + " tickets still in TicketRepository");
+        }
         return removedCount;
     }
 

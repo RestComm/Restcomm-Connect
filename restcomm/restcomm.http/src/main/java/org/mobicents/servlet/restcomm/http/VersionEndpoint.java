@@ -97,7 +97,9 @@ public class VersionEndpoint extends AbstractEndpoint {
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == mediaType) {
                 Response response = ok(gson.toJson(versionEntity), APPLICATION_JSON).build();
-                logger.debug("Supervisor endpoint response: "+gson.toJson(versionEntity));
+                if(logger.isDebugEnabled()){
+                    logger.debug("Supervisor endpoint response: "+gson.toJson(versionEntity));
+                }
                 return response;
             } else {
                 return null;
