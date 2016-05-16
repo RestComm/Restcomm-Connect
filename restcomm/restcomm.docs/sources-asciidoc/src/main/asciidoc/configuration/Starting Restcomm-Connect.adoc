@@ -51,14 +51,14 @@ BROADCAST_ADDRESS=''
  netstat -r
 ----
 * Picture below shows sample output for the command.
-Your *network interface* you can find in the Iface column in the same row where Gateway is indicated ( for example wlx60e32716068a ).
+Your *network interface* you can find in the Iface column in the same row where Gateway is indicated (for example wlx60e32716068a).
 
 * You will have multiple rows for the same network interface.
-One of the rows in the Destination column contains the *network address*. ( for example 172.21.0.0 )
+One of the rows in the Destination column contains the *network address* (for example 172.21.0.0).
 
 image::images/10.png[]
 
-=== Obtaining the public IP
+==== Obtaining the public IP
 * In order to get your public ip address you should run the following command:
 
 [source,bash]
@@ -70,23 +70,23 @@ The information you will need can be found in the output:
 
 image::images/8.png[]
 
-* Your *IP address* ( for example 172.21.0.107 ) you will see in
+* Your *IP address* (for example 172.21.0.107) you will see in
 [source,bash]
 ----
 inet addr
 ----
 
-* Your *subnet mask* ( for example 255.255.255.0 ) you will see in
+* Your *subnet mask* (for example 255.255.255.0) you will see in
 [source,bash]
 ----
 Mask
 ----
-* Your *broadcast address* ( for example 172.21.0.255 ) you will see in
+* Your *broadcast address* (for example 172.21.0.255) you will see in
 [source,bash]
 ----
 Bcast
 ----
-=== Network configuration
+==== Network configuration
 * Insert the network configuration details of your server in the following variables:
 
 [source,bash]
