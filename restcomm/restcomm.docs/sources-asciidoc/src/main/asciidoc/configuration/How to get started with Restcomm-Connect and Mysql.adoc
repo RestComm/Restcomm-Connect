@@ -96,9 +96,9 @@ Open the *restcomm.xml* file.
 
 * Go to the $RESTCOMM_HOME/bin/restcomm/ directory.
 
-=== Checking whether the setup was successful
+== Verify the setup was successful
 
-* In order to check the setup first you have to start Restcomm and media server running the following command:
+* In order to verify the setup was correctly done, first you have to start Restcomm and media server running the following command:
 
 [source,bash]
 ----
