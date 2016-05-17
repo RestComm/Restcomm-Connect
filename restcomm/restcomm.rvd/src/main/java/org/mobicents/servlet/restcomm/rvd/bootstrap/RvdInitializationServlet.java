@@ -18,7 +18,9 @@ public class RvdInitializationServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config) ;
-        logger.info("Initializing RVD. Project version: " + RvdConfiguration.getRvdProjectVersion());
+        if(logger.isInfoEnabled()) {
+            logger.info("Initializing RVD. Project version: " + RvdConfiguration.getRvdProjectVersion());
+        }
         RvdConfiguration rvdConfiguration = RvdConfiguration.createOnce(config.getServletContext());
         WorkspaceBootstrapper workspaceBootstrapper = new WorkspaceBootstrapper(rvdConfiguration.getWorkspaceBasePath());
         workspaceBootstrapper.run();

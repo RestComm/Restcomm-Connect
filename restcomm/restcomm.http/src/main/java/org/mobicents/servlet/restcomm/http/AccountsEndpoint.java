@@ -144,7 +144,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         try {
             final Subject subject = SecurityUtils.getSubject();
             if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
-                    || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
+                    || (subject.getPrincipal().toString().equals(account.getSid().toString()) && subject.isPermitted("RestComm:Read:Accounts"))) {
             } else {
                 return status(UNAUTHORIZED).build();
             }

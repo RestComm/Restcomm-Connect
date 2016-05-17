@@ -44,7 +44,9 @@ public class TrafficThrottling implements RestcommExtensionGeneric {
     public ExtensionResponse preInboundAction(SipServletRequest request) {
         SipManager sipManager = ((MobicentsSipApplicationSessionFacade) request.getApplicationSession()).getSipContext().getSipManager();
         int activeCalls = sipManager.getActiveSipApplicationSessions();
-        logger.info("Active calls: "+activeCalls);
+        if(logger.isInfoEnabled()) {
+            logger.info("Active calls: "+activeCalls);
+        }
         ExtensionResponse response = new ExtensionResponse();
         response.setAllowed(false);
         return response;
