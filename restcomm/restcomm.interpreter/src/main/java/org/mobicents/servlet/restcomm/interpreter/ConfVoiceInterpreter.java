@@ -392,9 +392,9 @@ public class ConfVoiceInterpreter extends UntypedActor {
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             downloaderResponse = (DownloaderResponse) message;
-            if (logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()){
                 logger.debug("response succeeded " + downloaderResponse.succeeded() + ", statusCode "
-                        + downloaderResponse.get().getStatusCode());
+                    + downloaderResponse.get().getStatusCode());
             }
             if (downloaderResponse.succeeded() && HttpStatus.SC_OK == downloaderResponse.get().getStatusCode()) {
                 fsm.transition(message, acquiringConfMediaGroup);
@@ -424,7 +424,9 @@ public class ConfVoiceInterpreter extends UntypedActor {
             }
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
-            logger.info("DiskCacheResponse " + response.succeeded() + " error=" + response.error());
+            if(logger.isInfoEnabled()){
+                logger.info("DiskCacheResponse " + response.succeeded() + " error=" + response.error());
+            }
             if (response.succeeded()) {
                 if (caching.equals(state) || checkingCache.equals(state)) {
                     if (play.equals(verb.name()) || say.equals(verb.name())) {
@@ -441,8 +443,9 @@ public class ConfVoiceInterpreter extends UntypedActor {
             }
         } else if (Tag.class.equals(klass)) {
             verb = (Tag) message;
-
-            logger.info("ConfVoiceInterpreter verb = " + verb.name());
+            if(logger.isInfoEnabled()) {
+                logger.info("ConfVoiceInterpreter verb = " + verb.name());
+            }
 
             if (Verbs.dial.equals(verb.name()))
                 originalInterpreter.tell(new Exception("Dial verb not supported"), source);
@@ -718,7 +721,7 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
             String hash = hash(verb);
             DiskCacheRequest request = new DiskCacheRequest(hash);
-            if (logger.isErrorEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("Checking cache for hash: " + hash);
             }
             cache.tell(request, source);
@@ -967,7 +970,9 @@ public class ConfVoiceInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Finished called for ConfVoiceInterpreter");
+            if(logger.isInfoEnabled()) {
+                logger.info("Finished called for ConfVoiceInterpreter");
+            }
 
             final StopMediaGroup stop = new StopMediaGroup();
             // Destroy the media group(s).

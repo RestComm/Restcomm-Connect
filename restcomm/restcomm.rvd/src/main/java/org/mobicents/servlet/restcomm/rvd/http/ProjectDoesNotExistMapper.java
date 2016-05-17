@@ -15,7 +15,9 @@ public class ProjectDoesNotExistMapper implements ExceptionMapper<ProjectDoesNot
     @Override
     public Response toResponse(ProjectDoesNotExist e) {
         logger.error(e);
-        logger.debug(e,e);
+        if(logger.isDebugEnabled()) {
+            logger.debug(e,e);
+        }
 
         RvdResponse rvdResponse = new RvdResponse(RvdResponse.Status.ERROR).setException(e);
         return Response.status(Status.NOT_FOUND).entity(rvdResponse.asJson()).build();
