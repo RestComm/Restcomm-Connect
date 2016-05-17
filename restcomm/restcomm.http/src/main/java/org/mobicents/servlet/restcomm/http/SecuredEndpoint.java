@@ -44,13 +44,13 @@ import javax.ws.rs.core.Context;
 
 /**
  * Security layer endpoint. It will scan the request for security related assets and populate the
- * UserIdentityContext accordingly. Extend the class and use secure*() methods to apply security rules to
+ * UserIdentityContext accordingly. Extend the class and use checkEffectiveAccount*() methods to apply security rules to
  * your endpoint.
  *
  * How to use it:
- * - use secure() method to check that a user (any user) is authenticated.
- * - use secure(permission) method to check that an authenticated user has the required permission according to his roles
- * - use secure(account,permission) method to check that besides permission a user also has ownership over an account
+ * - use checkEffectiveAccount() method to check that a user (any user) is authenticated.
+ * - use checkEffectiveAccount(permission) method to check that an authenticated user has the required permission according to his roles
+ * - use checkEffectiveAccount(account,permission) method to check that besides permission a user also has ownership over an account
  *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
@@ -87,19 +87,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     /**
      * Grants general purpose access if any valid token exists in the request
      */
-    protected void secure() {
+    protected void checkEffectiveAccount() {
         if (userIdentityContext.getEffectiveAccount() == null)
             throw new AuthorizationException();
-    }
-
-    // boolean overloaded form of secure()
-    protected boolean isSecured() {
-        try {
-            secure();
-            return true;
-        } catch (AuthorizationException e) {
-            return false;
-        }
     }
 
     /**
@@ -109,30 +99,22 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      *
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
-    protected void secure (final String permission) {
-        secure(); // ok there is a valid authenticated account
+    protected void checkPermission(final String permission) {
+        checkEffectiveAccount(); // ok there is a valid authenticated account
         if ( secureApi(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
             throw new AuthorizationException();
     }
 
-    // boolean overloaded form of secure(permission)
-    protected boolean isSecured(final String permission) {
+    // boolean overloaded form of checkEffectiveAccount(permission)
+    protected boolean isSecuredByPermission(final String permission) {
         try {
-            secure(permission);
+            checkPermission(permission);
             return true;
         } catch (AuthorizationException e) {
             return false;
         }
     }
 
-    // Authorize request by using either keycloak token or API key method. If any of them succeeds, request is allowed
-    /**
-     * High level authorization. It grants access to 'account' resources required by permission.
-     * It takes into account any Oauth token of API Key existing in the request.
-     * @param operatedAccount
-     * @param permission
-     * @throws AuthorizationException
-     */
     /**
      * Personalized type of grant. Besides checking 'permission' the effective account should have some sort of
      * ownership over the operatedAccount. The exact type of ownership is defined in secureAccount()
@@ -148,7 +130,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         if (operatedAccount == null)
             throw new AuthorizationException();
-        secure(permission); // check an authbenticated account allowed to do "permission" is available
+        checkPermission(permission); // check an authbenticated account allowed to do "permission" is available
         if (type == SecuredType.SECURED_STANDARD) {
             if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, null) != AuthOutcome.OK )
                 throw new AuthorizationException();
@@ -160,16 +142,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         if (type == SecuredType.SECURED_ACCOUNT) {
             if (secureLevelControlAccounts(userIdentityContext.getEffectiveAccount(), operatedAccount) != AuthOutcome.OK)
                 throw new AuthorizationException();
-        }
-    }
-
-    // boolean overloaded form of secure(operatedAccount, String permission)
-    protected boolean isSecured(final Account operatedAccount, final String permission) {
-        try {
-            secure(operatedAccount, permission);
-            return true;
-        } catch (AuthorizationException e) {
-            return false;
         }
     }
 
@@ -190,14 +162,14 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission) throws AuthorizationException {
-        secure(operatedAccount, resourceAccountSid, permission, SecuredType.SECURED_STANDARD);
-    }
-
-    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission, final SecuredType type ) {
-        secure(operatedAccount, resourceAccountSid, type);
-        secure(permission); // check an authbenticated account allowed to do "permission" is available
-    }
+//    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission) throws AuthorizationException {
+//        secure(operatedAccount, resourceAccountSid, permission, SecuredType.SECURED_STANDARD);
+//    }
+//
+//    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission, final SecuredType type ) {
+//        secure(operatedAccount, resourceAccountSid, type);
+//        checkPermission(permission); // check an authbenticated account allowed to do "permission" is available
+//    }
 
     /**
      * Checks is the effective account has the specified role. Only role values contained in the Restcomm Account
@@ -239,42 +211,26 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         for (String roleName: roleNames) {
             SimpleRole simpleRole = restcommRoles.getRole(roleName);
             if ( simpleRole == null) {
-                // logger.warn("Cannot map keycloak role '" + roleName + "' to local restcomm configuration. Ignored." );
+                return AuthOutcome.FAILED;
             }
             else {
                 Set<Permission> permissions = simpleRole.getPermissions();
                 // check the permissions one by one
                 for (Permission permission: permissions) {
                     if (permission.implies(neededPermission)) {
-                        logger.debug("Granted access by permission " + permission.toString());
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Granted access by permission " + permission.toString());
+                        }
                         return AuthOutcome.OK;
                     }
                 }
-                logger.debug("Role " + roleName + " does not allow " + neededPermissionString);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Role " + roleName + " does not allow " + neededPermissionString);
+                }
             }
         }
         return AuthOutcome.FAILED;
     }
-
-    /**
-     * Makes sure a user authenticated as actorAccount can access operatedAccount. In practice allows access if actorAccount == operatedAccount
-     * OR (UNDER REVIEW) if operatedAccount is a sub-account of actorAccount
-     *
-     * UPDATE: parent-child relation check is disabled for compatibility reasons.
-     *
-     * @param actorAccount
-     * @param operatedAccount
-     * @return
-     */
-//
-//    private AuthOutcome secureAccount(Account actorAccount, final Account operatedAccount) {
-//        if ( actorAccount != null && actorAccount.getSid() != null ) {
-//            if ( actorAccount.getSid().equals(operatedAccount.getSid()) /*|| actorAccount.getSid().equals(operatedAccount.getAccountSid()) */ ) {
-//                return AuthOutcome.OK;
-//            }
-//        }
-//        return AuthOutcome.FAILED;
-//    }
 
     /**
      * Applies the following access control rule:
@@ -348,7 +304,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
-     * Returns the string literal for the administrator role. This role is granted implicitly access from secure() method.
+     * Returns the string literal for the administrator role. This role is granted implicitly access from checkEffectiveAccount() method.
      * No need to explicitly apply it at each protected resource
      * .
      * @return the administrator role as string
