@@ -275,7 +275,7 @@ CREATE TABLE "restcomm_geolocation"(
 "date_updated" DATETIME NOT NULL,
 "date_executed" DATETIME NOT NULL,
 "account_sid" VARCHAR(34) NOT NULL,
-"source" VARCHAR(30) NOT NULL,
+"source" VARCHAR(30),
 "device_identifier" VARCHAR(30) NOT NULL,
 "geolocation_type" VARCHAR(15) NOT NULL,
 "response_status" VARCHAR(30),

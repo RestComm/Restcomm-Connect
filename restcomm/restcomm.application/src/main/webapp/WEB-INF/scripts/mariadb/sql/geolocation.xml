@@ -28,7 +28,7 @@
 	</delete>
 	
 	<update id="updateGeolocation" parameterType="map">
-		UPDATE restcomm_geolocation SET date_updated=#{date_updated}, response_status=#{response_status}, 
+		UPDATE restcomm_geolocation SET date_updated=#{date_updated}, source=#{source}, response_status=#{response_status}, 
 		cell_id=#{cell_id}, location_area_code=#{location_area_code}, mobile_country_code=#{mobile_country_code}, 
 		mobile_network_code=#{mobile_network_code}, network_entity_address=#{network_entity_address}, age_of_location_info=#{age_of_location_info}, 
 		device_latitude=#{device_latitude}, device_longitude=#{device_longitude}, accuracy=#{accuracy}, physical_address=#{physical_address}, 

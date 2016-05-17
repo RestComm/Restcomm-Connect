@@ -139,9 +139,10 @@ public class GeolocationsDaoTest {
         assertTrue(result.getUri().equals(geolocation.getUri()));
 
         // Update the Geolocation
-        // The API is designed so that source, deviceIdentifier and geolocationType shall not possible to update once created
+        // deviceIdentifier, statusCallback and geolocationType can not be updated once created
         URI url2 = URI.create("http://127.0.0.1:8080/restcomm/demos/geolocation-hello.xml");
         geolocation = geolocation.setDateUpdated(currentDateTime);
+        geolocation = geolocation.setSource("ble001");
         geolocation = geolocation.setResponseStatus("failed");
         geolocation = geolocation.setCause("API not compliant");
         geolocation = geolocation.setCellId("00010");
@@ -172,6 +173,7 @@ public class GeolocationsDaoTest {
         // Validate the results
         assertTrue(result.getDateUpdated().equals(geolocation.getDateUpdated()));
         assertTrue(result.getAccountSid().equals(geolocation.getAccountSid()));
+        assertTrue(result.getSource().equals(geolocation.getSource()));
         assertTrue(result.getResponseStatus().equals(geolocation.getResponseStatus()));
         assertTrue(result.getCause() == geolocation.getCause());
         assertTrue(result.getCellId().equals(geolocation.getCellId()));
@@ -211,8 +213,8 @@ public class GeolocationsDaoTest {
         DateTime currentDateTime = DateTime.now();
         builder.setDateUpdated(currentDateTime);
         builder.setAccountSid(accountSid);
-        builder.setSource("Source");
-        builder.setDeviceIdentifier("DeviceIdentifier");
+        builder.setSource("mlpClient1");
+        builder.setDeviceIdentifier("59899770937");
         builder.setGeolocationType(GeolocationType.Immediate);
         builder.setResponseStatus("successfull");
         builder.setCause("NA");
