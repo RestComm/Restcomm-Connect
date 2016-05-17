@@ -562,7 +562,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (CallStateChanged.class.equals(klass)) {
             final CallStateChanged event = (CallStateChanged) message;
             callState = event.state();
-            logger.info("VoiceInterpreter received CallStateChanged event: "+callState);
+            if(logger.isInfoEnabled()){
+                logger.info("VoiceInterpreter received CallStateChanged event: "+callState);
+            }
             if (CallStateChanged.State.RINGING == event.state()) {
                 if (forking.equals(state)) {
                     outboundCall = sender;
@@ -633,9 +635,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             attribute = verb.attribute("action");
                         }
                         //Busy was sent by one of the branches, remove the branch, execute dial action and continue
-                        logger.info("call state changed. New call state: " + ((CallStateChanged) message).state() + "Sender in the dialBranches: " + dialBranches.contains(sender));
+                        if(logger.isInfoEnabled()){
+                            logger.info("call state changed. New call state: " + ((CallStateChanged) message).state() + "Sender in the dialBranches: " + dialBranches.contains(sender));
+                        }
                         ActorRef branch = dialBranches.remove(dialBranches.indexOf(sender));
-                        logger.info("Will cancel branch: " + branch.toString());
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Will cancel branch: " + branch.toString());
+                        }
                         branch.tell(new Cancel(), self());
                         if (dialBranches.size() > 0) {
                             return;
@@ -713,11 +719,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
                 logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
-                        + ", statusCode " + response.get().getStatusCode());
+                    + ", statusCode " + response.get().getStatusCode());
             }
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
                 if (dialBranches == null || dialBranches.size()==0) {
-                    logger.info("Downloader response is success, moving to Ready state");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Downloader response is success, moving to Ready state");
+                    }
                     fsm.transition(message, ready);
                 } else {
                     return;
@@ -755,7 +763,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (ParserFailed.class.equals(klass)) {
-          logger.info("ParserFailed received. Will stop the call");
+            if(logger.isInfoEnabled()) {
+                logger.info("ParserFailed received. Will stop the call");
+            }
             isParserFailed = true;
             fsm.transition(message, hangingUp);
         } else if (Tag.class.equals(klass)) {
@@ -802,10 +812,14 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, finished);
             } else {
                 if (!isParserFailed) {
-                    logger.info("End tag received will move to hangup the call");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("End tag received will move to hangup the call");
+                    }
                     fsm.transition(message, hangingUp);
                 } else {
-                    logger.info("End tag received but parser failed earlier so hangup would have been already sent to the call");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("End tag received but parser failed earlier so hangup would have been already sent to the call");
+                    }
                 }
 
             }
@@ -813,7 +827,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, gathering);
         } else if (MediaGroupResponse.class.equals(klass)) {
             final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
-            logger.info("MediaGroupResponse, succeeded: " + response.succeeded() + "  " + response.cause());
+            if(logger.isInfoEnabled()) {
+                logger.info("MediaGroupResponse, succeeded: " + response.succeeded() + "  " + response.cause());
+            }
             if (response.succeeded()) {
                 if (playingRejectionPrompt.equals(state)) {
                     fsm.transition(message, hangingUp);
@@ -918,7 +934,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             attribute = verb.attribute("action");
         }
         if (dialBranches != null && dialBranches.contains(sender)) {
-            logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + fsm.state());
+            if(logger.isInfoEnabled()) {
+                logger.info("Dial branch new call state: " + ((CallStateChanged) message).state().toString() + " call path: " + sender().path() + " VI state: " + fsm.state());
+            }
             dialBranches.remove(sender);
 //            if (attribute != null) {
 //                executeDialAction(message, sender);
@@ -990,11 +1008,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void conferenceStateModeratorPresent(final Object message) {
-        logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: " + call.path().toString());
+        if(logger.isInfoEnabled()) {
+            logger.info("VoiceInterpreter#conferenceStateModeratorPresent will unmute the call: " + call.path().toString());
+        }
         call.tell(new Unmute(), self());
 
         if (confSubVoiceInterpreter != null) {
+        if(logger.isInfoEnabled()) {
             logger.info("VoiceInterpreter stopping confSubVoiceInterpreter");
+        }
 
             // Stop the conference back ground music
             final StopInterpreter stop = new StopInterpreter();
@@ -1067,7 +1089,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         while (headerNames.hasNext()) {
             String headerName = headerNames.next();
             if (headerName.startsWith("X-")) {
-                logger.debug("%%%%%%%%%%% Indetified customer header: " + headerName);
+                if(logger.isDebugEnabled()) {
+                    logger.debug("%%%%%%%%%%% Indetified customer header: " + headerName);
+                }
                 parameters.add(new BasicNameValuePair(prefix + headerName, sipMessage.getHeader(headerName)));
             }
         }
@@ -1303,9 +1327,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final GetNextVerb next = GetNextVerb.instance();
             if (parser != null) {
                 parser.tell(next, source);
-            } else {
+            } else if(logger.isInfoEnabled()) {
                 logger.info("Parser is null");
             }
+
         }
     }
 
@@ -1675,7 +1700,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
 
             if (dialRecordAttribute != null && "true".equalsIgnoreCase(dialRecordAttribute.value())) {
-                logger.info("Start recording of the bridge");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Start recording of the bridge");
+                }
                 record(bridge);
             }
         }
@@ -1707,7 +1734,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void recordCall() {
-        logger.info("Start recording of the call");
+        if(logger.isInfoEnabled()) {
+            logger.info("Start recording of the call");
+        }
         record(call);
     }
 
@@ -1719,7 +1748,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     @SuppressWarnings("unchecked")
     private void executeDialAction(final Object message, final ActorRef outboundCall) {
         if (!dialActionExecuted && verb != null && dial.equals(verb.name())) {
-            logger.info("Proceeding to execute Dial Action attribute");
+            if(logger.isInfoEnabled()){
+                logger.info("Proceeding to execute Dial Action attribute");
+            }
             this.dialActionExecuted = true;
             final List<NameValuePair> parameters = parameters();
 
@@ -1727,7 +1758,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (call != null) {
                 try {
-                    logger.info("Trying to get inbound call Info");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Trying to get inbound call Info");
+                    }
                     final Timeout expires = new Timeout(Duration.create(5, TimeUnit.SECONDS));
                     Future<Object> future = (Future<Object>) ask(call, new GetCallInfo(), expires);
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
@@ -1740,7 +1773,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (outboundCall != null) {
                 try {
-                    logger.info("Trying to get outboundCall Info");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Trying to get outboundCall Info");
+                    }
                     final Timeout expires = new Timeout(Duration.create(10, TimeUnit.SECONDS));
                     Future<Object> future = (Future<Object>) ask(outboundCall, new GetCallInfo(), expires);
                     CallResponse<CallInfo> callResponse = (CallResponse<CallInfo>) Await.result(future,
@@ -1834,7 +1869,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             final NotificationsDao notifications = storage.getNotificationsDao();
             if (attribute != null) {
-                logger.info("Executing Dial Action attribute.");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Executing Dial Action attribute.");
+                }
                 String action = attribute.value();
                 if (action != null && !action.isEmpty()) {
                     URI target = null;
@@ -1866,8 +1903,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             method = "POST";
                         }
                     }
-                    logger.info("Dial Action URL: " + uri.toString() + " Method: " + method);
-                    logger.debug("Dial Action parameters: \n" + parameters);
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Dial Action URL: " + uri.toString() + " Method: " + method);
+                    }
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Dial Action parameters: \n" + parameters);
+                    }
                     // Redirect to the action url.
                     request = new HttpRequestDescriptor(uri, method, parameters);
                     // Tell the downloader to send the Dial Parameters to the Action url but we don't need a reply back so sender ==
@@ -1877,7 +1918,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (verb == null) {
-            logger.info("Dial action didn't executed because verb is null");
+            if(logger.isInfoEnabled()) {
+                logger.info("Dial action didn't executed because verb is null");
+            }
         }
     }
 
@@ -1889,14 +1932,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
-            logger.info("FinishDialing, current state: " + state);
+            if(logger.isInfoEnabled()) {
+                logger.info("FinishDialing, current state: " + state);
+            }
             Attribute attribute = null;
             if (verb != null) {
                 attribute = verb.attribute("action");
             }
 
             if (message instanceof ReceiveTimeout && dialBranches != null) {
-                logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
+                if(logger.isInfoEnabled()) {
+                    logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
+                }
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -1909,7 +1956,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     //                        executeDialAction(message, branch);
     //                    }
                         branch.tell(new Cancel(), source);
-                        logger.info("Canceled branch: " + branch.path());
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Canceled branch: " + branch.path());
+                        }
                     }
                 }
                 if (dialBranches != null && dialBranches.size() > 0) {
@@ -1917,7 +1966,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
 //                    call.tell(new StopMediaGroup(), null);
                 if (attribute == null) {
-                    logger.info("Will ask for the next verb from parser");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Will ask for the next verb from parser");
+                }
                     final GetNextVerb next = GetNextVerb.instance();
                     parser.tell(next, source);
                 } else {
@@ -1934,11 +1985,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (message instanceof CallStateChanged) {
-                logger.info("CallStateChanged state: "+((CallStateChanged)message).state().toString()+" ,sender: "+sender().path());
+                if(logger.isInfoEnabled()) {
+                    logger.info("CallStateChanged state: "+((CallStateChanged)message).state().toString()+" ,sender: "+sender().path());
+                }
                 if (forking.equals(state) || finishDialing.equals(state)) {
                     if (sender.equals(call)) {
                         //Initial call wants to finish dialing
-                        logger.info("Sender == call: " + sender.equals(call));
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Sender == call: " + sender.equals(call));
+                        }
                         final UntypedActorContext context = getContext();
                         context.setReceiveTimeout(Duration.Undefined());
 
@@ -1979,7 +2034,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                 } else if (bridged.equals(state)) {
-                    logger.info("finishDialing state=bridged, will hangup outboundCall");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("finishDialing state=bridged, will hangup outboundCall");
+                    }
                     outboundCall.tell(new Hangup(), source);
                 } else {
 //                    logger.debug("FinishDialing, State: " + state);
@@ -2009,16 +2066,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (attribute != null) {
-                logger.info("Executing Dial Action url");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Executing Dial Action url");
+                }
                 if (outboundCall != null) {
                     executeDialAction(message, outboundCall);
                 } else {
-                    logger.info("Executing Dial Action url");
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Executing Dial Action url");
+                    }
                     executeDialAction(message, null);
                 }
                 callback();
                 return;
-            } else {
+            } else if(logger.isInfoEnabled()) {
                 logger.info("Action attribute is null.");
             }
 
@@ -2187,14 +2248,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 if (!muteCall) {
                     final Mute mute = new Mute();
-                    logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " callMuted = "
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " callMuted = "
                             + muteCall);
+                    }
                     call.tell(mute, source);
                 }
 
                 // Only play background music if conference is not doing that already
                 // If conference state is RUNNING_MODERATOR_ABSENT and participants > 0 then BG music is playing already
-                logger.info("Play background music? " + conferenceInfo.participants().size());
+                if(logger.isInfoEnabled()) {
+                    logger.info("Play background music? " + conferenceInfo.participants().size());
+                }
                 boolean playBackground = conferenceInfo.participants().size() == 1;
                 if (playBackground) {
                     // Parse wait url.
@@ -2365,7 +2430,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("At Finished state, state: " + fsm.state());
+            if(logger.isInfoEnabled()) {
+                logger.info("At Finished state, state: " + fsm.state());
+            }
             final Class<?> klass = message.getClass();
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;
@@ -2485,17 +2552,23 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     public void postStop() {
         logger.info("################## conferenceState.name(): "+conferenceState.name());
         if (!fsm.state().equals(uninitialized)) {
-            logger.info("VoiceIntepreter: " + self().path()
+            if(logger.isInfoEnabled()) {
+                logger.info("VoiceIntepreter: " + self().path()
                     + "At the postStop() method. Will clean up Voice Interpreter. Keep calls: " + liveCallModification);
+            }
             if (fsm.state().equals(bridged) && outboundCall != null && !liveCallModification) {
-                logger.info("At postStop(), will clean up outbound call");
+                if(logger.isInfoEnabled()) {
+                    logger.info("At postStop(), will clean up outbound call");
+                }
                 outboundCall.tell(new Hangup(), null);
                 callManager.tell(new DestroyCall(outboundCall), null);
                 outboundCall = null;
             }
 
             if (call != null && !liveCallModification) {
-                logger.info("At postStop(), will clean up call");
+                if(logger.isInfoEnabled()) {
+                    logger.info("At postStop(), will clean up call");
+                }
                 callManager.tell(new DestroyCall(call), null);
                 call = null;
             }
@@ -2575,9 +2648,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(Object message) throws Exception {
-            logger.info("Joining call from:" + callInfo.from() + " to: " + callInfo.to() + " with outboundCall from: "
+            if(logger.isInfoEnabled()) {
+                logger.info("Joining call from:" + callInfo.from() + " to: " + callInfo.to() + " with outboundCall from: "
                     + outboundCallInfo.from() + " to: " + outboundCallInfo.to());
-
+            }
             // Check for any Dial verbs with url attributes (call screening url)
             Tag child = dialChildrenWithAttributes.get(outboundCall);
             if (child != null && child.attribute("url") != null) {
@@ -2593,7 +2667,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                 } catch (Exception e) {
-                    logger.info("Exception while trying to execute call screening: "+e);
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Exception while trying to execute call screening: "+e);
+                    }
                     fsm.transition(message, hangingUp);
                     return;
                 }

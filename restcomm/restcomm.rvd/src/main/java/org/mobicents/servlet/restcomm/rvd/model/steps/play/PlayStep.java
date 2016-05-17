@@ -43,7 +43,9 @@ public class PlayStep extends Step {
             url = interpreter.populateVariables(remote.wavUrl);
         }
 
-        logger.debug("play url: " + url);
+        if(logger.isDebugEnabled()) {
+            logger.debug("play url: " + url);
+        }
         playStep.setWavurl(url);
         playStep.setLoop(loop);
 

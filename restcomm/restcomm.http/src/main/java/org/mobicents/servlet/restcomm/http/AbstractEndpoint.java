@@ -115,7 +115,7 @@ public abstract class AbstractEndpoint {
         if (account != null && account.getSid() != null) {
             final Sid accountSid = account.getSid();
             if (account.getStatus().equals(Account.Status.ACTIVE)
-                    && (subject.hasRole("Administrator") || (subject.getPrincipal().equals(accountSid) && subject
+                    && (subject.hasRole("Administrator") || (subject.getPrincipal().toString().equals(accountSid.toString()) && subject
                             .isPermitted(permission)))) {
                 return;
             } else {
