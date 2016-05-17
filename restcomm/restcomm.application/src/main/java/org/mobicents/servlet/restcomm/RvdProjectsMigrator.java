@@ -222,7 +222,7 @@ public class RvdProjectsMigrator {
         if (asServerLog) {
             if (error) {
                 logger.error(message);
-            } else {
+            } else if(logger.isInfoEnabled()) {
                 logger.info(message);
             }
         }
@@ -233,7 +233,7 @@ public class RvdProjectsMigrator {
             } else if (!asServerLog) { // Prevent duplicated messages
                 if (error) {
                     logger.error(message);
-                } else {
+                } else  if(logger.isInfoEnabled()) {
                     logger.info(message);
                 }
             }

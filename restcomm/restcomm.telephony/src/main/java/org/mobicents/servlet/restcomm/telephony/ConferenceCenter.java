@@ -102,27 +102,35 @@ public final class ConferenceCenter extends UntypedActor {
             // Only executes during a conference initialization
             // Adds conference to collection if started successfully
             if (!conferences.containsKey(name)) {
-                logger.info("Conference " + name + " started successfully");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Conference " + name + " started successfully");
+                }
                 conferences.put(name, sender);
                 response = new ConferenceCenterResponse(sender);
             }
         } else if (ConferenceStateChanged.State.COMPLETED.equals(update.state())) {
             // A conference completed with no errors
             // Remove it from conference collection and stop the actor
-            logger.info("Conference " + name + " completed without errors");
+            if(logger.isInfoEnabled()) {
+                logger.info("Conference " + name + " completed without errors");
+            }
             ActorRef conference = conferences.remove(update.name());
             context().stop(conference);
         } else if (ConferenceStateChanged.State.FAILED.equals(update.state())) {
             if (conferences.containsKey(name)) {
                 // A conference completed with errors
                 // Remove it from conference collection and stop the actor
-                logger.info("Conference " + name + " completed with errors");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Conference " + name + " completed with errors");
+                }
                 ActorRef conference = conferences.remove(update.name());
                 context().stop(conference);
             } else {
                 // Failed to initialize a conference
                 // Warn voice interpreter conference initialization failed
-                logger.info("Conference " + name + " failed to initialize");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Conference " + name + " failed to initialize");
+                }
                 final StringBuilder buffer = new StringBuilder();
                 buffer.append("The conference room ").append(name).append(" failed to initialize.");
                 final CreateConferenceException exception = new CreateConferenceException(buffer.toString());

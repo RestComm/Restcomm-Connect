@@ -1,15 +1,14 @@
 [[build-from-source]]
-*How to build Restcomm-Connect from source*
+= How to build Restcomm-Connect from source
 
-*Requirements*
+== Requirements
 
-* You must have *git* installed on your computer
-* You must have *ant* installed on your computer
-* You must have *JDK - 7* installed on your computer
-* You must be running *maven* version 3.x.x on your computer
+* You must have link:https://git-scm.com/book/en/v2/Getting-Started-Installing-Git[git] installed on your computer
+* You must have link:http://ant.apache.org/manual/install.html[ant] installed on your computer
+* You must have link:http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html[JDK - 7] installed on your computer
+* You must be running link:https://maven.apache.org/download.cgi[maven] version 3.x.x on your computer
 
-
-*Step 1*
+== Obtaining git URL
 
 * Go to  https://github.com/RestComm/Restcomm-Connect.git
 You will see the page like this one below. Copy the URL in the *HTTPS* field.
@@ -17,21 +16,34 @@ The URL should look like this: https://github.com/RestComm/Restcomm-Connect.git
 
 image::images/1.png[]
 
-*Step 2*
+== Restcomm-Connect cloning
 
 In the bash window of your local computer create a directory where you should clone Restcomm-Connect:
 
-* run the command : *git clone https://github.com/RestComm/Restcomm-Connect.git*.
+* run the command :
+
+[source,bash]
+----
+git clone https://github.com/RestComm/Restcomm-Connect.git
+----
 This command will create a new directory called RestComm-Connect. Go to this directory entering the command:
- *cd Restcomm-Connect*.
+
+[source,bash]
+----
+ cd Restcomm-Connect
+----
+
 The content of the directory should contain the following:
 
 image::images/6.png[]
+
+== Restcomm-Connect building
 
 * You will need to create a script to build Restcomm-Connect.
 Copy the script below into a bash script on your local directory at the root of the RestComm-Connect.
 In this tutorial, the script below is stored in the file *restcomm-connect-build.sh*.
 
+[source,bash]
 ----
 #!/bin/bash
 export RESTCOMM_HOME=/home/yuliachornobrivets/Restcomm-Connect
@@ -46,16 +58,26 @@ export DEPENDENCIES_HOME=$WORKSPACE/dependencies
 ant release -f ./release/build.xml -Drestcomm.release.version=$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Drestcomm.branch.name=restcomm-release-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Dcheckout.restcomm.dir=$RESTCOMM_HOME -Dworkspace.restcomm.dir=$RESTCOMM_HOME/restcomm -Dcheckout.dir=$DEPENDENCIES_HOME
 ----
 
-* Change the restcomm-connect-build.sh permission to make it executable as follows:
-  *chmod +x ./restcomm-connect-build.sh*.
-    The RestComm directory should now display the following content:
+* Change the restcomm-connect-build.sh permission to make it executable as follows
+
+[source,bash]
+----
+chmod +x ./restcomm-connect-build.sh
+----
+The RestComm directory should now display the following content:
 
 
 image::images/4.png[]
 
-* Now, run the build script as follows: *./restcomm-connect-build.sh*
+* Now, run the build script as follows:
+[source,bash]
+----
+./restcomm-connect-build.sh
+----
 
 This may take a while to build. If the build is successful, you should see this output at the end of the build:
+
+[source,bash]
 ----
 make-final-zip:
 
@@ -76,3 +98,5 @@ image::images/3.png[]
 
 Note that the zip file called *Restcomm-JBoss-AS7-7.6.2* is the binary for JBoss container.
 You can copy this zip file into a directory on your computer and unzip the content.
+
+Here you can read the detailed information on <<Starting Restcomm-Connect.adoc#configure-restcomm-iP-information-and-text-to-speech,Starting Restcomm-Connect>>.

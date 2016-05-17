@@ -151,8 +151,10 @@ public class SupervisorEndpoint extends AbstractEndpoint{
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
                Response response = ok(gson.toJson(monitoringServiceResponse), APPLICATION_JSON).build();
-                logger.debug("Supervisor endpoint response: "+gson.toJson(monitoringServiceResponse));
-                return response;
+               if(logger.isDebugEnabled()){
+                   logger.debug("Supervisor endpoint response: "+gson.toJson(monitoringServiceResponse));
+               }
+               return response;
             } else {
                 return null;
             }
