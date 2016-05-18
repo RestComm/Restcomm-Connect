@@ -18,7 +18,7 @@
  *
  */
 
-package org.mobicents.servlet.restcomm.rvd.security;
+package org.mobicents.servlet.restcomm.rvd.identity;
 
 /**
  * @author Orestis Tsakiridis

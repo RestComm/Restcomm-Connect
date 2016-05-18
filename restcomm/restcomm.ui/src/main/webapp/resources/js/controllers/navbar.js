@@ -2,15 +2,16 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, SessionService, Notifications, RCommAccounts) {
+rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, Notifications, RCommAccounts, $state) {
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
     $rootScope.location = $location.path();
   });
 
-  $scope.auth = AuthService;
-  $scope.sid = SessionService.get('sid');
+  //$scope.auth = AuthService;
+  //$scope.sid = SessionService.get('sid');
+  $scope.friendlyName = AuthService.getFrientlyName();
 
   $scope.testNotifications = function() {
     Notifications.info('This is an info message');
@@ -21,12 +22,10 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
   $scope.logout = function() {
     AuthService.logout();
-    $http.get('/restcomm/2012-04-24/Logout')/*.
-     success(function() {console.log('Logged out from API.');}).
-     error(function() {console.log('Failed to logout from API.');})*/;
+    $state.go('public.login');
   };
 
-  if(AuthService.isLoggedIn()) {
+  //if(AuthService.isLoggedIn()) {
     var accountsList = RCommAccounts.query(function() {
       $scope.accountsList = accountsList;
       for (var x in accountsList){
@@ -35,7 +34,7 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
         }
       }
     });
-  }
+  //}
 
   // add account -------------------------------------------------------------
 
@@ -66,8 +65,8 @@ rcMod.controller('MenuCtrl', function($scope, $http, $resource, $rootScope, $loc
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, SessionService, RCommAccounts, md5) {
-  $scope.sid = SessionService.get('sid');
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5) {
+  //$scope.sid = SessionService.get('sid');
 
   var accountBackup;
 
@@ -139,7 +138,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $routeParams, Sessio
   $scope.getAccounts = function() {
     $scope.accounts = RCommAccounts.query(function(data){
       angular.forEach(data, function(value){
-        if(value.sid == $routeParams.accountSid) {
+        if(value.sid == $stateParams.accountSid) {
           $scope.account = angular.copy(value);
           accountBackup = angular.copy(value);
         }
@@ -192,10 +191,9 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
   };
 };
 
-var AboutModalCtrl = function ($scope, $modalInstance, SessionService, RCommJMX, RCVersion) {
+var AboutModalCtrl = function ($scope, $modalInstance, RCommJMX, RCVersion) {
 
   $scope.Math = window.Math;
-  $scope.sid = SessionService.get('sid');
 
   $scope.getData = function() {
     $scope.version = RCVersion.get({accountSid: $scope.sid});
