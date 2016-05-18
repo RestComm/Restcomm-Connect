@@ -39,13 +39,13 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.Transcription;
 import org.mobicents.servlet.restcomm.entities.TranscriptionList;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.converter.TranscriptionConverter;
 import org.mobicents.servlet.restcomm.http.converter.TranscriptionListConverter;
@@ -54,14 +54,13 @@ import org.mobicents.servlet.restcomm.http.converter.TranscriptionListConverter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
+public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
     protected TranscriptionsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
 
     public TranscriptionsEndpoint() {
         super();
@@ -74,7 +73,6 @@ public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getTranscriptionsDao();
-        accountsDao = storage.getAccountsDao();
         final TranscriptionConverter converter = new TranscriptionConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Transcription.class, converter);
@@ -88,8 +86,9 @@ public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getTranscription(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
+            secure(operatedAccount, "RestComm:Read:Transcriptions");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -98,7 +97,8 @@ public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
+                secure(operatedAccount, transcription.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -116,7 +116,7 @@ public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
     protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

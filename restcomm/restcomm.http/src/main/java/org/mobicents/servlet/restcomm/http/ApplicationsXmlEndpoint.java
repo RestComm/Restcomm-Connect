@@ -55,9 +55,9 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
         try {
             secure(accountsDao.getAccount(new Sid(accountSid)), "RestComm:Modify:Applications");
             Application application = dao.getApplication(new Sid(sid));
-            if (application != null) {
-                secureLevelControlApplications(accountSid, application);
-            }
+//            if (application != null) {
+//                secureLevelControlApplications(accountSid, application);
+//            }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

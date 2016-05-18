@@ -10,20 +10,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
-
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.rvd.commons.http.SslMode;
 import org.mobicents.servlet.restcomm.rvd.configuration.RestcommConfig;
+import org.mobicents.servlet.restcomm.rvd.exceptions.RestcommConfigurationException;
 import org.mobicents.servlet.restcomm.rvd.http.utils.UriUtils;
 import org.mobicents.servlet.restcomm.rvd.model.RvdConfig;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
-import org.w3c.dom.Document;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -114,11 +107,11 @@ public class RvdConfiguration {
                 workspaceBasePath = contextRootPath + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked under RVD context
         }
         this.workspaceBasePath = workspaceBasePath;
-
-        restcommConfig = loadRestcommXmlConfig(contextRootPath + "../restcomm.war/WEB-INF/conf/restcomm.xml");
         if(logger.isInfoEnabled()) {
             logger.info("Using workspace at " + workspaceBasePath);
         }
+        // load configuration from restcomm.xml file
+        restcommConfig = loadRestcommXmlConfig(contextRootPath + "../restcomm.war/WEB-INF/conf/restcomm.xml");
     }
 
     /**
@@ -140,34 +133,17 @@ public class RvdConfiguration {
     }
 
     /**
-     * Load configuration options from restcomm.xml that make sence for RVD.
+     * Load configuration options from restcomm.xml that are needed by RVD. Return null in case of failure.
+     *
      * @param pathToXml
-     * @return
+     * @return a valid RestcommConfig object or null
      */
     private RestcommConfig loadRestcommXmlConfig(String pathToXml) {
-        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder;
-        File file = new File(pathToXml);
         try {
-            docBuilder = docBuilderFactory.newDocumentBuilder();
-            Document doc = docBuilder.parse(file);
-            XPathFactory xPathfactory = XPathFactory.newInstance();
-            XPath xpath = xPathfactory.newXPath();
-            // read ssl-mode
-            XPathExpression expr = xpath.compile("/restcomm/http-client/ssl-mode/text()");
-            String sslMode = (String) expr.evaluate(doc, XPathConstants.STRING);
-            // read use-hostname-to-resolve-relative-url
-            expr = xpath.compile("/restcomm/http-client/use-hostname-to-resolve-relative-url/text()");
-            String useHostname = (String) expr.evaluate(doc, XPathConstants.STRING);
-            // read hostname
-            expr = xpath.compile("/restcomm/http-client/hostname/text()");
-            String hostname = (String) expr.evaluate(doc, XPathConstants.STRING);
-
-            RestcommConfig config = new RestcommConfig(sslMode, hostname, useHostname);
-            return config;
-
-        } catch (Exception e) {
-            logger.error("Error parsing Restcomm config file: " + file.getPath(), e);
+            RestcommConfig restcommConfig = new RestcommConfig(pathToXml);
+            return restcommConfig;
+        } catch (RestcommConfigurationException e) {
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -235,5 +211,40 @@ public class RvdConfiguration {
             }
         }
         return restcommBaseUri;
+    }
+
+    /**
+     * Returns a valid base url of the authorization server or null
+     *
+     * @return
+     */
+    public String getAuthServerUrl() {
+        if (restcommConfig != null && ! RvdUtils.isEmpty(restcommConfig.getAuthServerUrl()) )
+            return restcommConfig.getAuthServerUrl();
+        return null;
+    }
+
+    public String getRealm() {
+        if (restcommConfig != null)
+            return restcommConfig.getRealm();
+        return null;
+    }
+
+    public String getRealmPublicKey() {
+        if (restcommConfig != null)
+            return restcommConfig.getRealmPublicKey();
+        return null;
+    }
+
+    /**
+     * Returns whether keycloak has been configured or not. It's possible that keylcoak is enabled but the
+     * Restcomm instance.is not registered. In that case the function will still return true.
+     *
+     * @return
+     */
+    public boolean keycloakEnabled() {
+        if (getAuthServerUrl() != null)
+            return true;
+        return false;
     }
 }

@@ -47,7 +47,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
@@ -55,6 +54,7 @@ import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesConverter;
 import org.mobicents.servlet.restcomm.http.converter.AvailableCountriesList;
 import org.mobicents.servlet.restcomm.http.converter.IncomingPhoneNumberConverter;
@@ -83,13 +83,12 @@ import com.thoughtworks.xstream.XStream;
  * @author jean.deruelle@telestax.com
  */
 @NotThreadSafe
-public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
+public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
     PhoneNumberParameters phoneNumberParameters;
     private IncomingPhoneNumbersDao dao;
-    protected AccountsDao accountsDao;
     private XStream xstream;
     protected Gson gson;
 
@@ -222,8 +221,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     }
 
     protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+            secure(operatedAccount, "RestComm:Read:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -232,7 +232,8 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+                secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (AuthorizationException e) {
                 return status(UNAUTHORIZED).build();
             }
@@ -272,7 +273,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -293,7 +294,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:IncomingPhoneNumbers");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -343,14 +344,16 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
     public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:IncomingPhoneNumbers");
+            secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
-            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD );
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }
@@ -484,14 +487,16 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     }
 
     public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Delete:IncomingPhoneNumbers");
+            secure(operatedAccount, "RestComm:Delete:IncomingPhoneNumbers");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
         try {
-            secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            //secureLevelControl(accountsDao, accountSid, String.valueOf(incomingPhoneNumber.getAccountSid()));
+            secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
         } catch (AuthorizationException e) {
             return status(UNAUTHORIZED).build();
         }

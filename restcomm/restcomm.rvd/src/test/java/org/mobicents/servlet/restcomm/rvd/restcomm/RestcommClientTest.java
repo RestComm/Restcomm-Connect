@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mobicents.servlet.restcomm.rvd.TestUtils;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,7 +44,7 @@ public class RestcommClientTest {
 
     @Test(expected=RestcommClient.RestcommClientInitializationException.class)
     public void exceptionThrownWhenNoCredentialsCanBeDetermined() throws RestcommClient.RestcommClientInitializationException, URISyntaxException {
-        RestcommClient client = new RestcommClient(fallbackUri,null,null);
+        RestcommClient client = new RestcommClient(null, null);
     }
 
 }
