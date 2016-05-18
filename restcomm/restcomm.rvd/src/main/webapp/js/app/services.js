@@ -716,3 +716,8 @@ angular.module('Rvd').factory('keepAliveResource', function($resource) {
     return $resource('services/auth/keepalive');
 });
 
+// keeps various configuration settings that we need to control from a single point. Fetching from server is also possible.
+angular.module('Rvd').service('RvdConfiguration', function () {
+    this.projectsRootPath = '/restcomm-rvd/services/projects';
+});
+
