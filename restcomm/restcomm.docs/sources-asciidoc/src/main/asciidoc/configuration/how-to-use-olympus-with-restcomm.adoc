@@ -27,8 +27,8 @@ image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-2-1030x461.jp
 You could follow these steps to call any Restcomm number by either selecting a number from the list or adding a new one in contacts.
   
 
-.Call from Bob
-====
+*Call from Bob*
+
 Say your friend Bob has logged in to Olympus and wants to talk:
 
 *   Use a separate tab to login to Olympus as shown before but this time Sign in as **Bob**, not Alice (for this tutorial we will be using just a separate tab in the same browser, but a more fitting example would be another user from a remote machine)
@@ -39,7 +39,7 @@ Say your friend Bob has logged in to Olympus and wants to talk:
 
 image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-5.jpg[olympus-5]
 
-At this time, Olymous will start to ring in Alice's window:
+At this time, Olympus will start to ring in Alice's window:
 
 image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-7-1030x420.jpg[olympus-7]
 
@@ -49,10 +49,7 @@ image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-7-1030x420.jp
 image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-8-1030x420.jpg[olympus-8]
 
 
-====
-
-.Chatting with Bob
-====
+*Chatting with Bob*
 
 *   After you sign in as Bob:
 1. click on the Contacts icon
@@ -66,13 +63,11 @@ image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-3.jpg[olympus
 
 image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-4.jpg[olympus-4]
 
-====
-
 
 Give it a try and share your experience with the rest of the Restcomm community! Here are some additional resources:
 
 *   GitHub repository: https://github.com/Mobicents/olympus[https://github.com/Mobicents/olympus]
-*   Restcomm forum: https://groups.google.com/forum/#!forum/restcomm[https://groups.google.com/forum/#!forum/restcomm]
+*   Restcomm forum: https://groups.google.com/forum/#!forum/restcomm
 
 
 
