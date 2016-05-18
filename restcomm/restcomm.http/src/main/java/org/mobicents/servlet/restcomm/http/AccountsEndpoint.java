@@ -83,7 +83,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new AccountListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
         // Make sure there is an authenticated account present when this endpoint is used
-        checkEffectiveAccount();
+        checkAuthenticatedAccount();
     }
 
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -164,7 +164,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        // what if effectiveAccount is null ?? - no need to check since we checkEffectiveAccount() in AccountsEndoint.init()
+        // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid accountSid = userIdentityContext.getEffectiveAccount().getSid();
         final Sid sidToBeRemoved = new Sid(operatedSid);
 
@@ -217,7 +217,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        // what if effectiveAccount is null ?? - no need to check since we checkEffectiveAccount() in AccountsEndoint.init()
+        // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
         try {

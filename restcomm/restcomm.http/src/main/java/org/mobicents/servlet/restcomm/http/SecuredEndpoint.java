@@ -44,13 +44,13 @@ import javax.ws.rs.core.Context;
 
 /**
  * Security layer endpoint. It will scan the request for security related assets and populate the
- * UserIdentityContext accordingly. Extend the class and use checkEffectiveAccount*() methods to apply security rules to
+ * UserIdentityContext accordingly. Extend the class and use checkAuthenticatedAccount*() methods to apply security rules to
  * your endpoint.
  *
  * How to use it:
- * - use checkEffectiveAccount() method to check that a user (any user) is authenticated.
- * - use checkEffectiveAccount(permission) method to check that an authenticated user has the required permission according to his roles
- * - use checkEffectiveAccount(account,permission) method to check that besides permission a user also has ownership over an account
+ * - use checkAuthenticatedAccount() method to check that a user (any user) is authenticated.
+ * - use checkAuthenticatedAccount(permission) method to check that an authenticated user has the required permission according to his roles
+ * - use checkAuthenticatedAccount(account,permission) method to check that besides permission a user also has ownership over an account
  *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
@@ -87,7 +87,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     /**
      * Grants general purpose access if any valid token exists in the request
      */
-    protected void checkEffectiveAccount() {
+    protected void checkAuthenticatedAccount() {
         if (userIdentityContext.getEffectiveAccount() == null)
             throw new AuthorizationException();
     }
@@ -100,12 +100,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
     protected void checkPermission(final String permission) {
-        checkEffectiveAccount(); // ok there is a valid authenticated account
-        if ( secureApi(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
+        checkAuthenticatedAccount(); // ok there is a valid authenticated account
+        if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
             throw new AuthorizationException();
     }
 
-    // boolean overloaded form of checkEffectiveAccount(permission)
+    // boolean overloaded form of checkAuthenticatedAccount(permission)
     protected boolean isSecuredByPermission(final String permission) {
         try {
             checkPermission(permission);
@@ -195,7 +195,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param roleNames
      * @return
      */
-    private AuthOutcome secureApi(String neededPermissionString, Set<String> roleNames) {
+    private AuthOutcome checkPermission(String neededPermissionString, Set<String> roleNames) {
         // if this is an administrator ask no more questions
         if ( roleNames.contains(getAdministratorRole()))
             return AuthOutcome.OK;
@@ -245,7 +245,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param resourceAccountSid the account SID property of the operated resource e.g. the accountSid of a DID.
      *
      */
-    protected AuthOutcome secureLevelControl( Account operatingAccount, Account operatedAccount, String resourceAccountSid) {
+    private AuthOutcome secureLevelControl( Account operatingAccount, Account operatedAccount, String resourceAccountSid) {
         String operatingAccountSid = null;
         if (operatingAccount != null)
             operatingAccountSid = operatingAccount.getSid().toString();
@@ -267,7 +267,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
 
-    protected AuthOutcome secureLevelControlApplications(Account operatingAccount, Account operatedAccount, String applicationAccountSid) {
+    private AuthOutcome secureLevelControlApplications(Account operatingAccount, Account operatedAccount, String applicationAccountSid) {
         String operatingAccountSid = null;
         if (operatingAccount != null)
             operatingAccountSid = operatingAccount.getSid().toString();
@@ -304,7 +304,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
-     * Returns the string literal for the administrator role. This role is granted implicitly access from checkEffectiveAccount() method.
+     * Returns the string literal for the administrator role. This role is granted implicitly access from checkAuthenticatedAccount() method.
      * No need to explicitly apply it at each protected resource
      * .
      * @return the administrator role as string
