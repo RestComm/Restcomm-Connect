@@ -4,14 +4,14 @@
     <div class="form-group col-md-6">
         <div class="input-group">
             <span class="input-group-addon"><i class="fa fa-user"></i> Account SID</span>
-            <input class="form-control" id="roSid" type="text" value="{{ accountData.sid }}" readonly />
+            <input class="form-control" id="roSid" type="text" value="{{ loggedAccount.sid }}" readonly />
         </div>
     </div>
     <div class="form-group col-md-6">
         <div class="input-group">
             <span class="input-group-addon"><i class="fa fa-lock"></i> Auth Token</span>
-            <input class="form-control" id="roToken" type="password" value="{{ accountData.auth_token }}" readonly />
-            <input class="form-control truncate hidden" id="roToken" type="text" value="{{ accountData.auth_token }}" readonly />
+            <input class="form-control" id="roToken" type="password" value="{{ loggedAccount.auth_token }}" readonly />
+            <input class="form-control truncate hidden" id="roToken" type="text" value="{{ loggedAccount.auth_token }}" readonly />
             <span class="input-group-addon btn" onclick="$(this).parent().children('input').toggleClass('hidden')">&nbsp;<i class="fa fa-eye-slash"></i>&nbsp;</span>
         </div>
     </div>

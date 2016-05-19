@@ -383,13 +383,42 @@ public class SmsTest {
         georgeCall.initiateOutgoingMessage(georgeContact, "sip:fotini@127.0.0.1:5080", null, null, null, greekHugeMessage);
         assertLastOperationSuccess(georgeCall);
         georgeCall.waitForAuthorisation(30 * 1000);
+        assertTrue(georgeCall.waitOutgoingMessageResponse(3000));
+        assertTrue(georgeCall.getLastReceivedResponse().getStatusCode()==Response.TRYING);
         
         assertTrue(fotiniCall.waitForMessage(30 * 1000));
         assertTrue(fotiniCall.sendMessageResponse(200, "OK-Fotini-Mesasge-Receieved", 1800));
+        assertTrue(georgeCall.waitOutgoingMessageResponse(3000));
+        assertTrue(georgeCall.getLastReceivedResponse().getStatusCode()==Response.OK);
         List<String> msgsFromGeorge = fotiniCall.getAllReceivedMessagesContent();
 
         assertTrue(msgsFromGeorge.size()>0);
         assertTrue(msgsFromGeorge.get(0).equals(greekHugeMessage));
+    }
+
+    @Test
+    public void testP2PSendSMS_GeorgeClient_ToFotiniClient_EmptyContent() throws ParseException {
+        SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        //Register George phone
+        assertTrue(georgePhone.register(uri, "george", "1234", georgeContact, 3600, 3600));
+        Credential georgeCredentials = new Credential("127.0.0.1", "george", "1234");
+        georgePhone.addUpdateCredential(georgeCredentials);
+
+        //Register Fotini phone
+        assertTrue(fotiniPhone.register(uri, "fotini", "1234", fotiniContact, 3600, 3600));
+        Credential fotiniCredentials = new Credential("127.0.0.1", "fotini", "1234");
+        fotiniPhone.addUpdateCredential(fotiniCredentials);
+
+        //Prepare Fotini to receive message
+        SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.listenForMessage();
+
+        //Prepare George to send message
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingMessage(georgeContact, "sip:fotini@127.0.0.1:5080", null, null, null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingMessageResponse(5000));
+        assertTrue(georgeCall.getLastReceivedResponse().getStatusCode()==Response.NOT_ACCEPTABLE);
     }
     
     @Deployment(name = "SmsTest", managed = true, testable = false)
