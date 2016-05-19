@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- This is free software; you can redistribute it and/or modify it under 
+<!--
+  ~ TeleStax, Open Source Cloud Communications
+  ~ Copyright 2011-2016, Telestax Inc and individual contributors
+  ~ by the @authors tag.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation; either version 3 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>
+  ~
+  -->
+
+<!-- This is free software; you can redistribute it and/or modify it under
 	the terms of the GNU Lesser General Public License as published by the Free 
 	Software Foundation; either version 2.1 of the License, or (at your option) 
 	any later version. This software is distributed in the hope that it will 
@@ -119,25 +139,14 @@
 		<security-roles>
 			<role name="Developer">
 				<permission>RestComm:*:Accounts</permission>
-				<permission>RestComm:*:Applications</permission>
-				<permission>RestComm:*:Announcements</permission>
-				<permission>RestComm:Read:AvailablePhoneNumbers</permission>
-				<permission>RestComm:*:Calls</permission>
-				<permission>RestComm:*:Clients</permission>
-				<permission>RestComm:*:Conferences</permission>
-				<permission>RestComm:Create,Delete,Read:Faxes</permission>
-				<permission>RestComm:*:IncomingPhoneNumbers</permission>
-				<permission>RestComm:Read:Notifications</permission>
-				<permission>RestComm:*:OutgoingCallerIds</permission>
-				<permission>RestComm:Delete,Read:Recordings</permission>
-				<permission>RestComm:Read,Modify:SandBoxes</permission>
-				<permission>RestComm:*:ShortCodes</permission>
-				<permission>RestComm:Read:SmsMessages</permission>
-				<permission>RestComm:Read:Transcriptions</permission>
-				<permission>RestComm:*:OutboundProxies</permission>
 			</role>
-			<role name="Unprivileged">
+			<role name="User">
 				<permission>RestComm:Read:Accounts</permission>
+			</role>
+			<role name="PowerUser">
+				<permission>RestComm:*:Accounts</permission>
+			</role>
+			<role name="Guest">
 			</role>
 		</security-roles>
 	</runtime-settings>
