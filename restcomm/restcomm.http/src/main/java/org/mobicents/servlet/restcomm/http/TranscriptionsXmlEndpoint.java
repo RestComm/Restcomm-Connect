@@ -48,7 +48,7 @@ public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
             secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Transcriptions");
             Transcription transcription = dao.getTranscription(new Sid(sid));
             if (transcription != null) {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
             }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
