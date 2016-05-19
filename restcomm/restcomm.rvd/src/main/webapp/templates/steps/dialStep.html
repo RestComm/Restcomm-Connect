@@ -77,7 +77,7 @@
 								<span  class="input-group-addon fa fa-cog rvd-clickable" ng-click="dialnoun.iface.advancedShown = !dialnoun.iface.advancedShown"></span>
 								<span class="input-group-addon fa fa-times rvd-clickable" ng-click="removeDialNoun(step,dialnoun)"></span>
 							</div>
-							<div ng-show='dialnoun.iface.advancedShown' class="input-group input-group-sm form-group noun-advanced">
+							<div ng-show='dialnoun.iface.advancedShown' class="input-group input-group-sm noun-advanced">
 								<span class="input-group-addon help-tooltip" tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceMutedTooltip' | translate}}">{{'dialStepConferenceMutedLabel' | translate}}</span>
 								<select ng-model='dialnoun.muted' auto-clear ng-options='pair.value as pair.caption for pair in yesNoBooleanOptions' class="form-control">
 									<option value=''></option>
@@ -99,7 +99,7 @@
 								</select>
 
 								<span class="input-group-addon help-tooltip"  tooltip-popup-delay="1000" tooltip-trigger="mouseenter" tooltip="{{'dialStepConferenceMaxTooltip' | translate}}">{{'dialStepConferenceMaxLabel' | translate}}</span>
-								<input ng-model='dialnoun.maxParticipants' auto-clear style="width:50px;" type='number' class='form-control' placeholder="{{'dialStepConferenceMaxPlaceholder' | translate}}">
+								<input ng-model='dialnoun.maxParticipants' auto-clear type='number' class='form-control' placeholder="{{'dialStepConferenceMaxPlaceholder' | translate}}">
 
 							</div>
 							<div ng-show='dialnoun.iface.advancedShown' class="input-group input-group-sm noun-advanced">
