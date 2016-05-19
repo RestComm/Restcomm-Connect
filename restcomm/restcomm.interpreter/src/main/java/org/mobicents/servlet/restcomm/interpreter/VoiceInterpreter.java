@@ -191,6 +191,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean liveCallModification = false;
     private boolean recordingCall = true;
     protected boolean isParserFailed = false;
+    protected boolean playWaitUrlPending = false;
 
     // Call bridging
     private final ActorRef bridgeManager;
@@ -352,6 +353,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(conferencing, finishConferencing));
         transitions.add(new Transition(conferencing, hangingUp));
         transitions.add(new Transition(conferencing, finished));
+        transitions.add(new Transition(conferencing, checkingCache));
+        transitions.add(new Transition(conferencing, caching));
         transitions.add(new Transition(finishConferencing, ready));
         transitions.add(new Transition(finishConferencing, faxing));
         transitions.add(new Transition(finishConferencing, sendingEmail));
@@ -710,6 +713,29 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     + ", statusCode " + response.get().getStatusCode());
             }
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
+                if (conferencing.equals(state)) {
+                    //This is the downloader response for Conferencing waitUrl
+                    if (parser != null) {
+                        getContext().stop(parser);
+                        parser = null;
+                    }
+                    final String type = response.get().getContentType();
+                    if (type != null) {
+                        if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
+                            parser = parser(response.get().getContentAsString());
+                        } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
+                            parser = parser("<Play>" + request.getUri() + "</Play>");
+                        } else if (type.contains("text/plain")) {
+                            parser = parser("<Say>" + response.get().getContentAsString() + "</Say>");
+                        }
+                    } else {
+                        //If the waitUrl is invalid then move to notFound
+                        fsm.transition(message, hangingUp);
+                    }
+                    final GetNextVerb next = GetNextVerb.instance();
+                    parser.tell(next, self());
+                    return;
+                }
                 if (dialBranches == null || dialBranches.size()==0) {
                     if(logger.isInfoEnabled()) {
                         logger.info("Downloader response is success, moving to Ready state");
@@ -729,6 +755,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
+                if (playWaitUrlPending) {
+                    URI waitUrl = response.get();
+                    playWaitUrl(waitUrl, self());
+                    playWaitUrlPending = false;
+                    return;
+                }
                 if (caching.equals(state) || checkingCache.equals(state)) {
                     if (play.equals(verb.name()) || say.equals(verb.name())) {
                         fsm.transition(message, playing);
@@ -759,6 +791,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (Tag.class.equals(klass)) {
             // final Tag verb = (Tag) message;
             verb = (Tag) message;
+            if (conferencing.equals(state)) {
+                if (!(play.equals(verb.name()) || say.equals(verb.name()))) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Tag for waitUrl is neither Play or Say");
+                    }
+                    fsm.transition(message, hangingUp);
+                }
+                if (say.equals(verb.name())) {
+                    fsm.transition(message, checkingCache);
+                } else if (play.equals(verb.name())) {
+                    fsm.transition(message, caching);
+                }
+                return;
+            }
             if (CallStateChanged.State.RINGING == callState) {
                 if (reject.equals(verb.name())) {
                     fsm.transition(message, rejecting);
@@ -2261,9 +2307,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
 
+                    if (!waitUrl.getPath().toLowerCase().endsWith("wav")) {
+                        final List<NameValuePair> parameters = parameters();
+                        request = new HttpRequestDescriptor(waitUrl, method, parameters);
+                        downloader.tell(request, self());
+                        playWaitUrlPending = true;
+                        return;
+                    }
+
                     // Tell conference to play music to participants on hold
                     if (waitUrl != null) {
-                        conference.tell(new Play(waitUrl, Short.MAX_VALUE), super.source);
+                        playWaitUrl(waitUrl, super.source);
                     }
                 }
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
@@ -2284,6 +2338,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
         }
+    }
+
+    protected void playWaitUrl(final URI waitUrl, final ActorRef source) {
+        conference.tell(new Play(waitUrl, Short.MAX_VALUE), source);
     }
 
     private final class FinishConferencing extends AbstractDialAction {
