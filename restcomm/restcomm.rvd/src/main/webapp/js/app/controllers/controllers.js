@@ -24,7 +24,7 @@ App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle, keepAli
 
 	$rootScope.$on('$stateChangeError',  function(event, toState, toParams, fromState, fromParams, error){
 	    event.preventDefault();
-	    console.log("error switching states");
+	    console.log("Error switching state: " + fromState.name + " -> " + toState.name);
 	    // see AuthService.checkAccess() for error definitions
 	    if (error == "NEED_LOGIN") {
 	        $state.go('root.public.login');
