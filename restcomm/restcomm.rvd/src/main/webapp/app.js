@@ -24,7 +24,7 @@ App.config(['$stateProvider','$urlRouterProvider', '$translateProvider', functio
     $stateProvider.state('root',{
         resolve:{
             init: function (initializer) {
-                console.log('Initializing RVD');
+                //console.log('Initializing RVD');
                 return initializer.init();
             }
         }
@@ -191,7 +191,7 @@ angular.element(document).ready(['$http',function ($http) {
 
   // when both responses are received do sth...
   $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
-    console.log("Received restcomm configuration");
+    //console.log("Received restcomm configuration");
     // create a constant with keycloak server and instance identity configuration
     var identityConfig = new IdentityConfig(responses[0],responses[1],$q);
     angular.module('Rvd').constant('IdentityConfig', identityConfig);

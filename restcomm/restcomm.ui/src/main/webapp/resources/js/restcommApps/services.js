@@ -36,7 +36,7 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
 						}
 					}
 			}).success(function(data){
-				console.log("Received apps from RVD");
+				//console.log("Received apps from RVD");
 				var rvdProjects = data.payload;
 				var localApps = [];
 				for (var i=0; i<restcommApps.length; i++) {
@@ -147,13 +147,13 @@ angular.module("rcApp.restcommApps").service("rappService", function ($http, $q,
     function getProducts() {
         var deferred = $q.defer();
 
-        console.log("retrieving products from AppStore");
+        //console.log("retrieving products from AppStore");
         $http({
             method:"GET",
             //url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token + "&cacheInvalidator=" + new Date().getTime()
             url:"https://" + rappManagerConfig.rasHost + "/edd-api/products/?number=30&key=" + rappManagerConfig.rasApiKey + "&token=" + rappManagerConfig.rasToken + "&cacheInvalidator=" + new Date().getTime()
         }).success(function (data) {
-            console.log("succesfully retrieved " + data.products.length + " products from AppStore");
+            //console.log("succesfully retrieved " + data.products.length + " products from AppStore");
             deferred.resolve(data.products);
         }).error(function () {
             console.log("http error while retrieving products from AppStore");
