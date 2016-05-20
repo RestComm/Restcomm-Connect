@@ -761,7 +761,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
-                if (playWaitUrlPending) {
+                if (playWaitUrlPending && play.equals(verb.name())) {
                     URI waitUrl = response.get();
                     playWaitUrl(waitUrl, self());
                     playWaitUrlPending = false;
