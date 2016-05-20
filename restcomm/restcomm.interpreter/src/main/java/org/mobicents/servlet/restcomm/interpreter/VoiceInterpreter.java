@@ -192,6 +192,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean recordingCall = true;
     protected boolean isParserFailed = false;
     protected boolean playWaitUrlPending = false;
+    Tag conferenceVerb;
+    List<URI> conferenceWaitUris;
 
     // Call bridging
     private final ActorRef bridgeManager;
@@ -272,6 +274,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(sendingEmail, finished));
         transitions.add(new Transition(sendingEmail, finishDialing));
         transitions.add(new Transition(caching, finished));
+        transitions.add(new Transition(caching, finishConferencing));
         transitions.add(new Transition(playing, ready));
         transitions.add(new Transition(playing, finished));
         transitions.add(new Transition(synthesizing, finished));
@@ -761,6 +764,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     playWaitUrlPending = false;
                     return;
                 }
+                //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+//                if (playWaitUrlPending) {
+//                    if (conferenceWaitUris == null)
+//                        conferenceWaitUris = new ArrayList<URI>();
+//                    URI waitUrl = response.get();
+//                    conferenceWaitUris.add(waitUrl);
+//                    final GetNextVerb next = GetNextVerb.instance();
+//                    parser.tell(next, self());
+//                    return;
+//                }
                 if (caching.equals(state) || checkingCache.equals(state)) {
                     if (play.equals(verb.name()) || say.equals(verb.name())) {
                         fsm.transition(message, playing);
@@ -842,6 +855,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 invalidVerb(verb);
             }
         } else if (End.class.equals(klass)) {
+            //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+//            if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
+//                playWaitUrl(conferenceWaitUris, self());
+//                playWaitUrlPending = false;
+//                return;
+//            }
             if (callState.equals(CallStateChanged.State.COMPLETED)) {
                 fsm.transition(message, finished);
             } else {
@@ -2224,6 +2243,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final NotificationsDao notifications = storage.getNotificationsDao();
             final Tag child = conference(verb);
+            conferenceVerb = verb;
 
             // Mute
             Attribute attribute = child.attribute("muted");
@@ -2252,7 +2272,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (!muteCall) {
                     final Mute mute = new Mute();
                     if(logger.isInfoEnabled()) {
-                        logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " callMuted = "
+                        logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " , callMuted = "
                             + muteCall);
                     }
                     call.tell(mute, source);
@@ -2261,7 +2281,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Only play background music if conference is not doing that already
                 // If conference state is RUNNING_MODERATOR_ABSENT and participants > 0 then BG music is playing already
                 if(logger.isInfoEnabled()) {
-                    logger.info("Play background music? " + conferenceInfo.participants().size());
+                    logger.info("Play background music? " + (conferenceInfo.participants().size() == 1));
                 }
                 boolean playBackground = conferenceInfo.participants().size() == 1;
                 if (playBackground) {
@@ -2308,6 +2328,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
 
                     if (!waitUrl.getPath().toLowerCase().endsWith("wav")) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("WaitUrl for Conference will use RCML from URI: "+waitUrl.toString());
+                        }
                         final List<NameValuePair> parameters = parameters();
                         request = new HttpRequestDescriptor(waitUrl, method, parameters);
                         downloader.tell(request, self());
@@ -2316,7 +2339,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
 
                     // Tell conference to play music to participants on hold
-                    if (waitUrl != null) {
+                    if (waitUrl != null && !playWaitUrlPending) {
                         playWaitUrl(waitUrl, super.source);
                     }
                 }
@@ -2338,6 +2361,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeLimit, TimeUnit.SECONDS));
         }
+    }
+
+    //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+    protected void playWaitUrl(final List<URI> waitUrls, final ActorRef source) {
+        conference.tell(new Play(waitUrls, Short.MAX_VALUE), source);
     }
 
     protected void playWaitUrl(final URI waitUrl, final ActorRef source) {
@@ -2373,7 +2401,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final NotificationsDao notifications = storage.getNotificationsDao();
 
             // Parse "action".
-            Attribute attribute = verb.attribute("action");
+            Attribute attribute = conferenceVerb.attribute("action");
             if (attribute != null) {
                 String action = attribute.value();
                 if (action != null && !action.isEmpty()) {
@@ -2393,7 +2421,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final URI uri = UriUtils.resolve(base, target);
                     // Parse "method".
                     String method = "POST";
-                    attribute = verb.attribute("method");
+                    attribute = conferenceVerb.attribute("method");
                     if (attribute != null) {
                         method = attribute.value();
                         if (method != null && !method.isEmpty()) {
@@ -2468,7 +2496,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (conference != null) {
                 // Parse "endConferenceOnExit"
                 boolean endOnExit = false;
-                final Tag child = conference(verb);
+                final Tag child = conference(conferenceVerb);
                 Attribute attribute = child.attribute("endConferenceOnExit");
 
                 if (attribute != null) {

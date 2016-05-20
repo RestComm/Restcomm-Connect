@@ -240,7 +240,8 @@ public class DialConferenceTest {
         bobCall.disconnect();
     }
 
-    private String dialConfernceRcmlWithWaitUrl = "<Response><Dial><Conference startConferenceOnEnter=\"false\" waitUrl=\"http://127.0.0.1:8080/restcomm/demos/hello-play.xml\">testConfRoom</Conference></Dial></Response>";
+    private String dialConfernceRcmlWithWaitUrl = "<Response><Dial><Conference startConferenceOnEnter=\"false\" waitUrl=\"http://127.0.0.1:8090/waitUrl\" waitMethod=\"GET\">testConfRoom</Conference></Dial></Response>";
+    private String waitUrlRcml = "<Response><Say>Wait while somebody joins the conference</Say><Play>/restcomm/audio/demo-prompt.wav</Play></Response>";
     @Test
     public synchronized void testDialConferenceClientsDisconnectWithWaitUrl() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -248,6 +249,12 @@ public class DialConferenceTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialConfernceRcmlWithWaitUrl)));
+
+        stubFor(get(urlPathEqualTo("/waitUrl"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(waitUrlRcml)));
 
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
