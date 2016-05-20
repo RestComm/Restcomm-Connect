@@ -23,17 +23,18 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	});
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
-	    console.log("switching states: " + fromState.name + " -> " + toState.name);
+	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
 	});
 
 	$rootScope.$on('$stateChangeError',  function(event, toState, toParams, fromState, fromParams, error){
-	    console.log("stateChangeError");
+	    event.preventDefault();
+	    console.log("Error switching state: " + fromState.name + " -> " + toState.name);
 	    // see AuthService.checkAccess() for error definitions
 	    if (error == "MISSING_ACCOUNT_SID")
 	        $state.go("public.login");
 	    else
 	    if (error == 'RESTCOMM_AUTH_FAILED' || error == 'RESTCOMM_NOT_AUTHENTICATED') {
-	        Notifications.error('Unauthorized access');
+	        //Notifications.error('Unauthorized access');
 	        $state.go("public.login");
 	    } else
 	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
