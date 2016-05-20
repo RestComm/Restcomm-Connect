@@ -50,7 +50,10 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    } else
 	    if (error == 'RESTCOMM_ACCOUNT_NOT_INITIALIZED') {
 	        $state.go('public.uninitialized');
-	    }
+	    } else
+	    if (error == 'ACCOUNT_ALREADY_INITIALIZED') {
+	        $state.go('restcomm.dashboard');
+	    } else
 	    if (error == 'UNKWNOWN_ERROR') {
 	        console.log('internal error');
 	    }
