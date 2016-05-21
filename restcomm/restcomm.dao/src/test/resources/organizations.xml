@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author guilherme.jansen@telestax.com (Guilherme Humberto Jansen)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.OrganizationsDao">
+  <insert id="addOrganization" parameterType="map">
+    INSERT INTO "restcomm_organizations" ("sid", "date_created", "date_updated", "friendly_name", "namespace", "api_version", "uri")
+    VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{namespace}, #{api_version}, #{uri});
+  </insert>
+  
+  <select id="getOrganization" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_organizations" WHERE "sid"=#{sid};
+  </select>
+  
+    <select id="getOrganizationByNamespace" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_organizations" WHERE "namespace"=#{namespace};
+  </select>
+  
+  <select id="getOrganizations" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_organizations" WHERE "account_sid"=#{account_sid};
+  </select>
+  
+  <delete id="removeOrganization" parameterType="string">
+    DELETE FROM "restcomm_organizations" WHERE "sid"=#{sid} AND "sid" &lt;&gt; 'ORec3515ebea5243b6bde0444d84b05b80';
+  </delete>
+  
+  <update id="updateOrganization" parameterType="map">
+    UPDATE "restcomm_organizations" SET "friendly_name"=#{friendly_name}, "date_updated"=#{date_updated}, 
+    "namespace"=#{namespace} WHERE "sid"=#{sid};
+  </update>
+</mapper>

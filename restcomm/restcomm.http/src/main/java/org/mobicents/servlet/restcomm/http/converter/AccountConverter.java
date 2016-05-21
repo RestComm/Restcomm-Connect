@@ -22,10 +22,10 @@ package org.mobicents.servlet.restcomm.http.converter;
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -68,6 +68,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeAuthToken(account, writer);
         writeUri(account.getUri(), writer);
         writeSubResourceUris(account, writer);
+        writeOrganizationSid(account, writer);
         writer.endNode();
     }
 
@@ -84,6 +85,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeAuthToken(account, object);
         writeUri(account.getUri(), object);
         writeSubResourceUris(account, object);
+        writeOrganizationSid(account, object);
         return object;
     }
 
@@ -241,5 +243,21 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private void writeEmailAddress(final Account account, final JsonObject object) {
         object.addProperty("email_address", account.getEmailAddress());
+    }
+
+    private void writeOrganizationSid(final Account account, final HierarchicalStreamWriter writer) {
+        if (account.getOrganizationSid() != null) {
+            writer.startNode("OrganizationSid");
+            writer.setValue(account.getOrganizationSid().toString());
+            writer.endNode();
+        }
+    }
+
+    private void writeOrganizationSid(final Account account, final JsonObject object) {
+        if (account.getOrganizationSid() != null) {
+            object.addProperty("organization_sid", account.getOrganizationSid().toString());
+        } else {
+            object.add("organization_sid", JsonNull.INSTANCE);
+        }
     }
 }

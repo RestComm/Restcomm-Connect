@@ -5,9 +5,9 @@
 	<insert id="addAccount" parameterType="map">
 		INSERT INTO restcomm_accounts (sid, date_created, date_updated,
 		email_address, friendly_name, account_sid, type, status, auth_token,
-		role, uri)
+		role, uri, organization_sid)
 		VALUES(#{sid}, #{date_created}, #{date_updated}, #{email_address}, #{friendly_name},
-		#{account_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri});
+		#{account_sid}, #{type}, #{status}, #{auth_token}, #{role}, #{uri}, #{organization_sid});
 	</insert>
 
 	<select id="getAccount" parameterType="string" resultType="hashmap">
@@ -31,11 +31,20 @@
 	<delete id="removeAccount" parameterType="string">
 		DELETE FROM restcomm_accounts WHERE sid=#{sid};
 	</delete>
+	
+  	<select id="migrateToDefaultOrganization" parameterType="string">
+    	UPDATE restcomm_accounts SET organization_sid='ORec3515ebea5243b6bde0444d84b05b80' WHERE organization_sid=#{organization_sid};
+  	</select>
+
+	<select id="updateSubaccountsOrganization" parameterType="map">
+		UPDATE restcomm_accounts SET organization_sid=#{organization_sid} WHERE account_sid=#{account_sid};
+	</select>
 
 	<update id="updateAccount" parameterType="map">
 		UPDATE restcomm_accounts SET date_updated=#{date_updated},
 		email_address=#{email_address}, friendly_name=#{friendly_name},
-		type=#{type}, status=#{status}, auth_token=#{auth_token}, role=#{role}
+		type=#{type}, status=#{status}, auth_token=#{auth_token}, role=#{role},
+		organization_sid=#{organization_sid}
 		WHERE sid=#{sid};
 	</update>
 </mapper>

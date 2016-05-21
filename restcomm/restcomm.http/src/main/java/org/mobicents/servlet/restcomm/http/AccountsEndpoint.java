@@ -89,6 +89,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
         validate(data);
 
+
         final DateTime now = DateTime.now();
         final String emailAddress = (data.getFirst("EmailAddress")).toLowerCase();
 
@@ -112,7 +113,13 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(rootUri).append(getApiVersion(null)).append("/Accounts/").append(sid.toString());
         final URI uri = URI.create(buffer.toString());
-        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri);
+        Sid organizationSid = null;
+        if (accountSid != null) {
+            Account master = accountsDao.getAccount(accountSid);
+            organizationSid = master.getOrganizationSid();
+        }
+        return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri,
+                organizationSid);
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
@@ -291,8 +298,20 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         } else {
             account = update(account, data);
             try {
-                secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT );
-                accountsDao.updateAccount(account);
+                secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
+                boolean isUpdateOrganization = data.containsKey("OrganizationSid");
+                boolean isMasterAccount = account.getAccountSid() == null;
+                if (isUpdateOrganization && !isMasterAccount) {
+                    return status(CONFLICT)
+                            .entity("Update Organization attribute is not allowed for sub accounts (allowed for master accounts only).")
+                            .build();
+                } else if (isUpdateOrganization && isMasterAccount) {
+                    account = account.setOrganizationSid(getSid("OrganizationSid", data));
+                    accountsDao.updateAccount(account);
+                    accountsDao.updateSubaccountsOrganization(account.getSid(), account.getOrganizationSid());
+                } else {
+                    accountsDao.updateAccount(account);
+                }
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

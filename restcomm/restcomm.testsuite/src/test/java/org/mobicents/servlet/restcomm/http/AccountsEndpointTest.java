@@ -54,6 +54,7 @@ public class AccountsEndpointTest {
     private String unprivilegedSid = "AC00000000000000000000000000000000";
     private String unprivilegedUsername = "unprivileged@company.com";
     private String unprivilegedAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String organizationSid = "ORec3515ebea5243b6bde0444d84b05b80";
 
 
 //    @Before
@@ -93,10 +94,10 @@ public class AccountsEndpointTest {
     @Test
     public void testCreateAccount() {
         RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                adminUsername, newAdminPassword, adminAccountSid, null);
+                adminUsername, newAdminPassword, adminAccountSid, null, null);
         accountUpdated = true;
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+                adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
         accountCreated = true;
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 newAdminAuthToken, userEmailAddress);
@@ -107,16 +108,17 @@ public class AccountsEndpointTest {
         assertTrue(createAccountResponse.get("auth_token").equals(getAccountResponse.get("auth_token")));
         String userPasswordHashed = new Md5Hash(userPassword).toString();
         assertTrue(getAccountResponse.get("auth_token").getAsString().equals(userPasswordHashed));
+        assertTrue(getAccountResponse.get("organization_sid").getAsString().equals(organizationSid));
     }
 
     @Test
     public void testCreateAdministratorAccount() {
         if (!accountUpdated) {
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                    adminUsername, newAdminPassword, adminAccountSid, null);
+                    adminUsername, newAdminPassword, adminAccountSid, null, null);
         }
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, newAdminAuthToken, "administrator@company.com", "1234");
+                adminUsername, newAdminAuthToken, "administrator@company.com", "1234", organizationSid);
         assertNull(createAccountResponse);
     }
 
@@ -124,16 +126,16 @@ public class AccountsEndpointTest {
     public void testCreateAccountTwice() {
         if (!accountUpdated) {
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                    adminUsername, newAdminPassword, adminAccountSid, null);
+                    adminUsername, newAdminPassword, adminAccountSid, null, null);
         }
         if (!accountCreated) {
             JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                    adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+                    adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
             accountCreated = true;
             assertNotNull(createAccountResponse);
         }
         JsonObject createAccountResponseSecondTime = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, newAdminAuthToken, userEmailAddress, userPassword);
+                adminUsername, newAdminAuthToken, userEmailAddress, userPassword, organizationSid);
         assertNull(createAccountResponseSecondTime);
     }
 
@@ -141,13 +143,13 @@ public class AccountsEndpointTest {
     public void testGetAccounts() throws InterruptedException {
         if (!accountUpdated){
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
-                    adminUsername, newAdminPassword, adminAccountSid, null);
+                    adminUsername, newAdminPassword, adminAccountSid, null, null);
         }
 
         if (!accountCreated) {
             // Create account
             RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
-                    userEmailAddress, userPassword);
+                    userEmailAddress, userPassword, organizationSid);
         }
         // Get Account using admin email address and user email address
         JsonObject account1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,

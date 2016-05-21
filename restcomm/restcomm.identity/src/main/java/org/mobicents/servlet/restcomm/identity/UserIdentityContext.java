@@ -20,6 +20,8 @@
 
 package org.mobicents.servlet.restcomm.identity;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,8 +30,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.Organization;
 
 /**
  * A per-request security context providing access to Oauth tokens or Account API Keys.
@@ -52,10 +57,11 @@ public class UserIdentityContext {
      * @param request
      * @param accountsDao
      */
-    public UserIdentityContext(HttpServletRequest request, AccountsDao accountsDao) {
+    public UserIdentityContext(HttpServletRequest request, AccountsDao accountsDao, OrganizationsDao organizationsDao) {
         this.accountKey = extractAccountKey(request, accountsDao);
         if (accountKey != null) {
-            if (accountKey.isVerified()) {
+            if (accountKey.isVerified()
+                    && isOrganizationCompliant(accountKey.getAccount(), getRequestUrl(request), organizationsDao)) {
                 effectiveAccount = accountKey.getAccount();
             } else
                 effectiveAccount = null;
@@ -93,6 +99,39 @@ public class UserIdentityContext {
             }
         }
         return null;
+    }
+
+    private boolean isOrganizationCompliant(Account account, URI requestUrl, OrganizationsDao organizationsDao) {
+        if (requestUrl != null) {
+            final InetAddressValidator addressValidator = InetAddressValidator.getInstance();
+            String host = requestUrl.getHost();
+            if (host.contains("[") || host.contains("]"))
+                // Remove ipv6 brackets if present
+                host = host.replace("[", "").replace("]", "");
+            if (!addressValidator.isValidInet4Address(host) && !addressValidator.isValidInet6Address(host)
+                    && !host.equalsIgnoreCase("localhost")) {
+                // Assuming host as a domain name, proceed extracting namespace and validating Organizations
+                final String namespace = host.split("\\.")[0];
+                final Organization accountOrganization = organizationsDao.getOrganization(account.getOrganizationSid());
+                final Organization namespaceOrganization = organizationsDao.getOrganization(namespace);
+                if (namespaceOrganization == null)
+                    return false;
+                final String accountOrganizationSid = String.valueOf(accountOrganization.getSid());
+                final String namespaceOrganizationSid = String.valueOf(namespaceOrganization.getSid());
+                if (!accountOrganizationSid.equalsIgnoreCase(namespaceOrganizationSid))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private URI getRequestUrl(HttpServletRequest request) {
+        try {
+            final URI url = new URI(String.valueOf(request.getRequestURL()));
+            return url;
+        } catch (URISyntaxException e) {
+            return null;
+        }
     }
 
     public AccountKey getAccountKey() {

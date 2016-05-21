@@ -139,6 +139,31 @@ public final class MybatisAccountsDao implements AccountsDao {
     }
 
     @Override
+    public void migrateToDefaultOrganization(Sid organizationSid) {
+        final SqlSession session = sessions.openSession();
+        try{
+            session.update(namespace + "migrateToDefaultOrganization", organizationSid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateSubaccountsOrganization(Sid accountSid, Sid organizationSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("account_sid", writeSid(accountSid));
+            map.put("organization_sid", writeSid(organizationSid));
+            session.update(namespace + "updateSubaccountsOrganization", map);
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void updateAccount(final Account account) {
         updateAccount(namespace + "updateAccount", account);
     }
@@ -165,8 +190,9 @@ public final class MybatisAccountsDao implements AccountsDao {
         final String authToken = readString(map.get("auth_token"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
+        final Sid organizationSid = readSid(map.get("organization_sid"));
         return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, accountSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     private Map<String, Object> toMap(final Account account) {
@@ -182,6 +208,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("auth_token", account.getAuthToken());
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
+        map.put("organization_sid", account.getOrganizationSid() != null ? account.getOrganizationSid().toString() : null);
         return map;
     }
 }

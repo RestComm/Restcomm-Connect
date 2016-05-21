@@ -50,5 +50,9 @@ public interface AccountsDao {
 
     void removeAccount(Sid sid);
 
+    void migrateToDefaultOrganization(Sid organizationSid);
+
+    void updateSubaccountsOrganization(Sid accountSid, Sid organizationSid);
+
     void updateAccount(Account account);
 }

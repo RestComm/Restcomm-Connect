@@ -25,7 +25,7 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
             showAccountSuspended($dialog);
         else
         if (errorStatus == "AUTH_ERROR") {
-            Notifications.error('Login failed. Please confirm your username and password.');
+            Notifications.error('Login failed. Please confirm your username, password and organization namespace (at the url).');
             // FIXME: Use ng-animate...
             $scope.loginFailed = true;
             $timeout(function() { $scope.loginFailed = false; }, 1000);

@@ -21,6 +21,10 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.util.Set;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
@@ -30,16 +34,14 @@ import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 
 
 /**
@@ -56,16 +58,17 @@ import javax.ws.rs.core.Context;
  */
 public abstract class SecuredEndpoint extends AbstractEndpoint {
 
-    // types of secured resources used to apply different policies to applications, numbers etc.
+    // types of secured resources used to apply different policies to applications, numbers etc. with their specific
+    // administrative roles
     public enum SecuredType {
-        SECURED_APP,
-        SECURED_ACCOUNT, SECURED_STANDARD
+        SECURED_APP, SECURED_ACCOUNT, SECURED_STANDARD;
     }
 
     protected Logger logger = Logger.getLogger(SecuredEndpoint.class);
 
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
+    protected OrganizationsDao organizationsDao;
     protected IdentityContext identityContext;
     @Context
     protected ServletContext context;
@@ -76,12 +79,14 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super();
     }
 
+    @Override
     protected void init(final Configuration configuration) {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
+        this.organizationsDao = storage.getOrganizationsDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
-        this.userIdentityContext = new UserIdentityContext(request, accountsDao);
+        this.userIdentityContext = new UserIdentityContext(request, accountsDao, organizationsDao);
     }
 
     /**
@@ -161,6 +166,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             throw new NotImplementedException();
         }
     }
+
 
 //    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, final String permission) throws AuthorizationException {
 //        secure(operatedAccount, resourceAccountSid, permission, SecuredType.SECURED_STANDARD);
@@ -304,6 +310,36 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
+     * Once Organization entity is above the Account entity in the hierarchy, the security validations are performed in a
+     * specific way, different than the level control concept performed in the other endpoints.
+     *
+     * @param organization entity that the logged user intends to read or write
+     * @param adminRoleRequired flag to inform if the desired action requires admin privileges
+     */
+    protected void secureOrganizations(Organization organization, boolean adminRoleRequired) {
+        final boolean isRestCommAdmin = hasAccountRole(getAdministratorRole());
+        final boolean isOrganizationAdmin = hasAccountRole(getOrganizationAdministratorRole());
+        if (adminRoleRequired) {
+            if (!(isRestCommAdmin || isOrganizationAdmin)) {
+                throw new AuthorizationException();
+            }
+            if (isOrganizationAdmin) {
+                isAccountOfOrganization(organization);
+            }
+        } else if (!isRestCommAdmin) {
+            isAccountOfOrganization(organization);
+        }
+    }
+
+    private void isAccountOfOrganization(Organization organization) {
+        String organizationSid = String.valueOf(organization.getSid());
+        String accountOrganizationSid = String.valueOf(userIdentityContext.getEffectiveAccount().getOrganizationSid());
+        if (!organizationSid.equalsIgnoreCase(accountOrganizationSid)) {
+            throw new AuthorizationException();
+        }
+    }
+
+    /**
      * Returns the string literal for the administrator role. This role is granted implicitly access from checkAuthenticatedAccount() method.
      * No need to explicitly apply it at each protected resource
      * .
@@ -311,6 +347,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected String getAdministratorRole() {
         return "Administrator";
+    }
+
+    /**
+     * Return the string literal for the administrator of a organization. This role allows to modify the attributes of a
+     * organization entity.
+     *
+     * @return the organization administrator as string
+     */
+    protected String getOrganizationAdministratorRole() {
+        return "Organization Administrator";
     }
 
 }
