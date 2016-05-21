@@ -96,7 +96,7 @@
 	"dialStepClientDestinationInputTooltip": "Dial to client",
 	"dialStepConferenceInputPlaceholder": "My Conference Room",
 	"dialStepConferenceInputTooltip": "Dial to conference",
-	"dialStepConferenceWaitTooltip": "A module to run while waiting to be added to the conference. Fill it with 'Play' or 'Say' steps",
+	"dialStepConferenceWaitTooltip": "A module or URL to play while waiting to be added to the conference. If URL is speficied, both RCML and .wav resources can be targeted. Use it with Start-on-enter set to NO",
 	"dialStepConferenceWaitLabel": "While waiting",
 	"dialStepConferenceMutedTooltip": "Specify whether a participant can speak in the conference",
 	"dialStepConferenceMutedLabel": "Muted",

@@ -56,88 +56,162 @@ angular.module('Rvd').service('projectModules', [function () {
 }]);
 */
 
-angular.module('Rvd').service('authentication', ['$http', '$cookies', '$q', '$location', 'Idle', function ($http, $cookies, $q, $location, Idle) {
-	//console.log("Creating authentication service");
-	var serviceInstance = {};
-	var authInfo = {};
+angular.module('Rvd').service('storage',function ($sessionStorage) {
+    function getCredentials() {
+        return $sessionStorage.rvdCredentials;
+    }
 
-	function refresh() {
-		authInfo.rvdticket = undefined;
-		authInfo.username = undefined;
-		var matches = RegExp( "^([^:]+)\:(.*)$" ).exec( $cookies.get("rvdticket") );
-		if (matches != null) {
-			authInfo.rvdticket = matches[2];
-			authInfo.username = matches[1];
-		}
+    function setCredentials(username, password, sid) {
+        $sessionStorage.rvdCredentials = {username: username, password: password, sid: sid};
+    }
+
+    function clearCredentials() {
+        $sessionStorage.rvdCredentials = null;
+    }
+
+    // public interface
+    return {
+        getCredentials: getCredentials,
+        setCredentials: setCredentials,
+        clearCredentials: clearCredentials
+    }
+
+});
+
+angular.module('Rvd').service('initializer',function (authentication, storage,  $q) {
+    return {
+        init: function () {
+            var initPromise = $q.defer();
+            // Put initialization operations here. Resolve initPromise when done.
+            // ...
+            initPromise.resolve();
+            return initPromise.promise;
+        }
+    };
+});
+
+angular.module('Rvd').service('authentication', function ($http, $q, IdentityConfig, storage, $state, md5) {
+    var authInfo = null;
+	var account = null; // if this is set it means that user logged in: authentication succeeded and account was retrieved
+
+	function getAccount() {
+	    return account;
 	}
 
-	function doLogin(username, password) {
-		var deferred = $q.defer();
-		$http({	url:'services/auth/login', method:'POST', data:{ username: username, password: password}})
-		.success ( function () {
-			console.log("login successful");
-			deferred.resolve();
-			Idle.watch(); // start watching for idleness if not already doing it
-		})
-		.error( function (data, status) {
-			console.log("error logging in");
-			deferred.reject(data);
-		});
-		return deferred.promise;
-	}
-	serviceInstance.doLogin = doLogin;
-
-	function doLogout() {
-		var deferred = $q.defer();
-		Idle.unwatch(); // stop checking for idleness
-		$http({	url:'services/auth/logout', method:'GET'})
-		.success ( function () {
-			console.log("logged out");
-			deferred.resolve();
-			$location.path("/login");
-		})
-		.error( function (data, status) {
-			console.log("error logging out");
-			deferred.reject(data);
-			$location.path("/login");
-		});
-		return deferred.promise;
-	}
-	serviceInstance.doLogout = doLogout;
-
-	serviceInstance.getAuthInfo = function () {
-		return authInfo;
+	function setAccount(acc) {
+	    account = acc;
+	    if (account) {
+	        authInfo = {username: account.email_address}
+	    } else
+	        authInfo = null;
 	}
 
-	serviceInstance.clearTicket = function () {
-		$cookies.remove("rvdticket");
-		authInfo.rvdticket = undefined;
-		authInfo.username = undefined;
+	function getAuthInfo() {
+	    return authInfo;
 	}
 
-	serviceInstance.looksAuthenticated = function () {
-		refresh();
-		if ( !authInfo.rvdticket )
-			return false;
-		return true;
+	function getUsername() {
+	    if (account)
+	        return account.email_address;
+	    return null;
 	}
 
-
-
-	serviceInstance.authResolver = function() {
-		var deferred = $q.defer();
-		if ( !this.looksAuthenticated() ) {
-			deferred.reject("AUTHENTICATION_ERROR");
-		} else {
-			deferred.resolve({status:"authenticated"});
-		}
-		return deferred.promise;
+	function getAuthHeader() {
+	    if (account)
+	        return "Basic " + btoa(account.email_address + ":" + account.auth_token);
+	     return null;
 	}
 
-	return serviceInstance;
+    /*
+	  Returns a promise
+	    resolved: nothing is really returned. The following assumptions stand:
+	        - getAccount() will have a valid authenticated account
+	        - using the credentials of the account one can access both Restcomm and RVD.
+	    rejected:
+	        - RVD_ACCESS_OUT_OF_SYNC. Restcomm authentication succeeded but RVD failed. RVD is not operational. account and storage credentnials will be cleared.
+	        - NEED_LOGIN. Authentication failed. User will have to try the login screen (applies for restcomm auth type)
+	*/
+	function restcommLogin(username,password) {
+	    var deferredLogin = $q.defer();
+	    var authHeader = basicAuthHeader(username, password);
+        $http({method:'GET', url:'/restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: authHeader}}).then(function (response) {
+            var acc = response.data; // store temporarily the account returned
+            $http({method:'GET', url:'services/auth/keepalive', headers: {Authorization: "Basic " + btoa(acc.email_address + ":" +acc.auth_token)}}).then(function (response) {
+                // ok, access to both restcomm and RVD is verified
+                setAccount(acc);
+                authInfo = {username:acc.email_address}; // TODO will probably add other fields here too that are not necessarily tied with the Restcomm account notion
+                storage.setCredentials(username,password,acc.sid);
+                deferredLogin.resolve();
+            }, function (response) {
+                setAccount(null);
+                storage.clearCredentials();
+                deferredLogin.reject('RVD_ACCESS_OUT_OF_SYNC');
+            });
+        }, function (response) {
+            // restcomm authentication failed with stored credentials
+            storage.clearCredentials();
+            deferredLogin.reject('NEED_LOGIN');
+        });
+        return deferredLogin.promise;
+	}
 
+	// checks that typical access to RVD services is allowed. A required role can be passed too
+	/*
+	  Returns
+	    on success; nothing is really returned. Implies the following:
+	        - storage.getCredentials() hold a valid set of {username,password,sid} values.
+	        - check restcommLogin() for additional assumptions
+	    throws:
+	        - NEED_LOGIN. Authentication failed. User will have to try the login screen (applies for restcomm auth type)
+	        - UNSUPPORTED_AUTH_TYPE. Restcomm authentication is disabled but alternative (keycloak) is not yet supported.
+	        - chains other errors fro restcommLogin()
+	*/
+	function checkRvdAccess(role) {
+	    // TODO implement role checking
+	    // ...
+	    if (IdentityConfig.securedByRestcomm()) {
+            if (!account) {
+                // There is no account set. If there are credentials in the storage we will try logging in using them
+                var creds = storage.getCredentials();
+                if (creds) {
+                    return restcommLogin(creds.username, creds.password); // a chained promise is returned
+                } else
+                    throw 'NEED_LOGIN';
+            } else {
+                return; // everythig is OK!
+            }
+	    } else {
+	        throw 'UNSUPPORTED_AUTH_TYPE';
+	    }
+	}
 
-}]);
+    // creates an auth header using a username (or sid) and a plaintext password (not already md5ed)
+	function basicAuthHeader(username, password) {
+	    var auth_header = "Basic " + btoa(username + ":" + md5.createHash(password));
+        return auth_header;
+	}
+
+    function doLogin(username, password) {
+        return restcommLogin(username,password);
+    }
+
+    function doLogout() {
+        storage.clearCredentials();
+        setAccount(null);
+    }
+
+    // public interface
+
+    return {
+        getAccount: getAccount,
+        getUsername: getUsername,
+        checkRvdAccess: checkRvdAccess,
+        doLogin: doLogin,
+        doLogout: doLogout,
+        getAuthInfo: getAuthInfo,
+        getAuthHeader: getAuthHeader
+	}
+});
 
 angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', '$resource', function ($http,$q,$modal,$resource) {
 	//console.log("Creating projectSettigsService");
@@ -265,9 +339,6 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 	}
 
 	function webTriggerModalCtrl ($scope, ccInfo, applicationSid, rvdSettings, $modalInstance, notifications, $location) {
-		console.log("in webTriggerModalCtrl");
-		console.log(rvdSettings);
-
 		$scope.save = function (applicationSid, data) {
 			//console.log("saving ccInfo for " + name);
 			service.save(applicationSid, data).then(
@@ -344,7 +415,6 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 			});
 
 			modalInstance.result.then(function (ccInfo) {
-				console.log(ccInfo);
 			}, function () {});
 	}
 
@@ -352,11 +422,11 @@ angular.module('Rvd').service('webTriggerService', ['$http','$q','$modal', funct
 }]);
 
 
-angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams', 'notifications', function ($http,$q,$routeParams,notifications) {
+angular.module('Rvd').service('projectLogService', ['$http','$q','$stateParams', 'notifications', function ($http,$q,$stateParams,notifications) {
 	var service = {};
 	service.retrieve = function () {
 		var deferred = $q.defer();
-		$http({method:'GET', url:'services/apps/'+$routeParams.applicationSid+'/log'})
+		$http({method:'GET', url:'services/apps/'+$stateParams.applicationSid+'/log'})
 		.success(function (data,status) {
 			console.log('retrieved log data');
 			deferred.resolve(data);
@@ -368,14 +438,14 @@ angular.module('Rvd').service('projectLogService', ['$http','$q','$routeParams',
 	}
 	service.reset = function () {
 		var deferred = $q.defer();
-		$http({method:'DELETE', url:'services/apps/'+$routeParams.applicationSid+'/log'})
+		$http({method:'DELETE', url:'services/apps/'+$stateParams.applicationSid+'/log'})
 		.success(function (data,status) {
 			console.log('reset log data');
-			notifications.put({type:'success',message:$routeParams.projectName+' log reset'});
+			notifications.put({type:'success',message:$stateParams.projectName+' log reset'});
 			deferred.resolve();
 		})
 		.error(function (data,status) {
-			//notifications.put({type:'danger',message:'Cannot reset '+$routeParams.projectName+' log'});
+			//notifications.put({type:'danger',message:'Cannot reset '+$stateParams.projectName+' log'});
 			deferred.reject();
 		});
 		return deferred.promise;
@@ -714,5 +784,86 @@ angular.module('Rvd').factory('stepService', [function() {
 /* Service that pings RVD to keep the ticket fresh */
 angular.module('Rvd').factory('keepAliveResource', function($resource) {
     return $resource('services/auth/keepalive');
+});
+
+// IdentityConfig service constructor. See app.js. This service is created early before the Rvd angular module is initialized and is accessible as a 'constant' service.
+function IdentityConfig(server, instance,$q) {
+    var This = this;
+    this.server = server;
+    this.instance = instance;
+
+    // is an identity server configured in Restcomm ?
+    function identityServerConfigured () {
+        return !!This.server && (!!This.server.authServerUrl);
+    }
+    // True is Restcomm is configured to use an authorization server and an identity instance is already in place
+    function securedByKeycloak () {
+        return identityServerConfigured() && (!!This.instance) && (!!This.instance.name);
+    }
+    // True if Restcomm is used for authorization (legacy mode). No keycloak needs to be present.
+    function securedByRestcomm() {
+        return !identityServerConfigured();
+    }
+    function getIdentity() {
+        if (!identityServerConfigured())
+            return null;
+        var deferred = $q.defer();
+        if (!!This.instance && !!This.instance.name)
+            deferred.resolve(This.instance);
+        else
+            deferred.reject("KEYCLOAK_INSTANCE_NOT_REGISTERED");
+        return deferred.promise;
+    }
+
+    // Public interface
+
+    this.identityServerConfigured = identityServerConfigured;
+    this.securedByKeycloak = securedByKeycloak;
+    this.securedByRestcomm = securedByRestcomm;
+    this.getIdentity = getIdentity;
+}
+
+angular.module('Rvd').factory('fileRetriever', function (Blob, FileSaver, $http) {
+    // Returns a promise.
+    // resolved: nothing is returned - the file has been saved normally
+    // rejected: ERROR_RETRIEVING_FILE - either an HTTP, or empty file returned
+    function download(downloadUrl, filename, contentType) {
+        contentType = contentType || 'application/zip'; // contentType defaults to application/zip
+        // returns a promise
+	    return $http({
+	        method: 'GET',
+	        url: downloadUrl,
+            headers: { accept: contentType },
+	        responseType: 'arraybuffer',
+            cache: false,
+            transformResponse: function(data, headers) {
+                var zip = null;
+                if (data) {
+                    zip = new Blob([data], {
+                        type: contentType
+                    });
+                }
+                var result = {blob: zip};
+                return result;
+            }
+	    }).then(function (response) {
+            if (response.data.blob) {
+                FileSaver.saveAs(response.data.blob, filename);
+                return;
+            } else
+                throw 'ERROR_RETRIEVING_FILE';
+	    }, function () {
+	        throw 'ERROR_RETRIEVING_FILE';
+	    });
+	}
+
+	return {
+	    download: download
+	}
+});
+
+// keeps various configuration settings that we need to control from a single point. Fetching from server is also possible.
+angular.module('Rvd').service('RvdConfiguration', function () {
+    this.projectsRootPath = '/restcomm-rvd/services/projects';
 });
 

@@ -26,8 +26,6 @@ import org.apache.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Announcement;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -56,7 +54,7 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  */
 @NotThreadSafe
-public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
+public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
     private static Logger logger = Logger.getLogger(AnnouncementsEndpoint.class);
 
     @Context
@@ -68,7 +66,6 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     protected ActorRef cache;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao dao;
     private URI uri;
 
     public AnnouncementsEndpoint() {
@@ -77,8 +74,6 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     public void init() {
-        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        dao = storage.getAccountsDao();
         system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         Configuration ttsConfiguration = configuration.subset("speech-synthesizer");
@@ -100,7 +95,7 @@ public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     public Response putAnnouncement(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) throws Exception {
         try {
-            secure(dao.getAccount(accountSid), "RestComm:Create:Announcements");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Announcements");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
