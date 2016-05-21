@@ -96,8 +96,8 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     }
 
     protected Response getConference(final String accountSid, final String sid, final MediaType responseType) {
-    	Account account = daoManager.getAccountsDao().getAccount(accountSid);
-    	try {
+        Account account = daoManager.getAccountsDao().getAccount(accountSid);
+        try {
             secure(account, "RestComm:Read:Conferences");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
@@ -109,7 +109,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         } else {
             try {
                 //secureLevelControl(daoManager.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
-            	secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -126,7 +126,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
 
     protected Response getConferences(final String accountSid, UriInfo info, MediaType responseType) {
         Account account = daoManager.getAccountsDao().getAccount(accountSid);
-    	try {
+        try {
             secure(account, "RestComm:Read:Conferences");
             //secureLevelControl(daoManager.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {

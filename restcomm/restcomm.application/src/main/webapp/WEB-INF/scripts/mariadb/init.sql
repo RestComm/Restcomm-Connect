@@ -141,7 +141,10 @@ caller_name VARCHAR(50),
 uri MEDIUMTEXT NOT NULL,
 call_path VARCHAR(255),
 ring_duration INT,
-instanceid VARCHAR(255)
+instanceid VARCHAR(255), 
+muted BOOLEAN, 
+start_conference_on_enter BOOLEAN,
+end_conference_on_exit BOOLEAN
 );
 
 CREATE TABLE restcomm_conference_detail_records (
