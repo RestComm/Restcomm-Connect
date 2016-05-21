@@ -2228,8 +2228,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     endConferenceOnExit = Boolean.parseBoolean(value);
                 }
             }
-            
-            //updating conferenceSid and othe conference related info in cdr
+
+            //updating conferenceSid and other conference related info in cdr
             if (callRecord != null) {
                 callRecord = callRecord.setConferenceSid(conferenceSid);
                 callRecord = callRecord.setMuted(muteCall);
