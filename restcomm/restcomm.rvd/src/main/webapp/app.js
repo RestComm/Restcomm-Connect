@@ -11,54 +11,124 @@ var App = angular.module('Rvd', [
 	'ngSanitize',
 	'ngResource',
 	'ngCookies',
-	'ngIdle'
+	'ngIdle',
+	'ui.router',
+	'ngStorage',
+	'angular-md5',
+	'ngFileSaver'
 ]);
 
 var rvdMod = App;
 
+App.config(['$stateProvider','$urlRouterProvider', '$translateProvider', function ($stateProvider,$urlRouterProvider,$translateProvider) {
+    $stateProvider.state('root',{
+        resolve:{
+            init: function (initializer) {
+                //console.log('Initializing RVD');
+                return initializer.init();
+            }
+        }
+    });
+    $stateProvider.state('root.public',{});
+    $stateProvider.state('root.public.login',{
+        url:"/login",
+        views: {
+            'container@': {
+                templateUrl: 'templates/login.html',
+                controller: 'loginCtrl'
+            }
+        }
+    });
+    $stateProvider.state('root.public.notready',{
+        url:'/notready',
+        views: {
+            'container@': {templateUrl: 'templates/notready.html'}
+        }
+    });
+    $stateProvider.state('root.rvd',{
+        views: {
+            'authmenu@': {
+                templateUrl: 'templates/index-authmenu.html',
+                controller: 'authMenuCtrl'
+            },
+            'container@': {
+                template: '<ui-view/>',
+                controller: 'containerCtrl'
+            }
+        },
+        resolve: {
+            authorize: function (init, authentication) { // block on init ;-)
+                return authentication.checkRvdAccess(); // pass required role here
+            }
+        }
+    });
+    $stateProvider.state('root.rvd.home',{
+        url:"/home",
+        templateUrl: 'templates/home.html'
+    });
+    $stateProvider.state('root.rvd.projectManager',{
+        url: '/project-manager/:projectKind',
+        templateUrl: 'templates/projectManager.html',
+        controller: 'projectManagerCtrl'
+    });
+    $stateProvider.state('root.rvd.designer', {
+        url: '/designer/:applicationSid=:projectName',
+        templateUrl : 'templates/designer.html',
+        controller : 'designerCtrl',
+        resolve: {
+            project: function(designerService, $stateParams, $state,authorize) {
+                return designerService.openProject($stateParams.applicationSid);
+            },
+            bundledWavs: function(designerService,authorize) {
+                return designerService.getBundledWavs()
+            }
+        }
+
+    });
+    $stateProvider.state('root.rvd.projectLog', {
+        url: '/designer/:applicationSid=:projectName/log',
+    	templateUrl : 'templates/projectLog.html',
+    	controller : 'projectLogCtrl'
+    });
+    $stateProvider.state('root.rvd.packaging',{template:'<ui-view/>'}); // does nothing for now
+    $stateProvider.state('root.rvd.packaging.details',{
+        url: '/packaging/:applicationSid=:projectName',
+        templateUrl : 'templates/packaging/form.html',
+        controller : 'packagingCtrl',
+        resolve: {
+            rappWrap: function(RappService, $stateParams,authorize) {return RappService.getRapp($stateParams);},
+            rvdSettingsResolver: function (rvdSettings,authorize) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
+        }
+    });
+    $stateProvider.state('root.rvd.packaging.download', {
+        url:'/packaging/:applicationSid=:projectName/download',
+   		templateUrl : 'templates/packaging/download.html',
+   		controller : 'packagingDownloadCtrl',
+   		resolve: {
+   			binaryInfo: function (RappService,$stateParams,authorize) { return RappService.getBinaryInfo($stateParams)}
+   		}
+    });
+    // not sure what this state does. It should probably be removed
+    $stateProvider.state('root.rvd.upgrade', {
+        url: '/upgrade/:projectName',
+        templateUrl : 'templates/upgrade.html',
+        controller : 'upgradeCtrl'
+    });
+
+    //$stateProvider.state('root.rvd.designer',{});
+    $urlRouterProvider.otherwise('/home');
+
+    $translateProvider.useStaticFilesLoader({
+        prefix: '/restcomm-rvd/languages/',
+        suffix: '.json'
+    });
+    $translateProvider.useCookieStorage();
+    $translateProvider.preferredLanguage('en-US');
+}]);
+
+/*
 App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $translateProvider) {
 
-	$routeProvider.when('/project-manager/:projectKind', {
-		templateUrl : 'templates/projectManager.html',
-		controller : 'projectManagerCtrl',
-		resolve: {
-			authInfo: function (authentication) {return authentication.authResolver();}
-		}
-	})
-	.when('/home', {
-		templateUrl : 'templates/home.html',
-		controller : 'homeCtrl',
-		resolve: {
-			authInfo: function (authentication) {return authentication.authResolver();}
-		}
-	})
-	.when('/designer/:applicationSid=:projectName', {
-		templateUrl : 'templates/designer.html',
-		controller : 'designerCtrl',
-		resolve: {
-			authInfo: function (authentication) {return authentication.authResolver();},
-			//projectSettings: function (projectSettingsService, $route) {return projectSettingsService.retrieve($route.current.params.projectName);},
-			project: function(designerService, $route) { return designerService.openProject($route.current.params.applicationSid); },
-			bundledWavs: function(designerService) { return designerService.getBundledWavs()}
-		}
-	})
-	.when('/packaging/:applicationSid=:projectName', {
-		templateUrl : 'templates/packaging/form.html',
-		controller : 'packagingCtrl',
-		resolve: {
-			rappWrap: function(RappService) {return RappService.getRapp();},
-			authInfo: function (authentication) {return authentication.authResolver();},
-			rvdSettingsResolver: function (rvdSettings) {return rvdSettings.refresh();} // not meant to return anything back. Just trigger the fetching of the settings
-		}
-	})
-	.when('/packaging/:applicationSid=:projectName/download', {
-		templateUrl : 'templates/packaging/download.html',
-		controller : 'packagingDownloadCtrl',
-		resolve: {
-			binaryInfo: packagingDownloadCtrl.getBinaryInfo,
-			authInfo: function (authentication) {return authentication.authResolver();}
-		}
-	})
 	.when('/upgrade/:projectName', {
 		templateUrl : 'templates/upgrade.html',
 		controller : 'upgradeCtrl',
@@ -66,26 +136,97 @@ App.config([ '$routeProvider', '$translateProvider', function($routeProvider, $t
 			authInfo: function (authentication) {return authentication.authResolver();}
 		}
 	})
-	.when('/login', {
-		templateUrl : 'templates/login.html',
-		controller : 'loginCtrl'
-	})
-	.when('/designer/:applicationSid=:projectName/log', {
-		templateUrl : 'templates/projectLog.html',
-		controller : 'projectLogCtrl'
-	})
+
 	.otherwise({
 		redirectTo : '/home'
 	});
 
-	$translateProvider.useStaticFilesLoader({
-  		prefix: '/restcomm-rvd/languages/',
-  		suffix: '.json'
-	});
-	$translateProvider.useCookieStorage();
-	$translateProvider.preferredLanguage('en-US');
-
 }]);
+*/
+
+
+// Rvd module and Identity bootstrapping
+
+var keycloakAuth = {};
+var keycloakLogout = function(){
+    keycloakAuth.loggedIn = false;
+    keycloakAuth.authz = null;
+    window.location = keycloakAuth.logoutUrl;
+};
+
+angular.element(document).ready(['$http',function ($http) {
+  // manually inject $q since it's not available
+  var initInjector = angular.injector(["ng"]);
+  var $q = initInjector.get("$q");
+
+  // try to retrieve Identity server configuration
+  var serverPromise = $q.defer();
+  // Disable until keycloak/organizations are applied. For now resolve to null.
+  /*
+  $http.get("/restcomm/2012-04-24/Identity/Server").success(function (serverConfig) {
+    console.log(serverConfig);
+    serverPromise.resolve(serverConfig);
+  }).error( function (response) {
+    if (response.status == 404)
+        serverPromise.resolve(null);
+    else
+        serverPromise.reject();
+  });*/
+  serverPromise.resolve(null);
+
+  // try to retrieve IdentityInstance
+  var instancePromise = $q.defer();
+  // Disable until keycloak/organizations are applied. For now resolve to null.
+  /*
+  $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
+    instancePromise.resolve(instance);
+  }).error(function (response) {
+    if (response.status == 404)
+      instancePromise.resolve(null);
+    else
+      instancePromise.reject();
+  });
+  */
+  instancePromise.resolve(null);
+
+  // when both responses are received do sth...
+  $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
+    //console.log("Received restcomm configuration");
+    // create a constant with keycloak server and instance identity configuration
+    var identityConfig = new IdentityConfig(responses[0],responses[1],$q);
+    angular.module('Rvd').constant('IdentityConfig', identityConfig);
+    angular.module('Rvd').factory('KeycloakAuth', function() {
+      return keycloakAuth;
+    });
+    if ( identityConfig.securedByKeycloak() ) {
+      // if the instance is already secured by keycloak
+      var keycloak = new Keycloak({ url: identityConfig.server.authServerUrl, realm: identityConfig.server.realm, clientId: identityConfig.instance.name + "-rvd-ui" });
+			keycloakAuth.loggedIn = false;
+			keycloak.init({ onLoad: 'login-required' }).success(function () {
+				keycloakAuth.loggedIn = true;
+				keycloakAuth.authz = keycloak;
+				keycloakAuth.logoutUrl = identityConfig.server.authServerUrl + "/realms/" + identityConfig.server.realm + "/protocol/openid-connect/logout?redirect_uri=" + window.location.origin;
+        angular.bootstrap(document, ["Rvd"]);
+			}).error(function (a, b) {
+					window.location.reload();
+			});
+    } else
+    if (identityConfig.identityServerConfigured() && !identityConfig.securedByKeycloak()){
+      // keycloak is already configured but no identity instance yet
+      angular.bootstrap(document, ["Rvd"]);
+    } else {
+      // no identity configuration. We should run in compatibility authorization mode
+      angular.bootstrap(document, ["Rvd"]);
+    }
+
+  }, function () {
+    console.log("Internal server error");
+  });
+}]);
+
+// endof bootstrapping section
+
+
 
 App.config(function(IdleProvider, KeepaliveProvider, TitleProvider) {
     // configure Idle settings

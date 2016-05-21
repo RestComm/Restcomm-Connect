@@ -54,9 +54,7 @@ import com.google.gson.Gson;
 public class RestcommClient {
 
     private final URI restcommBaseUrl;
-    private final String username;
-    private final String password;
-    private boolean authenticationTokenAsPassword = false;
+    private final String authHeader;
     CloseableHttpClient apacheClient;
 
     public static class RestcommClientException extends AccessApiException {
@@ -128,7 +126,7 @@ public class RestcommClient {
                         uriBuilder.addParameter(paramNames.get(i), paramValues.get(i));
                     String uri = uriBuilder.build().toString();
                     HttpGet get = new HttpGet(uri);
-                    get.addHeader("Authorization", "Basic " + getAuthenticationToken());
+                    get.addHeader("Authorization", client.authHeader);
                     apiResponse = client.apacheClient.execute(get);
                     try {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
@@ -151,7 +149,7 @@ public class RestcommClient {
                         values.add(new BasicNameValuePair(paramNames.get(i), paramValues.get(i)));
                     }
                     post.setEntity(new UrlEncodedFormEntity(values));
-                    post.addHeader("Authorization", "Basic " + getAuthenticationToken());
+                    post.addHeader("Authorization", client.authHeader);
                     apiResponse = client.apacheClient.execute(post);
                     try {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
@@ -174,7 +172,7 @@ public class RestcommClient {
                     for (int i = 0; i < paramNames.size(); i++) {
                         values.add(new BasicNameValuePair(paramNames.get(i), paramValues.get(i)));
                     }
-                    delete.addHeader("Authorization", "Basic " + getAuthenticationToken());
+                    delete.addHeader("Authorization", client.authHeader);
                     apiResponse = client.apacheClient.execute(delete);
                     try {
                         Integer statusCode = apiResponse.getStatusLine().getStatusCode();
@@ -200,37 +198,18 @@ public class RestcommClient {
             }
 
         }
-
-        private String getAuthenticationToken() {
-            if (client.authenticationTokenAsPassword) {
-                return client.password;
-            } else {
-                return RvdUtils.buildHttpAuthorizationToken(client.username, client.password);
-            }
-        }
-
     }
 
     /**
      * @param fallbackRestcommBaseUri
      * @throws RestcommClientInitializationException
      */
-    public RestcommClient (URI fallbackRestcommBaseUri, String usernameOverride, String passwordOverride) throws RestcommClientInitializationException {
-        if (RvdUtils.isEmpty(usernameOverride))
+    public RestcommClient (URI fallbackRestcommBaseUri, String authHeader) throws RestcommClientInitializationException {
+        if (RvdUtils.isEmpty(authHeader))
             throw new RestcommClientInitializationException("Restcomm client could not determine the user for accessing Restcomm");
-
+        this.authHeader = authHeader;
         this.restcommBaseUrl = fallbackRestcommBaseUri;
-        this.username = usernameOverride;
-        this.password = passwordOverride;
         apacheClient = CustomHttpClientBuilder.buildHttpClient();
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
     }
 
     public URI getRestcommBaseUrl() {
@@ -248,9 +227,4 @@ public class RestcommClient {
     public Request delete(String path) {
         return new Request(this, "DELETE", path);
     }
-
-    public void setAuthenticationTokenAsPassword(boolean b) {
-        this.authenticationTokenAsPassword = b;
-    }
-
 }
