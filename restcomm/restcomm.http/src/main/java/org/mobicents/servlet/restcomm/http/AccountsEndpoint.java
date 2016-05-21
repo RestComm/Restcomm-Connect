@@ -41,13 +41,9 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
-import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -60,11 +56,10 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public abstract class AccountsEndpoint extends AbstractEndpoint {
+public abstract class AccountsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    protected AccountsDao dao;
     protected Gson gson;
     protected XStream xstream;
 
@@ -74,11 +69,9 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
     @PostConstruct
     private void init() {
-        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
-        dao = storage.getAccountsDao();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -89,6 +82,8 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new AccountListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+        // Make sure there is an authenticated account present when this endpoint is used
+        checkAuthenticatedAccount();
     }
 
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -120,7 +115,7 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         final URI uri = URI.create(buffer.toString());
         Sid organizationSid = null;
         if (accountSid != null) {
-            Account master = dao.getAccount(accountSid);
+            Account master = accountsDao.getAccount(accountSid);
             organizationSid = master.getOrganizationSid();
         }
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri,
@@ -128,33 +123,29 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
-
-        Sid sid = null;
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        try {
+            checkPermission("RestComm:Read:Accounts");
+        } catch(final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
         Account account = null;
         if (Sid.pattern.matcher(accountSid).matches()) {
             try {
-                sid = new Sid(accountSid);
-                account = dao.getAccount(sid);
+                account = accountsDao.getAccount(new Sid(accountSid));
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
-
         } else {
             try {
-                account = dao.getAccount(accountSid);
-                sid = account.getSid();
+                account = accountsDao.getAccount(accountSid);
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
         }
 
         try {
-            final Subject subject = SecurityUtils.getSubject();
-            if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
-                    || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
-            } else {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(account, "RestComm:Read:Accounts", SecuredType.SECURED_ACCOUNT );
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -173,45 +164,48 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response deleteAccount(final String sid) {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid accountSid = new Sid((String) subject.getPrincipal());
-        final Sid sidToBeRemoved = new Sid(sid);
+    protected Response deleteAccount(final String operatedSid) {
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        try {
+            checkPermission("RestComm:Delete:Accounts");
+        } catch(final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
+        final Sid accountSid = userIdentityContext.getEffectiveAccount().getSid();
+        final Sid sidToBeRemoved = new Sid(operatedSid);
 
         try {
-            Account account = dao.getAccount(sidToBeRemoved);
-            secure(account, "RestComm:Delete:Accounts");
-            secureLevelControlAccounts(account);
+            Account removedAccount = accountsDao.getAccount(sidToBeRemoved);
+            secure(removedAccount, "RestComm:Delete:Accounts", SecuredType.SECURED_ACCOUNT);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         // Prevent removal of Administrator account
-        if (sid.equalsIgnoreCase(accountSid.toString()))
+        if (operatedSid.equalsIgnoreCase(accountSid.toString()))
             return status(BAD_REQUEST).build();
 
-        if (dao.getAccount(sidToBeRemoved) == null)
+        if (accountsDao.getAccount(sidToBeRemoved) == null)
             return status(NOT_FOUND).build();
 
-        dao.removeAccount(sidToBeRemoved);
+        accountsDao.removeAccount(sidToBeRemoved);
         return ok().build();
     }
 
     protected Response getAccounts(final MediaType responseType) {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid sid = new Sid((String) subject.getPrincipal());
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         try {
-            Account account = dao.getAccount(sid);
-            secure(account, "RestComm:Read:Accounts");
-        } catch (final AuthorizationException exception) {
+            checkPermission("RestComm:Read:Accounts");
+        } catch(final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Account account = dao.getAccount(sid);
+        final Account account = userIdentityContext.getEffectiveAccount();
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
             final List<Account> accounts = new ArrayList<Account>();
             accounts.add(account);
-            accounts.addAll(dao.getAccounts(sid));
+            accounts.addAll(accountsDao.getAccounts(account.getSid()));
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -224,8 +218,14 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        final Subject subject = SecurityUtils.getSubject();
-        final Sid sid = new Sid((String) subject.getPrincipal());
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        try {
+            checkPermission("RestComm:Create:Accounts");
+        } catch(final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
+        final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
         try {
             account = createFrom(sid, data);
@@ -234,14 +234,18 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
 
         // If Account already exists don't add it again
-        if (dao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
-            final Account parent = dao.getAccount(sid);
-            if (parent.getStatus().equals(Account.Status.ACTIVE)
-                    && (subject.hasRole("Administrator") || (subject.isPermitted("RestComm:Create:Accounts")))) {
-                if (!subject.hasRole("Administrator") || !data.containsKey("Role")) {
+        /*
+            Account creation rules:
+            - either be Administrator or have the following permission: RestComm:Create:Accounts
+            - only Administrators can choose a role for newly created accounts. Normal users will create accounts with the same role as their own.
+         */
+        if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
+            final Account parent = accountsDao.getAccount(sid);
+            if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
+                if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
                     account = account.setRole(parent.getRole());
                 }
-                dao.addAccount(account);
+                accountsDao.addAccount(account);
             } else {
                 return status(UNAUTHORIZED).build();
             }
@@ -281,31 +285,32 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
 
     protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        try {
+            checkPermission("RestComm:Modify:Accounts");
+        } catch(final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
         final Sid sid = new Sid(accountSid);
-        Account account = dao.getAccount(sid);
+        Account account = accountsDao.getAccount(sid);
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
             account = update(account, data);
-            final Subject subject = SecurityUtils.getSubject();
             try {
-                if ((subject.hasRole("Administrator") && secureLevelControlAccounts(account))
-                        || (subject.getPrincipal().equals(accountSid) && subject.isPermitted("RestComm:Modify:Accounts"))) {
-                    boolean isUpdateOrganization = data.containsKey("OrganizationSid");
-                    boolean isMasterAccount = account.getAccountSid() == null;
-                    if (isUpdateOrganization && !isMasterAccount) {
-                        return status(CONFLICT)
-                                .entity("Update Organization attribute is not allowed for sub accounts (allowed for master accounts only).")
-                                .build();
-                    } else if (isUpdateOrganization && isMasterAccount) {
-                        account = account.setOrganizationSid(getSid("OrganizationSid", data));
-                        dao.updateAccount(account);
-                        dao.updateSubaccountsOrganization(account.getSid(), account.getOrganizationSid());
-                    } else {
-                        dao.updateAccount(account);
-                    }
+                secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
+                boolean isUpdateOrganization = data.containsKey("OrganizationSid");
+                boolean isMasterAccount = account.getAccountSid() == null;
+                if (isUpdateOrganization && !isMasterAccount) {
+                    return status(CONFLICT)
+                            .entity("Update Organization attribute is not allowed for sub accounts (allowed for master accounts only).")
+                            .build();
+                } else if (isUpdateOrganization && isMasterAccount) {
+                    account = account.setOrganizationSid(getSid("OrganizationSid", data));
+                    accountsDao.updateAccount(account);
+                    accountsDao.updateSubaccountsOrganization(account.getSid(), account.getOrganizationSid());
                 } else {
-                    return status(UNAUTHORIZED).build();
+                    accountsDao.updateAccount(account);
                 }
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
@@ -329,14 +334,4 @@ public abstract class AccountsEndpoint extends AbstractEndpoint {
         }
     }
 
-    private boolean secureLevelControlAccounts(Account reference) {
-        Account subjectAccount = dao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
-        Account referenceAccount = reference;
-        if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getSid()))) {
-            if (!String.valueOf(subjectAccount.getSid()).equals(String.valueOf(referenceAccount.getAccountSid()))) {
-                throw new AuthorizationException();
-            }
-        }
-        return true;
-    }
 }

@@ -211,9 +211,10 @@ public class Jsr309BridgeController extends MediaServerController {
         @Override
         public void onEvent(RecorderEvent event) {
             EventType eventType = event.getEventType();
-
-            logger.info("********** Bridge Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Bridge Controller Processing Event: \"RecorderEvent\" (type = " + eventType + ")");
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Bridge Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Bridge Controller Processing Event: \"RecorderEvent\" (type = " + eventType + ")");
+            }
 
             if (RecorderEvent.RECORD_COMPLETED.equals(eventType)) {
                 MediaGroupResponse<String> response = null;
@@ -256,10 +257,12 @@ public class Jsr309BridgeController extends MediaServerController {
             }
 
             if (duration.equals(0.0)) {
-                logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Call wraping up recording. File doesn't exist since duration is 0");
+                }
                 final DateTime end = DateTime.now();
                 duration = new Double((end.getMillis() - recordingStarted.getMillis()) / 1000);
-            } else {
+            } else if(logger.isInfoEnabled()) {
                 logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
             }
 
@@ -288,10 +291,11 @@ public class Jsr309BridgeController extends MediaServerController {
         @Override
         public void onEvent(AllocationEvent event) {
             EventType eventType = event.getEventType();
-
-            logger.info("********** Bridge Controller Current State: \"" + fsm.state().toString() + "\"");
-            logger.info("********** Bridge Controller Processing Event: \"AllocationEventListener - Mixer\" (type = "
+            if(logger.isInfoEnabled()) {
+                logger.info("********** Bridge Controller Current State: \"" + fsm.state().toString() + "\"");
+                logger.info("********** Bridge Controller Processing Event: \"AllocationEventListener - Mixer\" (type = "
                     + eventType + ")");
+            }
 
             try {
                 if (AllocationEvent.ALLOCATION_CONFIRMED.equals(eventType)) {
@@ -328,9 +332,11 @@ public class Jsr309BridgeController extends MediaServerController {
         final ActorRef sender = sender();
         final State state = fsm.state();
 
-        logger.info("********** Bridge Controller " + self().path() + " State: \"" + state.toString());
-        logger.info("********** Bridge Controller " + self().path() + " Processing: \"" + klass.getName() + " Sender: "
+        if(logger.isInfoEnabled()) {
+            logger.info("********** Bridge Controller " + self().path() + " State: \"" + state.toString());
+            logger.info("********** Bridge Controller " + self().path() + " Processing: \"" + klass.getName() + " Sender: "
                 + sender.getClass());
+        }
 
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
@@ -386,7 +392,9 @@ public class Jsr309BridgeController extends MediaServerController {
     private void onStartRecording(StartRecording message, ActorRef self, ActorRef sender) throws Exception {
         if (is(active)) {
             try {
-                logger.info("Start recording bridged call");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Start recording bridged call");
+                }
 
                 Parameters params = this.mediaGroup.createParameters();
 

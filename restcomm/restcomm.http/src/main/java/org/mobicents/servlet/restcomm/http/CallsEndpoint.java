@@ -35,6 +35,7 @@ import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
@@ -94,7 +95,7 @@ import static javax.ws.rs.core.Response.status;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @NotThreadSafe
-public abstract class CallsEndpoint extends AbstractEndpoint {
+public abstract class CallsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -146,8 +147,9 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
+        Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
+            secure(account, "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -157,7 +159,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+               // secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -175,10 +178,10 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType) {
-
+        Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+            secure(account, "RestComm:Read:Calls");
+           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -298,7 +301,7 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         final Sid accountId = new Sid(accountSid);
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -309,8 +312,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
-        final String from = data.getFirst("From");
-        final String to = data.getFirst("To");
+        final String from = data.getFirst("From").trim();
+        final String to = data.getFirst("To").trim();
         final String username = data.getFirst("Username");
         final String password = data.getFirst("Password");
         final Integer timeout = getTimeout(data);
@@ -404,8 +407,9 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
     @SuppressWarnings("unchecked")
     protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
+        Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Modify:Calls");
+            secure(account, "RestComm:Modify:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -419,7 +423,8 @@ public abstract class CallsEndpoint extends AbstractEndpoint {
 
             if (cdr != null) {
                 try {
-                    secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
+                    //secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
                 } catch (final AuthorizationException exception) {
                     return status(UNAUTHORIZED).build();
                 }

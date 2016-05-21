@@ -1,8 +1,10 @@
-App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications, authentication) {
-	
+App.controller('projectManagerCtrl', function ( $scope, $http, $location, $stateParams, $timeout, $upload, notifications, authentication) {
+
+	var account = authentication.getAccount();
+
 	$scope.authInfo = authentication.getAuthInfo();
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
-	$scope.projectKind = $routeParams.projectKind;
+	$scope.projectKind = $stateParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd' && $scope.projectKind != 'sms')
 		$scope.projectKind = 'voice';
 	$scope.error = undefined; 
@@ -13,8 +15,9 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		var restcommApps;
 		var projectList = [];
 		$http({
-			url: '/restcomm/2012-04-24/Accounts/' + $scope.authInfo.username + '/Applications.json',
-			method: 'GET'
+			url: '/restcomm/2012-04-24/Accounts/' + account.sid + '/Applications.json',
+			method: 'GET',
+			headers: {Authorization: authentication.getAuthHeader()}
 		}).success(function (data, status, headers, config) {
 			restcommApps = data;
 			$http({url: 'services/projects',

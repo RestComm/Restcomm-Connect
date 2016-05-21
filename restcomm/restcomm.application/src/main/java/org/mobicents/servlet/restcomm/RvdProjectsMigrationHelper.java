@@ -91,6 +91,7 @@ public class RvdProjectsMigrationHelper {
 
     private Configuration configuration;
     private String workspacePath;
+    private String workspaceBackupPath;
     private StateHeader currentStateHeader;
     private Application currentApplication;
     private final ApplicationsDao applicationDao;
@@ -128,22 +129,34 @@ public class RvdProjectsMigrationHelper {
             XStream xstream = new XStream();
             xstream.alias("rvd", RvdConfig.class);
             RvdConfig rvdConfig = (RvdConfig) xstream.fromXML(input);
+            // Define workspace location
             String workspaceBasePath = contextPathRvd + WORKSPACE_DIRECTORY_NAME;
             if (rvdConfig.getWorkspaceLocation() != null && !"".equals(rvdConfig.getWorkspaceLocation())) {
                 if (rvdConfig.getWorkspaceLocation().startsWith("/"))
                     workspaceBasePath = rvdConfig.getWorkspaceLocation(); // this is an absolute path
                 else
                     workspaceBasePath = contextPathRvd + rvdConfig.getWorkspaceLocation(); // this is a relative path hooked
-                                                                                           // under
-                // RVD context
+                                                                                           // under RVD context
             }
             this.workspacePath = workspaceBasePath;
+            // Define workspace backup location
+            String workspaceBackupBasePath = contextPathRvd;
+            if (rvdConfig.getWorkspaceBackupLocation() != null && !"".equals(rvdConfig.getWorkspaceBackupLocation())) {
+                if (rvdConfig.getWorkspaceBackupLocation().startsWith("/"))
+                    workspaceBackupBasePath = rvdConfig.getWorkspaceBackupLocation(); // this is an absolute path
+                else
+                    workspaceBackupBasePath = contextPathRvd + rvdConfig.getWorkspaceBackupLocation(); // this is a relative
+                                                                                                       // path hooked under RVD
+                                                                                                       // context
+            }
+            this.workspaceBackupPath = workspaceBackupBasePath;
         } else {
             // Try to set embedded migration. For testing only
             String dir = contextRootPath + EMBEDDED_DIRECTORY_NAME + File.separator + WORKSPACE_DIRECTORY_NAME + File.separator;
             File embedded = new File(dir);
             if (embedded.exists()) {
                 this.workspacePath = dir;
+                this.workspaceBackupPath = contextRootPath;
                 this.embeddedMigration = true;
             } else {
                 throw new Exception("Error while searching for the workspace location. Aborting migration.");
@@ -155,7 +168,7 @@ public class RvdProjectsMigrationHelper {
     public void backupWorkspace() throws RvdProjectsMigrationException {
         try {
             File workspace = new File(this.workspacePath);
-            File workspaceBackup = new File(workspace.getParent() + File.separator + "workspaceBackup-"
+            File workspaceBackup = new File(this.workspaceBackupPath + File.separator + "workspaceBackup-"
                     + DateTime.now().getMillis());
             FileUtils.copyDirectoryToDirectory(workspace, workspaceBackup);
         } catch (IOException e) {
@@ -570,20 +583,26 @@ public class RvdProjectsMigrationHelper {
 
     private class RvdConfig {
         private String workspaceLocation;
+        private String workspaceBackupLocation;
         private String sslMode;
         private String restcommBaseUrl;
 
         public RvdConfig() {
         }
 
-        public RvdConfig(String workspaceLocation, String restcommPublicIp, String sslMode) {
+        public RvdConfig(String workspaceLocation, String workspaceBackupLocation, String restcommPublicIp, String sslMode) {
             super();
             this.workspaceLocation = workspaceLocation;
+            this.workspaceBackupLocation = workspaceBackupLocation;
             this.sslMode = sslMode;
         }
 
         public String getWorkspaceLocation() {
             return workspaceLocation;
+        }
+
+        public String getWorkspaceBackupLocation() {
+            return workspaceBackupLocation;
         }
 
         public String getSslMode() {

@@ -50,8 +50,8 @@ public class MainConfigurationSet extends ConfigurationSet {
     private final String hostname;
     private String instanceId;
 
-    public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-or-proxy-for-clients";
-    private final boolean bypassLbForClients;
+    public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
+    private boolean bypassLbForClients = false;
 
     public MainConfigurationSet(ConfigurationSource source) {
         super(source);
@@ -83,7 +83,7 @@ public class MainConfigurationSet extends ConfigurationSet {
             resolveRelativeUrlWithHostname = RESOLVE_RELATIVE_URL_WITH_HOSTNAME_DEFAULT;
             resolveRelativeUrlWithHostname = Boolean.valueOf(source.getProperty(USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY));
             resolveRelativeUrlHostname = source.getProperty("http-client.hostname");
-            bypassLb = Boolean.valueOf(source.getProperty("bypass-lb-or-proxy-for-clients"));
+            bypassLb = Boolean.valueOf(source.getProperty(BYPASS_LB_FOR_CLIENTS));
         } catch (Exception e) {
             throw new RuntimeException("Error initializing '" + USE_HOSTNAME_TO_RESOLVE_RELATIVE_URL_KEY + "' configuration setting", e);
         }
