@@ -255,6 +255,24 @@ public final class CallDetailRecord {
                 callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
+    public CallDetailRecord setMuted(final Boolean muted){
+        return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
+    }
+
+    public CallDetailRecord setStartConferenceOnEnter(final Boolean startConferenceOnEnter){
+        return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
+    }
+
+    public CallDetailRecord setEndConferenceOnExit(final Boolean endConferenceOnExit){
+        return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
+                status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
+    }
+
     @NotThreadSafe
     public static final class Builder {
         private Sid sid;
