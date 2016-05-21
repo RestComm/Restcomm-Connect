@@ -44,6 +44,7 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordList;
@@ -61,7 +62,7 @@ import com.thoughtworks.xstream.XStream;
  * @author maria-farooq@live.com (Maria Farooq)
  */
 @NotThreadSafe
-public abstract class ConferencesEndpoint extends AbstractEndpoint {
+public abstract class ConferencesEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -95,8 +96,9 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
     }
 
     protected Response getConference(final String accountSid, final String sid, final MediaType responseType) {
-        try {
-            secure(daoManager.getAccountsDao().getAccount(accountSid), "RestComm:Read:Conferences");
+    	Account account = daoManager.getAccountsDao().getAccount(accountSid);
+    	try {
+            secure(account, "RestComm:Read:Conferences");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -106,7 +108,8 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(daoManager.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+                //secureLevelControl(daoManager.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
+            	secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -122,10 +125,10 @@ public abstract class ConferencesEndpoint extends AbstractEndpoint {
     }
 
     protected Response getConferences(final String accountSid, UriInfo info, MediaType responseType) {
-
-        try {
-            secure(daoManager.getAccountsDao().getAccount(accountSid), "RestComm:Read:Conferences");
-            secureLevelControl(daoManager.getAccountsDao(), accountSid, null);
+        Account account = daoManager.getAccountsDao().getAccount(accountSid);
+    	try {
+            secure(account, "RestComm:Read:Conferences");
+            //secureLevelControl(daoManager.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }

@@ -57,7 +57,7 @@ public abstract class ParticipantsEndpoint extends CallsEndpoint {
 
         try {
             secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+            //secureLevelControl(daos.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
