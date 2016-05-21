@@ -44,14 +44,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.subject.Subject;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OrganizationsDao;
-import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Organization;
 import org.mobicents.servlet.restcomm.entities.OrganizationList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -69,7 +66,7 @@ import com.thoughtworks.xstream.XStream;
  * @author guilherme.jansen@telestax.com
  */
 @NotThreadSafe
-public class OrganizationsEndpoint extends AbstractEndpoint {
+public class OrganizationsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -118,9 +115,8 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getOrganization(final String sid, final MediaType responseType) {
-        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
         try {
-            secure(account, "RestComm:Read:Organizations");
+            checkPermission("RestComm:Read:Organizations");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -134,7 +130,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControlOrganizations(account, organization, false);
+                secureOrganizations(organization, false);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -150,18 +146,16 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getOrganizations(final MediaType responseType) {
-        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
         try {
-            secure(account, "RestComm:Read:Organizations");
+            checkPermission("RestComm:Read:Organizations");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
         List<Organization> organizations = new ArrayList<Organization>();
-        final Subject subject = SecurityUtils.getSubject();
-        if (subject.hasRole("Administrator")) {
+        if (hasAccountRole(getAdministratorRole())) {
             organizations = dao.getAllOrganizations();
         } else {
-            Organization organization = dao.getOrganization(account.getOrganizationSid());
+            Organization organization = dao.getOrganization(userIdentityContext.getEffectiveAccount().getOrganizationSid());
             organizations.add(organization); // Always be only one Organization, but list is used to keep the response standard
         }
         if (APPLICATION_XML_TYPE == responseType) {
@@ -176,6 +170,11 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
 
     protected Response putOrganization(final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        try {
+            checkPermission("RestComm:Create:Organizations");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -201,12 +200,11 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     }
 
     protected Response deleteOrganization(final String sid) {
-        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
         try {
-            secure(account, "RestComm:Delete:Organizations");
+            checkPermission("RestComm:Delete:Organizations");
             Organization organization = dao.getOrganization(new Sid(sid));
             if (organization != null) {
-                secureLevelControlOrganizations(account, organization, true);
+                secureOrganizations(organization, true);
             }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
@@ -227,9 +225,8 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
 
     protected Response updateOrganization(final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        Account account = accountsDao.getAccount(String.valueOf(SecurityUtils.getSubject().getPrincipal()));
         try {
-            secure(account, "RestComm:Modify:Organizations");
+            checkPermission("RestComm:Modify:Organizations");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -238,7 +235,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControlOrganizations(account, organization, true);
+                secureOrganizations(organization, true);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -265,31 +262,4 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
         return result;
     }
-
-    protected boolean secureLevelControlOrganizations(Account account, Organization organization, boolean adminRoleRequired) {
-        final Subject subject = SecurityUtils.getSubject();
-        final boolean isRestCommAdmin = subject.hasRole("Administrator");
-        final boolean isOrganizationAdmin = subject.hasRole("Organization Administrator");
-        if (adminRoleRequired) {
-            if (!(isRestCommAdmin || isOrganizationAdmin)) {
-                throw new AuthorizationException();
-            }
-            if (isOrganizationAdmin) {
-                return isAccountOfOrganization(account, organization);
-            }
-        } else if (!isRestCommAdmin) {
-            return isAccountOfOrganization(account, organization);
-        }
-        return true;
-    }
-
-    private boolean isAccountOfOrganization(Account account, Organization organization) {
-        String organizationSid = String.valueOf(organization.getSid());
-        String accountSid = String.valueOf(account.getOrganizationSid());
-        if (!organizationSid.equalsIgnoreCase(accountSid)) {
-            throw new AuthorizationException();
-        }
-        return true;
-    }
-
 }

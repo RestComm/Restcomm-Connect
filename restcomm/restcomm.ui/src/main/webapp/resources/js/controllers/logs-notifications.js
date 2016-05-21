@@ -71,9 +71,9 @@ $scope.sortBy = function(field) {
 
 });
 
-rcMod.controller('LogsNotificationsDetailsCtrl', function($scope, $routeParams, $resource, $modalInstance, SessionService, RCommLogsNotifications, notificationSid) {
+rcMod.controller('LogsNotificationsDetailsCtrl', function($scope, $stateParams, $resource, $modalInstance, SessionService, RCommLogsNotifications, notificationSid) {
   $scope.sid = SessionService.get("sid");
-  $scope.notificationSid = $routeParams.notificationSid || notificationSid;
+  $scope.notificationSid = $stateParams.notificationSid || notificationSid;
 
   $scope.closeNotificationDetails = function () {
     $modalInstance.dismiss('cancel');

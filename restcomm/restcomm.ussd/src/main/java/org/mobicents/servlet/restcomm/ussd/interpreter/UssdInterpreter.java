@@ -463,15 +463,23 @@ public class UssdInterpreter extends UntypedActor {
             final CallStateChanged event = (CallStateChanged) message;
             callState = event.state();
             if (CallStateChanged.State.RINGING == event.state()) {
-                logger.info("CallStateChanged.State.RINGING");
+                if(logger.isInfoEnabled()) {
+                    logger.info("CallStateChanged.State.RINGING");
+                }
             } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
-                logger.info("CallStateChanged.State.IN_PROGRESS");
+                if(logger.isInfoEnabled()) {
+                    logger.info("CallStateChanged.State.IN_PROGRESS");
+                }
             } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
                     || CallStateChanged.State.FAILED == event.state() || CallStateChanged.State.CANCELED == event.state()) {
-                logger.info("CallStateChanged.State.NO_ANSWER OR  CallStateChanged.State.COMPLETED OR CallStateChanged.State.FAILED or CallStateChanged.State.CANCELED");
+                if(logger.isInfoEnabled()) {
+                    logger.info("CallStateChanged.State.NO_ANSWER OR  CallStateChanged.State.COMPLETED OR CallStateChanged.State.FAILED or CallStateChanged.State.CANCELED");
+                }
                 fsm.transition(message, finished);
             } else if (CallStateChanged.State.BUSY == event.state()) {
-                logger.info("CallStateChanged.State.BUSY");
+                if(logger.isInfoEnabled()) {
+                    logger.info("CallStateChanged.State.BUSY");
+                }
             }
 //            else if (CallStateChanged.State.COMPLETED == event.state()) {
 //                logger.info("CallStateChanged.State.Completed");
@@ -501,7 +509,7 @@ public class UssdInterpreter extends UntypedActor {
             if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
-                            + ", statusCode " + response.get().getStatusCode());
+                        + ", statusCode " + response.get().getStatusCode());
                 }
                 fsm.transition(message, ready);
             } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
@@ -518,7 +526,9 @@ public class UssdInterpreter extends UntypedActor {
                 }
             }
         } else if (ParserFailed.class.equals(klass)) {
-            logger.info("ParserFailed received. Will stop the call");
+            if(logger.isInfoEnabled()) {
+                logger.info("ParserFailed received. Will stop the call");
+            }
             fsm.transition(message, cancelling);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
@@ -582,7 +592,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Acquiring Call Info");
+            if(logger.isInfoEnabled()) {
+                logger.info("Acquiring Call Info");
+            }
             ussdCall.tell(new Observe(source), source);
             ussdCall.tell(new GetCallInfo(), source);
         }
@@ -596,7 +608,9 @@ public class UssdInterpreter extends UntypedActor {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Downloading RCML");
+            if(logger.isInfoEnabled()) {
+                logger.info("Downloading RCML");
+            }
             final Class<?> klass = message.getClass();
             final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
             if (CallResponse.class.equals(klass)) {
@@ -652,7 +666,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Downloading Fallback RCML");
+            if(logger.isInfoEnabled()) {
+                logger.info("Downloading Fallback RCML");
+            }
             final Class<?> klass = message.getClass();
             // Notify the account of the issue.
             if (DownloaderResponse.class.equals(klass)) {
@@ -686,7 +702,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("In Ready state");
+            if(logger.isInfoEnabled()) {
+                logger.info("In Ready state");
+            }
             // ussdCall.tell(new Answer(), source);
             // Execute the received RCML here
             final UntypedActorContext context = getContext();
@@ -720,7 +738,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("In Not Found State");
+            if(logger.isInfoEnabled()) {
+                logger.info("In Not Found State");
+            }
             final DownloaderResponse response = (DownloaderResponse) message;
             if (logger.isDebugEnabled()) {
                 logger.debug("response succeeded " + response.succeeded() + ", statusCode " + response.get().getStatusCode());
@@ -742,7 +762,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Preparing the USSD Message");
+            if(logger.isInfoEnabled()) {
+                logger.info("Preparing the USSD Message");
+            }
             if (End.class.equals(message.getClass())) {
 
                 Boolean hasCollect = false;
@@ -788,15 +810,19 @@ public class UssdInterpreter extends UntypedActor {
                         notifications.addNotification(notification);
                         sendMail(notification);
                     }
-                    logger.info(errorString);
+                    if(logger.isInfoEnabled()) {
+                        logger.info(errorString);
+                    }
                     ussdText = new StringBuffer();
                     ussdText.append("Error while preparing the response.\nMessage length exceeds the maximum.");
                 }
 
                 ussdRestcommResponse.setMessage(ussdText.toString());
 
-                logger.info("UssdMessage prepared, hasCollect: " + hasCollect);
-                logger.info("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
+                if(logger.isInfoEnabled()) {
+                    logger.info("UssdMessage prepared, hasCollect: " + hasCollect);
+                    logger.info("UssdMessage prepared: " + ussdMessage.toString() + " hasCollect: " + hasCollect);
+                }
 
                 if (callInfo.direction().equalsIgnoreCase("inbound")) {
                     // USSD PULL
@@ -821,7 +847,9 @@ public class UssdInterpreter extends UntypedActor {
                         }
                     }
                 }
-                logger.info("UssdRestcommResponse message prepared: "+ussdRestcommResponse);
+                if(logger.isInfoEnabled()) {
+                    logger.info("UssdRestcommResponse message prepared: "+ussdRestcommResponse);
+                }
                 ussdCall.tell(ussdRestcommResponse, source);
             }
         }
@@ -849,7 +877,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("UssdInterpreter Processing INFO request");
+            if(logger.isInfoEnabled()) {
+                logger.info("UssdInterpreter Processing INFO request");
+            }
             final NotificationsDao notifications = storage.getNotificationsDao();
             SipServletRequest info = (SipServletRequest) message;
 
@@ -921,7 +951,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Cancelling state");
+            if(logger.isInfoEnabled()) {
+                logger.info("Cancelling state");
+            }
             final Class<?> klass = message.getClass();
             if (message instanceof SipServletRequest) {
                 SipServletRequest request = (SipServletRequest)message;
@@ -940,7 +972,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("Disconnecting state");
+            if(logger.isInfoEnabled()) {
+                logger.info("Disconnecting state");
+            }
             final Class<?> klass = message.getClass();
             if (message instanceof SipServletRequest) {
                 SipServletRequest request = (SipServletRequest)message;
@@ -959,7 +993,9 @@ public class UssdInterpreter extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("In Finished state");
+            if(logger.isInfoEnabled()) {
+                logger.info("In Finished state");
+            }
             final Class<?> klass = message.getClass();
             if (CallStateChanged.class.equals(klass)) {
                 final CallStateChanged event = (CallStateChanged) message;
@@ -981,7 +1017,9 @@ public class UssdInterpreter extends UntypedActor {
 
     @Override
     public void postStop() {
-        logger.info("UssdInterpreter postStop");
+        if(logger.isInfoEnabled()) {
+            logger.info("UssdInterpreter postStop");
+        }
         if (ussdCall != null)
             getContext().stop(ussdCall);
         if (outboundCall != null)

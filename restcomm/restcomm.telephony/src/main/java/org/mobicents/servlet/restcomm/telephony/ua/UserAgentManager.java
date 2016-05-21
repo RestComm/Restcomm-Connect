@@ -41,6 +41,7 @@ import scala.concurrent.duration.Duration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.sip.Address;
+import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletMessage;
@@ -96,7 +97,9 @@ public final class UserAgentManager extends UntypedActor {
         for (final Registration result : results) {
             final DateTime expires = result.getDateExpires();
             if (expires.isBeforeNow() || expires.isEqualNow()) {
-                logger.info("Registration: "+result.getAddressOfRecord()+" expired and will be removed now");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Registration: "+result.getAddressOfRecord()+" expired and will be removed now");
+                }
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
                 return;
@@ -105,7 +108,9 @@ public final class UserAgentManager extends UntypedActor {
             Long pingIntervalMillis = new Long(pingInterval * 1000 * 3);
             if ( (DateTime.now().getMillis() - updated.getMillis()) >  pingIntervalMillis) {
                 //Last time this registration updated was older than (pingInterval * 3), looks like it doesn't respond to OPTIONS
-                logger.info("Registration: "+result.getAddressOfRecord()+" didn't respond to OPTIONS and will be removed now");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Registration: "+result.getAddressOfRecord()+" didn't respond to OPTIONS and will be removed now");
+                }
                 registrations.removeRegistration(result);
                 monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
             }
@@ -185,21 +190,29 @@ public final class UserAgentManager extends UntypedActor {
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
         String host = ((SipURI)sipServletMessage.getTo().getURI()).getHost();
         String port = String.valueOf(((SipURI)sipServletMessage.getTo().getURI()).getPort());
-        logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration");
+        String transport = ((SipURI) sipServletMessage.getTo().getURI()).getTransportParam();
+        if(logger.isDebugEnabled()) {
+            logger.debug("Error response for the OPTIONS to: "+sipServletMessage.getFrom().toString()+" will remove registration");
+        }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
         List<Registration> registrations = regDao.getRegistrations(user);
         if (registrations != null) {
             Iterator<Registration> iter = registrations.iterator();
+            SipURI regLocation = null;
             while (iter.hasNext()) {
                 Registration reg = iter.next();
-                String locationToRemove = "sip:" + user + "@" + host + ":" + port;
+                try {
+                    regLocation = (SipURI) factory.createURI(reg.getLocation());
+                } catch (ServletParseException e) {}
 
-                if (reg.getAddressOfRecord().equalsIgnoreCase(locationToRemove)) {
-                    logger.info("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
+                if (regLocation != null && (reg.getAddressOfRecord().equalsIgnoreCase(regLocation.toString()) || reg.getLocation().equalsIgnoreCase(regLocation.toString()))) {
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Registration: " + reg.getLocation() + " failed to response to OPTIONS and will be removed");
+                    }
+
                     regDao.removeRegistration(reg);
                     monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
                 }
-
             }
         }
     }
@@ -252,7 +265,9 @@ public final class UserAgentManager extends UntypedActor {
         ping.setRequestURI(uri);
         final SipSession session = ping.getSession();
         session.setHandler("UserAgentManager");
-        logger.debug("About to send OPTIONS keepalive to: "+to);
+        if(logger.isDebugEnabled()) {
+            logger.debug("About to send OPTIONS keepalive to: "+to);
+        }
         try {
             ping.send();
         } catch (IOException e) {
@@ -317,10 +332,14 @@ public final class UserAgentManager extends UntypedActor {
         final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
         if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null && !initialPortBeforeLB.isEmpty()) {
-            logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
+            if(logger.isInfoEnabled()) {
+                logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
+            }
             patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
         } else {
-            logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
+            if(logger.isInfoEnabled()) {
+                logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
+            }
             patch(uri, ip, port);
         }
 
@@ -355,17 +374,23 @@ public final class UserAgentManager extends UntypedActor {
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
             monitoringService.tell(new UserRegistration(user, address, false), self());
-            logger.info("The user agent manager unregistered " + user + " at address "+address);
+            if(logger.isInfoEnabled()) {
+                logger.info("The user agent manager unregistered " + user + " at address "+address);
+            }
         } else {
             monitoringService.tell(new UserRegistration(user, address, true), self());
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
-                logger.info("The user agent manager updated " + user + " at address " + address);
+                if(logger.isInfoEnabled()) {
+                    logger.info("The user agent manager updated " + user + " at address " + address);
+                }
             } else {
                 // Add registration since it doesn't exists on the DB
                 registrations.addRegistration(registration);
-                logger.info("The user agent manager registered " + user + " at address " + address);
+                if(logger.isInfoEnabled()) {
+                    logger.info("The user agent manager registered " + user + " at address " + address);
+                }
             }
             response.setHeader("Contact", contact(uri, ttl));
         }

@@ -54,7 +54,7 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
             secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Clients");
             Client client = dao.getClient(new Sid(sid));
             if (client != null) {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
+               // secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
             }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();

@@ -4,11 +4,13 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import gov.nist.javax.sip.header.ContentType;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -24,6 +26,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
 
+import javax.sip.Dialog;
+import javax.sip.SipException;
 import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
 import javax.sip.message.Request;
@@ -359,7 +363,7 @@ public class TestDialVerbPartTwo {
         Map<String, String> statusCallbacks = new HashMap<String,String>();
 
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
-        assertTrue(requests.size()==4);
+        assertTrue(requests.size()==3);
 
 //        for (LoggedRequest loggedRequest : requests) {
 //            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
@@ -579,7 +583,7 @@ public class TestDialVerbPartTwo {
         logger.info("About to check the Status Callback Requests");
         Map<String, String> statusCallbacks = new HashMap<String,String>();
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
-        assertTrue(requests.size() == 4);
+        assertTrue(requests.size() == 3);
 
 //        for (LoggedRequest loggedRequest : requests) {
 //            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
@@ -597,6 +601,177 @@ public class TestDialVerbPartTwo {
 //            String key = iter.next();
 //            assertTrue(statusCallbacks.get(key).equalsIgnoreCase("completed"));
 //        }
+    }
+
+    private String dialRecordWithActionRcml = "<Response><Record action=\"http://127.0.0.1:8090/recordAction\" method=\"GET\" finishOnKey=\"*\" maxLength=\"10\" playBeep=\"true\"/></Response>";
+    @Test //Test case for github issue 859
+    public synchronized void testRecordWithActionAndStatusCallbackForAppWithDisconnectFromBob() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialRecordWithActionRcml)));
+
+        stubFor(get(urlPathEqualTo("/recordAction"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(sendSmsActionRcml)));
+
+        stubFor(get(urlPathMatching("/StatusCallBack.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcommWithStatusCallback, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        //Here we have Restcomm voice mail app for 10 sec
+        Thread.sleep(9000);
+
+        // hangup.
+        bobCall.disconnect();
+
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(60 * 1000));
+        assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
+        Request messageReceived = bobCall.getLastReceivedMessageRequest();
+        assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
+
+        Thread.sleep(5000);
+
+        JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(recordings);
+        double recordingDuration = ((JsonObject)recordings.get(0)).get("duration").getAsDouble();
+        assertTrue(recordingDuration <= 9.0 || recordingDuration <= 10.0);
+        assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
+
+        logger.info("About to check the Status Callback Requests");
+        Map<String, String> statusCallbacks = new HashMap<String,String>();
+
+        List<LoggedRequest> statusCallbackRequests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
+        assertTrue(statusCallbackRequests.size()==3);
+
+        List<LoggedRequest> recordActionRequests = findAll(getRequestedFor(urlPathMatching("/recordAction.*")));
+        assertTrue(recordActionRequests.size()==1);
+    }
+
+    @Test //Test case for github issue 859
+    public synchronized void testRecordWithActionAndStatusCallbackForAppWithBobSendsFinishKey() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialRecordWithActionRcml)));
+
+        stubFor(get(urlPathEqualTo("/recordAction"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(sendSmsActionRcml)));
+
+        stubFor(get(urlPathMatching("/StatusCallBack.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        // Phone2 register as alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare second phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcommWithStatusCallback, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        //Here we have Restcomm voice mail app for 10 sec
+        Thread.sleep(5000);
+
+        Dialog dialog = bobCall.getDialog();
+        String infoBody = "\n" +
+                "Signal=*\n" +
+                "Duration=28";
+        Request info = null;
+        try {
+            info = dialog.createRequest(Request.INFO);
+        } catch (SipException e) {
+            e.printStackTrace();
+        }
+        ContentType contentType = new ContentType();
+        contentType.setContentType("application");
+        contentType.setContentSubType("dtmf-relay");
+        info.setContent(infoBody.getBytes(), contentType);
+        String ruri = info.getRequestURI().toString();
+
+        SipTransaction infoTransaction = bobPhone.sendRequestWithTransaction(info, false, dialog);
+        assertNotNull(infoTransaction);
+
+        bobCall.listenForDisconnect();
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        bobCall.listenForMessage();
+        assertTrue(bobCall.waitForMessage(60 * 1000));
+        assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
+        Request messageReceived = bobCall.getLastReceivedMessageRequest();
+        assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
+
+        Thread.sleep(5000);
+
+        JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(recordings);
+        double recordingDuration = ((JsonObject)recordings.get(0)).get("duration").getAsDouble();
+        assertTrue(recordingDuration <= 9.0 || recordingDuration <= 10.0);
+        assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
+
+        logger.info("About to check the Status Callback Requests");
+        Map<String, String> statusCallbacks = new HashMap<String,String>();
+
+        List<LoggedRequest> statusCallbackRequests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
+        assertTrue(statusCallbackRequests.size()==3);
+
+        List<LoggedRequest> recordActionRequests = findAll(getRequestedFor(urlPathMatching("/recordAction.*")));
+        assertTrue(recordActionRequests.size()==1);
     }
 
     private String dialNumberRcml = "<Response><Dial callerId=\"+13055872294\"><Number url=\"http://127.0.0.1:8080/restcomm/hello-play.xml\">131313</Number></Dial></Response>";

@@ -70,14 +70,18 @@ public class BuildService {
     }
 
     private void buildNode(Node node, String projectName) throws StorageException {
-        logger.debug("Building module " + node.getName() );
+        if(logger.isDebugEnabled()) {
+            logger.debug("Building module " + node.getName() );
+        }
 
         // TODO sanitize node name!
 
         FsProjectStorage.storeNodeStepnames(node, projectName, workspaceStorage);
         // process the steps one-by-one
         for (Step step : node.getSteps()) {
-            logger.debug("Building step " + step.getKind() + " - " + step.getName() );
+            if(logger.isDebugEnabled()) {
+                logger.debug("Building step " + step.getKind() + " - " + step.getName() );
+            }
             FsProjectStorage.storeNodeStep(step, node, projectName, workspaceStorage);
         }
     }

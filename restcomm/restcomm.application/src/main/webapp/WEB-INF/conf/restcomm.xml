@@ -74,7 +74,7 @@
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
 		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set.
-		     Default valur false so call are routed through LB-->
+		     Default value false so call are routed through LB-->
 		<bypass-lb-for-clients>false</bypass-lb-for-clients>
 
 		<!-- Set to true so Restcomm will send 100 Trying on initial Request-->
@@ -151,6 +151,7 @@
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
+				<permission>RestComm:*:Usage</permission>
 				<permission>RestComm:Create,Read:Organizations</permission>
 			</role>
 			<role name="Organization Administrator">
@@ -172,6 +173,7 @@
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
+				<permission>RestComm:*:Usage</permission>
 				<permission>RestComm:*:Organizations</permission>
 			</role>
 		</security-roles>

@@ -2,20 +2,26 @@ package org.mobicents.servlet.restcomm.rvd.model;
 
 public class RvdConfig {
     private String workspaceLocation;
+    private String workspaceBackupLocation;
     private String sslMode;
     private String restcommBaseUrl;
 
     public RvdConfig() {
     }
 
-    public RvdConfig(String workspaceLocation, String restcommPublicIp, String sslMode) {
+    public RvdConfig(String workspaceLocation, String workspaceBackupLocation, String restcommPublicIp, String sslMode) {
         super();
         this.workspaceLocation = workspaceLocation;
+        this.workspaceBackupLocation = workspaceBackupLocation;
         this.sslMode = sslMode;
     }
 
     public String getWorkspaceLocation() {
         return workspaceLocation;
+    }
+
+    public String getWorkspaceBackupLocation() {
+        return workspaceBackupLocation;
     }
 
     public String getSslMode() {
