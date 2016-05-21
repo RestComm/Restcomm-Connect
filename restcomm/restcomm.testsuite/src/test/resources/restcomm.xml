@@ -136,6 +136,9 @@
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
 			</role>
+			<role name="Unprivileged">
+				<permission>RestComm:Read:Accounts</permission>
+			</role>
 		</security-roles>
 	</runtime-settings>
 

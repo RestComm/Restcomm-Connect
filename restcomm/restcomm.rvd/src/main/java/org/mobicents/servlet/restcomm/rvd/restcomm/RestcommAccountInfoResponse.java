@@ -31,6 +31,7 @@ public class RestcommAccountInfoResponse {
     String friendly_name;
     String email_address;
     String status;
+    String role;
 
     public RestcommAccountInfoResponse() {
         // TODO Auto-generated constructor stub
@@ -51,4 +52,6 @@ public class RestcommAccountInfoResponse {
     public String getStatus() {
         return status;
     }
+
+    public String getRole() { return role; }
 }

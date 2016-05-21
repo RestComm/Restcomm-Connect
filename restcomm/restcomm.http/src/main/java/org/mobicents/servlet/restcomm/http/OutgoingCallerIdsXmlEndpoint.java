@@ -54,7 +54,7 @@ public final class OutgoingCallerIdsXmlEndpoint extends OutgoingCallerIdsEndpoin
             secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:OutgoingCallerIds");
             OutgoingCallerId oci = dao.getOutgoingCallerId(new Sid(sid));
             if (oci != null) {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(oci.getAccountSid()));
+               // secureLevelControl(accountsDao, accountSid, String.valueOf(oci.getAccountSid()));
             }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
