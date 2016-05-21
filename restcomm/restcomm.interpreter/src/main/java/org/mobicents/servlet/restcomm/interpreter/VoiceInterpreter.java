@@ -192,6 +192,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ConferenceStateChanged.State conferenceState;
     private boolean muteCall;
     private boolean startConferenceOnEnter = true;
+    private boolean endConferenceOnExit = false;
     private ActorRef confSubVoiceInterpreter;
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
@@ -2203,9 +2204,37 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conferenceDetailRecord = conferenceBuilder.build();
                 conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
             }
-            //updating conferenceSid in cdr and adding new record in conference table
+            // parse mute
+            attribute = child.attribute("muted");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    muteCall = Boolean.parseBoolean(value);
+                }
+            }
+            // parse startConferenceOnEnter.
+            attribute = child.attribute("startConferenceOnEnter");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    startConferenceOnEnter = Boolean.parseBoolean(value);
+                }
+            }
+            // Parse "endConferenceOnExit"
+            attribute = child.attribute("endConferenceOnExit");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    endConferenceOnExit = Boolean.parseBoolean(value);
+                }
+            }
+            
+            //updating conferenceSid and othe conference related info in cdr
             if (callRecord != null) {
                 callRecord = callRecord.setConferenceSid(conferenceSid);
+                callRecord = callRecord.setMuted(muteCall);
+                callRecord = callRecord.setStartConferenceOnEnter(startConferenceOnEnter);
+                callRecord = callRecord.setEndConferenceOnExit(endConferenceOnExit);
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 records.updateCallDetailRecord(callRecord);
             }
@@ -2222,27 +2251,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final NotificationsDao notifications = storage.getNotificationsDao();
             final Tag child = conference(verb);
 
-            // Mute
-            Attribute attribute = child.attribute("muted");
-            if (attribute != null) {
-                final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
-                    muteCall = Boolean.parseBoolean(value);
-                }
-            }
-
             if (muteCall) {
                 final Mute mute = new Mute();
                 call.tell(mute, source);
-            }
-
-            // Parse start conference.
-            attribute = child.attribute("startConferenceOnEnter");
-            if (attribute != null) {
-                final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
-                    startConferenceOnEnter = Boolean.parseBoolean(value);
-                }
             }
 
             if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
@@ -2266,7 +2277,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     URI waitUrl = new URL(
                             "http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav")
                             .toURI();
-                    attribute = child.attribute("waitUrl");
+                    Attribute attribute = child.attribute("waitUrl");
                     if (attribute != null) {
                         String value = attribute.value();
                         if (value != null && !value.isEmpty()) {
@@ -2326,8 +2337,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
                 final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
                 records.updateConferenceDetailRecord(conferenceDetailRecord);
-            }else{
-                logger.info("unable to change state on conferencing");
             }
             // Set timer.
             final int timeLimit = timeLimit(verb);
@@ -2468,17 +2477,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // If the call is in a conference remove it.
             if (conference != null) {
-                // Parse "endConferenceOnExit"
-                boolean endOnExit = false;
-                final Tag child = conference(verb);
-                Attribute attribute = child.attribute("endConferenceOnExit");
-
-                if (attribute != null) {
-                    final String value = attribute.value();
-                    if (value != null && !value.isEmpty()) {
-                        endOnExit = Boolean.parseBoolean(value);
-                    }
-                }
 
                 // Stop Observing the conference
                 conference.tell(new StopObserving(super.source), null);
@@ -2508,8 +2506,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     conference.tell(play, source);
                 }
                 logger.info("################## conferenceState.name(): "+conferenceState.name());
-                logger.info("endOnExit: "+endOnExit+"conferenceInfo.participants().isEmpty(): "+conferenceInfo.participants().isEmpty());
-                if (endOnExit) {
+                logger.info("endOnExit: "+endConferenceOnExit+"conferenceInfo.participants().isEmpty(): "+conferenceInfo.participants().isEmpty());
+                if (endConferenceOnExit) {
                     // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
                     conference.tell(stop, super.source);
