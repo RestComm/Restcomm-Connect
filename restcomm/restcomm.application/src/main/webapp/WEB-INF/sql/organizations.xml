@@ -22,7 +22,7 @@
   </select>
   
   <delete id="removeOrganization" parameterType="string">
-    DELETE FROM "restcomm_organizations" WHERE "sid"=#{sid};
+    DELETE FROM "restcomm_organizations" WHERE "sid"=#{sid} AND "sid" &lt;&gt; 'ORec3515ebea5243b6bde0444d84b05b80';
   </delete>
   
   <update id="updateOrganization" parameterType="map">
