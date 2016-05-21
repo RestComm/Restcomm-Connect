@@ -2505,8 +2505,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final Play play = new Play(uri, 1);
                     conference.tell(play, source);
                 }
-                logger.info("################## conferenceState.name(): "+conferenceState.name());
-                logger.info("endOnExit: "+endConferenceOnExit+"conferenceInfo.participants().isEmpty(): "+conferenceInfo.participants().isEmpty());
                 if (endConferenceOnExit) {
                     // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
@@ -2541,14 +2539,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // Stop the interpreter.
             postCleanup();
-            logger.info("################## conferenceState.name(): "+conferenceState.name());
         }
     }
 
 
     @Override
     public void postStop() {
-        logger.info("################## conferenceState.name(): "+conferenceState.name());
         if (!fsm.state().equals(uninitialized)) {
             if(logger.isInfoEnabled()) {
                 logger.info("VoiceIntepreter: " + self().path()
