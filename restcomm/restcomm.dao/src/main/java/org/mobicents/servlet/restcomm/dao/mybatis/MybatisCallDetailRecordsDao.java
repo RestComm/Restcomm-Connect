@@ -26,6 +26,7 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.readInteger;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readUri;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeBigDecimal;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeDateTime;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
@@ -246,9 +247,12 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final String callerName = readString(map.get("caller_name"));
         final URI uri = readUri(map.get("uri"));
         final String callPath = readString(map.get("call_path"));
+        final Boolean muted = readBoolean(map.get("muted"));
+        final Boolean startConferenceOnEnter = readBoolean(map.get("start_conference_on_enter"));
+        final Boolean endConferenceOnExit = readBoolean(map.get("end_conference_on_exit"));
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
                 startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName,
-                uri, callPath, ringDuration);
+                uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     private Map<String, Object> toMap(final CallDetailRecord cdr) {
@@ -276,6 +280,9 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         map.put("caller_name", cdr.getCallerName());
         map.put("uri", writeUri(cdr.getUri()));
         map.put("call_path", cdr.getCallPath());
+        map.put("muted", cdr.getCallPath());
+        map.put("start_conference_on_enter", cdr.getStartConferenceOnEnter());
+        map.put("end_conference_on_exit", cdr.getEndConferenceOnExit());
         return map;
     }
 }
