@@ -130,7 +130,10 @@ CREATE TABLE "restcomm_call_detail_records" (
 "forwarded_from" VARCHAR(15),
 "caller_name" VARCHAR(30),
 "uri" LONGVARCHAR NOT NULL,
-"ring_duration" INT
+"ring_duration" INT, 
+"muted" BOOLEAN, 
+"start_conference_on_enter" BOOLEAN,
+"end_conference_on_exit" BOOLEAN
 );
 
 CREATE TABLE "restcomm_conference_detail_records" (
