@@ -247,4 +247,14 @@ public class RvdConfiguration {
             return true;
         return false;
     }
+
+    /*
+     * Returns a relative url to the base of the application service. Controllers are located under it.
+     * Currently hardcoded to /restcomm-rvd/services/apps/
+     *
+     * @return relative url to the application service
+     */
+    public String getApplicationsRelativeUrl() {
+        return "/restcomm-rvd/services/apps";
+    }
 }

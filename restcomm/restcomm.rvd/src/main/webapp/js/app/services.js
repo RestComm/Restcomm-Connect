@@ -862,4 +862,8 @@ angular.module('Rvd').factory('fileRetriever', function (Blob, FileSaver, $http)
 	}
 });
 
+// keeps various configuration settings that we need to control from a single point. Fetching from server is also possible.
+angular.module('Rvd').service('RvdConfiguration', function () {
+    this.projectsRootPath = '/restcomm-rvd/services/projects';
+});
 

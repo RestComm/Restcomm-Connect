@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -16,6 +17,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +51,11 @@ public class AccountsEndpointTest {
     private String newAdminAuthToken = "8e70383c69f7a3b7ea3f71b02f3e9731";
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
+    private String unprivilegedSid = "AC00000000000000000000000000000000";
+    private String unprivilegedUsername = "unprivileged@company.com";
+    private String unprivilegedAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String organizationSid = "ORec3515ebea5243b6bde0444d84b05b80";
+
 
 //    @Before
 //    public void before() {
@@ -154,6 +160,15 @@ public class AccountsEndpointTest {
 
         assertTrue(account1.toString().equals(account2.toString()));
 
+    }
+
+    /**
+     * Test access without administrator type of access. Instead a common role and permissions is used.
+     */
+    @Test
+    public void testAccountAcccessUsingRoles() {
+        ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(),unprivilegedUsername, unprivilegedAuthToken, unprivilegedSid);
+        Assert.assertEquals(200,response.getStatus());
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
