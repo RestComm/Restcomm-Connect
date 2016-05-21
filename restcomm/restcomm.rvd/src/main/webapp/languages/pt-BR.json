@@ -89,7 +89,7 @@
 	"dialStepClientDestinationInputTooltip": "Discar para o cliente",
 	"dialStepConferenceInputPlaceholder": "TRANSLATE: My Conference Room",
 	"dialStepConferenceInputTooltip": "Discar para a conferência",
-	"dialStepConferenceWaitTooltip": "Um modulo para executar durante o tempo de espera para entrar na conferência. Preencha com os passos 'Reproduzir' ou 'Falar'",
+	"dialStepConferenceWaitTooltip": "RETRANSLATE - A module or URL to play while waiting to be added to the conference. If URL is speficied, both RCML and .wav resources can be targeted. Use it with Start-on-enter set to false",
 	"dialStepConferenceWaitLabel": "Durante a espera",
 	"dialStepConferenceMutedTooltip": "Especifique qual participante pode falar na conferência",
 	"dialStepConferenceMutedLabel": "Mudo",

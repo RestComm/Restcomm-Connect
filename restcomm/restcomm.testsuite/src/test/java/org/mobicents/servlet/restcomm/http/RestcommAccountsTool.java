@@ -6,6 +6,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
@@ -114,5 +115,16 @@ public class RestcommAccountsTool {
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
         return jsonResponse;
+    }
+
+    /*
+        Returns an account response so that the invoker can make decisions on the status code etc.
+     */
+    public ClientResponse getAccountResponse(String deploymentUrl, String username, String authtoken, String accountSid) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
+        WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
+        ClientResponse response = webResource.path(accountSid).get(ClientResponse.class);
+        return response;
     }
 }

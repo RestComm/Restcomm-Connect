@@ -49,9 +49,9 @@ rcMod.controller('OutgoingCtrl', function($scope, $resource, $modal, $dialog, Se
   $scope.outgoingList = RCommOutgoingCallerIDs.query({accountSid:$scope.sid});
 });
 
-var OutgoingDetailsCtrl = function($scope, $routeParams, $resource, $location, $dialog, $modalInstance, SessionService, RCommOutgoingCallerIDs, Notifications) {
+var OutgoingDetailsCtrl = function($scope, $stateParams, $resource, $location, $dialog, $modalInstance, SessionService, RCommOutgoingCallerIDs, Notifications) {
 
-  if($scope.outgoingSid = $routeParams.outgoingSid) {
+  if($scope.outgoingSid = $stateParams.outgoingSid) {
     $scope.sid = SessionService.get("sid");
 
   } // or registering a new one ?

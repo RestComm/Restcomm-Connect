@@ -22,14 +22,8 @@ package org.mobicents.servlet.restcomm.http;
 import java.net.URI;
 
 import javax.ws.rs.core.MultivaluedMap;
-
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.subject.Subject;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -110,6 +104,7 @@ public abstract class AbstractEndpoint {
         return hasVoiceCallerIdLookup;
     }
 
+/*
     protected void secure(final Account account, final String permission) throws AuthorizationException {
         final Subject subject = SecurityUtils.getSubject();
         if (account != null && account.getSid() != null) {
@@ -125,20 +120,7 @@ public abstract class AbstractEndpoint {
             throw new AuthorizationException();
         }
     }
-
-    protected void secureLevelControl(AccountsDao accountsDao, String accountSid, String referenceAccountSid) {
-        String sidPrincipal = String.valueOf(SecurityUtils.getSubject().getPrincipal());
-        if (!sidPrincipal.equals(accountSid)) {
-            Account account = accountsDao.getAccount(new Sid(accountSid));
-            if (!sidPrincipal.equals(String.valueOf(account.getAccountSid()))) {
-                throw new AuthorizationException();
-            } else if (referenceAccountSid != null && !accountSid.equals(referenceAccountSid)) {
-                throw new AuthorizationException();
-            }
-        } else if (referenceAccountSid != null && !sidPrincipal.equals(referenceAccountSid)) {
-            throw new AuthorizationException();
-        }
-    }
+    */
 
     // A general purpose method to test incoming parameters for meaningful data
     protected boolean isEmpty(Object value) {
