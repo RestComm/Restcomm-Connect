@@ -407,15 +407,15 @@ public final class CallDetailRecord {
             this.callPath = callPath;
         }
 
-        public void setMuted(Boolean muted) {
+        public void setMuted(final Boolean muted) {
             this.muted = muted;
         }
 
-        public void setStartConferenceOnEnter(Boolean startConferenceOnEnter) {
+        public void setStartConferenceOnEnter(final Boolean startConferenceOnEnter) {
             this.startConferenceOnEnter = startConferenceOnEnter;
         }
 
-        public void setEndConferenceOnExit(Boolean endConferenceOnExit) {
+        public void setEndConferenceOnExit(final Boolean endConferenceOnExit) {
             this.endConferenceOnExit = endConferenceOnExit;
         }
     }
