@@ -56,14 +56,17 @@ public final class CallDetailRecord {
     private final String forwardedFrom;
     private final String callerName;
     private final URI uri;
-
     private final String callPath;
+    private final Boolean muted;
+    private final Boolean startConferenceOnEnter;
+    private final Boolean endConferenceOnExit;
 
     public CallDetailRecord(final Sid sid, final String instanceId, final Sid parentCallSid, final Sid conferenceSid, final DateTime dateCreated, final DateTime dateUpdated,
             final Sid accountSid, final String to, final String from, final Sid phoneNumberSid, final String status,
             final DateTime startTime, final DateTime endTime, final Integer duration, final BigDecimal price,
             final Currency priceUnit, final String direction, final String answeredBy, final String apiVersion,
-            final String forwardedFrom, final String callerName, final URI uri, final String callPath,final Integer ringDuration) {
+            final String forwardedFrom, final String callerName, final URI uri, final String callPath,final Integer ringDuration,
+            final Boolean muted, final Boolean startConferenceOnEnter, final Boolean endConferenceOnExit) {
         super();
         this.sid = sid;
         this.instanceId = instanceId;
@@ -89,6 +92,9 @@ public final class CallDetailRecord {
         this.uri = uri;
         this.callPath = callPath;
         this.ringDuration = ringDuration;
+        this.muted = muted;
+        this.startConferenceOnEnter = startConferenceOnEnter;
+        this.endConferenceOnExit = endConferenceOnExit;
     }
 
     public static Builder builder() {
@@ -189,52 +195,64 @@ public final class CallDetailRecord {
         return callPath;
     }
 
+    public Boolean isMuted() {
+        return muted;
+    }
+
+    public Boolean getStartConferenceOnEnter() {
+        return startConferenceOnEnter;
+    }
+
+    public Boolean getEndConferenceOnExit() {
+        return endConferenceOnExit;
+    }
+
     public CallDetailRecord setStatus(final String status) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     public CallDetailRecord setStartTime(final DateTime startTime) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     public CallDetailRecord setEndTime(final DateTime endTime) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     public CallDetailRecord setDuration(final Integer duration) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     public CallDetailRecord setRingDuration(final Integer ringDuration) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     public CallDetailRecord setPrice(final BigDecimal price) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     public CallDetailRecord setAnsweredBy(final String answeredBy) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     public CallDetailRecord setConferenceSid(final Sid conferenceSid) {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, DateTime.now(), accountSid, to, from, phoneNumberSid,
                 status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                callerName, uri, callPath, ringDuration);
+                callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
     }
 
     @NotThreadSafe
@@ -262,8 +280,10 @@ public final class CallDetailRecord {
         private String forwardedFrom;
         private String callerName;
         private URI uri;
-
         private String callPath;
+        private Boolean muted;
+        private Boolean startConferenceOnEnter;
+        private Boolean endConferenceOnExit;
 
         private Builder() {
             super();
@@ -290,12 +310,15 @@ public final class CallDetailRecord {
             uri = null;
             callPath = null;
             ringDuration = null;
+            muted = null;
+            startConferenceOnEnter = null;
+            endConferenceOnExit = null;
         }
 
         public CallDetailRecord build() {
             return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid,
                     status, startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom,
-                    callerName, uri, callPath, ringDuration);
+                    callerName, uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit);
         }
 
         public void setSid(final Sid sid) {
@@ -382,6 +405,18 @@ public final class CallDetailRecord {
 
         public void setCallPath(final String callPath) {
             this.callPath = callPath;
+        }
+
+        public void setMuted(Boolean muted) {
+            this.muted = muted;
+        }
+
+        public void setStartConferenceOnEnter(Boolean startConferenceOnEnter) {
+            this.startConferenceOnEnter = startConferenceOnEnter;
+        }
+
+        public void setEndConferenceOnExit(Boolean endConferenceOnExit) {
+            this.endConferenceOnExit = endConferenceOnExit;
         }
     }
 }
