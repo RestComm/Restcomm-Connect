@@ -128,7 +128,7 @@ public final class ConferenceParticipantConverter extends AbstractConverter impl
     }
 
     private void writeEndConferenceOnEnter(final Boolean endConferenceOnEnter, final JsonObject object) {
-        object.addProperty("start_conference_on_enter", endConferenceOnEnter);
+        object.addProperty("end_conference_on_enter", endConferenceOnEnter);
     }
 
     private void writeConferenceSid(final Sid sid, final HierarchicalStreamWriter writer) {
