@@ -22,9 +22,9 @@ package org.mobicents.servlet.restcomm.http.converter;
 import java.lang.reflect.Type;
 
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
+import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -38,9 +38,12 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  */
 @ThreadSafe
 public final class ConferenceDetailRecordConverter extends AbstractConverter implements JsonSerializer<ConferenceDetailRecord> {
-
+    private final String apiVersion;
+    private final String rootUri;
     public ConferenceDetailRecordConverter(final Configuration configuration) {
         super(configuration);
+        apiVersion = configuration.getString("api-version");
+        rootUri = StringUtils.addSuffixIfNotPresent(configuration.getString("root-uri"), "/");
     }
 
     @SuppressWarnings("rawtypes")
@@ -80,41 +83,33 @@ public final class ConferenceDetailRecordConverter extends AbstractConverter imp
         return object;
     }
 
-    private void writeEndTime(final DateTime endTime, final HierarchicalStreamWriter writer) {
-        writer.startNode("EndTime");
-        if (endTime != null) {
-            writer.setValue(endTime.toString());
-        }
-        writer.endNode();
-    }
-
-    private void writeEndTime(final DateTime endTime, final JsonObject object) {
-        if (endTime != null) {
-            object.addProperty("end_time", endTime.toString());
-        }
-    }
-
-    private void writeStartTime(final DateTime startTime, final HierarchicalStreamWriter writer) {
-        writer.startNode("StartTime");
-        if (startTime != null) {
-            writer.setValue(startTime.toString());
-        }
-        writer.endNode();
-    }
-
-    private void writeStartTime(final DateTime startTime, final JsonObject object) {
-        if (startTime != null) {
-            object.addProperty("start_time", startTime.toString());
-        }
-    }
-
     private void writeSubResources(final ConferenceDetailRecord cdr, final HierarchicalStreamWriter writer) {
         writer.startNode("SubresourceUris");
+        writeParticipants(cdr, writer);
         writer.endNode();
     }
 
     private void writeSubResources(final ConferenceDetailRecord cdr, final JsonObject object) {
         final JsonObject other = new JsonObject();
+        writeParticipants(cdr, object);
         object.add("subresource_uris", other);
+    }
+
+    private void writeParticipants(final ConferenceDetailRecord cdr, final HierarchicalStreamWriter writer) {
+        writer.startNode("Participants");
+        writer.setValue(prefix(cdr) + "/Participants");
+        writer.endNode();
+    }
+
+    private void writeParticipants(final ConferenceDetailRecord cdr, final JsonObject object) {
+        object.addProperty("recordings", prefix(cdr) + "/Participants");
+    }
+
+    private String prefix(final ConferenceDetailRecord cdr) {
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append(rootUri).append(apiVersion).append("/Accounts/");
+        buffer.append(cdr.getAccountSid().toString()).append("/Conferences/");
+        buffer.append(cdr.getSid());
+        return buffer.toString();
     }
 }

@@ -698,7 +698,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         } else if (ConferenceStateChanged.class.equals(klass)) {
             final ConferenceStateChanged event = (ConferenceStateChanged) message;
-            logger.info("ConferenceStateChanged caught with event state: "+event.state());
             switch (event.state()) {
                 case RUNNING_MODERATOR_PRESENT:
                     conferenceState = event.state();
@@ -2349,14 +2348,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("FinishConferencing is called");
             if (message instanceof ReceiveTimeout) {
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
-            logger.info("-1 $$$$$$$$$$$$$$$$$$$$$$$$$ "+message.getClass());
 
             // Clean up
             if (message instanceof ConferenceStateChanged) {
@@ -2366,7 +2363,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
                 }
-                logger.info("0 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState + " confStateChanged.state() "+ confStateChanged.state());
                 // update conference state in DB
                 if (conferenceDetailRecord != null) {
                     conferenceDetailRecord = conferenceDetailRecord.setStatus(confStateChanged.state().name());
@@ -2473,7 +2469,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // If the call is in a conference remove it.
             if (conference != null) {
-                logger.info("1 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
                 // Stop Observing the conference
                 conference.tell(new StopObserving(super.source), null);
 
@@ -2508,7 +2503,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else {
                     conference.tell(new RemoveParticipant(call), source);
                 }
-                logger.info("2 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
             }
 
             if (!liveCallModification) {
@@ -2522,7 +2516,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // so we can start processing a new RestComm application
                 call.tell(new StopMediaGroup(), super.source);
             }
-            logger.info("3 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
@@ -2530,23 +2523,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context.stop(mailerNotify);
             if (mailerService != null)
                 context.stop(mailerService);
-            logger.info("4 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
             context.stop(asrService);
             context.stop(faxService);
             context.stop(cache);
             context.stop(synthesizer);
 
-            logger.info("5 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
             // Stop the interpreter.
             postCleanup();
-            logger.info("6 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
         }
     }
 
 
     @Override
     public void postStop() {
-        logger.info("7 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
         if (!fsm.state().equals(uninitialized)) {
             if(logger.isInfoEnabled()) {
                 logger.info("VoiceIntepreter: " + self().path()
