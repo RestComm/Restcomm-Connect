@@ -19,14 +19,16 @@ App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle, keepAli
 	});
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
-	    console.log("switching states: " + fromState.name + " -> " + toState.name);
+	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
 	});
 
 	$rootScope.$on('$stateChangeError',  function(event, toState, toParams, fromState, fromParams, error){
-	    console.log("error switching states");
+	    event.preventDefault();
+	    console.log("Error switching state: " + fromState.name + " -> " + toState.name);
 	    // see AuthService.checkAccess() for error definitions
-	    if (error == "NEED_LOGIN")
+	    if (error == "NEED_LOGIN") {
 	        $state.go('root.public.login');
+	    }
 	    else
 	    if (error == "RVD_ACCESS_OUT_OF_SYNC") {
 	        notifications.put({type:'error', message:'Internal error. RVD authentication is out of sync.'});
