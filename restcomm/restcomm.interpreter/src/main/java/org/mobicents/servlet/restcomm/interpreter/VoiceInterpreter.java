@@ -111,7 +111,6 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashMap;
@@ -194,6 +193,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     protected boolean playWaitUrlPending = false;
     Tag conferenceVerb;
     List<URI> conferenceWaitUris;
+    private boolean playMusicForConference = false;
 
     // Call bridging
     private final ActorRef bridgeManager;
@@ -418,6 +418,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             logger.error("URISyntaxException while trying to resolve Cache URI: " + e);
         }
         uri = uri + accountId.toString();
+        playMusicForConference = Boolean.parseBoolean(runtime.getString("play-music-for-conference","false"));
         this.cache = cache(path, uri);
         this.downloader = downloader();
         this.monitoring = monitoring;
@@ -2281,6 +2282,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
 
+            if (logger.isInfoEnabled()) {
+                logger.info("At conferencing state, playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+            }
+            if (playMusicForConference && startConferenceOnEnter) {
+                //playMusicForConference is true, take over control of startConferenceOnEnter
+                if (conferenceInfo.participants().size() == 1) {
+                    startConferenceOnEnter = false;
+                } else  if (conferenceInfo.participants().size() > 1) {
+                    startConferenceOnEnter = true;
+                }
+            }
+
             if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
                 if (!muteCall) {
                     final Mute mute = new Mute();
@@ -2299,9 +2312,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 boolean playBackground = conferenceInfo.participants().size() == 1;
                 if (playBackground) {
                     // Parse wait url.
-                    URI waitUrl = new URL(
-                            "http://127.0.0.1:8080/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav")
-                            .toURI();
+                    URI waitUrl = new URI("/restcomm/music/electronica/teru_-_110_Downtempo_Electronic_4.wav");
                     attribute = child.attribute("waitUrl");
                     if (attribute != null) {
                         String value = attribute.value();
