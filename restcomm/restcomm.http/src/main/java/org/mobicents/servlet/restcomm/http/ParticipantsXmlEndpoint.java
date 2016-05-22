@@ -55,7 +55,7 @@ public final class ParticipantsXmlEndpoint extends ParticipantsEndpoint {
 
     @GET
     public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
-        return getParticipants(accountSid, conferenceSid, info, APPLICATION_XML_TYPE);
+        return getCalls(accountSid, conferenceSid, info, APPLICATION_XML_TYPE);
     }
 
 }
