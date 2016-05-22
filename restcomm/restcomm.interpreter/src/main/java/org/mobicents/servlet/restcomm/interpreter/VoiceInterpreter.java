@@ -707,6 +707,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 case COMPLETED:
                     conferenceState = event.state();
                     fsm.transition(message, finishConferencing);
+                    break;
                 default:
                     break;
             }
@@ -2327,12 +2328,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // XXX get record limit etc from dial verb
                     recordConference();
                 }
-            }
-            // update conference state in DB
-            if (conferenceDetailRecord != null) {
-                conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
-                final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
-                records.updateConferenceDetailRecord(conferenceDetailRecord);
+                // update conference state in DB
+                if (conferenceDetailRecord != null) {
+                    conferenceDetailRecord = conferenceDetailRecord.setStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.name());
+                    final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
+                    records.updateConferenceDetailRecord(conferenceDetailRecord);
+                }
             }
             // Set timer.
             final int timeLimit = timeLimit(verb);
@@ -2355,24 +2356,23 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
+            logger.info("-1 $$$$$$$$$$$$$$$$$$$$$$$$$ "+message.getClass());
 
             // Clean up
-            if (ConferenceStateChanged.class.equals(message)) {
+            if (message instanceof ConferenceStateChanged) {
                 // Destroy conference if state changed to completed (last participant in call)
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
                 }
-            }
-            if (conferenceDetailRecord != null) {
-                conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
-                final DateTime end = DateTime.now();
-                conferenceDetailRecord = conferenceDetailRecord.setEndTime(end);
-                final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
-                records.updateConferenceDetailRecord(conferenceDetailRecord);
-            }else{
-                logger.info("unable to change status on finishconferenencing");
+                logger.info("0 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState + " confStateChanged.state() "+ confStateChanged.state());
+                // update conference state in DB
+                if (conferenceDetailRecord != null) {
+                    conferenceDetailRecord = conferenceDetailRecord.setStatus(confStateChanged.state().name());
+                    final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
+                    records.updateConferenceDetailRecord(conferenceDetailRecord);
+                }
             }
             conference = null;
 
@@ -2473,7 +2473,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // If the call is in a conference remove it.
             if (conference != null) {
-
+                logger.info("1 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
                 // Stop Observing the conference
                 conference.tell(new StopObserving(super.source), null);
 
@@ -2508,6 +2508,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else {
                     conference.tell(new RemoveParticipant(call), source);
                 }
+                logger.info("2 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
             }
 
             if (!liveCallModification) {
@@ -2521,6 +2522,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // so we can start processing a new RestComm application
                 call.tell(new StopMediaGroup(), super.source);
             }
+            logger.info("3 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
 
             // Stop the dependencies.
             final UntypedActorContext context = getContext();
@@ -2528,19 +2530,23 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context.stop(mailerNotify);
             if (mailerService != null)
                 context.stop(mailerService);
+            logger.info("4 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
             context.stop(asrService);
             context.stop(faxService);
             context.stop(cache);
             context.stop(synthesizer);
 
+            logger.info("5 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
             // Stop the interpreter.
             postCleanup();
+            logger.info("6 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
         }
     }
 
 
     @Override
     public void postStop() {
+        logger.info("7 $$$$$$$$$$$$$$$$$$$$$$$$$ conference state: "+ conferenceState);
         if (!fsm.state().equals(uninitialized)) {
             if(logger.isInfoEnabled()) {
                 logger.info("VoiceIntepreter: " + self().path()

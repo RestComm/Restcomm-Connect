@@ -136,8 +136,8 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
         String status = info.getQueryParameters().getFirst("Status");
-        String startTime = info.getQueryParameters().getFirst("StartTime");
-        String endTime = info.getQueryParameters().getFirst("EndTime");
+        String dateCreated = info.getQueryParameters().getFirst("DateCreated");
+        String dateUpdated = info.getQueryParameters().getFirst("DateUpdated");
         String friendlyName = info.getQueryParameters().getFirst("FriendlyName");
 
         if (pageSize == null) {
@@ -156,7 +156,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
 
         ConferenceDetailRecordFilter filterForTotal;
         try {
-            filterForTotal = new ConferenceDetailRecordFilter(accountSid, status, startTime, endTime, friendlyName,
+            filterForTotal = new ConferenceDetailRecordFilter(accountSid, status, dateCreated, dateUpdated, friendlyName,
                     null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -170,7 +170,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
 
         ConferenceDetailRecordFilter filter;
         try {
-            filter = new ConferenceDetailRecordFilter(accountSid, status, startTime, endTime, friendlyName,
+            filter = new ConferenceDetailRecordFilter(accountSid, status, dateCreated, dateUpdated, friendlyName,
                     limit, offset);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
