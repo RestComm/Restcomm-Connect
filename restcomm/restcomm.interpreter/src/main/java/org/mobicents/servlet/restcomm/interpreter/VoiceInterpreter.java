@@ -2411,7 +2411,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             // Clean up
-            if (ConferenceStateChanged.class.equals(message)) {
+            if (message instanceof ConferenceStateChanged) {
                 // Destroy conference if state changed to completed (last participant in call)
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
