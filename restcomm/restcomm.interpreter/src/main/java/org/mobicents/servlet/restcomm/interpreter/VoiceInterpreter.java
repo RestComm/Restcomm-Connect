@@ -274,8 +274,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(sendingEmail, finished));
         transitions.add(new Transition(sendingEmail, finishDialing));
         transitions.add(new Transition(caching, finished));
+        transitions.add(new Transition(caching, conferencing));
         transitions.add(new Transition(caching, finishConferencing));
         transitions.add(new Transition(playing, ready));
+        transitions.add(new Transition(playing, finishConferencing));
         transitions.add(new Transition(playing, finished));
         transitions.add(new Transition(synthesizing, finished));
         transitions.add(new Transition(redirecting, ready));
@@ -358,6 +360,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(conferencing, finished));
         transitions.add(new Transition(conferencing, checkingCache));
         transitions.add(new Transition(conferencing, caching));
+        transitions.add(new Transition(conferencing, playing));
         transitions.add(new Transition(finishConferencing, ready));
         transitions.add(new Transition(finishConferencing, faxing));
         transitions.add(new Transition(finishConferencing, sendingEmail));
@@ -701,6 +704,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     conferenceState = event.state();
                     conferenceStateModeratorPresent(message);
                     break;
+                case COMPLETED:
+                    conferenceState = event.state();
+                    // At this point i think we should call finishConferencing,
+                    // who will tell conference center to destroy the conference.
+                    fsm.transition(message, finishConferencing);
+                    break;
                 default:
                     break;
             }
@@ -759,9 +768,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
                 if (playWaitUrlPending && play.equals(verb.name())) {
-                    URI waitUrl = response.get();
-                    playWaitUrl(waitUrl, self());
-                    playWaitUrlPending = false;
+                    fsm.transition(message, conferencing);
                     return;
                 }
                 //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
@@ -804,7 +811,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (Tag.class.equals(klass)) {
             // final Tag verb = (Tag) message;
             verb = (Tag) message;
-            if (conferencing.equals(state)) {
+            if (playWaitUrlPending) {
                 if (!(play.equals(verb.name()) || say.equals(verb.name()))) {
                     if (logger.isInfoEnabled()) {
                         logger.info("Tag for waitUrl is neither Play or Say");
@@ -2241,6 +2248,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
+            if (message instanceof DiskCacheResponse) {
+                URI waitUrl = ((DiskCacheResponse)message).get();
+                playWaitUrl(waitUrl, self());
+                playWaitUrlPending = false;
+                return;
+            }
             final NotificationsDao notifications = storage.getNotificationsDao();
             final Tag child = conference(verb);
             conferenceVerb = verb;
