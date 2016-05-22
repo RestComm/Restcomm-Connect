@@ -199,11 +199,11 @@ public final class CallDetailRecord {
         return muted;
     }
 
-    public Boolean getStartConferenceOnEnter() {
+    public Boolean isStartConferenceOnEnter() {
         return startConferenceOnEnter;
     }
 
-    public Boolean getEndConferenceOnExit() {
+    public Boolean isEndConferenceOnExit() {
         return endConferenceOnExit;
     }
 

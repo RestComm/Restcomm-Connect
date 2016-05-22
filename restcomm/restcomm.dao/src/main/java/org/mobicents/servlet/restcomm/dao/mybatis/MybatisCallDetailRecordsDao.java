@@ -281,8 +281,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         map.put("uri", writeUri(cdr.getUri()));
         map.put("call_path", cdr.getCallPath());
         map.put("muted", cdr.isMuted());
-        map.put("start_conference_on_enter", cdr.getStartConferenceOnEnter());
-        map.put("end_conference_on_exit", cdr.getEndConferenceOnExit());
+        map.put("start_conference_on_enter", cdr.isStartConferenceOnEnter());
+        map.put("end_conference_on_exit", cdr.isEndConferenceOnExit());
         return map;
     }
 }
