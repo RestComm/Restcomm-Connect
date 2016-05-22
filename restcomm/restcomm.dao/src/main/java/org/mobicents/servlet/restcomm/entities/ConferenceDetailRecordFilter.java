@@ -34,32 +34,32 @@ public class ConferenceDetailRecordFilter {
 
     private final String accountSid;
     private final String status;
-    private final Date startTime;
-    private final Date endTime;
+    private final Date dateCreated;
+    private final Date dateUpdated;
     private final String friendlyName;
     private final Integer limit;
     private final Integer offset;
 
-    public ConferenceDetailRecordFilter(String accountSid, String status, String startTime, String endTime,
+    public ConferenceDetailRecordFilter(String accountSid, String status, String dateCreated, String dateUpdated,
             String friendlyName, Integer limit, Integer offset) throws ParseException {
         this.accountSid = accountSid;
         this.status = status;
         this.friendlyName = friendlyName;
         this.limit = limit;
         this.offset = offset;
-        if (startTime != null) {
+        if (dateCreated != null) {
             SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = parser.parse(startTime);
-            this.startTime = date;
+            Date date = parser.parse(dateCreated);
+            this.dateCreated = date;
         } else
-            this.startTime = null;
+            this.dateCreated = null;
 
-        if (endTime != null) {
+        if (dateUpdated != null) {
             SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = parser.parse(endTime);
-            this.endTime = date;
+            Date date = parser.parse(dateUpdated);
+            this.dateUpdated = date;
         } else
-            this.endTime = null;
+            this.dateUpdated = null;
     }
 
     public String getSid() {
@@ -74,12 +74,12 @@ public class ConferenceDetailRecordFilter {
         return friendlyName;
     }
 
-    public Date getStartTime() {
-        return startTime;
+    public Date getDateCreated() {
+        return dateCreated;
     }
 
-    public Date getEndTime() {
-        return endTime;
+    public Date getDateUpdated() {
+        return dateUpdated;
     }
 
     public int getLimit() {

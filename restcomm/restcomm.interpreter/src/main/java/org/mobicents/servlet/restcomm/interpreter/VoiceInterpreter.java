@@ -66,11 +66,9 @@ import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
-import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
@@ -188,6 +186,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     // The conferencing stuff.
     private ActorRef conference;
+    private String conferenceFriendlyName;
     private ConferenceInfo conferenceInfo;
     private ConferenceStateChanged.State conferenceState;
     private boolean muteCall;
@@ -1515,6 +1514,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String name = child.text();
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
+                    conferenceFriendlyName = name;
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
                 } else {
@@ -2196,11 +2196,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 UriBuffer.append(conferenceSid);
                 final URI uri = URI.create(UriBuffer.toString());
                 conferenceBuilder.setUri(uri);
-
-                IncomingPhoneNumbersDao incomingPhoneNumbersDao = storage.getIncomingPhoneNumbersDao();
-                IncomingPhoneNumber incomingPhoneNumber = incomingPhoneNumbersDao.getIncomingPhoneNumber(callRecord.getTo());
-                if(incomingPhoneNumbersDao != null)
-                    conferenceBuilder.setFriendlyName(incomingPhoneNumber.getFriendlyName());
+                conferenceBuilder.setFriendlyName(conferenceFriendlyName);
                 conferenceDetailRecord = conferenceBuilder.build();
                 conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
             }
