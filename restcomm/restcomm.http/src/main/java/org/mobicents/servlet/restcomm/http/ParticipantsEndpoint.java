@@ -169,7 +169,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
 
-        String status = CallStateChanged.State.IN_PROGRESS.name();
+        String status = CallStateChanged.State.IN_PROGRESS.toString();
 
         if (pageSize == null) {
             pageSize = "50";
