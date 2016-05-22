@@ -43,13 +43,17 @@ angular.module('Rvd').factory('RestcommAuthenticationInterceptor', function ($in
         return $injector.invoke(function ($state, authentication) {
             if (config.url.startsWith('services/') || config.url.startsWith('/restcomm-rvd/services/')) {
                 if (authentication.getAuthHeader()) {
-                    // if the request is targeted towards RVD add authorization header
-                    config.headers.authorization = authentication.getAuthHeader();
+                    // if the request is targeted towards RVD add authorization header and there is no authorization header already
+                    delete config.headers.authorization; // mind the case insensitivity of headers
+                    delete config.headers.Authorization;
+                    config.headers.Authorization = authentication.getAuthHeader();
                 }
             } else
             if (config.url.startsWith('/restcomm/2012-04-24/')) {
                 if (authentication.getAuthHeader()) {
-                    config.headers.authorization = authentication.getAuthHeader();
+                    delete config.headers.authorization;   // mind the case insensitivity of headers
+                    delete config.headers.Authorization;
+                    config.headers.Authorization = authentication.getAuthHeader();
                 }
             }
             return config;

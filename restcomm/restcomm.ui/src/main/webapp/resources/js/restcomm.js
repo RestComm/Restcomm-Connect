@@ -41,9 +41,17 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         identity: function (IdentityConfig) {
             return IdentityConfig.getIdentity();
         },
-        uninitialized: function (AuthService) {
-            if (!AuthService.isUninitialized())
-                throw 'ACCOUNT_ALREADY_INITIALIZED';
+        uninitialized: function (AuthService,$q) {
+            try {
+                return $q.when(AuthService.checkAccess()).then(function () {
+                    throw 'ACCOUNT_ALREADY_INITIALIZED';
+                });
+            } catch (err) {
+                if (err == 'RESTCOMM_ACCOUNT_NOT_INITIALIZED')
+                    return; // ok, you're in the right place
+                else
+                    throw err; // raise again
+            }
         }
     }
   });
