@@ -47,13 +47,13 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
 import org.mobicents.servlet.restcomm.entities.OutgoingCallerId;
 import org.mobicents.servlet.restcomm.entities.OutgoingCallerIdList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.http.converter.OutgoingCallerIdConverter;
 import org.mobicents.servlet.restcomm.http.converter.OutgoingCallerIdListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -63,14 +63,13 @@ import org.mobicents.servlet.restcomm.util.StringUtils;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @NotThreadSafe
-public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
+public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
     protected OutgoingCallerIdsDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
 
     public OutgoingCallerIdsEndpoint() {
         super();
@@ -83,7 +82,6 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         dao = storage.getOutgoingCallerIdsDao();
-        accountsDao = storage.getAccountsDao();
         final OutgoingCallerIdConverter converter = new OutgoingCallerIdConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(OutgoingCallerId.class, converter);
@@ -120,8 +118,9 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getCallerId(final String accountSid, final String sid, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
+            secure(operatedAccount, "RestComm:Read:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -130,7 +129,8 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+                secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -148,7 +148,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     protected Response getCallerIds(final String accountSid, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -167,7 +167,7 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
             final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds");
-            secureLevelControl(accountsDao, accountSid, null);
+            //secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -190,8 +190,9 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
 
     protected Response updateOutgoingCallerId(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Modify:OutgoingCallerIds");
+            secure(operatedAccount, "RestComm:Modify:OutgoingCallerIds");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -200,7 +201,8 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+                //secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
+                secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }

@@ -81,6 +81,10 @@
 		<!-- Used only for testing. !!! Don't enable this for production -->
 		<send-trying-for-initial-requests>false</send-trying-for-initial-requests>
 
+		<!--Play background music for conference rooms with 1 participant even if startConference=true? Music will stop after the second participant joins-->
+		<!--Default value: false -->
+		<play-music-for-conference>false</play-music-for-conference>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
@@ -151,6 +155,7 @@
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
+				<permission>RestComm:*:Usage</permission>
 			</role>
 		</security-roles>
 	</runtime-settings>

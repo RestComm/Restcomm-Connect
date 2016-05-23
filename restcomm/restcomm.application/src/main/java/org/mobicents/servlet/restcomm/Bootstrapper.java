@@ -25,6 +25,7 @@ import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
@@ -258,7 +259,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Load the RestComm configuration file.
             Configuration xml = null;
             try {
-                xml = new XMLConfiguration(path);
+                XMLConfiguration xmlConfiguration = new XMLConfiguration();
+                xmlConfiguration.setDelimiterParsingDisabled(true);
+                xmlConfiguration.setAttributeSplittingDisabled(true);
+                xmlConfiguration.load(path);
+                xml = xmlConfiguration;
             } catch (final ConfigurationException exception) {
                 logger.error(exception);
             }
@@ -280,10 +285,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.error("ObjectInstantiationException during initialization: ", exception);
             }
             context.setAttribute(DaoManager.class.getName(), storage);
-            ShiroResources.getInstance().set(DaoManager.class, storage);
+            //ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
             RestcommConfiguration.createOnce(xml);
+            // Initialize identityContext
+            IdentityContext identityContext = new IdentityContext(xml);
+            context.setAttribute(IdentityContext.class.getName(), identityContext);
 
             // Create the media gateway.
 
