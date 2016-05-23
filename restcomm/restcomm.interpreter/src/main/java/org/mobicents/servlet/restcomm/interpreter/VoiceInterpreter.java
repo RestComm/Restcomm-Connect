@@ -2460,20 +2460,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
-            logger.info("1 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"+conferenceState);
             // Clean up
             if (message instanceof ConferenceStateChanged) {
-                logger.info("2 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"+conferenceState);
                 // Destroy conference if state changed to completed (last participant in call)
                 ConferenceStateChanged confStateChanged = (ConferenceStateChanged) message;
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
-                    logger.info("3 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"+conferenceState);
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
                 }
                 // update conference state in DB
                 if (conferenceDetailRecord != null) {
-                    logger.info("4 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"+conferenceState+" confStateChanged.state().name() "+confStateChanged.state().name());
                     conferenceDetailRecord = conferenceDetailRecord.setStatus(confStateChanged.state().name());
                     final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
                     records.updateConferenceDetailRecord(conferenceDetailRecord);
