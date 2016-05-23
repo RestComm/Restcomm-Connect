@@ -8,6 +8,7 @@
 # VARIABLES
 RESTCOMM_BIN=$RESTCOMM_HOME/bin
 RESTCOMM_DARS=$RESTCOMM_HOME/standalone/configuration/dars
+RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
 
 ## FUNCTIONS
@@ -118,6 +119,12 @@ configVoipInnovations() {
 configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
+	#Check for Por Offset
+	if (( $PORT_OFFSET > 0 )); then
+		SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
+	fi
+
+
 		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
 		sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 		# -e "s|<bandwidth>|<!\-\-<bandwidth>|" \
@@ -156,7 +163,7 @@ configDidProvisionManager() {
 				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
 				sed -i "/<callback-urls>/ {
-					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:5080\" method=\"SIP\" />|
+					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$SIP_PORT_TCP\" method=\"SIP\" />|
 					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
 					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
 					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
@@ -177,10 +184,10 @@ configDidProvisionManager() {
 				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
 
 				sed -i "/<callback-urls>/ {
-					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
-					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
-					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
-					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
+					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
+					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
+					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
+					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
 				}" $FILE
 
 				sed -i "/<voxbone>/ {
@@ -286,42 +293,6 @@ configMobicentsProperties() {
 	echo "Updated mobicents-dar properties"
 }
 
-## Description: Configures TeleStax Proxy
-## Parameters : 1.Enabled
-##              2.login
-##              3.password
-## 		4.Endpoint
-## 		5.Proxy IP
-configTelestaxProxy() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	enabled="$1"
-	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
-		sed -e "/<telestax-proxy>/ {
-			N; s|<enabled>.*</enabled>|<enabled>$1</enabled>|
-		N; s|<login>.*</login>|<login>$2</login>|
-		N; s|<password>.*</password>|<password>$3</password>|
-		N; s|<endpoint>.*</endpoint>|<endpoint>$4</endpoint>|
-		N; s|<siteId>.*</siteId>|<siteId>$6</siteId>|
-		N; s|<uri>.*</uri>|<uri>http:\/\/$5:2080</uri>|
-		}" $FILE > $FILE.bak
-
-		mv $FILE.bak $FILE
-		echo 'Enabled TeleStax Proxy'
-	else
-		sed -e "/<telestax-proxy>/ {
-			N; s|<enabled>.*</enabled>|<enabled>false</enabled>|
-			N; s|<login>.*</login>|<login></login>|
-			N; s|<password>.*</password>|<password></password>|
-			N; s|<endpoint>.*</endpoint>|<endpoint></endpoint>|
-			N; s|<siteid>.*</siteid>|<siteid></siteid>|
-			N; s|<uri>.*</uri>|<uri>http:\/\/127.0.0.1:2080</uri>|
-		}" $FILE > $FILE.bak
-
-		mv $FILE.bak $FILE
-		echo 'Disabled TeleStax Proxy'
-	fi
-}
-
 
 ## Description: Configures Media Server Manager
 ## Parameters : 1.Enabled
@@ -421,17 +392,22 @@ configMediaServerMSaddress() {
 
 configRestCommURIs() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	#Check for Por Offset
+	if (( $PORT_OFFSET > 0 )); then
+		HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+		HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+	fi
 
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
             REMOTEADD="$STATIC_ADDRESS"
-            PORT=8443
+            PORT="$HTTPS_PORT"
 			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>https://$REMOTEADD:$PORT/restcomm/audio<\/prompts-uri>|" \
 		    -e "s|<cache-uri>.*</cache-uri>|<cache-uri>https://$REMOTEADD/restcomm/cache</cache-uri>|" \
 			-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>https://$REMOTEADD/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
 
 		else
-			PORT=8080
+			PORT="$HTTP_PORT"
 			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>http://$BIND_ADDRESS:$PORT/restcomm/audio<\/prompts-uri>|" \
 		    -e "s|<cache-uri>.*/cache-uri>|<cache-uri>http://$BIND_ADDRESS/restcomm/cache</cache-uri>|" \
 			-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>http://$BIND_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
@@ -452,6 +428,27 @@ updateRecordingsPath() {
 	fi
 }
 
+
+configHypertextPort(){
+RCFILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
+
+#Check for Por Offset
+if (( $PORT_OFFSET > 0 )); then
+	HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+	HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+fi
+
+sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|
+N; 		s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" $RCFILE > $RCFILE.bak
+mv $RCFILE.bak $RCFILE
+
+sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|
+N; 		s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
+
+mv $MSSFILE.bak $MSSFILE
+}
+
 # MAIN
 echo 'Configuring RestComm...'
 #configJavaOpts
@@ -463,10 +460,10 @@ configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
-configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
 configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
 configMediaServerMSaddress "$BIND_ADDRESS"
 configRestCommURIs
 updateRecordingsPath
+configHypertextPort
 echo 'Configured RestComm!'
