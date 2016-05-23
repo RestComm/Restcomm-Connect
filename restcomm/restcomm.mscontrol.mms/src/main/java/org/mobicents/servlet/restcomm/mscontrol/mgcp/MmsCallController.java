@@ -380,8 +380,8 @@ public class MmsCallController extends MediaServerController {
         final State state = fsm.state();
 
         if(logger.isInfoEnabled()) {
-            logger.info("********** Call Controller Current State: \"" + state.toString());
-            logger.info("********** Call Controller Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
+            logger.info("********** MmsCallController Current State: \"" + state.toString());
+            logger.info("********** MmsCallController Processing Message: \"" + klass.getName() + " sender : " + sender.getClass());
         }
 
         if (Observe.class.equals(klass)) {
@@ -669,7 +669,7 @@ public class MmsCallController extends MediaServerController {
     }
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
-        if (is(active)) {
+        if (is(active) || is(muting)) {
             // Forward message to media group to handle
             this.mediaGroup.tell(message, sender);
         }
