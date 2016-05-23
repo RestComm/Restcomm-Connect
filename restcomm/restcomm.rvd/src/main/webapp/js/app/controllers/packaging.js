@@ -1,4 +1,4 @@
-rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications, rvdSettings, $translate) {
+rvdMod.controller('packagingCtrl', function ($scope, $stateParams, Rapp, ConfigOption, $http, rappWrap, $location, notifications, rvdSettings, $translate) {
 
 	$scope.addConfigurationOption = function(type) {
 		$scope.rapp.config.addOption(type);
@@ -56,8 +56,8 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 	}
 	
 	// initialization stuff
-	$scope.projectName = $routeParams.projectName;
-	$scope.applicationSid = $routeParams.applicationSid;
+	$scope.projectName = $stateParams.projectName;
+	$scope.applicationSid = $stateParams.applicationSid;
 	$scope.rapp = rappWrap.rapp;
 	$scope.isNewRapp = !rappWrap.exists;
 	//if ( !rappWrap.exists ) {
@@ -67,34 +67,25 @@ rvdMod.controller('packagingCtrl', function ($scope, $routeParams, Rapp, ConfigO
 	$scope.effectiveSettings = rvdSettings.getEffectiveSettings();
 });
 
-var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function ($scope, binaryInfo, $routeParams) {
+var packagingDownloadCtrl = rvdMod.controller('packagingDownloadCtrl', function ($scope, binaryInfo, $stateParams, fileRetriever) {
 	$scope.test = binaryInfo;
 	$scope.binaryInfo = binaryInfo;
-	$scope.projectName = $routeParams.projectName;
-	$scope.applicationSid = $routeParams.applicationSid;
+	$scope.projectName = $stateParams.projectName;
+	$scope.applicationSid = $stateParams.applicationSid;
+	$scope.download = function(applicationSid, projectName) {
+        var downloadUrl = '/restcomm-rvd/services/ras/packaging/download?applicationSid=' + applicationSid + '&projectName=' + projectName;
+        fileRetriever.download(downloadUrl, projectName + ".ras.zip").catch(function () {
+            notifications.put({message:'Error downloading application package', type:"danger"});
+        });
+	}
 });
 
-packagingDownloadCtrl.getBinaryInfo = function ($q, $http, $route) {
-	var deferred = $q.defer();
-	$http({
-		url: 'services/ras/packaging/binary/info?applicationSid=' + $route.current.params.applicationSid,
-		method: 'GET'
-	})
-	.success(function (data, status) {
-		console.log("Package is ready for download");
-		deferred.resolve(data.payload); // this is binaryInfo
-	})
-	.error(function () {deferred.reject("error reading binary package information")});
-	return deferred.promise;
-}
-
-
-rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', function ($http, $q, Rapp,$route, $rootScope) {
+rvdMod.factory('RappService', ['$http', '$q', 'Rapp', function ($http, $q, Rapp) {
 	var serviceFunctions = {
-		getRapp : function () {
+		getRapp : function (params) {
 			var deferred = $q.defer();
 			$http({
-				url:  'services/ras/packaging/app?applicationSid=' + $route.current.params.applicationSid,
+				url:  'services/ras/packaging/app?applicationSid=' + params.applicationSid,
 				method: 'GET',
 			})
 			.success(function (data, status, headers, config) {
@@ -111,7 +102,20 @@ rvdMod.factory('RappService', ['$http', '$q', 'Rapp', '$route', '$location', fun
 				}
 			});
 			return deferred.promise;
-		}
+		},
+		getBinaryInfo : function (params) {
+        	var deferred = $q.defer();
+        	$http({
+        		url: 'services/ras/packaging/binary/info?applicationSid=' + params.applicationSid,
+        		method: 'GET'
+        	})
+        	.success(function (data, status) {
+        		console.log("Package is ready for download");
+        		deferred.resolve(data.payload); // this is binaryInfo
+        	})
+        	.error(function () {deferred.reject("error reading binary package information")});
+        	return deferred.promise;
+        }
 	}
 	return serviceFunctions;
 }])

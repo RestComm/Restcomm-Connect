@@ -25,6 +25,7 @@ import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.shiro.ShiroResources;
+import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
@@ -128,24 +129,34 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
         // Configure the transport to be used by the connector
         final String mediaTransport = configuration.getString("media-server.transport", "udp");
-        logger.info("JSR 309 - media-server.transport: udp");
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - media-server.transport: udp");
+        }
         properties.setProperty("connector.sip.transport", mediaTransport);
 
         // Configure SIP connector using RestComm binding address
         SipURI sipURI = outboundInterface(getServletContext(), mediaTransport);
         properties.setProperty("connector.sip.address", sipURI.getHost());
-        logger.info("JSR 309 - connector.sip.address: " + sipURI.getHost());
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - connector.sip.address: " + sipURI.getHost());
+        }
         properties.setProperty("connector.sip.port", String.valueOf(sipURI.getPort()));
-        logger.info("JSR 309 - connector.sip.port: " + String.valueOf(sipURI.getPort()));
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - connector.sip.port: " + String.valueOf(sipURI.getPort()));
+        }
 
         // Configure Media Server address based on restcomm configuration file
         final String mediaAddress = configuration.getString("media-server.address", "127.0.0.1");
         properties.setProperty("mediaserver.sip.ipaddress", mediaAddress);
-        logger.info("JSR 309 - mediaserver.sip.ipaddress: " + mediaAddress);
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - mediaserver.sip.ipaddress: " + mediaAddress);
+        }
 
         final String mediaPort = configuration.getString("media-server.port", "5060");
         properties.setProperty("mediaserver.sip.port", mediaPort);
-        logger.info("JSR 309 - mediaserver.sip.port: " + mediaPort);
+        if(logger.isInfoEnabled()) {
+            logger.info("JSR 309 - mediaserver.sip.port: " + mediaPort);
+        }
 
         // Let RestComm control call legs
         properties.setProperty("connector.conferenceControlLeg", "no");
@@ -248,7 +259,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Load the RestComm configuration file.
             Configuration xml = null;
             try {
-                xml = new XMLConfiguration(path);
+                XMLConfiguration xmlConfiguration = new XMLConfiguration();
+                xmlConfiguration.setDelimiterParsingDisabled(true);
+                xmlConfiguration.setAttributeSplittingDisabled(true);
+                xmlConfiguration.load(path);
+                xml = xmlConfiguration;
             } catch (final ConfigurationException exception) {
                 logger.error(exception);
             }
@@ -270,10 +285,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.error("ObjectInstantiationException during initialization: ", exception);
             }
             context.setAttribute(DaoManager.class.getName(), storage);
-            ShiroResources.getInstance().set(DaoManager.class, storage);
+            //ShiroResources.getInstance().set(DaoManager.class, storage);
             ShiroResources.getInstance().set(Configuration.class, xml.subset("runtime-settings"));
             // Create high-level restcomm configuration
             RestcommConfiguration.createOnce(xml);
+            // Initialize identityContext
+            IdentityContext identityContext = new IdentityContext(xml);
+            context.setAttribute(IdentityContext.class.getName(), identityContext);
 
             // Create the media gateway.
 
@@ -281,7 +299,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ActorRef monitoring = monitoringService(xml, loader);
             if (monitoring != null) {
                 context.setAttribute(MonitoringService.class.getName(), monitoring);
-                logger.info("Monitoring Service created and stored in the context");
+                if(logger.isInfoEnabled()) {
+                    logger.info("Monitoring Service created and stored in the context");
+                }
             } else {
                 logger.error("Monitoring Service is null");
             }

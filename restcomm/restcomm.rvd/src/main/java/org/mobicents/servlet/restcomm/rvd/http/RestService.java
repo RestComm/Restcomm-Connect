@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -17,6 +20,12 @@ import org.mobicents.servlet.restcomm.rvd.validation.ValidationReport;
 import com.google.gson.Gson;
 
 public class RestService {
+
+    @Context
+    protected HttpServletRequest request;
+    @Context
+    protected ServletContext servletContext;
+
     protected Response buildErrorResponse(Response.Status httpStatus, RvdResponse.Status rvdStatus, RvdException exception) {
         RvdResponse rvdResponse = new RvdResponse(rvdStatus).setException(exception);
         return Response.status(httpStatus).entity(rvdResponse.asJson()).build();

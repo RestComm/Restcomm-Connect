@@ -121,7 +121,9 @@ public final class AttSpeechSynthesizer extends UntypedActor {
         final String text = request.text();
 
         if (language == null) {
-            logger.info("There is no suitable speaker to synthesize " + request.language());
+            if(logger.isInfoEnabled()) {
+                logger.info("There is no suitable speaker to synthesize " + request.language());
+            }
             throw new IllegalArgumentException("There is no suitable language to synthesize " + request.language());
         }
 
@@ -148,7 +150,9 @@ public final class AttSpeechSynthesizer extends UntypedActor {
         if(file.exists()) {
             return file.toURI();
         } else {
-            logger.info("There was a problem with AT&T TTS server. Check configuration and that TTS Server is running");
+            if(logger.isInfoEnabled()) {
+                logger.info("There was a problem with AT&T TTS server. Check configuration and that TTS Server is running");
+            }
             throw new SpeechSynthesizerException("There was a problem with TTSClientFile. Check configuration and that TTS Server is running");
         }
     }

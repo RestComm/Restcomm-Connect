@@ -103,7 +103,7 @@
 						<a ng-show="app.isOnline && !app.isLocal" href="{{app.link}}" target="_blank" type="button" class="btn btn-primary">Get application</a>
 						<a ng-show="app.isOnline && app.isLocal" href="{{app.link}}" target="_blank">View in AppStore</a>
 						<div ng-show="app.hasPackaging || app.wasImported">
-							<a href="#/ras/config/{{app.sid}}={{app.projectName}}{{(app.hasPackaging ? '/dev':'')}}" ng-class="{'ras-bold': (!app.hasBootstrap)}">Configure</a>
+							<a href="#/ras/config/{{app.sid}}={{app.projectName}}/{{(app.hasPackaging ? 'dev':'')}}" ng-class="{'ras-bold': (!app.hasBootstrap)}">Configure</a>
 						</div>
 					</td>
 				</tr>

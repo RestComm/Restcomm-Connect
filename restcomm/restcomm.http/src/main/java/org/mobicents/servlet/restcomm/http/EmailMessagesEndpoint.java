@@ -43,7 +43,7 @@ import org.mobicents.servlet.restcomm.patterns.StopObserving;
 /**
  *  @author lefty .liblefty@telestax.com (Lefteris Banos)
  */
-public class EmailMessagesEndpoint extends AbstractEndpoint {
+public class EmailMessagesEndpoint extends SecuredEndpoint {
     private static Logger logger = Logger.getLogger(EmailMessagesEndpoint.class);
     @Context
     protected ServletContext context;
@@ -130,7 +130,7 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
     protected Response putEmailMessage(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         try {
             secure(accountsDao.getAccount(accountSid), "RestComm:Create:EmailMessages"); //need to fix for Emails.
-            secureLevelControl(accountsDao, accountSid, null);
+           // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
