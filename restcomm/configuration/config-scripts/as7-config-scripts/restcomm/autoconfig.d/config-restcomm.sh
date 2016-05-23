@@ -119,12 +119,6 @@ configVoipInnovations() {
 configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	#Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-	fi
-
-
 		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
 		sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
@@ -385,10 +379,6 @@ configMediaServerMSaddress() {
 configRestCommURIs() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	#Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
-		HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
-	fi
 
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
@@ -425,12 +415,6 @@ configHypertextPort(){
 RCFILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
 
-#Check for Por Offset
-if (( $PORT_OFFSET > 0 )); then
-	HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
-	HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
-fi
-
 sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|
 N; 		s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" $RCFILE > $RCFILE.bak
 mv $RCFILE.bak $RCFILE
@@ -443,6 +427,13 @@ mv $MSSFILE.bak $MSSFILE
 
 # MAIN
 echo 'Configuring RestComm...'
+#Check for Por Offset
+if (( $PORT_OFFSET > 0 )); then
+	SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+	HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+	HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+fi
+
 #configJavaOpts
 configMobicentsProperties
 configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD" "$MEDIASERVER_EXTERNAL_ADDRESS"

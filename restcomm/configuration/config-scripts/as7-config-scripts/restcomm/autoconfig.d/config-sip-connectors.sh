@@ -17,6 +17,11 @@ configConnectors() {
 		SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
 		SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
 		SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
+		localMGCP=$((2727 + $PORT_OFFSET))
+		remoteMGCP=$((2427 + $PORT_OFFSET))
+		sed -i "s|2727|${localMGCP}|"    $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml
+		sed -i "s|2427|${remoteMGCP}|"   $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml
+		sed -i "s|2427|${remoteMGCP}|"   $RESTCOMM_HOME/mediaserver/deploy/server-beans.xml
 	fi
 
 
