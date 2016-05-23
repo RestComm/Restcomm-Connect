@@ -30,7 +30,7 @@ configConnectors() {
       		LB_INTERNAL_IP=$LB_PUBLIC_IP
 		fi
 		sed -e "s|path-name=\"org.mobicents.ext\" \(app-dispatcher-class=.*\)|path-name=\"org.mobicents.ha.balancing.only\" \1|" \
-		-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_UDP\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_UDP\"/>|" \
+		    -e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_UDP\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_UDP\"/>|" \
 	        -e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_TCP\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_TCP\"/>|" \
 	        -e "s|<connector name=\"sip-tls\" .*/>|<connector name=\"sip-tls\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tls\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_TLS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_TLS\"/>|" \
 	        -e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" use-static-address=\"true\" static-server-address=\"$LB_PUBLIC_IP\" static-server-port=\"$SIP_PORT_WS\" use-load-balancer=\"true\" load-balancer-address=\"$LB_INTERNAL_IP\" load-balancer-rmi-port=\"$LB_RMI_PORT\"  load-balancer-sip-port=\"$LB_SIP_PORT_WS\"/>|" \
@@ -41,7 +41,7 @@ configConnectors() {
 
 		if [ -n "$static_address" ]; then
 			sed -e "s|path-name=\".*\"  \(app-dispatcher-class=.*\)|path-name=\"org.mobicents.ext\"  \1|" \
-			-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"S$IP_PORT_UDP\"/>|" \
+			-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_UDP\"/>|" \
 			-e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_TCP\"/>|" \
 			-e "s|<connector name=\"sip-tls\" .*/>|<connector name=\"sip-tls\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tls\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_TLS\"/>|" \
 			-e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_WS\"/>|" \
@@ -111,16 +111,17 @@ configConnectors() {
 configSocketbinding() {
 FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 	if (( $PORT_OFFSET > 0 )); then
-    	sed -i "s|\${jboss.socket.binding.port-offset:0\}|${PORT_OFFSET}|"   $FILE > $FILE.bak
-    	mv $FILE.bak $FILE
+    	sed -i "s|\${jboss.socket.binding.port-offset:0\}|${PORT_OFFSET}|" $FILE
+
 	fi
-	 sed -e "<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>" \
-        -e "<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>" \
-        -e "<socket-binding name=\"sip-udp\" port=\".*\"/>|<socket-binding name=\"sip-udp\" port=\"$SIP_PORT_UDP\"/>" \
-        -e "<socket-binding name=\"sip-tcp\" port=\".*\"/>|<socket-binding name=\"sip-tcp\" port=\"$SIP_PORT_TCP\"/>" \
-        -e "<socket-binding name=\"sip-tls\" port=\".*\"/>|<socket-binding name=\"sip-tls\" port=\"$SIP_PORT_TLS\"/>" \
-        -e "<socket-binding name=\"sip-ws\" port=\".*\"/>|<socket-binding name=\"sip-ws\" port=\"$SIP_PORT_WS\"/>" \
-        -e "<socket-binding name=\"sip-wss\" port=\".*\"/>|<socket-binding name=\"sip-wss\" port=\"$SIP_PORT_WSS\"/>" $FILE > $FILE.bak
+	sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|" \
+        -e "s|<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" \
+        -e "s|<socket-binding name=\"sip-udp\" port=\".*\"/>|<socket-binding name=\"sip-udp\" port=\"$SIP_PORT_UDP\"/>|" \
+        -e "s|<socket-binding name=\"sip-tcp\" port=\".*\"/>|<socket-binding name=\"sip-tcp\" port=\"$SIP_PORT_TCP\"/>|" \
+        -e "s|<socket-binding name=\"sip-tls\" port=\".*\"/>|<socket-binding name=\"sip-tls\" port=\"$SIP_PORT_TLS\"/>|" \
+        -e "s|<socket-binding name=\"sip-ws\" port=\".*\"/>|<socket-binding name=\"sip-ws\" port=\"$SIP_PORT_WS\"/>|" \
+        -e "s|<socket-binding name=\"sip-wss\" port=\".*\"/>|<socket-binding name=\"sip-wss\" port=\"$SIP_PORT_WSS\"/>|" \
+        $FILE > $FILE.bak
         mv $FILE.bak $FILE
 }
 
