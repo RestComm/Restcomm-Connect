@@ -27,6 +27,9 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -37,11 +40,19 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.Queue;
+import org.mobicents.servlet.restcomm.entities.QueueList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.entities.Sid.Type;
+import org.mobicents.servlet.restcomm.http.converter.QueueConverter;
+import org.mobicents.servlet.restcomm.http.converter.QueueListConverter;
+import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,7 +63,7 @@ import com.thoughtworks.xstream.XStream;
  */
 
 @NotThreadSafe
-public class QueuesEndpoint extends AbstractEndpoint {
+public abstract class QueuesEndpoint extends AbstractEndpoint {
 
     @Context
     private ServletContext context;
@@ -76,10 +87,15 @@ public class QueuesEndpoint extends AbstractEndpoint {
         accountsDao = daos.getAccountsDao();
         super.init(configuration);
         builder = new GsonBuilder();
+        builder.registerTypeAdapter(Queue.class, new QueueConverter(configuration));
+       // builder.registerTypeAdapter(QueueList.class, new QueueListConverter(configuration));
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
+        xstream.registerConverter(new QueueConverter(configuration));
+        xstream.registerConverter(new QueueListConverter(configuration));
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
     }
 
@@ -91,8 +107,14 @@ public class QueuesEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-
-        final RestCommResponse response = new RestCommResponse("Get Queues");
+        final Queue queue = new Queue(Sid.generate(Type.QUEUE), new DateTime(), new DateTime(), "testqueue",
+                Integer.valueOf(0), Integer.valueOf(0), Integer.valueOf(0), info.getRequestUri().getPath());
+        final Queue queue1 = new Queue(Sid.generate(Type.QUEUE), new DateTime(), new DateTime(), "testqueue",
+                Integer.valueOf(0), Integer.valueOf(0), Integer.valueOf(0), info.getRequestUri());
+        List<Queue> queueList = new ArrayList<Queue>();
+        queueList.add(queue);
+        queueList.add(queue1);
+        final RestCommResponse response = new RestCommResponse(new QueueList(queueList));
         if (APPLICATION_XML_TYPE == responseType) {
 
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -111,8 +133,10 @@ public class QueuesEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
+        final Queue queue = new Queue(Sid.generate(Type.QUEUE), new DateTime(), new DateTime(), "testqueue",
+                Integer.valueOf(0), Integer.valueOf(0), Integer.valueOf(0), info.getRequestUri());
 
-        final RestCommResponse response = new RestCommResponse("Get Queue By Id");
+        final RestCommResponse response = new RestCommResponse(queue);
         if (APPLICATION_XML_TYPE == responseType) {
 
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -132,8 +156,10 @@ public class QueuesEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
+        final Queue queue = new Queue(Sid.generate(Type.QUEUE), new DateTime(), new DateTime(), "testqueue",
+                Integer.valueOf(0), Integer.valueOf(0), Integer.valueOf(0), null);
 
-        final RestCommResponse response = new RestCommResponse("Create Queue");
+        final RestCommResponse response = new RestCommResponse(queue);
         if (APPLICATION_XML_TYPE == responseType) {
 
             return ok(xstream.toXML(response), APPLICATION_XML).build();

@@ -27,6 +27,10 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -37,11 +41,17 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.Member;
+import org.mobicents.servlet.restcomm.entities.MemberList;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.converter.MemberConverter;
+import org.mobicents.servlet.restcomm.http.converter.MemberListConverter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,7 +62,7 @@ import com.thoughtworks.xstream.XStream;
  */
 
 @NotThreadSafe
-public class MembersEndpoint extends AbstractEndpoint {
+public abstract class MembersEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
 
@@ -75,10 +85,15 @@ public class MembersEndpoint extends AbstractEndpoint {
         accountsDao = daos.getAccountsDao();
         super.init(configuration);
         builder = new GsonBuilder();
+        builder.registerTypeAdapter(Member.class, new MemberConverter(configuration));
+        builder.registerTypeAdapter(MemberList.class, new MemberListConverter(configuration));
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(new MemberConverter(configuration));
+        xstream.registerConverter(new MemberListConverter(configuration));
+
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
     }
 
@@ -89,8 +104,14 @@ public class MembersEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-
-        final RestCommResponse response = new RestCommResponse("Get Queue Members");
+        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
+                Integer.valueOf(0));
+        final Member member1 = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
+                Integer.valueOf(0));
+        List<Member> memberList = new ArrayList<Member>();
+        memberList.add(member);
+        memberList.add(member1);
+        final RestCommResponse response = new RestCommResponse(new MemberList(memberList));
         if (APPLICATION_XML_TYPE == responseType) {
 
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -109,8 +130,9 @@ public class MembersEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-
-        final RestCommResponse response = new RestCommResponse("Get Queues Front Mmber");
+        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
+                Integer.valueOf(0));
+        final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -130,8 +152,9 @@ public class MembersEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-
-        final RestCommResponse response = new RestCommResponse("Get Queue Member");
+        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
+                Integer.valueOf(0));
+        final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
             return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -151,8 +174,9 @@ public class MembersEndpoint extends AbstractEndpoint {
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-
-        final RestCommResponse response = new RestCommResponse("Dequeue");
+        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
+                Integer.valueOf(0));
+        final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
             return ok(xstream.toXML(response), APPLICATION_XML).build();
