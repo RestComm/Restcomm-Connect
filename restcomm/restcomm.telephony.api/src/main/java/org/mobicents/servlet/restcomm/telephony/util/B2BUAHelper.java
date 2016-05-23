@@ -100,6 +100,7 @@
          final Registration registration = registrations.getRegistration(user);
          if (registration != null) {
              final String location = registration.getLocation();
+             final String aor = registration.getAddressOfRecord();
              SipURI to;
              SipURI from;
              try {
