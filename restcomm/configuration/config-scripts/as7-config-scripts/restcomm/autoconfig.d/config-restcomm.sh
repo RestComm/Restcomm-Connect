@@ -121,17 +121,13 @@ configDidProvisionManager() {
 
 	#Check for Por Offset
 	if (( $PORT_OFFSET > 0 )); then
-		SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
+		SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
 	fi
 
 
 		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
 		sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
-		# -e "s|<bandwidth>|<!\-\-<bandwidth>|" \
-		# -e "s|<\/bandwidth>|<\/bandwidth>\-\->|" \
-		# -e "s|<!\-\- <voip-innovations>|<voip-innovations>|" \
-		# -e "s|<\/voip-innovations>\-\->|<\/voip-innovations>|" \
-		# $FILE > $FILE.bak
+
 
 		sed -e "/<voip-innovations>/ {
 			N; s|<login>.*</login>|<login>$1</login>|
@@ -143,11 +139,7 @@ configDidProvisionManager() {
 		else
 			if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
 			sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
-			# -e "s|<voip-innovations>|<!\-\-<voip-innovations>|" \
-			# -e "s|<\/voip-innovations>|<\/voip-innovations>\-\->|" \
-			# -e "s|<!\-\- <bandwidth>|<bandwidth>|" \
-			# -e "s|<\/bandwidth>\-\->|<\/bandwidth>|" \
-			# $FILE > $FILE.bak
+
 
 			sed -e "/<bandwidth>/ {
 				N; s|<username>.*</username>|<username>$1</username>|
@@ -163,7 +155,7 @@ configDidProvisionManager() {
 				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
 				sed -i "/<callback-urls>/ {
-					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$SIP_PORT_TCP\" method=\"SIP\" />|
+					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$SIP_PORT_UDP\" method=\"SIP\" />|
 					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
 					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
 					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
@@ -184,10 +176,10 @@ configDidProvisionManager() {
 				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
 
 				sed -i "/<callback-urls>/ {
-					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
-					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
-					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
-					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$SIP_PORT_TCP\" method=\"SIP\" />|
+					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
 				}" $FILE
 
 				sed -i "/<voxbone>/ {
