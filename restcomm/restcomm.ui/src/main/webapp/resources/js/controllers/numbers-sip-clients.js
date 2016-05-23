@@ -56,11 +56,11 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
 
 // Numbers : RestComm Clients : Details (also used for Modal) -----------------------
 
-var ClientDetailsCtrl = function ($scope, $routeParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
+var ClientDetailsCtrl = function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
 
 	$scope.localApps = localApps;
   // are we editing details...
-  if($scope.clientSid = $routeParams.clientSid) {
+  if($scope.clientSid = $stateParams.clientSid) {
     $scope.sid = SessionService.get("sid");
 
     $scope.clientDetails = RCommClients.get({accountSid:$scope.sid, clientSid: $scope.clientSid});

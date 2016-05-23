@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications) {
+rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications, $state) {
 
   $scope.alerts = [];
 
@@ -13,28 +13,26 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
   };
 
   $scope.login = function() {
-    AuthService.login($scope.credentials).
-      success(function(data, status, headers, config) {
-        if (data.status && data.status == 'suspended') {
-          showAccountSuspended($dialog);
-          return;
-        }
-        // Success may come in many forms...
-        if (status == 200) {
-          if(AuthService.getWaitingReset(data)) {
-            $scope.updatePassword = true;
-          }
-          else {
+    AuthService.login($scope.credentials.sid, $scope.credentials.token).then(function (loginStatus) {
+        // SUCCESS
+        if (loginStatus == 'UNINITIALIZED' )
+            $state.go('public.uninitialized');
+        else
             $location.path('/dashboard');
-          }
+    }, function (errorStatus) {
+        // ERROR
+        if (errorStatus == 'SUSPENDED')
+            showAccountSuspended($dialog);
+        else
+        if (errorStatus == "AUTH_ERROR") {
+            Notifications.error('Login failed. Please confirm your username and password.');
+            // FIXME: Use ng-animate...
+            $scope.loginFailed = true;
+            $timeout(function() { $scope.loginFailed = false; }, 1000);
         }
-        else {
-          Notifications.error('Login failed. Please confirm your username and password.')
-          // FIXME: Use ng-animate...
-          $scope.loginFailed = true;
-          $timeout(function() { $scope.loginFailed = false; }, 1000);
-        }
-      });
+        else
+            Notifications.error('Unknown error');
+    });
   };
 
   $scope.closeAlert = function(index) {
@@ -45,19 +43,6 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
     $scope.alerts.splice(index, 1);
   };
 
-  // For password reset
-  $scope.update = function() {
-    AuthService.updatePassword($scope.credentials, $scope.newPassword).success(function(data, status) {
-      // Success may come in many forms...
-      if (status == 200) {
-        $location.path('/dashboard');
-      }
-      else {
-        alert("Failed to update password. Please try again.");
-        $location.path('/login');
-      }
-    });
-  }
   /*
    $scope.newPassword = $scope.confPassword = "";
 
@@ -76,4 +61,17 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
 
     $dialog.messageBox(title, msg, btns).open();
   };
+});
+
+// assumes user has been authenticated but his account is not initialized
+rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state) {
+  // For password reset
+  $scope.update = function() {
+    AuthService.updatePassword($scope.newPassword).then(function () {
+        $state.go('restcomm.dashboard');
+    }, function (error) {
+        alert("Failed to update password. Please try again.");
+        $state.go('public.login');
+    });
+  }
 });

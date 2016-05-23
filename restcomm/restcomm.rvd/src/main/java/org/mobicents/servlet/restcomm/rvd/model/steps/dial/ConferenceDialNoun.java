@@ -87,7 +87,11 @@ public class ConferenceDialNoun extends DialNoun {
         if ( ! RvdUtils.isEmpty(getWaitModule()) ) {
             Map<String, String> pairs = new HashMap<String, String>();
             pairs.put("target", getWaitModule());
-            rcmlNoun.setWaitUrl( interpreter.buildAction(pairs) );
+            String action = interpreter.buildAction(pairs);
+            rcmlNoun.setWaitUrl( interpreter.getRvdSettings().getApplicationsRelativeUrl() + "/" + interpreter.getAppName() + "/" + action  );
+        } else
+        if ( ! RvdUtils.isEmpty(getWaitUrl())) {
+            rcmlNoun.setWaitUrl(interpreter.populateVariables(getWaitUrl()));
         }
 
         rcmlNoun.setBeep(getBeep());
