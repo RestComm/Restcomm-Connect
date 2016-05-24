@@ -71,7 +71,8 @@ configMediaServerManager() {
 			-e "s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|" \
 			-e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
 			-e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
-			-e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+			-e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
+			-e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
 		echo 'Configured Media Server Manager'
