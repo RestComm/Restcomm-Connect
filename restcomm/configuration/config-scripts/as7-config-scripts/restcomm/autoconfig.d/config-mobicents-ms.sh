@@ -65,10 +65,11 @@ configLogDirectory() {
 configMediaServerManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	bind_address="$1"
-	ms_external_address="$2"
+	ms_address="$2"
+	ms_external_address="$3"
 		sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
 			-e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
-			-e "s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|" \
+			-e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
 			-e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
 			-e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
 			-e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
@@ -135,5 +136,5 @@ fi
 configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"
 #configJavaOpts
 configLogDirectory
-configMediaServerManager "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
+configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 echo 'Finished configuring Mobicents Media Server!'
