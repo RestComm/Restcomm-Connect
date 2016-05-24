@@ -17,11 +17,6 @@ configConnectors() {
 		SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
 		SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
 		SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
-		localMGCP=$((2727 + $PORT_OFFSET))
-		remoteMGCP=$((2427 + $PORT_OFFSET))
-		sed -i "s|2727|${localMGCP}|"    $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml
-		sed -i "s|2427|${remoteMGCP}|"   $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml
-		sed -i "s|2427|${remoteMGCP}|"   $RESTCOMM_HOME/mediaserver/deploy/server-beans.xml
 	fi
 
 
@@ -112,7 +107,6 @@ configSocketbinding() {
 FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 	if (( $PORT_OFFSET > 0 )); then
     	sed -i "s|\${jboss.socket.binding.port-offset:0\}|${PORT_OFFSET}|" $FILE
-
 	fi
 	sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|" \
         -e "s|<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" \
@@ -127,6 +121,8 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 
 #MAIN
 echo 'Configuring Application Server...'
-configConnectors "$STATIC_ADDRESS"
+#Reload Variables
+source $BASEDIR/restcomm.conf
 configSocketbinding
+configConnectors "$STATIC_ADDRESS"
 echo 'Finished configuring Application Server!'

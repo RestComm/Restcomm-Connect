@@ -39,54 +39,22 @@ configJavaOpts() {
 }
 
 ## Description: Updates RestComm configuration file
-## Parameters : 1.Private IP
-## 		2.Public IP
+## Parameters : 1.BIND_ADDRESS
+## 		2.STATIC_ADDRESS
+configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS"
 configRestcomm() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	bind_address="$1"
 	static_address="$2"
-	outbound_proxy="$3"
-	outbound_proxy_user="$4"
-	outbound_proxy_password="$5"
-	ms_external_address="$6"
-	recording_address=$bind_address
+
 	if [ -n "$static_address" ]; then
-		recording_address=$static_address
-	fi
-
-	if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
-			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
-			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$bind_address<\/external-ip>|" \
-			-e "s|<external-address>.*<\/external-address>|<external-address>$ms_external_address<\/external-address>|" \
- 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$ms_external_address<\/external-address>|" \
-			-e "s|<normalize-numbers-for-outbound-calls>.*<\/normalize-numbers-for-outbound-calls>|<normalize-numbers-for-outbound-calls>false<\/normalize-numbers-for-outbound-calls>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
-			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
-			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
-
-	else
-		if [ -n "$static_address" ]; then
-			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
+	 	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
 			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
-			-e "s|<external-address>.*<\/external-address>|<external-address>$ms_external_address<\/external-address>|" \
- 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$ms_external_address<\/external-address>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|" \
-			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
-			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
-		else
-			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-			-e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
-			-e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
-			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
-			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
-		fi
+		 	 $FILE > $FILE.bak;
+	else
+		sed -e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|'   $FILE > $FILE.bak;
 	fi
+
 	mv $FILE.bak $FILE
 	echo 'Updated RestComm configuration'
 
@@ -97,6 +65,15 @@ configRestcomm() {
 		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
 	fi
+}
+
+
+configOutboundProxy(){
+FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
+	-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
+	-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+	mv $FILE.bak $FILE
 }
 
 ## Description: Configures Voip Innovations Credentials
@@ -280,32 +257,6 @@ configMobicentsProperties() {
 }
 
 
-## Description: Configures Media Server Manager
-## Parameters : 1.Enabled
-## 		2.private IP
-## 		3.public IP
-
-configMediaServerManager() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	enabled="$1"
-	bind_address="$2"
-	ms_external_address="$3"
-
-	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
-		sed -e "/<mgcp-server class=\"org.mobicents.servlet.restcomm.mgcp.MediaGateway\">/ {
-			N
-			N; s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|
-			N; s|<local-port>.*</local-port>|<local-port>2727</local-port>|
-			N; s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|
-			N; s|<remote-port>.*</remote-port>|<remote-port>2427</remote-port>|
-			N; s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|
-			N; s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|
-		}" $FILE > $FILE.bak
-
-		mv $FILE.bak $FILE
-		echo 'Configured Media Server Manager'
-	fi
-}
 
 ## Description: Configures SMPP Account Details
 ## Parameters : 1.activate
@@ -366,19 +317,10 @@ configSMPPAccount() {
 
 	fi
 }
-configMediaServerMSaddress() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	if [ -n "$MS_ADDRESS" ]; then
-		sed -e  "s|<remote-address>.*<\/remote-address>|<remote-address>$MS_ADDRESS<\/remote-address>|" $FILE > $FILE.bak
-		mv $FILE.bak $FILE
-		echo "Updated MSaddress"
-	fi
-}
 
 configRestCommURIs() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	#Check for Por Offset
 
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
@@ -427,25 +369,27 @@ mv $MSSFILE.bak $MSSFILE
 
 # MAIN
 echo 'Configuring RestComm...'
+#Reload Variables
+source $BASEDIR/restcomm.conf
 #Check for Por Offset
 if (( $PORT_OFFSET > 0 )); then
 	SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
 	HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
 	HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+	LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
+	REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 fi
 
 #configJavaOpts
 configMobicentsProperties
-configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD" "$MEDIASERVER_EXTERNAL_ADDRESS"
+configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
-configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
-configMediaServerMSaddress "$BIND_ADDRESS"
 configRestCommURIs
 updateRecordingsPath
 configHypertextPort

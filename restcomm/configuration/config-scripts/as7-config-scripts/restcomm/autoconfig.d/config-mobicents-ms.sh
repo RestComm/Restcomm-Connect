@@ -2,7 +2,7 @@
 ## Description: Configures the Media Server
 ## Author: Henrique Rosa (henrique.rosa@telestax.com)
 
-configUdpManager() {
+configServerBeans() {
 	FILE=$MMS_HOME/deploy/server-beans.xml
 	MSERVER_EXTERNAL_ADDRESS="$MEDIASERVER_EXTERNAL_ADDRESS"
 
@@ -12,7 +12,7 @@ configUdpManager() {
 
 	sed -e "s|<property name=\"bindAddress\">.*<\/property>|<property name=\"bindAddress\">$1<\/property>|" \
 	    -e "s|<property name=\"localBindAddress\">.*<\/property>|<property name=\"localBindAddress\">$1<\/property>|" \
-			-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MSERVER_EXTERNAL_ADDRESS</property>|" \
+		-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MSERVER_EXTERNAL_ADDRESS</property>|" \
 	    -e "s|<property name=\"localNetwork\">.*<\/property>|<property name=\"localNetwork\">$2<\/property>|" \
 	    -e "s|<property name=\"localSubnet\">.*<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
 	    -e 's|<property name="useSbc">.*</property>|<property name="useSbc">true</property>|' \
@@ -20,13 +20,6 @@ configUdpManager() {
 	    -e "s|<property name=\"lowestPort\">.*</property>|<property name=\"lowestPort\">$MEDIASERVER_LOWEST_PORT</property>|" \
 	    -e "s|<property name=\"highestPort\">.*</property>|<property name=\"highestPort\">$MEDIASERVER_HIGHEST_PORT</property>|" \
 	    $FILE > $FILE.bak
-
-#	grep -q -e "<property name=\"lowestPort\">.*</property>" $FILE.bak || sed -i "/rtpTimeout/ a\
-#    <property name=\"lowestPort\">$MEDIASERVER_LOWEST_PORT</property>" $FILE.bak
-
-#    grep -q -e "<property name=\"highestPort\">.*</property>" $FILE.bak || sed -i "/rtpTimeout/ a\
-#    <property name=\"highestPort\">$MEDIASERVER_HIGHEST_PORT</property>" $FILE.bak
-
 	mv $FILE.bak $FILE
 	echo 'Configured UDP Manager'
 }
@@ -62,6 +55,26 @@ configLogDirectory() {
 	    $FILE > $FILE.bak
 	mv $FILE.bak $FILE
 	echo 'Updated log configuration'
+}
+
+## Description: Configures Media Server Manager
+## Parameters :
+## 		1.BIND_ADDRESS
+## 		2.MEDIASERVER_EXTERNAL_ADDRESS
+
+configMediaServerManager() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	bind_address="$1"
+	ms_external_address="$2"
+		sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" /
+			-e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" /
+			-e "s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|" /
+			-e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" /
+			-e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" -e
+			-e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+
+		mv $FILE.bak $FILE
+		echo 'Configured Media Server Manager'
 }
 
 ## MAIN
@@ -113,7 +126,8 @@ if [ -z "$MS_SUBNET_MASK" ]; then
       MS_SUBNET_MASK=$SUBNET_MASK
 fi
 
-configUdpManager $MS_ADDRESS $MS_NETWORK $MS_SUBNET_MASK
+configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"
 #configJavaOpts
 configLogDirectory
+configMediaServerManager "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 echo 'Finished configuring Mobicents Media Server!'
