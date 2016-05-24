@@ -238,6 +238,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
     private void writeEmailAddress(final Account account, final HierarchicalStreamWriter writer) {
         writer.startNode("EmailAddress");
         writer.setValue(account.getEmailAddress());
+        writer.endNode();
         writer.close();
     }
 
@@ -248,6 +249,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
     private void writeRoleInfo(final String role, final HierarchicalStreamWriter writer) {
         writer.startNode("Role");
         writer.setValue(role);
+        writer.endNode();
         writer.close();
     }
 
