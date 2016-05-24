@@ -66,11 +66,11 @@ configMediaServerManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	bind_address="$1"
 	ms_external_address="$2"
-		sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" /
-			-e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" /
-			-e "s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|" /
-			-e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" /
-			-e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" -e
+		sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
+			-e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
+			-e "s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|" \
+			-e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
+			-e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
 			-e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
