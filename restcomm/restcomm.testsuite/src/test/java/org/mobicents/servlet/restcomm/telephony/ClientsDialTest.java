@@ -350,9 +350,6 @@ public class ClientsDialTest {
         Credential c = new Credential("127.0.0.1", "maria", "1234");
         mariaPhone.addUpdateCredential(c);
 
-        final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
-
         Thread.sleep(1000);
 
         // Maria initiates a call to Dimitri
@@ -360,6 +357,12 @@ public class ClientsDialTest {
         mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(mariaCall);
         assertTrue(mariaCall.waitForAuthorisation(3000));
+
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        georgeCall.waitForIncomingCall(5 * 1000);
+        georgeCall.sendIncomingCallResponse(Response.RINGING, "RINGING-George", 3600);
 
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
@@ -371,18 +374,15 @@ public class ClientsDialTest {
             assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
             mariaDialog = mariaCall.getDialog();
-            assertNotNull(mariaDialog);
         }
+
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null,
+                null));
 
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
         assertTrue(mariaCall.sendInviteOkAck());
-
-        georgeCall.waitForIncomingCall(5 * 1000);
-        georgeCall.sendIncomingCallResponse(Response.RINGING, "RINGING-George", 3600);
-        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null,
-                null));
 
         //        For a reason the ACK will never reach Restcomm. This is only when working with the sipUnit
         //        assertTrue(georgeCall.waitForAck(5 * 1000));
