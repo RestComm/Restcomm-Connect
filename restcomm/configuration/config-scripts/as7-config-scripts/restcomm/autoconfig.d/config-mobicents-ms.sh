@@ -125,6 +125,11 @@ fi
 if [ -z "$MS_SUBNET_MASK" ]; then
       MS_SUBNET_MASK=$SUBNET_MASK
 fi
+#Check for Por Offset
+if (( $PORT_OFFSET > 0 )); then
+	LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
+	REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
+fi
 
 configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"
 #configJavaOpts
