@@ -55,6 +55,7 @@ public final class VoiceInterpreterBuilder {
     private String statusCallbackMethod;
     private String emailAddress;
     private ActorRef monitoring;
+    private String rcml;
 
     /**
      * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -71,7 +72,7 @@ public final class VoiceInterpreterBuilder {
             @Override
             public UntypedActor create() throws Exception {
                 return new VoiceInterpreter(configuration, account, phone, version, url, method, fallbackUrl, fallbackMethod,
-                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring);
+                        statusCallback, statusCallbackMethod, emailAddress, calls, conferences, bridges, sms, storage, monitoring, rcml);
             }
         }));
     }
@@ -143,4 +144,6 @@ public final class VoiceInterpreterBuilder {
     public void setMonitoring(ActorRef monitoring) {
         this.monitoring = monitoring;
     }
+
+    public void setRcml(final String rcml) { this.rcml = rcml; }
 }

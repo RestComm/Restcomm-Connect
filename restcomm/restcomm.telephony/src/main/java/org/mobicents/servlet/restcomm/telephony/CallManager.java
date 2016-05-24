@@ -361,7 +361,13 @@ public final class CallManager extends UntypedActor {
                 // This call is not a registered DID (application). Try to proxy out this call.
                 // log to console and to notification engine
                 String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
-                sendNotification(errMsg, 11002, "warning", true);
+                sendNotification(errMsg, 11002, "info", true);
+
+                if (isWebRTC(request)) {
+                    //This is a WebRTC client that dials out
+                    proxyThroughMediaServer(request, client, toUser);
+                    return;
+                }
 
                 // https://telestax.atlassian.net/browse/RESTCOMM-335
                 final String proxyURI = activeProxy;
@@ -439,6 +445,36 @@ public final class CallManager extends UntypedActor {
                 + "cannot be found or there is application attached to that";
         sendNotification(errMsg, 11005, "error", true);
 
+    }
+
+    private boolean isWebRTC(final SipServletRequest request) {
+        String transport = request.getTransport();
+        if (!request.getInitialTransport().equalsIgnoreCase(transport))
+            transport = request.getInitialTransport();
+        return "ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport);
+    }
+
+    private void proxyThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
+        String rcml = "<Response><Dial>"+destNumber+"</Dial></Response>";
+        final VoiceInterpreterBuilder builder = new VoiceInterpreterBuilder(system);
+        builder.setConfiguration(configuration);
+        builder.setStorage(storage);
+        builder.setCallManager(self());
+        builder.setConferenceManager(conferences);
+        builder.setBridgeManager(bridges);
+        builder.setSmsService(sms);
+        builder.setAccount(client.getAccountSid());
+        builder.setVersion(client.getApiVersion());
+        final Account account = storage.getAccountsDao().getAccount(client.getAccountSid());
+        builder.setEmailAddress(account.getEmailAddress());
+        builder.setRcml(rcml);
+        builder.setMonitoring(monitoring);
+        final ActorRef interpreter = builder.build();
+        final ActorRef call = call();
+        final SipApplicationSession application = request.getApplicationSession();
+        application.setAttribute(Call.class.getName(), call);
+        call.tell(request, self());
+        interpreter.tell(new StartInterpreter(call), self());
     }
 
     private void info(final SipServletRequest request) throws IOException {

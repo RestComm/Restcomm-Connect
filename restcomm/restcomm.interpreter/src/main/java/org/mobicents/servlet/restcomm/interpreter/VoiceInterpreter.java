@@ -194,6 +194,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     Tag conferenceVerb;
     List<URI> conferenceWaitUris;
     private boolean playMusicForConference = false;
+    //Used for system apps, such as when WebRTC client is dialing out.
+    //The rcml will be used instead of download the RCML
+    private String rcml;
 
     // Call bridging
     private final ActorRef bridgeManager;
@@ -202,7 +205,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
                             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring) {
+                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -236,6 +239,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
+        transitions.add(new Transition(acquiringCallInfo, ready));
         transitions.add(new Transition(initializingCall, downloadingRcml));
         transitions.add(new Transition(initializingCall, ready));
         transitions.add(new Transition(initializingCall, finishDialing));
@@ -422,6 +426,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.cache = cache(path, uri);
         this.downloader = downloader();
         this.monitoring = monitoring;
+        this.rcml = rcml;
     }
 
     private boolean is(State state) {
@@ -552,7 +557,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
-                    fsm.transition(message, downloadingRcml);
+                    if (rcml!=null && !rcml.isEmpty()) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("System app is present will proceed to ready state, system app: "+rcml);
+                        }
+                        createInitialCallRecord((CallResponse<CallInfo>) message);
+                        fsm.transition(message, ready);
+                    } else {
+                        fsm.transition(message, downloadingRcml);
+                    }
                 } else {
                     fsm.transition(message, initializingCall);
                 }
@@ -1230,68 +1243,72 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
             if (CallResponse.class.equals(klass)) {
-                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                callInfo = response.get();
-                callState = callInfo.state();
-                if (callInfo.direction().equals("inbound")) {
-                    callRecord = records.getCallDetailRecord(callInfo.sid());
-                    if (callRecord == null) {
-                        // Create a call detail record for the call.
-                        final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                        builder.setSid(callInfo.sid());
-                        builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
-                        builder.setDateCreated(callInfo.dateCreated());
-                        builder.setAccountSid(accountId);
-                        builder.setTo(callInfo.to());
-                        if (callInfo.fromName() != null) {
-                            builder.setCallerName(callInfo.fromName());
-                        } else {
-                            builder.setCallerName("Unknown");
-                        }
-                        if (callInfo.from() != null) {
-                            builder.setFrom(callInfo.from());
-                        } else {
-                            builder.setFrom("Unknown");
-                        }
-                        builder.setForwardedFrom(callInfo.forwardedFrom());
-                        builder.setPhoneNumberSid(phoneId);
-                        builder.setStatus(callState.toString());
-                        final DateTime now = DateTime.now();
-                        builder.setStartTime(now);
-                        builder.setDirection(callInfo.direction());
-                        builder.setApiVersion(version);
-                        builder.setPrice(new BigDecimal("0.00"));
-                        // TODO implement currency property to be read from Configuration
-                        builder.setPriceUnit(Currency.getInstance("USD"));
-                        final StringBuilder buffer = new StringBuilder();
-                        buffer.append("/").append(version).append("/Accounts/");
-                        buffer.append(accountId.toString()).append("/Calls/");
-                        buffer.append(callInfo.sid().toString());
-                        final URI uri = URI.create(buffer.toString());
-                        builder.setUri(uri);
-
-                        builder.setCallPath(call.path().toString());
-
-                        callRecord = builder.build();
-                        records.addCallDetailRecord(callRecord);
-                        //
-                        // if (liveCallModification) {
-                        // logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
-                        // fsm.transition(message, acquiringCallMediaGroup);
-                        // return;
-                        // }
-                    }
-
-                    // Update the application.
-                    callback();
-                }
+                createInitialCallRecord((CallResponse<CallInfo>) message);
             }
             // Ask the downloader to get us the application that will be executed.
             final List<NameValuePair> parameters = parameters();
             request = new HttpRequestDescriptor(url, method, parameters);
             downloader.tell(request, source);
+        }
+    }
+
+    private void createInitialCallRecord(CallResponse<CallInfo> message) {
+        final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+        final CallResponse<CallInfo> response = message;
+        callInfo = response.get();
+        callState = callInfo.state();
+        if (callInfo.direction().equals("inbound")) {
+            callRecord = records.getCallDetailRecord(callInfo.sid());
+            if (callRecord == null) {
+                // Create a call detail record for the call.
+                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                builder.setSid(callInfo.sid());
+                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                builder.setDateCreated(callInfo.dateCreated());
+                builder.setAccountSid(accountId);
+                builder.setTo(callInfo.to());
+                if (callInfo.fromName() != null) {
+                    builder.setCallerName(callInfo.fromName());
+                } else {
+                    builder.setCallerName("Unknown");
+                }
+                if (callInfo.from() != null) {
+                    builder.setFrom(callInfo.from());
+                } else {
+                    builder.setFrom("Unknown");
+                }
+                builder.setForwardedFrom(callInfo.forwardedFrom());
+                builder.setPhoneNumberSid(phoneId);
+                builder.setStatus(callState.toString());
+                final DateTime now = DateTime.now();
+                builder.setStartTime(now);
+                builder.setDirection(callInfo.direction());
+                builder.setApiVersion(version);
+                builder.setPrice(new BigDecimal("0.00"));
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(version).append("/Accounts/");
+                buffer.append(accountId.toString()).append("/Calls/");
+                buffer.append(callInfo.sid().toString());
+                final URI uri = URI.create(buffer.toString());
+                builder.setUri(uri);
+
+                builder.setCallPath(call.path().toString());
+
+                callRecord = builder.build();
+                records.addCallDetailRecord(callRecord);
+                //
+                // if (liveCallModification) {
+                // logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+                // fsm.transition(message, acquiringCallMediaGroup);
+                // return;
+                // }
+            }
+
+            // Update the application.
+            callback();
         }
     }
 
@@ -1381,6 +1398,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     source.tell(stop, source);
                     return;
                 }
+            } else if ((message instanceof CallResponse) && (rcml != null && !rcml.isEmpty())) {
+                if (parser != null) {
+                    context.stop(parser);
+                    parser = null;
+                }
+                parser = parser(rcml);
             } else if (pausing.equals(state)) {
                 context.setReceiveTimeout(Duration.Undefined());
             }
