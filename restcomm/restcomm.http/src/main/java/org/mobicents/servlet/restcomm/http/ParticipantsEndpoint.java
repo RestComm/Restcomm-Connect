@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import static akka.pattern.Patterns.ask;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
@@ -26,16 +27,20 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -59,9 +64,19 @@ import org.mobicents.servlet.restcomm.http.converter.ConferenceParticipantConver
 import org.mobicents.servlet.restcomm.http.converter.RecordingConverter;
 import org.mobicents.servlet.restcomm.http.converter.RecordingListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
+import org.mobicents.servlet.restcomm.telephony.GetCall;
+import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Mute;
+import org.mobicents.servlet.restcomm.mscontrol.messages.Unmute;
 
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
+import akka.util.Timeout;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -84,8 +99,6 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
     protected AccountsDao accountsDao;
     protected RecordingsDao recordingsDao;
     protected String instanceId;
-
-    protected boolean normalizePhoneNumbers;
 
     public ParticipantsEndpoint() {
         super();
@@ -118,8 +131,6 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(listConverter);
 
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
-
-        normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
@@ -235,4 +246,86 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
+        final Sid accountSid = new Sid(sid);
+        Account account = daos.getAccountsDao().getAccount(accountSid);
+        try {
+            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall started $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            secure(account, "RestComm:Modify:Calls");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 1 updateCall started $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
+        CallDetailRecord cdr = null;
+        try {
+            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 2 updateCall started $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            cdr = dao.getCallDetailRecord(new Sid(callSid));
+
+            if (cdr != null) {
+                try {
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                } catch (final AuthorizationException exception) {
+                    return status(UNAUTHORIZED).build();
+                }
+            } else {
+                return Response.status(NOT_ACCEPTABLE).build();
+            }
+        } catch (Exception e) {
+            return status(BAD_REQUEST).build();
+        }
+
+        final String mutedStr = data.getFirst("Muted");
+        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall mutedStr = "+mutedStr+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        // Mute/UnMute call
+        if (mutedStr != null) {
+
+            boolean muted = Boolean.parseBoolean(mutedStr);
+            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall muted = "+muted+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            String callPath = null;
+            final ActorRef call;
+            final CallInfo callInfo;
+
+            try {
+                callPath = cdr.getCallPath();
+                Future<Object> future = (Future<Object>) ask(callManager, new GetCall(callPath), expires);
+                call = (ActorRef) Await.result(future, Duration.create(100000, TimeUnit.SECONDS));
+
+                future = (Future<Object>) ask(call, new GetCallInfo(), expires);
+                CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
+                        Duration.create(100000, TimeUnit.SECONDS));
+                callInfo = response.get();
+                logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall callInfo = "+callInfo+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            } catch (Exception exception) {
+                return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+            }
+            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall callInfo.state().name() = "+callInfo.state().name()+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            if (callInfo.state().name().equalsIgnoreCase("IN_PROGRESS")){
+                if (muted) {
+                    if (call != null) {
+                        call.tell(new Mute(), null);
+                        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 3 updateCall muted call sent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+                    }
+                } else {
+                    if (call != null) {
+                        call.tell(new Unmute(), null);
+                        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 4 updateCall unmuted call sent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+                    }
+                }
+            }else{
+                logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 5 updateCall else $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+            }
+        }
+
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(cdr), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            return ok(xstream.toXML(new RestCommResponse(cdr)), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
 }

@@ -23,9 +23,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -56,6 +58,13 @@ public final class ParticipantsXmlEndpoint extends ParticipantsEndpoint {
     @GET
     public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
         return getCalls(accountSid, conferenceSid, info, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{callSid}")
+    @POST
+    public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid,
+            final MultivaluedMap<String, String> data) {
+        return updateCall(accountSid, callSid, data, APPLICATION_XML_TYPE);
     }
 
 }
