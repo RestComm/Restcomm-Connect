@@ -41,7 +41,6 @@ configJavaOpts() {
 ## Description: Updates RestComm configuration file
 ## Parameters : 1.BIND_ADDRESS
 ## 		2.STATIC_ADDRESS
-configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS"
 configRestcomm() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	bind_address="$1"
@@ -393,4 +392,5 @@ configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYS
 configRestCommURIs
 updateRecordingsPath
 configHypertextPort
+configOutboundProxy
 echo 'Configured RestComm!'
