@@ -360,6 +360,16 @@ mv $MSSFILE.bak $MSSFILE
 }
 
 
+
+otherRestCommConf(){
+FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
+		mv $FILE.bak $FILE
+mv $MSSFILE.bak $MSSFILE
+}
+
+
+
 # MAIN
 echo 'Configuring RestComm...'
 #Reload Variables
@@ -385,4 +395,5 @@ configRestCommURIs
 updateRecordingsPath
 configHypertextPort
 configOutboundProxy
+otherRestCommConf
 echo 'Configured RestComm!'
