@@ -351,7 +351,13 @@ updateRecordingsPath() {
 	fi
 }
 
+configHypertextPort(){
+MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
+sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|
+N; 		s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
 
+mv $MSSFILE.bak $MSSFILE
+}
 
 
 # MAIN
@@ -377,6 +383,6 @@ configSpeechSynthesizers
 configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
 configRestCommURIs
 updateRecordingsPath
-
+configHypertextPort
 configOutboundProxy
 echo 'Configured RestComm!'
