@@ -119,10 +119,31 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
         mv $FILE.bak $FILE
 }
 
+configHypertextPort(){
+RCFILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
+MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
+
+sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|
+N; 		s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" $RCFILE > $RCFILE.bak
+mv $RCFILE.bak $RCFILE
+
+#Check for Por Offset
+if (( $PORT_OFFSET > 0 )); then
+	HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+	HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+fi
+sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|
+N; 		s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
+
+mv $MSSFILE.bak $MSSFILE
+}
+
+
 #MAIN
 echo 'Configuring Application Server...'
 #Reload Variables
 source $BASEDIR/restcomm.conf
 configSocketbinding
 configConnectors "$STATIC_ADDRESS"
+configHypertextPort
 echo 'Finished configuring Application Server!'

@@ -352,19 +352,7 @@ updateRecordingsPath() {
 }
 
 
-configHypertextPort(){
-RCFILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
 
-sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|
-N; 		s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" $RCFILE > $RCFILE.bak
-mv $RCFILE.bak $RCFILE
-
-sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|
-N; 		s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
-
-mv $MSSFILE.bak $MSSFILE
-}
 
 # MAIN
 echo 'Configuring RestComm...'
@@ -389,6 +377,6 @@ configSpeechSynthesizers
 configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
 configRestCommURIs
 updateRecordingsPath
-configHypertextPort
+
 configOutboundProxy
 echo 'Configured RestComm!'
