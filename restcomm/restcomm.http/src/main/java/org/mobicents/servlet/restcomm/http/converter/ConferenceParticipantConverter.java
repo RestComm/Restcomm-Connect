@@ -67,7 +67,6 @@ public final class ConferenceParticipantConverter extends AbstractConverter impl
         writeStartConferenceOnEnter(cdr.isStartConferenceOnEnter(), writer);
         writeEndConferenceOnEnter(cdr.isEndConferenceOnExit(), writer);
         writeUri(cdr.getUri(), writer);
-        writeSubResources(cdr, writer);
         writer.endNode();
     }
 
@@ -91,7 +90,6 @@ public final class ConferenceParticipantConverter extends AbstractConverter impl
         writeStartConferenceOnEnter(cdr.isStartConferenceOnEnter(), object);
         writeEndConferenceOnEnter(cdr.isEndConferenceOnExit(), object);
         writeUri(cdr.getUri(), object);
-        writeSubResources(cdr, object);
         return object;
     }
 
@@ -143,39 +141,5 @@ public final class ConferenceParticipantConverter extends AbstractConverter impl
         if (sid != null) {
             object.addProperty("conference_sid", sid.toString());
         }
-    }
-
-    private void writeNotifications(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
-        writer.startNode("Notifications");
-        writer.setValue(prefix(cdr) + "/Notifications");
-        writer.endNode();
-    }
-
-    private void writeNotifications(final CallDetailRecord cdr, final JsonObject object) {
-        object.addProperty("notifications", prefix(cdr) + "/Notifications");
-    }
-
-    private void writeRecordings(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
-        writer.startNode("Recordings");
-        writer.setValue(prefix(cdr) + "/Recordings");
-        writer.endNode();
-    }
-
-    private void writeRecordings(final CallDetailRecord cdr, final JsonObject object) {
-        object.addProperty("recordings", prefix(cdr) + "/Recordings");
-    }
-
-    private void writeSubResources(final CallDetailRecord cdr, final HierarchicalStreamWriter writer) {
-        writer.startNode("SubresourceUris");
-        writeNotifications(cdr, writer);
-        writeRecordings(cdr, writer);
-        writer.endNode();
-    }
-
-    private void writeSubResources(final CallDetailRecord cdr, final JsonObject object) {
-        final JsonObject other = new JsonObject();
-        writeNotifications(cdr, other);
-        writeRecordings(cdr, other);
-        object.add("subresource_uris", other);
     }
 }
