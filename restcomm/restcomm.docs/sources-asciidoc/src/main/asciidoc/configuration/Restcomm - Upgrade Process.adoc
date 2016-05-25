@@ -1,0 +1,21 @@
+In order to be able to use the latest features of Restcomm Connect, it is at times necessary to upgrade from a current version to the latest iteration. Telestax has made the upgrade procedure intuitive and fast. Please follow the steps below to upgrade Restcomm Connect from version your current version to the latest iteration. Before any major upgrade of a production server, we recommend that you backup your Amazon AMI instance:
+
+* See link:http://stackoverflow.com/questions/11323008/how-to-make-a-daily-back-up-of-my-ec2-instance[HERE] for how to back up your EC2 instance if you run on Amazon Web Services.
+
+= Upgrade to latest version
+
+Stop restcomm by running
+
+* *restcomm_stop*
+
+Run the upgrade script as follows
+
+* *restcomm_update*
+
+Once the upgrade is finished, type
+
+* *source /etc/profile*
+
+Finally restart restcomm
+
+* *restcomm_start*

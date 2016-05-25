@@ -1,0 +1,69 @@
+It is possible to run Restcomm in a cluster mode where two Restcomm instances can use the same Mysql server as explained http://docs.telestax.com/restcomm-using-a-single-mysql-database-for-2-restcomm-servers/[HERE]. In this tutorial, you will learn how to configure two Restcomm instances to share the same workspace. This means, any application created with Restcomm Visual Designer on any Restcomm server will be available and visible on both Servers. In order to be able to call these applications, you will need to point Restcomm to the same database (as explained http://docs.telestax.com/restcomm-using-a-single-mysql-database-for-2-restcomm-servers/[HERE]) and the same RVD workspace.
+
+[[requirements]]
+Requirements
+^^^^^^^^^^^^
+
+* Install NFS on your Linux Server
+* Basic Knowledge of Restcomm
+* This tutorial use a Redhat Linux Server
+
+image:./images/Two-Restcomm-Servers-Sharing-a-Single-RVD-Workspace-.png[Two Restcomm Servers Sharing a Single RVD Workspace,width=553,height=273]
+
+[[step-1---make-sure-nfs-is-started-and-export-server1-rvd-workspace]]
+Step 1 - Make sure NFS is started and export Server1 RVD Workspace
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* On Restcomm server1, create a new directory */opt/telestax/restcomm-shared-workspace*
+* Edit the */etc/exports* file and add the line below:
+
+[source,lang:default,decode:true]
+----
+/opt/telestax/restcomm-shared-workspace   192.168.1.12(rw,sync,no_root_squash,no_subtree_check)
+----
+
+* The above will share the *restcomm-shared-space* directory and give read-write access to any NFS client from server (Restcomm Server2) *192.168.1.12*
+* Save the changes above and run the command below for changes to take effect.
+* *sudo service nfs reload*
+* Log into the (Restcomm server2) 192.168.1.12 and make sure the NFS exported directory is visible. Run the command below.
+* *showmount -e 192.168.1.11*
+* You will see an output like the one below
+* *Export list for 192.168.1.11: - /opt/telestax/restcomm-shared-workspace 192.168.1.12*
+
+[[step-2---mount-the-shared-directory-on-restcomm-server2]]
+Step 2 - Mount the Shared directory on Restcomm server2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* On Restcomm Server2, create a new directory /opt/telestax/restcomm-mount-shared-workspace
+* *mkdir -p /opt/telestax/restcomm-mount-shared-workspace*
+* mount the shared directory on Server1 to the new directory you created above
+* **mount -t nfs 192.168.1.11:/opt/telestax/restcomm-shared-workspace**  */opt/telestax/restcomm-mount-shared-workspace*
+* create a test file in the */opt/telestax/restcomm-mount-shared-workspace*
+* *touch testfile.txt*
+* This file will also be visible in the *opt/telestax/restcomm-shared-workspace* of Restcomm Server1
+* Make sure the NFS share directory will automount on server restart. Add the line below to the */etc/fstab* file
+
+[source,lang:default,decode:true]
+----
+192.168.1.11:/opt/telestax/restcomm-shared-workspace  /opt/telestax/restcomm-mount-shared-workspace nfs defaults 0 0
+----
+
+[[step-3---change-the-default-rvd-workspace-on-restcomm-server1-to-use-the-nfs-directory]]
+Step 3 - Change the default RVD workspace on Restcomm Server1 to use the NFS directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Rename default RVD workspace to workspace-old as shown below
+* *mv $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace   $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace-old*
+* Create a new symbolic link directory that points to the NFS shared directory(replacing the default workspace directory)
+* *sudo ln -s /opt/telestax/restcomm-shared-workspace   /opt/telestax/$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace*
+* Copy the content of the directory workspace-old to workspace.(This content will be visible to both servers)
+
+[[step-4---change-the-default-rvd-workspace-on-restcomm-server2-to-use-the-nfs-directory]]
+Step 4 - Change the default RVD workspace on Restcomm Server2 to use the NFS directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Rename default RVD workspace to workspace-old as shown below
+* *mv $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace   $RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace-old*
+* Create a new symbolic link directory that points to the NFS mount shared directory(replacing the default workspace directory)
+* *sudo ln -s /opt/telestax/restcomm-mount-shared-workspace   /opt/telestax/$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war/workspace*
+* Note the difference above that the directory is the restcomm-mount-shared-workspace.
