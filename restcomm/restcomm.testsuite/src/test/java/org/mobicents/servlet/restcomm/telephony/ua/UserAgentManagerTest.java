@@ -19,8 +19,12 @@
  */
 package org.mobicents.servlet.restcomm.telephony.ua;
 
+import gov.nist.javax.sip.message.SIPResponse;
 import org.cafesip.sipunit.Credential;
+import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
+import org.cafesip.sipunit.SipResponse;
 import org.cafesip.sipunit.SipStack;
 import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -162,49 +166,21 @@ public final class UserAgentManagerTest {
         SipURI uri = sipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
-        assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:5070;transport=udp", 3600, 3600));
+        assertTrue(phone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5070;transport=udp", 3600, 3600));
         Thread.sleep(500);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         // This is necessary for SipUnit to accept unsolicited requests.
-        phone.setLoopback(true);
-        // Due to some limitations in hsql to load new databases after the container
-        // has been started we have to compensate for REGISTER messages coming from
-        // the proxy tests so this test code is more complex than it should be but
-        // it should still make sense.
-        boolean timedOut = false;
-        RequestEvent event = null;
+//        phone.setLoopback(true);
         phone.listenRequestMessage();
-        do {
-            // Wait for an incoming request.
-            event = phone.waitRequest(75 * 1000);
-            if (event == null) {
-                logger.info("Event is null, will timeout");
-                timedOut = true;
-            } else {
-                final String method = event.getRequest().getMethod();
-                if ("REGISTER".equalsIgnoreCase(method)) {
-                    logger.info("Event is REGISTER, will timeout");
-                    event = null;
-                    continue;
-                } else {
-                    // Validate the request.
-                    assertTrue("OPTIONS".equalsIgnoreCase(method));
-                    logger.info("Event is OPTIONS, will timeout");
-                    // Send the OK response.
-                    final MessageFactory factory = sipStack.getMessageFactory();
-                    final Request request = event.getRequest();
-                    Response ok = factory.createResponse(200, request);
-                    SipTransaction transaction = phone.sendReply(event, ok);
-                    // Validate the transaction.
-                    assertNotNull(transaction);
-                    // Exit
-                    timedOut = true;
-                }
-            }
-        } while (!timedOut);
+        RequestEvent requestEvent = phone.waitRequest(75000);
+        assertNotNull(requestEvent);
+        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
+        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+        Response response = sipStack.getMessageFactory().createResponse(SIPResponse.OK, requestEvent.getRequest());
+        phone.sendReply(requestEvent, response);
+        Thread.sleep(1000);
         // Clean up (Unregister).
         assertTrue(phone.unregister("sip:127.0.0.1:5070;transport=udp", 0));
-        assertNotNull(event);
     }
 
     @Test
