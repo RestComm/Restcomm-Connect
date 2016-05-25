@@ -1,0 +1,102 @@
+[[environment-variables]]
+Environment variables
+~~~~~~~~~~~~~~~~~~~~~
+
+RestComm docker container provides the option to use a file to configure environment variables. These variable are used with the Restcomm Docker  RUN command.
+
+* *ENVCONFURL* Set the URL for environment variables configuration file location/repository.
+* *REPOUSR* Set Username for environment variables configuration file Authentication if needed.
+* *REPOPWRD* Set Password for environment variables configuration file Authenitcation if needed.
+
+The RestComm docker image supports a set of environment variables to configure the application.
+
+* *STATIC_ADDRESS* Set the public ip address that RestComm should use
+* *NET_INTERFACE* Set specific interface for RestComm to use (default eth0 )
+* *USE_STANDARD_HTTP_PORTS* Use standard HTTS(S) ports such as 80, 443
+* *USE_STANDARD_SIP_PORTS* Use standard SIP such as 5060, 5061, 5062, 5063
+* *PORT_OFFSET* Used to port enable port offset if two RestComm-docker instances are running in same host. (e.g PORT_OFFSET=100. ports will be used are 180,543,5180,5182…)
+* *OUTBOUND_PROXY* Set the SIP Outbound proxy
+* *OUTBOUND_PROXY_USERNAME* Set the SIP Outbound proxy username
+* *OUTBOUND_PROXY_PASSWORD* Set the SIP Outbound proxy password
+* *PROVISION_PROVIDER* Set the Provision Provider, choose one of the following: VI (VoipInnovation), BW (Bandwidth), NX (Nexmo), VB (Voxbone)
+* *DID_LOGIN* Set the DID Provider username
+* *DID_PASSWORD* Set the DID Provider password
+* *DID_ENDPOINT* Set the Endpoint ID for VoipInnovation Provision Provider
+* *DID_SITEID* Set the Site Id for Bandwidth Provision Provider
+* *DID_ACCOUNTID* Set the Account Id for Bandwidth Provision Provider
+* *INTERFAX_USER* Set the Interfax username
+* *INTERFAX_PASSWORD* Set the Interfax password
+* *ISPEECH_KEY* Set the iSpeech speech recognition key
+* *VOICERSS_KEY* Set the VoiceRss Text-To-Speech key
+* *ACAPELA_APPLICATION* Set the Acapela Text-To-Speech application key
+* *ACAPELA_LOGIN* Set the Acapela Text-To-Speech username
+* *ACAPELA_PASSWORD* Set the Acapela Text-To-Speech password
+* *SMPP_TYPE* Set the SMPP Type ie the unique name for the SMPP Connection and sets the SMPP to be enabled for the SMS API and RVD Tag
+* *S3_BUCKET_NAME* Set the S3 Bucket Name so that Restcomm stores the Recording in Amazon Web Services S3 Service
+* *S3_ACCESS_KEY* Set the S3 Access Key so that Restcomm stores the Recording in Amazon Web Services S3 Service
+* *S3_SECURITY_KEY* Set the S3 Security Key so that Restcomm stores the Recording in Amazon Web Services S3 Service
+* *HSQL_PERSIST* Path to use for persist date using HSQL.
+* *SMTP_USER* Set the SMTP User so that Restcomm configures the SMTP Service for the Email API and RVD Tag
+* *SMTP_PASSWORD* Set the SMTP Password so that Restcomm configures the SMTP Service for the Email API and RVD Tag
+* *SMTP_HOST* Set the SMTP Host so that Restcomm configures the SMTP Service for the Email API and RVD Tag
+* *MYSQL_USER* Set the MySQL User so that Restcomm configures RestComm to use a MySQL DB instead of In memory DB
+* *MYSQL_PASSWORD* Set the MySQL Password so that Restcomm configures RestComm to use a MySQL DB instead of In memory DB
+* *MYSQL_HOST* Set the MySQL Host so that Restcomm configures RestComm to use a MySQL DB instead of In memory DB
+* *MYSQL_SNDHOST* Set the MySQL Failover Host, a secondary MySQL DB with Master-Slave topology (will use same DB name and password as primary DB)
+* *MYSQL_SCHEMA* Set the MySQL Schema so that Restcomm configures RestComm to use a MySQL DB instead of In memory DB
+* *SSL_MODE* Set the SSL Mode for Restcomm and RVD to query External Service over HTTPS. Values : allowall, strict
+* *RVD_LOCATION* Set the Location for Restcomm Visual Designer to store the workspaces in a shared filesystem
+* *RVD_PORT* Set custom port mapping for RVD, when custom port is used instead of (-p 80:80, -p 443:443). E.g. (-e RVD_PORT="555" -p 555:443).
+* *LOG_LEVEL* Set the Log Level for Restcomm and MMS
+* *CORE_LOGS_LOCATION* Set the location were to store Restcomm logs
+* *RESTCOMM_TRACE_LOG* Set the location were to store network trace logs (pcap files)
+* *RESTCOMMHOST* Set the hostname for this machine for RestComm to recognize it and use it for relative URL requests
+* *INIT_PASSWORD* Set password for “administrator@company.com” when running RestComm-docker
+* *RC_JAVA_OPTS_EXTRA* Used to add extra JAVA options for RestComm (e.g RC_JAVA_OPTS_EXTRA="-Xms2048m -Xmx2048m").
+
+*Media server*
+
+* *MEDIASERVER_LOWEST_PORT* Set the Media Server lowest RTP port
+* *MEDIASERVER_HIGHEST_PORT* Set the Media Server highest RTP port
+* *MEDIASERVER_LOGS_LOCATION* Set the location were to store Mediaserver logs.
+* *USESBC* Disable Session Border Control for MS. (Used for RestComm chain topology)
+* *DTMFDBI* Set dtmf detection dbi value for inband detection. (Value range -36-0)
+* *MS_COMPATIBILITY_MODE* Use external XMS dialogig Media Server. Need to combine with the appropriate "Media Server Network Configuration"
+* *RECORDINGS_PATH* Directory where recordings are saved (Mainly set when external Media server is used).
+* *MS_JAVA_EXTRA_OPTS* Add extra JAVA options on Medias Server (e.g MS_JAVA_EXTRA_OPTS="-Xms2048m -Xmx2048m").
+
+*Media Server Network Configuration*
+
+* *MS_ADDRESS* Specify MS IP different than RestComm. Can be used for external MS as well.
+* *MS_SUBNET_MASK* MS subnet mask
+* *MS_NETWORK* MS network
+* *MEDIASERVER_EXTERNAL_ADDRESS* Public IP address to enable “srflx” candidates in ice negotiation.
+
+*SMS outbound proxy configuration*
+
+* *SMS_OUTBOUND_PROXY* Set the ip address and port for the SMS proxy server that needs to be used (-e SMS_OUTBOUND_PROXY="PROXY_IP:PROXY_PORT").
+
+*HTTPS related configuration*
+
+* *SECURESSL* Configure RestComm to be used in secure mode ie only on HTTPS not HTTP and SIP Over Secure WebSockets + TLS (Values: AUTH - need to provide JKS file & DER file. SELF - self sighned certificate generation)
+* *TRUSTSTORE_PASSWORD* Set the password to use for RestComm to configure the certificate for HTTPS and SIP TLS
+* *TRUSTSTORE_ALIAS* Set the Alias to use for RestComm to configure the certificate for HTTPS and SIP TLS
+
+*SECURESSL=AUTH*
+
+* *CERTCONFURL* JKS file URL location
+* *CERTREPOUSR* Username for authentication if needed.
+* *CERTREPOPWRD* Password for authentications if needed
+* *DERCONFURL* DER file URL location
+* *DERREPOUSR* Username for authentication if needed
+* *DERREPOPWRD* Password for authentication if needed
+
+*SMPP related configuration*
+
+* *GENERIC_SMPP_TYPE* The SMPP type
+* *GENERIC_SMPP_ID* The SMPP id
+* *GENERIC_SMPP_PASSWORD* The SMPP password
+* *GENERIC_SMPP_PEER_IP* The SMPP peer IP Address
+* *GENERIC_SMPP_PEER_PORT* The SMPP peer port
+* *GENERIC_SMPP_SOURCE_MAP* The SMPP source map
+* *GENERIC_SMPP_DEST_MAP* The SMPP destination map
