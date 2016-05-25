@@ -32,8 +32,6 @@ configConnectors() {
 	    $FILE > $FILE.bak
 
 	else
-
-		if [ -n "$static_address" ]; then
 			sed -e "s|path-name=\".*\"  \(app-dispatcher-class=.*\)|path-name=\"org.mobicents.ext\"  \1|" \
 			-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_UDP\"/>|" \
 			-e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_TCP\"/>|" \
@@ -41,15 +39,6 @@ configConnectors() {
 			-e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_WS\"/>|" \
 			-e "s|<connector name=\"sip-wss\" .*/>|<connector name=\"sip-wss\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-wss\" use-static-address=\"true\" static-server-address=\"$static_address\" static-server-port=\"$SIP_PORT_WSS\"/>|" \
 		    $FILE > $FILE.bak
-		else
-			sed -e "s|path-name=\".*\" \(app-dispatcher-class=.*\)|path-name=\"org.mobicents.ext\" \1|" \
-			-e "s|<connector name=\"sip-udp\" .*/>|<connector name=\"sip-udp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-udp\" static-server-port=\"$SIP_PORT_UDP\"/>|" \
-			-e "s|<connector name=\"sip-tcp\" .*/>|<connector name=\"sip-tcp\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tcp\" static-server-port=\"$SIP_PORT_TCP\"/>|" \
-			-e "s|<connector name=\"sip-tls\" .*/>|<connector name=\"sip-tls\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-tls\" static-server-port=\"$SIP_PORT_TLS\"/>|" \
-			-e "s|<connector name=\"sip-ws\" .*/>|<connector name=\"sip-ws\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-ws\" static-server-port=\"$SIP_PORT_WS\"/>|" \
-			-e "s|<connector name=\"sip-wss\" .*/>|<connector name=\"sip-wss\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"sip-wss\" static-server-port=\"$SIP_PORT_WSS\"/>|" \
-		    $FILE > $FILE.bak
-		fi
 	fi
 	mv $FILE.bak $FILE
 	echo 'Configured SIP Connectors and Bindings'
@@ -121,5 +110,5 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 #MAIN
 echo 'Configuring Application Server...'
 configSocketbinding
-configConnectors "$STATIC_ADDRESS"
+configConnectors "$PUBLIC_IP"
 echo 'Finished configuring Application Server!'

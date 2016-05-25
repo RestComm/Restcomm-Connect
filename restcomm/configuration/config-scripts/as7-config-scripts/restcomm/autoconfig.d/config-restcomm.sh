@@ -317,12 +317,11 @@ configRestCommURIs() {
 
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
-            REMOTEADD="$STATIC_ADDRESS"
+            REMOTEADD="$PUBLIC_IP"
             PORT="$HTTPS_PORT"
 			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>https://$REMOTEADD:$PORT/restcomm/audio<\/prompts-uri>|" \
 		    -e "s|<cache-uri>.*</cache-uri>|<cache-uri>https://$REMOTEADD/restcomm/cache</cache-uri>|" \
 			-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>https://$REMOTEADD/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
-
 		else
 			PORT="$HTTP_PORT"
 			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>http://$BIND_ADDRESS:$PORT/restcomm/audio<\/prompts-uri>|" \
@@ -368,7 +367,7 @@ otherRestCommConf(){
 echo 'Configuring RestComm...'
 #configJavaOpts
 configMobicentsProperties
-configRestcomm "$STATIC_ADDRESS"
+configRestcomm "$PUBLIC_IP"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
