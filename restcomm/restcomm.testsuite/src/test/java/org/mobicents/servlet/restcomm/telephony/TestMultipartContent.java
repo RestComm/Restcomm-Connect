@@ -29,6 +29,7 @@ import java.net.URL;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
+import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -195,9 +196,13 @@ public class TestMultipartContent {
     @Test
     public synchronized void testDialConference() throws InterruptedException {
 
+        Credential c = new Credential("127.0.0.1", "bob", "1234");
+        bobPhone.addUpdateCredential(c);
+
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialConf, null, multipartBody, "multipart", "mixed;boundary=uniqueBoundary", null, null);
         assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitForAuthorisation(5000));
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
         assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
