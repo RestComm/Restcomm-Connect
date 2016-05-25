@@ -1,0 +1,17 @@
+This guide explains how to use a file to load environment variables instead of using the command line. This allows you to version control your file for each environment (production, staging, dev, ...)
+
+[[load-environments-variables-from-file]]
+Load Environments Variables from File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Check the --env-file option that docker provides : https://docs.docker.com/engine/reference/commandline/run/[docker]
+
+* The --env-file=[ ] reads the required environment variables from a file.
+* Create a file similar to the one  https://github.com/RestComm/Restcomm-Docker/blob/master/scripts/restcomm_localenv_basic[HERE]
+
+Run the following command :
+
+[source,lang:default,decode:true]
+----
+sudo docker run -i -d --name=restcomm -v /var/log/restcomm:/var/log/restcomm/ --env-file="/PATH/TO/FILE/restcomm_localenv_basic" -e STATIC_ADDRESS="IP_OF_SERVER" -e RESTCOMMHOST="ADD_HOSTNAME" -e LOG_LEVEL="INFO" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+----
