@@ -61,12 +61,17 @@ configLogDirectory() {
 ## Parameters :
 ## 		1.BIND_ADDRESS
 ## 		2.MEDIASERVER_EXTERNAL_ADDRESS
-
 configMediaServerManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	bind_address="$1"
 	ms_address="$2"
 	ms_external_address="$3"
+
+	#Check for Por Offset
+	if (( $PORT_OFFSET > 0 )); then
+		local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
+		local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
+	fi
 		sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
 			-e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
 			-e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
@@ -126,14 +131,6 @@ fi
 
 if [ -z "$MS_SUBNET_MASK" ]; then
       MS_SUBNET_MASK=$SUBNET_MASK
-fi
-
-#Reload Port Variables
-source $BASEDIR/advance.conf
-#Check for Por Offset
-if (( $PORT_OFFSET > 0 )); then
-	LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
-	REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 fi
 
 configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"

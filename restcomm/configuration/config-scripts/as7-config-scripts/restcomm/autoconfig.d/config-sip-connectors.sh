@@ -12,11 +12,11 @@ configConnectors() {
 
 	#Check for Por Offset
 	if (( $PORT_OFFSET > 0 )); then
-		SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-		SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
-		SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
-		SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
-		SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
+		local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+		local SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
+		local SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
+		local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
+		local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
 	fi
 
 	if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
@@ -105,7 +105,7 @@ configConnectors() {
 configSocketbinding() {
 FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 	if (( $PORT_OFFSET > 0 )); then
-    	sed -i "s|\${jboss.socket.binding.port-offset:0\}|${PORT_OFFSET}|" $FILE
+    	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
 	fi
 	sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|" \
         -e "s|<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" \
@@ -118,12 +118,8 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
         mv $FILE.bak $FILE
 }
 
-
 #MAIN
 echo 'Configuring Application Server...'
-#Reload Port Variables
-source $BASEDIR/advance.conf
-
 configSocketbinding
 configConnectors "$STATIC_ADDRESS"
 echo 'Finished configuring Application Server!'

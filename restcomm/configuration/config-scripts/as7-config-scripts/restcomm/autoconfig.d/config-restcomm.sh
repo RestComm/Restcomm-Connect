@@ -60,7 +60,6 @@ configRestcomm() {
 	fi
 }
 
-
 configOutboundProxy(){
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
@@ -88,6 +87,10 @@ configVoipInnovations() {
 
 configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+	if (( $PORT_OFFSET > 0 )); then
+		local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+	fi
 
 		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
 		sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
@@ -154,7 +157,6 @@ configDidProvisionManager() {
 		fi
 		fi
 		fi
-
 }
 
 ## Description: Configures Fax Service Credentials
@@ -256,7 +258,6 @@ configMobicentsProperties() {
 ## 		4.systemType
 ## 		5.peerIP
 ## 		6.peerPort
-
 configSMPPAccount() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	activate="$1"
@@ -265,7 +266,6 @@ configSMPPAccount() {
 	systemType="$4"
 	peerIP="$5"
 	peerPort="$6"
-
 
 	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
 
@@ -304,14 +304,16 @@ configSMPPAccount() {
 
 		mv $FILE.bak $FILE
 		echo 'Configured SMPP Account Details'
-
-
 	fi
 }
 
-
 configRestCommURIs() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+	if (( $PORT_OFFSET > 0 )); then
+		local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+		local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+	fi
 
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
@@ -332,7 +334,6 @@ configRestCommURIs() {
 	fi
 }
 
-
 updateRecordingsPath() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
@@ -345,33 +346,26 @@ updateRecordingsPath() {
 
 configHypertextPort(){
     MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
+
+    #Check for Por Offset
+	if (( $PORT_OFFSET > 0 )); then
+		local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+		local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+	fi
+
     sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|
     N; 		s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
-
     mv $MSSFILE.bak $MSSFILE
 }
-
-
 
 otherRestCommConf(){
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
-		mv $FILE.bak $FILE
+	mv $FILE.bak $FILE
 }
-
-
 
 # MAIN
 echo 'Configuring RestComm...'
-#Reload Port Variables
-source $BASEDIR/advance.conf
-#Check for Por Offset
-if (( $PORT_OFFSET > 0 )); then
-	SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-	HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
-	HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
-fi
-
 #configJavaOpts
 configMobicentsProperties
 configRestcomm "$STATIC_ADDRESS"
