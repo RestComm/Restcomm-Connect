@@ -1,0 +1,23 @@
+[[important-ports]]
+Important Ports
+^^^^^^^^^^^^^^^
+
+RestComm binds to the ip address of the host and following ports:
+
+* **http**: 8080
+* **sip/udp**: 5080
+* **sip/tcp**: 5080
+* **sip/tls**: 5081
+* **sip/ws**: 5082 (Used for WebRTC - SIP Over WebSockets)
+* **sip/wss**: 5083 (Used for WebRTC - Secure SIP Over WebSockets)
+* **rtp/udp**: 65000 - 65535
+
+If you use -e USE_STANDARD_PORTS, RestComm will binds to the ip address of the host and following ports:
+
+* **http**: 80
+* **sip/udp**: 5060
+* **sip/tcp**: 5060
+* **sip/tls**: 5061
+* **sip/ws**: 5062 (Used for WebRTC - SIP Over WebSockets)
+* **sip/wss**: 5063 (Used for WebRTC - Secure SIP Over WebSockets)
+* **rtp/udp**: 65000 - 65535
