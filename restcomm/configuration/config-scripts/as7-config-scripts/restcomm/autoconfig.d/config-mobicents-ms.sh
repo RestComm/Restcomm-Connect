@@ -127,6 +127,9 @@ fi
 if [ -z "$MS_SUBNET_MASK" ]; then
       MS_SUBNET_MASK=$SUBNET_MASK
 fi
+
+#Reload Port Variables
+source $BASEDIR/advance.conf
 #Check for Por Offset
 if (( $PORT_OFFSET > 0 )); then
 	LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))

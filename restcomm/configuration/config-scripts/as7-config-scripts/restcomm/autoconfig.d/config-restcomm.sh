@@ -39,20 +39,14 @@ configJavaOpts() {
 }
 
 ## Description: Updates RestComm configuration file
-## Parameters : 1.BIND_ADDRESS
-## 		2.STATIC_ADDRESS
+## Parameters : 1.STATIC_ADDRESS
 configRestcomm() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	bind_address="$1"
-	static_address="$2"
+	static_address="$1"
 
-	if [ -n "$static_address" ]; then
-	 	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
-		 	 $FILE > $FILE.bak;
-	else
-		sed -e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|'   $FILE > $FILE.bak;
-	fi
+	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
+		-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
+		 $FILE > $FILE.bak;
 
 	mv $FILE.bak $FILE
 	echo 'Updated RestComm configuration'
@@ -68,8 +62,8 @@ configRestcomm() {
 
 
 configOutboundProxy(){
-FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
 	-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
 	-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
@@ -98,7 +92,6 @@ configDidProvisionManager() {
 		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
 		sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
-
 		sed -e "/<voip-innovations>/ {
 			N; s|<login>.*</login>|<login>$1</login>|
 			N; s|<password>.*</password>|<password>$2</password>|
@@ -109,7 +102,6 @@ configDidProvisionManager() {
 		else
 			if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
 			sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
-
 
 			sed -e "/<bandwidth>/ {
 				N; s|<username>.*</username>|<username>$1</username>|
@@ -352,28 +344,27 @@ updateRecordingsPath() {
 }
 
 configHypertextPort(){
-MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
-sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|
-N; 		s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
+    MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
+    sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|
+    N; 		s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
 
-mv $MSSFILE.bak $MSSFILE
+    mv $MSSFILE.bak $MSSFILE
 }
 
 
 
 otherRestCommConf(){
-FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
-mv $MSSFILE.bak $MSSFILE
 }
 
 
 
 # MAIN
 echo 'Configuring RestComm...'
-#Reload Variables
-source $BASEDIR/restcomm.conf
+#Reload Port Variables
+source $BASEDIR/advance.conf
 #Check for Por Offset
 if (( $PORT_OFFSET > 0 )); then
 	SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
@@ -383,7 +374,7 @@ fi
 
 #configJavaOpts
 configMobicentsProperties
-configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS"
+configRestcomm "$STATIC_ADDRESS"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"

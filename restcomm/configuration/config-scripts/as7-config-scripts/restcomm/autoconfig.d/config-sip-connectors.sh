@@ -10,16 +10,6 @@ configConnectors() {
 	FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 	static_address="$1"
 
-	#Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-		SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
-		SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
-		SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
-		SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
-	fi
-
-
 	if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
 		if [ -z "$LB_INTERNAL_IP" ]; then
       		LB_INTERNAL_IP=$LB_PUBLIC_IP
@@ -120,12 +110,19 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 }
 
 
-
-
 #MAIN
 echo 'Configuring Application Server...'
-#Reload Variables
-source $BASEDIR/restcomm.conf
+#Reload Port Variables
+source $BASEDIR/advance.conf
+
+#Check for Por Offset
+	if (( $PORT_OFFSET > 0 )); then
+		SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+		SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
+		SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
+		SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
+		SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
+	fi
 configSocketbinding
 configConnectors "$STATIC_ADDRESS"
 echo 'Finished configuring Application Server!'
