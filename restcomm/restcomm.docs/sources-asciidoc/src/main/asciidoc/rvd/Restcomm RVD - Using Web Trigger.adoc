@@ -164,8 +164,28 @@ Throughout this tutorial we have only used _client_ destinations for the call. R
 
 IMPORTANT: Make sure you url-encode these values if you specify the *to* destination in the trigger URL!
 
-[[future-considerations]]
-Future considerations
-+++++++++++++++++++++
+[[basic-http-authentication]]
+HTTP Basic Authentication
++++++++++++++++++++++++++
 
-* Web Trigger will be further secured using HTTP Basic authentication in next Restcomm version (7.6.0).
+As of Restcomm version 7.7.0 support for HTTP Basic authentication has been added to WebTrigger. The mechanism works as an alternative to custom token authentication. In order to take advantage of it you'll just have to provide your restcomm account credentials as an HTTP _Authorization_ header. 
+
+*Example*
+
+credentials 
+
+  _administrator@company.com:RestComm
+  
+URL
+
+  http://RESTCOMM_HOST:PORT/restcomm-rvd/services/apps/TestWebTrigger/start
+  
+Headers
+
+  Authorization: Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTpSZXN0Q29tbQ==
+  
+* Note that there is no *token* URL parameter
+* You don't need to supply the _Access Token_ field in the WebTrigger form discribed in _Step 4_. In fact, you can have this field empty to disable token authentication.
+* You don't need to supply credentials for _Restcomm API access_ as decribed in _Step 5_. Skip this step.
+
+
