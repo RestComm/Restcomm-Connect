@@ -1,0 +1,127 @@
+When working with the binary version of Restcomm, the default database is hsqlDB. This is of course not suitable for production but it is provided as a way for you to conveniently and quickly start up Restcomm. If you are running Restcomm on Amazon Cloud, the configuration and setup comes with MariaDB. For those who wish to run Restcomm on a local server or on another cloud based system, the following tutorial will show you how to get started with Restcomm and MariaDB
+
+[[requirements]]
+Requirements
+^^^^^^^^^^^^
+
+* Make sure MariaDB is installed, for those run on systems that supports Yum install, see the instruction https://mariadb.com/kb/en/mariadb/yum/[HERE]
+* Download the latest version of Restcomm-Connect as explained in <<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
+
+[[step-1---adding-the-mariadb-jdbc-connector-to-jboss-datasource]]
+Step 1 - Adding the MariaDB JDBC connector to JBoss Datasource
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Edit **$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml** file
+* Under the datasource tag add the following:
+* Make sure you are using the correct IP address and port default port 3306. In the example below the local IP is 192.168.1.3:3306
+* Use the correct username and password for the MariaDB access
+* Set the MariaDB enabled="true" and make sure you set the default dummy datasource to "false"
+
+[source,lang:default,decode:true]
+----
+<datasource jndi-name="java:/MariaDS" pool-name="MariaDS" enabled="true">
+    <connection-url>jdbc:mariadb://192.168.1.3:3306/restcomm</connection-url>
+    <driver>mariadb</driver>
+    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+    <pool>
+        <min-pool-size>100</min-pool-size>
+        <max-pool-size>200</max-pool-size>
+    </pool>
+    <security>
+        <user-name>myTestUsername</user-name>
+        <password>myTestPassword</password>
+    </security>
+    <statement>
+        <prepared-statement-cache-size>100</prepared-statement-cache-size>
+        <share-prepared-statements/>
+    </statement>
+</datasource>
+----
+
+* In the datasource under the *drivers* tag, add the following:
+* save and exit the standalone-sip.xml file
+
+[source,lang:default,decode:true]
+----
+<driver name="mariadb" module="org.mariadb.jdbc">
+	<xa-datasource-class>org.mariadb.jdbc.MySQLDataSource</xa-datasource-class>
+</driver>
+----
+
+[[step-2---configuring-the-mybatis.xml-file-to-use-mariadb]]
+Step 2 - Configuring the mybatis.xml file to use MariaDB
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Edit the file *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/mybatis.xml*
+* Change the environments id to id="mariadb"
+* Add the MariaDB configuration environment tag as shown below
+
+[source,lang:default,decode:true]
+----
+<environments default="mariadb">
+        <environment id="mariadb">
+                <transactionManager type="JDBC" />
+                <dataSource type="JNDI">
+                        <property name="data_source" value="java:/MariaDS" />
+                </dataSource>
+        </environment>
+</environments>
+----
+
+* Save and exist the *mybatis.xml* file
+
+[[step-3---download-mariadb-java-client-driver]]
+Step 3 - Download MariaDB Java Client Driver
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Download the mariaDB java client driver from link:https://mariadb.com/my_portal/download/java-client[HERE]
+* Go to the directory *$RESTCOMM_HOME/modules*
+* Run the following command to create a new directory structure:  *mkdir -p ./org/mariadb/jdbc/main*
+* Go to the newly created directory structure *$RESTCOMM_HOME/modules/org/mariadb/jdbc/main*
+* Copy the downloaded *mariadb-java-client-1.2.0.jar* to the *$RESTCOMM_HOME/modules/org/mariadb/jdbc/main*
+* In the *$RESTCOMM_HOME/modules/org/mariadb/jdbc/main* create a new xml file called *module.xml*
+* The content of the *module.xml* should be similar to the one below. Notice the *path* name of the java client must matches the one you download
+* You should now have 2 files in the *$RESTCOMM_HOME/modules/org/mariadb/jdbc/main* directory.
+
+[source,lang:default,decode:true]
+----
+<?xml version="1.0" encoding="UTF-8" ?>
+<module xmlns="urn:jboss:module:1.1" name="org.mariadb.jdbc">
+    <resources>
+        <resource-root path="mariadb-java-client-1.2.0.jar"/>
+    </resources>
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.transaction.api"/>
+    </dependencies>
+</module>
+----
+
+[[step-4---start-mariadb-and-create-the-restcomm-database.]]
+ Step 4 - Start mariaDB and Create the restcomm Database.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Start mariaDB  - *sudo /etc/init.d/mysql start*
+* Go to the directory *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/scripts/mariadb*
+* There will be an *init.sql* file and an *sql* directory
+* Create the restcomm database from the *init.sql* as follows:
+* mysql -u root < *init.sql*
+
+[[step-5---edit-the-restcomm.xml-file-to-point-the-dao-to-mariadb]]
+Step 5 - Edit the restcomm.xml file to point the DAO to mariadb
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Edit the file **$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF**/conf/restcomm.xml
+* Find the dao-manager tag and change the sql-files path to mariadb as shown below
+
+[source,lang:default,decode:true]
+----
+ <dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
+        <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml
+        </configuration-file>
+        <data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
+        <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
+  </dao-manager>
+----
+
+Start Restcomm as explained in <<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
