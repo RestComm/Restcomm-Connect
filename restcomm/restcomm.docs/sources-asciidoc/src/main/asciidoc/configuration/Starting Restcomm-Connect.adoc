@@ -23,6 +23,7 @@ wget https://mobicents.ci.cloudbees.com/job/RestComm/lastSuccessfulBuild/artifac
 *Restcomm-JBoss-AS7-7.6.0.869.zip*.
   Further we shall refer to this above Restcomm directory as the *$RESTCOMM_HOME*.
 
+[ip-information]
 == Configure Restcomm IP information and Text-to-speech
 === Add your IP address
 _A single host may have multiple IP addresses.
