@@ -1,0 +1,22 @@
+[[persist-your-work-using-shared-filesystem]]
+Persist your work using shared filesystem
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can persist the logs, database, recordings, text-to-speech cache and RVD workspace using shared filesystem, so even if you stop and remove your container, your work won't be lost. Download the https://github.com/restcomm/Restcomm-Docker/blob/master/restcomm_workspace.zip?raw=true[*restcomm_workspace*] that contains the default database, default RVD workspace and the required folders and unzip it to a folder in your filesystem. Next run Restcomm image using the following volume arguments:
+
+* Restcomm logs `-v $YOUR_FOLDER/restcomm_workspace/restcomm/log:/opt/Restcomm-JBoss-AS7/standalone/log`
+* Restcomm recordings `-v $YOUR_FOLDER/restcomm_workspace/restcomm/recordings:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings`
+* Restcomm tts cache `-v $YOUR_FOLDER/restcomm_workspace/restcomm/cache:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/cache`
+
+*HSQL database persistant data* In order to properly manage to persist data on a host directory, it is necessary to use `HSQL_PERSIST` option. Then need to mount the volume set at the `HSQL_PERSIST` option at a directory on the host. (e.g. `-v /$YOUR_FOLDER/restcomm_workspace/restcomm/data:/dir_to_HSQL_PERSIST`) 
+
+__RestComm logs additional information __ 
+
+If you are using specific log paths (CORE_LOGS_LOCATION, MEDIASERVER_LOGS_LOCATION, RESTCOMM_TRACE_LOG) use them to mount volumes to host. `-V HOST_CORE_LOGS_LOCATION:CORE_LOGS_LOCATION -V HOST_MEDIASERVER_LOGS_LOCATION:MEDIASERVER_LOGS_LOCATION -V HOST_TRACE_LOGS_LOCATION:RESTCOMM_TRACE_LOG` Example if you unzip the _restcomm_workspace.zip_ to /opt/restcomm_workspace/
+
+*  docker run command will be:
+
+[source,lang:default,decode:true]
+----
+docker run --name=restcomm --restart=always -d -e VOICERSS_KEY="YOUR_VOICERSS_KEY" -p 8080:8080 -p 5080:5080 -p 5080:5080/udp -p 65000-65050:65000-65050/udp -v /opt/restcomm_workspace/restcomm/log:/opt/Restcomm-JBoss-AS7/standalone/log -v /opt/restcomm_workspace/restcomm/recordings:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings -v /opt/restcomm_workspace/restcomm/cache:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/cache -v /opt/restcomm_workspace/restcomm/data:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/data/hsql -v /opt/restcomm_workspace/mms/log:/opt/Restcomm-JBoss-AS7/mediaserver/log -v /opt/restcomm_workspace/rvd/workspace:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm-rvd.war/workspace restcomm/restcomm:latest
+----

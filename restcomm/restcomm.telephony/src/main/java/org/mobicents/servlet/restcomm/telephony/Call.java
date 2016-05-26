@@ -366,7 +366,7 @@ public final class Call extends UntypedActor {
                 uri = factory.createSipURI(null, realIP);
             }
         } catch (Exception e) {
-            logger.warning("Exception whule trying to get the Initial IP Address and Port");
+            logger.warning("Exception while trying to get the Initial IP Address and Port");
 
         }
         return uri;

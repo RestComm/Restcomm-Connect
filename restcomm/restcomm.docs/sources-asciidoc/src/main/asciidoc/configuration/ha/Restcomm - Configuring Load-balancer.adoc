@@ -1,0 +1,127 @@
+This tutorial focuses on how to use Telscale Loadbalancer to distribute SIP traffic between two Restcomm Servers. The diagram below shows the network topology. 
+
+image:./images/Telscale-load-balancer-for-Restcomm.png[Telscale load balancer for Restcomm,width=654,height=293]
+
+[[requirements]]
+Requirements
+^^^^^^^^^^^^
+
+* Basic knowledge of Restcomm
+
+[[step-1---install-and-configure-telscale-load-balancer]]
+Step 1 - Install and Configure Telscale Load Balancer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Restcomm Loader Balancer is packaged with Restcomm Connect.
+
+* You must copy the load balancer binary from the $RESTCOMM_HOME/tools/sip-balancer to the install directory of your server.
+* In this example, the sip-balancer directory has been copied to /opt/telestax/sip-balancer
+* You will see the following files in the sip-balancer directory:
+
+[source,lang:default,decode:true]
+----
+lb-log4j.xml  logs  lb-configuration.properties  sip-balancer-jar-with-dependencies.jar 
+----
+
+open and edit the  file *lb-configuration.properties* file
+
+* change the *host* parameter to the IP address of the load balancer server
+
+[source,lang:default,decode:true]
+----
+# The binding address of the load balancer
+host=192.168.1.10
+----
+
+* change the **externalPort**  variables to *5080* .
+* Ports 5080 is the default port used by Restcomm
+
+[source,lang:default,decode:true]
+----
+# The SIP port used where client should connect
+externalPort=5080
+----
+
+* Leave the rest of the variables as default, save and exit the *lb-configuration.properties* file
+* Start the load balancer (as shown below) whilst you are in the directory */opt/telestax/sip-balancer*
+
+[source,lang:default,decode:true]
+----
+java -DlogConfigFile=./lb-log4j.xml -jar ./sip-balancer-jar-with-dependencies.jar -mobicents-balancer-config=lb-configuration.properties
+----
+
+* If the server is successfully started, you will see an output similar to the one below:
+
+[source,lang:default,decode:true]
+----
+********truncated************
+tStore=null javax.net.ssl.trustStorePassword=null
+2016-02-25 01:05:23,104 INFO main - the sip stack timer gov.nist.javax.sip.stack.timers.DefaultSipTimer has been started
+2016-02-25 01:05:23,334 INFO main - Sip Balancer started on external address 192.168.1, external port : 5080, internalPort : 5085
+2016-02-25 01:05:23,436 INFO main - HTTP LB listening on port 2080
+2016-02-25 01:05:24,285 INFO RMI TCP Connection(4)-192.168.1.10 - Balancer algorithm org.mobicents.tools.sip.balancer.CallIDAffinityBalancerAlgorithm loaded succesfully for cluster version = 0
+----
+
+[[step-2---configure-restcomm-servers-to-point-to-the-load-balancer]]
+Step 2 - Configure Restcomm Servers to Point to the Load Balancer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[[restcomm-server-1]]
+Restcomm Server 1
++++++++++++++++++
+
+* Open and edit the file  *$RESTCOMM_HOME/bin/restcomm/proxy.conf* as shown below
+
+[source,lang:default,decode:true]
+----
+# Proxy variable declarations
+ACTIVE_PROXY='true'                     # values: TRUE or FALSE
+TP_LOGIN=''                         # Username
+TP_PASSWORD=''                      # Password
+INSTANCE_ID=''                      # EC2 Instance id (will be used as endpoint - VI or accountId - BW)
+SITE_ID=''                          # Only for BW integration
+PROXY_IP='192.168.1.10'                         # Public IP Address of the Telestax Proxy
+PROXY_PRIVATE_IP='192.168.1.10'    # Private IP Address of the Telestax Proxy
+----
+
+* Open and edit the file  *$RESTCOMM_HOME/bin/restcomm/restcomm.conf* as shown below
+
+[source,lang:default,decode:true]
+----
+# Network configuration
+NET_INTERFACE='eth1'
+PRIVATE_IP='192.168.1.11'
+SUBNET_MASK='255.255.255.0'
+NETWORK='192.168.1.0'
+BROADCAST_ADDRESS='192.168.1.255'
+# PUBLIC IP ADDRESS
+STATIC_ADDRESS=''
+----
+
+* Start Restcomm and you will see the following in the startup console
+
+[source,lang:default,decode:true]
+----
+02:38:52,455 INFO  [org.mobicents.ha.javax.sip.LoadBalancerHeartBeatingServiceImpl] (Timer-2) Keepalive: SIP Load Balancer Found! /192.168.1.11:5065:2080:2000
+----
+
+* In the load balancer console, you will see the output below.
+
+[source,lang:default,decode:true]
+----
+2016-02-25 01:05:24,287 INFO RMI TCP Connection(4)- 192.168.1.11 - NodeExpirationTimerTask Run NSync[SIPNode hostname[telscalerestcomcore01] ip[192.168.1.11] httpPort[8080] sslPort[8443] wsPort[5082] tcpPort[5080] udpPort[5080] version[0] ] added
+----
+
+[[restcomm-server-2]]
+Restcomm Server 2
++++++++++++++++++
+
+* Repeat *Step 2* for Restcomm Server 2 using the IP address 192.168.1.12
+
+[[step-3---making-a-call-to-the-load-balancer-from-restcomm]]
+Step 3 - Making a Call to the Load Balancer from Restcomm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Make a call to the SIP IP address of the load balancer sip:1234@192.168.1.10:5080 
+
+The load balancer will distribute the call evenly between the two Restcomm servers. The first call will go to 192.168.1.11 and the next call will go to 192.168.1.12.

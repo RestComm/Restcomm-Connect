@@ -5,7 +5,6 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
-import javax.net.ssl.SSLContext;
 
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -15,6 +14,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+
+import javax.net.ssl.SSLContext;
 
 
 /**
@@ -28,6 +29,7 @@ public class CustomHttpClientBuilder {
     private CustomHttpClientBuilder() {
     }
 
+    // returns an apache http client
     public static CloseableHttpClient buildHttpClient() {
         SslMode sslMode = RvdConfiguration.getInstance().getSslMode();
         if ( sslMode == SslMode.strict ) {
@@ -36,6 +38,18 @@ public class CustomHttpClientBuilder {
         else
             return buildAllowallClient();
     }
+
+    // returns a jersey client - experimental
+    /*
+    public static Client buildJerseyHttpClient() {
+        SslMode sslMode = RvdConfiguration.getInstance().getSslMode();
+        if ( sslMode == SslMode.strict ) {
+            return buildStrictJerseyClient();
+        }
+        else
+            return buildAllowallJerseyClient();
+    }
+    */
 
     private static CloseableHttpClient buildStrictClient() {
         String[] protocols = getSSLPrototocolsFromSystemProperties();
@@ -77,5 +91,48 @@ public class CustomHttpClientBuilder {
         }
         return null;
     }
+
+    // experimental support for Jersey http client
+/*
+    private static Client buildStrictJerseyClient() {
+        return Client.create();
+    }
+
+    private static Client buildAllowallJerseyClient() {
+
+        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager(){
+            @Override
+            public void checkClientTrusted(java.security.cert.X509Certificate[] x509Certificates, String s) throws CertificateException {}
+
+            @Override
+            public void checkServerTrusted(java.security.cert.X509Certificate[] x509Certificates, String s) throws CertificateException {}
+
+            @Override
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+             return null;
+            }
+        }};
+
+        SSLContext ctx;
+        try {
+            ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, trustAllCerts, new SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        ClientConfig config = new DefaultClientConfig();
+        config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(new HostnameVerifier() {
+            @Override
+            public boolean verify(String s, SSLSession sslSession) {
+                return true;
+            }
+        }, ctx));
+
+        Client client = Client.create(config);
+        return client;
+    }
+    */
 
 }
