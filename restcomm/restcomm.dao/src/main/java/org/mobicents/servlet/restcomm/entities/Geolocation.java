@@ -239,7 +239,7 @@ public final class Geolocation {
                     return value;
                 }
             }
-            throw new IllegalArgumentException(glt + " is not a valid application GeolocationType.");
+            throw new IllegalArgumentException(glt + " is not a valid GeolocationType.");
         }
 
         @Override

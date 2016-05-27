@@ -48,25 +48,13 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         super();
     }
 
-    // *** Immediate type of Geolocation *** //
-
-    @Path("/Immediate.json")
-    @DELETE
-    public Response deleteImmediateGeolocationJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
-    }
+    /*******************************************/
+    // *** Immediate type of Geolocation ***//
+    /*******************************************/
 
     @Path("/Immediate/{sid}.json")
     @DELETE
     public Response deleteImmediateGeolocationAsJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
-    }
-
-    @Path("/Immediate")
-    @DELETE
-    public Response deleteImmediateGeolocationXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid) {
         return deleteGeolocation(accountSid, sid);
     }
@@ -78,25 +66,11 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return deleteGeolocation(accountSid, sid);
     }
 
-    @Path("/Immediate.json")
-    @GET
-    public Response getImmediateGeolocationJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/Immediate/{sid}.json")
     @GET
     public Response getImmediateGeolocationAsJson(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid) {
         return getGeolocation(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Immediate")
-    @GET
-    public Response getImmediateGeolocationXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_XML_TYPE);
     }
 
     @Path("/Immediate/{sid}")
@@ -141,13 +115,6 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
 
-    @Path("/Immediate")
-    @PUT
-    public Response updateImmediateGeolocationXmlPut(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
-    }
-
     @Path("/Immediate/{sid}")
     @PUT
     public Response updateImmediateGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
@@ -159,23 +126,9 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     // *** Notification type of Geolocation ***//
     /*******************************************/
 
-    @Path("/Notification.json")
-    @DELETE
-    public Response deleteNotificationGeolocationJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
-    }
-
     @Path("/Notification/{sid}.json")
     @DELETE
     public Response deleteNotificationGeolocationAsJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
-    }
-
-    @Path("/Notification")
-    @DELETE
-    public Response deleteNotificationGeolocationXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid) {
         return deleteGeolocation(accountSid, sid);
     }
@@ -187,25 +140,11 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return deleteGeolocation(accountSid, sid);
     }
 
-    @Path("/Notification.json")
-    @GET
-    public Response getNotificationGeolocationJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/Notification/{sid}.json")
     @GET
     public Response getNotificationGeolocationAsJson(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid) {
         return getGeolocation(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Notification")
-    @GET
-    public Response getNotificationGeolocationXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_XML_TYPE);
     }
 
     @Path("/Notification/{sid}")
@@ -250,13 +189,6 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
 
-    @Path("/Notification")
-    @PUT
-    public Response updateNotificationGeolocationXmlPut(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
-    }
-
     @Path("/Notification/{sid}")
     @PUT
     public Response updateNotificationGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
@@ -264,11 +196,10 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
 
-    //
-
     @GET
     public Response getGeolocationsAsXml(@PathParam("accountSid") final String accountSid) {
         return getGeolocations(accountSid, APPLICATION_XML_TYPE);
     }
+
 
 }
