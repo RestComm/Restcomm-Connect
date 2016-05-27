@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
 
 import java.net.URI;
@@ -44,8 +45,11 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
+import org.mobicents.servlet.restcomm.dao.ClientsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.AccountList;
+import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
@@ -62,6 +66,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     protected Configuration configuration;
     protected Gson gson;
     protected XStream xstream;
+    protected ClientsDao clientDao;
 
     public AccountsEndpoint() {
         super();
@@ -72,6 +77,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
+        clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
         final AccountConverter converter = new AccountConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -184,7 +190,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         accountsDao.removeAccount(sidToBeRemoved);
 
         // Remove its SIP client account
-        clientDao.removeClients(sidToBeRemoved)
+        clientDao.removeClients(sidToBeRemoved);
 
         return ok().build();
     }
@@ -359,9 +365,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
                             clientDao.updateClient(client);
                         }
                     }
-                } else {
-                    return status(UNAUTHORIZED).build();
-                }
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
