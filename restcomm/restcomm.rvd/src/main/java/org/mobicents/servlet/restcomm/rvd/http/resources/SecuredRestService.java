@@ -5,6 +5,7 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
 import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
@@ -32,7 +33,8 @@ public class SecuredRestService extends RestService {
      * Makes sure the request is done by an authenticated user.
      */
     protected void secure() {
-        if (userIdentityContext.getAccountInfo() == null) {
+        RestcommAccountInfoResponse account = userIdentityContext.getAccountInfo();
+        if (account == null || !"active".equals(account.getStatus()) ) {
             throw new AuthorizationException();
         }
     }

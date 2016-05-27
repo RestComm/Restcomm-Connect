@@ -1,15 +1,18 @@
 package org.mobicents.servlet.restcomm.rvd.identity;
 
 import com.google.gson.Gson;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
+import org.mobicents.servlet.restcomm.rvd.commons.http.CustomHttpClientBuilder;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
-import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -59,14 +62,24 @@ public class AccountProvider {
      * @return
      */
     public RestcommAccountInfoResponse getAccount(String username, String authorizationHeader) {
-        Client jerseyClient = Client.create();
-        WebResource webResource = jerseyClient.resource(buildAccountQueryUrl(username));
-        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).header("Authorization", authorizationHeader).get(ClientResponse.class);
-        if (response.getStatus() != 200)
-            return null;
-        Gson gson = new Gson();
-        RestcommAccountInfoResponse accountInfo = gson.fromJson(response.getEntity(String.class), RestcommAccountInfoResponse.class);
-        return accountInfo;
+        CloseableHttpClient client = CustomHttpClientBuilder.buildHttpClient();
+        HttpGet GETRequest = new HttpGet(buildAccountQueryUrl(username));
+        GETRequest.addHeader("Authorization", authorizationHeader);
+        try {
+            CloseableHttpResponse response = client.execute(GETRequest);
+            if (response.getStatusLine().getStatusCode() == 200 ) {
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    String accountJson = EntityUtils.toString(entity);
+                    Gson gson = new Gson();
+                    RestcommAccountInfoResponse accountResponse = gson.fromJson(accountJson, RestcommAccountInfoResponse.class);
+                    return accountResponse;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     public RestcommAccountInfoResponse getAccount(BasicAuthCredentials creds) {

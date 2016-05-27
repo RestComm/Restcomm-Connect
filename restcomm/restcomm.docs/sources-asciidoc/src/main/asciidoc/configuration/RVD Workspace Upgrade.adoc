@@ -1,0 +1,140 @@
+Given the new http://docs.telestax.com/restcomm-api-applications/[Applications REST API] available since the previous RestComm release (7.4.0), some modifications were done to better integrate RVD Projects with Application entities. So the native application server RVD will continue providing the RCML requested by RestComm's interpreters, but now using the Application entities. The list below contains a description of the main modifications:
+
+1.  **RVD Workspace Migration**: RestComm bootstrap updates RVD workspace naming convention, Applications, IncomingPhoneNumbers and Clients;
+2.  **Integration of Applications with other entities**: AdminUI allows to set both Applications or URLs to RestComm Numbers or Clients;
+3.  **User Interface and internal modifications**: AdminUI and RVD UI obtain now the list of available applications using http://docs.telestax.com/restcomm-api-applications/[Applications REST API].
+
+The following parts of this document are organised by following the 3 items mentioned above.
+
+[[rvd-workspace-migration]]
+1. RVD Workspace Migration
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The migration executed on RestComm's bootstrap is a sequence of steps executed to adapt the filesystem and database with the new structure. The steps executed by the migration algorithm are:
+
+1.  Backup RVD Workspace directory
+
+IMPORTANT: To backup database structures execute link:./RVDWorkspaceMigrationBackup.sql_.txt[this script.])
+
+2.  Synchronize RVD Project with Applications API (create the Application or update the existing one);
+3.  Rename the directory of the project inside RVD Workspace using the application SID obtained from step 2;
+4.  Update IncomingPhoneNumbers replacing the voice, SMS and USSD URLs that points to the application by its respective application SID;
+5.  Update Clients replacing the voice URL that points to the application by its respective application SID;
+6.  If the current project is the last one, store the result of the migration and continue with RestComm bootstrap, otherwise, get next RVD project and go to step 2.
+
+[[configuration]]
+1.1 Configuration
+^^^^^^^^^^^^^^^^^
+
+The configuration required to run the migration algorithm on RestComm's bootstrap is placed inside $RESTCOMM_HOME/standalone/deploy/restcomm.war/WEB-INF/conf/restcomm.xml. The parameters to be configured inside this file are "**rvd-workspace-migration-enabled**" and "**default-email-address**", as described below:
+
+[cols=",,",]
+|==================================================================================================================================================================================
+|Parameter |Value |Description
+|rvd-workspace-migration-enabled |**true** or *false* |Controls if the migration needs to be executed at RestComm's bootstrap.
+|smtp-notify/host |DNS or IP address |Host address of the SMTP server.
+|smtp-notify/user |string |The username with the SMTP server.
+|smtp-notify/password |string |The password for the provided account with the SMTP server.
+|smtp-notify/port |number |Port to be used with the SMTP server.
+|smtp-notify/default-email-address |A valid email address using the format defined as addr-spec of RFC-2822 |Email that will receive the result of the migration after it finishes.
+|==================================================================================================================================================================================
+
+[[execution]]
+1.2 Execution
+^^^^^^^^^^^^^
+
+The default value of the parameter "**rvd-workspace-migration-enabled**" is "**true**" for the release that introduced this feature, and should be "**false**" for the next ones. 
+
+After the execution of the migration, a file named "**.version**" will be created inside RVD's workspace directory storing the result of the migration and the version of RestComm that managed its execution. The following box represent the content of this file:
+
+[source,lang:default,decode:true]
+----
+{"status":true,"version":"7.6.0"}
+----
+
+Once this file is present inside RVD's workspace and holds the current version of RestComm, the migration will not be executed in the next bootstrap of this version, even if the parameter "**rvd-workspace-migration-enabled**" still configured with the value "**true**". This strategy was created to allow only one automatic attempt of migration per RestComm version. 
+
+If the migration failed and it's necessary to run another attempt, make sure to remove the file "**.version**" from RVD workspace and keep the value of the parameter "**rvd-workspace-migration-enabled**" as "**true**", and then restart RestComm. For more information see the **Troubleshooting** at session **1.4** of this document.
+
+[[logs]]
+1.3 Logs
+^^^^^^^^
+
+During the execution of the process, RestComm will use 4 different resources to store the progress of the migration: specific log file, generic log file, RestComm Notifications and e-mail messages. 
+
+The following table shows detailed information about each log resource.
+
+[cols=",,",]
+|==========================================================================================================================================================================================
+|Name |Description |Location
+|workspace-migration.log |Specific log file used to store the full progress of migration, including error messages, stacktraces and more. |$RESTCOMM_HOME
+|server.log |Generic log file used to display status messages with the result of the migration and/or important error messages. |$RESTCOMM_HOME/standalone/log
+|RestComm Notification |Notification stored in the database to keep the history of beginning/end of the migration and also errors. |Menu "Logs > Notifications" at RestComm's Admin UI page
+|e-mail message |Message sent to the address configured at the parameter "default-email-address" at the end of the migration with the results. |n/a
+|==========================================================================================================================================================================================
+
+[[troubleshooting]]
+1.4 Troubleshooting
+^^^^^^^^^^^^^^^^^^^
+
+While the migration is executed, some errors can be easily predicted/handled, but another ones require manual intervention due to the diversity of operations executed by the algorithm. 
+
+Given that, it's important to emphasise that the migration needs to be executed with success, indifferent of the number of attempts. This process is required for several new features implemented across the platform. 
+
+To help with manual troubleshooting of possible issues, a set of error codes was created describing each situation with is consequences and how to work around it. If some error occur, it can just skip the project that raised the problem or abort the migration, always storing details inside the log files. 
+
+The following table have details about troubleshooting to each error code, also guiding which situation is recommended to execute the algorithm again.
+
+[cols=",,",]
+|==========================================================================================================================================================================================================================================================================================================================
+|Code |Comments |New attempt recommended?
+|1 |The file system can be inaccessible or with insufficient permission to read. Check the workspace location and the permissions assigned to the directory before a new attempt. |Yes
+|2 |One of the final steps executed failed. Since this is a generic error, the analysis need to consider if there is another error associated to this one, like error 12. In this case, see the description of the specific error. |n/a
+|3 |The file system can be inaccessible or with insufficient permission to write. Check $RESTCOMM_HOME permissions before a new attempt. This error does not compromise the success of the migration and a new attempt is not required if this is the only error. |No
+|4 |It was not possible to send the email at the end of the execution. Check the required configurations at the section 1.1 of this document and network connectivity. This error does not compromise the success of the migration and a new attempt is not required if this is the only error. |No
+|5 |The file system can be inaccessible or with insufficient permission to write. Check the workspace location and the permissions assigned to this directory and also subdirectories before a new attempt. |Yes
+|6 |The file system can be inaccessible or with insufficient permission to read or the state file is corrupted. Check the project location, the permissions assigned to this directory and subdirectories and also if the state file is consistent, before a new attempt. |Yes
+|7 |To execute the synchronization of a project, RestComm uses the database creating or updating Application entities. Check if the database service is online and available to use. |Yes
+|8 |Potential problem while communicating with database. Check if the database service is online and available to use. |Yes
+|9 |Potential problem while communicating with database. Check if the database service is online and available to use. |Yes
+|10 |Potential problem while communicating with database. Check if the database service is online and available to use. |Yes
+|11 |Potential problem while communicating with database. Check if the database service is online and available to use. |Yes
+|12 |The file system can be inaccessible or with insufficient permission to write. Check $RESTCOMM_HOME permissions before a new attempt. This error implies that was not be possible to store the result of the migration inside RVD's workspace, so a new attempt of execution is encouraged to keep data integrity. |Yes
+|13 |The file system can be inaccessible, with insufficient permission to write or without enough space to make a copy of the workspace. Check workspace location, permissions and available free space in the partition before a new attempt. |Yes
+|==========================================================================================================================================================================================================================================================================================================================
+
+Based on the table above, if a new attempt of execution is recommended, follow the steps below:
+
+1.  Stop RestComm;
+2.  Make sure the parameter "**rvd-workspace-migration-enabled**" remains with the value "**true**" inside the configuration file "**restcomm.xml**";
+3.  Remove the file "**.version**" inside RVD workspace directory;
+4.  Double check the recommendations provided by the column "Comments" in the previous table;
+5.  Start RestComm.
+
+To get more information about the configuration and execution of the algorithm, please make sure to read sections 1.1 and 1.2 of this document. 
+
+IMPORTANT: In a new attempt of execution, the projects that were successfully migrated will be skipped to keep it consistent. 
+
+If a manual intervention is required with the database, check REST API documentation for http://docs.telestax.com/restcomm-api-applications/[Applications], http://docs.telestax.com/restcomm-api-incomingphonenumbers/[IncomingPhoneNumbers] and http://docs.telestax.com/restcomm-api-clients/[Clients].
+
+[[integration-of-applications-with-other-entities]]
+2. Integration of Applications with other entities
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With the consistency provided by the efforts to improve the way we use Application entities, AdminUI was adapted to manage IncomingPhoneNumbers and Clients configuration with both URL or Applications in a more elegant way. 
+
+By selecting the option **URL** in the first dropdown menu, the text field in the right will allow to inform an external provider for the RCML and also the HTTP method to be used. image:./images/Screen-Shot-2016-02-04-at-14.14.27.png[Screen Shot 2016-02-04 at 14.14.27,width=675,height=45]
+
+If the option **Application** is selected, use the button in the right side to browse Applications inside RectComm database and assign them to this IncomingPhoneNumber/Client. 
+
+image:./images/Screen-Shot-2016-02-04-at-14.14.45.png[Screen Shot 2016-02-04 at 14.14.45,width=679,height=43]
+
+[[user-interface-internal-modifications]]
+3. User Interface internal modifications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some minor and abstract changes were made to better fit the list of Applications inside AdminUI and RVD UI. 
+
+Before the modification, RVD was the provider of the list of available Projects to AdminUI and RVD UI, but now both UIs are using Applications REST API to get the complete list of applications from RestComm.
+
+This modification allows us to use a RestComm Applications created using a application server different than RVD in a transparent way to the final user, bringing more flexibility to RestComm.
