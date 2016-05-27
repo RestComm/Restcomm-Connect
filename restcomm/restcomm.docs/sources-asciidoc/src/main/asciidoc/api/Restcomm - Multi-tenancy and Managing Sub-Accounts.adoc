@@ -1,0 +1,59 @@
+In our continuous effort to improve Restcomm functionalities, we have introduced multi-tenancy as part of http://www.telestax.com/telscale-restcomm-7-4-0-ga-released/[Restcomm 7.4.0]. Multi tenancy support provides a set of rules that improve user information management and control who can gain access to specific accounts. This set of rules will be also applied by the upcoming OAuth support, so they both OAuth and Multi-tenancy Support will handle this consistency together. The information below will provide an overview of how multi-tenancy is applied to Restcomm.
+
+[[restcomm-rest-api]]
+*Restcomm REST API*
+~~~~~~~~~~~~~~~~~~~
+
+Restcomm REST API access control is managed by two main entities, credentials and accounts. To better understand how it works, we'll assume the following diagram as the account hierarchy, where each account and sub account has its own information. 
+
+image:./images/ElementTree-4.png[ElementTree-4,width=656,height=322]
+
+Considering that Primary and Secondary accounts represents different Restcomm users, they will not be able to manage information from each other. So if Primary Account tries to access the REST API using its own credentials but requesting for the list of DIDs of the Secondary Account, the response will be a HTTP 401 error. The 'curl' command below represents the given situation.
+
+[source,lang:default,decode:true]
+----
+curl -X GET http://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/[secondarySid]/IncomingPhoneNumbers.json
+----
+
+As mentioned above, there are more possible combinations between credentials and accounts used to request information through the API. But instead list all those possibilities, we can assume the pattern used by the API to control access in a general way, grouped by the result obtained from the API: 
+
+*Allowed:*
+
+* Request information about the same account used as credential
+* Request information about a sub account of the account used as credential
+
+*Denied:*
+
+* Request information about the parent account of the account used as credential
+* Request information about a account of the same level of the account used as credential
+* Request information about a sub account different than the ones from the account used as credential
+
+This access control is applied to the API's: <<account-api.adoc#account,Account>>, <<incoming-phone-numbers-api.adoc#incoming-phone-numbers,IncomingPhoneNumbers>>, <<calls-api.adoc#calls,Calls>>, <<sms-api.adoc#sms,SMS>>, OutgoingCallerIds, <<recordings-api.adoc#recordings,Recordings>>, <<transcriptions-api.adoc#transcriptions,Transcriptions>> and <<notifications-api.adoc#notifications,Notifications>>. 
+
+To understand this rules based on the hierarchy presented by the diagram above, we can assume the following for each account: 
+
+* *Primary Account* can view and manage Primary Application, DID P, DID A and DID B only. 
+* *Subaccount A* can view and manage Application A and DID A only. 
+* *Subaccount B* can view and manage Application B and DID B only. 
+* *Secondary Account* can view and manage Application S, DID S, DID C and DID D only.
+* *Subaccount C* can view and manage Application C and DID C only.
+* *Subaccount D* can view and manage Application D and DID D only. 
+
+IMPORTANT: The Applications API has a different access control, and allows the accounts to manage its own applications only. So, if a request is made to this API using a credential different than the account, the response will be a HTTP 401 error.
+
+[[restcomm-admin-ui]]
+*Restcomm Admin UI*
+~~~~~~~~~~~~~~~~~~~
+
+The user interface follows a similar behaviour to the API. Is known that the AdminUI currently shows only info related to the logged user, but now the local applications displayed under the 'Restcomm Apps' option were adjusted to follow the same behaviour. This filter is also applied to the available applications when configuring a DID, as shown by the images below. 
+
+[Available applications at DID's configuration, filtered by logged user]
+image:./images/Screen-Shot-2015-10-05-at-16.40.46.png[Screen Shot 2015-10-05 at 16.40.46,width=525,height=351]
+
+[Restcomm Apps list, filtered by logged user.]
+image:./images/Screen-Shot-2015-10-05-at-16.35.37.png[Screen Shot 2015-10-05 at 16.35.37,width=506,height=332]
+
+[RVD Projects created by the user]
+image:./images/Screen-Shot-2015-10-05-at-16.34.53.png[Screen Shot 2015-10-05 at 16.34.53,width=512,height=396]
+
+This is the way that multi tenancy support provides access control between accounts, ensuring that only authorized accounts will be able to see and manage another accounts info.  

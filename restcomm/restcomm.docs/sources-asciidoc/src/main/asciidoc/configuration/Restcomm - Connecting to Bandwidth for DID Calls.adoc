@@ -1,0 +1,68 @@
+This tutorial is about how to connect Restcomm to Bandwidth and provision DIDs. Restcomm uses ports 5080 for SIP traffic while Bandwidth expects to receive traffic on port 5060. 
+
+Normal SIP traffic will work using a SIP phone (ex sip:DID@RESTCOMM_IP:5080) but making a call from a PSTN to a DID provisioned by Bandwidth will not work as Restcomm replies using a different port.
+
+[[step-1---configure-restcomm-ip-address]]
+Step 1 - Configure Restcomm IP Address
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Please see the instruction <<Starting Restcomm-Connect.adoc#add-your-ip-address,Starting Restcomm-Connect>>
+
+[[step-2---configure-restcomm-to-use-bandwidth]]
+Step 2 - Configure Restcomm to use Bandwidth
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Edit the file *$RESTCOMM_HOME/bin/restcomm/restcomm.conf* Look for the section below and add your Bandwidth connection details
+
+[source,lang:default,decode:true]
+----
+# DID Provision provider variable declarations
+# values: VI (VoipInnovation), BW (Bandwidth), NX (Nexmo), VB (Voxbone)
+PROVISION_PROVIDER='BW' 
+#Username and password for all supported DID provision providers
+DID_LOGIN='YOUR_BANDWIDTH_LOGIN'
+DID_PASSWORD='YOUR_BANDWIDTH_PWD'
+----
+
+Save and exit file
+
+[[step-3---configure-standalone-sip.xml-to-use-5060-instead-of-5080]]
+Step 3 - Configure **standalone-sip.xm**l to use 5060 instead of 5080
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Open and Edit the file *RESTCOMM_HOME/standalone/configuration/standalone-sip.xml*
+
+* Got to the section
+
+[source,lang:default,decode:true]
+----
+<subsystem xmlns="urn:org.mobicents:sip-servlets-as7:1.0" application-router="configuration/dars/mobicents-dar.properties" stack-properties="configuration/mss-sip-stack.properties" path-name="org.mobicents.ext" app-dispatcher-class="org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl" concurrency-control-mode="SipApplicationSession" congestion-control-interval="-1">
+            <connector name="sip-udp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-udp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5080"/>
+            <connector name="sip-tcp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tcp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5080"/>
+            <connector name="sip-tls" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tls" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5081"/>
+            <connector name="sip-ws" protocol="SIP/2.0" scheme="sip" socket-binding="sip-ws" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5082"/>
+        </subsystem>
+----
+
+* Change all the ports from 508x to 516x as follows
+
+[source,lang:default,decode:true]
+----
+<subsystem xmlns="urn:org.mobicents:sip-servlets-as7:1.0" application-router="configuration/dars/mobicents-dar.properties" stack-properties="configuration/mss-sip-stack.properties" path-name="org.mobicents.ext" app-dispatcher-class="org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl" concurrency-control-mode="SipApplicationSession" congestion-control-interval="-1">
+            <connector name="sip-udp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-udp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5060"/>
+            <connector name="sip-tcp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tcp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5060"/>
+            <connector name="sip-tls" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tls" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5061"/>
+            <connector name="sip-ws" protocol="SIP/2.0" scheme="sip" socket-binding="sip-ws" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5062"/>
+        </subsystem>
+----
+
+* Save and exit the file
+* Restart Restcomm
+
+[[making-future-sip-calls]]
+Making future SIP Calls
+^^^^^^^^^^^^^^^^^^^^^^^
+
+You will now need to use port 5060 to make calls from a SIP phone as follows: sip:DID@RESTCOMM_IP:5060
+
+ 

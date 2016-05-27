@@ -1,0 +1,196 @@
+In a recent link:http://www.telestax.com/restcomm-facilitates-internet-of-things-iot/[demo for the VoIP User Conference], John Senay showed an link:http://electricimp.com/product/[Electric Imp] smart device that connects via WiFi to the Internet and sends programmable event triggers to an associated agent in the cloud to Restcomm. The link:http://electricimp.com/docs/api/agent/[cloud hosted agent] for the device is then scripted to execute further intelligent tasks.
+
+The IMP device costs under $100 and is a prime representative of a new generation of affordable IoT devices that are taking over the world faster than Big Data is. IoT devices can be now seen in flying self made drones, home appliances, cars, health monitoring gadgets and even clothes.
+
+In this blog post we will walk through the steps of John’s demo. After reading the article you will be able to build your own IoT device and program it to communicate intelligently with humans.
+
+http://www.theconnectivist.com/2014/05/infographic-the-growth-of-the-internet-of-things/[image:http://theconnectivist-img.s3.amazonaws.com/wp-content/uploads/2014/05/Unknown.png[IoT growth chart,width=1300,height=731]]
+
+The IMP has a total of eleven pins, with six pins available for GPIO, to provide I2C, SPI and UART signaling.  John Senay showed the actual IDE with its three parts, one frame showed the code run on the IMP card, one frame showed the code for the agent, running in the Electric Cloud and one frame showing the live device log.
+
+Use case:
+
+* Electric Imp device is connected to a local Wi-Fi network
+* The Imp observes a state change on the switch ( On or Off )
+* The Imp sends a command to the Agent in the Electric Cloud
+* The agent sends a RESTful command  to a Restcomm instance on the Amazon Web Service Cloud
+* Restcomm sends an SMS to specified phone number
+
+image:./images/diagram.jpg[diagram,width=937,height=480]
+
+Technical skills required:
+
+* Knowledge of Restcomm
+* Knowledge of JavaScript
+* Basic electrical engineering knowledge
+
+IoT parts needed:
+
+* Power Cable for April BoardL https://www.adafruit.com/products/1197
+* April Board: https://www.adafruit.com/products/1130
+* Electric IMP card: https://www.google.com/url?q=https%3A%2F%2Fwww.adafruit.com%2Fproducts%2F1129&sa=D&sntz=1&usg=AFQjCNHZJ1Uj5ItN9eTcnsJZ1rQ6khz0Uw[https://www.adafruit.com/products/1129]
+* Breadboard: https://www.adafruit.com/products/64
+* Male to Female Jumpers: https://www.adafruit.com/products/1953
+* Male to Male Jumpers: https://www.adafruit.com/products/758
+* Button Switch: https://www.adafruit.com/products/1009
+
+[[step-1-setting-up-the-hardware]]
+Step 1 – Setting up the Hardware
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* To get started with the Electric Imp please follow the User Guide and Getting started docs link:https://electricimp.com/docs/gettingstarted/[HERE]
+* Now let’s build the smart button gadget by following the steps link:https://electricimp.com/docs/examples/digitalin-button/[HERE]
+* See the complete wired setup on the image below:
+
+[[setup]]
+image:./images/setup1.jpg[setup,width=429,height=579]
+
+[[section]]
+
+[[step-2-creating-rvd-application]]
+Step 2 – Creating RVD application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Go to Restcomm Admin UI
+* Create Voice Application and bound it to registered DID
+* Drag and drop SMS. Enter the message you want Restcomm to send to a specified number in the text are. In our case we will type: “Hello from my agent!, the Cat is out the door!!”.
+* In “To” section specify the phone number to which SMS will be sent
+* In “From” type the DID that is already bound to the application. We are using “12025520044”.
+* Once you are done Save the application
+
+image:./images/ElectricImpSMS.jpg[ElectricImpSMS,width=835,height=338]
+
+[[step-3-setting-up-the-electric-imp-device]]
+Step 3 – Setting up the Electric Imp Device
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* First we need to setup the example code
+* You are now ready to start writing code for your imp.
+* Once your imp is connected to your WiFi, go to the link:https://plan.electricimp.com/[IDE page]
+* Commission your imp as link:http://devwiki.electricimp.com/doku.php?id=commissioning[described by the imp team]. You will notice that the Electric Imp IDE has 3 collapsible windows: Agent, Device, and Logs. Logs provides all the collected and printed information from your device and code, this is an invaluable debugging tool. Agent and Device are where we will be putting our code. The Agent is the server side code, this code runs on Electric Imp’s servers and allows you to execute heavier tasks including HTTP requests. The Device code is the code runs on the physical imp card, an ARM M3 microcontroller, that will be inserted into your device. Electric Imp has created an easy way to pass messages from the device to the agent and vice versa. First we will focus on the Agent code since this is where we will do the communication with Restcomm.
+* Copy the code below into your agent tab in the Electric Imp
+
+[source,lang:default,decode:true]
+----
+constREST_SID=“ACCOUNT_ID”;    // Your Restcomm Account SID
+constREST_AUTH=“AUTH_TOKEN”;    // Your Restcomm Auth Token
+constREST_NUM=“15125555555″;    // Your Restcomm Phone Number
+classRestcomm{
+    _baseUrl=“http://SERVER IP ADDRESS:8080/restcomm/2012-04-24/Accounts/”;
+    _accountSid=null;
+    _authToken=null;
+    _phoneNumber=null;
+    constructor(accountSid,authToken,phoneNumber){
+        _accountSid=accountSid;
+        _authToken=authToken;
+        _phoneNumber=phoneNumber;
+    }
+    functionsend(to,message,callback=null){
+        local url=_baseUrl+_accountSid+“/SMS/Messages”
+        local auth=http.base64encode(_accountSid+“:”+_authToken);
+        local headers={“Authorization”:“Basic “+auth};
+        local body=http.urlencode({
+            From=_phoneNumber,
+            To=to,
+            Body=message
+        }
+    );
+    local request=http.post(url,headers,body);
+    if(callback==null)
+        returnrequest.sendsync();
+    else
+        request.sendasync(callback);
+    }
+    functionRespond(resp,message){
+        local data={Response={Message=message}};
+        local body=xmlEncode(data);
+        resp.header(“Content-Type”,“text/xml”);
+        server.log(body);
+        resp.send(200,body);
+    }
+    functionxmlEncode(data,version=“1.0″,encoding=“UTF-8″){
+        returnformat(“<?xml version=\“%s\“encoding=\“%s\“?>%s”,version,encoding,_recursiveEncode(data))
+    }
+    /******************** Private Function (DO NOT CALL) ********************/
+    function_recursiveEncode(data){
+        locals=“”;
+        foreach(k,vindata){
+            if(typeof(v)==“table”||typeof(v)==“array”){
+                s+=format(“<%s>%s</%s>”,k.tostring(),_recursiveEncode(v),k.tostring());
+            }else{
+                s+=format(“<%s>%s</%s>”,k.tostring(),v.tostring(),k.tostring());;
+            }
+        }
+        returns
+    }
+}
+//restcomm <- Restcomm(REST_SID, REST_AUTH, REST_NUM);
+// sending a message
+//numberToSendTo <- “15125555555″
+//restcomm.send(numberToSendTo, “Hello from my agent!, the Cat is out the door!!”, function(resp) { server.log(resp.statuscode + ” – ” + resp.body); });
+// processing messages
+http.onrequest(
+    function(req,resp){
+        local path=req.path.tolower();
+        if(path==“/restcomm”||path==“/restcomm/”){
+            // restcomm request handler
+            try{
+                local data=http.urldecode(req.body);
+                restcomm.Respond(resp,“You just said ‘”+data.Body+“‘”);
+            }catch(ex){
+                local message=“Uh oh, something went horribly wrong: “+ex;
+                restcomm.Respond(resp,message);
+            }
+        }else{
+            // default request handler
+            resp.send(200,“OK”);
+        }
+    }
+);
+functionbutton_pressed(status){
+    server.log(“button pressed, sending SMS”);
+    restcomm<-Restcomm(REST_SID,REST_AUTH,REST_NUM);
+    // sending a message
+    numberToSendTo<-“15125555555″
+    restcomm.send(numberToSendTo,“Hello from my agent!, the Cat is out the door!!”,function(resp){server.log(resp.statuscode+” – “+resp.body);});
+}
+device.on(“button_pressed”,button_pressed);
+----
+
+* Once copied, change where it says FEED_ID_HERE and API_KEY_HERE to your respective Restcomm Acoount  SID and Restcomm Auth Token that you can get from Restcomm Admin UI.
+* Next it is time to setup our device code. This code may need to vary depending on the type of UART device you are trying to interface with. The basic setup provided will work with and FTDI cable or Arduino microcontroller.
+
+[source,lang:default,decode:true]
+----
+// Alias the GPIO pin as ‘button’
+button<-hardware.pin1;
+functionbuttonPress()
+{
+    local state=button.read();
+    if(state==1)
+    {
+        // The button is released
+        
+        server.log(“Release”);
+    }else
+    {
+        // The button is pressed
+        
+        server.log(“Press”);
+        agent.send(“button_pressed”,“”);
+    }
+}
+// Configure the button to call buttonPress() when the pin’s state changes
+button.configure(DIGITAL_IN_PULLUP,buttonPress);
+----
+
+You are now ready to test the device and receive SMS from Restcomm whenever there is a state change. For more information:
+
+* https://docs.telestax.com/[Restcomm documentation]
+* https://groups.google.com/forum/#!forum/restcomm[Restcomm public forum]
+* https://electricimp.com/docs/api/[Electic Imp API documentation]
+* https://electricimp.com/docs/examples/[Electric Imp example code]
+* https://electricimp.com/docs/resources/[Electric Imp Developer resources]
+* http://forums.electricimp.com/[Electric Imp public forum]
+
+http://www.telestax.com/contactus/#InquiryForm[Contact Telestax] for help with your IoT and Restcomm projects.

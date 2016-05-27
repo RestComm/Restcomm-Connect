@@ -1,0 +1,43 @@
+[[automatically-restart-the-container-in-case-of-a-failure-or-host-restart]]
+Automatically restart the container in case of a failure or host restart
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Use the flag *--restart-always*
+
+[source,lang:default,decode:true]
+----
+docker run -e USE_STANDARD_PORTS="true" -e VOICERSS_KEY="YOUR_VOICESS_KEY_HERE" --name=restcomm --restart=always -d -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+----
+
+[[get-basic-environment-configuration-file-from-restcomm-docker-repository]]
+Get basic environment configuration file from RestComm-Docker repository
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* Use the flag : *ENVCONFURL*
+
+[source,lang:default,decode:true]
+----
+docker run -i -d  --name=restcomm -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_basic.sh"  -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+----
+
+[[to-run-on-standard-ports-ie-80-for-http-443-for-https-5060-for-sip]]
+To run on standard ports ie 80 for HTTP, 443 for HTTPs, 5060 for SIP
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* You have to use the *USE_STANDARD_PORTS*
+
+[source,lang:default,decode:true]
+----
+docker run -e USE_STANDARD_PORTS="true" -e VOICERSS_KEY="YOUR_VOICESS_KEY_HERE" --name=restcomm -d -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+----
+
+[[provide-your-voicerss-key-for-text-to-speech-and-outbound-proxy]]
+Provide your VoiceRSS key for Text-To-Speech and Outbound proxy
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+* set env variable *VOICERSS_KEY* and *OUTBOUND_PROXY*
+
+[source,lang:default,decode:true]
+----
+docker run -e USE_STANDARD_PORTS="true" -e VOICERSS_KEY="YOUR_VOICESS_KEY_HERE" -e OUTBOUND_PROXY="YOUR_OUTBOUND_PROXY_HERE" --name=restcomm -d -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+----

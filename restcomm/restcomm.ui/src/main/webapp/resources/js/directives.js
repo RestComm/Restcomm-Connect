@@ -109,13 +109,17 @@ rcDirectives.directive('rcEndpointUrl', function() {
 		}
 
         $scope.initTarget = function() {
-            if($scope.sidVar){
-                setApplicationTarget($scope);
-            } else
-            if ($scope.urlVar) {
-                $scope.targetVar = 'URL';
-            } else {
-				setApplicationTarget($scope);
+			if ($scope.urlOnlyVar)
+				$scope.targetVar = 'URL';
+			else {
+				if($scope.sidVar){
+					setApplicationTarget($scope);
+				} else
+				if ($scope.urlVar) {
+					$scope.targetVar = 'URL';
+				} else {
+					setApplicationTarget($scope);
+				}
 			}
         }
 

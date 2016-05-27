@@ -29,7 +29,6 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.Version;
 import org.mobicents.servlet.restcomm.VersionEntity;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.UsageDao;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -52,7 +51,7 @@ import static javax.ws.rs.core.Response.status;
  *
  */
 @ThreadSafe
-public class VersionEndpoint extends AbstractEndpoint {
+public class VersionEndpoint extends SecuredEndpoint {
     private static Logger logger = Logger.getLogger(VersionEndpoint.class);
 
     @Context
@@ -61,7 +60,6 @@ public class VersionEndpoint extends AbstractEndpoint {
     protected UsageDao dao;
     protected Gson gson;
     protected XStream xstream;
-    protected AccountsDao accountsDao;
 
     @PostConstruct
     public void init() {
@@ -97,7 +95,9 @@ public class VersionEndpoint extends AbstractEndpoint {
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE == mediaType) {
                 Response response = ok(gson.toJson(versionEntity), APPLICATION_JSON).build();
-                logger.debug("Supervisor endpoint response: "+gson.toJson(versionEntity));
+                if(logger.isDebugEnabled()){
+                    logger.debug("Supervisor endpoint response: "+gson.toJson(versionEntity));
+                }
                 return response;
             } else {
                 return null;

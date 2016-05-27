@@ -7,7 +7,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
 
-import javax.servlet.ServletContext;
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -34,7 +34,6 @@ import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlBadR
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.CallControlInvalidConfigurationException;
 import org.mobicents.servlet.restcomm.rvd.exceptions.callcontrol.UnauthorizedCallControlAccess;
-import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.interpreter.Interpreter;
 import org.mobicents.servlet.restcomm.rvd.interpreter.exceptions.RemoteServiceError;
 import org.mobicents.servlet.restcomm.rvd.model.CallControlInfo;
@@ -47,15 +46,12 @@ import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
-import org.mobicents.servlet.restcomm.rvd.security.AuthenticationService;
-import org.mobicents.servlet.restcomm.rvd.security.BasicAuthCredentials;
-import org.mobicents.servlet.restcomm.rvd.security.SecurityUtils;
-import org.mobicents.servlet.restcomm.rvd.security.exceptions.RvdSecurityException;
+import org.mobicents.servlet.restcomm.rvd.identity.BasicAuthCredentials;
+import org.mobicents.servlet.restcomm.rvd.identity.SecurityUtils;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.WorkspaceStorage;
-import org.mobicents.servlet.restcomm.rvd.security.annotations.RvdAuth;
 import org.mobicents.servlet.restcomm.rvd.storage.FsCallControlInfoStorage;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageEntityNotFound;
 import org.mobicents.servlet.restcomm.rvd.storage.exceptions.StorageException;
@@ -63,13 +59,8 @@ import org.mobicents.servlet.restcomm.rvd.storage.exceptions.WavItemDoesNotExist
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
 @Path("apps")
-public class RvdController extends RestService {
+public class RvdController extends SecuredRestService {
     static final Logger logger = Logger.getLogger(RvdController.class.getName());
-
-    @Context
-    ServletContext servletContext;
-    @Context
-    HttpServletRequest request;
 
     private RvdConfiguration rvdSettings;
     private ProjectAwareRvdContext rvdContext;
@@ -77,7 +68,9 @@ public class RvdController extends RestService {
     private WorkspaceStorage workspaceStorage;
     private ModelMarshaler marshaler;
 
-    void init(RvdContext rvdContext) {
+    @PostConstruct
+    public void init(RvdContext rvdContext) {
+        super.init();
         rvdSettings = rvdContext.getSettings();
         marshaler = rvdContext.getMarshaler();
         workspaceStorage = rvdContext.getWorkspaceStorage();
@@ -113,8 +106,9 @@ public class RvdController extends RestService {
                 rvdContext.getProjectLogger().log(e.getMessage()).tag("app", appname).tag("EXCEPTION").done();
             rcmlResponse = Interpreter.rcmlOnException();
         }
-
-        logger.debug(rcmlResponse);
+        if(logger.isDebugEnabled()) {
+            logger.debug(rcmlResponse);
+        }
         return Response.ok(rcmlResponse, MediaType.APPLICATION_XML).build();
     }
 
@@ -126,14 +120,16 @@ public class RvdController extends RestService {
         try {
             rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
             init(rvdContext);
-
-            logger.info("Received Restcomm GET request");
+            if(logger.isInfoEnabled()) {
+                logger.info("Received Restcomm GET request");
+            }
             Enumeration<String> headerNames = (Enumeration<String>) httpRequest.getHeaderNames();
             while (headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
             }
-
-            logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+            if(logger.isInfoEnabled()) {
+                logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+            }
             MultivaluedMap<String, String> requestParams = ui.getQueryParameters();
 
             return runInterpreter(appname, httpRequest, requestParams);
@@ -153,10 +149,13 @@ public class RvdController extends RestService {
             rvdContext = new ProjectAwareRvdContext(appname, request, servletContext);
             init(rvdContext);
 
-            logger.info("Received Restcomm POST request");
-            logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
-            logger.debug("POST Params: " + requestParams.toString());
-
+            if(logger.isInfoEnabled()) {
+                logger.info("Received Restcomm POST request");
+            }
+            if(logger.isDebugEnabled()) {
+                logger.debug(httpRequest.getMethod() + " - " + httpRequest.getRequestURI() + " - " + httpRequest.getQueryString());
+                logger.debug("POST Params: " + requestParams.toString());
+            }
             return runInterpreter(appname, httpRequest, requestParams);
         } catch (StorageException e) {
             logger.error(e, e);
@@ -195,8 +194,9 @@ public class RvdController extends RestService {
 
     private RestcommCreateCallResponse executeAction(String projectName, HttpServletRequest request, String toParam,
                                                      String fromParam, String accessToken, UriInfo ui, String basicAuthUsername, String basicAuthPassword, String accountSid) throws StorageException, CallControlException {
-
-        logger.info( "WebTrigger: Application '" + projectName + "' initiated. User request URL: " + ui.getRequestUri().toString());
+        if(logger.isInfoEnabled()) {
+            logger.info( "WebTrigger: Application '" + projectName + "' initiated. User request URL: " + ui.getRequestUri().toString());
+        }
         if (rvdContext.getProjectSettings().getLogging())
             rvdContext.getProjectLogger().log("WebTrigger incoming request: " + ui.getRequestUri().toString(),false).tag("app", projectName).tag("WebTrigger").done();
 
@@ -239,12 +239,13 @@ public class RvdController extends RestService {
         // initialize a restcomm client object using various information sources
         RestcommClient restcommClient;
         try {
-            restcommClient = new RestcommClient(restcommBaseUri, username, password);
+            restcommClient = new RestcommClient(restcommBaseUri, getUserIdentityContext().getEffectiveAuthorizationHeader());
         } catch (RestcommClient.RestcommClientInitializationException e) {
             throw new CallControlException("WebTrigger",e);
         }
-
-        logger.debug("WebTrigger: reaching restcomm at '" + restcommBaseUri + "'");
+        if(logger.isDebugEnabled()) {
+            logger.debug("WebTrigger: reaching restcomm at '" + restcommBaseUri + "'");
+        }
 
         String rcmlUrl = info.lanes.get(0).startPoint.rcmlUrl;
         // use the existing application for RCML if none has been given
@@ -274,7 +275,9 @@ public class RvdController extends RestService {
             throw new CallControlException("Error copying user supplied parameters to rcml url", e);
         }
 
-        logger.debug("WebTrigger: rcmlUrl: " + rcmlUrl);
+        if(logger.isDebugEnabled()) {
+            logger.debug("WebTrigger: rcmlUrl: " + rcmlUrl);
+        }
 
         // to
         String to = toParam;
@@ -302,7 +305,7 @@ public class RvdController extends RestService {
 
             // Find the account sid for the apiUsername is not available
             if (RvdUtils.isEmpty(accountSid)) {
-                RestcommAccountInfoResponse accountResponse = restcommClient.get("/restcomm/2012-04-24/Accounts.json/" + restcommClient.getUsername()).done(
+                RestcommAccountInfoResponse accountResponse = restcommClient.get("/restcomm/2012-04-24/Accounts.json/" + getLoggedUsername()).done(
                         marshaler.getGson(), RestcommAccountInfoResponse.class);
                 accountSid = accountResponse.getSid();
             }
@@ -311,7 +314,9 @@ public class RvdController extends RestService {
                     .addParam("From", from).addParam("To", to).addParam("Url", rcmlUrl)
                     .done(marshaler.getGson(), RestcommCreateCallResponse.class);
 
-            logger.info("WebTrigger: joined " + to + " with " + rcmlUrl);
+            if(logger.isInfoEnabled()) {
+                logger.info("WebTrigger: joined " + to + " with " + rcmlUrl);
+            }
             return response;
         } catch (AccessApiException e) {
             throw new CallControlException(e.getMessage(), e).setStatusCode(e.getStatusCode());
@@ -333,16 +338,11 @@ public class RvdController extends RestService {
             String password = null;
             String accountSid = null;
             if (basicCredentials != null) {
-                AuthenticationService authService = new AuthenticationService();
-                try {
-                    RestcommAccountInfoResponse accountInfo = authService.authenticate(basicCredentials.getUsername(), basicCredentials.getPassword());
-                    if (accountInfo != null) {
-                        username = accountInfo.getEmail_address();
-                        password = basicCredentials.getPassword();
-                        accountSid = accountInfo.getSid();
-                    }
-                } catch (RvdSecurityException e) {
-                    logger.warn(e);
+                RestcommAccountInfoResponse accountInfo = getUserIdentityContext().getAccountInfo();
+                if (accountInfo != null) {
+                    username = accountInfo.getEmail_address();
+                    password = basicCredentials.getPassword();
+                    accountSid = accountInfo.getSid();
                 }
             }
             rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
@@ -385,17 +385,12 @@ public class RvdController extends RestService {
             String password = null;
             String accountSid = null;
             if (basicCredentials != null) {
-                AuthenticationService authService = new AuthenticationService();
-                try {
-                    RestcommAccountInfoResponse accountInfo = authService.authenticate(basicCredentials.getUsername(), basicCredentials.getPassword());
+                    RestcommAccountInfoResponse accountInfo = getUserIdentityContext().getAccountInfo();
                     if (accountInfo != null) {
                         username = accountInfo.getEmail_address();
                         password = basicCredentials.getPassword();
                         accountSid = accountInfo.getSid();
                     }
-                } catch (RvdSecurityException e) {
-                    logger.warn(e);
-                }
             }
             rvdContext = new ProjectAwareRvdContext(projectName, request, servletContext);
             init(rvdContext);
@@ -420,10 +415,10 @@ public class RvdController extends RestService {
         }
     }
 
-    @RvdAuth
     @GET
     @Path("{appname}/log")
     public Response appLog(@PathParam("appname") String appName) {
+        secure();
         try {
             rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
             init(rvdContext);
@@ -453,10 +448,10 @@ public class RvdController extends RestService {
         }
     }
 
-    @RvdAuth
     @DELETE
     @Path("{appname}/log")
     public Response resetAppLog(@PathParam("appname") String appName) {
+        secure();
         try {
             rvdContext = new ProjectAwareRvdContext(appName, request, servletContext);
             init(rvdContext);

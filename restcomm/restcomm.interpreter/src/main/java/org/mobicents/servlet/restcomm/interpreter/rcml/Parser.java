@@ -57,7 +57,9 @@ public final class Parser extends UntypedActor {
 
     public Parser(final Reader reader, final String xml, final ActorRef sender) throws IOException {
         super();
-        logger.debug("About to create new Parser for xml: "+xml);
+        if(logger.isDebugEnabled()){
+            logger.debug("About to create new Parser for xml: "+xml);
+        }
         this.xml = xml;
         this.sender = sender;
         final XMLInputFactory inputs = XMLInputFactory.newInstance();
@@ -71,7 +73,9 @@ public final class Parser extends UntypedActor {
             }
             iterator = document.iterator();
         } catch (final XMLStreamException exception) {
-            logger.info("There was an error parsing the RCML for xml: "+xml+" excpetion: ", exception);
+            if(logger.isInfoEnabled()) {
+                logger.info("There was an error parsing the RCML for xml: "+xml+" excpetion: ", exception);
+            }
             sender.tell(new ParserFailed(exception,xml), null);
         } finally {
             if (stream != null) {
@@ -127,7 +131,9 @@ public final class Parser extends UntypedActor {
                 }
             }
         } else {
-            logger.info("iterator is null");
+            if(logger.isInfoEnabled()){
+                logger.info("iterator is null");
+            }
         }
         return null;
     }
@@ -167,11 +173,15 @@ public final class Parser extends UntypedActor {
             final Tag verb = next();
             if (verb != null) {
                 sender.tell(verb, self);
-                logger.debug("Parser, next verb: "+verb.toString());
+                if(logger.isDebugEnabled()){
+                    logger.debug("Parser, next verb: "+verb.toString());
+                }
             } else {
                 final End end = End.instance();
                 sender.tell(end, sender);
-                logger.debug("Parser, next verb: "+end.toString());
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Parser, next verb: "+end.toString());
+                }
             }
         }
     }

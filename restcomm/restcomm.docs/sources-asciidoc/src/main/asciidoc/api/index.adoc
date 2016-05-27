@@ -15,6 +15,7 @@ The Restcomm REST API is served over HTTPS. To ensure data privacy, unencrypted 
 Restcomm Accounts have the following subresources. Click on a link to read the API documentation for accessing or modifying each resource:
 
 * <<account-api.adoc#account,Restcomm API – Account>>
+* <<Restcomm - Multi-tenancy and Managing Sub-Accounts.adoc#restcomm-rest-api,Multi-tenancy and Managing Sub-Accounts>>
 * <<applications-api.adoc#applications,Restcomm API – Applications>>
 * <<available-phone-numbers-api.adoc#available-phone-numbers,Restcomm API – AvailablePhoneNumbers>>
 * <<calls-api.adoc#calls,Restcomm API – Calls>>
