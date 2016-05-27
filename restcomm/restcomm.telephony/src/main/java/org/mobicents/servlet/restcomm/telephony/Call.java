@@ -366,7 +366,7 @@ public final class Call extends UntypedActor {
                 uri = factory.createSipURI(null, realIP);
             }
         } catch (Exception e) {
-            logger.warning("Exception whule trying to get the Initial IP Address and Port");
+            logger.warning("Exception while trying to get the Initial IP Address and Port");
 
         }
         return uri;
@@ -995,11 +995,31 @@ public final class Call extends UntypedActor {
             final SipServletResponse response = (SipServletResponse) message;
             // Issue 99: https://bitbucket.org/telestax/telscale-restcomm/issue/99
             if (response.getStatus() == SipServletResponse.SC_OK && isOutbound()) {
+                String initialIpBeforeLB = null;
+                String initialPortBeforeLB = null;
+                try {
+                    initialIpBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                    initialPortBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemotePort");
+                } catch (Exception e) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Exception during check of LB custom headers for IP address and port");
+                    }
+                }
                 final SipServletRequest ack = response.createAck();
                 SipSession session = response.getSession();
 
-                final SipServletRequest originalInvite = response.getRequest();
-                if (!ack.getHeaders("Route").hasNext()) {
+                if (initialIpBeforeLB != null ) {
+                    if (initialPortBeforeLB == null)
+                        initialPortBeforeLB = "5060";
+                    if(logger.isInfoEnabled()) {
+                        logger.info("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
+                                + initialPortBeforeLB + " for ACK message, ");
+                    }
+                    String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                    SipURI uri = factory.createSipURI(null, realIP);
+                    ack.setRequestURI(uri);
+                } else if (!ack.getHeaders("Route").hasNext()) {
+                    final SipServletRequest originalInvite = response.getRequest();
                     final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
                     if ((SipURI) session.getAttribute("realInetUri") == null) {
 //                  session.setAttribute("realInetUri", factory.createSipURI(null, realInetUri.getHost()+":"+realInetUri.getPort()));

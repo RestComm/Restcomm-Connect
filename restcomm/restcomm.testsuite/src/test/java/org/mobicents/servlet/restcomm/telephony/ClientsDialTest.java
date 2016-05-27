@@ -1,30 +1,12 @@
 package org.mobicents.servlet.restcomm.telephony;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Date;
-
-import javax.sip.Dialog;
-import javax.sip.InvalidArgumentException;
-import javax.sip.SipException;
-import javax.sip.address.SipURI;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
 import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -38,15 +20,34 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mobicents.servlet.restcomm.http.CreateClientsTool;
 import org.mobicents.servlet.restcomm.http.RestcommCallsTool;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.mobicents.servlet.restcomm.tools.MonitoringServiceTool;
+
+import javax.sip.Dialog;
+import javax.sip.InvalidArgumentException;
+import javax.sip.SipException;
+import javax.sip.address.SipURI;
+import javax.sip.header.UserAgentHeader;
+import javax.sip.message.Response;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -79,6 +80,8 @@ public class ClientsDialTest {
     private static SipStackTool tool4;
     private static SipStackTool tool5;
     private static SipStackTool tool6;
+    private static SipStackTool tool7;
+    private static SipStackTool tool8;
 
     private String pstnNumber = "+151261006100";
 
@@ -114,6 +117,15 @@ public class ClientsDialTest {
     private String clientWithAppContact = "sip:clientWithApp@127.0.0.1:5095";
     private String clientWithAppClientSid;
 
+    private SipStack fotiniSipStackTcp;
+    private SipPhone fotiniPhoneTcp;
+    private String fotiniContactTcp = "sip:fotini@127.0.0.1:5096";
+    private String fotiniClientSid;
+
+    private SipStack bobSipStackTcp;
+    private SipPhone bobPhoneTcp;
+    private String bobContactTcp = "sip:bob@127.0.0.1:5097";
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -125,6 +137,8 @@ public class ClientsDialTest {
         tool4 = new SipStackTool("ClientsDialTest4");
         tool5 = new SipStackTool("ClientsDialTest5");
         tool6 = new SipStackTool("ClientsDialTest6");
+        tool7 = new SipStackTool("ClientsDialTest7");
+        tool8 = new SipStackTool("ClientsDialTest8");
     }
 
     @Before
@@ -151,6 +165,13 @@ public class ClientsDialTest {
         mariaRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "maria", "1234", null);
         dimitriRestcommClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "dimitri", "1234", null);
         clientWithAppClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "clientWithApp", "1234", "http://127.0.0.1:8090/1111");
+
+        fotiniSipStackTcp = tool7.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5096", "127.0.0.1:5080");
+        fotiniPhoneTcp = fotiniSipStackTcp.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, fotiniContactTcp);
+        fotiniClientSid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), "fotini", "1234", null);
+
+        bobSipStackTcp = tool8.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5097", "127.0.0.1:5080");
+        bobPhoneTcp = bobSipStackTcp.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, bobContactTcp);
     }
 
     @After
@@ -188,6 +209,18 @@ public class ClientsDialTest {
         }
         if (clientWithAppSipStack != null) {
             clientWithAppSipStack.dispose();
+        }
+        if (fotiniSipStackTcp != null) {
+            fotiniSipStackTcp.dispose();
+        }
+        if (fotiniPhoneTcp != null) {
+            fotiniPhoneTcp.dispose();
+        }
+        if (bobSipStackTcp != null) {
+            bobSipStackTcp.dispose();
+        }
+        if (bobPhoneTcp != null) {
+            bobPhoneTcp.dispose();
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
@@ -361,7 +394,74 @@ public class ClientsDialTest {
         //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
         //        assertTrue(georgeCall.respondToDisconnect());
     }
-    
+
+    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    public void testClientDialOutPstnSimulateWebRTCClient() throws ParseException, InterruptedException {
+
+        assertNotNull(mariaRestcommClientSid);
+        assertNotNull(dimitriRestcommClientSid);
+
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 14400, 3600));
+        Thread.sleep(3000);
+
+        Credential c = new Credential("127.0.0.1", "maria", "1234");
+        mariaPhone.addUpdateCredential(c);
+
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+
+        Thread.sleep(1000);
+
+        //Change UserAgent header to "sipunit" so CallManager
+        ArrayList<String> replaceHeaders = new ArrayList<String>();
+        List<String> userAgentList = new ArrayList<String>();
+        userAgentList.add("wss-sipunit");
+        UserAgentHeader userAgentHeader = mariaSipStack.getHeaderFactory().createUserAgentHeader(userAgentList);
+        replaceHeaders.add(userAgentHeader.toString());
+
+        // Maria initiates a call to Dimitri
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
+
+        Dialog mariaDialog = null;
+
+        if (responseMaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+            mariaDialog = mariaCall.getDialog();
+            assertNotNull(mariaDialog);
+        }
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(mariaCall.sendInviteOkAck());
+        assertTrue(georgeCall.waitForIncomingCall(5 * 1000));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "RINGING-George", 3600));
+
+        SipRequest lastReceivedRequest = georgeCall.getLastReceivedRequest();
+        String receivedBody = new String(lastReceivedRequest.getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        //        For a reason the ACK will never reach Restcomm. This is only when working with the sipUnit
+        //        assertTrue(georgeCall.waitForAck(5 * 1000));
+
+        Thread.sleep(3000);
+        georgeCall.listenForDisconnect();
+        assertTrue(mariaCall.disconnect());
+
+        //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
+        //        assertTrue(georgeCall.respondToDisconnect());
+    }
+
     @Test
     public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
         String invalidNumber = "+123456789";
@@ -817,6 +917,75 @@ public class ClientsDialTest {
         georgeCall.listenForDisconnect();
         assertTrue(georgeCall.waitForDisconnect(30 * 1000));
         assertTrue(georgeCall.respondToDisconnect());
+    }
+
+    @Test @Ignore //This will fail because SipUnit when working on TCP will pick an ephemeral port different than the one at Contact header
+    public void testClientsCallEachOtherOnTcp() throws ParseException, InterruptedException {
+
+        SipURI uri = fotiniSipStackTcp.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+
+        assertTrue(fotiniPhoneTcp.register(uri, "fotini", "1234", fotiniContactTcp, 3600, 3600));
+        Thread.sleep(3000);
+        assertTrue(bobPhoneTcp.register(uri, "bob", "1234", bobContactTcp, 3600, 3600));
+        Thread.sleep(3000);
+
+        Credential c = new Credential("127.0.0.1", "fotini", "1234");
+        fotiniPhoneTcp.addUpdateCredential(c);
+
+        final SipCall bobCallTcp = bobPhoneTcp.createSipCall();
+        bobCallTcp.listenForIncomingCall();
+
+        Thread.sleep(1000);
+
+        // Maria initiates a call to Dimitri
+        long startTime = System.currentTimeMillis();
+        final SipCall fotiniCallTcp = fotiniPhoneTcp.createSipCall();
+        fotiniCallTcp.initiateOutgoingCall(fotiniContactTcp, bobContactTcp, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(fotiniCallTcp);
+        assertTrue(fotiniCallTcp.waitForAuthorisation(5000));
+
+        assertTrue(bobCallTcp.waitForIncomingCall(5000));
+        assertTrue(bobCallTcp.sendIncomingCallResponse(Response.TRYING, "Trying-Bob-TCP", 1800));
+
+        assertTrue(fotiniCallTcp.waitOutgoingCallResponse(5000));
+        assertTrue(fotiniCallTcp.getLastReceivedResponse().getStatusCode()==Response.TRYING);
+
+        assertTrue(bobCallTcp.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob-TCP", 1800));
+
+        assertTrue(fotiniCallTcp.waitOutgoingCallResponse(5000));
+        assertTrue(fotiniCallTcp.getLastReceivedResponse().getStatusCode()==Response.RINGING);
+
+        String receivedBody = new String(bobCallTcp.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCallTcp.sendIncomingCallResponse(Response.OK, "Ok-Bob-TCP", 1800, receivedBody, "application", "sdp", null, null));
+
+        assertTrue(fotiniCallTcp.waitOutgoingCallResponse(5000));
+        assertTrue(fotiniCallTcp.getLastReceivedResponse().getStatusCode()==Response.OK);
+
+        assertTrue(fotiniCallTcp.sendInviteOkAck());
+        assertTrue(bobCallTcp.waitForAck(5000));
+
+        Thread.sleep(3000);
+
+        bobCallTcp.listenForDisconnect();
+        assertTrue(fotiniCallTcp.disconnect());
+        assertTrue(bobCallTcp.waitForDisconnect(5000));
+        assertTrue(bobCallTcp.respondToDisconnect());
+
+        long endTime   = System.currentTimeMillis();
+
+        double totalTime = (endTime - startTime)/1000.0;
+        assertTrue(3.0 <= totalTime);
+        assertTrue(totalTime <= 4.0);
+
+        Thread.sleep(3000);
+
+        //Check CDR
+        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(cdrs);
+        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
+        System.out.println("cdrsArray.size(): "+cdrsArray.size());
+        assertTrue(cdrsArray.size() == 1);
+
     }
 
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)

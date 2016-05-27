@@ -337,22 +337,41 @@ public final class MockMediaGateway extends UntypedActor {
         EventName[] events = rqnt.getSignalRequests();
         //Thread sleep for the maximum recording length to simulate recording from RMS side
         int sleepTime = 0;
-        //Only check for the Recording Length Timer parameter if the RQNT is about PlayRecord request
-        if (events != null && events.length > 0 && events[0].getEventIdentifier() != null && events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
-            String[] paramsArray = ((EventName) events[0]).getEventIdentifier().getParms().split(" ");
-            for (String param : paramsArray) {
-                if (param.startsWith("rlt")) {
-                    sleepTime = Integer.parseInt(param.replace("rlt=", ""));
+        boolean failResponse = false;
+        if (events != null && events.length > 0 && events[0].getEventIdentifier() != null) {
+            if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+                //Check for the Recording Length Timer parameter if the RQNT is about PlayRecord request
+                String[] paramsArray = ((EventName) events[0]).getEventIdentifier().getParms().split(" ");
+                for (String param : paramsArray) {
+                    if (param.startsWith("rlt")) {
+                        sleepTime = Integer.parseInt(param.replace("rlt=", ""));
+                    }
                 }
-            }
-            if (sleepTime == 3600000) {
-                //If maxLength is not set, rlt will be rlt=3600000
-                //In that case don't sleep at all
-                sleepTime = 0;
+                if (sleepTime == 3600000) {
+                    //If maxLength is not set, rlt will be rlt=3600000
+                    //In that case don't sleep at all
+                    sleepTime = 0;
+                }
+            } else if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pa")) {
+                //If this is a Play Audio request, check that the parameter string ends with WAV
+                String[] paramsArray = ((EventName) events[0]).getEventIdentifier().getParms().split(" ");
+                for (String param : paramsArray) {
+                    if (param.startsWith("an")) {
+                        String annoUrl = param.replace("an=", "");
+                        if (!annoUrl.toLowerCase().endsWith("wav")) {
+                            failResponse = true;
+                        }
+                    }
+                }
             }
         }
         System.out.println(rqnt.toString());
-        final ReturnCode code = ReturnCode.Transaction_Executed_Normally;
+        ReturnCode code = null;
+        if (failResponse) {
+            code = ReturnCode.Transient_Error;
+        } else {
+            code = ReturnCode.Transaction_Executed_Normally;
+        }
         final JainMgcpResponseEvent response = new NotificationRequestResponse(self, code);
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);

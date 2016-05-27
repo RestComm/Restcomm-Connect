@@ -1,0 +1,102 @@
+Dynamic routing is a feature of RVD’s External Services that has been deprecated in the Restcomm Conect 7.5.0 release. This article describes how to manually convert your existing projects that rely on dynamic routing to the newer and proposed _mapped_ routing. If your project doesn’t contain ES elements with dynamic routing enabled you can skip reading.
+
+[[is-dynamic-routing-used]]
+Is dynamic routing used ?
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here is how an ES element with dynamic routing enabled looks like: 
+
+image:./images/how_dynamic_routing_looks_like.png[how_dynamic_routing_looks_like,width=908,height=156]
+
+[[example-application]]
+Example application
+^^^^^^^^^^^^^^^^^^^
+
+Consider a simple voice application that authenticates callers. A Caller enters a pin using DTMF and the application relies on an external service for the authentication. According to the results of the authentication it either directs (routes) the caller to the Members module - if authentication was successful - or the Guests module if it failed. Here is how the application will look like when dynamic routing is used: Application modules: 
+
+image:./images/application_modules.png[application_modules,width=933,height=113]
+
+Sample response to a successful authentication request:
+
+[source,font:courier-new,lang:default,decode:true]
+----
+GET http://myservice/authenticate?pin=3145
+{
+  "nextModule": "Members"
+  …
+  …
+}
+----
+
+Sample response to a rejected authentication request:``
+
+[source,font:courier-new,lang:default,decode:true]
+----
+GET http://myservice/authenticate?pin=1111
+{
+  "nextModule": "Guests"
+  …
+  …
+}
+----
+
+External Service element: 
+
+image:./images/how_dynamic_routing_looks_like.png[how_dynamic_routing_looks_like,width=908,height=156]
+
+When dynamic routing is used RVD asks the external service to designate the _name of the module_ to continue to, after authentication. This is a bad coupling since the service should be aware of the module names instead of simply responding whether authentication succeeded or not.
+
+[[converting-to-mapped-routing---the-quick-way]]
+Converting to mapped routing - the quick way
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to convert the application with minimal effort:
+
+* Switch routing decision option to *mapped* from **dynamic**.
+* Create mappings for all possible outcomes for the operation. In this case, authentication has two outcomes: Guests and Members. Two mappings need to be created that map the Guests and Members values to the respective modules.
+
+Here is how the External Service element will look like: 
+
+image:./images/use_of_mapped_routing_quick.png[use_of_mapped_routing_quick,width=912,height=220]
+
+That’s it! The ES element now uses mapped routing.
+
+[[converting-to-mapped-routing---the-clean-way]]
+Converting to mapped routing - the clean way
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you’re able to modify your service besides the RVD application, you can clean your application logic too and remove the bad coupling. In that case the service will return the status of the authentication instead of the module name. Sample response for successful authentication:``
+
+[source,font:courier-new,lang:default,decode:true]
+----
+GET http://myservice/authenticate?pin=3145
+{
+  "status": "success"
+  …
+  …
+}
+----
+
+Sample response for failed authentication:
+
+[source,font:courier-new,lang:default,decode:true]
+----
+GET http://myservice/authenticate?pin=1111
+{
+  "status": "failed"
+  …
+  …
+}
+----
+
+The ES element now looks like this: 
+
+image:./images/es_final.png[es_final,width=928,height=636]
+
+You need to:
+
+* Switch routing decision option to *mapped* from **dynamic**.
+* Create mappings for all possible outcomes for the operation. In this case the service returns either success or failed. These will be the values to use in our mappings.
+* Change the control variable (on the right) from ‘nextModule’ to ‘status’.
+
+The ES element is now converted.

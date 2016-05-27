@@ -1,0 +1,58 @@
+This tutorial will show you how to configure two Restcomm instances to use the same Mysql Server instance.
+
+[[requirements]]
+Requirements
+~~~~~~~~~~~~
+
+* Install Mysql
+* Download the latest version of Restcomm Telscale as explained http://docs.telestax.com/restcomm-pages/[HERE]
+
+image:./images/2-Restcomm-Servers-Using-a-Single-Mysql-Server.png[2 Restcomm Servers Using a Single Mysql Server,width=413,height=283]
+
+[[step-1---configure-restcomm-server-1-to-use-mysql-database]]
+Step 1 - Configure Restcomm Server 1 to use Mysql Database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Configure the first Restcomm Server1 to use Mysql as explained in the documentation http://docs.telestax.com/restcomm-install-and-configure-restcomm-to-use-mysql/[HERE]
+
+* On Restcomm server1 with IP *(192.168.1.11)* grant access to the Mysql Server so that Restcomm Server2 *(192.168.1.12)* will be able to access the restcomm.
+* On Restcomm server1 access the mysql server;
+* *mysql -u root -p*
+* enter the root password
+* make sure restcomm database is created :  *show databases;*
+* grant access to servers from the same subnet as shown below
+* ALTER USER PRIVILEGES ON \*.* TO 'root'@'192.168.1.%' IDENTIFIED BY 'rootUserPWD' WITH GRANT OPTION;
+
+[[step-2---configure-restcomm-server2-to-use-mysql-database-running-on-192.168.1.11]]
+Step 2 - Configure Restcomm Server2 to use Mysql Database running on 192.168.1.11
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Configure Restcomm Server2 as explained in the documentation http://docs.telestax.com/restcomm-install-and-configure-restcomm-to-use-mysql/[HERE]:
+
+* In step 1 of the documentation above, you have to edit **$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml**
+* change the IP address to point to the Mysql instanced running on Restcomm Server1 as follows: **<connection-url>**jdbc:mysql://192.168.1.11:3306/restcomm**</connection-url>**
+* See full snapshot below:
+* Complete steps 2 - 5 as explained in the documentation *Install and configure Restcomm to use Mysql*
+
+[source,lang:default,decode:true]
+----
+<datasource jndi-name="java:/MysqlDS" pool-name="MysqlDS" enabled="true">
+                    <connection-url>jdbc:mysql://192.168.1.11:3306/restcomm</connection-url>
+                    <driver>mysqlDriver</driver>
+                    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+                    <pool>
+                        <min-pool-size>100</min-pool-size>
+                        <max-pool-size>200</max-pool-size>
+                    </pool>
+                    <security>
+                        <user-name>root</user-name>
+                        <password>myPWD</password>
+                    </security>
+                    <statement>
+                        <prepared-statement-cache-size>100</prepared-statement-cache-size>
+                        <share-prepared-statements/>
+                    </statement>
+                </datasource>
+----
+
+* Once you have completed the 2 steps above, Restcomm Server1 and Server2 will  use the same Mysql database running on 192.168.1.11

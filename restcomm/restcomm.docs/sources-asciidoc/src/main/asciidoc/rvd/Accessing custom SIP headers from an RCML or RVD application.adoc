@@ -1,0 +1,35 @@
+Restcomm provides an additional interface to communicate with an RCML/RVD application by means of custom SIP headers. The idea is that all custom SIP headers in a SIP message are detected and converted to HTTP parameters in the request to the RCML application using a convention. The RCML application can consume this parameters. Furthermore, RVD converts these parameters to RVD variables and makes them available to its modules.
+
+[[rcml-applications]]
+RCML applications
+^^^^^^^^^^^^^^^^^
+
+The following conventions are followed:
+
+* Any SIP header starting with *X-* prefix is custom.
+* HTTP parameters are created out of each custom SIP header by adding the *SipHeader_* prefix to its name.
+
+Example mappings from SIP header names to HTTP parameter names:
+
+[source,lang:default,decode:true]
+----
+X-My-Header -> SipHeader_X-My-Header
+----
+
+Thus the SipHeader_X-My-Header will be available as typical GET or POST parameter in the RCML application.
+
+[[rvd-applications]]
+RVD applications
+^^^^^^^^^^^^^^^^
+
+RVD will take the previous convention one step further and create an RVD variable out of the parameter. Thus, the mapping from a custom SIP header to an RVD variable will be the following:
+
+[source,lang:default,decode:true]
+----
+X-My-Header -> $core_x_my_header
+----
+
+So, if *X-My-Header* SIP header arrives at Restcomm, RVD will have a variable named *$core_x_my_header* available in its modules. Note the following:
+
+* All characters are converted to lower case. This happens because although SIP headers are  not case insesitive while RVD variables are.
+* All non alpha numeric characters i.e.** [^A-Za-z0-9_]**,  are converted to `_'  (underscore). That happens because RVD has some additional restrictions for naming variables. Here is the regular expression that is used for invalid characters to underscore:

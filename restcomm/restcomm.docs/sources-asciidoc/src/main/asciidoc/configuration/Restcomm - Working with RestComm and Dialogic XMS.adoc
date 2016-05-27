@@ -1,0 +1,49 @@
+RestComm is a next generation Cloud Communications Platform. It allows web developers to rapidly build voice, video, WebRTC, USSD, SMS, fax and rich messaging applications. Restcomm opens new revenue streams for service providers by exposing existing SS7 and IMS core network assets to application developers. 
+
+This documentation will explain how you can configure Dialogic XMS JSR-309 driver to work with Restcomm.
+
+[[automatic-configuration-and-startup]]
+Automatic configuration and startup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* *Download the Restcomm Connect binary* from link:https://github.com/Mobicents/RestComm/releases/tag/latest[latest release].
+* *Unzip the file to the directory of your choice.* This directory will be known as RESTCOMM_HOME from now on.
+* *Modify $RESTCOMM_HOME/bin/restcomm/restcomm.conf* file by setting the variable *MS_ADDRESS* to the public address of your Dialogic XMS instance.
+** A detailed guide to RestComm's automatic configuration and startup can be found link:http://docs.telestax.com/restcomm-understanding-autoconfigure-script[here].
+* **Start RestComm** using the **$JBOSS_HOME/bin/restcomm/restcomm-start.sh **script.
+
+An example of configuration for the RestComm startup mechanism can be found below:
+
+[source,lang:sh,decode:true]
+----
+NET_INTERFACE=eth0
+PRIVATE_IP=192.168.1.175
+SUBNET_MASK=255.255.255.0
+NETWORK=192.168.1.0
+BROADCAST_ADDRESS=192.168.1.255
+#MEDIA SERVER COMPATIBILITY MODE (mms=Mobicents Media Server, xms=Dialogic XMS)
+MS_COMPATIBILITY_MODE='xms'
+MS_ADRESS=54.22.56.57
+
+----
+
+[[creating-a-logger-for-jsr-309-connector]]
+*Creating a Logger for JSR-309 Connector*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Go to the  *$JBOSS_HOME/standalone/configuration* folder
+* Edit the file *standalone-sip.xml*
+* Locate the tag <subsystem xmlns="urn:jboss:domain:logging:1.2">
+* Change the logger level to one of this options: DEBUG, INFO, WARN or ERROR
+* As shown below the logger level is set to INFO
+
+[source,lang:default,decode:true]
+----
+<logger category="com.vendor.dialogic">
+    <level name="INFO"/>
+</logger>
+----
+
+#MEDIA SERVER COMPATIBILITY MODE (mms=Mobicents Media Server, xms=Dialogic XMS) 
+MS_COMPATIBILITY_MODE='xms' 
+MS_ADDRESS=''
