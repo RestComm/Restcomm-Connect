@@ -1,4 +1,4 @@
-Gone are the days when you have to be an expert in a programming language and know everything about telecommunications in order to create a simple voice application. Telscale Restcomm  Visual Designer (RVD) is taking the pain out of the process. This video tutorial will guide you through how it is done.   
+Gone are the days when you have to be an expert in a programming language and know everything about telecommunications in order to create a simple voice application. Restcomm Visual Designer (RVD) is taking the pain out of the process. This video tutorial will guide you through how it is done.   
 
 What will you be able to do with the new Visual Designer? Create applications without
 
