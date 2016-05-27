@@ -452,6 +452,13 @@ updateRecordingsPath() {
 	fi
 }
 
+otherRestCommConf(){
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
+	mv $FILE.bak $FILE
+}
+
+
 # MAIN
 echo 'Configuring RestComm...'
 #configJavaOpts
@@ -469,4 +476,5 @@ configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYS
 configMediaServerMSaddress "$BIND_ADDRESS"
 configRestCommURIs
 updateRecordingsPath
+otherRestCommConf
 echo 'Configured RestComm!'

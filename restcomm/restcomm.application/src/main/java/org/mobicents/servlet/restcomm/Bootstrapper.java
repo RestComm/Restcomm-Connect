@@ -168,10 +168,23 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private SipURI outboundInterface(ServletContext context, String transport) {
         SipURI result = null;
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
-        for (final SipURI uri : uris) {
-            final String interfaceTransport = uri.getTransportParam();
-            if (transport.equalsIgnoreCase(interfaceTransport)) {
-                result = uri;
+        if (uris != null && uris.size() > 0) {
+            for (final SipURI uri : uris) {
+                final String interfaceTransport = uri.getTransportParam();
+                if (transport.equalsIgnoreCase(interfaceTransport)) {
+                    result = uri;
+                }
+            }
+            if (logger.isInfoEnabled()) {
+                if (result == null) {
+                    logger.info("Outbound interface is NULL! Looks like there was no "+transport+" in the list of connectors");
+                } else {
+                    logger.info("Outbound interface found: "+result.toString());
+                }
+            }
+        } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("ServletContext return null or empty list of connectors");
             }
         }
         return result;
@@ -341,7 +354,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             GenerateInstanceId generateInstanceId = null;
             InstanceId instanceId = null;
             try {
-                generateInstanceId = new GenerateInstanceId(context, outboundInterface(context,"udp"));
+                SipURI sipURI = outboundInterface(context,"udp");
+                if (sipURI != null) {
+                    generateInstanceId = new GenerateInstanceId(context, sipURI);
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("SipURI is NULL!!! Cannot proceed to generate InstanceId");
+                    }
+                }
                 instanceId = generateInstanceId.instanceId();
             } catch (UnknownHostException e) {
                 logger.error("UnknownHostException during the generation of InstanceId: "+e);
