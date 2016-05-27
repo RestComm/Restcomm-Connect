@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('DashboardCtrl', function ($scope, $resource, $route, $rootScope, RCommStatistics) {
+rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RCommStatistics) {
   //$scope.sid = SessionService.get("sid");
 
   // TEMPORARY... FIXME!
