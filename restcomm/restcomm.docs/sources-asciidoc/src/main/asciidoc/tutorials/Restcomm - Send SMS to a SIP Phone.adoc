@@ -1,0 +1,138 @@
+In this tutorial, you will learn how to send an SMS from Restcomm Visual Designer (RVD) to a Jitsi SIP phone.  
+
+= Requirements
+
+* Restcomm on running on your local server.
+* Jitsi SIP phone installed on your local server. (Latest version of Jitsi)
+
+= Step 1
+
+Create an SMS application using RVD
+
+* Go to http://127.0.0.1:8080/restcomm-rvd on your web browser
+* In the *Start New Project* page, choose *Voice*
+* Create a new project RVD project. In this tutorial the project name is SMSTest and press the button Create
+
+image:./images/restcomm-rvd-smstest1.png[restcomm-rvd-smstest1,width=647,height=213]
+
+Next, create two new modules.called Welcome and Send SMS
+
+* Remove the default Say verb
+* Drag and drop the *Dial* Verb into the Welcome module.
+* Drag and drop the *Client* noun to the space below the noun list and enter the name *alice*
+* You must create the *Send SMS* module in order to be able to select it in the *Continue to* drop down list.
+* The *Welcome* module should be similar to the screenshot below.
+
+image:./images/restcomm-rvd-smstest2.png[restcomm-rvd-smstest2,width=774,height=281]
+
+Next, you need to create the *Send SMS* module
+
+* Drag and drop the *SMS* button on the left hand pane into the new module you have just created
+* Type the SMS message you will like to send in the text area of the *Say* verb.
+* Enter alice in the *To* field
+* Enter any number in the *From* field
+* Leave the rest of the field as default
+* The *Send SMS* module should look like the screen below
+* Save the project by pressing the *Save* button at the top of the page
+
+image:./images/restcomm-rvd-smstest3.png[restcomm-rvd-smstest3,width=764,height=278]
+
+= Step 2
+
+You must now link the newly created SMSTest to a Restcomm phone number.
+
+* Go to http://127.0.0.1:8080/ in order to open the Restcomm Admin Management page
+* You will see the login, screen below. Log in using your credentials.
+
+image:./images/restcomm-rvd-smstest4.png[restcomm-rvd-smstest4,width=704,height=451]
+
+In the main dashboard, click on the menu *Numbers* to reveal a list of already configured phone numbers and the application to which they are linked.
+
+* Next, click on the *+Register Number* button
+
+image:./images/restcomm-rvd-smstest5.png[restcomm-rvd-smstest5,width=687,height=284]
+
+In the *Register Number* window, enter a new phone number you will like to attach to your SMSTest application. In this tutorial *7777* is the number chosen. 
+
+Click on the Optional Parameters to reveal more configuration options 
+
+In the Voice section under **Voice Request URL**, click the option button at the end to reveal available RVD projects.
+
+Select SMSTest and at the end of the window, press the *Register* button to confirm your configuration.   
+
+image:./images/restcomm-rvd-smstest6.png[restcomm-rvd-smstest6,width=612,height=580] 
+
+The number *7777* will now appear in the list of registered numbers.   
+
+= Step 3
+
+In this section, you will configure Jitsi SIP phone to use the Restcomm application you have just created and receive the SMS message you configured.
+
+* Start two instances of jitsi from the command line.
+* The first instance can be started by typing *jitsi*
+* Second instance *jitsi - -multiple*
+
+Configure instance with alice account
+
+* Click on the menu Tools ->Options
+* Click on the Add button at the bottom of the window
+* In the Network, select SIP
+* SIP id = alice
+* Password = 1234
+* Click on the *Advanced* button
+
+image:./images/restcomm-rvd-smstest7.png[restcomm-rvd-smstest7,width=475,height=311]
+
+In the Account Registration Wizard, go to the Connection tab
+
+* Enter *127.0.0.1* as the Registrar IP address and leave the port as default
+
+In the section Proxy Options, uncheck the Configure proxy automatically and enter the following:
+
+* Proxy = *127.0.0.1*
+* Port = *5080*
+
+image:./images/restcomm-rvd-smstest8a.png[restcomm-rvd-smstest8a,width=711,height=548]
+
+* At the bottom of the window, press **Next**, then, *Sign in*
+* You should now see that *alice* is registered when you set the account to online.
+
+image:./images/restcomm-rvd-smstest9.png[restcomm-rvd-smstest9,width=250,height=600]
+
+Next step is to configure the second instance with user Bob. The configuration is similar to the one used for Alice. 
+
+= Step 4
+
+WARNING: Alice configuration SIP port must match the port configured in the restcomm.xml file to which the SMS message will be sent
+
+How to check: In the Jitsi instance on which user Alice is configured,
+
+* Click on the menu *Tools -> Options*
+* Click on the tab **Advanced**, on the left pane, select *SIP*
+* That will show the screen below:
+
+image:./images/restcomm-rvd-smstest10.png[restcomm-rvd-smstest10,width=515,height=422]
+
+Make sure the *SIP client port* above (**5070**)matches the port defined in the `$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml`
+
+[source,lang:xml,decode:true]
+----
+<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService"> 
+	<outbound-prefix></outbound-prefix> 
+	<outbound-endpoint>127.0.0.1:**5070**</outbound-endpoint> 
+</sms-aggregator>   
+----
+
+= Step 5
+
+You can now make a call from Bob to Alice. From the Jitsi SIP phone on which Bob is registered. make a call to **7777**, the number attached to the SMSTest application. 
+
+See screenshot below   
+
+image:./images/restcomm-rvd-smstest11.png[restcomm-rvd-smstest11,width=250,height=395]
+
+The Jitsi phone to which Alice is connected will ring. 
+
+Answer the call and then hang up. The SMS message you entered in the *Send SMS* module of the RVD will appear in a pop-up window similar to the one below. Note that the number 55555 appears as the source of the SMS message.
+
+image:./images/restcomm-rvd-smstest12.png[restcomm-rvd-smstest12,width=312,height=108]
