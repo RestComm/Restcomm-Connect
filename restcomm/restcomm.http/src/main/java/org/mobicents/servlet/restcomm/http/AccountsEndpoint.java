@@ -41,7 +41,6 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.entities.Account;
@@ -51,6 +50,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
@@ -117,12 +117,8 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        try {
-            checkPermission("RestComm:Read:Accounts");
-        } catch(final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
         Account account = null;
+        checkPermission("RestComm:Read:Accounts");
         if (Sid.pattern.matcher(accountSid).matches()) {
             try {
                 account = accountsDao.getAccount(new Sid(accountSid));
@@ -137,11 +133,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             }
         }
 
-        try {
-            secure(account, "RestComm:Read:Accounts", SecuredType.SECURED_ACCOUNT );
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(account, "RestComm:Read:Accounts", SecuredType.SECURED_ACCOUNT );
 
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -159,21 +151,13 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response deleteAccount(final String operatedSid) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        try {
-            checkPermission("RestComm:Delete:Accounts");
-        } catch(final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        checkPermission("RestComm:Delete:Accounts");
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid accountSid = userIdentityContext.getEffectiveAccount().getSid();
         final Sid sidToBeRemoved = new Sid(operatedSid);
 
-        try {
-            Account removedAccount = accountsDao.getAccount(sidToBeRemoved);
-            secure(removedAccount, "RestComm:Delete:Accounts", SecuredType.SECURED_ACCOUNT);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        Account removedAccount = accountsDao.getAccount(sidToBeRemoved);
+        secure(removedAccount, "RestComm:Delete:Accounts", SecuredType.SECURED_ACCOUNT);
         // Prevent removal of Administrator account
         if (operatedSid.equalsIgnoreCase(accountSid.toString()))
             return status(BAD_REQUEST).build();
@@ -187,11 +171,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response getAccounts(final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        try {
-            checkPermission("RestComm:Read:Accounts");
-        } catch(final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        checkPermission("RestComm:Read:Accounts");
         final Account account = userIdentityContext.getEffectiveAccount();
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -212,11 +192,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        try {
-            checkPermission("RestComm:Create:Accounts");
-        } catch(final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        checkPermission("RestComm:Create:Accounts");
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
         Account account = null;
@@ -240,7 +216,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
                 }
                 accountsDao.addAccount(account);
             } else {
-                return status(UNAUTHORIZED).build();
+                throw new InsufficientPermission();
             }
         } else {
             return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
@@ -279,23 +255,15 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        try {
-            checkPermission("RestComm:Modify:Accounts");
-        } catch(final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        checkPermission("RestComm:Modify:Accounts");
         final Sid sid = new Sid(accountSid);
         Account account = accountsDao.getAccount(sid);
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
             account = update(account, data);
-            try {
-                secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT );
-                accountsDao.updateAccount(account);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT );
+            accountsDao.updateAccount(account);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {

@@ -32,6 +32,8 @@ import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
+import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
@@ -89,7 +91,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected void checkAuthenticatedAccount() {
         if (userIdentityContext.getEffectiveAccount() == null)
-            throw new AuthorizationException();
+            throw new NotAuthenticated();
     }
 
     /**
@@ -100,9 +102,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
     protected void checkPermission(final String permission) {
-        checkAuthenticatedAccount(); // ok there is a valid authenticated account
+        //checkAuthenticatedAccount(); // ok there is a valid authenticated account
         if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
-            throw new AuthorizationException();
+            throw new InsufficientPermission();
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
@@ -128,32 +130,34 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
+        checkAuthenticatedAccount();
+        checkPermission(permission); // check an authbenticated account allowed to do "permission" is available
         if (operatedAccount == null)
             throw new AuthorizationException();
-        checkPermission(permission); // check an authbenticated account allowed to do "permission" is available
         if (type == SecuredType.SECURED_STANDARD) {
             if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, null) != AuthOutcome.OK )
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_APP) {
             if (secureLevelControlApplications(userIdentityContext.getEffectiveAccount(),operatedAccount,null) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT) {
             if (secureLevelControlAccounts(userIdentityContext.getEffectiveAccount(), operatedAccount) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         }
     }
 
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
+        checkAuthenticatedAccount();
         String resourceAccountSidString = resourceAccountSid == null ? null : resourceAccountSid.toString();
         if (type == SecuredType.SECURED_APP) {
             if (secureLevelControlApplications(userIdentityContext.getEffectiveAccount(), operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_STANDARD){
             if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT)
             throw new IllegalStateException("Account security is not supported when using sub-resources");
