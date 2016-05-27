@@ -1,0 +1,41 @@
+This tutorial will take you through the steps of installing Restcomm to a GNU/Linux box using the latest release from GitHub.
+
+[[prerequisites]]
+Prerequisites
+^^^^^^^^^^^^^
+
+* A Linux box with Java 1.7 or higher installed
+* Free VoiceRSS account for text to speech functionality
+
+[[installing-restcomm]]
+Installing Restcomm
+^^^^^^^^^^^^^^^^^^^
+
+* Download link:https://github.com/Restcomm/RestComm-Connect/releases/latest[Restcomm latest release] and extract it:
++
+[source,theme:github,toolbar:1,lang:default,decode:true]
+----
+$ unzip <mobicents restcomm release>.zip
+----
+* Go to link:http://www.voicerss.org and get a Text-to-Speech account. This is a free account that is required to activate Text-to-Speech in Restcomm.
+* Navigate to $RESTCOMM/bin/restcomm/restcomm.conf and set the string you got from voicerss accordingly:
++
+[source,theme:github,toolbar:1,lang:default,decode:true]
+----
+# VoiceRSS variable declarations
+VOICERSS_KEY='<voicerss key here>'
+----
+* From the same directory start Restcomm platform by executing:
++
+[source,theme:github,toolbar:1,lang:default,decode:true]
+----
+./start-restcomm.sh
+----
+
+Now the Restcomm platform is up and running! You can experiment with it right away using the built-in Olympus WebRTC client that ships with Restcomm. 
+
+Just open http://<restcomm ip>:8080/olympus and you are good to go! 
+
+image:./images/olympus-1.jpg[Restcomm Olympus,width=1030,height=656]
+
+For more information on how to use Olympus please check out <<how-to-use-olympus-with-restcomm.adoc#restcomm-olympus,How to use Olympus with Restcomm>>

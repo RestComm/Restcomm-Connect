@@ -1,13 +1,14 @@
-== *Restcomm – How to use Olympus with Restcomm*
+[[restcomm-olympus]]
+= *Restcomm – How to use Olympus with Restcomm*
 
 Olympus WebRTC client enables fast and convenient set up of Restcomm platform over web interface. With Olympus' WebRTC client, Restcomm has evolved from its previous client, described here http://url[telestax.com/livechat-and-video-call-with-restcomm/].
 
 This tutorial will show you how to use the new Olympus WebRTC client to take advantage of Restcomm’s telephony features.
 
-=== *Pre-requisites*
+= Pre-requisites
 A Restcomm installation. Please check http://docs.telestax.com/restcomm-docker-quick-start-guide/[http://docs.telestax.com/restcomm-docker-quick-start-guide/] on how to install Restcomm.
 
-==== *Calling Restcomm with WebRTC*
+= Calling Restcomm with WebRTC
 
 First, let’s see how we can make a call to Restcomm and hear a simple announcement
 
@@ -27,7 +28,7 @@ image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-2-1030x461.jp
 You could follow these steps to call any Restcomm number by either selecting a number from the list or adding a new one in contacts.
   
 
-*Call from Bob*
+== Call from Bob
 
 Say your friend Bob has logged in to Olympus and wants to talk:
 
@@ -49,7 +50,7 @@ image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-7-1030x420.jp
 image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-8-1030x420.jpg[olympus-8]
 
 
-*Chatting with Bob*
+== Chatting with Bob
 
 *   After you sign in as Bob:
 1. click on the Contacts icon
@@ -66,9 +67,8 @@ image::http://docs.telestax.com/wp-content/uploads/2015/05/olympus-4.jpg[olympus
 
 Give it a try and share your experience with the rest of the Restcomm community! Here are some additional resources:
 
-*   GitHub repository: https://github.com/Mobicents/olympus[https://github.com/Mobicents/olympus]
-*   Restcomm forum: https://groups.google.com/forum/#!forum/restcomm
 
-
-
-
+* GitHub repository: https://github.com/Restcomm/olympus[https://github.com/Restcomm/olympus]
+* Restcomm forum: https://groups.google.com/forum/#!forum/restcomm
+* Stack Overflow: http://stackoverflow.com/questions/tagged/restcomm (remember to tag your questions with 'restcomm')
+* Gitter #Restcomm-Discuss channel at https://gitter.im/RestComm/Restcomm-discuss

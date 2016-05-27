@@ -1,4 +1,4 @@
-var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route, Notifications, rappManagerConfig, $filter) {	
+var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, Notifications, rappManagerConfig, $filter, $state,$stateParams) {
 	
 	/* Sample list item
 	{
@@ -208,7 +208,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	    		  Notifications.warn("This application is already installed");
 	    	  } else {
 	    		  Notifications.success("Application installed");
-				  $route.reload();
+				  $state.transitionTo($state.current, $state.$current.params, { reload: true, inherit: true, notify: true });
 			  }
 	      })
 	      .error( function (data, status, headers) {

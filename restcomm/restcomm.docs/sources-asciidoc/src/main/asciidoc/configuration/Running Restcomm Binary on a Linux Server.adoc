@@ -1,0 +1,141 @@
+RestComm is a robust, powerful platform that will facilitate building comprehensive real-time communication solutions. The steps below will help you get started with ease.  
+
+* *On a production system, please take into consideration the following:*
+* *Restcomm Media Server can get into a bad state and report "Too many open files" error because of Linux default value on the total number of file descriptors.*
+* *You can go to the following sites to see how to increase the maximum number of open files in your server:*
+** *http://www.cyberciti.biz/faq/linux-increase-the-maximum-number-of-open-files/*
+** *http://amitbhayani.blogspot.fr/2010/01/javanetsocketexception-too-many-open.html.*
+
+= Running RestComm
+
+[[jboss-security]]
+== JBoss Security
+
+Running a secure application is dependent on multiple factors. Restcomm runs on JBoss which implies that system security implemention can be handled at JBoss level. Please see the link below on how you can make your server environment more secure. https://community.jboss.org/wiki/SecureJboss?_sscc=t.
+
+
+== Start Restcomm
+
+<<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
+
+= Testing the Demo Applications
+
+Restcomm comes prepackaged with multiple example applications designed to help you quickly get started.
+
+[[demo-1---testing-the-play-verb]]
+== Demo 1 - Testing the Play Verb
+
+Start a SIP phone (see below) and dial `1234@127.0.0.1:5080` . You will hear a welcome message.
+
+WARNING: Some SIP phones have codec incompatibility issues, in the above example, we used Ekiga. You may also try Jitsi or Sflphone.
+
+*The application bound to the number 1234 can be found at*
+....
+ <filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-play.xml</filename>.
+....
+
+[[demo-2---testing-say-verb]]
+== Demo 2 - Testing Say Verb
+
+You must first activate Text-to-Speech before you can proceed.   
+
+NOTE: You must get an API key from http://www.voicerss.org in order to proceed with this section. You can register for a free account and an API key will be emailed to you. 
+
+Once you have the API key, open the `$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml` file and find the speech-synthesizer VoiceRSS section. Add your API key as shown below and restart RestComm
+
+....
+<speech-synthesizer
+        class="org.mobicents.servlet.restcomm.tts.VoiceRSSSpeechSynthesizer">
+        <service-root>http://api.voicerss.org</service-root>
+        <apikey>2901c0aXXXXXXXXXXXXXX</apikey>
+....
+
+Start a SIP phone dial `1235@127.0.0.1:5080` . You will hear a welcome message in multiple languages.
+
+*The application bound to the number 1235 can be found at*
+....
+ $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/hello-world.xml.
+....
+
+[[demo-3---testing-gather-verb]]
+== Demo 3 - Testing Gather Verb
+
+This demo creates a simple IVR system
+
+NOTE: Activate DTMF using Ekiga Make sure your DTMF setting in Ekiga is set to RFC2833. In order to set it correctly, go to the menu Edit->Preference->Protocols->SIP Settings->DTMF Mode You may also use SFLPHONE instead of Ekiga
+
+Start a SIP phone dial `1236@127.0.0.1:5080` . You will hear a message asking you to enter a digit and press star. If the digit is correctly received, Restcomm will replay the number you entered.
+
+The application bound to the number 1236 can be found at 
+....
+<filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/hello-gather.xml</filename>.
+....
+
+and 
+
+....
+<filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/gather.jsp</filename>.
+....
+
+[[demo-4---testing-the-dial-sip-noun]]
+== Demo 4 - Testing the Dial Sip Noun
+
+This demo makes a call from one SIP phone to another. The Demo uses the SIP noun. You can calll any SIP account. All you have to do is change the content of the `dial-sip.xml` 
+
+In order to use this demo, you may use the default accounts, Alice and Bob, and register them on two separate SIP phones. Start both SIP phones and make sure Alice and Bob are registerd with the password (1234). These users come pre-configured with Restcomm for test purposes.
+
+[[start-two-sip-phone-sessions]]
+=== Start Two SIP Phone Sessions
+
+*If you are using the SIP sflphone here is what to do:* 
+
+*Start first instance ex. - sflphone* 
+
+*Start second instance ex. - sudo sflphone*
+
+In the application `dial-sip.xml` you can change the default to `sip:alice@127.0.0.1:5061?` 
+
+This will allow you to make a call to Alice. Note that Alice must be registered on port 5061 for the call to succeed. 
+
+From the the phone on which Bob is registerd, dial the number `1237`. 
+
+The phone on which Alice is registered will ring and the connection will be made when you answer the call.
+
+*The application bound to the number 1237 can be found at*
+....
+$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/dial/sip/dial-sip.xml.
+....
+
+[[demo-5---testing-the-client-noun]]
+== Demo 5 - Testing the Client Noun
+
+This demo makes a call from one SIP Client to Another. The demo uses the Client noun
+
+In order to use this demo, you must have user Alice and Bob registered on two separate SIP phones. Start both SIP phones and make sure Alice and Bob are registerd with the password (1234). These users come pre-configured with Restcomm for test purposes.
+
+From the phone on which Bob is registerd, dial the number `1238`. The phone on which Alice is registered will ring and the connection will be made when you answer the call.
+
+*The application bound to the number 1238 can be found at*
+....
+<filename>$RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/dial/client/dial-client.xml</filename>.
+....
+
+[[demo-6---testing-conference-noun]]
+== Demo 6 - Testing Conference Noun
+
+This demo Lets a user join a conference as a moderator and the other user as a participant. The participant will dial `1310` and will hear a hold music. The moderator will dial `1311` and the hold music will stop and the conference will be started. 
+
+Most SIP phones will require you to register before you can make a call. You can use the default accounts, Alice and Bob with password (1234)to register. 
+
+From the phone on which Bob is registerd, dial the number `1310`. From the phone on which Alice is registered, dial `1311`
+
+*The application bound to the number 1310 and 1311 can be found at*
+....
+http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference.xml
+....
+
+and at
+
+....
+http://127.0.0.1:8080/restcomm/demos/dial/conference/dial-conference-moderator.xml
+....
