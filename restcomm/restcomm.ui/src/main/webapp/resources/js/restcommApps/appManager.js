@@ -1,4 +1,4 @@
-var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, $route, Notifications, rappManagerConfig, $filter) {	
+var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManagerCtrl', function($scope, $upload, $location, products, localApps, $sce, Notifications, rappManagerConfig, $filter, $state,$stateParams) {
 	
 	/* Sample list item
 	{
@@ -208,7 +208,7 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	    		  Notifications.warn("This application is already installed");
 	    	  } else {
 	    		  Notifications.success("Application installed");
-				  $route.reload();
+				  $state.transitionTo($state.current, $state.$current.params, { reload: true, inherit: true, notify: true });
 			  }
 	      })
 	      .error( function (data, status, headers) {
@@ -259,26 +259,6 @@ var rappManagerCtrl = angular.module("rcApp.restcommApps").controller('RappManag
 	$scope.rappManagerConfig = rappManagerConfig;
 	
 });
-
-rappManagerCtrl.getProducts = function ($q, $http, rappManagerConfig) {
-	var deferred = $q.defer();
-	
-	console.log("retrieving products from AppStore");
-	$http({
-		method:"GET", 
-		//url:"https://restcommapps.wpengine.com/edd-api/products/?key=" + apikey + "&token=" + token + "&cacheInvalidator=" + new Date().getTime()
-		url:"https://" + rappManagerConfig.rasHost + "/edd-api/products/?number=30&key=" + rappManagerConfig.rasApiKey + "&token=" + rappManagerConfig.rasToken + "&cacheInvalidator=" + new Date().getTime()
-	}).success(function (data) {
-		console.log("succesfully retrieved " + data.products.length + " products from AppStore");
-		deferred.resolve(data.products);
-	}).error(function () {
-		console.log("http error while retrieving products from AppStore");
-		//deferred.reject("http error");
-		deferred.resolve([]);
-	});
-	
-	return deferred.promise;
-}
 
 rcMod.filter('appsFilter', function() {
   return function(appsList, filterType, searchFilterText) {

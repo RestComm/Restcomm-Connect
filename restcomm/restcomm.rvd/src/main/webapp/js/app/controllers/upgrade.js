@@ -1,5 +1,5 @@
-App.controller('upgradeCtrl', function ($scope, $routeParams, $http, $q, $location) {
-	$scope.projectName = $routeParams.projectName;
+App.controller('upgradeCtrl', function ($scope, $stateParams, $http, $q, $location) {
+	$scope.projectName = $stateParams.projectName;
 	$scope.upgradeStatus = "pending";
 	
 	$scope.onUpgradePressed = function(name) {

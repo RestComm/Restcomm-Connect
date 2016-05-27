@@ -6,9 +6,13 @@ import javax.ws.rs.core.MultivaluedMap;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -16,6 +20,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
  */
 
 public class RestcommAccountsTool {
+    private static Logger logger = Logger.getLogger(RestcommAccountsTool.class.getName());
 
     private static RestcommAccountsTool instance;
     private static String accountsUrl;
@@ -36,16 +41,17 @@ public class RestcommAccountsTool {
     }
 
     private String getAccountsUrl(String deploymentUrl, Boolean xml) {
-        // if (accountsUrl == null) {
-        if (deploymentUrl.endsWith("/")) {
-            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-        }
-        if (xml) {
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts";
-        } else {
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
-        }
-        // }
+//        if (accountsUrl == null) {
+            if (deploymentUrl.endsWith("/")) {
+                deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+            }
+            if(xml){
+                accountsUrl = deploymentUrl + "/2012-04-24/Accounts";
+            } else {
+                accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
+            }
+//        }
+
         return accountsUrl;
     }
 
@@ -59,12 +65,10 @@ public class RestcommAccountsTool {
         webResource.accept(MediaType.APPLICATION_JSON).delete();
     }
 
-    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken,
-            String emailAddress, String password, String accountSid, String status) {
-        Client jerseyClient = Client.create();
+    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password, String accountSid, String status) {        Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
-        String url = getAccountsUrl(deploymentUrl, true) + "/" + accountSid + ".json";
+        String url = getAccountsUrl(deploymentUrl,true) + "/"+accountSid+".json";
 
         WebResource webResource = jerseyClient.resource(url);
 
@@ -82,8 +86,8 @@ public class RestcommAccountsTool {
         return jsonResponse;
     }
 
-    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken,
-            String emailAddress, String password) {
+    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
+            String password) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -97,18 +101,20 @@ public class RestcommAccountsTool {
         params.add("Password", password);
         params.add("Role", "Administartor");
 
+        JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
 
         try {
             String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
-            JsonParser parser = new JsonParser();
             jsonResponse = parser.parse(response).getAsJsonObject();
-        } catch (Exception e) {}
-
+        } catch (Exception e) {
+            logger.info("Exception: "+e);
+        }
         return jsonResponse;
     }
 
-    public JsonObject getAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String username) {
+    public JsonObject getAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String username)
+            throws UniformInterfaceException {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
@@ -119,5 +125,16 @@ public class RestcommAccountsTool {
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
         return jsonResponse;
+    }
+
+    /*
+        Returns an account response so that the invoker can make decisions on the status code etc.
+     */
+    public ClientResponse getAccountResponse(String deploymentUrl, String username, String authtoken, String accountSid) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
+        WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
+        ClientResponse response = webResource.path(accountSid).get(ClientResponse.class);
+        return response;
     }
 }

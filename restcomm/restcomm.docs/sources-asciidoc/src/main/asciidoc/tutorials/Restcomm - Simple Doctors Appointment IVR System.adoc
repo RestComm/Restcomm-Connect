@@ -1,0 +1,225 @@
+In this tutorial, you will learn how to use RestComm to quickly build an Interactive Voice Response (IVR) application. The sample is based on PHP but, you could also use any programming language of your choice. An xml file is used to store and retrieve data in order to facilitate learning how to build voice applications.   
+
+= Requirements
+
+* Install Restcomm binary on your server.
+* Setup your local Apache web server.
+
+Creating an application that will automatically make appointments for clients can be very useful for businesses in different settings. This could be applied to out of hours service, when the receptionist is busy or when the Doctor wants to check when he next has an appointment. Care has been taken to keep this example very simple so that you can get a glimpse of the potential and the power of RestComm. 
+
+There are 4 files that you need to create, the content of the files is located further down:
+
+* *welcome-conf.xml*
+* *handle-doctors-appointment.php*
+* *handle-doctors-appointment2.php*
+* *appointment-db.xml*
+
+Create the welcome-conf.xml file in the *$RESTCOMM_HOME/server/default/deploy/restcomm.war/demo* 
+
+Use cURL to bind the welcome-conf.xml to Restcomm. All you need to do is change the hello-world.xml to welcome-conf.xml and run the command. 
+
+NOTE: The other files must be created in your web root directory. Because the appointment-db.xml file needs to be updated during the application run time, you need to change the owner and the permission to allow read-write.
+
+= What the Doctor's Application Does
+
+*The doctors appointment application does a couple of things:* 
+
+When a user calls, he lands on the welcome-conf.xml file that has been linked to RestComm using the cURL command in the installation documentation. The user is prompted to enter his patient number. In the next handle-doctors-appointment.php file, the user hears a menu of options to choose the day he wants an appointment. The handle-doctors-appointment2.php will set an appointment day or will prompt the use to choose another day if there is already someone schedule for the chosen day. 
+
+The example doctors' application is not complete as you will need to add more logic to make it more robust. For example,
+
+* prevent patients from booking two appointments
+* let patients delete an appointment
+* make sure a new patient doesn't override another patient's appointment
+* add more features to allow patients to choose hours of appointment
+* let patients choose the doctor they want from the list of available doctors
+
+The list can go on but, this should just give you an idea of the possibilities you have using RestComm to quickly build IVR applications.  
+
+* *file1 = welcome-conf.xml*
+* *file2 = handle-doctors-appointment.php*
+* *file3 = handle-doctors-appointment2.php*
+* *file4 = appointment-db.xml*
+
+NOTE: You can get the sample patient numbers from the appointment-db.xml file
+
+*File 1*
+
+[source,lang:xml,decode:true]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+<Gather action="http://127.0.0.1/handle-doctors-appointment.php" finishOnKey="*">
+<Say>Welcome to the Doctors Appointment Menu.</Say>
+<Say>Powered by Telestax RestComm</Say>
+<Say>Enter your 4 digit Patient number and press star</Say>
+</Gather>
+<!-- If customer doesn't input anything, prompt and try again. -->
+<Say>Sorry, your input is not  valid</Say>
+<Redirect>http://127.0.0.1:8080/restcomm/demo/welcome-conf.xml</Redirect>
+</Response>
+----
+
+*File 2*
+
+[source,lang:php,decode:true]
+----
+<?php
+header('Content-type: text/xml');
+
+echo '<?xml version="1.0" encoding="UTF-8"?>';
+
+$patient_num = (int) ($_REQUEST['Digits']);
+$p_len = strlen($patient_num);
+
+echo '<Response>';
+
+//make sure user enter 4 digits and digit not same as default digit
+if($p_len == "4"){
+
+$db = simplexml_load_file("http://127.0.0.1/appointment-db.xml");
+
+foreach($db->clients as $clientlist){
+
+if($clientlist->patientnum == $patient_num) {
+$patient_name = $clientlist->patientname;
+}
+}
+
+$db->asXml("/var/www/html/appointment-db.xml");
+echo '<Gather action="http://127.0.0.1/handle-doctors-appointment2.php?p_num='.$patient_num.'" numDigits="1">';
+echo '<Say> Hello'.$patient_name.' </Say>';
+echo '<Say>To make an appointment for monday press 1</Say>';
+echo '<Say>for tuesday press 2</Say>';
+echo '<Say>for wednesday press 3</Say>';
+echo '<Say>for thursday press 4</Say>';
+echo '<Say>for friday press 5</Say>';
+echo '</Gather>';
+echo '<Say>You entered an invalid input</Say>';
+echo '<Redirect>http://127.0.0.1/handle-doctors-appointment.php?Digits='.$patient_num.'</Redirect>';
+
+}else{
+echo '<Say>You entered an invalid patient number</Say>';
+echo '<Redirect>http://127.0.0.1:8080/restcomm/demo/welcome-conf.xml</Redirect>';
+}
+
+echo '</Response>';
+?>
+----
+
+*File 3*
+
+[source,lang:php,decode:true]
+----
+<?php
+header('Content-type: text/xml');
+
+echo '<?xml version="1.0" encoding="UTF-8"?>';
+
+$patient_num = (int) ($_REQUEST['p_num']);
+$day_chosen = (int) ($_REQUEST['Digits']);
+$input_array = array("1","2","3","4","5") ;
+
+echo '<Response>';
+
+//open the appointment-db.xml file
+
+$db = simplexml_load_file("http://127.0.0.1/appointment-db.xml");
+
+//make sure the user input $day_chosen is in the array
+if(in_array($day_chosen, $input_array)){
+
+foreach($db->days as $clientlist){
+//if there is already an appointment redirect to previous menu
+if($clientlist->busy == "1" && $clientlist->day == $day_chosen){
+echo '<Say>The doctor is already busy on' .$clientlist->dayname.' </Say>';
+echo '<Say>Please choose another day </Say>';
+echo '<Redirect>http://127.0.0.1/handle-doctors-appointment.php?Digits='.$patient_num.' </Redirect>';
+
+//if no existing appointment on that day set a new one
+}elseif($clientlist->busy == "0" && $clientlist->day == $day_chosen){
+$clientlist->patientnum = $patient_num;
+$day_name = $clientlist->dayname;
+$clientlist->busy = "1";
+}
+}
+
+//get patient name from the appointment-db.xml
+foreach($db->clients as $clientlist){
+if($clientlist->patientnum == $patient_num) {
+$get_patientname = $clientlist->patientname;
+}
+}
+//update the appointment-db.xml file with changes
+$db->asXml("/var/www/html/appointment-db.xml");
+
+echo '<Say>Hello '.$get_patientname.'Your appointment for '.$day_name.' has been validated</Say>';
+echo '<Say>Goodbye!</Say>';
+
+}else{
+echo '<Say>You entered an invalid input</Say>';
+echo '<Redirect>http://127.0.0.1/handle-doctors-appointment.php?Digits='.$patient_num.' </Redirect>';
+
+}
+
+echo '</Response>';
+?>
+----
+
+*File 4*
+
+[source,lang:xml,decode:true]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<appointment>
+<days>
+<day>1</day>
+<dayname>Monday</dayname>
+<busy>0</busy>
+<patientnum>1111</patientnum>
+<patientname/>
+</days>
+<days>
+<day>2</day>
+<dayname>Tuesday</dayname>
+<busy>0</busy>
+<patientnum></patientnum>
+<patientname/>
+</days>
+<days>
+<day>3</day>
+<dayname>Wednesday</dayname>
+<busy>0</busy>
+<patientnum></patientnum>
+<patientname/>
+</days>
+<days>
+<day>4</day>
+<dayname>Thursday</dayname>
+<busy>0</busy>
+<patientnum/>
+<patientname/>
+</days>
+<days>
+<day>5</day>
+<dayname>Friday</dayname>
+<busy>0</busy>
+<patientnum/>
+<patientname/>
+</days>
+
+<clients>
+<patientnum>1111</patientnum>
+<patientname>James</patientname>
+</clients>
+<clients>
+<patientnum>2222</patientnum>
+<patientname>Mary</patientname>
+</clients>
+<clients>
+<patientnum>3333</patientnum>
+<patientname>David</patientname>
+</clients>
+
+</appointment>
+----

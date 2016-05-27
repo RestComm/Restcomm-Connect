@@ -1,13 +1,14 @@
 package org.mobicents.servlet.restcomm.http;
 
-import com.google.gson.JsonObject;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.http.client.ClientProtocolException;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipStack;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -16,20 +17,13 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.sip.address.SipURI;
-import java.io.IOException;
-import java.net.URL;
-import java.text.ParseException;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -58,6 +52,9 @@ public class AccountsEndpointTest {
     private String newAdminAuthToken = "8e70383c69f7a3b7ea3f71b02f3e9731";
     private String userEmailAddress = "gvagenas@restcomm.org";
     private String userPassword = "1234";
+    private String unprivilegedSid = "AC00000000000000000000000000000000";
+    private String unprivilegedUsername = "unprivileged@company.com";
+    private String unprivilegedAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     static SipStackTool tool1;
 
@@ -261,8 +258,8 @@ public class AccountsEndpointTest {
     }
 
     @Test
-    public void testGetAccounts() {
-        if (!accountUpdated) {
+    public void testGetAccounts() throws InterruptedException {
+        if (!accountUpdated){
             RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
                     adminUsername, newAdminPassword, adminAccountSid, null);
         }
@@ -272,7 +269,6 @@ public class AccountsEndpointTest {
             RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(), adminUsername, newAdminAuthToken,
                     userEmailAddress, userPassword);
         }
-
         // Get Account using admin email address and user email address
         JsonObject account1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 newAdminAuthToken, userEmailAddress);
@@ -281,6 +277,16 @@ public class AccountsEndpointTest {
                 newAdminAuthToken, account1.get("sid").getAsString());
 
         assertTrue(account1.toString().equals(account2.toString()));
+
+    }
+
+    /**
+     * Test access without administrator type of access. Instead a common role and permissions is used.
+     */
+    @Test
+    public void testAccountAcccessUsingRoles() {
+        ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(),unprivilegedUsername, unprivilegedAuthToken, unprivilegedSid);
+        Assert.assertEquals(200,response.getStatus());
     }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)

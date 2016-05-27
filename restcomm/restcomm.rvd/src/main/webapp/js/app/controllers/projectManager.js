@@ -1,8 +1,10 @@
-App.controller('projectManagerCtrl', function ( $scope, $http, $location, $routeParams, $timeout, $upload, notifications, authentication) {
-	
+App.controller('projectManagerCtrl', function ( $scope, $http, $location, $stateParams, $timeout, $upload, notifications, authentication) {
+
+	var account = authentication.getAccount();
+
 	$scope.authInfo = authentication.getAuthInfo();
 	$scope.projectNameValidator = /^[^:;@#!$%^&*()+|~=`{}\\\[\]"<>?,\/]+$/;
-	$scope.projectKind = $routeParams.projectKind;
+	$scope.projectKind = $stateParams.projectKind;
 	if ( $scope.projectKind != 'voice' && $scope.projectKind != 'ussd' && $scope.projectKind != 'sms')
 		$scope.projectKind = 'voice';
 	$scope.error = undefined; 
@@ -13,8 +15,9 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 		var restcommApps;
 		var projectList = [];
 		$http({
-			url: '/restcomm/2012-04-24/Accounts/' + $scope.authInfo.username + '/Applications.json',
-			method: 'GET'
+			url: '/restcomm/2012-04-24/Accounts/' + account.sid + '/Applications.json',
+			method: 'GET',
+			headers: {Authorization: authentication.getAuthHeader()}
 		}).success(function (data, status, headers, config) {
 			restcommApps = data;
 			$http({url: 'services/projects',
@@ -52,7 +55,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.createNewProject = function(name, kind, ticket) {
-		$http({url: 'services/projects/' + name + "/?kind=" + kind + "&ticket=" + ticket,
+		$http({url: 'services/projects/' + name + "/?kind=" + kind,
 				method: "PUT"
 		})
 		.success(function (data, status, headers, config) {
@@ -86,7 +89,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 			projectItem.viewMode = 'view';
 			return;
 		}
-		$http({ method: "PUT", url: 'services/projects/' + projectItem.applicationSid + '/rename?newName=' + projectItem.newProjectName + "&ticket=" + ticket})
+		$http({ method: "PUT", url: 'services/projects/' + projectItem.applicationSid + '/rename?newName=' + projectItem.newProjectName})
 			.success(function (data, status, headers, config) { 
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
@@ -102,7 +105,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	}
 	
 	$scope.deleteProject = function(projectItem, ticket) {
-		$http({ method: "DELETE", url: 'services/projects/' + projectItem.applicationSid + "?ticket=" + ticket})
+		$http({ method: "DELETE", url: 'services/projects/' + projectItem.applicationSid})
 		.success(function (data, status, headers, config) { 
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
@@ -122,10 +125,10 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $route
 	    for (var i = 0; i < $files.length; i++) {
 	      var file = $files[i];
 	      $scope.upload = $upload.upload({
-	        url: 'services/projects?ticket=' + ticket,
+	        url: 'services/projects',
 	        file: file,
 	      }).progress(function(evt) {
-	        console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
+	        //console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
 	      }).success(function(data, status, headers, config) {
 	    	  console.log('Project imported successfully');
 	    	  $scope.refreshProjectList();
