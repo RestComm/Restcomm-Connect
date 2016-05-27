@@ -1,0 +1,93 @@
+This tutorial will show you how to integrate https://github.com/RestComm/restcomm-web-sdk[Restcomm Web SDK] into your Web Apps to tap into the https://github.com/RestComm[Restcomm] telecom capabilities. Restcomm Web SDK provides a Javascript library that uses WebRTC for media and JAIN SIP for signaling and exposes a simple a yet efficient Twilio compatible API to add communication features in your Web App like calls and text messages.
+
+[[prerequisites]]
+Prerequisites
+^^^^^^^^^^^^^
+
+* http://www.restcomm.com/[Restcomm Communications Platform]
+* NodeJS (we are using NodeJS for the server side cause it's simpler, but you could use anything you want)
+
+[[restcomm]]
+1. Restcomm
+^^^^^^^^^^^
+
+Here you have two alternatives:
+
+* Don't perform a local installation and use link:http://www.restcomm.com/[Restcomm Cloud].
+* Install the latest https://hub.docker.com/r/restcomm/restcomm/[Restcomm Docker image] locally (i.e. $ docker pull mobicents/restcomm to get it from docker hub). For more information please check http://www.telestax.com/rapid-webrtc-application-development-with-restcomm-and-docker/ and https://github.com/RestComm/Restcomm-Docker#restcomm-docker-image. If you aren't familiar with docker you can have a quick intro here https://www.docker.com/
+
+[[restcomm-web-sdk]]
+2. Restcomm Web SDK
+^^^^^^^^^^^^^^^^^^^
+
+Once you have installed the Restcomm platform (or you are using RaaS) you are ready to start taking advantage of Restcomm's features from your Web Apps. What you need to do is clone the restcomm-web-sdk GitHub repository from: https://github.com/RestComm/restcomm-web-sdk:
+
+[source,theme:github,toolbar:1,lang:default,decode:true]
+----
+$ git clone https://github.com/RestComm/restcomm-web-sdk.git
+----
+
+[[use-the-existing-sample-webapp-hello-world]]
+Use the existing sample Web App, 'Hello World'
+++++++++++++++++++++++++++++++++++++++++++++++
+
+To illustrate the Web SDK, we'll be using a sample App provided in the repo, called Hello World:
+
+* Edit index.html inside hello-world sample in the local repo: $RESTCOMM_WEB_SDK/samples/hello-world.
+* Search for string 'CHANGEME' and perform required changes in the Restcomm instance IP address/domain name. This will depend on which alternative you picked above for RestComm: a. if you used RaaS then you don't need to update the IP address (i.e. the RaaS domain name is used by default). b. if you used the Docker image then you should use the local IP address that Restcomm uses when coming up:
++
+[source,theme:github,toolbar:1,lang:js,mark:6,23,decode:true]
+----
+function call() {
+   var parameters = {
+      'username': '+1235@cloud.restcomm.com',  // CHANGEME: update the IP address to your Restcomm instance 
+      'video-enabled': false,  // should we use WebRTC video or WebRTC audio only?
+      'local-media': localMedia,
+      'remote-media': remoteMedia,
+   };
+
+   // Make the actual call, using the parameters above
+   currentConnection = RestCommClient.Device.connect(parameters);
+    
+   ...
+----
+* Fire up a NodeJS 'static' web server and serve the contents of index.html:
++
+[source,theme:github,toolbar:1,lang:default,decode:true]
+----
+$ nodejs server.js
+----
+* Navigate your browser to https://localhost:8443 (in my case it's a LAN IP as I'm using a virtual machine), this is where NodeJS server.js is configured to serve your page. *Important:* notice that we are using https because latest Chrome doesn't allow to use WebRTC from insecure origins and since the .pem we are using is self-signed and for demo purposes only, you will get the usual warning when opening the page that it can't be trusted. Just ignore it for the purposes of this demo.
+* Once the page loads you should see a fairly basic user interface with 2 buttons and a console area where the Restcomm Client library outputs events:
++
+image:./images/restcomm-websdk-hello-world.png[restcomm-websdk-hello-world,width=904,height=784]
++
+* Then press the Call button and behind the scenes number '+1235' will be called on the Restcomm instance and you will hear the associated announcement.
+* From then on, you can try more fun experiments, such as calling a different Restcomm number by changing the URI in the code from sip:1235@<ip address> to for example sip:1311@<ip address> which is the default Restcomm Application for conferencing:
++
+[source,theme:github,toolbar:1,lang:js,mark:11,decode:true]
+----
+function call() {
+   var parameters = {
+      'username': '+1311@cloud.restcomm.com',  // CHANGEME: update the IP address to your Restcomm instance 
+      'video-enabled': false,  // should we use WebRTC video or WebRTC audio only?
+      'local-media': localMedia,
+      'remote-media': remoteMedia,
+   };
+
+   // Make the actual call, using the parameters above
+   currentConnection = RestCommClient.Device.connect(parameters);
+
+   ...
+----
+
+Now the real fun begins: you can call the same number using the Restcomm Web SDK from yet another browser window and start a conference between the two! 
+
+That's it! Give it a try it and share your experience with the rest of the Restcomm community, or even better, jump in and get your hands dirty with the code! 
+
+Here are some additional resources:
+
+* Reference Documentation: http://restcomm.github.io/restcomm-web-sdk/doc/
+* Restcomm forum: https://groups.google.com/forum/#!forum/restcomm
+* Stack Overflow: http://stackoverflow.com/questions/tagged/restcomm (remember to tag your questions with 'restcomm')
+* Gitter #Restcomm-Discuss channel at https://gitter.im/RestComm/Restcomm-discuss

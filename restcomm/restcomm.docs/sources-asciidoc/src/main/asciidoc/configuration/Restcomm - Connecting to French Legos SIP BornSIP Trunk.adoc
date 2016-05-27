@@ -1,0 +1,55 @@
+Restcomm is a next generation Cloud Communications Platform to rapidly build voice and text messaging applications, using mainstream web development skills. Restcomm is a turnkey Cloud Communications solution from Telestax.
+
+[[requirements]]
+Requirements
+^^^^^^^^^^^^
+
+* Restcomm running : <<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
+* Go to the website of Legos to get an account http://www.legos.fr/en/services-2/sip-trunk/[HERE]
+
+Legos will give you the followng configuration information
+
+[source,lang:default,decode:true]
+----
+SIP Trunk Server : XXX.bornsip.XXX
+Trunk Authentication Id : AuthenticaionIDXXXXXXXX
+Trunk Password : AuthPasswordXXXXXXXXX
+Outbound CallerID : CallerIDXXXXXXX
+----
+
+[[step-1---change-outbound-setting-in-the-read-user-data.sh-file]]
+Step 1 - Change outbound setting in the read-user-data.sh file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Edit the read-user-data.sh  as follows (**ONLY FOR RESTCOMM ON AMAZON CLOUD**)
+* #Change the Outbound proxy to '' *export OUTBOUND_PROXY=$(readUserData OUTBOUND_PROXY 'XXX.bornsip.XXX')*
+* Disable the Telestax proxy by setting the following line to 'false'
+* *export ACTIVE_PROXY=$(readUserData active_proxy 'false')*
+
+[[step-2---edit-restcomm.conf-file]]
+Step 2 - Edit restcomm.conf file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Go to the $Restcomm_HOME/bin/restcomm/restcomm.conf file and edit the following lines
+[source,lang:default,decode:true]
+----
+# Address for outbound calls 
+OUTBOUND_PROXY='XXX.bornsip.XXX'
+OUTBOUND_PROXY_USERNAME='AuthenticaionIDXXXXXXX'
+OUTBOUND_PROXY_PASSWORD='AuthPasswordXXXXXXXXX'
+----
+
+[[step-3---edit-restcomm.xml]]
+Step 3 - Edit restcomm.xml
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* In the *$Restcomm_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml*
+* Search for the tag *<outboudproxy-user-at-from-header>* the value must be set to "true"
+* *<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>*
+
+[[step-4---restart-restcomm]]
+Step 4 - Restart Restcomm
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Restart Restcomm and make a call to a PSTN in France.
+* The CallerID of the SIP phone you use to make the call should be CallerIDXXXXXXX (Provided by Legos)

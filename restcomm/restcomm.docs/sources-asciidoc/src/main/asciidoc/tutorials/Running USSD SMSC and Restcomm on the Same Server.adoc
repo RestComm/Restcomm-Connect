@@ -1,0 +1,150 @@
+In most cases, products like USSD, SMSC and Restcomm will be installed on different servers for performance gain. However, in some pre-production environment, it might be necessary to have all 3 products installed and running on the same physical server. Below are a few configuration details to take into consideration.
+
+[[step-1---configuring-smsc]]
+Step 1 - Configuring SMSC
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Start SMSC server as normal as explained http://docs.telestax.com/smsc-quick-start-user-guide/[HERE]
+* SMSC will use port 8080 to access the GUI dashboard
+* SMSC will use port 5060 to Listen for SIP messages
+* SMSC will use port 3435 for the CLI shell (See https://docs.telestax.com/smsc-advanced-server-settings/[HERE] for how to use the CLI Shelf)
+
+[[step-2---configuring-ussd-and-using-port-offset]]
+Step 2 - Configuring USSD and Using Port Offset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+USSD uses at the above ports that are now already in use by SMSC. You will need to use an off to start USSD
+
+* Start USSD in default mode as follows (This will offset the default port by **200**)
+* *$USSD_HOME/jboss-5.1.0.GA/bin# ./run.sh -b IP_ADDRESS  -Djboss.service.binding.set=ports-02*
+* You may also use add the parameters (**-c simulato**r) to start USSD in simulator mode as follows:
+* *$USSD_HOME/jboss-5.1.0.GA/bin# ./run.sh -b IP_ADDRESS -c simulator -Djboss.service.binding.set=ports-02*
+* The USSD GUI will be accessible as *http://IP_ADDRESS:8280/ussd-management*
+* The JSS7 console will be available at *http://IP_ADDRESS:8280/jss7-management-console*
+
+[[ussd-sip-port]]
+USSD SIP PORT
+^^^^^^^^^^^^^
+
+You need to change the default SIP port 5060 to an offset (200) that will match the above for easier management (You can use any offset of your choice if you which)
+
+* Go to  USSD_HOME/server/default (or "simulator")/deploy/sip11-ra-DU-6.1.2.GA-TelScale.jar.
+* Extract the content of the file like this : *jar xf sip11-ra-DU-6.1.2.GA-TelScale.jar.*
++
+NOTE: the version of the jar file above might be different
++
+* Edit the file  **META-INF/deploy-config.xml**
+* Look for the line -  *<property name="javax.sip.PORT" type="java.lang.Integer" value="5060" />*
+* change the value="**5060**" to value="**5260**"
+* Save the file
+* create a new jar archive as follows
+* *"jar cf sip11-ra-DU-6.1.2.GA-TelScale.jar jars META-INF"*
+
+NOTE: The above steps can also be used to offset the default SIP port for SMSC
+
+[[ussd-command-line-interface-cli-shell-port]]
+USSD Command Line Interface (CLI) Shell Port
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You need to change the default CLI port 3435 to an offset (200) that will match the above for easier management (You can use any offset of your choice if you which)
+
+* Edit the file  USSD_HOME/server/default (or "**simulator**")/deploy/telscale-ussd-server/META-INF/jboss-beans.xml.
+* Look for the line "**<bean name="ShellExecutor**"".
+* Under the  parameter "**<property name="port">3435</property>**".
+* Change the port "**<property name="port">3435</property>** to "**<property name="port">3635</property>**
+* Save and exit the file
+* Access the USSD command line interface as follows
+* Execute :  *$USSD_HOME/jboss-5.1.0.GA/bin/ss7-cli.sh*
+* Execute the following command to acccess the CLI : *connect IP_ADDRESS 3645*
+
+NOTE: You need to specify the IP address and the new port offset
+
+NOTE: The above steps can also be used to offset the default CLI Port for SMSC
+
+[[section]]
+
+[[other-ports-to-take-into-consideration]]
+Other Ports to take into consideration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SMSC Gateway listerns for incoming SMPP connections (SMPP server port) on the default port value of *2776.*
+
+* You might need to change the ports if you have multiple server instances.
+* Go to *http://IP_ADDRESS:8080/smsc-management/#*
+* Go to SMPP Server - Port
+* On the CLI shelf
+* Execute -  *smppserver set port <port>*
+* Restart SMPP server (using the GUI) or you may restart the SMSC Gateway
+
+NOTE: You also need to consider using different ports for multiple instances when using  SS7 SCTP.
+
+[[step-3---configuring-restcomm-using-port-offset]]
+Step 3 - Configuring  Restcomm Using Port Offset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default Restcomm uses port 8080 for the Admin UI and ports 508x  for communication. In order to avoid conflicts with the 2 previously configured products (USSD and SMSC)  
+
+* Edit the file *RESTCOMM_HOME/bin/restcomm/start-restcomm.sh*
+* Search for the section
+
+[source,lang:default,decode:true]
+----
+                'standalone'*)
+                        # start restcomm on standalone mode
+                        chmod +x $RESTCOMM_HOME/bin/standalone.sh
+                        echo 'TelScale RestComm started running on standalone mode. Screen session: restcomm.'
+                        echo "Using IP Address: $BIND_ADDRESS"
+                        if [[ "$RUN_DOCKER" == "true" || "$RUN_DOCKER" == "TRUE" ]]; then
+                                $RESTCOMM_HOME/bin/standalone.sh -b $bind_address
+                        else
+                                screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address
+                        fi
+                        ;;
+----
+
+* Change the line
+
+[source,lang:default,decode:true]
+----
+screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address
+----
+
+* to the following
+
+[source,lang:default,decode:true]
+----
+screen -dmS 'restcomm' $RESTCOMM_HOME/bin/standalone.sh -b $bind_address -Djboss.socket.binding.port-offset=100
+----
+
+* Save and exit the file *RESTCOMM_HOME/bin/restcomm/start-restcomm.sh*
+
+NOTE: The following section might not be needed as Restcomm doesn't use the default SIP port 5060. However, it might be useful in case there are other port conflicts
+
+Open and Edit the file *RESTCOMM_HOME/standalone/configuration/standalone-sip.xml*
+
+* Got to the section
+
+[source,lang:default,decode:true]
+----
+<subsystem xmlns="urn:org.mobicents:sip-servlets-as7:1.0" application-router="configuration/dars/mobicents-dar.properties" stack-properties="configuration/mss-sip-stack.properties" path-name="org.mobicents.ext" app-dispatcher-class="org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl" concurrency-control-mode="SipApplicationSession" congestion-control-interval="-1">
+            <connector name="sip-udp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-udp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5080"/>
+            <connector name="sip-tcp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tcp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5080"/>
+            <connector name="sip-tls" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tls" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5081"/>
+            <connector name="sip-ws" protocol="SIP/2.0" scheme="sip" socket-binding="sip-ws" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5082"/>
+        </subsystem>
+----
+
+* Change all the ports from 508x to 518x as follows
+
+[source,lang:default,decode:true]
+----
+<subsystem xmlns="urn:org.mobicents:sip-servlets-as7:1.0" application-router="configuration/dars/mobicents-dar.properties" stack-properties="configuration/mss-sip-stack.properties" path-name="org.mobicents.ext" app-dispatcher-class="org.mobicents.servlet.sip.core.SipApplicationDispatcherImpl" concurrency-control-mode="SipApplicationSession" congestion-control-interval="-1">
+            <connector name="sip-udp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-udp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5180"/>
+            <connector name="sip-tcp" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tcp" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5180"/>
+            <connector name="sip-tls" protocol="SIP/2.0" scheme="sip" socket-binding="sip-tls" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5181"/>
+            <connector name="sip-ws" protocol="SIP/2.0" scheme="sip" socket-binding="sip-ws" use-static-address="true" static-server-address="192.168.1.3" static-server-port="5182"/>
+        </subsystem>
+----
+
+* Save and exit the file
+* Restart Restcomm
