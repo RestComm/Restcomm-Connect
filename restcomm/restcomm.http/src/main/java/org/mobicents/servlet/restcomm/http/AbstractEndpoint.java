@@ -23,12 +23,9 @@ import java.net.URI;
 import java.math.BigInteger;
 
 import javax.ws.rs.core.MultivaluedMap;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-import org.mobicents.servlet.restcomm.dao.AccountsDao;
-import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -148,6 +145,14 @@ public abstract class AbstractEndpoint {
         }
         return hasVoiceCallerIdLookup;
     }
+
+    /*
+     * protected void secure(final Account account, final String permission) throws AuthorizationException { final Subject
+     * subject = SecurityUtils.getSubject(); if (account != null && account.getSid() != null) { final Sid accountSid =
+     * account.getSid(); if (account.getStatus().equals(Account.Status.ACTIVE) && (subject.hasRole("Administrator") ||
+     * (subject.getPrincipal().toString().equals(accountSid.toString()) && subject .isPermitted(permission)))) { return; } else
+     * { throw new AuthorizationException(); } } else { throw new AuthorizationException(); } }
+     */
 
     // A general purpose method to test incoming parameters for meaningful data
     protected boolean isEmpty(Object value) {

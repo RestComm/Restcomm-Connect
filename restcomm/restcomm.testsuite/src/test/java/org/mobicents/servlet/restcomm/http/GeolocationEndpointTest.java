@@ -171,17 +171,21 @@ public class GeolocationEndpointTest {
         // Parameter values Assignment, StatusCallback missing
         MultivaluedMap<String, String> geolocationNewParams = new MultivaluedMapImpl();
         geolocationNewParams.add("DeviceIdentifier", deviceIdentifier = "TstDevId4RejImm");
-
+        Sid rejectedGeolocationSid = null;
         // HTTP POST Geolocation creation with given parameters values
-        JsonObject geolocationJsonNew = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(
-                deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationNewParams);
-        Sid rejectedGeolocationSid = new Sid(geolocationJsonNew.get("sid").getAsString());
-
-        // Checking Test asserts via HTTP GET (no record found as POST is rejected)
-        geolocationJsonNew = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, adminAccountSid, rejectedGeolocationSid.toString());
-
-        assertTrue(geolocationJsonNew == null);
+        try {
+            JsonObject missingParamGeolocationJson = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(
+                    deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationNewParams);
+            rejectedGeolocationSid = new Sid(missingParamGeolocationJson.get("sid").getAsString());
+            JsonObject rejectedGeolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(
+                    deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
+                    rejectedGeolocationSid.toString());
+            assertTrue(rejectedGeolocationJson == null);
+        } catch (Exception exception) {
+            // Checking Test asserts via HTTP GET (no record found as POST returned a response status of 400 Bad Request)
+            assertTrue(rejectedGeolocationSid == null);
+            logger.info("Exception during HTTP POST: " + exception.getMessage());
+        }
 
         // Test create Immediate type of Geolocation via POST with one prohibited parameter
         @SuppressWarnings("unused")
@@ -189,16 +193,20 @@ public class GeolocationEndpointTest {
         geolocationParams.add("EventGeofenceLatitude", eventGeofenceLatitude = "45.426280"); // "EventGeofenceLatitude"
                                                                                              // applicable only for Notification
                                                                                              // type of Geolocation
-
-        JsonObject geolocationJsonNewer = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(
-                deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationParams);
-        Sid newRejectedGeolocationSid = new Sid(geolocationJsonNewer.get("sid").getAsString());
-
-        // Checking Test asserts via HTTP GET (no record found as POST is rejected)
-        geolocationJsonNewer = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, adminAccountSid, newRejectedGeolocationSid.toString());
-
-        assertTrue(geolocationJsonNewer == null);
+        // HTTP POST Geolocation creation with given parameters values
+        try {
+            JsonObject prohibitedParamGeolocationJson = RestcommGeolocationsTool.getInstance().createImmediateGeolocation(
+                    deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationNewParams);
+            rejectedGeolocationSid = new Sid(prohibitedParamGeolocationJson.get("sid").getAsString());
+            JsonObject rejectedGeolocationJson = RestcommGeolocationsTool.getInstance().getImmediateGeolocation(
+                    deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
+                    rejectedGeolocationSid.toString());
+            assertTrue(rejectedGeolocationJson == null);
+        } catch (Exception exception) {
+            // Checking Test asserts via HTTP GET (no record found as POST is rejected)
+            assertTrue(rejectedGeolocationSid == null);
+            logger.info("Exception during HTTP POST: " + exception.getMessage());
+        }
 
     }
 
@@ -636,17 +644,21 @@ public class GeolocationEndpointTest {
         geolocationNewParams.add("EventGeofenceLongitude", eventGeofenceLongitude = "170.566560");
         geolocationNewParams.add("GeofenceRange", "200");
         geolocationNewParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
-
+        Sid rejectedGeolocationSid = null;
         // HTTP POST Geolocation creation with given parameters values
-        JsonObject geolocationJsonNew = RestcommGeolocationsTool.getInstance().createNotificationGeolocation(
-                deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationNewParams);
-        Sid rejectedGeolocationSid = new Sid(geolocationJsonNew.get("sid").getAsString());
-
-        // Checking Test asserts via HTTP GET (no record found as POST is rejected)
-        geolocationJsonNew = RestcommGeolocationsTool.getInstance().getNotificationGeolocation(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, adminAccountSid, rejectedGeolocationSid.toString());
-
-        assertTrue(geolocationJsonNew == null);
+        try {
+            JsonObject missingParamGeolocationJson = RestcommGeolocationsTool.getInstance().createNotificationGeolocation(
+                    deploymentUrl.toString(), adminAccountSid, adminUsername, adminAuthToken, geolocationNewParams);
+            rejectedGeolocationSid = new Sid(missingParamGeolocationJson.get("sid").getAsString());
+            JsonObject rejectedGeolocationJson = RestcommGeolocationsTool.getInstance().getNotificationGeolocation(
+                    deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
+                    rejectedGeolocationSid.toString());
+            assertTrue(rejectedGeolocationJson == null);
+        } catch (Exception exception) {
+            // Checking Test asserts via HTTP GET (no record found as POST returned a response status of 400 Bad Request)
+            assertTrue(rejectedGeolocationSid == null);
+            logger.info("Exception during HTTP POST: " + exception.getMessage());
+        }
 
     }
 

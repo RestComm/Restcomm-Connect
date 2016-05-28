@@ -29,6 +29,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.apache.log4j.Logger;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -113,8 +114,19 @@ public class RestcommGeolocationsTool {
         WebResource webResource = jerseyClient.resource(url);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
         JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        return jsonResponse;
+        JsonObject jsonObject = null;
+        try {
+            JsonElement jsonElement = parser.parse(response);
+            if (jsonElement.isJsonObject()) {
+                jsonObject = jsonElement.getAsJsonObject();
+            } else {
+                logger.info("JsonElement: " + jsonElement.toString());
+            }
+        } catch (Exception e) {
+            logger.info("Exception during JSON response parsing, exception: " + e);
+            logger.info("JSON response: " + response);
+        }
+        return jsonObject;
     }
 
     public JsonObject createNotificationGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
@@ -125,8 +137,19 @@ public class RestcommGeolocationsTool {
         WebResource webResource = jerseyClient.resource(url);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
         JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        return jsonResponse;
+        JsonObject jsonObject = null;
+        try {
+            JsonElement jsonElement = parser.parse(response);
+            if (jsonElement.isJsonObject()) {
+                jsonObject = jsonElement.getAsJsonObject();
+            } else {
+                logger.info("JsonElement: " + jsonElement.toString());
+            }
+        } catch (Exception e) {
+            logger.info("Exception during JSON response parsing, exception: " + e);
+            logger.info("JSON response: " + response);
+        }
+        return jsonObject;
     }
 
     public JsonObject getImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
