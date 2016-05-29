@@ -10,12 +10,12 @@ See the videos below to see what will be coming soon.
 
 = Building the Apps
 
-video::EtxXrHKBK1c[youtube]
+video::EtxXrHKBK1c[youtube, width=640, height=480]
 
 = Number provisioning
 
-video::lXAji2qCq-4[youtube]
+video::lXAji2qCq-4[youtube, width=640, height=480]
 
 = Voip calls
 
-video::kiDHJXV3LmE[youtube]
+video::kiDHJXV3LmE[youtube, width=640, height=480]
