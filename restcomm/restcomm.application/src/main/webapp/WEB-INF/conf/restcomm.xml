@@ -74,12 +74,16 @@
 		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
 		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set.
-		     Default valur false so call are routed through LB-->
+		     Default value false so call are routed through LB-->
 		<bypass-lb-for-clients>false</bypass-lb-for-clients>
 
 		<!-- Set to true so Restcomm will send 100 Trying on initial Request-->
 		<!-- Used only for testing. !!! Don't enable this for production -->
 		<send-trying-for-initial-requests>false</send-trying-for-initial-requests>
+
+		<!--Play background music for conference rooms with 1 participant even if startConference=true? Music will stop after the second participant joins-->
+		<!--Default value: false -->
+		<play-music-for-conference>false</play-music-for-conference>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -151,6 +155,7 @@
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
 				<permission>RestComm:*:EmailMessages</permission>
+				<permission>RestComm:*:Usage</permission>
 				<permission>RestComm:*:Geolocation</permission>
 			</role>
 		</security-roles>

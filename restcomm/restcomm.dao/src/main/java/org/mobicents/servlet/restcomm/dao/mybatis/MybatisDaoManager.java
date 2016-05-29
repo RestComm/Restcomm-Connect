@@ -46,9 +46,9 @@ import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.restcomm.dao.UsageDao;
+import org.mobicents.servlet.restcomm.dao.GeolocationDao;
 import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.dao.GeolocationDao;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -209,7 +209,8 @@ public final class MybatisDaoManager implements DaoManager {
         properties.setProperty("data", dataFiles);
         properties.setProperty("sql", sqlFiles);
         final SqlSessionFactory sessions = builder.build(reader, properties);
-        if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+        if (!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older
+                                                // install
             boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
             if (amazonS3Enabled) {
                 final String accessKey = amazonS3Configuration.getString("access-key");
@@ -220,7 +221,8 @@ public final class MybatisDaoManager implements DaoManager {
                 final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
                 final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
                 final String bucketRegion = amazonS3Configuration.getString("bucket-region");
-                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile,bucketRegion);
+                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy,
+                        daysToRetainPublicUrl, removeOriginalFile, bucketRegion);
             }
         }
         start(sessions);
