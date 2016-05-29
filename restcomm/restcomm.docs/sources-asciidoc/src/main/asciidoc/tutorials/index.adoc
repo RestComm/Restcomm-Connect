@@ -1,30 +1,33 @@
 [[tutorials]]
 = Restcomm Tutorials
 
+[[connect-tutorials]]
 == Restcomm Connect Tutorials
 
 The Restcomm Connect Tutorials will help you in creating sample applications that cover common use cases in a variety of languages using the Restcomm API, RCML or Visual Designer. Download, test, and tweak for yourself. 
 
-* <<account-api.adoc#account,Restcomm API – Account>>
-* <<Restcomm - Multi-tenancy and Managing Sub-Accounts.adoc#restcomm-rest-api,Multi-tenancy and Managing Sub-Accounts>>
-* <<applications-api.adoc#applications,Restcomm API – Applications>>
-* <<available-phone-numbers-api.adoc#available-phone-numbers,Restcomm API – AvailablePhoneNumbers>>
-* <<clients-api.adoc#clients,Restcomm API – Clients>>
-* <<incoming-phone-numbers-api.adoc#incoming-phone-numbers,Restcomm API – IncomingPhoneNumbers>>
-* <<recordings-api.adoc#recordings,Restcomm API – Recordings>>
-* <<transcriptions-api.adoc#transcriptions,Restcomm API – Transcriptions>>
-* <<usage-records-api.adoc#records,Restcomm API – Usage Records>>
+* <<how-to-use-olympus-with-restcomm.adoc#olympus,How to use Olympus on Restcomm Connect>>
+* <<Restcomm - Sending email via Restcomm Email verb.adoc#email,Sending email via Restcomm Email verb>>
+* <<Restcomm - Send SMS and Make DID Calls.adoc#did,Send SMS and Make DID Calls>>
+* <<Restcomm - Send SMS to a SIP Phone.adoc#did,Send SMS to a SIP Phone>>
+* <<Restcomm - Automated Customer Support Call Notification App with zero coding.adoc#support,Automated Customer Support Call Notification App with zero coding>>
+* <<Restcomm - Build an IoT Device that Sends SMS to Users.adoc#iot,Build an IoT Device that Sends SMS to Users>>
+* <<Restcomm - Building a Car Repair IVR Solution.adoc#car-repair,Building a Car Repair IVR Solution>>
+* <<Restcomm - Build Interactive Voice Response Currency Converter App.adoc#currency,Build Interactive Voice Response Currency Converter App>>
+* <<Restcomm - Simple Doctors Appointment IVR System.adoc#doctors,Simple Doctors Appointment IVR System>>
+* <<Restcomm - Voicemail To Email Service with Restcomm and MailGun.adoc#voicemail,Voicemail To Email Service with Restcomm and MailGun>>
+* <<Restcomm - Create an IVR App with RVD.adoc#ivr-rvd,Create an IVR App with RVD>>
+* <<Restcomm - Create a Voicemail to Email app with zero coding.adoc#voicemail,Create a Voicemail to Email app with zero coding>>
+* <<Restcomm - Create a Weight Calculator App with RVD.adoc#weight,Create a Weight Calculator App with RVD>>
+* <<Restcomm - Building USSD Apps part 1.adoc#ussd-1,Building USSD Apps part 1>>
+* <<Restcomm - Building USSD Push Apps part 2.adoc#ussd-2,Building USSD Push Apps part 2>>
 
+[[core-tutorials]]
 == Restcomm Core Tutorials
 
 The Restcomm Core Tutorials will show you how to integrate multiple Restcomm Core and Connect components together in creating powerful systems to embed Communications as a feature
 
-* <<account-api.adoc#account,Restcomm API – Account>>
-* <<Restcomm - Multi-tenancy and Managing Sub-Accounts.adoc#restcomm-rest-api,Multi-tenancy and Managing Sub-Accounts>>
-* <<applications-api.adoc#applications,Restcomm API – Applications>>
-* <<available-phone-numbers-api.adoc#available-phone-numbers,Restcomm API – AvailablePhoneNumbers>>
-* <<clients-api.adoc#clients,Restcomm API – Clients>>
-* <<incoming-phone-numbers-api.adoc#incoming-phone-numbers,Restcomm API – IncomingPhoneNumbers>>
-* <<recordings-api.adoc#recordings,Restcomm API – Recordings>>
-* <<transcriptions-api.adoc#transcriptions,Restcomm API – Transcriptions>>
-* <<usage-records-api.adoc#records,Restcomm API – Usage Records>>
+* <<Running USSD SMSC and Restcomm on the Same Server.adoc#ussd-smsc-restconn,Running USSD SMSC and Restcomm on the Same Server>>
+* <<Restcomm - Sending SMS through SMPP to SMSC Gateway.adoc#smpp,Sending SMS through SMPP to SMSC Gateway>>
+* <<Restcomm - Load Testing - Part 1.adoc#load-1,Load Testing - Part 1>>
+* <<Restcomm - Load Testing - Part 2.adoc#load-2,Load Testing - Part 2>>
