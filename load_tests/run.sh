@@ -33,10 +33,10 @@ if [ $# -lt 6 ]; then
 fi
 
 stopRestcomm(){
-  if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ] then
+if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
     $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
     sleep 1
-  fi
+fi
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
 }
 
