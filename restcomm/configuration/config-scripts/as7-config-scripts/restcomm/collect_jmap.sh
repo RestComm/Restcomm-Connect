@@ -41,11 +41,24 @@ fi
 if [[ -z "$RESTCOMM_PID" ]]; then
     echo "Please make sure that RestComm is running..."
  else
-    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm > restcomm_gc_histogram_before
+    echo "****************************************************************" > restcomm_mem
+    echo "GC Histogram before GC.run" >> restcomm_mem
+    echo "****************************************************************" >> restcomm_mem
+    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> restcomm_mem
+
     jcmd $RESTCOMM_PID GC.run
     sleep 5
-    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm > restcomm_gc_histogram_after
-    echo "GC ran"
+    
+    echo "****************************************************************" >> restcomm_mem
+    echo "GC Histogram after GC.run" >> restcomm_mem
+    echo "****************************************************************" >> restcomm_mem
+    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> restcomm_mem
+
+    echo "****************************************************************" >> restcomm_mem
+    echo "JVMTop" >> restcomm_mem
+    echo "****************************************************************" >> restcomm_mem
+    ./jvmtop.sh -n 1 >> restcomm_mem
+
     jmap -dump:format=b,file=restcomm_jmap_$DATE.bin $RESTCOMM_PID
     mv restcomm_jmap_$DATE.bin $JMAP_DIR
  fi
