@@ -41,8 +41,10 @@ fi
 if [[ -z "$RESTCOMM_PID" ]]; then
     echo "Please make sure that RestComm is running..."
  else
+    jcmd $RESTCOMM_PID GC.run
+    sleep 2
     jmap -dump:format=b,file=restcomm_jmap_$DATE.bin $RESTCOMM_PID
-     mv restcomm_jmap_$DATE.bin $JMAP_DIR
+    mv restcomm_jmap_$DATE.bin $JMAP_DIR
  fi
 
 }
@@ -55,8 +57,10 @@ fi
 if [[ -z "$RMS_PID" ]]; then
       echo "Please make sure that Mediaserver is running..."
   else
+      jcmd $RMS_PID GC.run
+      sleep 2
       jmap -dump:format=b,file=rms_jmap_$DATE.bin $RMS_PID
-       mv rms_jmap_$DATE.bin $JMAP_DIR
+      mv rms_jmap_$DATE.bin $JMAP_DIR
  fi
 }
 
