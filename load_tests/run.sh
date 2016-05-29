@@ -12,6 +12,8 @@ export JVMTOP_EXECUTABLE=$CURRENT_FOLDER/jvmtop.sh
 echo "JVMTOP Executable $JVMTOP_EXECUTABLE"
 export SIPP_REPORT_EXECUTABLE="java -jar $CURRENT_FOLDER/sipp-report-0.2-SNAPSHOT-with-dependencies.jar -a"
 
+echo "Collect JMAP: $COLLECT_JMAP"
+
 export RESULTS_FOLDER=$CURRENT_FOLDER/results
 if [ ! -d "$RESULTS_FOLDER" ]; then
   mkdir $RESULTS_FOLDER
@@ -30,6 +32,14 @@ if [ $# -lt 6 ]; then
     exit 1
 fi
 
+stopRestcomm(){
+  if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ] then
+    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
+    sleep 1
+  fi
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+}
+
 case "$TEST_NAME" in
 "helloplay")
     echo "Testing Hello-Play"
@@ -41,9 +51,7 @@ case "$TEST_NAME" in
     sleep 45
     $CURRENT_FOLDER/tests/hello-play/helloplay.sh
     sleep 45
-    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
-    sleep 2
-    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;
 "conference")
@@ -63,9 +71,7 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/conference/conference.sh
     sleep 45
-    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
-    sleep 2
-    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;
 "helloplay-one-minute")
@@ -80,9 +86,7 @@ case "$TEST_NAME" in
     sleep 45
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
     sleep 45
-    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
-    sleep 2
-    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;
 "dialclient")
@@ -104,9 +108,7 @@ case "$TEST_NAME" in
   #Next run the client script that will initiate callls to Restcomm
   $CURRENT_FOLDER/tests/dialclient/dialclient-client.sh
   sleep 45
-  $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
-  sleep 2
-  $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+  stopRestcomm
   echo $'\n********** Restcomm stopped\n'
   ;;
 *) echo "Not known test: $TEST_NAME"
