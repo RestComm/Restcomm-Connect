@@ -41,6 +41,8 @@ case "$TEST_NAME" in
     sleep 45
     $CURRENT_FOLDER/tests/hello-play/helloplay.sh
     sleep 45
+    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
+    sleep 2
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     echo $'\n********** Restcomm stopped\n'
     ;;
@@ -61,6 +63,8 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/conference/conference.sh
     sleep 45
+    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
+    sleep 2
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     echo $'\n********** Restcomm stopped\n'
     ;;
@@ -76,6 +80,8 @@ case "$TEST_NAME" in
     sleep 45
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
     sleep 45
+    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
+    sleep 2
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     echo $'\n********** Restcomm stopped\n'
     ;;
@@ -98,6 +104,8 @@ case "$TEST_NAME" in
   #Next run the client script that will initiate callls to Restcomm
   $CURRENT_FOLDER/tests/dialclient/dialclient-client.sh
   sleep 45
+  $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
+  sleep 2
   $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
   echo $'\n********** Restcomm stopped\n'
   ;;
