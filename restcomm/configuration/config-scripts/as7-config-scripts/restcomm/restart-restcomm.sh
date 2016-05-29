@@ -75,8 +75,9 @@ shift $(($OPTIND-1))
 
 if [ "$JMAP" == "true" ]; then
   echo "...JMAP files will be collected"
- ./collect_jmap
+ ./collect_jmap.sh
 fi
 
 stopRestComm
+sleep 2
 startRestComm
