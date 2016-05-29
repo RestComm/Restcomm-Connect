@@ -4,14 +4,7 @@
 ## Author     : Lefteris Banos
 #
 
-##Global Parameters
-DATE=$(date +%F_%H_%M)
-DIR_NAME=restcomm_$DATE
-BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-JMAP_DIR=$BASEDIR/$DIR_NAME
-
 JMAP="false"
-DTAR="false"
 
 ##
 ## FUNCTIONS
@@ -19,7 +12,7 @@ DTAR="false"
 getPID(){
    RESTCOMM_PID=" "
    RMS_PID=""
-   
+
    RESTCOMM_PID=$(jps | grep jboss-modules.jar | cut -d " " -f 1)
 
    while read -r line
@@ -30,35 +23,6 @@ getPID(){
    fi
    done < <(jps | grep Main | cut -d " " -f 1)
 
-}
-
-restcomm_jmap(){
-if [[ -z "$RESTCOMM_PID" ]]; then
-    echo "Please make sure that RestComm is running..."
- else
-    jmap -dump:format=b,file=restcomm_jmap.bin $RESTCOMM_PID
-     mv restcomm_jmap.bin $JMAP_DIR
- fi
-
-}
-
-rms_jmap(){
-if [[ -z "$RMS_PID" ]]; then
-      echo "Please make sure that Mediaserver is running..."
-  else
-      jmap -dump:format=b,file=rms_jmap.bin $RMS_PID
-       mv rms_jmap.bin $JMAP_DIR
- fi
-}
-
-make_tar() {
- if [ -d "$JMAP_DIR" ]; then
-     echo TAR_FILE : $JMAP_DIR.tar.gz
-     tar -zcf $JMAP_DIR.tar.gz -C $JMAP_DIR . 3>&1 1>&2 2>&3
-     rm -rf $JMAP_DIR
-     return 0
- fi
-   exit 1
 }
 
 stopRestComm(){
@@ -88,15 +52,15 @@ while getopts "hmz" OPT; do
         echo " "
         echo "options:"
         echo "-m collect jmap"
-        echo "-z make tar"
+        echo "now will jusr restart Restcomm right now"
         echo "-h show brief help"
         exit 0
         ;;
        m)
              JMAP="true"
              ;;
-       z)
-             DTAR="true"
+      now)
+             JMAP="false"
              ;;
        ?)
              echo "Invalid option: $OPTARG"
@@ -110,17 +74,9 @@ shift $(($OPTIND-1))
 
 
 if [ "$JMAP" == "true" ]; then
- echo "...JMAP files will be collected to : $JMAP_DIR"
- mkdir -p $JMAP_DIR
- getPID
- rms_jmap
- restcomm_jmap
-fi
-
-if [ "$DTAR" == "true" ]; then
-make_tar
+  echo "...JMAP files will be collected"
+ ./collect_jmap
 fi
 
 stopRestComm
 startRestComm
-
