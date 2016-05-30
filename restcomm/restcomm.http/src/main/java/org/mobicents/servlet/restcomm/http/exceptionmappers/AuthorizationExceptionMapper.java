@@ -20,7 +20,9 @@
 
 package org.mobicents.servlet.restcomm.http.exceptionmappers;
 
-import org.apache.shiro.authz.AuthorizationException;
+import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
+import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
+import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -37,6 +39,14 @@ import javax.ws.rs.ext.Provider;
 public class AuthorizationExceptionMapper implements ExceptionMapper<AuthorizationException> {
     @Override
     public Response toResponse(AuthorizationException e) {
-        return Response.status(Response.Status.UNAUTHORIZED).build();
+        if (e instanceof NotAuthenticated)
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        else
+        if (e instanceof InsufficientPermission)
+            return Response.status(Response.Status.FORBIDDEN).build();
+        else {
+            // map all other types of auth errors to 403
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
     }
 }

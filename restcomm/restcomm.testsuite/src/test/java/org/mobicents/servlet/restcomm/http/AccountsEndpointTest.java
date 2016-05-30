@@ -1,9 +1,5 @@
 package org.mobicents.servlet.restcomm.http;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.net.URL;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -18,12 +14,13 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.UniformInterfaceException;
+
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -54,6 +51,12 @@ public class AccountsEndpointTest {
     private String unprivilegedSid = "AC00000000000000000000000000000000";
     private String unprivilegedUsername = "unprivileged@company.com";
     private String unprivilegedAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String guestSid = "AC11111111111111111111111111111111";
+    private String guestUsername = "guest@company.com";
+    private String guestAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String removedSid = "AC22222222222222222222222222222222";
+    private String removedUsername = "removed@company.com";
+    private String removedAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
 
 //    @Before
@@ -73,7 +76,16 @@ public class AccountsEndpointTest {
         JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, adminUsername);
         assertTrue(adminAccount.get("sid").getAsString().equals(adminAccountSid));
+    }
 
+    @Test
+    public void testGetAccountAccess(){
+        // check non-existent user receives a 401
+        ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), "nonexisting@company.com", "badpassword", adminAccountSid);
+        assertEquals("Non-existing user should get a 401", 401, response.getStatus());
+        // check InsufficientPerimssion errors- 403. Try to get administrator account with unprivileged accoutn creds
+        response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), unprivilegedUsername, unprivilegedAuthToken, adminAccountSid);
+        assertEquals("Unpriveleged access to account did not return 403", 403, response.getStatus());
     }
 
     @Test
@@ -107,6 +119,13 @@ public class AccountsEndpointTest {
         assertTrue(createAccountResponse.get("auth_token").equals(getAccountResponse.get("auth_token")));
         String userPasswordHashed = new Md5Hash(userPassword).toString();
         assertTrue(getAccountResponse.get("auth_token").getAsString().equals(userPasswordHashed));
+    }
+
+    @Test public void testCreateAccountAccess(){
+        // 'unprivilaged should not be able to create accounts and receive a 403
+        ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                unprivilegedUsername, unprivilegedAuthToken, "notcreated@company.com", "not-created-password");
+        assertEquals("403 not returned", 403, response.getStatus());
     }
 
     @Test
@@ -158,6 +177,20 @@ public class AccountsEndpointTest {
 
         assertTrue(account1.toString().equals(account2.toString()));
 
+    }
+
+    @Test
+    public void testGetAccountsAccess() {
+        ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), guestUsername, guestAuthToken);
+        assertEquals("Guest account should get get a 403 when retrieving accounts", 403, response.getStatus());
+    }
+
+    @Test
+    public void testRemoveAccountAccess(){
+        ClientResponse response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), unprivilegedUsername, unprivilegedAuthToken, removedSid + ".json" );
+        assertEquals("Unprivileged account should receive a 403 while removing an account", 403, response.getStatus());
+        response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, removedSid );
+        assertEquals("Administrator should receive a 200 OK when removing an account", 200, response.getStatus());
     }
 
     /**
