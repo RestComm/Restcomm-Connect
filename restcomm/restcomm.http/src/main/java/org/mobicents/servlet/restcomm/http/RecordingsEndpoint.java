@@ -87,11 +87,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
 
     protected Response getRecording(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Read:Recordings");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Read:Recordings");
         final Recording recording = dao.getRecording(new Sid(sid));
         if (recording == null) {
             return status(NOT_FOUND).build();
@@ -114,12 +110,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordings(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
-            //secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
         final List<Recording> recordings = dao.getRecordings(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(recordings), APPLICATION_JSON).build();
@@ -132,11 +123,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
 
         final List<Recording> recordings = dao.getRecordingsByCall(new Sid(callSid));
         if (APPLICATION_JSON_TYPE == responseType) {

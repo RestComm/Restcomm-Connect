@@ -28,7 +28,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +39,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
@@ -91,11 +89,7 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     }
 
     protected Response getProxies(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
 
         Map<String, String> proxies;
 
@@ -118,11 +112,7 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     }
 
     protected Response switchProxy(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
 
         Map<String, String> proxyAfterSwitch;
 
@@ -145,11 +135,7 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     }
 
     protected Response getActiveProxy(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
 
         Map<String, String> activeProxy;
 

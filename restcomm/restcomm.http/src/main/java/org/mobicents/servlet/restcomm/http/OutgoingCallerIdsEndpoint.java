@@ -119,11 +119,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
 
     protected Response getCallerId(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Read:OutgoingCallerIds");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Read:OutgoingCallerIds");
         final OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
@@ -146,12 +142,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getCallerIds(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
-            //secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
         final List<OutgoingCallerId> outgoingCallerIds = dao.getOutgoingCallerIds(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(outgoingCallerIds), APPLICATION_JSON).build();
@@ -165,12 +156,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
 
     protected Response putOutgoingCallerId(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds");
-            //secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds");
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -191,11 +177,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     protected Response updateOutgoingCallerId(final String accountSid, final String sid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Modify:OutgoingCallerIds");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Modify:OutgoingCallerIds");
         OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();

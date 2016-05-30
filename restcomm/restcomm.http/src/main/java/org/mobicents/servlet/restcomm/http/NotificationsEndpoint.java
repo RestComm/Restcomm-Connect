@@ -87,11 +87,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
 
     protected Response getNotification(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Read:Notifications");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Read:Notifications");
         final Notification notification = dao.getNotification(new Sid(sid));
         if (notification == null) {
             return status(NOT_FOUND).build();
@@ -114,12 +110,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getNotifications(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
-            //secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
         final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(notifications), APPLICATION_JSON).build();
