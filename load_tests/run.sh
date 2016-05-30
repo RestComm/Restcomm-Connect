@@ -50,7 +50,7 @@ case "$TEST_NAME" in
     echo $'\n********** Restcomm started\n'
     sleep 45
     $CURRENT_FOLDER/tests/hello-play/helloplay.sh
-    sleep 45
+    sleep 60
     stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;
