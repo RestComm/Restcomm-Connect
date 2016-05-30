@@ -9,7 +9,7 @@
 DATE=$(date +%F_%H_%M)
 DIR_NAME=restcomm_$DATE
 BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-JMAP_DIR=$BASEDIR/results/jmap
+JMAP_DIR=$BASEDIR/results/jmap_$DATE
 
 JMAP="true"
 DTAR="true"
@@ -84,7 +84,6 @@ make_tar() {
  if [ -d "$JMAP_DIR" ]; then
      echo TAR_FILE : $JMAP_DIR.tar.gz
      tar -zcf $JMAP_DIR.tar.gz -C $JMAP_DIR . 3>&1 1>&2 2>&3
-     mv $JMAP_DIR.tar.gz $BASEDIR/results
      rm -rf $JMAP_DIR
      return 0
  fi
