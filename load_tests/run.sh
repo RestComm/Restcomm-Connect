@@ -34,7 +34,7 @@ fi
 
 stopRestcomm(){
 if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
-    $RESTCOMM_HOME/bin/restcomm/collect_jmap.sh
+    ./collect_jmap.sh
     sleep 1
 fi
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
