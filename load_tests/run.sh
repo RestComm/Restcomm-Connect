@@ -4,6 +4,8 @@
 ## Author     : George Vagenas
 #
 
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+
 export CURRENT_FOLDER=`pwd`
 echo "Current folder $CURRENT_FOLDER"
 export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp

@@ -44,22 +44,22 @@ if [[ -z "$RESTCOMM_PID" ]]; then
     echo "****************************************************************" > $JMAP_DIR/restcomm_mem
     echo "GC Histogram before GC.run" >> $JMAP_DIR/restcomm_mem
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
-    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> $JMAP_DIR/restcomm_mem
+    $JAVA_HOME/bin/jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> $JMAP_DIR/restcomm_mem
 
-    jcmd $RESTCOMM_PID GC.run
+    $JAVA_HOME/bin/jcmd $RESTCOMM_PID GC.run
     sleep 5
 
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     echo "GC Histogram after GC.run" >> $JMAP_DIR/restcomm_mem
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
-    jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> $JMAP_DIR/restcomm_mem
+    $JAVA_HOME/bin/jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> $JMAP_DIR/restcomm_mem
 
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     echo "JVMTop" >> $JMAP_DIR/restcomm_mem
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     $BASEDIR/jvmtop.sh -n 1 >> $JMAP_DIR/restcomm_mem
 
-    jmap -dump:live,format=b,file=restcomm_jmap_$DATE.bin $RESTCOMM_PID
+    $JAVA_HOME/bin/jmap -dump:live,format=b,file=restcomm_jmap_$DATE.bin $RESTCOMM_PID
     mv restcomm_jmap_$DATE.bin $JMAP_DIR
  fi
 
@@ -73,9 +73,9 @@ fi
 if [[ -z "$RMS_PID" ]]; then
       echo "Please make sure that Mediaserver is running..."
   else
-      jcmd $RMS_PID GC.run
+      $JAVA_HOME/bin/jcmd $RMS_PID GC.run
       sleep 2
-      jmap -dump:live,format=b,file=rms_jmap_$DATE.bin $RMS_PID
+      $JAVA_HOME/bin/jmap -dump:live,format=b,file=rms_jmap_$DATE.bin $RMS_PID
       mv rms_jmap_$DATE.bin $JMAP_DIR
  fi
 }
