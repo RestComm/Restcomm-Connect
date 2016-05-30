@@ -17,8 +17,6 @@ The **<Geolocation>** verb supports the following attributes:
 |==============================================
 |PARAMETER |ALLOWED VALUES |DEFAULT VALUE
 |deviceIdentifier |Phone number |See below
-|source |Phone number or client name |See below
-|desiredAccuracy |String |See below
 |action |Relative or absolute URL |None
 |method |GET, POST |POST
 |statusCallback |Relative or absolute URL |None
@@ -29,23 +27,6 @@ The **<Geolocation>** verb supports the following attributes:
 ●      **deviceIdentifier**. The _‘deviceIdentifier’_ attribute takes a
 valid E.164 phone number, an IP or MAC address as a value. RestComm will
 send a location request to this target.
-
-●      **source.** The ‘source’ attribute takes a valid E.164 phone
-number or a location client name as a value. When sending a location
-request during a voice call, USSD session or SMS message, ‘from’
-attribute defaults to the originating E.164 phone number.
-
-●      **desiredAccuracy.** The ‘desiredAccuracy’ attribute takes a
-string as value, referring to the expected quality of location
-information or estimated precision for this Geolocation service. The
-following values are available:
-
-o       __High__: when the error margin must be less than 100 metres.
-
-o       __Average__: when the error margin can be between 100 and 300
-metres.
-
-o       __Low__: when the error margin can be greater than 300 metres.
 
 ●      **action**. The _‘action’_ attribute takes a URL as an argument.
 After processing the <Geolocation> verb, RestComm will make a GET or
@@ -193,7 +174,7 @@ action:
 ....
 <Response>
 	<Geolocation>
-		<Immediate deviceIdentifier="59899549878" source="59898071997" desiredAccuracy="High" action="http://my.controller.net" method="POST"/>
+		<Immediate deviceIdentifier="59899549878" action="http://my.controller.net" method="POST"/>
     </Geolocation>
 </Response>
 ....
@@ -205,7 +186,7 @@ POST:
 ....
 <Response>
     <Geolocation>
-        <Immediate deviceIdentifier="59899549878" source="59898071997" desiredAccuracy="High" statusCallback="http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf"/>
+        <Immediate deviceIdentifier="59899549878" statusCallback="http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf"/>
     </Geolocation>
 </Response>
 ....
@@ -217,7 +198,7 @@ GET action:
 ....
 <Response>
     <Geolocation>
-        <Notification deviceIdentifier="59899549878" source="BLE01" desiredAccuracy="High" eventGeofencingLatitude="-33.426280" eventGeofencingLatitude="-70.566560W" geofenceRange="500" geofenceEvent="in-out" action="http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf" method="GET"/>
+        <Notification deviceIdentifier="59899549878" eventGeofencingLatitude="-33.426280" eventGeofencingLatitude="-70.566560W" geofenceRange="500" geofenceEvent="in-out" action="http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf" method="GET"/>
     </Geolocation>
 </Response>
 ....
@@ -229,7 +210,7 @@ POST:
 ....
 <Response>
     <Geolocation>
-        <Notification deviceIdentifier="59899549878" source="LATU" desiredAccuracy="High" eventGeofencingLatitude="-33.426280" eventGeofencingLatitude="-70.566560W" geofenceRange="500" geofenceEvent="in-out" statusCallback="http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf"/>
+        <Notification deviceIdentifier="59899549878" eventGeofencingLatitude="-33.426280" eventGeofencingLatitude="-70.566560W" geofenceRange="500" geofenceEvent="in-out" statusCallback="http://192.16.1.19:8080/ACae6e420f425248d6a26948c17a9e2acf"/>
     </Geolocation>
 </Response>
 ....

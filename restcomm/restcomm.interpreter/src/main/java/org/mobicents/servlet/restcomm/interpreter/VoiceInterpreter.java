@@ -202,6 +202,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     Tag conferenceVerb;
     List<URI> conferenceWaitUris;
     private boolean playMusicForConference = false;
+    //Used for system apps, such as when WebRTC client is dialing out.
+    //The rcml will be used instead of download the RCML
+    private String rcml;
 
     // Call bridging
     private final ActorRef bridgeManager;
@@ -210,7 +213,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     public VoiceInterpreter(final Configuration configuration, final Sid account, final Sid phone, final String version,
                             final URI url, final String method, final URI fallbackUrl, final String fallbackMethod, final URI statusCallback,
                             final String statusCallbackMethod, final String emailAddress, final ActorRef callManager,
-                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring) {
+                            final ActorRef conferenceManager, final ActorRef bridgeManager, final ActorRef sms, final DaoManager storage, final ActorRef monitoring, final String rcml) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -244,6 +247,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(acquiringCallInfo, initializingCall));
         transitions.add(new Transition(acquiringCallInfo, downloadingRcml));
         transitions.add(new Transition(acquiringCallInfo, finished));
+        transitions.add(new Transition(acquiringCallInfo, ready));
         transitions.add(new Transition(initializingCall, downloadingRcml));
         transitions.add(new Transition(initializingCall, ready));
         transitions.add(new Transition(initializingCall, finishDialing));
@@ -281,6 +285,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(sendingEmail, ready));
         transitions.add(new Transition(sendingEmail, finished));
         transitions.add(new Transition(sendingEmail, finishDialing));
+        transitions.add(new Transition(checkingCache, caching));
+        transitions.add(new Transition(checkingCache, conferencing));
         transitions.add(new Transition(caching, finished));
         transitions.add(new Transition(caching, conferencing));
         transitions.add(new Transition(caching, finishConferencing));
@@ -430,6 +436,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.cache = cache(path, uri);
         this.downloader = downloader();
         this.monitoring = monitoring;
+        this.rcml = rcml;
     }
 
     private boolean is(State state) {
@@ -560,7 +567,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 final String direction = callInfo.direction();
                 if ("inbound".equals(direction)) {
-                    fsm.transition(message, downloadingRcml);
+                    if (rcml!=null && !rcml.isEmpty()) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("System app is present will proceed to ready state, system app: "+rcml);
+                        }
+                        createInitialCallRecord((CallResponse<CallInfo>) message);
+                        fsm.transition(message, ready);
+                    } else {
+                        fsm.transition(message, downloadingRcml);
+                    }
                 } else {
                     fsm.transition(message, initializingCall);
                 }
@@ -615,6 +630,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                         if (!sender.equals(call)) {
                             removeDialBranch(message, sender);
+                            return;
                         } else {
                             fsm.transition(message, finishDialing);
                         }
@@ -776,20 +792,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
-                if (playWaitUrlPending && play.equals(verb.name())) {
-                    fsm.transition(message, conferencing);
+                //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+                if (playWaitUrlPending) {
+                    if (conferenceWaitUris == null)
+                        conferenceWaitUris = new ArrayList<URI>();
+                    URI waitUrl = response.get();
+                    conferenceWaitUris.add(waitUrl);
+                    final GetNextVerb next = GetNextVerb.instance();
+                    parser.tell(next, self());
                     return;
                 }
-                //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
-//                if (playWaitUrlPending) {
-//                    if (conferenceWaitUris == null)
-//                        conferenceWaitUris = new ArrayList<URI>();
-//                    URI waitUrl = response.get();
-//                    conferenceWaitUris.add(waitUrl);
-//                    final GetNextVerb next = GetNextVerb.instance();
-//                    parser.tell(next, self());
-//                    return;
-//                }
                 if (caching.equals(state) || checkingCache.equals(state)) {
                     if (play.equals(verb.name()) || say.equals(verb.name())) {
                         fsm.transition(message, playing);
@@ -818,7 +830,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             isParserFailed = true;
             fsm.transition(message, hangingUp);
         } else if (Tag.class.equals(klass)) {
-            // final Tag verb = (Tag) message;
             verb = (Tag) message;
             if (playWaitUrlPending) {
                 if (!(play.equals(verb.name()) || say.equals(verb.name()))) {
@@ -871,12 +882,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 invalidVerb(verb);
             }
         } else if (End.class.equals(klass)) {
-            //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
-//            if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
-//                playWaitUrl(conferenceWaitUris, self());
-//                playWaitUrlPending = false;
-//                return;
-//            }
+//            Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+            if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
+                fsm.transition(conferenceWaitUris, conferencing);
+                return;
+            }
             if (callState.equals(CallStateChanged.State.COMPLETED)) {
                 fsm.transition(message, finished);
             } else {
@@ -1238,68 +1248,72 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             final Class<?> klass = message.getClass();
-            final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
             if (CallResponse.class.equals(klass)) {
-                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                callInfo = response.get();
-                callState = callInfo.state();
-                if (callInfo.direction().equals("inbound")) {
-                    callRecord = records.getCallDetailRecord(callInfo.sid());
-                    if (callRecord == null) {
-                        // Create a call detail record for the call.
-                        final CallDetailRecord.Builder builder = CallDetailRecord.builder();
-                        builder.setSid(callInfo.sid());
-                        builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
-                        builder.setDateCreated(callInfo.dateCreated());
-                        builder.setAccountSid(accountId);
-                        builder.setTo(callInfo.to());
-                        if (callInfo.fromName() != null) {
-                            builder.setCallerName(callInfo.fromName());
-                        } else {
-                            builder.setCallerName("Unknown");
-                        }
-                        if (callInfo.from() != null) {
-                            builder.setFrom(callInfo.from());
-                        } else {
-                            builder.setFrom("Unknown");
-                        }
-                        builder.setForwardedFrom(callInfo.forwardedFrom());
-                        builder.setPhoneNumberSid(phoneId);
-                        builder.setStatus(callState.toString());
-                        final DateTime now = DateTime.now();
-                        builder.setStartTime(now);
-                        builder.setDirection(callInfo.direction());
-                        builder.setApiVersion(version);
-                        builder.setPrice(new BigDecimal("0.00"));
-                        // TODO implement currency property to be read from Configuration
-                        builder.setPriceUnit(Currency.getInstance("USD"));
-                        final StringBuilder buffer = new StringBuilder();
-                        buffer.append("/").append(version).append("/Accounts/");
-                        buffer.append(accountId.toString()).append("/Calls/");
-                        buffer.append(callInfo.sid().toString());
-                        final URI uri = URI.create(buffer.toString());
-                        builder.setUri(uri);
-
-                        builder.setCallPath(call.path().toString());
-
-                        callRecord = builder.build();
-                        records.addCallDetailRecord(callRecord);
-                        //
-                        // if (liveCallModification) {
-                        // logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
-                        // fsm.transition(message, acquiringCallMediaGroup);
-                        // return;
-                        // }
-                    }
-
-                    // Update the application.
-                    callback();
-                }
+                createInitialCallRecord((CallResponse<CallInfo>) message);
             }
             // Ask the downloader to get us the application that will be executed.
             final List<NameValuePair> parameters = parameters();
             request = new HttpRequestDescriptor(url, method, parameters);
             downloader.tell(request, source);
+        }
+    }
+
+    private void createInitialCallRecord(CallResponse<CallInfo> message) {
+        final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+        final CallResponse<CallInfo> response = message;
+        callInfo = response.get();
+        callState = callInfo.state();
+        if (callInfo.direction().equals("inbound")) {
+            callRecord = records.getCallDetailRecord(callInfo.sid());
+            if (callRecord == null) {
+                // Create a call detail record for the call.
+                final CallDetailRecord.Builder builder = CallDetailRecord.builder();
+                builder.setSid(callInfo.sid());
+                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                builder.setDateCreated(callInfo.dateCreated());
+                builder.setAccountSid(accountId);
+                builder.setTo(callInfo.to());
+                if (callInfo.fromName() != null) {
+                    builder.setCallerName(callInfo.fromName());
+                } else {
+                    builder.setCallerName("Unknown");
+                }
+                if (callInfo.from() != null) {
+                    builder.setFrom(callInfo.from());
+                } else {
+                    builder.setFrom("Unknown");
+                }
+                builder.setForwardedFrom(callInfo.forwardedFrom());
+                builder.setPhoneNumberSid(phoneId);
+                builder.setStatus(callState.toString());
+                final DateTime now = DateTime.now();
+                builder.setStartTime(now);
+                builder.setDirection(callInfo.direction());
+                builder.setApiVersion(version);
+                builder.setPrice(new BigDecimal("0.00"));
+                // TODO implement currency property to be read from Configuration
+                builder.setPriceUnit(Currency.getInstance("USD"));
+                final StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(version).append("/Accounts/");
+                buffer.append(accountId.toString()).append("/Calls/");
+                buffer.append(callInfo.sid().toString());
+                final URI uri = URI.create(buffer.toString());
+                builder.setUri(uri);
+
+                builder.setCallPath(call.path().toString());
+
+                callRecord = builder.build();
+                records.addCallDetailRecord(callRecord);
+                //
+                // if (liveCallModification) {
+                // logger.info("There is no CallRecord for this call but this is a LiveCallModificatin request. Will acquire call media group");
+                // fsm.transition(message, acquiringCallMediaGroup);
+                // return;
+                // }
+            }
+
+            // Update the application.
+            callback();
         }
     }
 
@@ -1389,6 +1403,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     source.tell(stop, source);
                     return;
                 }
+            } else if ((message instanceof CallResponse) && (rcml != null && !rcml.isEmpty())) {
+                if (parser != null) {
+                    context.stop(parser);
+                    parser = null;
+                }
+                parser = parser(rcml);
             } else if (pausing.equals(state)) {
                 context.setReceiveTimeout(Duration.Undefined());
             }
@@ -2313,9 +2333,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (message instanceof DiskCacheResponse) {
-                URI waitUrl = ((DiskCacheResponse)message).get();
-                playWaitUrl(waitUrl, self());
+            if (message instanceof List<?>) {
+                List<URI> waitUrls = (List<URI>) message;
+                playWaitUrl(waitUrls, self());
                 playWaitUrlPending = false;
                 return;
             }
@@ -2329,7 +2349,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (logger.isInfoEnabled()) {
-                logger.info("At conferencing state, playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+                logger.info("At conferencing, state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
             }
             if (playMusicForConference && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter

@@ -57,7 +57,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $modal, $dialog, $r
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-var NumberDetailsCtrl = function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
+rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService) {
 
   // are we editing details...
   //if($scope.phoneSid === $stateParams.phoneSid) {
@@ -145,9 +145,9 @@ var NumberDetailsCtrl = function ($scope, $stateParams, $location, $dialog, $mod
       }
     );
   }
-};
+});
 
-var NumberRegisterCtrl = function ($scope, $stateParams, $location, $http, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+rcMod.controller('NumberRegisterCtrl', function ($scope, $stateParams, $location, $http, $dialog, $modalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
 
   $scope.sid = SessionService.get("sid");
 
@@ -205,7 +205,7 @@ var NumberRegisterCtrl = function ($scope, $stateParams, $location, $http, $dial
     $scope.findNumbers(--$scope.currentPage);
   }
 
-};
+});;
 
 
 var confirmNumberDelete = function(phone, $dialog, $scope, RCommNumbers, Notifications, $location) {

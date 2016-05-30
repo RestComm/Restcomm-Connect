@@ -1,0 +1,59 @@
+Restcomm is a communication platform that helps developers build telecom solutions rapidly. It comes with powerful tools that lets you integrate traditional telephony with modern SIP backed systems. For example, it is possible to build an application that will send SMS messages from Restcomm to to *SS7/SMPP* via *Restcomm SMSC* gateway. The configuration is intuitive and easy to implement. this tutorial will show you who to configure Restcomm and send an SMS to Restcomm SMSC gateway. If is assumed that the SMSC gateway is already configured to forward all SMS received to the appropriate SS7/SMPP servers.   
+
+= Requirements
+
+* Basic knowledge of Restcomm
+* Understanding of Restcomm SMSC gateway
+
+= Step 1
+
+In this step, you will need to tell Restcomm how to route the SMS taffic to the Restcomm SMSC gateway
+
+* Go to *$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/restcomm.xml*
+* Edit the section with the sms-aggregator tag as shown below
+* In the *outbound-endpoint* tag, add the IP address and port of the Restcomm SMSC gateway
+* You need to restart Restcomm for the changes to take effect.
+
+[source,lang:default,decode:true]
+----
+<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">
+    <outbound-prefix></outbound-prefix>
+    <outbound-endpoint>SMSC_IPADDRESS:SMSC_PORT</outbound-endpoint>
+</sms-aggregator>
+----
+
+= Step 2
+
+In this step, you will need to build a simple SMS application using Restcomm Visual Designer (RVD)
+
+* Open you web browser and go to *http://RESTCOMM_IP_ADDRESS:8080/*
+* First time login, username "administrator@company.com" and password : "RestComm"
+* You will be prompted to change the password
+* In the Admin UI dashboard, at the top of the page, click on the "VisualDesigner" link
+* In the RVD front page, choose Voice.
+* Create a new voice project
+* Drag and drop an SMS verb to the application and enter the SMS message you want to send.
+* Also provide "To" and "From"
+* Go back to the *http://RESTCOMM_IP_ADDRESS:8080/*
+* Go to the "**Numbers**" link
+* Register a new phone number (ex. 5566)
+* Press "**optional parameters**" link
+* in the Voice URL option, point to the new voice application you just created using the RVD
+* In the list of numbers available, make sure the new number you registered is visible.
+
+= Step 3
+
+You will need to make a SIP call to the application you just created using the phone number you registered. For this to work, the SIP client needs to be registered with Restcomm, you can login using alice or bob. See link:http://docs.telestax.com/restcomm-testing-default-demos/[Demos Apps]
+
+* make a call to call *sip:PHONE_NUMBER@RESTCOMM_IP_ADDRESS:5080*
+
+This will execute the application which will send SMS using the Restcomm SMSC server.
+
+= Step 4
+
+If you want to perform a quick test without using the Visual Designer, you can make an API call directly from the command line as follows.
+
+[source,lang:default,decode:true]
+----
+curl -X POST -H 'application/json' 'http://ACCOUNT SID:AUTHENTICATION TOKEN@RESTCOMM_IP_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACCOUNT SID/SMS/Messages.json' -d "From=NEW DID" -d "To=12356" -d "Body=Hello World"
+----

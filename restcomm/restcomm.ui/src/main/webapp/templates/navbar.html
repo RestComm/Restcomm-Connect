@@ -3,7 +3,6 @@
         <div class="navbar-header">
             <span class="navbar-brand"><img src="resources/img/telestax-logo-dark.png" class="navbar-telestax" /> <img src="resources/img/restcomm-logo.png" class="navbar-restcomm" /> RESTCOMM</span>
         </div>
-        <i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
         <div class="navbar-collapse collapse">
             <div ng-if="!!loggedAccount" ng-controller="UserMenuCtrl">
                 <ul class="nav navbar-nav">
@@ -25,7 +24,7 @@
                     <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
                     <!--<li class="divider-vertical"></li>-->
                 </ul>
-                <!--<i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>-->
+                <i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
                 <ul class="nav navbar-nav pull-right">
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ friendlyName }} <b class="caret"></b></a>

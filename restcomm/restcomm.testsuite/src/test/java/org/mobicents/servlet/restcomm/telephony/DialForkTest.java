@@ -1038,13 +1038,18 @@ public class DialForkTest {
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
-        assertTrue(alicePhone.unregister(aliceContact, 3600));
+        Thread.sleep(500);
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         //Even though no call answered the dial forking the originated call from Bob should be still live
+        if (liveCalls != 1) {
+            logger.info("&&&&& LiveCalls :"+liveCalls);
+        }
         assertTrue(liveCalls == 1);
         assertTrue(liveCallsArraySize == 1);
+
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         //Now Fotini should receive a call
         assertTrue(fotiniCall.waitForIncomingCall(30 * 1000));

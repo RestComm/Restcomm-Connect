@@ -1,0 +1,257 @@
+This tutorial will show you how to integrate the WebRTC enabled Restcomm Client iOS SDK into your Apps to tap into the Restcomm telecom capabilities.
+
+[[prerequisites]]
+Prerequisites
+^^^^^^^^^^^^^
+
+* Restcomm Communications Platform
+* Xcode 6 with at least iOS SDK 7 or higher
+
+[[restcomm]]
+1. Restcomm
+^^^^^^^^^^^
+
+Here you have two alternatives:
+
+* Don't perform a local installation and use link:http://www.restcomm.com/[Restcomm as a Service].
+* Install the latest link:https://hub.docker.com/r/restcomm/restcomm/[Restcomm Docker image] locally (i.e. $ docker pull restcomm/stable to get it from docker hub). For more information please check link:http://docs.telestax.com/restcomm-docker-quick-start-guide/[here]. If you aren't familiar with docker you can have a quick intro here https://www.docker.com/
+
+[[restcomm-client-ios-sdk]]
+2. Restcomm Client iOS SDK
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once you have installed the Restcomm platform (or you are using the Demo Amazon instance) you are ready to start taking advantage of Restcomm's features from your iOS Applications. Here's what you need to do:
+
+* Grab the latest Restcomm Client iOS SDK release from GitHub: https://github.com/RestComm/restcomm-ios-sdk/releases. At the time of this writing it is v1.0.0-beta-4 and the bundle you need to download is restcomm-ios-sdk-1.0.0-beta-4.tar.bz2
+* Extract it:
++
+[source,theme:github,toolbar:2,lang:default,decode:true]
+----
+$ tar -jxvf restcomm-ios-sdk-1.0.0-beta-4.tar.bz2
+----
+
+[[use-the-existing-sample-ios-app-helloworld]]
+Use the existing sample iOS App, 'HelloWorld'
++++++++++++++++++++++++++++++++++++++++++++++
+
+To illustrate the SDK, first we'll be using one of the sample Apps provided in the bundle, called HelloWorld:
+
+* Open Hello World sample Xcode project from $IOS_SDK/Samples/restcomm-helloworld/restcomm-helloworld.xcodeproj
+* Open file ViewController.mm source file within Hello World, search for string 'CHANGEME' and perform required changes in the Restcomm instance IP address. This will depend on which alternative you picked above for RestComm: a. if you used RaaS then you don't need to update the IP address (i.e. the RaaS domain name is used by default) b. if you used the Docker image then you should use the local IP address that Restcomm uses when coming up:
++
+[source,theme:github,toolbar:1,lang:objc,mark:10,22,decode:true]
+----
+- (void)viewDidLoad
+{
+    ....
+    self.parameters = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+                       @"sip:ios-sdk@cloud.restcomm.com", @"aor",
+                       @"1234", @"password",
+                       nil];
+
+    // CHANGEME: set the IP address of your RestComm instance in the URI below (or leave empty for registrar-less access)
+    [self.parameters setObject:@"" forKey:@"registrar"];
+
+    // initialize RestComm Client by setting up an RCDevice
+    self.device = [[RCDevice alloc] initWithParams:self.parameters delegate:self];
+    ....
+}
+
+- (IBAction)dialPressed:(id)sender
+{
+    ...
+    // CHANGEME: set the number of the RestComm Application you wish to contact (currently we are using '1235',
+    // which is the Hello World RestComm Application). Also set the ip address for your RestComm instance
+    [self.parameters setObject:@"sip:+1235@cloud.restcomm.com" forKey:@"username"];
+
+    // call the other party
+    self.connection = [self.device connect:self.parameters delegate:self];
+}
+----
+* Build and run Hello World either on the Xcode simulator or your device.
+* Once the sample App starts up you can press Dial and behind the scenes number '+1235' will be called on the Restcomm instance and you will hear the associated announcement.
+* From then on, you can try even more fun experiments, such as calling a different Restcomm number by changing the whole URI in the code from sip:+1235@<ip address>:5080 to for example sip:1311@<ip address>:5080 which is the default Restcomm Application for conferencing:
++
+[source,theme:github,toolbar:1,lang:objc,mark:6,decode:true]
+----
+- (IBAction)dialPressed:(id)sender
+{
+    ...
+    // CHANGEME: set the number of the RestComm Application you wish to contact (currently we are using '1235',
+    // which is the Hello World RestComm Application). Also set the ip address for your RestComm instance
+    [self.parameters setObject:@"sip:+1311@cloud.restcomm.com" forKey:@"username"];
+
+    // call the other party
+    self.connection = [self.device connect:self.parameters delegate:self];
+    ...
+}
+----
++
+Now the real fun begins: you can call the same number using the iOS SDK from yet another iOS device or simulator and start a conference between the two!
+
+[[create-a-new-xcode-ios-app-from-scratch]]
+Create a new Xcode iOS App from scratch
++++++++++++++++++++++++++++++++++++++++
+
+Next, we 'll be going in more detail over the steps it takes to come up with an App similar to HelloWorld starting from a 'Single View' Xcode iOS Application. That way you 'll get a good idea what you need to do to incorporate it in an existing iOS App, or as described below come up with a new App from scratch:
+
+* Create a single view Application. Xcode > File > New > Project and pick a 'Single View Application':
++
+image:./images/Screen-Shot-2015-05-26-at-4.54.53-PM.png[Single View Application,width=733,height=430]
++
+* Pick a project name and a location and press Create.
+* Include the SDK in the code (line 2),  create required objects (lines 5 and 6) and also adopt specific SDK protocols so that you can receive events (line 4):
++
+[source,theme:github,toolbar:1,lang:default,mark:2,4,5,6,decode:true]
+----
+#import <UIKit/UIKit.h>
+#import "RestCommClient.h"
+
+@interface ViewController : UIViewController<RCDeviceDelegate,RCConnectionDelegate>
+@property (nonatomic,retain) RCDevice* device;
+@property (nonatomic,retain) RCConnection* connection;
+// this is not mandatory but let's keep all our parameters in our ViewController in case we need them
+@property NSMutableDictionary * parameters;
+@end
+----
++
+At this point you will get a warning because we haven't told Xcode where to look for the Restcomm Client headers but don't worry we'll fix that soon.
+* Add some bootstrap code in viewDidLoad of the View Controller. Remember to use the correct IP for your Restcomm instance (or the RaaS domain name already filled in below):
++
+[source,theme:github,toolbar:1,lang:default,decode:true]
+----
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+    
+    self.parameters = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+                       @"sip:ios-sdk@cloud.restcomm.com", @"aor",
+                       @"+1234", @"password",
+                       nil];
+
+    // CHANGEME: set the IP address of your RestComm instance in the URI below (or leave empty for registrar-less access)
+    [self.parameters setObject:@"" forKey:@"registrar"];
+
+    // initialize RestComm Client by setting up an RCDevice
+    self.device = [[RCDevice alloc] initWithParams:self.parameters delegate:self];
+}
+----
+* Open Main.storyboard from the Project Navigator and add the UI controls: let's use one button for dialing and one for hang up (don't worry if the view looks too big -in latest Xcode installations a bigger view is used to accommodate more than one device -but you can see how this will look in your device in the Preview window on the right):
++
+image:./images/Screen-Shot-2015-05-26-at-5.29.01-PM.png[image,width=1030,height=717]
++
+* Then connect the UI controls to actions in the ViewController code:
++
+image:./images/Screen-Shot-2015-05-26-at-5.39.57-PM-21-1030x630.png[image,width=1030,height=630]
++
+* Add Restcomm Client iOS SDK calls to the actions you just created to integrate with Restcomm. [RCDevice connect] will make the call and return the established connection (when we press Dial), while [RCConnection disconnect] will disconnect the connection (when we press Hang up). Again, remember to use the correct IP address for the Restcomm instance you are using:
++
+[source,theme:github,toolbar:1,lang:default,mark:7,12,decode:true]
+----
+- (IBAction)dialPressed:(id)sender {
+    // CHANGEME: set the number of the RestComm Application you wish to contact (currently we are using '1235',
+    // which is the Hello World RestComm Application). Also set the ip address for your RestComm instance
+    [self.parameters setObject:@"sip:1235@cloud.restcomm.com" forKey:@"username"];
+    
+    // do the call
+    self.connection = [self.device connect:self.parameters delegate:self];
+}
+
+- (IBAction)hangupPressed:(id)sender {
+    // disconnect the established RCConnection
+    [self.connection disconnect];
+    
+    self.connection = nil;
+}
+----
++
+At this point you will get some warnings again because we haven't configured Xcode yet, but we'll do in the next step
+* Rename ViewController.m to ViewController.mm to be able to use C++ code (which some includes of some libs use)
+* Add include search paths in the Xcode project so that warnings go away. Go to project (1), select your target (2), build settings (3), select 'All' to see all settings (4), search for 'search' to filter the Header Search Paths (5), edit the paths (6) and then press the (+) sign to add the full paths to the includes for a. RestCommClient library and b. webrtc library headers. Those reside inside the Restcomm Client iOS SDK bundle you got from GitHub at dependencies/packages/RestCommClientLib/include and dependencies/packages/webrtc/include respectively:
++
+image:./images/include-settings1.png[include-settings,width=1030,height=471]
++
+As an example, in my case those full paths I added above are: /Users/Antonis/Documents/restcomm-ios-sdk/dependencies/packages/RestCommClientLib/include/RestCommClient and /Users/Antonis/Documents/restcomm-ios-sdk/dependencies/packages/webrtc/include.
+* Another thing you need to add in Build Setting is the -Objc flag to 'Other Linker Flags':
++
+image:./images/linker-flags.png[linker-flags,width=1030,height=414]
++
+* Add needed frameworks and libs in the Xcode project by navigating from Build Settings to General. *Important:* a special case of library is webrtc for iOS (i.e. libWebRTC-11366.a, which is being updated regularly) which we have prebuilt and can be found at $IOS_SDK/dependencies/packages/webrtc/. Also you need libRestCommClient.a which is the heart of the RestComm iOS SDK and can be found at $IOS_SDK/dependencies/packages/RestCommClientLib, libsofia-sip-ua.a found at $IOS_SDK/dependencies/packages/sofia-sip-1.12.11/lib, libcrypto.a and libssl.a found at $IOS_SDK/dependencies/packages/openssl-1.0.1i/lib. The rest of the libraries & frameworks can be found in the default locations presented by Xcode. In the end your 'Linked Frameworks and Libraries' should look like this:
++
+image:./images/xcode-frameworks.png[image,width=1030,height=846]
++
+* Then, you need to add the following paths in Library Search Paths in Build Settings so that non-system libraries can be correctly picked up by your project: $IOS_SDK/dependencies/packages/webrtc, $IOS_SDK/dependencies/packages/openssl-1.0.1i/lib, $IOS_SDK/dependencies/packages/sofia-sip-1.12.11/lib, $IOS_SDK/dependencies/packages/RestCommClientLib.
+* While in Build Settings you also need to search for 'bitcode'  and set 'Enable Bitcode' to No.
+* Implement the needed RCDevice and RCConnection callbacks defined in RCDeviceDelegate and RCConnectionDelegate protocols so that you get back events from the RestCommClient library:
++
+[source,theme:github,toolbar:1,lang:default,decode:true]
+----
+// ---------- Delegate methods for RC Device
+- (void)device:(RCDevice*)device didStopListeningForIncomingConnections:(NSError*)error
+{
+    
+}
+
+- (void)deviceDidStartListeningForIncomingConnections:(RCDevice*)device
+{
+    
+}
+
+// received incoming message
+- (void)device:(RCDevice *)device didReceiveIncomingMessage:(NSString *)message
+{
+}
+
+// 'ringing' for incoming connections
+- (void)device:(RCDevice*)device didReceiveIncomingConnection:(RCConnection*)connection
+{
+}
+
+- (void)device:(RCDevice *)device didReceivePresenceUpdate:(RCPresenceEvent *)presenceEvent
+{
+    
+}
+
+- (void)deviceDidInitializeSignaling:(RCDevice *)device
+{
+}
+
+// ---------- Delegate methods for RC Connection
+- (void)connection:(RCConnection*)connection didFailWithError:(NSError*)error
+{
+    
+}
+
+- (void)connectionDidStartConnecting:(RCConnection*)connection
+{
+
+}
+
+- (void)connectionDidConnect:(RCConnection*)connection
+{
+
+}
+
+- (void)connectionDidDisconnect:(RCConnection*)connection
+{
+}
+
+- (void)device:(RCDevice *)device didReceiveConnectivityUpdate:(RCConnectivityStatus)deviceState
+{
+    
+}
+----
+* You are now ready to build and run your project! Press the Play button in Xcode and wait for the App to load. It should look like this: 
++
+image:./images/iphone-sample-app.png[iphone-sample-app,width=146,height=300]
++
+* Now press dial and the SDK will call the configured Restcomm instance and voila, you will hear the announcement!
+* Finally, you can press Hang up to terminate the call whenever you like.
+
+That's it! Give it a try it and share your experience with the rest of the Restcomm community! Here are some additional resources:
+
+* Roadmap: https://github.com/RestComm/restcomm-ios-sdk/milestones
+* Reference Documentation: http://restcomm.github.io/restcomm-ios-sdk/doc/html/
+* Restcomm forum: https://groups.google.com/forum/#!forum/restcomm
+* Stack Overflow: http://stackoverflow.com/questions/tagged/restcomm
+* You can also install RestComm Olympus application directly on your iOS device using the .ipa we provide. Please follow the instructions at the TestFairy download link: https://github.com/RestComm/restcomm-ios-sdk#latest-olympus-ipa
