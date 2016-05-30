@@ -1,0 +1,60 @@
+One of the many great features of Restcomm is the ability to make DID calls and send SMS through the integrated built-in plugins. For example, using an external provider like Voip Innovations, you can make phone calls and send SMS to any mobile number in the United States. In this tutorial, you will learn how to configure your Restcomm installation and connect it to Voip Innovations. 
+
+= Step One
+
+* You must get and unzip Restcomm binary to a directory on your local server. This root directory in which Restcomm is located will be referred to as *$RESTCOMM_HOME.*
+* Go to **$RESTCOMM_HOME/telscale-media/telscale-media-server/deploy**/ directory
+* Open the file *server-beans.xml* and look for the network section as shown below
+
+[source,lang:xml,decode:true]
+----
+<property name="bindAddress">127.0.0.1</property>
+<property name="localBindAddress">127.0.0.1</property>
+<property name="localNetwork">127.0.0.1</property>
+<property name="localSubnet">255.255.255.255</property>
+----
+
+* Get your local IP address and change the *server-beans.xml* file adding your network details (see example below)
+
+[source,lang:xml,decode:true]
+----
+<property name="bindAddress">192.168.1.3</property>
+<property name="localBindAddress">192.168.1.3</property>
+<property name="localNetwork">192.168.1.0</property>
+<property name="localSubnet">255.255.255.0</property>
+----
+
+* Save the file and exit the text editor.
+
+= Step Two
+
+* Go to $RESTCOMM_HOME/**standalone/deployments/restcomm.war/WEB-INF/conf** directory
+* Open the file *restcomm.xml* and edit the following section.
+* Add you Voip Innovations configuration details. See here for how to get you login API information
+
+[source,lang:xml,decode:true]
+----
+<!-- Configuration for the VoIP Innovations provisioning API. -->
+<voip-innovations>
+    <login></login>
+    <password></password>
+    <endpoint></endpoint>
+    <uri>https://backoffice.voipinnovations.com/api2.pl</uri>
+</voip-innovations>
+----
+
+* Use Voip Innovations IP address as outbound proxy. Change the default 127.0.0.1 to 64.136.174.30 as shown below
+
+[source,lang:xml,decode:true]
+----
+<outbound-proxy-uri>64.136.174.30</outbound-proxy-uri>
+----
+
+* In the restcomm.xml file, perform a *search and replace* of all the 127.0.0.1 IP address and change them to your local IP address. In the example, the 127.0.0.1 will be changed to 192.168.1.3
+* Save and close the *restcomm.xml* file
+
+= Step Three
+
+* Get your public IP address (you can do a Google search of What Is My IP)
+* Log into your Voip Innovations website dashboard and configure your API using your public IP address
+* Create an endpoint from the dashboard of Voip Innovations and use the details to fill out the restcomm.xml file in Step two

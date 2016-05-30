@@ -53,5 +53,5 @@ fi
 
 echo "About to launch rocket... SIMULTANEOUS_CALLS: $SIMULTANEOUS_CALLS, MAXIMUM_CALLS: $MAXIMUM_CALLS, CALL_RATE: $CALL_RATE"
 sleep 3
-$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/dialclient/dialclient-sipp-client.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/dialclient-client-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/dialclient-client-$DATE-screens.log
+$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/dialclient/dialclient-sipp-client.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS  -rate_increase 10 -rate_interval 10s -rate_max $CALL_RATE -no_rate_quit -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/dialclient-client-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/dialclient-client-$DATE-screens.log
 echo $?

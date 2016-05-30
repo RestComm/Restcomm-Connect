@@ -415,7 +415,7 @@ public class ProjectRestService extends SecuredRestService {
                 while (iterator.hasNext()) {
                     FileItemStream item = iterator.next();
                     JsonObject fileinfo = new JsonObject();
-                    fileinfo.addProperty("fieldName", item.getFieldName());
+                    fileinfo.addProperty("field", item.getFieldName());
 
                     // is this a file part (talking about multipart requests, there might be parts that are not actual files).
                     // They will be ignored
@@ -449,8 +449,9 @@ public class ProjectRestService extends SecuredRestService {
                             throw e;
                         }
 
-                        fileinfo.addProperty("name", item.getName());
-                        fileinfo.addProperty("projectName", effectiveProjectName);
+                        //fileinfo.addProperty("name", item.getName());
+                        fileinfo.addProperty("name", effectiveProjectName);
+                        fileinfo.addProperty("id", applicationSid);
 
                     }
                     if (item.getName() == null) {
@@ -461,8 +462,7 @@ public class ProjectRestService extends SecuredRestService {
                 }
                 return Response.ok(gson.toJson(fileinfos), MediaType.APPLICATION_JSON).build();
             } else {
-                String json_response = "{\"result\":[{\"size\":" + size(request.getInputStream()) + "}]}";
-                return Response.ok(json_response, MediaType.APPLICATION_JSON).build();
+                return Response.status(Status.BAD_REQUEST).build();
             }
         } catch (StorageException | UnsupportedProjectVersion e) {
             logger.warn(e, e);
