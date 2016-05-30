@@ -8,7 +8,7 @@
 ##Global Parameters
 DATE=$(date +%F_%H_%M)
 DIR_NAME=restcomm_$DATE
-c=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 JMAP_DIR=$BASEDIR/results/jmap
 
 JMAP="true"
