@@ -11,6 +11,7 @@ DIR_NAME=restcomm_$DATE
 BASEDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 JMAP_DIR=$BASEDIR/results/jmap_$DATE
 export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/
+
 JMAP="true"
 DTAR="true"
 
