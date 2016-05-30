@@ -306,12 +306,12 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
             if (callInfo.state().name().equalsIgnoreCase("IN_PROGRESS")){
                 if (muted) {
                     if (call != null) {
-                        call.tell(new Mute(), null);
+                        call.tell(new Mute(), call);
                         logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 3 updateCall muted call sent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
                     }
                 } else {
                     if (call != null) {
-                        call.tell(new Unmute(), null);
+                        call.tell(new Unmute(), call);
                         logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 4 updateCall unmuted call sent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
                     }
                 }
@@ -319,7 +319,7 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
                 logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 5 updateCall else $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             }
         }
-
+        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 6 updateCall done $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(cdr), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {
