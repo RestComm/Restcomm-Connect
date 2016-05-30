@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.dao;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.sql.Timestamp;
 import java.util.Currency;
 import java.util.Date;
 
@@ -73,7 +74,7 @@ public final class DaoUtils {
 
     public static DateTime readDateTime(final Object object) {
         if (object != null) {
-            return new DateTime((Date) object);
+            return new DateTime(((Timestamp) object).getTime());
         } else {
             return null;
         }
@@ -159,9 +160,9 @@ public final class DaoUtils {
         }
     }
 
-    public static Date writeDateTime(final DateTime dateTime) {
+    public static Timestamp writeDateTime(final DateTime dateTime) {
         if (dateTime != null) {
-            return dateTime.toDate();
+            return new Timestamp(dateTime.getMillis());
         } else {
             return null;
         }
