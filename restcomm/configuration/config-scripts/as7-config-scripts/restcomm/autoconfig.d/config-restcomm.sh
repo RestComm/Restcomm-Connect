@@ -424,18 +424,18 @@ configRestCommURIs() {
 
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
-            REMOTEADD="$STATIC_ADDRESS"
-            PORT=8443
-			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>https://$REMOTEADD:$PORT/restcomm/audio<\/prompts-uri>|" \
-		    -e "s|<cache-uri>.*</cache-uri>|<cache-uri>https://$REMOTEADD/restcomm/cache</cache-uri>|" \
-			-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>https://$REMOTEADD/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
-
+			PORT=8443
+			SCHEME='https'
 		else
 			PORT=8080
-			sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>http://$BIND_ADDRESS:$PORT/restcomm/audio<\/prompts-uri>|" \
-		    -e "s|<cache-uri>.*/cache-uri>|<cache-uri>http://$BIND_ADDRESS/restcomm/cache</cache-uri>|" \
-			-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>http://$BIND_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
-		fi
+			SCHEME='http'
+		fi    	
+		# STATIC_ADDRESS will be populated by user or script before 
+		REMOTE_ADDRESS="${SCHEME}://${STATIC_ADDRESS}:${PORT}"
+		sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" \
+		-e "s|<cache-uri>.*/cache-uri>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" \
+		-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
+
 		mv $FILE.bak $FILE
 		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
 	fi
