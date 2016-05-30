@@ -138,8 +138,6 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         } else {
             try {
                 secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
-                /*secureLevelControl(accountsDao, accountSid, null);
-                 secureLevelControl(accountsDao, accountSid, String.valueOf(geolocation.getAccountSid()));*/
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -159,8 +157,6 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         try {
             account = accountsDao.getAccount(accountSid);
             secure(account, "RestComm:Read:Geolocation", SecuredType.SECURED_APP);
-            // secure(accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
-            // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -182,7 +178,6 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             Geolocation geolocation = dao.getGeolocation(new Sid(sid));
             if (geolocation != null) {
                 secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
-                // secureLevelControl(accountsDao, accountSid, String.valueOf(geolocation.getAccountSid()));
             }
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
@@ -197,21 +192,27 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         try {
             account = accountsDao.getAccount(accountSid);
             secure(account, "RestComm:Create:Geolocation", SecuredType.SECURED_APP);
-            // secureLevelControl(accountsDao, accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
 
         try {
             validate(data, geolocationType);
-        } catch (final NullPointerException npe) {
-            return status(BAD_REQUEST).entity(npe.getMessage()).build();
-        } catch (final IllegalArgumentException iae) {
-            cause = iae.getMessage();
+        } catch (final NullPointerException nullPointerException) {
+            // API compliance check regarding missing mandatory parameters
+            return status(BAD_REQUEST).entity(nullPointerException.getMessage()).build();
+        } catch (final IllegalArgumentException illegalArgumentException) {
+            // API compliance check regarding malformed parameters
+            cause = illegalArgumentException.getMessage();
             rStatus = responseStatus.Failed.toString();
-        } catch (final UnsupportedOperationException uoe) {
-            return status(BAD_REQUEST).entity(uoe.getMessage()).build();
+        } catch (final UnsupportedOperationException unsupportedOperationException) {
+            // API compliance check regarding parameters not allowed for Immediate type of Geolocation
+            return status(BAD_REQUEST).entity(unsupportedOperationException.getMessage()).build();
         }
+
+        /*********************************************/
+        /*** Query GMLC for Location Data, stage 2 ***/
+        /*********************************************/
 
         Geolocation geolocation = createFrom(new Sid(accountSid), data, geolocationType);
 
@@ -434,12 +435,14 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         } else {
             try {
                 secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
-                // secureLevelControl(accountsDao, accountSid, String.valueOf(geolocation.getAccountSid()));
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             } catch (final NullPointerException exception) {
                 return status(BAD_REQUEST).entity(exception.getMessage()).build();
             }
+            /*********************************************/
+            /*** Query GMLC for Location Data, stage 2 ***/
+            /*********************************************/
 
             geolocation = update(geolocation, data);
             dao.updateGeolocation(geolocation);
@@ -460,6 +463,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
         // *** Set of parameters with provided data for Geolocation update***//
         if (data.containsKey("Source")) {
             updatedGeolocation = updatedGeolocation.setSource(data.getFirst("Source"));
+
         }
 
         if (data.containsKey("DeviceIdentifier")) {
@@ -479,7 +483,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                     || !updatedGeolocation.getResponseStatus().equals(responseStatus.Unauthorized.toString())
                     || !updatedGeolocation.getResponseStatus().equals(responseStatus.Failed.toString())) {
                 updatedGeolocation = updatedGeolocation.setCause(null);
-                // cause is set to null if responseStatus is neither "rejected" nor "unauthorized" nor "failed"
+                // cause is set to null if responseStatus is not rejected, failed or unauthorized
             }
         }
 
@@ -487,7 +491,7 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
                 && (!updatedGeolocation.getResponseStatus().equals(responseStatus.Unauthorized.toString())
                         || !updatedGeolocation.getResponseStatus().equals(responseStatus.Failed.toString()))) {
             updatedGeolocation = updatedGeolocation.setCause(null);
-            // "Cause" is set to null if "ResponseStatus" is not null and is neither "rejected" nor "unauthorized" nor "failed"
+            // "Cause" is set to null if "ResponseStatus" is not null and is neither "rejected", "unauthorized" nor "failed"
         }
 
         if (data.containsKey("CellId")) {
