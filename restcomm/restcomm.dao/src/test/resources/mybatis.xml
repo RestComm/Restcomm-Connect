@@ -9,7 +9,7 @@
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="org.hsqldb.jdbcDriver"/>
-        <property name="url" value="jdbc:hsqldb:file:./src/test/resources/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
+        <property name="url" value="jdbc:hsqldb:file:/C:/var/resources/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
         <property name="username" value="sa"/>
         <property name="password" value=""/>
       </dataSource>
@@ -18,6 +18,12 @@
   
   
   <mappers>
+    <mapper class="org.mobicents.servlet.restcomm.mappers.AccountsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.AnnouncementsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.ApplicationsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.AvailablePhoneNumberMapper" />
+  </mappers>
+  <!-- <mappers>
     <mapper resource="accounts.xml"/>
     <mapper resource="applications.xml"/>
     <mapper resource="available-phone-numbers.xml"/>
@@ -36,5 +42,5 @@
     <mapper resource="transcriptions.xml"/>
     <mapper resource="gateways.xml"/>
     <mapper resource="announcements.xml"/>
-  </mappers>
+  </mappers> -->
 </configuration>
