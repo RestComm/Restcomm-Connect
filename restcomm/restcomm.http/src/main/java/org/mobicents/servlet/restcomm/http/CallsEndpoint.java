@@ -28,7 +28,6 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -84,7 +83,6 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
@@ -154,12 +152,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-               // secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
-                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -404,12 +397,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             cdr = dao.getCallDetailRecord(new Sid(callSid));
 
             if (cdr != null) {
-                try {
-                    //secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
-                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-                } catch (final AuthorizationException exception) {
-                    return status(UNAUTHORIZED).build();
-                }
+                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             } else {
                 return Response.status(NOT_ACCEPTABLE).build();
             }

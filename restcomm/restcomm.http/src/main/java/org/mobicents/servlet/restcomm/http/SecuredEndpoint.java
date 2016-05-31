@@ -24,7 +24,6 @@ import java.util.Set;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
-import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
@@ -32,6 +31,7 @@ import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
@@ -270,7 +270,21 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return AuthOutcome.OK;
     }
 
-
+    /** Applies the following access control rules
+     *
+     * If an application Account Sid is given:
+     *  - If operatingAccount is the same as the operated account and application resource belongs to operated account too
+     *    acces is granted.
+     * If no application Accouns Sid is given:
+     *  - If operatingAccount is the same as the operated account access is granted.
+     *
+     * NOTE: Parent relationships on accounts do not grant access here.
+     *
+     * @param operatingAccount
+     * @param operatedAccount
+     * @param applicationAccountSid
+     * @return
+     */
     private AuthOutcome secureLevelControlApplications(Account operatingAccount, Account operatedAccount, String applicationAccountSid) {
         String operatingAccountSid = null;
         if (operatingAccount != null)
@@ -287,6 +301,17 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return AuthOutcome.OK;
     }
 
+    /** Applies the following access control rules:
+     *
+     * If the operating account is an administrator:
+     *  - If it is the same or parent of the operated account access is granted.
+     * If the operating accoutn is NOT an administrator:
+     *  - If it is the same as the operated account access is granted.
+     *
+     * @param operatingAccount
+     * @param operatedAccount
+     * @return
+     */
     private AuthOutcome secureLevelControlAccounts(Account operatingAccount, Account operatedAccount) {
         if (operatingAccount == null || operatedAccount == null)
             return AuthOutcome.FAILED;
