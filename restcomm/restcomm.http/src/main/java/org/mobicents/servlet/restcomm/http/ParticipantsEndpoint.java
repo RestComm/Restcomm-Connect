@@ -315,6 +315,9 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
                         logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 4 updateCall unmuted call sent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
                     }
                 }
+                cdr = cdr.setMuted(muted);
+                dao.updateCallDetailRecord(cdr);
+                logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 4.5 updateCall else $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             }else{
                 logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 5 updateCall else $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             }
