@@ -2,9 +2,7 @@
 Add G729 Codec to the Restcomm Media Server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-******************Important Notice**********************
-
-Restcomm Connect ships with G.729 codec. G.729 includes patents from several companies and is licensed by Sipro Lab Telecom. Sipro Lab Telecom is the authorized Intellectual Property Licensing Administrator for G.729 technology and patent pool.
+IMPORTANT: Restcomm Connect ships with G.729 codec. G.729 includes patents from several companies and is licensed by Sipro Lab Telecom. Sipro Lab Telecom is the authorized Intellectual Property Licensing Administrator for G.729 technology and patent pool.
 
 *In a number of countries, the use of G.729 may require a license fee and/or royalty fee.*
 
