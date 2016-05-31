@@ -21,33 +21,33 @@ package org.mobicents.servlet.restcomm.http.converter;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
-import org.mobicents.servlet.restcomm.entities.Gateway;
-import org.mobicents.servlet.restcomm.entities.GatewayList;
+import org.mobicents.servlet.restcomm.entities.Member;
+import org.mobicents.servlet.restcomm.entities.MemberList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
 @ThreadSafe
-public final class GatewayListConverter extends AbstractConverter {
-    public GatewayListConverter(final Configuration configuration) {
+public final class MemberListConverter extends AbstractConverter {
+    public MemberListConverter(final Configuration configuration) {
         super(configuration);
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(final Class klass) {
-        return GatewayList.class.equals(klass);
+        return MemberList.class.equals(klass);
     }
 
     @Override
     public void marshal(final Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
-        final GatewayList list = (GatewayList) object;
-        writer.startNode("Gateways");
-        for (final Gateway gateway : list.getGateways()) {
-            context.convertAnother(gateway);
+        final MemberList list = (MemberList) object;
+        writer.startNode("Members");
+        for (final Member member : list.getMembers()) {
+            context.convertAnother(member);
         }
         writer.endNode();
     }

@@ -19,8 +19,11 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -41,7 +44,6 @@ public class QueuesJsonEndpoint extends QueuesEndpoint {
 
     public QueuesJsonEndpoint() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
     @GET
@@ -56,11 +58,25 @@ public class QueuesJsonEndpoint extends QueuesEndpoint {
         return getQueue(accountSid, queueSid, info, APPLICATION_JSON_TYPE);
     }
 
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response createQueue(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return createQueue(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Consumes(APPLICATION_FORM_URLENCODED)
     @Path("/{queueSid}")
     @POST
-    public Response enqueue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
+    public Response updateQueue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
             final MultivaluedMap<String, String> data) {
-        return enqueue(accountSid, queueSid, data, APPLICATION_JSON_TYPE);
+        return updateQueue(accountSid, queueSid, data, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{queueSid}.json")
+    @DELETE
+    public Response deleteAccountAsJson(@PathParam("queueSid") final String queueSid,
+            @PathParam("accountSid") final String accountSid) {
+        return deleteQueue(queueSid, accountSid);
     }
 
 }

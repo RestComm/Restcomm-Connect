@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.http;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -55,11 +56,22 @@ public class QueuesXmlEndpoint extends QueuesEndpoint {
         return getQueue(accountSid, queueSid, info, APPLICATION_XML_TYPE);
     }
 
+    @POST
+    public Response createQueue(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return createQueue(accountSid, data, APPLICATION_XML_TYPE);
+    }
+
     @Path("/{queueSid}")
     @POST
-    public Response enqueue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
+    public Response updateQueue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
             final MultivaluedMap<String, String> data) {
-        return enqueue(accountSid, queueSid, data, APPLICATION_XML_TYPE);
+        return updateQueue(accountSid, queueSid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{queueSid}")
+    @DELETE
+    public Response deleteAccountAsJson(@PathParam("queueSid") final String queueSid,@PathParam("accountSid") final String accountSid) {
+        return deleteQueue(queueSid,accountSid);
     }
 
 }

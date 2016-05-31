@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
+import org.mobicents.servlet.restcomm.dao.QueueDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
@@ -76,6 +77,7 @@ public final class MybatisDaoManager implements DaoManager {
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
     private InstanceIdDao instanceIdDao;
+    private QueueDao queueDao;
 
     public MybatisDaoManager() {
         super();
@@ -179,6 +181,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public QueueDao getQueueDao() {
+        return queueDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -202,7 +209,8 @@ public final class MybatisDaoManager implements DaoManager {
         properties.setProperty("data", dataFiles);
         properties.setProperty("sql", sqlFiles);
         final SqlSessionFactory sessions = builder.build(reader, properties);
-        if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+        if (!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older
+                                                // install
             boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
             if (amazonS3Enabled) {
                 final String accessKey = amazonS3Configuration.getString("access-key");
@@ -213,7 +221,8 @@ public final class MybatisDaoManager implements DaoManager {
                 final int daysToRetainPublicUrl = amazonS3Configuration.getInt("days-to-retain-public-url");
                 final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
                 final String bucketRegion = amazonS3Configuration.getString("bucket-region");
-                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, daysToRetainPublicUrl, removeOriginalFile,bucketRegion);
+                s3AccessTool = new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy,
+                        daysToRetainPublicUrl, removeOriginalFile, bucketRegion);
             }
         }
         start(sessions);
@@ -244,5 +253,7 @@ public final class MybatisDaoManager implements DaoManager {
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
+        queueDao = new MybatisQueueDao(sessions);
     }
+
 }
