@@ -1219,10 +1219,6 @@ public final class Call extends UntypedActor {
             // Forward to media server controller
             this.msController.tell(message, sender);
             muted = true;
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setMuted(muted);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
         }
     }
 
@@ -1231,10 +1227,6 @@ public final class Call extends UntypedActor {
             // Forward to media server controller
             this.msController.tell(message, sender);
             muted = false;
-            if (outgoingCallRecord != null && isOutbound()) {
-                outgoingCallRecord = outgoingCallRecord.setMuted(muted);
-                recordsDao.updateCallDetailRecord(outgoingCallRecord);
-            }
         }
     }
 
