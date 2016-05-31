@@ -1,0 +1,44 @@
+= Restcomm API – Conferences
+
+== Conferences
+
+The Conference list resource represents the set of conferences originated and terminated from an account.
+
+=== Conference Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/Conferences/\{ConferenceSid}*
+
+=== Resource Properties
+
+[cols=",",options="header",]
+|======================================================================================================================================================================
+|Property |Description
+|Sid |A string that uniquely identifies this conference.
+|FriendlyName |A user provided string that identifies this conference room.
+|Status |A string representing the status of the conference. Possible values are RUNNING_MODERATOR_PRESENT, RUNNING_MODERATOR_ABSENT and COMPLETED.
+|DateCreated |The date that this conference was created.
+|DateUpdated |The date that this conference was last updated.
+|AccountSid |The unique id of the Account that created this conference.
+|ApiVersion |Displays the current API version
+|Uri |The URI for this account, relative to http://localhost:port/restcomm.
+|======================================================================================================================================================================
+
+=== Supported Operations
+**HTTP GET**. Returns the representation of a Conference resource, including the properties above. 
+
+== Conference List Resource URI
+
+**/2012-04-24/Accounts/\{AccountSid}/Conferences** 
+
+=== Supported Operations
+**HTTP GET**. 
+Returns the list representation of all the Conference resources for this Account, including the properties above. 
+
+**HTTP POST**. 
+Not supported
+
+**HTTP PUT**. 
+Not supported
+
+**HTTP DELETE**. 
+Not supported
