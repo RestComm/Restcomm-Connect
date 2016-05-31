@@ -7,7 +7,7 @@ The <Conference> represents a single conference originated and terminated from a
 === Conference Resource URI
 
 ....
-/2012-04-24/Accounts/{AccountSid}/Conferences/ConferenceSid}
+/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}
 ....
 
 === Resource Properties
