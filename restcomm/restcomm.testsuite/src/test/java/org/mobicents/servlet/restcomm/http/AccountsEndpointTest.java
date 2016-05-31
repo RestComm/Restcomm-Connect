@@ -189,7 +189,7 @@ public class AccountsEndpointTest {
     public void testRemoveAccountAccess(){
         ClientResponse response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), unprivilegedUsername, unprivilegedAuthToken, removedSid + ".json" );
         assertEquals("Unprivileged account should receive a 403 while removing an account", 403, response.getStatus());
-        response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, removedSid );
+        response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, removedSid + ".json");
         assertEquals("Administrator should receive a 200 OK when removing an account", 200, response.getStatus());
     }
 

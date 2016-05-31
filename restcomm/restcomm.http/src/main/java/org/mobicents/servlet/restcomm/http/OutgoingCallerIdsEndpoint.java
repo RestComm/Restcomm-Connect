@@ -44,7 +44,6 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -124,12 +123,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                //secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
-                secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -182,12 +176,7 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                //secureLevelControl(accountsDao, accountSid, String.valueOf(outgoingCallerId.getAccountSid()));
-                secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (data.containsKey("FriendlyName")) {
                 final String friendlyName = data.getFirst("FriendlyName");
                 outgoingCallerId = outgoingCallerId.setFriendlyName(friendlyName);

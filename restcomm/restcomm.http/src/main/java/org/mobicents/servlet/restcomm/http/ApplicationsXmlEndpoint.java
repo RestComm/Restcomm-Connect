@@ -24,8 +24,6 @@ package org.mobicents.servlet.restcomm.http;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,8 +34,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Application;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
@@ -52,14 +50,11 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
     }
 
     private Response deleteApplication(final String accountSid, final String sid) {
-        try {
-            secure(accountsDao.getAccount(new Sid(accountSid)), "RestComm:Modify:Applications");
-            Application application = dao.getApplication(new Sid(sid));
-//            if (application != null) {
-//                secureLevelControlApplications(accountSid, application);
-//            }
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
+        Account operatedAccount = accountsDao.getAccount(new Sid(accountSid));
+        secure(operatedAccount, "RestComm:Modify:Applications", SecuredType.SECURED_APP);
+        Application application = dao.getApplication(new Sid(sid));
+        if (application != null) {
+            secure(operatedAccount, application.getAccountSid(), SecuredType.SECURED_APP);
         }
         dao.removeApplication(new Sid(sid));
         return ok().build();
