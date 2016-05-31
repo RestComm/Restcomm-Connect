@@ -1,12 +1,14 @@
 = Restcomm API – Conferences
 
-== Conferences
+== Conference
 
-The Conference list resource represents the set of conferences originated and terminated from an account.
+The <Conference> represents a single conference originated and terminated from an account.
 
 === Conference Resource URI
 
-*/2012-04-24/Accounts/\{AccountSid}/Conferences/\{ConferenceSid}*
+....
+/2012-04-24/Accounts/{AccountSid}/Conferences/ConferenceSid}
+....
 
 === Resource Properties
 
@@ -26,9 +28,35 @@ The Conference list resource represents the set of conferences originated and te
 === Supported Operations
 **HTTP GET**. Returns the representation of a Conference resource, including the properties above. 
 
+==== Example: Get Conference by ConferenceSid
+
+....
+curl -H "Authorization: Basic <MY_ENCODED_CREDENTIALS>" http://IP:8080/restcomm/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}
+....
+
+
+**HTTP POST**. 
+Not supported
+
+**HTTP PUT**. 
+Not supported
+
+**HTTP DELETE**. 
+Not supported
+
+**Conference Subresources**. 
+<Participants> represent set/list of in-progress calls in a running conference room.
+
+....
+/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}/Participants
+....
+
+
 == Conference List Resource URI
 
-**/2012-04-24/Accounts/\{AccountSid}/Conferences** 
+....
+/2012-04-24/Accounts/AccountSid}/Conferences
+....
 
 === Supported Operations
 **HTTP GET**. 
