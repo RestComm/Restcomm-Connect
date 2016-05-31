@@ -61,7 +61,7 @@ public class RestcommConferenceParticipantsTool {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
 
-        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Conferences" + conferenceSid + "/Participants" + ((json) ? ".json" : "");
+        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Conferences/" + conferenceSid + "/Participants" + ((json) ? ".json" : "");
 
         return accountsUrl;
     }
