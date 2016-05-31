@@ -136,6 +136,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
         Future<Object> future = (Future<Object>) ask(synthesizer, synthesize, expires);
         Object object = Await.result(future, Duration.create(6000, TimeUnit.SECONDS));
         if(object != null) {
+            @SuppressWarnings("unchecked")
             SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>)object;
             uri = response.get();
         }
