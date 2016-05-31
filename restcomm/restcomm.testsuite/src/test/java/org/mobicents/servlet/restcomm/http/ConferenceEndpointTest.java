@@ -105,18 +105,49 @@ public class ConferenceEndpointTest {
         assertTrue(allConferencesObject.get("end").getAsInt() == 2);
         assertTrue(filteredConferencesByStatusObject.get("start").getAsInt() == 0);
         assertTrue(filteredConferencesByStatusObject.get("end").getAsInt() == 1);
-        assertTrue(allConferencesObject.get("conferences").getAsJsonArray().size() != filteredConferencesByStatusObject.get("conferences")
+        assertTrue(allConferencesObject.get("conferences").getAsJsonArray().size() > filteredConferencesByStatusObject.get("conferences")
                 .getAsJsonArray().size());
     }
 
     @Test
     public void getConferencesFilteredByFriendlyName() {
+        Map<String, String> filters = new HashMap<String, String>();
+        filters.put("FriendlyName", "1111");
 
+        JsonObject allConferencesObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken);
+
+        JsonObject filteredConferencesByFNObject = RestcommConferenceTool.getInstance().getConferencesUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+
+        assertTrue(filteredConferencesByFNObject.get("conferences").getAsJsonArray().size() == 2);
+        assertTrue(allConferencesObject.get("start").getAsInt() == 0);
+        assertTrue(allConferencesObject.get("end").getAsInt() == 2);
+        assertTrue(filteredConferencesByFNObject.get("start").getAsInt() == 0);
+        assertTrue(filteredConferencesByFNObject.get("end").getAsInt() == 2);
+        assertTrue(allConferencesObject.get("conferences").getAsJsonArray().size() == filteredConferencesByFNObject.get("conferences")
+                .getAsJsonArray().size());
     }
 
     @Test
     public void getConferencesFilteredUsingMultipleFilters() {
+        Map<String, String> filters = new HashMap<String, String>();
+        filters.put("FriendlyName", "1111");
+        filters.put("Status", "COMPLETED");
 
+        JsonObject allConferencesObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken);
+
+        JsonObject filteredConferencesByFNObject = RestcommConferenceTool.getInstance().getConferencesUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+
+        assertTrue(filteredConferencesByFNObject.get("conferences").getAsJsonArray().size() == 1);
+        assertTrue(allConferencesObject.get("start").getAsInt() == 0);
+        assertTrue(allConferencesObject.get("end").getAsInt() == 2);
+        assertTrue(filteredConferencesByFNObject.get("start").getAsInt() == 0);
+        assertTrue(filteredConferencesByFNObject.get("end").getAsInt() == 1);
+        assertTrue(allConferencesObject.get("conferences").getAsJsonArray().size() > filteredConferencesByFNObject.get("conferences")
+                .getAsJsonArray().size());
     }
 
 }
