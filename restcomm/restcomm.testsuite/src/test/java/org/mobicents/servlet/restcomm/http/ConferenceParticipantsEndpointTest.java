@@ -62,11 +62,11 @@ public class ConferenceParticipantsEndpointTest {
         JsonObject page = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid,
         		runningConferenceSid, adminAuthToken);
         int totalSize = page.get("total").getAsInt();
-        JsonArray firstPageCallsArray = page.get("calls").getAsJsonArray();
-        int firstPageCallsArraySize = firstPageCallsArray.size();
-        assertTrue(firstPageCallsArraySize == 3);
+        JsonArray pageCallsArray = page.get("calls").getAsJsonArray();
+        int pageCallsArraySize = pageCallsArray.size();
+        assertTrue(pageCallsArraySize == 3);
         assertTrue(page.get("start").getAsInt() == 0);
-        assertTrue(page.get("end").getAsInt() == 2);
+        assertTrue(page.get("end").getAsInt() == 3);
 
         assertTrue(totalSize == 3);
     }
@@ -76,9 +76,23 @@ public class ConferenceParticipantsEndpointTest {
         JsonObject page = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid,
         		completedConferenceSid, adminAuthToken);
         int totalSize = page.get("total").getAsInt();
-        JsonArray firstPageCallsArray = page.get("calls").getAsJsonArray();
-        int firstPageCallsArraySize = firstPageCallsArray.size();
-        assertTrue(firstPageCallsArraySize == 0);
+        JsonArray pageCallsArray = page.get("calls").getAsJsonArray();
+        int pageCallsArraySize = pageCallsArray.size();
+        assertTrue(pageCallsArraySize == 0);
+        assertTrue(page.get("start").getAsInt() == 0);
+        assertTrue(page.get("end").getAsInt() == 0);
+
+        assertTrue(totalSize == 0);
+    }
+
+    @Test
+    public void muteParticipant() {
+        JsonObject page = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid,
+        		runningConferenceSid, adminAuthToken);
+        int totalSize = page.get("total").getAsInt();
+        JsonArray pageCallsArray = page.get("calls").getAsJsonArray();
+        int pageCallsArraySize = pageCallsArray.size();
+        assertTrue(pageCallsArraySize == 0);
         assertTrue(page.get("start").getAsInt() == 0);
         assertTrue(page.get("end").getAsInt() == 0);
 
