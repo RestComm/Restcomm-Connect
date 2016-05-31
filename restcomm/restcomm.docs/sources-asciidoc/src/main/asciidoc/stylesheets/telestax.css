@@ -171,9 +171,9 @@ object, svg { display: inline-block; vertical-align: middle; }
 
 .spread { width: 100%; }
 
-p.lead, .paragraph.lead > p, #preamble > .sectionbody > .paragraph:first-of-type p { font-size: 1.21875em; line-height: 1.6; }
+/*p.lead, .paragraph.lead > p, #preamble > .sectionbody > .paragraph:first-of-type p { font-size: 1.21875em; line-height: 1.6; }*/
 
-.subheader, .admonitionblock td.content > .title, .audioblock > .title, .exampleblock > .title, .imageblock > .title, .listingblock > .title, .literalblock > .title, .stemblock > .title, .openblock > .title, .paragraph > .title, .quoteblock > .title, table.tableblock > .title, .verseblock > .title, .videoblock > .title, .dlist > .title, .olist > .title, .ulist > .title, .qlist > .title, .hdlist > .title { line-height: 1.25; color: #002c5e; font-weight: 300; margin-top: 0.2em; margin-bottom: 0.5em; }
+.subheader, .admonitionblock td.content > .title, .audioblock > .title, .exampleblock > .title, .imageblock > .title, .listingblock > .title, .literalblock > .title, .stemblock > .title, .openblock > .title, .paragraph > .title, .quoteblock > .title, table.tableblock > .title, .verseblock > .title, .videoblock > .title, .dlist > .title, .olist > .title, .ulist > .title, .qlist > .title, .hdlist > .title { line-height: 1.25; color: #002c5e; font-weight: 300; margin-top: 1em; margin-bottom: 1m; }
 
 /* Typography resets */
 div, dl, dt, dd, ul, ol, li, h1, h2, h3, #toctitle, .sidebarblock > .content > .title, h4, h5, h6, pre, form, p, blockquote, th, td { margin: 0; padding: 0; direction: ltr; list-style: disc }
@@ -215,7 +215,7 @@ small { font-size: 60%; line-height: inherit; }
 code { font-family: "Ubuntu Mono", "Inconsolata", monospace; font-weight: 400; color: #331d00; }
 
 /* Lists */
-ul, ol, dl { font-size: 1em; line-height: 1.5; margin-bottom: 1.25em; list-style-position: outside; font-family: inherit; }
+ul, ol, dl { font-size: 1em; line-height: 1.5; margin-bottom: 1.25em; list-style-position: inside; font-family: inherit; }
 
 ul, ol { margin-left: 1.5em; }
 ul.no-bullet, ol.no-bullet { margin-left: 1.5em; }
@@ -322,7 +322,8 @@ p a > code:hover { color: #1a0f00; }
 #content > h1:first-child:not([class]) { color: #703f1c; border-bottom: 1px solid rgba(145, 135, 84, 0.15); padding-bottom: 8px; margin-top: 0; padding-top: 1rem; margin-bottom: 1.25rem; }
 
 #toc { border-bottom: 0px solid #dddddd; padding-bottom: 0.5em; }
-#toc > ul { margin-left: 0.125em; }
+#toc > ul { margin-left: 1em; }
+.ulist > ul { margin-left: 1em; }
 #toc ul.sectlevel0 > li > a { font-style: italic; }
 #toc ul.sectlevel0 ul.sectlevel1 { margin: 0.5em 0; }
 #toc ul { font-family: "Varela Round", sans-serif; list-style-type: none; }
@@ -507,17 +508,17 @@ td > div.verse { white-space: pre; }
 
 ol { margin-left: 1.75em; }
 
-ul li ol { margin-left: 1.5em; }
+ul li ol { margin-left: 1em; }
 
 dl dd { margin-left: 1.125em; }
 
 dl dd:last-child, dl dd:last-child > :last-child { margin-bottom: 0; }
 
-ol > li p, ul > li p, ul dd, ol dd, .olist .olist, .ulist .ulist, .ulist .olist, .olist .ulist { margin-bottom: 0.625em; }
+ol > li p, ul > li p, ul dd, ol dd, .olist .olist, .ulist .ulist, .ulist .olist, .olist .ulist { margin-bottom: 1em; margin-top: 1em; }
 
 ul.unstyled, ol.unnumbered, ul.checklist, ul.none { list-style-type: none; }
 
-ul.unstyled, ol.unnumbered, ul.checklist { margin-left: 0.625em; }
+ul.unstyled, ol.unnumbered, ul.checklist { margin-left: 1em; }
 
 ul.checklist li > p:first-child > .fa-square-o:first-child, ul.checklist li > p:first-child > .fa-check-square-o:first-child { width: 1em; font-size: 0.85em; }
 
@@ -689,7 +690,7 @@ b.conum * { color: inherit !important; }
 #content h2, #content h3, #content #toctitle, #content .sidebarblock > .content > .title, #content h4, #content h5, #content #toctitle { position: relative; left: -0.0625em; }
 #content h2 { font-weight: bold; }
 
-.paragraph.lead > p, #preamble > .sectionbody > .paragraph:first-of-type p { color: black; }
+.paragraph.lead > p, #preamble > .sectionbody > .paragraph:first-of-type p { color: #818181; }
 
 pre.pygments.highlight { background-color: rgba(16, 195, 196, 0.05); }
 
@@ -729,16 +730,16 @@ pre.pygments.highlight { background-color: rgba(16, 195, 196, 0.05); }
     display: block;
 }
 
-/* Webkit */
+/* Webkit
 ::selection {
     background: #f25f33;
     color: #fff;
-}
-/* Gecko/Mozilla */
+}*/
+/* Gecko/Mozilla
 ::-moz-selection {
     background: #f25f33
     color: #fff;
-}
+}*/
 
 .alignleft {
 	float: left;
@@ -782,6 +783,8 @@ html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abb
 	vertical-align: baseline;
 	outline: none;
 }
+
+div.paragraph * { margin-bottom: 1em; margin-top: 1em }
 
 article, aside, details, figcaption, figure, footer, header, hgroup, nav, section {
     display: block;
@@ -913,6 +916,7 @@ input[type='submit'],
 }
 
 ul{
+	padding-left:0;
 	list-style-position:inside;
 }
 
@@ -1981,11 +1985,11 @@ header.centered_logo .header_right_widget{
 
 header.centered_logo nav.main_menu,
 header.centered_logo nav.main_menu.right{
-	position: relative;
+	/*position: relative;*/
 	display: inline-block;
 	left: auto;
 	float: none;
-    vertical-align: middle;
+    /*vertical-align: middle;*/
 }
 
 header.centered_logo nav.main_menu > ul{
@@ -2111,7 +2115,7 @@ nav.main_menu{
 }
 
 nav.main_menu.right{
-	position: relative;
+	/*position: relative;*/
 	left: auto;
 	float: right;
 }
@@ -3299,7 +3303,7 @@ header.sticky .header_inner_right.left_side{
 }
 
 .container_inner{
-	width: 1100px;
+	width: 1200px;
 	margin: 0px auto;
 }
 /*.content .container {
