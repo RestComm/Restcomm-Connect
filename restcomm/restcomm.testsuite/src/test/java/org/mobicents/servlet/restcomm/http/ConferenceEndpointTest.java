@@ -22,6 +22,8 @@ package org.mobicents.servlet.restcomm.http;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -80,30 +82,35 @@ public class ConferenceEndpointTest {
         int totalSize = page.get("total").getAsInt();
         JsonArray firstPageConferenceArray = page.get("conferences").getAsJsonArray();
         int firstPageConferenceArraySize = firstPageConferenceArray.size();
-        assertTrue(firstPageConferenceArraySize == 3);
+        assertTrue(firstPageConferenceArraySize == 2);
         assertTrue(page.get("start").getAsInt() == 0);
-        assertTrue(page.get("end").getAsInt() == 3);
+        assertTrue(page.get("end").getAsInt() == 2);
 
-        assertTrue(totalSize == 3);
-    }
-    
-    @Test
-    public void getParticipants() {
-    	
+        assertTrue(totalSize == 2);
     }
 
     @Test
     public void getConferencesFilteredByStatus() {
+        Map<String, String> filters = new HashMap<String, String>();
+        filters.put("Status", "COMPLETED");
 
+        JsonObject allConferencesObject = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken);
+
+        JsonObject filteredConferencesByStatusObject = RestcommConferenceTool.getInstance().getConferencesUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+
+        assertTrue(filteredConferencesByStatusObject.get("conferences").getAsJsonArray().size() == 1);
+        assertTrue(allConferencesObject.get("start").getAsInt() == 0);
+        assertTrue(allConferencesObject.get("end").getAsInt() == 2);
+        assertTrue(filteredConferencesByStatusObject.get("start").getAsInt() == 0);
+        assertTrue(filteredConferencesByStatusObject.get("end").getAsInt() == 1);
+        assertTrue(allConferencesObject.get("conferences").getAsJsonArray().size() != filteredConferencesByStatusObject.get("conferences")
+                .getAsJsonArray().size());
     }
 
     @Test
     public void getConferencesFilteredByFriendlyName() {
-
-    }
-
-    @Test
-    public void getConferencesUsingPageSize() {
 
     }
 
