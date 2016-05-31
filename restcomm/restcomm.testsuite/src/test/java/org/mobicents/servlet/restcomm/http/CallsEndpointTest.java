@@ -63,11 +63,11 @@ public class CallsEndpointTest {
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
         assertTrue(lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
                 .equals("CAfe9ce46f104f4beeb10c83a5dad2be66"));
-        assertTrue(lastPageCallsArray.size() == 42);
+        assertTrue(lastPageCallsArray.size() == 48);
         assertTrue(lastPage.get("start").getAsInt() == 400);
-        assertTrue(lastPage.get("end").getAsInt() == 442);
+        assertTrue(lastPage.get("end").getAsInt() == 448);
 
-        assertTrue(totalSize == 442);
+        assertTrue(totalSize == 448);
     }
 
     @Test
@@ -93,11 +93,11 @@ public class CallsEndpointTest {
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
         assertTrue(lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
                 .equals("CAfe9ce46f104f4beeb10c83a5dad2be66"));
-        assertTrue(lastPageCallsArray.size() == 42);
+        assertTrue(lastPageCallsArray.size() == 48);
         assertTrue(lastPage.get("start").getAsInt() == 400);
-        assertTrue(lastPage.get("end").getAsInt() == 442);
+        assertTrue(lastPage.get("end").getAsInt() == 448);
 
-        assertTrue(totalSize == 442);
+        assertTrue(totalSize == 448);
     }
 
     @Test
