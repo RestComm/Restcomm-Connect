@@ -30,3 +30,4 @@ Restcomm Accounts have the following subresources. Click on a link to read the A
 * <<transcriptions-api.adoc#transcriptions,Restcomm API – Transcriptions>>
 * <<usage-records-api.adoc#records,Restcomm API – Usage Records>>
 * <<ussd-push-api.adoc#uss-push,Restcomm API – UssdPush>>
+* <<monitoring-service.adoc#monitoring, Restcomm API - Supervisor/Monitoring Service>>

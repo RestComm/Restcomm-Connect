@@ -1,0 +1,103 @@
+[[monitoring]]
+= Restcomm API - Supervisor/Monitoring service
+
+== Supervisor API
+You can use *Supervisor API* to access statistics from Restcomm and monitor the usage.
+
+*Supervisor API* can be used to monitor traffic on a Restcomm instance.
+
+The *Supervisor API* will provide the following metrics:
+
+* Real Time metrics
+  - Live incoming calls
+  - Live outgoing calls
+  - Live calls (total)
+  - Live call details array. An array with call details for each of the live calls
+  - Registered users
+* Accumulated metrics
+  - Total calls since uptime
+  - Incoming calls since uptime
+  - Outgoing calls since uptime
+  - No Answered calls
+  - Busy calls
+  - Failed calls
+  - Not found calls
+  - Canceled calls
+  - Inbound Text messages to RMCL applications
+  - Inbound Text messages to Restcomm clients
+  - Inbound Text messages to outbound proxy
+  - Inbound Text messages with Not Found error
+  - Outoing Text messages
+
+=== Supervisor Resource URI
+
+*/2012-04-24/Accounts/\{AccountSid}/Supervisor.json/metrics*
+
+Supervisor API supports only json format.
+
+=== Supported Operations
+**HTTP GET**. Returns the monitoring service metrics in json format.
+
+=== Get metrics
+
+To get the monitoring service metrics you can use the curl command bellow
+
+....
+curl http://ACCOUNT_ID:AUTH_TOKEN@IP_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACCOUNT_ID/Supervisor.json/metrics
+....
+
+For example for the curl command below:
+
+....
+curl http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics
+....
+
+the monitoring service response for a Restcomm instance with 1 registered user and 2 live calls will return the following metrics:
+
+....
+{
+  {
+    "InstanceId": "ID6f1e138741034df5879be5e073b018bb",
+    "Version": "7.7.0",
+    "Revision": "rccfa3f2159ddcabdac430de17aec05f9b0a6ea2e",
+    "Metrics": {
+      "TotalCallsSinceUptime": 4,
+      "NoAnswerCalls": 0,
+      "LiveOutgoingCalls": 0,
+      "OutgoingCallsSinceUptime": 0,
+      "IncomingCallsSinceUptime": 4,
+      "RegisteredUsers": 1,
+      "CompletedCalls": 2,
+      "TextMessageOutbound": 0,
+      "NotFoundCalls": 0,
+      "CanceledCalls": 0,
+      "FailedCalls": 0,
+      "TextMessageNotFound": 0,
+      "TextMessageInboundToApp": 0,
+      "LiveCalls": 2,
+      "BusyCalls": 0,
+      "LiveIncomingCalls": 2,
+      "TextMessageInboundToProxyOut": 0,
+      "TextMessageInboundToClient": 0
+    },
+    "LiveCallDetails": [
+      {
+        "sid": "CA1c34db0d7ba1488a9c7eefaadc982358",
+        "State": "IN_PROGRESS",
+        "direction": "inbound",
+        "date_created": "Mon, 30 May 2016 13:47:52 +0300",
+        "from": "bob",
+        "to": "1310",
+        "Initial Invite": "sip:1310@127.0.0.1:5080"
+      },
+      {
+        "sid": "CAb9fecafc42cc4ad49e0dd991f1966cc7",
+        "State": "IN_PROGRESS",
+        "direction": "inbound",
+        "date_created": "Mon, 30 May 2016 13:47:48 +0300",
+        "from": "unregistereduser",
+        "to": "1310",
+        "Initial Invite": "sip:1310@127.0.0.1:5080"
+      }
+    ]
+....

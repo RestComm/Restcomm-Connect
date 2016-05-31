@@ -56,7 +56,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
 
 // Numbers : RestComm Clients : Details (also used for Modal) -----------------------
 
-var ClientDetailsCtrl = function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
+rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $modalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps) {
 
 	$scope.localApps = localApps;
   // are we editing details...
@@ -149,7 +149,7 @@ var ClientDetailsCtrl = function ($scope, $stateParams, $location, $dialog, $mod
   $scope.confirmClientDelete = function(client) {
     confirmClientDelete(client, $dialog, $scope, RCommClients, $location);
   }
-}
+});
 
 var confirmClientDelete = function(client, $dialog, $scope, RCommClients, $location) {
   var title = 'Delete RestComm Client \'' + client.login + '\'';

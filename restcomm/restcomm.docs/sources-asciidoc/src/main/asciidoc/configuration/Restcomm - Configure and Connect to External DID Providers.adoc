@@ -1,0 +1,137 @@
+This tutorial will give you a short overview of what you need to do to connect Restcomm Cloud communication platform to following DID providers:
+
+* *VoipInnovations*
+* *Bandwidth *
+* *Nexmo*
+* *Voxbone*
+
+[[requirements]]
+= Requirements
+
+* Basic Knowledge of Restcomm
+* Account from any of the above mentioned DID providers
+* <<Restcomm - Installing Restcomm from GitHub.adoc#installing-restcomm,Install Restcomm>>
+* Change Default Password as explained http://docs.telestax.com/restcomm-change-default-password/[HERE]
+
+[[step-1---configure-the-restcomm.conf-file]]
+= Step 1 - Configure the restcomm.conf file
+
+* Go to *$RESTCOMM_HOME/bin/restcomm*
+* open the file *restcomm.conf* for edit
+
+To fill out the section *# Network configuration* run the following command on your bash terminal
+
+[source,lang:default,decode:true]
+----
+$> ifconfig 
+enp19s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.1.3  netmask 255.255.255.0  broadcast 192.168.1.255
+        inet6 fe80::f2bf:97ff:fe03:9e0a  prefixlen 64  scopeid 0x20<link>
+        ether f0:bf:97:03:9e:0a  txqueuelen 1000  (Ethernet)
+        RX packets 44916  bytes 36481273 (34.7 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 37502  bytes 5636746 (5.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+$> netstat -r
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+default         192.168.1.1     0.0.0.0         UG        0 0          0 enp19s0
+192.168.1.0     0.0.0.0         255.255.255.0   U         0 0          0 enp19s0
+----
+
+Use the information above to fill out your configuration as shown in the example below: 
+
+[source,lang:default,decode:true]
+----
+NET_INTERFACE=enp19s0 
+PRIVATE_IP=192.168.1.3
+SUBNET_MASK=255.255.255.0
+NETWORK=192.168.1.0
+BROADCAST_ADDRESS=192.168.1.255
+----
+
+NOTE: If you want to be able to call your Restcomm instance by initiating a call from the internet, you will need to configure your firewall NAT and the ports defined below
+
+[[restcomm-ports-to-open-on-the-firewall-for-nat]]
+== Restcomm Ports to open on the firewall for NAT
+
+* tcp:8080
+* udp:5080
+* udp:64535-65535
+* tcp/udp: 5060
+
+
+1. Port 8080 is used for the restcomm-management console over http
+2. Port 5080 is used to make calls ex. sip:1234@Restcomm_IP:5080
+3. Port 64535-65535 are used for media RTP traffic
+4. Port 5060 is used for SIP
+
+[[step-2---setting-the-static-public-ip-adress]]
+= Step 2 - Setting the Static Public IP Adress
+
+* Go to the file *restcomm.conf* under the section # PUBLIC IP ADDRESS
+* Get the public IP address of the server on which Restcomm is installed
+
+'''''
+
+*Open your internet browser and in google.com, type, "what is my ip". This will give you the Public IP address of your Internet Facing Server*
+
+'''''
+
+Use the public IP address to fill out the STATIC_ADDRESS below 
+[source,lang:default,decode:true]
+----
+# PUBLIC IP ADDRESS
+STATIC_ADDRESS=SERVER_PUBLIC_IP_ADDRESS 
+
+ex. STATIC_ADDRESS=222.222.111.111
+----
+
+[[step-3---did-provider-configuration]]
+= Step 3 - DID Provider Configuration
+
+In the file **restcomm.conf**, go to the section 
+
+----
+# DID Provision provider variable declarations 
+PROVISION_PROVIDER='NX' # values: VI (VoipInnovation), BW (Bandwidth), NX (Nexmo), VB (Voxbone) 
+#Username and password for all supported DID provision providers 
+DID_LOGIN=' '
+DID_PASSWORD=' '
+# VoipInnovation Endpoint ID 
+DID_ENDPOINT='' 
+#Bandwidth SiteId and AccountId 
+DID_SITEID=''
+DID_ACCOUNTID=''  
+----
+
+Enter your account details as provided by your Telco Service Provider.
+
+'''''
+
+[[example-nexmo]]
+== Nexmo Example
+
+ if you were to use Nexmo, the configuration will be as follows:
+
+The DID_LOGIN will be your Nexmo API *key* and the DID_PASSWORD will be your Nexmo API *secret.* The leave the rest of the configuration as default
+
+----
+PROVISION_PROVIDER='NX'
+DID_LOGIN='XXXX'
+DID_PASSWORD='XXXX'
+----
+
+'''''
+
+* Save the restcomm.conf file
+* start restcomm by running the script $RESTCOMM_HOME/bin/restcomm**/start-restcomm.sh**
+
+'''''
+
+You must stop ($RESTCOMM_HOME/bin/restcomm**/stop-restcomm.sh**) and start ($RESTCOMM_HOME/bin/restcomm**/start-restcomm.sh** )restcomm after making changes to the restcomm.conf file.
+
+'''''
+
+ 

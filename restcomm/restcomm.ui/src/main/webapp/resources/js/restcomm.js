@@ -1,5 +1,4 @@
 var rcMod = angular.module('rcApp', [
-  'ngRoute',
   'rcApp.filters',
   'rcApp.services',
   'rcApp.directives',

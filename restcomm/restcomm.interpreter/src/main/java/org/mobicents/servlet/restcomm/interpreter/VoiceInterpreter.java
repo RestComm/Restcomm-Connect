@@ -277,6 +277,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(sendingEmail, ready));
         transitions.add(new Transition(sendingEmail, finished));
         transitions.add(new Transition(sendingEmail, finishDialing));
+        transitions.add(new Transition(checkingCache, caching));
+        transitions.add(new Transition(checkingCache, conferencing));
         transitions.add(new Transition(caching, finished));
         transitions.add(new Transition(caching, conferencing));
         transitions.add(new Transition(caching, finishConferencing));
@@ -620,6 +622,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                         if (!sender.equals(call)) {
                             removeDialBranch(message, sender);
+                            return;
                         } else {
                             fsm.transition(message, finishDialing);
                         }
@@ -781,20 +784,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
-                if (playWaitUrlPending && play.equals(verb.name())) {
-                    fsm.transition(message, conferencing);
+                //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+                if (playWaitUrlPending) {
+                    if (conferenceWaitUris == null)
+                        conferenceWaitUris = new ArrayList<URI>();
+                    URI waitUrl = response.get();
+                    conferenceWaitUris.add(waitUrl);
+                    final GetNextVerb next = GetNextVerb.instance();
+                    parser.tell(next, self());
                     return;
                 }
-                //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
-//                if (playWaitUrlPending) {
-//                    if (conferenceWaitUris == null)
-//                        conferenceWaitUris = new ArrayList<URI>();
-//                    URI waitUrl = response.get();
-//                    conferenceWaitUris.add(waitUrl);
-//                    final GetNextVerb next = GetNextVerb.instance();
-//                    parser.tell(next, self());
-//                    return;
-//                }
                 if (caching.equals(state) || checkingCache.equals(state)) {
                     if (play.equals(verb.name()) || say.equals(verb.name())) {
                         fsm.transition(message, playing);
@@ -823,7 +822,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             isParserFailed = true;
             fsm.transition(message, hangingUp);
         } else if (Tag.class.equals(klass)) {
-            // final Tag verb = (Tag) message;
             verb = (Tag) message;
             if (playWaitUrlPending) {
                 if (!(play.equals(verb.name()) || say.equals(verb.name()))) {
@@ -876,12 +874,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 invalidVerb(verb);
             }
         } else if (End.class.equals(klass)) {
-            //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
-//            if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
-//                playWaitUrl(conferenceWaitUris, self());
-//                playWaitUrlPending = false;
-//                return;
-//            }
+//            Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+            if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
+                fsm.transition(conferenceWaitUris, conferencing);
+                return;
+            }
             if (callState.equals(CallStateChanged.State.COMPLETED)) {
                 fsm.transition(message, finished);
             } else {
@@ -2272,9 +2269,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (message instanceof DiskCacheResponse) {
-                URI waitUrl = ((DiskCacheResponse)message).get();
-                playWaitUrl(waitUrl, self());
+            if (message instanceof List<?>) {
+                List<URI> waitUrls = (List<URI>) message;
+                playWaitUrl(waitUrls, self());
                 playWaitUrlPending = false;
                 return;
             }
@@ -2306,7 +2303,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (logger.isInfoEnabled()) {
-                logger.info("At conferencing state, playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+                logger.info("At conferencing, state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
             }
             if (playMusicForConference && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter

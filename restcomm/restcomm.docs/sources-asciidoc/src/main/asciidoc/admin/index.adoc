@@ -1,0 +1,14 @@
+= Restcomm Administration Interface
+
+The Restcomm Administration Interface allows you to interact visually instead of using the following REST APIs below. 
+Please read <<Restcomm - Overview Admin User Interface.adoc#adminUI,Restcomm Admin User Interface Overview>> for understanding how to interact with the Restcomm platform
+
+* <<account-api.adoc#account,Restcomm API – Account>>
+* <<Restcomm - Multi-tenancy and Managing Sub-Accounts.adoc#restcomm-rest-api,Multi-tenancy and Managing Sub-Accounts>>
+* <<applications-api.adoc#applications,Restcomm API – Applications>>
+* <<available-phone-numbers-api.adoc#available-phone-numbers,Restcomm API – AvailablePhoneNumbers>>
+* <<clients-api.adoc#clients,Restcomm API – Clients>>
+* <<incoming-phone-numbers-api.adoc#incoming-phone-numbers,Restcomm API – IncomingPhoneNumbers>>
+* <<recordings-api.adoc#recordings,Restcomm API – Recordings>>
+* <<transcriptions-api.adoc#transcriptions,Restcomm API – Transcriptions>>
+* <<usage-records-api.adoc#records,Restcomm API – Usage Records>>
