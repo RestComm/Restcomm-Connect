@@ -154,6 +154,11 @@ public class MybatisQueueDao implements QueueDao {
         byte[] binaryData = toBytesArray(members);
         queue = queue.setQueue(binaryData);
         updateQueue(namespace + "updateQueueBytes", queue);
+        if (members.size() > 0) {
+            queue = queue.setCurrentSize(members.size());
+            updateQueue(namespace + "updateQueue", queue);
+        }
+
     }
 
     @Override
