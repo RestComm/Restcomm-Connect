@@ -17,26 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.entities;
+package org.mobicents.servlet.restcomm.dao;
 
 import java.util.List;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.mobicents.servlet.restcomm.entities.Queue;
+import org.mobicents.servlet.restcomm.entities.QueueFilter;
+import org.mobicents.servlet.restcomm.entities.QueueRecord;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
-@NotThreadSafe
-public final class MemberList {
-    private List<Member> members;
+public interface QueueDao {
 
-    public MemberList(final List<Member> members) {
-        super();
-        this.members = members;
-    }
-
-    public List<Member> getMembers() {
-        return members;
-    }
-
+    Queue getQueue(Sid sid);
+    List<Queue> getQueues(QueueFilter filer);
+    void addQueue(Queue queue);
+    void removeQueue(Sid sid);
+    void updateQueue(Queue queue);
+    Queue getQueueByFriendlyName(String friendlyName);
+    void setQueueBytes(java.util.Queue<QueueRecord> members,Queue queue);
+    java.util.Queue<QueueRecord> getQueueBytes(Sid sid);
+    int getTotalQueueByAccount(QueueFilter filter);
 }

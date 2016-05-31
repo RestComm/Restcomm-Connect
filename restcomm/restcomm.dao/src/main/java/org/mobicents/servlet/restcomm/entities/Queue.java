@@ -24,6 +24,8 @@ import java.net.URI;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
+import com.cedarsoftware.util.io.JsonReader;
+
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
@@ -36,10 +38,13 @@ public class Queue {
     private final Integer averageWaitTime;
     private final Integer currentSize;
     private final Integer maxSize;
+    private final Sid accountSid;
     private final URI uri;
+    private final byte[] queue;
 
     public Queue(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
-            final Integer averageWaitTime, final Integer currentSize, final Integer maxSize, final URI uri) {
+            final Integer averageWaitTime, final Integer currentSize, final Integer maxSize, final Sid accountSid,
+            final URI uri) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -48,7 +53,39 @@ public class Queue {
         this.averageWaitTime = averageWaitTime;
         this.currentSize = currentSize;
         this.maxSize = maxSize;
+        this.accountSid = accountSid;
         this.uri = uri;
+        this.queue = null;
+    }
+
+    public Queue(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
+            final Integer currentSize, final Integer maxSize, final Sid accountSid, final URI uri) {
+        super();
+        this.sid = sid;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
+        this.friendlyName = friendlyName;
+        this.currentSize = currentSize;
+        this.maxSize = maxSize;
+        this.accountSid = accountSid;
+        this.uri = uri;
+        this.queue = null;
+        this.averageWaitTime = 0;
+    }
+
+    public Queue(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
+            final Integer currentSize, final Integer maxSize, final Sid accountSid, final URI uri, final byte[] queue) {
+        super();
+        this.sid = sid;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
+        this.friendlyName = friendlyName;
+        this.averageWaitTime = 0;
+        this.currentSize = currentSize;
+        this.maxSize = maxSize;
+        this.accountSid = accountSid;
+        this.uri = uri;
+        this.queue = queue;
     }
 
     public Sid getSid() {
@@ -79,8 +116,41 @@ public class Queue {
         return maxSize;
     }
 
+    public Sid getAccountSid() {
+        return accountSid;
+    }
+
     public URI getUri() {
         return uri;
+    }
+
+    public byte[] getQueue() {
+        return queue;
+    }
+
+    public Queue setQueue(final byte[] queue) {
+
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri, queue);
+    }
+
+    public Queue setFriendlyName(final String friendlyName) {
+
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri);
+    }
+
+    public Queue setMaxSize(final Integer maxSize) {
+
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri);
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Queue<QueueRecord> toCollectionFromBytes() {
+        java.util.Queue<QueueRecord> queue = new java.util.LinkedList<QueueRecord>();
+        if (this.queue != null) {
+            queue = (java.util.Queue<QueueRecord>) JsonReader.jsonToJava(new String(this.queue));
+            System.out.println(queue.element());
+        }
+        return (queue != null) ? queue : new java.util.LinkedList<QueueRecord>();
     }
 
 }

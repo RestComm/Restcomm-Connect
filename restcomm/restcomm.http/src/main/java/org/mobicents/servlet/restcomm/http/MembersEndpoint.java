@@ -25,11 +25,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -46,8 +48,11 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.QueueDao;
 import org.mobicents.servlet.restcomm.entities.Member;
 import org.mobicents.servlet.restcomm.entities.MemberList;
+import org.mobicents.servlet.restcomm.entities.Queue;
+import org.mobicents.servlet.restcomm.entities.QueueRecord;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.MemberConverter;
@@ -62,7 +67,7 @@ import com.thoughtworks.xstream.XStream;
  */
 
 @NotThreadSafe
-public abstract class MembersEndpoint extends AbstractEndpoint {
+public abstract class MembersEndpoint extends SecuredEndpoint {
     @Context
     private ServletContext context;
 
@@ -71,6 +76,7 @@ public abstract class MembersEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private String instanceId;
     private AccountsDao accountsDao;
+    private QueueDao queueDao;
     private DaoManager daos;
 
     public MembersEndpoint() {
@@ -83,6 +89,7 @@ public abstract class MembersEndpoint extends AbstractEndpoint {
         configuration = configuration.subset("runtime-settings");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         accountsDao = daos.getAccountsDao();
+        queueDao = daos.getQueueDao();
         super.init(configuration);
         builder = new GsonBuilder();
         builder.registerTypeAdapter(Member.class, new MemberConverter(configuration));
@@ -97,41 +104,22 @@ public abstract class MembersEndpoint extends AbstractEndpoint {
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
     }
 
-    protected Response getQueueMembers(final String accountSid, final String queueSid, UriInfo info, MediaType responseType) {
-        try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Members");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
-        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
-                Integer.valueOf(0));
-        final Member member1 = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
-                Integer.valueOf(0));
-        List<Member> memberList = new ArrayList<Member>();
-        memberList.add(member);
-        memberList.add(member1);
-        final RestCommResponse response = new RestCommResponse(new MemberList(memberList));
-        if (APPLICATION_XML_TYPE == responseType) {
-
-            return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(response), APPLICATION_JSON).build();
-        } else {
-            return null;
-        }
-    }
-
     protected Response getFrontQueueMember(final String accountSid, final String queueSid, UriInfo info,
             MediaType responseType) {
+        java.util.Queue<QueueRecord> queueList = new java.util.LinkedList<QueueRecord>();
         try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Members");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Members");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
-                Integer.valueOf(0));
+        final Queue queue = queueDao.getQueue(new Sid(queueSid));
+        if (queue == null) {
+            return status(NOT_FOUND).build();
+        }
+        queueList = queue.toCollectionFromBytes();
+        QueueRecord record = queueList.poll();
+        queueDao.setQueueBytes(queueList, queue);
+        Member member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, 0);
         final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
@@ -143,17 +131,36 @@ public abstract class MembersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getQueueMember(final String accountSid, final String queueSid, final String callSid, UriInfo info,
+    protected Response getQueueMember(final String accountSid, final String queueSid, String callSid, UriInfo info,
             MediaType responseType) {
-
+        java.util.Queue<QueueRecord> queueList = new java.util.LinkedList<QueueRecord>();
         try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Members");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Members");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
-                Integer.valueOf(0));
+        final Queue queue = queueDao.getQueue(new Sid(queueSid));
+        if (queue == null) {
+            return status(NOT_FOUND).build();
+        }
+        queueList = queue.toCollectionFromBytes();
+        Member member = null;
+        boolean found = false;
+        int position = 0;
+        for (QueueRecord record : queueList) {
+            if (record.getCallerSid().equals(callSid)) {
+                member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, position);
+                queueList.remove(record);
+                found = true;
+                break;
+            }
+            ++position;
+
+        }
+        if (!found) {
+            return status(BAD_REQUEST).build();
+        }
+        queueDao.setQueueBytes(queueList, queue);
         final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
@@ -165,17 +172,54 @@ public abstract class MembersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response dequeue(final String accountSid, final String callSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
-
+    protected Response getQueueMembers(final String accountSid, final String queueSid, UriInfo info, MediaType responseType) {
+        java.util.Queue<QueueRecord> queueList = new java.util.LinkedList<QueueRecord>();
         try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Members");
-            secureLevelControl(daos.getAccountsDao(), accountSid, null);
+            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Members");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
-        final Member member = new Member(new Sid(UUID.randomUUID().toString()), new DateTime(), Integer.valueOf(0),
-                Integer.valueOf(0));
+        final Queue queue = queueDao.getQueue(new Sid(queueSid));
+        if (queue == null) {
+            return status(NOT_FOUND).build();
+        }
+        queueList = queue.toCollectionFromBytes();
+        final List<Member> members = new ArrayList<Member>();
+        Member member = null;
+        int position = 0;
+        for (QueueRecord record : queueList) {
+            member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, position++);
+            members.add(member);
+        }
+
+        if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new MemberList(members));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(members), APPLICATION_JSON).build();
+        } else {
+            return null;
+        }
+    }
+
+    protected Response enqueue(final String accountSid, final String queueSid, final String callSid,
+            final MultivaluedMap<String, String> data, final MediaType responseType) {
+
+        java.util.Queue<QueueRecord> queueList = new java.util.LinkedList<QueueRecord>();
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Members");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Queue queue = queueDao.getQueue(new Sid(queueSid));
+        if (queue == null) {
+            return status(NOT_FOUND).build();
+        }
+        queueList = queue.toCollectionFromBytes();
+        QueueRecord record = new QueueRecord(new Sid(callSid).toString(), new Date());
+        queueList.offer(record);
+        queueDao.setQueueBytes(queueList, queue);
+        Member member = new Member(new Sid(callSid), new DateTime(), 0, queueList.size());
         final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 

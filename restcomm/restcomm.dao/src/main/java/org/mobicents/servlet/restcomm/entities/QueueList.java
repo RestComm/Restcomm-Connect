@@ -39,8 +39,4 @@ public final class QueueList {
         return queues;
     }
 
-    public void setQueues(List<Queue> queues) {
-        this.queues = queues;
-    }
-
 }

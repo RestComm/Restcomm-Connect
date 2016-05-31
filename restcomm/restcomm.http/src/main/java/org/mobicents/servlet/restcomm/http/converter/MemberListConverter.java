@@ -39,7 +39,7 @@ public final class MemberListConverter extends AbstractConverter {
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(final Class klass) {
-        return MemberListConverter.class.equals(klass);
+        return MemberList.class.equals(klass);
     }
 
     @Override

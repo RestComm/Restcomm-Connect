@@ -73,17 +73,14 @@
 			<artifactId>hsqldb</artifactId>
 		</dependency>
 
-<!-- 		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-s3</artifactId>
-			<version>${aws.sdk.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.httpcomponents</groupId>
-					<artifactId>httpclient</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency> -->
+		<dependency>
+			<groupId>com.cedarsoftware</groupId>
+			<artifactId>json-io</artifactId>
+			<version>4.4.0</version>
+		</dependency>
+		<!-- <dependency> <groupId>com.amazonaws</groupId> <artifactId>aws-java-sdk-s3</artifactId> 
+			<version>${aws.sdk.version}</version> <exclusions> <exclusion> <groupId>org.apache.httpcomponents</groupId> 
+			<artifactId>httpclient</artifactId> </exclusion> </exclusions> </dependency> -->
 
 	</dependencies>
 </project>

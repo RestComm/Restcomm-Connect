@@ -19,24 +19,44 @@
  */
 package org.mobicents.servlet.restcomm.entities;
 
-import java.util.List;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
-
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
-@NotThreadSafe
-public final class MemberList {
-    private List<Member> members;
+public class QueueFilter {
 
-    public MemberList(final List<Member> members) {
-        super();
-        this.members = members;
+    private String accountSid;
+    private int offset;
+    private int limit;
+
+    public String getAccountSid() {
+        return accountSid;
     }
 
-    public List<Member> getMembers() {
-        return members;
+    public QueueFilter(String accountSid, int offset, int limit) {
+        super();
+        this.accountSid = accountSid;
+        this.offset = offset;
+        this.limit = limit;
+    }
+
+    public void setAccountSid(String accountSid) {
+        this.accountSid = accountSid;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
     }
 
 }

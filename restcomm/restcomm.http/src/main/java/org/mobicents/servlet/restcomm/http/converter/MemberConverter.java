@@ -48,7 +48,7 @@ public final class MemberConverter extends AbstractConverter implements JsonSeri
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(Class klass) {
-        return MemberConverter.class.equals(klass);
+        return Member.class.equals(klass);
     }
 
     @Override

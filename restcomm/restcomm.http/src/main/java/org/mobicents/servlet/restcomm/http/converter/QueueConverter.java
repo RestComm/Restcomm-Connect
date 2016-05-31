@@ -45,7 +45,7 @@ public final class QueueConverter extends AbstractConverter implements JsonSeria
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(Class klass) {
-        return QueueConverter.class.equals(klass);
+        return Queue.class.equals(klass);
     }
 
     @Override

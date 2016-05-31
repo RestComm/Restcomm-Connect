@@ -19,24 +19,40 @@
  */
 package org.mobicents.servlet.restcomm.entities;
 
-import java.util.List;
+import java.util.Date;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
+import org.joda.time.DateTime;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
-@NotThreadSafe
-public final class MemberList {
-    private List<Member> members;
+@JsonSerialize
+public class QueueRecord {
 
-    public MemberList(final List<Member> members) {
+    private final String callerSid;
+    private final Date dateOfEnqueued;
+
+    public QueueRecord(String callerSid, Date dateOfEnqueued) {
         super();
-        this.members = members;
+        this.callerSid = callerSid;
+        this.dateOfEnqueued = dateOfEnqueued;
     }
 
-    public List<Member> getMembers() {
-        return members;
+    public String getCallerSid() {
+        return callerSid;
+    }
+
+    public Date getDateOfEnqueued() {
+        return dateOfEnqueued;
+    }
+
+    public DateTime toDateTime() {
+        if (dateOfEnqueued != null) {
+            return new DateTime(dateOfEnqueued);
+        }
+        return null;
     }
 
 }
