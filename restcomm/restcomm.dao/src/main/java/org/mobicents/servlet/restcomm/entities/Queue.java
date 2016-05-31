@@ -133,6 +133,10 @@ public class Queue {
         return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri, queue);
     }
 
+    public Queue setCurrentSize(final Integer currentSize) {
+
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri, queue);
+    }
     public Queue setFriendlyName(final String friendlyName) {
 
         return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri);

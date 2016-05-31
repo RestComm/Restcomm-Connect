@@ -93,7 +93,7 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
         super.init(configuration);
         builder = new GsonBuilder();
         builder.registerTypeAdapter(Member.class, new MemberConverter(configuration));
-        builder.registerTypeAdapter(MemberList.class, new MemberListConverter(configuration));
+        //builder.registerTypeAdapter(MemberList.class, new MemberListConverter(configuration));
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
