@@ -6,7 +6,6 @@ import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
 import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * @author Orestis Tsakiridis
@@ -19,7 +18,7 @@ public class SecuredRestService extends RestService {
         AccountProvider accountProvider = AccountProvider.getInstance();
         // if it is secured by keycloak try to create a deployment too
         if (config.keycloakEnabled()) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
         String authorizationHeader = request.getHeader("Authorization");
         userIdentityContext = new UserIdentityContext(authorizationHeader, accountProvider);

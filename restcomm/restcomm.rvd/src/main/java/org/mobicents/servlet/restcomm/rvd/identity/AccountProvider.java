@@ -73,7 +73,8 @@ public class AccountProvider {
                     String accountJson = EntityUtils.toString(entity);
                     Gson gson = new Gson();
                     RestcommAccountInfoResponse accountResponse = gson.fromJson(accountJson, RestcommAccountInfoResponse.class);
-                    return accountResponse;
+                    if ("active".equals(accountResponse.getStatus()))
+                        return accountResponse;
                 }
             }
         } catch (IOException e) {
