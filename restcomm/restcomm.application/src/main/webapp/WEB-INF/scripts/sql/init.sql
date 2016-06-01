@@ -133,7 +133,8 @@ CREATE TABLE "restcomm_call_detail_records" (
 "ring_duration" INT, 
 "muted" BOOLEAN, 
 "start_conference_on_enter" BOOLEAN,
-"end_conference_on_exit" BOOLEAN
+"end_conference_on_exit" BOOLEAN,
+"on_hold" BOOLEAN
 );
 
 CREATE TABLE "restcomm_conference_detail_records" (
