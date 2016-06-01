@@ -144,7 +144,8 @@ ring_duration INT,
 instanceid VARCHAR(255), 
 muted BOOLEAN, 
 start_conference_on_enter BOOLEAN,
-end_conference_on_exit BOOLEAN
+end_conference_on_exit BOOLEAN,
+on_hold BOOLEAN
 );
 
 CREATE TABLE restcomm_conference_detail_records (
