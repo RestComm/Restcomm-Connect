@@ -62,9 +62,9 @@ There is two different ways to install Restcomm Connect. Either through Docker o
 
 === High Availability and Load Balancing
 
-* <<Restcomm - Configuring Load-balancer.adoc#load-balancer,Configuring Load-balancer>>
-* <<Restcomm - Using a Single Mysql Database for 2 Restcomm Servers.adoc#mysql,Using a Single Mysql Database for 2 Restcomm Connect Servers>>
-* <<Restcomm - Single RVD Workspace for two Restcomm Instances.adoc#rvd,Single RVD Workspace for two Restcomm Instances.adoc>>
+* <<ha/Restcomm - Configuring Load-balancer.adoc#load-balancer,Configuring Load-balancer>>
+* <<ha/Restcomm - Using a Single Mysql Database for 2 Restcomm Servers.adoc#mysql,Using a Single Mysql Database for 2 Restcomm Connect Servers>>
+* <<ha/Restcomm - Single RVD Workspace for two Restcomm Instances.adoc#rvd,Single RVD Workspace for two Restcomm Instances>>
 
 == Contributor Resources
 
