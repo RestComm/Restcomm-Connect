@@ -1,0 +1,1 @@
+Changelog scripts are depreciated. Use upgrade script at $RESTCOMM_HOME/bin/restcomm/upgrade.sh, see http://documentation.telestax.com/connect/configuration/How%20to%20use%20Mysql%20schema%20upgrade%20scripts.html#mysql-schema-upgrade

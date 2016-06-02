@@ -17,7 +17,7 @@ For example#, the following will say a short message#, and then record the calle
 
 RCML is similar to HTML. Only one RCML document is rendered to the caller at once#, but many documents can be linked together to build complex interactive voice applications.
 
-Calls from a Twilio number to an outside number are controlled using RCML in the same manner as incoming calls. The initial URL for the call is provided as a parameter to the Twilio REST API request you make to initiate the call.
+Calls from a Restcomm  number to an outside number are controlled using RCML in the same manner as incoming calls. The initial URL for the call is provided as a parameter to the Restcomm  REST API request you make to initiate the call.
 
 == The RCML Verbs
 
@@ -34,13 +34,13 @@ You can use different combinations of the verbs below to create all kinds of int
 * <<pause-rcml.adoc#pause,Pause - Wait before executing more instructions>>
 * <<play-rcml.adoc#play,Play - Play an audio file for the caller>>
 * <<record-rcml.adoc#record,Record - Record the caller's voice>>
-* <<redirect-rcml.adoc#redirect,Redirect - Redirect call flow to a different TwiML document.>>
+* <<redirect-rcml.adoc#redirect,Redirect - Redirect call flow to a different RCML document.>>
 * <<reject-rcml.adoc#reject,Reject - Decline an incoming call without being billed.>>
 * <<say-rcml.adoc#say,Say - Read text to the caller>>
 * <<sms-rcml.adoc#sms,SMS - Send an SMS message during a phone call>>
 * <<ussd-collect-rcml.adoc#ussd-collect,USSD Collect - Collect USSD>>
 
-== How Twilio Interacts with Your Application
+== How Restcomm  Interacts with Your Application
 
 * <<request-rcml.adoc#,Requests>>
 * <<response-rcml.adoc#,Responses>>
