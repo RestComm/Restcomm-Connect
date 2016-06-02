@@ -247,7 +247,7 @@ public final class CallManager extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
-                return new Call(sipFactory, msControllerFactory.provideCallController());
+                return new Call(sipFactory, msControllerFactory.provideCallController(), configuration);
             }
         }));
     }
