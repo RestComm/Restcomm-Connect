@@ -191,8 +191,10 @@ public final class Call extends UntypedActor {
 
     // Runtime Setting
     private Configuration runtimeSettings;
+    private Configuration configuration;
+    private boolean disableSdpPatchingOnUpdatingMediaSession;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController) {
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
         final ActorRef source = self();
 
@@ -290,6 +292,8 @@ public final class Call extends UntypedActor {
         // Media Group runtime stuff
         this.liveCallModification = false;
         this.recording = false;
+        this.configuration = configuration;
+        this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
     }
 
     private boolean is(State state) {
@@ -1061,10 +1065,21 @@ public final class Call extends UntypedActor {
                 }
             }
 
+            String answer = null;
+            if (!disableSdpPatchingOnUpdatingMediaSession) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Will patch SDP answer from 200 OK received with the external IP Address from Response on updating media session");
+                }
+                final String externalIp = response.getInitialRemoteAddr();
+                final byte[] sdp = response.getRawContent();
+                answer = SdpUtils.patch(response.getContentType(), sdp, externalIp);
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("SDP Patching on updating media session is disabled");
+                }
+                answer = SdpUtils.getSdp(response.getContentType(), response.getRawContent());
+            }
 
-            final String externalIp = response.getInitialRemoteAddr();
-            final byte[] sdp = response.getRawContent();
-            final String answer = SdpUtils.patch(response.getContentType(), sdp, externalIp);
             final UpdateMediaSession update = new UpdateMediaSession(answer);
             msController.tell(update, source);
         }
