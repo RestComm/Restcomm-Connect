@@ -117,9 +117,15 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         }
         queueList = queue.toCollectionFromBytes();
-        QueueRecord record = queueList.poll();
-        queueDao.setQueueBytes(queueList, queue);
-        Member member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, 0);
+        QueueRecord record = queueList.peek();
+      //  queueDao.setQueueBytes(queueList, queue);
+        Member member = null;
+        
+        if(record!=null){
+            member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, 0); 
+        }else{
+            return null;
+        }
         final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
@@ -150,7 +156,7 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
         for (QueueRecord record : queueList) {
             if (record.getCallerSid().equals(callSid)) {
                 member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, position);
-                queueList.remove(record);
+             //   queueList.remove(record);
                 found = true;
                 break;
             }
@@ -160,7 +166,7 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
         if (!found) {
             return status(BAD_REQUEST).build();
         }
-        queueDao.setQueueBytes(queueList, queue);
+       // queueDao.setQueueBytes(queueList, queue);
         final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
@@ -197,6 +203,35 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(members), APPLICATION_JSON).build();
+        } else {
+            return null;
+        }
+    }
+    
+    protected Response dequeue(final String accountSid, final String queueSid, final String callSid,
+            final MultivaluedMap<String, String> data, final MediaType responseType) {
+
+        java.util.Queue<QueueRecord> queueList = new java.util.LinkedList<QueueRecord>();
+        try {
+            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Members");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
+        }
+        final Queue queue = queueDao.getQueue(new Sid(queueSid));
+        if (queue == null) {
+            return status(NOT_FOUND).build();
+        }
+        queueList = queue.toCollectionFromBytes();
+        QueueRecord record = new QueueRecord(new Sid(callSid).toString(), new Date());
+        queueList.offer(record);
+        queueDao.setQueueBytes(queueList, queue);
+        Member member = new Member(new Sid(callSid), new DateTime(), 0, queueList.size());
+        final RestCommResponse response = new RestCommResponse(member);
+        if (APPLICATION_XML_TYPE == responseType) {
+
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(response), APPLICATION_JSON).build();
         } else {
             return null;
         }
