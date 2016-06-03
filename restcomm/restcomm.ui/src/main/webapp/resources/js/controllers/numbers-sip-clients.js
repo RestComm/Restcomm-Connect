@@ -28,7 +28,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $modal, $dialog, Ses
 
   $scope.showRegisterSIPClientModal = function () {
     var registerSIPClientModal = $modal.open({
-      controller: ClientDetailsCtrl,
+      controller: 'ClientDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-register-sip-client.html',
       resolve: { localApps: function (rappService) { return rappService.refreshLocalApps();} }
