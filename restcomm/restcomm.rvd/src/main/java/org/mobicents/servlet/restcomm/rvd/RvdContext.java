@@ -14,6 +14,8 @@ public class RvdContext {
     protected WorkspaceStorage workspaceStorage;
 
     public RvdContext(HttpServletRequest request,  ServletContext servletContext) {
+        if (request == null || servletContext == null)
+            throw new IllegalArgumentException();
         this.settings = RvdConfiguration.getInstance();
         this.marshaler = new ModelMarshaler();
         this.workspaceStorage = new WorkspaceStorage(settings.getWorkspaceBasePath(), marshaler);

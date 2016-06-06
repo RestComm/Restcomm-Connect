@@ -73,6 +73,14 @@
 		<!-- Used only for testing. !!! Don't enable this for production -->
 		<send-trying-for-initial-requests>true</send-trying-for-initial-requests>
 
+		<!--Play background music for conference rooms with 1 participant even if startConference=true? Music will stop after the second participant joins-->
+		<!--Default value: false -->
+		<play-music-for-conference>false</play-music-for-conference>
+
+		<!-- Set to true so Restcomm won't patch the SDP answer answered received trying to cope with NAT -->
+		<!-- Default value: false -->
+		<disable-sdp-patching-on-updating-mediasession>true</disable-sdp-patching-on-updating-mediasession>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>

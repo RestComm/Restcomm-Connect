@@ -465,7 +465,7 @@
          }
          CallDetailRecord callRecord = records.getCallDetailRecord((Sid) linkedRequest.getSession().getAttribute(CDR_SID));
 
-         if (response.getContent() != null) {
+         if (response.getRawContent() != null && response.getRawContent().length > 0 ) {
              final byte[] sdp = response.getRawContent();
              String offer = null;
              if (response.getContentType().equalsIgnoreCase("application/sdp") && patchForNat) {
