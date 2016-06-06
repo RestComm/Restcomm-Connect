@@ -85,6 +85,10 @@
 		<!--Default value: false -->
 		<play-music-for-conference>false</play-music-for-conference>
 
+		<!-- Set to true so Restcomm won't patch the SDP answer answered received trying to cope with NAT -->
+		<!-- Default value: false -->
+		<disable-sdp-patching-on-updating-mediasession>false</disable-sdp-patching-on-updating-mediasession>
+
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
 			<outbound-proxy-user></outbound-proxy-user>
