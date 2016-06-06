@@ -104,7 +104,7 @@ LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
 source $BASEDIR/restcomm.conf
-source $BASEDIR/proxy.conf
+source $BASEDIR/advanced.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
