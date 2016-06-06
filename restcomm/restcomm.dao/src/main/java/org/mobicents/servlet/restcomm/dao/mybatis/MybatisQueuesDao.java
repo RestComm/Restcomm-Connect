@@ -38,7 +38,7 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.dao.QueueDao;
+import org.mobicents.servlet.restcomm.dao.QueuesDao;
 import org.mobicents.servlet.restcomm.entities.Queue;
 import org.mobicents.servlet.restcomm.entities.QueueFilter;
 import org.mobicents.servlet.restcomm.entities.QueueRecord;
@@ -50,12 +50,12 @@ import com.cedarsoftware.util.io.JsonWriter;
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
-public class MybatisQueueDao implements QueueDao {
+public class MybatisQueuesDao implements QueuesDao {
 
-    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.QueueDao.";
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.QueuesDao.";
     private final SqlSessionFactory sessions;
 
-    public MybatisQueueDao(final SqlSessionFactory sessions) {
+    public MybatisQueuesDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
     }
@@ -107,6 +107,11 @@ public class MybatisQueueDao implements QueueDao {
         } finally {
             session.close();
         }
+    }
+
+    @Override
+    public void removeQueues(Sid sid) {
+        removeQueue(namespace + "removeQueues", sid);
     }
 
     @Override
@@ -184,7 +189,7 @@ public class MybatisQueueDao implements QueueDao {
         final URI uri = readUri(map.get("uri"));
         final byte[] queue = readBlobData(map.get("queue"));
 
-        return new Queue(sid, dateCreated, dateUpdated, friendlyName, currentSize, maxSize, accountSid, uri, queue);
+        return new Queue(sid, dateCreated, dateUpdated, friendlyName, 0, currentSize, maxSize, accountSid, uri, queue);
     }
 
     private Map<String, Object> toMap(final Queue queue) {

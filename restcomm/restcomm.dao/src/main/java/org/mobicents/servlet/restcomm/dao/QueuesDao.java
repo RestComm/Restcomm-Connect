@@ -29,12 +29,13 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
-public interface QueueDao {
+public interface QueuesDao {
 
     Queue getQueue(Sid sid);
-    List<Queue> getQueues(QueueFilter filer);
+    List<Queue> getQueues(QueueFilter filter);
     void addQueue(Queue queue);
     void removeQueue(Sid sid);
+    void removeQueues(Sid sid);
     void updateQueue(Queue queue);
     Queue getQueueByFriendlyName(String friendlyName);
     void setQueueBytes(java.util.Queue<QueueRecord> members,Queue queue);

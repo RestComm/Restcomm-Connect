@@ -40,7 +40,7 @@ import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
-import org.mobicents.servlet.restcomm.dao.QueueDao;
+import org.mobicents.servlet.restcomm.dao.QueuesDao;
 import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.dao.RegistrationsDao;
 import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
@@ -77,7 +77,7 @@ public final class MybatisDaoManager implements DaoManager {
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
     private InstanceIdDao instanceIdDao;
-    private QueueDao queueDao;
+    private QueuesDao queuesDao;
 
     public MybatisDaoManager() {
         super();
@@ -181,8 +181,8 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
-    public QueueDao getQueueDao() {
-        return queueDao;
+    public QueuesDao getQueuesDao() {
+        return queuesDao;
     }
 
     @Override
@@ -253,7 +253,7 @@ public final class MybatisDaoManager implements DaoManager {
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
-        queueDao = new MybatisQueueDao(sessions);
+        queuesDao = new MybatisQueuesDao(sessions);
     }
 
 }

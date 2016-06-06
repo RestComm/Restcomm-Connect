@@ -48,7 +48,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.QueueDao;
+import org.mobicents.servlet.restcomm.dao.QueuesDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Queue;
 import org.mobicents.servlet.restcomm.entities.QueueFilter;
@@ -79,7 +79,7 @@ public abstract class QueuesEndpoint extends SecuredEndpoint {
     private XStream xstream;
     private String instanceId;
     private AccountsDao accountsDao;
-    private QueueDao queueDao;
+    private QueuesDao queueDao;
     private DaoManager daos;
     private QueueListConverter listConverter;
 

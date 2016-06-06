@@ -23,6 +23,7 @@ import java.net.URI;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Client.Builder;
 
 import com.cedarsoftware.util.io.JsonReader;
 
@@ -41,6 +42,7 @@ public class Queue {
     private final Sid accountSid;
     private final URI uri;
     private final byte[] queue;
+    private static final Integer AVERAGE_WAIT_TIME = 0;
 
     public Queue(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
             final Integer averageWaitTime, final Integer currentSize, final Integer maxSize, final Sid accountSid,
@@ -59,28 +61,14 @@ public class Queue {
     }
 
     public Queue(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
-            final Integer currentSize, final Integer maxSize, final Sid accountSid, final URI uri) {
+            final Integer averageWaitTime, final Integer currentSize, final Integer maxSize, final Sid accountSid,
+            final URI uri, final byte[] queue) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.friendlyName = friendlyName;
-        this.currentSize = currentSize;
-        this.maxSize = maxSize;
-        this.accountSid = accountSid;
-        this.uri = uri;
-        this.queue = null;
-        this.averageWaitTime = 0;
-    }
-
-    public Queue(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final String friendlyName,
-            final Integer currentSize, final Integer maxSize, final Sid accountSid, final URI uri, final byte[] queue) {
-        super();
-        this.sid = sid;
-        this.dateCreated = dateCreated;
-        this.dateUpdated = dateUpdated;
-        this.friendlyName = friendlyName;
-        this.averageWaitTime = 0;
+        this.averageWaitTime = averageWaitTime;
         this.currentSize = currentSize;
         this.maxSize = maxSize;
         this.accountSid = accountSid;
@@ -128,23 +116,32 @@ public class Queue {
         return queue;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public Queue setQueue(final byte[] queue) {
 
-        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri, queue);
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, AVERAGE_WAIT_TIME, currentSize, maxSize, accountSid,
+                uri, queue);
     }
 
     public Queue setCurrentSize(final Integer currentSize) {
 
-        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri, queue);
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, AVERAGE_WAIT_TIME, currentSize, maxSize, accountSid,
+                uri, queue);
     }
+
     public Queue setFriendlyName(final String friendlyName) {
 
-        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri);
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, AVERAGE_WAIT_TIME, currentSize, maxSize, accountSid,
+                uri);
     }
 
     public Queue setMaxSize(final Integer maxSize) {
 
-        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, currentSize, maxSize, accountSid, uri);
+        return new Queue(sid, dateCreated, DateTime.now(), friendlyName, AVERAGE_WAIT_TIME, currentSize, maxSize, accountSid,
+                uri);
     }
 
     @SuppressWarnings("unchecked")
@@ -157,4 +154,56 @@ public class Queue {
         return (queue != null) ? queue : new java.util.LinkedList<QueueRecord>();
     }
 
+    public static final class Builder {
+        private Sid sid;
+        private String friendlyName;
+        private Integer averageWaitTime;
+        private Integer currentSize;
+        private Integer maxSize;
+        private Sid accountSid;
+        private URI uri;
+        private byte[] queue;
+
+        private Builder() {
+            super();
+        }
+
+        public Queue build() {
+            final DateTime now = DateTime.now();
+            return new Queue(sid, now, now, friendlyName, averageWaitTime, currentSize, maxSize, accountSid, uri, queue);
+        }
+
+        public void setSid(Sid sid) {
+            this.sid = sid;
+        }
+
+        public void setFriendlyName(String friendlyName) {
+            this.friendlyName = friendlyName;
+        }
+
+        public void setAverageWaitTime(Integer averageWaitTime) {
+            this.averageWaitTime = averageWaitTime;
+        }
+
+        public void setCurrentSize(Integer currentSize) {
+            this.currentSize = currentSize;
+        }
+
+        public void setMaxSize(Integer maxSize) {
+            this.maxSize = maxSize;
+        }
+
+        public void setAccountSid(Sid accountSid) {
+            this.accountSid = accountSid;
+        }
+
+        public void setUri(URI uri) {
+            this.uri = uri;
+        }
+
+        public void setQueue(byte[] queue) {
+            this.queue = queue;
+        }
+
+    }
 }

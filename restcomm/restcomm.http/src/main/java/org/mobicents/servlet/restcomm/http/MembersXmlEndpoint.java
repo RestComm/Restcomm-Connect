@@ -50,24 +50,28 @@ public class MembersXmlEndpoint extends MembersEndpoint {
         return getQueueMembers(accountSid, queueSid, info, APPLICATION_XML_TYPE);
     }
 
-    @Path("/Front")
-    @GET
-    public Response getFrontQueueMember(@PathParam("accountSid") final String accountSid,
-            @PathParam("queueSid") final String queueSid, @Context UriInfo info) {
-        return getFrontQueueMember(accountSid, queueSid, info, APPLICATION_XML_TYPE);
-    }
-
     @Path("/{callSid}")
     @GET
     public Response getQueueMember(@PathParam("accountSid") final String accountSid,
             @PathParam("queueSid") final String queueSid, @PathParam("callSid") final String callSid, @Context UriInfo info) {
-        return getQueueMember(accountSid, queueSid, callSid, info, APPLICATION_XML_TYPE);
+        if (callSid.equals("Front")) {
+            return getFrontQueueMember(accountSid, queueSid, info, APPLICATION_XML_TYPE);
+        } else {
+            return getQueueMember(accountSid, queueSid, callSid, info, APPLICATION_XML_TYPE);
+        }
     }
 
     @Path("/{callSid}")
     @POST
-    public Response enqueue(@PathParam("accountSid") final String accountSid,
-            @PathParam("queueSid") final String queueSid, @PathParam("callSid") final String callSid,final MultivaluedMap<String, String> data) {
-        return enqueue(accountSid, queueSid,callSid, data, APPLICATION_XML_TYPE);
+    public Response dequeue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
+            @PathParam("callSid") final String callSid, final MultivaluedMap<String, String> data) {
+        return dequeue(accountSid, queueSid, callSid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/enqueue/{callSid}")
+    @POST
+    public Response enqueue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
+            @PathParam("callSid") final String callSid, final MultivaluedMap<String, String> data) {
+        return enqueue(accountSid, queueSid, callSid, data, APPLICATION_XML_TYPE);
     }
 }

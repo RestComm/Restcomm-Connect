@@ -19,19 +19,25 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import static akka.pattern.Patterns.ask;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -47,8 +53,10 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
+import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.QueueDao;
+import org.mobicents.servlet.restcomm.dao.QueuesDao;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Member;
 import org.mobicents.servlet.restcomm.entities.MemberList;
 import org.mobicents.servlet.restcomm.entities.Queue;
@@ -57,10 +65,21 @@ import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.MemberConverter;
 import org.mobicents.servlet.restcomm.http.converter.MemberListConverter;
+import org.mobicents.servlet.restcomm.telephony.CallInfo;
+import org.mobicents.servlet.restcomm.telephony.CallResponse;
+import org.mobicents.servlet.restcomm.telephony.GetCall;
+import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
+import org.mobicents.servlet.restcomm.telephony.UpdateCallScript;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+
+import akka.actor.ActorRef;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author muhammad.bilal@gmail.com (Muhammad Bilal)
@@ -76,8 +95,9 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
     private XStream xstream;
     private String instanceId;
     private AccountsDao accountsDao;
-    private QueueDao queueDao;
+    private QueuesDao queueDao;
     private DaoManager daos;
+    private ActorRef callManager;
 
     public MembersEndpoint() {
         super();
@@ -87,13 +107,14 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
     public void init() {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
+        callManager = (ActorRef) context.getAttribute("org.mobicents.servlet.restcomm.telephony.CallManager");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         accountsDao = daos.getAccountsDao();
-        queueDao = daos.getQueueDao();
+        queueDao = daos.getQueuesDao();
         super.init(configuration);
         builder = new GsonBuilder();
         builder.registerTypeAdapter(Member.class, new MemberConverter(configuration));
-        //builder.registerTypeAdapter(MemberList.class, new MemberListConverter(configuration));
+        // builder.registerTypeAdapter(MemberList.class, new MemberListConverter(configuration));
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -118,12 +139,12 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
         }
         queueList = queue.toCollectionFromBytes();
         QueueRecord record = queueList.peek();
-      //  queueDao.setQueueBytes(queueList, queue);
+        // queueDao.setQueueBytes(queueList, queue);
         Member member = null;
-        
-        if(record!=null){
-            member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, 0); 
-        }else{
+
+        if (record != null) {
+            member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, 0);
+        } else {
             return null;
         }
         final RestCommResponse response = new RestCommResponse(member);
@@ -156,7 +177,7 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
         for (QueueRecord record : queueList) {
             if (record.getCallerSid().equals(callSid)) {
                 member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, position);
-             //   queueList.remove(record);
+                // queueList.remove(record);
                 found = true;
                 break;
             }
@@ -166,7 +187,7 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
         if (!found) {
             return status(BAD_REQUEST).build();
         }
-       // queueDao.setQueueBytes(queueList, queue);
+        // queueDao.setQueueBytes(queueList, queue);
         final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 
@@ -207,13 +228,14 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
             return null;
         }
     }
-    
+
+    @SuppressWarnings("unchecked")
     protected Response dequeue(final String accountSid, final String queueSid, final String callSid,
             final MultivaluedMap<String, String> data, final MediaType responseType) {
 
         java.util.Queue<QueueRecord> queueList = new java.util.LinkedList<QueueRecord>();
         try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Members");
+            secure(accountsDao.getAccount(accountSid), "RestComm:Update:Members");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -222,10 +244,95 @@ public abstract class MembersEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         }
         queueList = queue.toCollectionFromBytes();
-        QueueRecord record = new QueueRecord(new Sid(callSid).toString(), new Date());
-        queueList.offer(record);
+        QueueRecord record = null;
+        Member member = null;
+        if (queueList != null) {
+            if (callSid.equalsIgnoreCase("Front")) {
+                record = queueList.poll();
+            } else {
+                boolean found = false;
+                int position = 0;
+                for (QueueRecord rec : queueList) {
+                    if (rec.getCallerSid().equals(callSid)) {
+                        member = new Member(new Sid(rec.getCallerSid()), rec.toDateTime(), 0, position);
+                        queueList.remove(record);
+                        found = true;
+                        break;
+                    }
+                    ++position;
+
+                }
+                if (!found) {
+                    return status(BAD_REQUEST).build();
+                }
+            }
+        } else {
+            return status(BAD_REQUEST).build();
+        }
         queueDao.setQueueBytes(queueList, queue);
-        Member member = new Member(new Sid(callSid), new DateTime(), 0, queueList.size());
+
+        final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
+        CallDetailRecord cdr = null;
+        try {
+            cdr = dao.getCallDetailRecord(new Sid(callSid));
+
+            if (cdr != null) {
+                try {
+                    // secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
+                    secure(accountsDao.getAccount(accountSid), cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                } catch (final AuthorizationException exception) {
+                    return status(UNAUTHORIZED).build();
+                }
+            } else {
+                return Response.status(NOT_ACCEPTABLE).build();
+            }
+        } catch (Exception e) {
+            return status(BAD_REQUEST).build();
+        }
+
+        final String url = data.getFirst("Url");
+        String method = data.getFirst("Method");
+
+        if (method == null)
+            method = "POST";
+
+        String callPath = null;
+        final ActorRef call;
+        final CallInfo callInfo;
+        final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
+        try {
+            callPath = cdr.getCallPath();
+            Future<Object> future = (Future<Object>) ask(callManager, new GetCall(callPath), expires);
+            call = (ActorRef) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+
+            future = (Future<Object>) ask(call, new GetCallInfo(), expires);
+            CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
+                    Duration.create(10, TimeUnit.SECONDS));
+            callInfo = response.get();
+        } catch (Exception exception) {
+            return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+        }
+
+        if (url != null && call != null) {
+            try {
+                final String version = getApiVersion(data);
+                final URI uri = (new URL(url)).toURI();
+
+                // TODO need to check whether these parameter required or not
+                URI fallbackUri = null;
+                URI callbackUri = null;
+                final UpdateCallScript update = new UpdateCallScript(call, new Sid(accountSid), version, uri, method,
+                        fallbackUri, method, callbackUri, method, false);
+                callManager.tell(update, null);
+            } catch (Exception exception) {
+                return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
+            }
+        }
+        if (record != null) {
+            member = new Member(new Sid(record.getCallerSid()), record.toDateTime(), 0, 0);
+        } else {
+            return null;
+        }
         final RestCommResponse response = new RestCommResponse(member);
         if (APPLICATION_XML_TYPE == responseType) {
 

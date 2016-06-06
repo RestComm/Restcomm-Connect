@@ -42,7 +42,6 @@ public class MembersJsonEndpoint extends MembersEndpoint {
 
     public MembersJsonEndpoint() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
     @GET
@@ -70,7 +69,7 @@ public class MembersJsonEndpoint extends MembersEndpoint {
     }
     
 
-    @Path("/{callSid}")
+    @Path("/enqueue/{callSid}")
     @POST
     public Response enqueue(@PathParam("accountSid") final String accountSid,
             @PathParam("queueSid") final String queueSid, @PathParam("callSid") final String callSid,final MultivaluedMap<String, String> data) {
