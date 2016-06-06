@@ -10,6 +10,13 @@ configServerBeans() {
    		MSERVER_EXTERNAL_ADDRESS="\<null\/\>"
 	fi
 
+	#Check for Por Offset
+	if (( $PORT_OFFSET > 0 )); then
+		local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
+	fi
+	sed -i 's|<property name="port">.*</property>|<property name="port">'"${REMOTEMGCP}"'</property>|' $FILE
+
+
 	sed -e "s|<property name=\"bindAddress\">.*<\/property>|<property name=\"bindAddress\">$1<\/property>|" \
 	    -e "s|<property name=\"localBindAddress\">.*<\/property>|<property name=\"localBindAddress\">$1<\/property>|" \
 		-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MSERVER_EXTERNAL_ADDRESS</property>|" \
