@@ -58,6 +58,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   $scope.showAboutModal = function () {
     $modal.open({
       controller: AboutModalCtrl,
+      scope: $scope,
       windowClass: 'temp-modal-lg',
       templateUrl: 'modules/modals/modal-about.html'
     });
