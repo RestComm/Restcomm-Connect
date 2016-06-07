@@ -46,9 +46,6 @@
 		<if test="endTime != null">
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
-		<if test="onHold != null">
-			AND on_hold like #{onHold}
-		</if>
 	</select>
   
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
@@ -81,9 +78,6 @@
 
 		<if test="endTime != null">
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY) order by start_time
-		</if>
-		<if test="onHold != null">
-			AND on_hold like #{onHold}
 		</if>
 		
 		LIMIT #{limit} OFFSET #{offset}
