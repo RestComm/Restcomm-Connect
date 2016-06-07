@@ -15,27 +15,13 @@ RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
 
 ## Description: Configures Java Options for Application Server
 ## Parameters : none
-configJavaOpts() {
+configRCJavaOpts() {
 	FILE=$RESTCOMM_BIN/standalone.conf
-
-	# Find total available memory on the instance
-    TOTAL_MEM=$(free -m -t | grep 'Total:' | awk '{print $2}')
-    # get 70 percent of available memory
-    # need to use division by 1 for scale to be read
-    CHUNK_MEM=$(echo "scale=0; ($TOTAL_MEM * 0.7)/1" | bc -l)
-    # divide chunk memory into units of 64mb
-    MULTIPLIER=$(echo "scale=0; $CHUNK_MEM/64" | bc -l)
-    # use multiples of 64mb to know effective memory
-    FINAL_MEM=$(echo "$MULTIPLIER * 64" | bc -l)
-    MEM_UNIT='m'
-
-    RESTCOMM_OPTS="-Xms$FINAL_MEM$MEM_UNIT -Xmx$FINAL_MEM$MEM_UNIT -XX:MaxPermSize=256m -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
-
-	sed -e "/if \[ \"x\$JAVA_OPTS\" = \"x\" \]; then/ {
-		N; s|JAVA_OPTS=.*|JAVA_OPTS=\"$RESTCOMM_OPTS\"|
+    echo "RestComm java options with: $RC_JAVA_OPTS"
+    sed -e "/if \[ \"x\$JAVA_OPTS\" = \"x\" \]; then/ {
+		N; s|JAVA_OPTS=.*|JAVA_OPTS=\"$RC_JAVA_OPTS\"|
 	}" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
-	echo "Configured JVM for RestComm: $RESTCOMM_OPTS"
 }
 
 ## Description: Updates RestComm configuration file
@@ -386,7 +372,7 @@ fi
 
 # MAIN
 echo 'Configuring RestComm...'
-#configJavaOpts
+configRCJavaOpts
 configMobicentsProperties
 configRestcomm "$PUBLIC_IP"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
