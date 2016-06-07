@@ -9,6 +9,7 @@ import javax.sdp.MediaDescription;
 import javax.sdp.Origin;
 import javax.sdp.SdpException;
 import javax.sdp.SdpFactory;
+import javax.sdp.SdpParseException;
 import javax.sdp.SessionDescription;
 
 //import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
@@ -71,6 +72,27 @@ public class SdpUtils {
             patchedSdp = sdp.toString();
         }
         return patchedSdp;
+    }
+
+    public static String getSdp(final String contentType, final byte[] data) throws SdpParseException {
+        final String text = new String(data);
+        String sdpResult = null;
+        if (contentType.equalsIgnoreCase("application/sdp")) {
+            final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(text);
+            sdpResult = sdp.toString();
+        } else {
+            String boundary = contentType.split(";")[1].split("=")[1];
+            String[] parts = text.split(boundary);
+            String sdpText = null;
+            for (String part : parts) {
+                if (part.contains("application/sdp")) {
+                    sdpText = part.replaceAll("Content.*", "").replaceAll("--", "").trim();
+                }
+            }
+            final SessionDescription sdp = SdpFactory.getInstance().createSessionDescription(sdpText);
+            sdpResult = sdp.toString();
+        }
+        return sdpResult;
     }
 
     private static void fix(final Origin origin, final String externalIp) throws UnknownHostException, SdpException {

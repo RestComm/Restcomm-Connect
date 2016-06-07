@@ -191,8 +191,10 @@ public final class Call extends UntypedActor {
 
     // Runtime Setting
     private Configuration runtimeSettings;
+    private Configuration configuration;
+    private boolean disableSdpPatchingOnUpdatingMediaSession;
 
-    public Call(final SipFactory factory, final ActorRef mediaSessionController) {
+    public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
         final ActorRef source = self();
 
@@ -290,6 +292,8 @@ public final class Call extends UntypedActor {
         // Media Group runtime stuff
         this.liveCallModification = false;
         this.recording = false;
+        this.configuration = configuration;
+        this.disableSdpPatchingOnUpdatingMediaSession = this.configuration.subset("runtime-settings").getBoolean("disable-sdp-patching-on-updating-mediasession", false);
     }
 
     private boolean is(State state) {
@@ -716,11 +720,23 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(final Object message) throws Exception {
-            if (isOutbound()) {
-                final UntypedActorContext context = getContext();
-                context.setReceiveTimeout(Duration.Undefined());
-                final SipServletRequest cancel = invite.createCancel();
-                cancel.send();
+            try {
+                if (isOutbound()) {
+                    final UntypedActorContext context = getContext();
+                    context.setReceiveTimeout(Duration.Undefined());
+                    final SipServletRequest cancel = invite.createCancel();
+                    cancel.send();
+                }
+            } catch (Exception e) {
+                StringBuffer strBuffer = new StringBuffer();
+                strBuffer.append("Exception while trying to create Cancel for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" call state: "+fsm.state());
+                if (invite != null) {
+                    strBuffer.append(" , invite RURI: "+invite.getRequestURI());
+                } else {
+                    strBuffer.append(" , invite is NULL! ");
+                }
+                strBuffer.append(" Exception: "+e.getMessage());
+                logger.warning(strBuffer.toString());
             }
             msController.tell(new CloseMediaSession(), source);
         }
@@ -1061,10 +1077,21 @@ public final class Call extends UntypedActor {
                 }
             }
 
+            String answer = null;
+            if (!disableSdpPatchingOnUpdatingMediaSession) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Will patch SDP answer from 200 OK received with the external IP Address from Response on updating media session");
+                }
+                final String externalIp = response.getInitialRemoteAddr();
+                final byte[] sdp = response.getRawContent();
+                answer = SdpUtils.patch(response.getContentType(), sdp, externalIp);
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("SDP Patching on updating media session is disabled");
+                }
+                answer = SdpUtils.getSdp(response.getContentType(), response.getRawContent());
+            }
 
-            final String externalIp = response.getInitialRemoteAddr();
-            final byte[] sdp = response.getRawContent();
-            final String answer = SdpUtils.patch(response.getContentType(), sdp, externalIp);
             final UpdateMediaSession update = new UpdateMediaSession(answer);
             msController.tell(update, source);
         }
@@ -1305,7 +1332,7 @@ public final class Call extends UntypedActor {
 
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isInfoEnabled()) {
-            logger.info("Got CANCEL for Call, from: "+from+" to: "+to+" state: "+fsm.state());
+            logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
         }
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             fsm.transition(message, canceling);
