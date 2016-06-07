@@ -30,6 +30,7 @@ import org.joda.time.DateTime;
  * @author Orestis Tsakiridis
  */
 public class IdentityInstance {
+
     private Sid sid;
     private Sid organizationSid;
     private String name;
