@@ -64,6 +64,7 @@ public final class ConferenceParticipantConverter extends AbstractConverter impl
         writeDateUpdated(cdr.getDateUpdated(), writer);
         writeAccountSid(cdr.getAccountSid(), writer);
         writeMuted(cdr.isMuted(), writer);
+        writeHold(cdr.isOnHold(), writer);
         writeStartConferenceOnEnter(cdr.isStartConferenceOnEnter(), writer);
         writeEndConferenceOnEnter(cdr.isEndConferenceOnExit(), writer);
         writeUri(cdr.getUri(), writer);
@@ -87,6 +88,7 @@ public final class ConferenceParticipantConverter extends AbstractConverter impl
         writeDateUpdated(cdr.getDateUpdated(), object);
         writeAccountSid(cdr.getAccountSid(), object);
         writeMuted(cdr.isMuted(), object);
+        writeHold(cdr.isOnHold(), object);
         writeStartConferenceOnEnter(cdr.isStartConferenceOnEnter(), object);
         writeEndConferenceOnEnter(cdr.isEndConferenceOnExit(), object);
         writeUri(cdr.getUri(), object);
@@ -103,6 +105,18 @@ public final class ConferenceParticipantConverter extends AbstractConverter impl
 
     private void writeMuted(final Boolean muted, final JsonObject object) {
         object.addProperty("muted", muted);
+    }
+
+    private void writeHold(final Boolean hold, final HierarchicalStreamWriter writer) {
+        writer.startNode("Hold");
+        if (hold != null) {
+            writer.setValue(hold.toString());
+        }
+        writer.endNode();
+    }
+
+    private void writeHold(final Boolean hold, final JsonObject object) {
+        object.addProperty("hold", hold);
     }
 
     private void writeStartConferenceOnEnter(final Boolean startConferenceOnEnter, final HierarchicalStreamWriter writer) {
