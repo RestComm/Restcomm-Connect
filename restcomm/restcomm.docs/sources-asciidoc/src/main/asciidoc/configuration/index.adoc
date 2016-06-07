@@ -2,12 +2,70 @@
 
 If you don't use the hosted version of Restcomm, then you will need to install Restcomm in a local environment. The various guides below will guide you on how to do that and install, configure and start Restcomm to fit your local environment
 
-== Configuration Resources
+== Basic Configuration Resources
 
+There is two different ways to install Restcomm Connect. Either through Docker or through binary. You will find below instructions for both
+
+=== Docker Installation and Start
+
+* <<docker/Restcomm - Docker Quick Start Guide.adoc#restcomm-docker,Restcomm Connect Docker Quick Start Guide>>
+* <<docker/Restcomm - Docker Image in OSX host.adoc#restcomm-docker-osx,Restcomm Connect Docker Image in OSX host>>
+* <<docker/Restcomm - Docker Important Ports.adoc#google-cloud,Restcomm Connect Docker Important Ports>>
+* <<docker/Restcomm - Docker Environment Variables.adoc#docker-environment,Restcomm Connect Docker Environment Variables>>
+* <<docker/Restcomm - Docker Advanced Configuration.adoc#docker-advanced,Restcomm Connect Docker Advanced Configuration>>
+* <<docker/Restcomm - Docker Using Self-signed Certificate.adoc#docker-certificate,Restcomm Connect Docker Using Self-signed Certificate>>
+* <<docker/Restcomm - Docker Adding a Jar File to an Existing Container.adoc#docker-jar,Restcomm Connect Docker Adding a Jar File to an Existing Container>>
+* <<docker/Restcomm - Docker How to Load Environment Variable from a File.adoc#docker-certificate,Restcomm Connect Docker How to Load Environment Variable from a File>>
+* <<docker/Restcomm - Docker How to Persist Your Work on a Filesystem.adoc#docker-persist,Restcomm Connect Docker How to Persist Your Work on a Filesystem>>
+
+=== Binary Installation and Start
+
+* <<Restcomm - Installing Restcomm from GitHub.adoc#restcomm-github-install,Installing Restcomm-Connect from GitHub>>
+* <<Running Restcomm Binary on a Linux Server.adoc#restcomm-linux,Running Restcomm Binary on a Linux Server>>
+* <<Restcomm - Installing on Google Cloud.adoc#google-cloud,Installing on Google Cloud>>
 * <<Starting Restcomm-Connect.adoc#start-restcomm-connect,Starting Restcomm-Connect>>
-* <<How to get started with Restcomm-Connect and Mysql.adoc#restcomm-connect-mysql,How to get started with Restcomm-Connect and Mysql>>
-* <<How to use Mysql schema upgrade scripts.adoc#mysql-schema-upgrade,How to use Mysql schema upgrade scripts>>
 
-== Developer Resources
+=== Database Configuration
+
+* <<How to get started with Restcomm-Connect and Mysql.adoc#restcomm-connect-mysql,How to get started with Restcomm-Connect and Mysql>>
+* <<Restcomm - Install and Configure Restcomm to use MariaDB.adoc#restcomm-connect-maria,Restcomm - Install and Configure Restcomm Connect to use MariaDB>>
+* <<How to use Mysql schema upgrade scripts.adoc#mysql-schema-upgrade,How to use Mysql schema upgrade scripts>>
+* <<Restcomm - How to Reset Admin Password.adoc#admin-pwd,How to Reset Admin Password>>
+
+=== DID Configuration
+
+* <<Restcomm - Automatic DID Provisioning.adoc#did-provisioning,Automatic DID Provisioning>>
+* <<Restcomm - Configure and Connect to External DID Providers.adoc#did-provisioning,Configure and Connect to External DID Providers>>
+* <<Restcomm - Connecting SMPP Endpoint through Nexmo.adoc#nexmo,Connecting SMPP Endpoint through Nexmo>>
+* <<Restcomm - Connecting to Bandwidth for DID Calls.adoc#badnwidth,Connecting to Bandwidth for DID Calls>>
+* <<Restcomm - Connecting to French Legos SIP BornSIP Trunk.adoc#legos,Connecting to French Legos SIP BornSIP Trunk>>
+
+== Advanced Configuration Resources
+
+=== Upgrade
+
+* <<Restcomm - Upgrade Process.adoc#upgrade,Upgrade Process>>
+* <<RVD Workspace Upgrade.adoc#rvd-upgrade,Restcomm Visual Designer Workspace Upgrade>>
+
+=== Media
+
+* <<Restcomm - Working with RestComm and Dialogic XMS.adoc#google-cloud,Integrate RestComm-Connect with Dialogic XMS Media Server>>
+* <<Restcomm - How to Add G729 Codec to the Media Server.adoc#g729,How to Add G729 Codec to the Media Server>>
+
+=== Security 
+
+* <<Restcomm - Enable HTTPS secure connector on JBoss AS 7 or EAP 6.adoc#secure,Enable HTTPS secure connector on JBoss AS 7 or EAP 6>>
+
+=== SMS
+
+* <<Restcomm - Route SMS to SS7 SMPP via Telscale SMSC.adoc#smpp,Route SMS to SS7 SMPP via Restcomm SMSC>>
+
+=== High Availability and Load Balancing
+
+* <<ha/Restcomm - Configuring Load-balancer.adoc#load-balancer,Configuring Load-balancer>>
+* <<ha/Restcomm - Using a Single Mysql Database for 2 Restcomm Servers.adoc#mysql,Using a Single Mysql Database for 2 Restcomm Connect Servers>>
+* <<ha/Restcomm - Single RVD Workspace for two Restcomm Instances.adoc#rvd,Single RVD Workspace for two Restcomm Instances>>
+
+== Contributor Resources
 
 * <<How to build Restcomm-Connect from source.adoc#build-from-source,How to build Restcomm-Connect from source>>
