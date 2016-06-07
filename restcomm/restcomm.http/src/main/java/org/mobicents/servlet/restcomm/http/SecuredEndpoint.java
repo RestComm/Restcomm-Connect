@@ -28,9 +28,12 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
+import org.keycloak.adapters.KeycloakDeployment;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.Account;
+import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
@@ -67,6 +70,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
     protected IdentityContext identityContext;
+    IdentityInstance identityInstance;
     @Context
     protected ServletContext context;
     @Context
@@ -80,8 +84,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
+        IdentityInstance identityInstance = getCurrentIdentityInstance(request, storage.getIdentityInstancesDao());
+        KeycloakDeployment deployment = identityContext.getDeployment(identityInstance.getSid());
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
-        this.userIdentityContext = new UserIdentityContext(request, accountsDao);
+        this.userIdentityContext = new UserIdentityContext(deployment, request, accountsDao);
     }
 
     /**
@@ -311,6 +317,27 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected String getAdministratorRole() {
         return "Administrator";
+    }
+
+
+    /**
+     * Returns an IdentityInstance for a request.
+     *
+     * It tries to determine the organization from the request and then map this organization to an
+     * IdentityInstance. Since organization support is not yet ready, all requests are mapped to
+     * a fixed organization SID by default.
+     *.
+     * @param request
+     * @param identityInstancesDao
+     * @return the IdentityInstance object mapped or null
+     */
+    protected IdentityInstance getCurrentIdentityInstance(HttpServletRequest request, IdentityInstancesDao identityInstancesDao) {
+        // TODO here determine current organization based on request, conf etc.
+        Sid organizationSid = new Sid("OR00000000000000000000000000000000");
+        // TODO throw an error if organizationSid is not found. There has to be one, right ?
+        // ...
+        IdentityInstance identityInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
+        return identityInstance;
     }
 
 }

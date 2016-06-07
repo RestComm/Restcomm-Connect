@@ -20,12 +20,20 @@
 package org.mobicents.servlet.restcomm.identity;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
+import org.keycloak.adapters.KeycloakDeployment;
+import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
+import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.identity.keycloak.KeycloakAdapterConfBuilder;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
  * Identity Context holds all identity related entities whose lifecycle follows Restcomm lifecycle, such as
- * keycloak deployment (to be added) and restcomm roles.
+ * keycloak deployments and restcomm roles.
  *
  * In a typical use case you can  access to the IdentityContext from the ServletContext.
  *
@@ -33,6 +41,12 @@ import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
  */
 public class IdentityContext {
     RestcommRoles restcommRoles;
+    // keycloak specific properties
+    String realmName;
+    String realmKey;
+    String authServerUrl;
+    ConcurrentHashMap<Sid,KeycloakDeployment> deployments = new ConcurrentHashMap<Sid,KeycloakDeployment>();
+    IdentityInstancesDao dao;
 
     /**
      * @param restcommConfiguration An apache configuration object representing <restcomm/> element of restcomm.xml
@@ -41,10 +55,60 @@ public class IdentityContext {
         this.restcommRoles = new RestcommRoles(restcommConfiguration.subset("runtime-settings").subset("security-roles"));
     }
 
+    // no-keycloak constructor
     public IdentityContext(RestcommRoles restcommRoles) {
         if (restcommRoles == null)
             throw  new IllegalArgumentException("Cannot create an IdentityContext object with null roles!");
         this.restcommRoles = restcommRoles;
+    }
+
+    public IdentityContext(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl, IdentityInstancesDao dao) {
+        this(restcommRoles);
+        if (StringUtils.isEmpty(realmKey) || StringUtils.isEmpty(realmName) || StringUtils.isEmpty(authServerUrl) || dao == null)
+            throw new IllegalArgumentException();
+        this.realmName = realmName;
+        this.realmKey= realmKey;
+        this.authServerUrl = authServerUrl;
+    }
+
+    /**
+     * Creates a new deployment out of an identity instance and puts in a hashmap. If it's allready there it returns it.
+     *
+     * @param instance
+     * @return
+     * @throws KeycloakDeploymentAlreadyCreated
+     */
+    public KeycloakDeployment addDeployment( IdentityInstance instance ) {
+        KeycloakDeployment existingDeployment = deployments.get(instance.getSid());
+        // if it's already there do nothing (return it)
+        if (existingDeployment != null)
+            return existingDeployment;
+        else {
+            KeycloakAdapterConfBuilder confBuilder = new KeycloakAdapterConfBuilder(realmName, realmKey, authServerUrl, instance.getName(), instance.getRestcommRestClientSecret());
+            KeycloakDeployment deployment = IdentityUtils.createDeployment(confBuilder.getUnregisteredRestcommConfig());
+            deployments.put(instance.getSid(), deployment);
+            return deployment;
+        }
+    }
+
+    /**
+     * Returns a keycloak deployment for an identity instance sid in a lazy way (creates
+     * it the deployment if not alread there).
+     *
+     * @param identityInstanceSid
+     * @return existing keycloak deployment object of null
+     */
+    public KeycloakDeployment getDeployment(Sid identityInstanceSid) {
+        KeycloakDeployment deployment = deployments.get(identityInstanceSid);
+        if (deployment == null) {
+            IdentityInstance addedInstance = dao.getIdentityInstance(identityInstanceSid);
+            if (addedInstance != null) {
+                return addDeployment(addedInstance);
+            } else
+                return null;
+        } else {
+            return deployment;
+        }
     }
 
     public RestcommRoles getRestcommRoles() { return restcommRoles; }

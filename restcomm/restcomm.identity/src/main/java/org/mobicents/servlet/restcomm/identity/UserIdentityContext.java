@@ -28,19 +28,31 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.keycloak.RSATokenVerifier;
+import org.keycloak.adapters.KeycloakDeployment;
+import org.keycloak.common.VerificationException;
+import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 
 /**
- * A per-request security context providing access to Oauth tokens or Account API Keys.
- * @author "Tsakiridis Orestis"
+ * A per-request security context providing access to an effective account
+ * authorization tokens and credentials extracted from the request. When keycloak-based
+ * auth is used an identity instance reference should also be present.
  *
+ * @author "Tsakiridis Orestis"
  */
 public class UserIdentityContext {
+    protected Logger logger = Logger.getLogger(UserIdentityContext.class);
 
     final AccountKey accountKey;
     final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
     Set<String> effectiveAccountRoles;
+    // keycloak related properties
+    final String oauthTokenString;
+    final AccessToken oauthToken;
+    final KeycloakDeployment keycloakDeployment;
 
     /**
      * After successfull creation of a UserIdentityContext object the following stands:
@@ -52,7 +64,23 @@ public class UserIdentityContext {
      * @param request
      * @param accountsDao
      */
-    public UserIdentityContext(HttpServletRequest request, AccountsDao accountsDao) {
+    public UserIdentityContext(KeycloakDeployment keycloakDeployment, HttpServletRequest request, AccountsDao accountsDao) {
+        // identityContext should be there for any oauth-related operation to take place
+        this.keycloakDeployment = keycloakDeployment;
+        if (keycloakDeployment == null) {
+            oauthTokenString = null;
+            oauthToken = null;
+        } else {
+            // try to initialize oauth token from request
+            final String tokenString = extractOauthTokenString(request);
+            if (!StringUtils.isEmpty(tokenString)) {
+                this.oauthToken = verifyToken(tokenString, keycloakDeployment);
+                this.oauthTokenString = tokenString;
+            } else {
+                this.oauthToken = null;
+                this.oauthTokenString = null;
+            }
+        }
         this.accountKey = extractAccountKey(request, accountsDao);
         if (accountKey != null) {
             if (accountKey.isVerified()) {
@@ -66,6 +94,18 @@ public class UserIdentityContext {
             effectiveAccountRoles = extractAccountRoles(effectiveAccount);
     }
 
+    private String extractOauthTokenString(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null) {
+            String[] parts = authHeader.split(" ");
+            if (parts.length >= 2 && parts[0].equals("Bearer")) {
+                String tokenString = parts[1];
+                return tokenString;
+            }
+        }
+        return null;
+    }
+
     private Set<String> extractAccountRoles(Account account) {
         if (account == null)
             return null;
@@ -74,6 +114,18 @@ public class UserIdentityContext {
             roles.add(account.getRole());
         }
         return roles;
+    }
+
+    private AccessToken verifyToken(String tokenString, KeycloakDeployment deployment) {
+        AccessToken token;
+        try {
+            token = RSATokenVerifier.verifyToken(tokenString, deployment.getRealmKey(), deployment.getRealmInfoUrl());
+            return token;
+        } catch (VerificationException e) {
+            if (logger.isDebugEnabled())
+                logger.error("Cannot verity token", e);
+            return null;
+        }
     }
 
     private AccountKey extractAccountKey(HttpServletRequest request, AccountsDao dao) {
@@ -93,6 +145,14 @@ public class UserIdentityContext {
             }
         }
         return null;
+    }
+
+    public AccessToken getOauthToken() {
+        return oauthToken;
+    }
+
+    public String getOauthTokenString() {
+        return oauthTokenString;
     }
 
     public AccountKey getAccountKey() {
