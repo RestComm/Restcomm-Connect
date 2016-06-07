@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ TeleStax, Open Source Cloud Communications
+  ~ Copyright 2016, Telestax Inc and individual contributors
+  ~ by the @authors tag.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation; either version 3 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>
+  ~
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author Orestis Tsakiridis
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.IdentityInstancesDao">
+    <insert id="addIdentityInstance" parameterType="map">
+        INSERT INTO "restcomm_identity_instances" ("sid", "organization_sid", "name", "date_created", "date_updated", "restcomm_rest_rat", "restcomm_rest_last_registration_date", "restcomm_rest_status", "restcomm_rest_client_secret", "restcomm_ui_rat", "restcomm_ui_last_registration_date", "restcomm_ui_status", "rvd_rest_rat", "rvd_rest_last_registration_date", "rvd_rest_status", "rvd_ui_rat", "rvd_ui_last_registration_date", "rvd_ui_status")
+        VALUES(#{sid}, #{organization_sid}, #{name}, #{date_created}, #{date_updated}, #{restcomm_rest_rat}, #{restcomm_rest_last_registration_date}, #{restcomm_rest_status}, #{restcomm_rest_client_secret}, #{restcomm_ui_rat}, #{restcomm_ui_last_registration_date}, #{restcomm_ui_status}, #{rvd_rest_rat}, #{rvd_rest_last_registration_date}, #{rvd_rest_status}, #{rvd_ui_rat}, #{rvd_ui_last_registration_date}, #{rvd_ui_status})
+    </insert>
+
+    <select id="getIdentityInstance" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_identity_instances" WHERE "sid"=#{sid};
+    </select>
+
+    <select id="getIdentityInstanceByOrganizationSid" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_identity_instances" WHERE "organization_sid"=#{organization_sid};
+    </select>
+
+    <select id="getIdentityInstanceByName" parameterType="string" resultType="hashmap">
+        SELECT * FROM "restcomm_identity_instances" WHERE "name"=#{name};
+    </select>
+
+    <delete id="removeIdentityInstance" parameterType="string">
+        DELETE FROM "restcomm_identity_instances" WHERE "sid"=#{sid};
+    </delete>
+</mapper>
