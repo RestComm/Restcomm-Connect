@@ -31,27 +31,13 @@ configServerBeans() {
 	echo 'Configured UDP Manager'
 }
 
-configJavaOptsMem() {
+configRMSJavaOpts() {
     FILE=$MMS_HOME/bin/run.sh
+	echo "Add mediasercer extra java options: $RMS_JAVA_OPTS"
+	# patch mediaserver java opts
 
-	# Find total available memory on the instance
-    TOTAL_MEM=$(free -m -t | grep 'Total:' | awk '{print $2}')
-    # get 20 percent of available memory
-    # need to use division by 1 for scale to be read
-    CHUNK_MEM=$(echo "scale=0; ($TOTAL_MEM * 0.2)/1" | bc -l)
-    # divide chunk memory into units of 64mb
-    MULTIPLIER=$(echo "scale=0; $CHUNK_MEM/64" | bc -l)
-    # use multiples of 64mb to know effective memory
-    FINAL_MEM=$(echo "$MULTIPLIER * 64" | bc -l)
-    MEM_UNIT='m'
-
-    MMS_OPTS="-Xms$FINAL_MEM$MEM_UNIT -Xmx$FINAL_MEM$MEM_UNIT -XX:MaxPermSize=256m -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
-
-	sed -e "/# Setup MMS specific properties/ {
-		N; s|JAVA_OPTS=.*|JAVA_OPTS=\"$MMS_OPTS\"|
-	}" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
-	echo "Updated Java Options for Media Server: $MMS_OPTS"
+	sed -i '/JAVA_OPTS=\"-Dprogram.name=$PROGNAME $JAVA_OPTS\"/{n;d}' $FILE
+	sed -i '/JAVA_OPTS="-Dprogram.name=$PROGNAME $JAVA_OPTS"/ a JAVA_OPTS="'"$RMS_JAVA_OPTS"'"' $FILE
 }
 
 configLogDirectory() {
@@ -113,7 +99,7 @@ if [ -z "$MS_SUBNET_MASK" ]; then
 fi
 
 configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"
-#configJavaOpts
+configRMSJavaOpts
 configLogDirectory
 configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
 echo 'Finished configuring Mobicents Media Server!'
