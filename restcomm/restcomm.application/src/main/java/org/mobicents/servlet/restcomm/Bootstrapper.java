@@ -2,6 +2,7 @@ package org.mobicents.servlet.restcomm;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -35,9 +36,6 @@ import org.mobicents.servlet.restcomm.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -45,6 +43,8 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
 import com.telestax.servlet.MonitoringService;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 /**
  *
@@ -79,7 +79,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 ActorRef gateway;
                 try {
                     settings = configuration.subset("media-server-manager");
-                    gateway = gateway(settings, loader);
+                    gateway = gateways(settings, loader).get(0);
                     factory = new MmsControllerFactory(this.system, gateway);
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
@@ -190,38 +190,51 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return result;
     }
 
-    private ActorRef gateway(final Configuration settings, final ClassLoader loader) throws UnknownHostException {
+    private List<ActorRef> gateways(final Configuration settings, final ClassLoader loader) throws UnknownHostException {
         final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                final String classpath = settings.getString("mgcp-server[@class]");
+                final String classpath = settings.getString("mgcp-servers[@class]");
                 return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
             }
         }));
-        final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
-        builder.setName(settings.getString("mgcp-server[@name]"));
-        String address = settings.getString("mgcp-server.local-address");
-        builder.setLocalIP(InetAddress.getByName(address));
-        String port = settings.getString("mgcp-server.local-port");
-        builder.setLocalPort(Integer.parseInt(port));
-        address = settings.getString("mgcp-server.remote-address");
-        builder.setRemoteIP(InetAddress.getByName(address));
-        port = settings.getString("mgcp-server.remote-port");
-        builder.setRemotePort(Integer.parseInt(port));
-        address = settings.getString("mgcp-server.external-address");
-        if (address != null) {
-            builder.setExternalIP(InetAddress.getByName(address));
-            builder.setUseNat(true);
-        } else {
-            builder.setUseNat(false);
+        // List of available gateways
+        List<ActorRef> gateways = new ArrayList<ActorRef>(1);
+        
+        final String mgcpMediaServerName = settings.getString("mgcp-servers[@name]");
+        
+        List<Object> mgcpMediaServers = settings.getList("mgcp-servers.mgcp-server.local-address");
+        int mgcpMediaServerListSize = mgcpMediaServers.size();
+        //TODO remove this log line after completion
+        logger.info("mgcpMediaServerListSize: "+mgcpMediaServerListSize); 
+
+        for (int count = 0; count < mgcpMediaServerListSize; count++) {
+            final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
+            builder.setName(settings.getString(mgcpMediaServerName));
+            String address = settings.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
+            builder.setLocalIP(InetAddress.getByName(address));
+            String port = settings.getString("mgcp-servers.mgcp-server(" + count + ").local-port");
+            builder.setLocalPort(Integer.parseInt(port));
+            address = settings.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
+            builder.setRemoteIP(InetAddress.getByName(address));
+            port = settings.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
+            builder.setRemotePort(Integer.parseInt(port));
+            address = settings.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
+            if (address != null) {
+                builder.setExternalIP(InetAddress.getByName(address));
+                builder.setUseNat(true);
+            } else {
+                builder.setUseNat(false);
+            }
+            final String timeout = settings.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
+            builder.setTimeout(Long.parseLong(timeout));
+            final PowerOnMediaGateway powerOn = builder.build();
+            gateway.tell(powerOn, null);
         }
-        final String timeout = settings.getString("mgcp-server.response-timeout");
-        builder.setTimeout(Long.parseLong(timeout));
-        final PowerOnMediaGateway powerOn = builder.build();
-        gateway.tell(powerOn, null);
-        return gateway;
+
+        return gateways;
     }
 
     private String home(final ServletContext context) {
@@ -373,5 +386,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 //            Ping ping = new Ping(xml, context);
 //            ping.sendPing();
         }
+    }
+
+    /**
+     * Select appropriate media server based on configured algorithm
+     * 
+     * @param configuration restcomm configuration
+     */
+    private void getMediaServer(final Configuration configuration){
+    	
     }
 }
