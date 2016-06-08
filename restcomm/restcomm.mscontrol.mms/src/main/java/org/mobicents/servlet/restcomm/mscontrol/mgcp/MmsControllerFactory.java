@@ -38,6 +38,8 @@ import akka.actor.UntypedActorFactory;
 public class MmsControllerFactory implements MediaServerControllerFactory {
 
     private final ActorSystem system;
+    //private final ActorRef mediaGateway;
+    // A list of media gateways.
     private final ActorRef mediaGateway;
     private final CallControllerFactory callControllerFactory;
     private final ConferenceControllerFactory conferenceControllerFactory;
