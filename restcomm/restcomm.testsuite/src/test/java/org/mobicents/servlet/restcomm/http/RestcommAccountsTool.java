@@ -65,17 +65,25 @@ public class RestcommAccountsTool {
         webResource.accept(MediaType.APPLICATION_JSON).delete();
     }
 
-    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password, String accountSid, String status) {        Client jerseyClient = Client.create();
+    public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
+        Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
         String url = getAccountsUrl(deploymentUrl,true) + "/"+accountSid+".json";
 
         WebResource webResource = jerseyClient.resource(url);
 
+        // FriendlyName, status, password and auth_token are currently updated in AccountsEndpoint. Role remains to be added
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        params.add("EmailAddress", emailAddress);
-        params.add("Password", password);
-        params.add("Role", "Administartor");
+        if (friendlyName != null)
+            params.add("FriendlyName", friendlyName);
+        if (password != null)
+            params.add("Password", password);
+        if (authToken != null)
+            params.add("Auth_Token", authToken);
+        // role update is not supported yet!
+        if (role != null)
+            params.add("Role", role);
         if (status != null)
             params.add("Status", status);
 
