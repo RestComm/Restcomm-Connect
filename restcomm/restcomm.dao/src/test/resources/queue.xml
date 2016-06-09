@@ -17,7 +17,7 @@
   </select>
   
   <select id="getQueueByFriendlyName" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_queues" WHERE "friendly_name"=#{name};
+    SELECT * FROM "restcomm_queues" WHERE "friendly_name"=#{friendlyName};
   </select>
   
   <select id="getQueues" parameterType="org.mobicents.servlet.restcomm.entities.QueueFilter" resultType="hashmap">

@@ -3,7 +3,7 @@
 <!--
   @author muhammad.bilal19@gmail.com (Muhammad Bilal)
 -->
-<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.QueueDao">
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.QueuesDao">
   <insert id="addQueue" parameterType="map">
     INSERT INTO "restcomm_queues" ("sid", "date_created", "date_updated", "friendly_name", "current_size", "max_size", "account_sid", "uri")
     VALUES(#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{current_size}, #{max_size}, #{account_sid}, #{uri});
@@ -17,7 +17,7 @@
   </select>
   
   <select id="getQueueByFriendlyName" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_queues" WHERE "friendly_name"=#{name};
+    SELECT * FROM "restcomm_queues" WHERE "friendly_name"=#{friendlyName};
   </select>
   
   <select id="getQueues" parameterType="org.mobicents.servlet.restcomm.entities.QueueFilter" resultType="hashmap">
@@ -34,6 +34,10 @@
   
   <delete id="removeQueue" parameterType="string">
     DELETE FROM "restcomm_queues" WHERE "sid"=#{sid};
+  </delete>
+  
+  <delete id="removeQueues" parameterType="string">
+    DELETE FROM "restcomm_queues" WHERE "account_sid"=#{sid};
   </delete>
   
   <update id="updateQueue" parameterType="map">

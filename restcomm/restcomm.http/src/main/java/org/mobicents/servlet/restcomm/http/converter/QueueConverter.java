@@ -85,7 +85,7 @@ public final class QueueConverter extends AbstractConverter implements JsonSeria
     }
 
     private void writeCurrentSize(final Integer currentSize, final JsonObject object) {
-        object.addProperty("currentSize", currentSize.toString());
+        object.addProperty("current_Size", currentSize.toString());
     }
 
     private void writeAverageWaitTime(final Integer averageWaitTime, final HierarchicalStreamWriter writer) {
@@ -105,7 +105,7 @@ public final class QueueConverter extends AbstractConverter implements JsonSeria
     }
 
     private void writeMaxSize(final Integer maxSize, final JsonObject object) {
-        object.addProperty("maxSize", maxSize.toString());
+        object.addProperty("max_size", maxSize.toString());
     }
 
 }

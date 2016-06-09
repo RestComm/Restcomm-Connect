@@ -54,26 +54,25 @@ public class MembersJsonEndpoint extends MembersEndpoint {
     @GET
     public Response getQueueMember(@PathParam("accountSid") final String accountSid,
             @PathParam("queueSid") final String queueSid, @PathParam("callSid") final String callSid, @Context UriInfo info) {
-       if(callSid.equals("Front")){
-           return getFrontQueueMember(accountSid, queueSid, info, APPLICATION_JSON_TYPE);
-       }else{
-        return getQueueMember(accountSid, queueSid, callSid, info, APPLICATION_JSON_TYPE);
-       }
+        if (callSid.equals("Front")) {
+            return getFrontQueueMember(accountSid, queueSid, info, APPLICATION_JSON_TYPE);
+        } else {
+            return getQueueMember(accountSid, queueSid, callSid, info, APPLICATION_JSON_TYPE);
+        }
     }
-    
+
     @Path("/{callSid}")
     @POST
-    public Response dequeue(@PathParam("accountSid") final String accountSid,
-            @PathParam("queueSid") final String queueSid, @PathParam("callSid") final String callSid,final MultivaluedMap<String, String> data) {
-        return dequeue(accountSid, queueSid,callSid, data, APPLICATION_JSON_TYPE);
+    public Response dequeue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
+            @PathParam("callSid") final String callSid, final MultivaluedMap<String, String> data) {
+        return dequeue(accountSid, queueSid, callSid, data, APPLICATION_JSON_TYPE);
     }
-    
 
     @Path("/enqueue/{callSid}")
     @POST
-    public Response enqueue(@PathParam("accountSid") final String accountSid,
-            @PathParam("queueSid") final String queueSid, @PathParam("callSid") final String callSid,final MultivaluedMap<String, String> data) {
-        return enqueue(accountSid, queueSid,callSid, data, APPLICATION_JSON_TYPE);
+    public Response enqueue(@PathParam("accountSid") final String accountSid, @PathParam("queueSid") final String queueSid,
+            @PathParam("callSid") final String callSid, final MultivaluedMap<String, String> data) {
+        return enqueue(accountSid, queueSid, callSid, data, APPLICATION_JSON_TYPE);
     }
 
 }

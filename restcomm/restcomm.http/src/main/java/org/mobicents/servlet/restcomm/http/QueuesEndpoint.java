@@ -93,7 +93,7 @@ public abstract class QueuesEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         accountsDao = daos.getAccountsDao();
-        queueDao = daos.getQueueDao();
+        queueDao = daos.getQueuesDao();
         super.init(configuration);
         listConverter = new QueueListConverter(configuration);
         builder = new GsonBuilder();

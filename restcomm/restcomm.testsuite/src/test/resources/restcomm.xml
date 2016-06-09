@@ -135,6 +135,7 @@
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
+				<permission>RestComm:*:Queue</permission>
 			</role>
 			<role name="Unprivileged">
 				<permission>RestComm:Read:Accounts</permission>
