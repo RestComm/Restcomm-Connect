@@ -1,7 +1,5 @@
 package org.mobicents.servlet.restcomm.rvd.http.resources;
 
-import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
-
 import org.keycloak.adapters.KeycloakDeployment;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AuthorizationException;
@@ -11,7 +9,6 @@ import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.identity.IdentityProvider;
 import org.mobicents.servlet.restcomm.rvd.identity.RequestOrigin;
-import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 
 /**
  * @author Orestis Tsakiridis
