@@ -322,7 +322,16 @@
 		<hostname></hostname>
 	</http-client>
 
-	<!-- The SMS aggregator is responsible for the handling of SMS messages 
+	<!-- Identity/keycloak specific settings -->
+	<!--
+	<identity>
+		<auth-server-url>https://identity.restcomm.com/auth</auth-server-url>
+		<realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB</realm-public-key>
+		<realm>restcomm</realm>
+	</identity>
+	-->
+
+	<!-- The SMS aggregator is responsible for the handling of SMS messages
 		inside of RestComm. Refer to the org.mobicents.servlet.sip.restcomm.SmsAggregator 
 		interface for more information. -->
 	<sms-aggregator class="org.mobicents.servlet.restcomm.sms.SmsService">

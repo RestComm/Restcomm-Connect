@@ -20,6 +20,7 @@
 
 package org.mobicents.servlet.restcomm.configuration.sets;
 
+import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.configuration.sources.ConfigurationSource;
 import org.mobicents.servlet.restcomm.http.SslMode;
@@ -38,6 +39,8 @@ import org.apache.commons.lang.StringUtils;
 @Immutable
 public class MainConfigurationSet extends ConfigurationSet {
 
+    protected Logger logger = Logger.getLogger(MainConfigurationSet.class);
+
     private static final String SSL_MODE_KEY = "http-client.ssl-mode";
     private static final String HTTP_RESPONSE_TIMEOUT = "http-client.response-timeout";
     private static final SslMode SSL_MODE_DEFAULT = SslMode.strict;
@@ -52,6 +55,14 @@ public class MainConfigurationSet extends ConfigurationSet {
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
+    // keycloak related properties
+    private static final String IDENTITY_AUTH_SERVER_URL = "identity.auth-server-url";
+    private static final String IDENTITY_REALM_PUBLIC_KEY = "identity.realm-public-key";
+    private static final String IDENTITY_REALM = "identity.realm";
+    private String identityAuthServerUrl;
+    private String identityRealmPublicKey;
+    private String identityRealm;
+
 
     public MainConfigurationSet(ConfigurationSource source) {
         super(source);
@@ -91,6 +102,22 @@ public class MainConfigurationSet extends ConfigurationSet {
         this.useHostnameToResolveRelativeUrls = resolveRelativeUrlWithHostname;
         this.hostname = resolveRelativeUrlHostname;
         bypassLbForClients = bypassLb;
+        // initialize keycloak properties
+        initIdentity(source);
+
+    }
+
+    private void initIdentity(ConfigurationSource source) {
+        // identity.auth-server-url
+        this.identityAuthServerUrl = source.getProperty(IDENTITY_REALM_PUBLIC_KEY);
+        this.identityRealm = source.getProperty(IDENTITY_REALM);
+        this.identityRealmPublicKey = source.getProperty(IDENTITY_REALM_PUBLIC_KEY);
+        if (!StringUtils.isEmpty(this.identityAuthServerUrl)) {
+            if (StringUtils.isEmpty(this.identityRealm) || StringUtils.isEmpty(this.identityRealmPublicKey)) {
+                logger.error("Inconsistent identity configuration! Keycloak based authorization will not work.");
+                return;
+            }
+        }
     }
 
     public SslMode getSslMode() {
@@ -116,4 +143,10 @@ public class MainConfigurationSet extends ConfigurationSet {
     }
 
     public String getInstanceId() { return this.instanceId; }
+
+    public String getIdentityAuthServerUrl() {return identityAuthServerUrl;}
+
+    public String getIdentityRealmPublicKey() {return identityRealmPublicKey;}
+
+    public String getIdentityRealm() {return identityRealm;}
 }
