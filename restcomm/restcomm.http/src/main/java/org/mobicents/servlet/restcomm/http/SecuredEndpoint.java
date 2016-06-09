@@ -333,11 +333,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected IdentityInstance getCurrentIdentityInstance(HttpServletRequest request, IdentityInstancesDao identityInstancesDao) {
         // TODO here determine current organization based on request, conf etc.
-        Sid organizationSid = new Sid("OR00000000000000000000000000000000");
+        Sid organizationSid = getCurrentOrganizationSid();
         // TODO throw an error if organizationSid is not found. There has to be one, right ?
         // ...
         IdentityInstance identityInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
         return identityInstance;
+    }
+
+    protected Sid getCurrentOrganizationSid() {
+        // TODO
+        return new Sid("OR00000000000000000000000000000000");
     }
 
 }
