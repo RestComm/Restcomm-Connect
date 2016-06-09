@@ -19,7 +19,7 @@ migrate() {
   $db_upgrade_folder/flyway info
 }
 
-sed -i "s|flyway.url=.*|flyway.url=jdbc:mysql://$MYSQL_IP_ADDRESS:$MYSQL_PORT/restcomm?useSSL=false|" $db_upgrade_folder/conf/flyway.conf
+sed -i "s|flyway.url=.*|flyway.url=jdbc:mysql://$MYSQL_IP_ADDRESS:$MYSQL_PORT/$RESTCOMM_DB?useSSL=false|" $db_upgrade_folder/conf/flyway.conf
 sed -i "s/flyway.user=.*/flyway.user=$MYSQL_USER/" $db_upgrade_folder/conf/flyway.conf
 sed -i "s/flyway.password=.*/flyway.password=$MYSQL_PASSWORD/" $db_upgrade_folder/conf/flyway.conf
 sed -i "s/flyway.placeholders.RESTCOMM_DBNAME=.*/flyway.placeholders.RESTCOMM_DBNAME=$RESTCOMM_DB/" $db_upgrade_folder/conf/flyway.conf
