@@ -90,7 +90,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $state
 			return;
 		}
 		$http({ method: "PUT", url: 'services/projects/' + projectItem.applicationSid + '/rename?newName=' + projectItem.newProjectName})
-			.success(function (data, status, headers, config) { 
+			.success(function (data, status, headers, config) {
 				console.log( "project " + projectItem.name + " renamed to " + projectItem.newProjectName );
 				projectItem.name = projectItem.newProjectName;
 				projectItem.viewMode = 'view';
@@ -106,7 +106,7 @@ App.controller('projectManagerCtrl', function ( $scope, $http, $location, $state
 	
 	$scope.deleteProject = function(projectItem, ticket) {
 		$http({ method: "DELETE", url: 'services/projects/' + projectItem.applicationSid})
-		.success(function (data, status, headers, config) { 
+		.success(function (data, status, headers, config) {
 			console.log( "project " + projectItem.name + " deleted " );
 			$scope.refreshProjectList();
 			projectItem.showConfirmation = false;

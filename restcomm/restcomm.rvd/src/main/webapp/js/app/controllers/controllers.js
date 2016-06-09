@@ -174,6 +174,10 @@ App.controller('containerCtrl', function ($scope, authentication) {
     $scope.authInfo = authentication.getAuthInfo();
 });
 
+App.controller('containerCtrl', function ($scope, authentication) {
+    $scope.authInfo = authentication.getAuthInfo();
+});
+
 App.controller('translateController', function($translate, $scope) {
   $scope.changeLanguage = function (langKey) {
     $translate.use(langKey);

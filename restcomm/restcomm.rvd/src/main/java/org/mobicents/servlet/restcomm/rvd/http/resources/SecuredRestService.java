@@ -1,11 +1,17 @@
 package org.mobicents.servlet.restcomm.rvd.http.resources;
 
+import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
+
+import org.keycloak.adapters.KeycloakDeployment;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
 import org.mobicents.servlet.restcomm.rvd.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.rvd.http.RestService;
 import org.mobicents.servlet.restcomm.rvd.identity.AccountProvider;
 import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
+import org.mobicents.servlet.restcomm.rvd.identity.IdentityProvider;
+import org.mobicents.servlet.restcomm.rvd.identity.RequestOrigin;
+import org.mobicents.servlet.restcomm.rvd.identity.UserIdentityContext;
 
 /**
  * @author Orestis Tsakiridis
@@ -16,12 +22,14 @@ public class SecuredRestService extends RestService {
     public void init() {
         RvdConfiguration config = RvdConfiguration.getInstance();
         AccountProvider accountProvider = AccountProvider.getInstance();
+        KeycloakDeployment deployment = null;
         // if it is secured by keycloak try to create a deployment too
         if (config.keycloakEnabled()) {
-            throw new UnsupportedOperationException();
+            IdentityProvider identityProvider = IdentityProvider.getInstance();
+            deployment = identityProvider.getKeycloak(new RequestOrigin(request));
         }
         String authorizationHeader = request.getHeader("Authorization");
-        userIdentityContext = new UserIdentityContext(authorizationHeader, accountProvider);
+        userIdentityContext = new UserIdentityContext(authorizationHeader, deployment, accountProvider);
     }
 
     public UserIdentityContext getUserIdentityContext() {

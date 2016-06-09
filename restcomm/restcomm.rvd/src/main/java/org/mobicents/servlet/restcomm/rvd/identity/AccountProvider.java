@@ -29,7 +29,7 @@ public class AccountProvider {
 
     String restcommUrl;
 
-    AccountProvider(String restcommUrl) {
+    public AccountProvider(String restcommUrl) {
         if (restcommUrl == null)
             throw new IllegalStateException("restcommUrl cannot be null");
         this.restcommUrl = sanitizeRestcommUrl(restcommUrl);

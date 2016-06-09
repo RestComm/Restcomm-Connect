@@ -1,6 +1,10 @@
 package org.mobicents.servlet.restcomm.rvd.identity;
 
 import org.apache.commons.codec.binary.Base64;
+import org.keycloak.RSATokenVerifier;
+import org.keycloak.adapters.KeycloakDeployment;
+import org.keycloak.common.VerificationException;
+import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.utils.RvdUtils;
 
@@ -30,6 +34,7 @@ import java.util.HashSet;
  */
 public class UserIdentityContext {
     private String oauthTokenString;
+    private AccessToken oauthToken;
     private BasicAuthCredentials basicCredentials; // HTTP basic auth credentials
     // the following fields are independent form the authorization type (Basic or Oauth)
     private String effectiveAuthHeader;
@@ -42,14 +47,27 @@ public class UserIdentityContext {
     }
 
 
-    public UserIdentityContext(String authorizationHeader, AccountProvider accountProvider) {
+    public UserIdentityContext(String authorizationHeader, KeycloakDeployment deployment, AccountProvider accountProvider) {
         this.oauthTokenString = extractOauthTokenString(authorizationHeader);
         basicCredentials = extractBasicAuthCredentials(authorizationHeader);
+        // if there is a Bearer token present let's initialize keycloak related context for this user
+        if (oauthTokenString != null && deployment != null) {
+            this.oauthToken = verifyOauthToken(oauthTokenString, deployment);
+        }
         // try to initialize effective account using basic auth creds
         if (basicCredentials != null) {
             this.accountInfo = accountProvider.getAccount(basicCredentials.getUsername(), authorizationHeader);
             if (this.accountInfo != null) {
                 authType = AuthType.Basic;
+                effectiveAuthHeader = authorizationHeader;
+            }
+        }
+        if (this.accountInfo == null && oauthToken != null) {
+            // if we couldn't determine an affective account using basic auth creds, try using oauthToken
+            String username = oauthToken.getPreferredUsername();
+            this.accountInfo = accountProvider.getAccount(username, authorizationHeader);
+            if (this.accountInfo != null) {
+                authType = AuthType.Oauth;
                 effectiveAuthHeader = authorizationHeader;
             }
         }
@@ -62,6 +80,21 @@ public class UserIdentityContext {
         }
     }
 
+/*
+    // constructor used mainly for testing purposes
+    public UserIdentityContext() {}
+
+    // constructor used mainly for testing purposes
+    public UserIdentityContext(String oauthTokenString, AccessToken oauthToken, BasicAuthCredentials basicCredentials, String effectiveAuthHeader, AuthType authType, RestcommAccountInfoResponse accountInfo, Set<String> accountRoles) {
+        this.oauthTokenString = oauthTokenString;
+        this.oauthToken = oauthToken;
+        this.basicCredentials = basicCredentials;
+        this.effectiveAuthHeader = effectiveAuthHeader;
+        this.authType = authType;
+        this.accountInfo = accountInfo;
+        this.accountRoles = accountRoles;
+    }
+*/
     public RestcommAccountInfoResponse getAccountInfo() {
         return accountInfo;
     }
@@ -85,6 +118,14 @@ public class UserIdentityContext {
     public String getEffectiveAuthorizationHeader() {
         return this.effectiveAuthHeader;
     }
+
+    // NOT IMPLEMENTED YET
+    /*
+    Set<String> getKeycloaRoles() {
+        throw new NotImplementedException()''
+    }
+    */
+
 
     /**
      * Parses an Bearer Authorization header of an oauth request and returns the Bearer token.
@@ -124,6 +165,17 @@ public class UserIdentityContext {
             }
         }
         return null;
+    }
+
+    private AccessToken verifyOauthToken(String tokenString,  KeycloakDeployment deployment ) {
+        AccessToken token;
+        try {
+            token = RSATokenVerifier.verifyToken(tokenString, deployment.getRealmKey(), deployment.getRealmInfoUrl());
+            return token;
+        } catch (VerificationException e) {
+            //logger.error("Cannot verity token.", e);
+            return null;
+        }
     }
 
 }

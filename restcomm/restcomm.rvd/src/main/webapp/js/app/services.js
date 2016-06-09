@@ -279,6 +279,7 @@ angular.module('Rvd').service('projectSettingsService', ['$http','$q','$modal', 
 		}
 	}
 
+
 	service.showModal = function(applicationSid, projectName) {
 		var modalInstance = $modal.open({
 			  templateUrl: 'templates/projectSettingsModal.html',
@@ -866,4 +867,5 @@ angular.module('Rvd').factory('fileRetriever', function (Blob, FileSaver, $http)
 angular.module('Rvd').service('RvdConfiguration', function () {
     this.projectsRootPath = '/restcomm-rvd/services/projects';
 });
+
 
