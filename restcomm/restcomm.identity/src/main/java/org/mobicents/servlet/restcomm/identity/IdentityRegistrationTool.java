@@ -29,7 +29,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
-import org.mobicents.servlet.restcomm.identity.entities.ClientEntity;
+import org.mobicents.servlet.restcomm.identity.entities.KeycloakClient;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
 
@@ -74,10 +74,11 @@ public class IdentityRegistrationTool {
      */
     public IdentityInstance registerInstanceWithIAT(String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError {
         String instanceName = generateName();
-        ClientEntity restcommRestClient;
-        ClientEntity restcommUiClient;
-        ClientEntity rvdRestClient;
-        ClientEntity rvdUiClient;
+        KeycloakClient restcommRestClient;
+        KeycloakClient restcommUiClient;
+        KeycloakClient rvdRestClient;
+        KeycloakClient rvdUiClient;
+        // create client application at keycloak side
         try {
             restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
             restcommUiClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
@@ -87,6 +88,7 @@ public class IdentityRegistrationTool {
             logger.error(e);
             return null;
         }
+        // for each client created, there is a Registration Access token that allows further modifying that client in the future. We keep that.
         IdentityInstance identityInstance = new IdentityInstance();
         identityInstance.setName(instanceName);
         identityInstance.setRestcommRestRAT(restcommRestClient.getRegistrationAccessToken());
@@ -112,14 +114,14 @@ public class IdentityRegistrationTool {
         return UUID.randomUUID().toString().split("-")[0];
     }
 
-    ClientEntity registerRestcommRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    KeycloakClient registerRestcommRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         return registerClient(instanceName + "-" + RESTCOMM_REST_CLIENT_SUFFIX, iat, rootUrl, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRestcommUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    KeycloakClient registerRestcommUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         //return registerClient(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX, iat, redirectUrls, restcommClientSecret, bearerOnly, publicClient);
 
-        ClientEntity repr = new ClientEntity();
+        KeycloakClient repr = new KeycloakClient();
         repr.setClientId(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX);
         repr.setProtocol("openid-connect");
         repr.setBearerOnly(bearerOnly);
@@ -130,15 +132,15 @@ public class IdentityRegistrationTool {
         return registerClient(iat,repr);
     }
 
-    ClientEntity registerRvdRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    KeycloakClient registerRvdRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         return registerClient(instanceName + "-" + RVD_REST_CLIENT_SUFFIX, iat, rootUrl, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerRvdUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    KeycloakClient registerRvdUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         return registerClient(instanceName + "-" + RVD_UI_CLIENT_SUFFIX, iat, rootUrl, restcommClientSecret, bearerOnly, publicClient);
     }
 
-    ClientEntity registerClient(String iat, ClientEntity repr) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    KeycloakClient registerClient(String iat, KeycloakClient repr) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         // create the Keycloak Client entity (not related to the jersey client class)
         Client jersey = Client.create();
         WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl());
@@ -150,7 +152,7 @@ public class IdentityRegistrationTool {
         ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + iat).post(ClientResponse.class, json);
         if (response.getStatus() == 201) {
             String data = response.getEntity(String.class);
-            ClientEntity createdClient = gson.fromJson(data, ClientEntity.class);
+            KeycloakClient createdClient = gson.fromJson(data, KeycloakClient.class);
             return createdClient;
         } else
         if (response.getStatus() == 403){
@@ -160,9 +162,9 @@ public class IdentityRegistrationTool {
         }
     }
 
-    ClientEntity registerClient(String clientId, String iat, String redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    KeycloakClient registerClient(String clientId, String iat, String redirectUrls, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         // build a client representation as a JSON object
-        ClientEntity repr = new ClientEntity();
+        KeycloakClient repr = new KeycloakClient();
         repr.setClientId(clientId);
         repr.setProtocol("openid-connect");
         repr.setBearerOnly(bearerOnly);

@@ -91,13 +91,12 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
     }
 
     protected Response getCurrentIdentityInstance() {
-        IdentityInstance instance = getActiveIdentityInstance();
         // TODO use a proper converter here
-        Gson gson = new Gson();
-        if (instance == null)
+        if (identityInstance == null)
             return Response.status(Response.Status.NOT_FOUND).build();
         else {
-            String json = gson.toJson(new IdentityInstanceEntity(instance));
+            Gson gson = new Gson();
+            String json = gson.toJson(new IdentityInstanceEntity(identityInstance));
             return Response.ok(json).header("Content-Type", "application/json").build();
         }
     }

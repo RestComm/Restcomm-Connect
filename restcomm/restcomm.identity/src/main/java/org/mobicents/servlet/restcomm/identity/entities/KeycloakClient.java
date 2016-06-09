@@ -23,9 +23,14 @@ package org.mobicents.servlet.restcomm.identity.entities;
 import java.util.List;
 
 /**
+ * A thinner entity class for the respective keycloak ClientRepresentation class.
+ *
+ * NOTE: Although keycloak adapter library already contains such a notion it was redefined with bare minimum
+ * fields to achieve looser coupling (that may help for more relaxed upgrade policy).
+ *
  * @author Orestis Tsakiridis
  */
-public class ClientEntity {
+public class KeycloakClient {
     private String clientId;
     private String protocol;
     private Boolean bearerOnly;
