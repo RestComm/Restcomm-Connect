@@ -232,8 +232,6 @@ angular.element(document).ready(['$http',function ($http) {
 
   // try to retrieve Identity server configuration
   var serverPromise = $q.defer();
-  // disable until organizations/keycloak in place
-  /*
   $http.get("/restcomm/2012-04-24/Identity/Server").success(function (serverConfig) {
     console.log(serverConfig);
     serverPromise.resolve(serverConfig);
@@ -243,13 +241,10 @@ angular.element(document).ready(['$http',function ($http) {
     else
         serverPromise.reject();
   });
-  */
-  serverPromise.resolve(null);
+  //serverPromise.resolve(null);
 
   // try to retrieve IdentityInstance
   var instancePromise = $q.defer();
-  // disable until organizations/keycloak in place
-  /*
   $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
     instancePromise.resolve(instance);
   }).error(function (response) {
@@ -257,8 +252,8 @@ angular.element(document).ready(['$http',function ($http) {
       instancePromise.resolve(null);
     else
       instancePromise.reject();
-  });*/
-  instancePromise.resolve(null);
+  });
+  //instancePromise.resolve(null);
 
   // when both responses are received do sth...
   $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
