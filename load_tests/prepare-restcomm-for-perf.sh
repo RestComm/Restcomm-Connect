@@ -20,7 +20,7 @@ sed -i 's/INFO/WARN/g' $RESTCOMM_HOME/mediaserver/conf/log4j.xml
 sed -i 's/ERROR/WARN/g' $RESTCOMM_HOME/mediaserver/conf/log4j.xml
 sed -i 's/DEBUG/WARN/g' $RESTCOMM_HOME/mediaserver/conf/log4j.xml
 
-echo "Update AKKA log level to OFF"
+# echo "Update AKKA log level to OFF"
 sed -i 's/INFO/OFF/g' $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/classes/application.conf
 
 echo "Update MGCP Timeout"

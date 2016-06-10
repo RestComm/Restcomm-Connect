@@ -46,7 +46,7 @@ echo "Restcomm IP Address: $RESTCOMM_ADDRESS - Local IP Address: $LOCAL_ADDRESS"
 if [[ "$WARMUP" == "true" ]]; then
   echo "Warm up, SIMULTANEOUS_CALLS_WARMUP: $SIMULTANEOUS_CALLS_WARMUP, MAXIMUM_CALLS_WARMUP: $MAXIMUM_CALLS_WARMUP, CALL_RATE_WARMUP: $CALL_RATE_WARMUP"
   sleep 3
-  $SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/gather/gather-sipp.xml -s 1236 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS_WARMUP -m $MAXIMUM_CALLS_WARMUP -r $CALL_RATE_WARMUP -recv_timeout 10000 -t un -nr  -max_socket 500000
+  $SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/gather/gather-sipp.xml -s 1236 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS_WARMUP -m $MAXIMUM_CALLS_WARMUP -r $CALL_RATE_WARMUP -recv_timeout 10000 -t un -nr
   #$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/gather/gather-sipp.xml -s 1236 $RESTCOMM_ADDRESS:5080 -p 509 -l $SIMULTANEOUS_CALLS_WARMUP -m $MAXIMUM_CALLS_WARMUP -r $CALL_RATE_WARMUP -recv_timeout 10000 -t un -nr
   echo "Warmup finished"
   sleep 2m
@@ -54,5 +54,7 @@ fi
 
 echo "About to launch rocket... SIMULTANEOUS_CALLS: $SIMULTANEOUS_CALLS, MAXIMUM_CALLS: $MAXIMUM_CALLS, CALL_RATE: $CALL_RATE"
 sleep 3
-$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/gather/gather-sipp.xml -s 1236 $RESTCOMM_ADDRESS:5080 -p 5090 -i $LOCAL_ADDRESS -mi $LOCAL_ADDRESS -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -aa -rate_increase 10 -rate_interval 10s -rate_max $CALL_RATE -no_rate_quit -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/gather-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/gather-$DATE-screens.log -trace_err -error_file $RESULTS_FOLDER/gather-$DATE-errors.log -trace_msg -message_file $RESULTS_FOLDER/gather-$DATE-message.log
+$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/gather/gather-sipp.xml -s 1236 $RESTCOMM_ADDRESS:5080 -p 5090 -i $LOCAL_ADDRESS -mi $LOCAL_ADDRESS -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -aa -rate_increase 10 -rate_interval 10s -rate_max $CALL_RATE -no_rate_quit -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/gather-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/gather-$DATE-screens.log -trace_err -error_file $RESULTS_FOLDER/gather-$DATE-errors.log
+#$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/gather/gather-sipp.xml -s 1236 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS:5090 -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -rate_increase 10 -rate_interval 10s -rate_max $CALL_RATE -no_rate_quit -recv_timeout 10000 -t un -nr
+#-trace_stat -stf $RESULTS_FOLDER/gather-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/gather-$DATE-screens.log
 echo $?

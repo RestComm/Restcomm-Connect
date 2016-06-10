@@ -110,7 +110,7 @@ Duration=38
 <!-- <pause milliseconds="4800"/> -->
 
 <!-- receive BYE -->
-<recv request="BYE"  timeout="100000"/>
+<recv request="BYE"  timeout="10000"/>
 
 <!-- send OK -->
 <send>
