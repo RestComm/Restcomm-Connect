@@ -6,7 +6,7 @@
 
 export CURRENT_FOLDER=`pwd`
 export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/toRelease/Restcomm-JBoss-AS7-7.7.0.925
-export WARMUP=true
+export WARMUP=false
 export COLLECT_JMAP=true
 
 export RESULTS_FOLDER=$CURRENT_FOLDER/results
@@ -25,7 +25,7 @@ export CALL_RATE=$5
 
 export TEST_NAME="${6,,}"
 
-export VOICERSS=c58e134224704b0182f2e2eaef59f8d8
+export VOICERSS=
 export RESTCOMM_NEW_PASSWORD='NewPassword'
 
 $CURRENT_FOLDER/run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME
