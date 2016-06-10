@@ -10,10 +10,10 @@ sed -i 's/DEBUG/WARN/g' $RESTCOMM_HOME/$JBOSS_CONFIG/configuration/standalone-si
 echo "Update RestComm JVM Heap size options"
 sed -i 's/Xms64m/Xms2048m/g' $RESTCOMM_HOME/bin/standalone.conf
 sed -i 's/XX:MaxPermSize=256m/XX:MaxPermSize=512m/g' $RESTCOMM_HOME/bin/standalone.conf
-sed -i 's/Xmx512m/Xmx8192m -Xmn512m -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000 -XX:+CMSIncrementalPacing -XX:CMSIncrementalDutyCycle=100 -XX:CMSIncrementalDutyCycleMin=100 -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode/g' $RESTCOMM_HOME/bin/standalone.conf
+sed -i 's/Xmx512m/Xmx8192m -Xmn512m -XX:+UseG1GC -XX:ParallelGCThreads=8 -XX:ConcGCThreads=8 -XX:G1RSetUpdatingPauseTimePercent=10 -XX:+ParallelRefProcEnabled -XX:G1HeapRegionSize=4m -XX:G1HeapWastePercent=5 -XX:InitiatingHeapOccupancyPercent=85 -XX:+UnlockExperimentalVMOptions -XX:G1MixedGCLiveThresholdPercent=85 -XX:+AlwaysPreTouch -XX:+UseCompressedOops -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000/g' $RESTCOMM_HOME/bin/standalone.conf
 
 echo "Update MMS JVM Heap size options"
-sed -i 's/JAVA_OPTS="$JAVA_OPTS.*/JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Xmx8192m -Xmn512m -XX:+CMSIncrementalPacing -XX:CMSIncrementalDutyCycle=100 -XX:CMSIncrementalDutyCycleMin=100 -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:MaxPermSize=512m -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"/g' $RESTCOMM_HOME/mediaserver/bin/run.sh
+sed -i 's/JAVA_OPTS="$JAVA_OPTS.*/JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Xmx8192m -Xmn512m -XX:MaxPermSize=512m -XX:+UseG1GC -XX:ParallelGCThreads=8 -XX:ConcGCThreads=8 -XX:G1RSetUpdatingPauseTimePercent=10 -XX:+ParallelRefProcEnabled -XX:G1HeapRegionSize=4m -XX:G1HeapWastePercent=5 -XX:InitiatingHeapOccupancyPercent=85 -XX:+UnlockExperimentalVMOptions -XX:G1MixedGCLiveThresholdPercent=85 -XX:+AlwaysPreTouch -XX:+UseCompressedOops -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"/g' $RESTCOMM_HOME/mediaserver/bin/run.sh
 
 echo "Update MMS log level to WARN"
 sed -i 's/INFO/WARN/g' $RESTCOMM_HOME/mediaserver/conf/log4j.xml
