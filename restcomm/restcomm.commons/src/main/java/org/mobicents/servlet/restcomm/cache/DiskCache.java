@@ -38,12 +38,14 @@ import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -184,14 +186,9 @@ public final class DiskCache extends UntypedActor {
             final String extension = "wav";
             final String hash = request.hash();
             final String filename = hash + "." + extension;
-            File matchedFile = (new File(location)).listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    // return name.startsWith(hash) && name.endsWith("."+extension);
-                    return name.equalsIgnoreCase(filename);
-                }
-            })[0];
+            Path p = Paths.get(location+filename);
 
-            if (matchedFile.exists()) {
+            if (Files.exists(p)) {
                 // return URI.create(matchedFile.getAbsolutePath());
                 return URI.create(this.uri + filename);
             } else {
