@@ -1344,7 +1344,7 @@ public final class Call extends UntypedActor {
         if (is(ringing)) {
             fsm.transition(message, failingNoAnswer);
         } else if(logger.isInfoEnabled()) {
-            logger.info("Call : "+self().path()+" isTerminated(): "+self().isTerminated()+" timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+            logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
                 + " Direction: " + direction + " From: " + from + " To: " + to);
         }
     }
