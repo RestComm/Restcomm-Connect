@@ -228,9 +228,9 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         domain = new StringBuilder().append(remoteIp.getHostAddress()).append(":").append(remotePort).toString();
         notificationListeners.clear();
         responseListeners.clear();
-        requestIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
-        sessionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
-        transactionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
+        requestIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
+        sessionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
+        transactionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
     }
 
     @Override
