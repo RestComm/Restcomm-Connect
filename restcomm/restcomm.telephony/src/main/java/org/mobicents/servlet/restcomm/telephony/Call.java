@@ -370,7 +370,7 @@ public final class Call extends UntypedActor {
                 uri = factory.createSipURI(null, realIP);
             }
         } catch (Exception e) {
-            logger.warning("Exception while trying to get the Initial IP Address and Port");
+            logger.warning("Exception while trying to get the Initial IP Address and Port: "+e);
 
         }
         return uri;
@@ -1793,6 +1793,7 @@ public final class Call extends UntypedActor {
     public void postStop() {
         try {
             onStopObserving(new StopObserving(), self(), null);
+            getContext().stop(msController);
         } catch (Exception exception) {
             if(logger.isInfoEnabled()) {
                 logger.info("Exception during Call postStop while trying to remove observers: "+exception);
