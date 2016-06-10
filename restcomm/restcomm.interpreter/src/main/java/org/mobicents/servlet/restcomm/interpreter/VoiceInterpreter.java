@@ -2060,8 +2060,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
                 dialChildren = null;
-                callManager.tell(new DestroyCall(outboundCall));
-                outboundCall = null;
+//                outboundCall = null;
                 callback();
                 return;
             }
