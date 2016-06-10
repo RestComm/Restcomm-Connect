@@ -19,6 +19,22 @@
  */
 package org.mobicents.servlet.restcomm.cache;
 
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.shiro.crypto.hash.Sha256Hash;
+import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
+import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -28,23 +44,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.shiro.crypto.hash.Sha256Hash;
-import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
-import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
-
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -121,11 +120,12 @@ public final class DiskCache extends UntypedActor {
                     final File tmp = new File(path + "." + "tmp");
                     InputStream input = null;
                     OutputStream output = null;
+                    HttpClient client = null;
+                    HttpResponse httpResponse = null;
                     try {
                         if (request.uri().getScheme().equalsIgnoreCase("https")) {
                             //Handle the HTTPS URIs
-                            final HttpClient client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
-                            client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
+                            client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
                             URI result = new URIBuilder()
                                     .setScheme(uri.getScheme())
                                     .setHost(uri.getHost())
@@ -134,7 +134,7 @@ public final class DiskCache extends UntypedActor {
                                     .build();
 
                             HttpGet httpRequest = new HttpGet(result);
-                            HttpResponse httpResponse = client.execute((HttpUriRequest) httpRequest);
+                            httpResponse = client.execute((HttpUriRequest) httpRequest);
                             int code = httpResponse.getStatusLine().getStatusCode();
 
                             if (code >= 400) {
@@ -165,6 +165,14 @@ public final class DiskCache extends UntypedActor {
                         }
                         if (output != null) {
                             output.close();
+                        }
+                        if (httpResponse != null) {
+                            ((CloseableHttpResponse) httpResponse).close();
+                            httpResponse = null;
+                        }
+                        if (client != null) {
+                            HttpClientUtils.closeQuietly(client);
+                            client = null;
                         }
                     }
                 }
