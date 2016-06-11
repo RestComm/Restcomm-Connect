@@ -163,6 +163,7 @@ public class MmsCallController extends MediaServerController {
     private Boolean recording = false;
     private DateTime recordStarted;
     private DaoManager daoManager;
+    private Boolean collecting = false;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -319,6 +320,17 @@ public class MmsCallController extends MediaServerController {
         Record record = new Record(recordingUri, timeout, maxLength, finishOnKey);
         this.mediaGroup.tell(record, null);
     }
+
+    private void stopCollect(Stop message) throws Exception {
+        if(logger.isInfoEnabled()) {
+            logger.info("Stop DTMF collect");
+        }
+        if (this.mediaGroup != null) {
+            // Tell media group to stop recording
+            mediaGroup.tell(message, null);
+        }
+        collecting = false;
+        }
 
     private void stopRecordingCall(Stop message) throws Exception {
         if(logger.isInfoEnabled()) {
@@ -598,6 +610,8 @@ public class MmsCallController extends MediaServerController {
     private void onStop(Stop message, ActorRef self, ActorRef sender) throws Exception {
         if (this.recording) {
             stopRecordingCall(message);
+        } else if (this.collecting) {
+            stopCollect(message);
         }
     }
 
@@ -679,6 +693,7 @@ public class MmsCallController extends MediaServerController {
         if (is(active)) {
             // Forward message to media group to handle
             this.mediaGroup.tell(message, sender);
+            this.collecting = true;
         }
     }
 
@@ -1055,17 +1070,9 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(Object message) throws Exception {
-            // Cleanup resources
-            cleanup();
-
             // Notify observers the controller has stopped
             broadcast(new MediaServerControllerStateChanged(state));
-
-            // Clean observers
-            observers.clear();
-
-            // Terminate actor
-            getContext().stop(super.source);
+        }
         }
 
         protected void cleanup() {
@@ -1074,9 +1081,9 @@ public class MmsCallController extends MediaServerController {
             }
 
             if (mediaGroup != null) {
-                mediaGroup.tell(new StopObserving(super.source), super.source);
-                context().stop(mediaGroup);
+            mediaGroup.tell(new StopObserving(self()), self());
                 mediaGroup.tell(new StopMediaGroup(), null);
+            context().stop(mediaGroup);
                 mediaGroup = null;
             }
 
@@ -1096,7 +1103,7 @@ public class MmsCallController extends MediaServerController {
                 if(logger.isInfoEnabled()) {
                     logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridgeEndpoint.path());
                 }
-                mediaGateway.tell(new DestroyEndpoint(bridgeEndpoint), source);
+            mediaGateway.tell(new DestroyEndpoint(bridgeEndpoint), self());
                 context().stop(bridgeEndpoint);
                 bridgeEndpoint = null;
             }
@@ -1104,8 +1111,6 @@ public class MmsCallController extends MediaServerController {
             bridge = null;
             outboundCallBridgeEndpoint = null;
         }
-
-    }
 
     private final class Inactive extends FinalState {
 
@@ -1123,4 +1128,15 @@ public class MmsCallController extends MediaServerController {
 
     }
 
+    @Override
+    public void postStop() {
+        // Cleanup resources
+        cleanup();
+
+        // Clean observers
+        observers.clear();
+
+        // Terminate actor
+        getContext().stop(self());
+    }
 }

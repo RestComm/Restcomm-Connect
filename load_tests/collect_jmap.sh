@@ -43,12 +43,15 @@ if [[ -z "$RESTCOMM_PID" ]]; then
     echo "Please make sure that RestComm is running..."
  else
     echo "****************************************************************" > $JMAP_DIR/restcomm_mem
+    echo "Testname: \"$TEST_NAME\", SIMULTANEOUS_CALLS: $SIMULTANEOUS_CALLS, MAXIMUM_CALLS: $MAXIMUM_CALLS, CALL_RATE: $CALL_RATE" >> $JMAP_DIR/restcomm_mem
+    echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
+    echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     echo "GC Histogram before GC.run" >> $JMAP_DIR/restcomm_mem
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     jcmd $RESTCOMM_PID GC.class_histogram  | grep org.mobicents.servlet.restcomm >> $JMAP_DIR/restcomm_mem
 
     jcmd $RESTCOMM_PID GC.run
-    sleep 5
+    sleep 15
 
     echo "****************************************************************" >> $JMAP_DIR/restcomm_mem
     echo "GC Histogram after GC.run" >> $JMAP_DIR/restcomm_mem

@@ -20,14 +20,12 @@
 package org.mobicents.servlet.restcomm.http.client;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 
 import org.apache.http.Header;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.util.HttpUtils;
-import org.mobicents.servlet.restcomm.util.StringUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -37,17 +35,15 @@ public final class HttpResponseDescriptor {
     private final URI uri;
     private final int statusCode;
     private final String statusDescription;
-    private final InputStream content;
+    private final String content;
     private final long contentLength;
     private final String contentEncoding;
     private final String contentType;
     private final boolean isChunked;
     private final Header[] headers;
 
-    private volatile String buffer;
-
     private HttpResponseDescriptor(final URI uri, final int statusCode, final String statusDescription,
-            final InputStream content, final long contentLength, final String contentEncoding, final String contentType,
+            final String content, final long contentLength, final String contentEncoding, final String contentType,
             final boolean isChunked, final Header[] headers) {
         super();
         this.uri = uri;
@@ -69,21 +65,22 @@ public final class HttpResponseDescriptor {
         return statusDescription;
     }
 
-    public InputStream getContent() {
-        return content;
-    }
+//    public InputStream getContent() {
+//        return content;
+//    }
 
     public String getContentAsString() throws IOException {
-        if (buffer != null) {
-            return buffer;
-        } else {
-            synchronized (this) {
-                if (buffer == null) {
-                    buffer = StringUtils.toString(content);
-                }
-            }
-            return buffer;
-        }
+//        if (buffer != null) {
+//            return buffer;
+//        } else {
+//            synchronized (this) {
+//                if (buffer == null) {
+//                    buffer = StringUtils.toString(content);
+//                }
+//            }
+//            return buffer;
+//        }
+        return content;
     }
 
     public long getContentLength() {
@@ -122,7 +119,7 @@ public final class HttpResponseDescriptor {
         private URI uri;
         private int statusCode;
         private String statusDescription;
-        private InputStream content;
+        private String content;
         private long contentLength;
         private String contentEncoding;
         private String contentType;
@@ -146,7 +143,7 @@ public final class HttpResponseDescriptor {
             this.statusDescription = statusDescription;
         }
 
-        public void setContent(final InputStream content) {
+        public void setContent(final String content) {
             this.content = content;
         }
 
