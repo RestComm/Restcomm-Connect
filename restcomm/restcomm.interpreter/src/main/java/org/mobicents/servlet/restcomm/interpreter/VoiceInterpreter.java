@@ -2060,7 +2060,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
                 dialChildren = null;
-                outboundCall = null;
+//                outboundCall = null;
                 callback();
                 return;
             }
@@ -2096,6 +2096,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                        }
                         //Instead move the FSM to finished
                         dialChildren = null;
+                        callManager.tell(new DestroyCall(outboundCall));
                         outboundCall = null;
                         callback();
                         fsm.transition(message, finished);
@@ -2111,6 +2112,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
 
                         dialChildren = null;
+                        callManager.tell(new DestroyCall(outboundCall));
                         outboundCall = null;
                         return;
                     }
@@ -2171,7 +2173,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             dialChildren = null;
-            outboundCall = null;
+//            fsm.transition(message, finished);
+//            callManager.tell(new DestroyCall(outboundCall));
+//            outboundCall = null;
         }
     }
 
