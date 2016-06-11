@@ -228,9 +228,9 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
         domain = new StringBuilder().append(remoteIp.getHostAddress()).append(":").append(remotePort).toString();
         notificationListeners.clear();
         responseListeners.clear();
-        requestIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
-        sessionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
-        transactionIdPool = new RevolvingCounter(1, Integer.MAX_VALUE);
+        requestIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
+        sessionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
+        transactionIdPool = new RevolvingCounter(1, Long.MAX_VALUE);
     }
 
     @Override
@@ -296,7 +296,11 @@ public final class MediaGateway extends UntypedActor implements JainMgcpListener
             context.stop(request.link());
         } else if (DestroyEndpoint.class.equals(klass)) {
             final DestroyEndpoint request = (DestroyEndpoint) message;
-            logger.info("Gateway: "+self().path()+" about to stop endpoint path: "+request.endpoint().path()+" isTerminated: "+request.endpoint().isTerminated()+" sender: "+sender().path());
+            if (logger.isInfoEnabled())
+                logger.info("Gateway: "+self().path()+" about to stop endpoint path: "+request.endpoint().path()+" isTerminated: "+request.endpoint().isTerminated()+" sender: "+sender().path());
+            while (notificationListeners.containsValue(request.endpoint())) {
+                notificationListeners.values().remove(request.endpoint());
+            }
             context.stop(request.endpoint());
         } else if (message instanceof JainMgcpCommandEvent) {
             send(message, sender);
