@@ -2307,16 +2307,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (logger.isInfoEnabled()) {
-                logger.info("At conferencing, state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+"  conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+                logger.info("At conferencing, VI state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+" startConferenceOnEnter: "+startConferenceOnEnter+"  conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
             }
             if (playMusicForConference) { // && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter
-                if (startConferenceOnEnter) {
-                    if (conferenceInfo.participants().size() == 1) {
-                        startConferenceOnEnter = false;
-                    } else if (conferenceInfo.participants().size() > 1) {
-                        startConferenceOnEnter = true;
-                    }
+                if (conferenceInfo.participants().size() == 1) {
+                    startConferenceOnEnter = false;
+                } else if (conferenceInfo.participants().size() > 1) {
+                    startConferenceOnEnter = true;
+//                    if (startConferenceOnEnter) {
+//
+//                    } else {
+//                        startConferenceOnEnter = false;
+//                    }
                 }
             }
 
