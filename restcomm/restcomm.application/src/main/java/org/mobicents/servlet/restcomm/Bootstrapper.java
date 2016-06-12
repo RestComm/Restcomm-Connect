@@ -76,11 +76,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         MediaServerControllerFactory factory;
         switch (compatibility) {
             case "mms":
-                ActorRef gateway;
+                List<ActorRef> gateways;
                 try {
                     settings = configuration.subset("media-server-manager");
-                    gateway = gateways(settings, loader).get(0);
-                    factory = new MmsControllerFactory(this.system, gateway);
+                    gateways = gateways(settings, loader);
+                    factory = new MmsControllerFactory(this.system, gateways, configuration.subset("media-server-routing"));
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
@@ -202,26 +202,32 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         }));
         // List of available gateways
         List<ActorRef> gateways = new ArrayList<ActorRef>(1);
-        
+
         final String mgcpMediaServerName = settings.getString("mgcp-servers[@name]");
-        
+        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ New Edition $$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
         List<Object> mgcpMediaServers = settings.getList("mgcp-servers.mgcp-server.local-address");
         int mgcpMediaServerListSize = mgcpMediaServers.size();
         //TODO remove this log line after completion
-        logger.info("mgcpMediaServerListSize: "+mgcpMediaServerListSize); 
+        logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
 
         for (int count = 0; count < mgcpMediaServerListSize; count++) {
             final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
             builder.setName(settings.getString(mgcpMediaServerName));
             String address = settings.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").local-address: "+address);
             builder.setLocalIP(InetAddress.getByName(address));
             String port = settings.getString("mgcp-servers.mgcp-server(" + count + ").local-port");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").local-port: "+port);
             builder.setLocalPort(Integer.parseInt(port));
             address = settings.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-address: "+address);
             builder.setRemoteIP(InetAddress.getByName(address));
             port = settings.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-port: "+port);
             builder.setRemotePort(Integer.parseInt(port));
             address = settings.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").external-address: "+ address);
             if (address != null) {
                 builder.setExternalIP(InetAddress.getByName(address));
                 builder.setUseNat(true);
@@ -231,6 +237,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             final String timeout = settings.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
             builder.setTimeout(Long.parseLong(timeout));
             final PowerOnMediaGateway powerOn = builder.build();
+            gateways.add(gateway);
             gateway.tell(powerOn, null);
         }
 
@@ -386,14 +393,5 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 //            Ping ping = new Ping(xml, context);
 //            ping.sendPing();
         }
-    }
-
-    /**
-     * Select appropriate media server based on configured algorithm
-     * 
-     * @param configuration restcomm configuration
-     */
-    private void getMediaServer(final Configuration configuration){
-    	
     }
 }
