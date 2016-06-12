@@ -32,7 +32,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
@@ -47,11 +46,7 @@ public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
     }
 
     private Response deleteGateway(final String accountSid, final String sid) {
-        try {
-            secure(super.accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(super.accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
         dao.removeGateway(new Sid(sid));
         return ok().build();
     }
