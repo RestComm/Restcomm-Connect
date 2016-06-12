@@ -37,7 +37,6 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
@@ -87,21 +86,12 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
 
     protected Response getNotification(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Read:Notifications");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Read:Notifications");
         final Notification notification = dao.getNotification(new Sid(sid));
         if (notification == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                //secureLevelControl(accountsDao, accountSid, String.valueOf(notification.getAccountSid()));
-                secure(operatedAccount, notification.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(operatedAccount, notification.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(notification), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -114,12 +104,7 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getNotifications(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
-            //secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Notifications");
         final List<Notification> notifications = dao.getNotifications(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(notifications), APPLICATION_JSON).build();

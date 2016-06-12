@@ -26,9 +26,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
-import static javax.ws.rs.core.Response.Status.*;
 
-import org.apache.shiro.authz.AuthorizationException;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.Transcription;
 
@@ -44,15 +43,13 @@ public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
     @Path("/{sid}")
     @DELETE
     public Response deleteTranscription(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
-        try {
-            secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Transcriptions");
-            Transcription transcription = dao.getTranscription(new Sid(sid));
-            if (transcription != null) {
-                //secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
-            }
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
+        Account operatedAccount = super.accountsDao.getAccount(accountSid);
+        secure(operatedAccount, "RestComm:Delete:Transcriptions");
+        Transcription transcription = dao.getTranscription(new Sid(sid));
+        if (transcription != null) {
+            secure(operatedAccount, String.valueOf(transcription.getAccountSid()), SecuredType.SECURED_STANDARD );
         }
+        // TODO return NOT_FOUND if transcrtiption==null
         dao.removeTranscription(new Sid(sid));
         return ok().build();
     }

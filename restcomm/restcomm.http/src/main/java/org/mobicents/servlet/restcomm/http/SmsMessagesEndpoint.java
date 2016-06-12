@@ -33,7 +33,6 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
@@ -124,21 +123,12 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
 
     protected Response getSmsMessage(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Read:SmsMessages");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Read:SmsMessages");
         final SmsMessage smsMessage = dao.getSmsMessage(new Sid(sid));
         if (smsMessage == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                // secureLevelControl(accountsDao, accountSid, String.valueOf(smsMessage.getAccountSid()));
-                secure(operatedAccount, smsMessage.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(operatedAccount, smsMessage.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(smsMessage), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -151,12 +141,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     protected Response getSmsMessages(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
-           // secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
         final List<SmsMessage> smsMessages = dao.getSmsMessages(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(smsMessages), APPLICATION_JSON).build();
@@ -194,12 +179,7 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     @SuppressWarnings("unchecked")
     protected Response putSmsMessage(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
-           // secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
         try {
             validate(data);
             if(normalizePhoneNumbers)

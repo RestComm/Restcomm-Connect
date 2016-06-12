@@ -22,7 +22,6 @@ package org.mobicents.servlet.restcomm.http;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +36,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumberList;
@@ -102,11 +100,7 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, PhoneNumberSearchFilters listFilters, String filterPattern, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
         String searchPattern = "";
         if (filterPattern != null && !filterPattern.isEmpty()) {
             for(int i = 0; i < filterPattern.length(); i ++) {

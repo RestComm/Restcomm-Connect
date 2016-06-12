@@ -22,8 +22,6 @@ package org.mobicents.servlet.restcomm.http;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -34,8 +32,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.Client;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
@@ -50,14 +48,11 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     }
 
     private Response deleteClient(final String accountSid, final String sid) {
-        try {
-            secure(super.accountsDao.getAccount(accountSid), "RestComm:Delete:Clients");
-            Client client = dao.getClient(new Sid(sid));
-            if (client != null) {
-               // secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
-            }
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
+        Account operatedAccount =super.accountsDao.getAccount(accountSid);
+        secure(operatedAccount, "RestComm:Delete:Clients");
+        Client client = dao.getClient(new Sid(sid));
+        if (client != null) {
+            secure(operatedAccount, String.valueOf(client.getAccountSid()), SecuredType.SECURED_STANDARD);
         }
         dao.removeClient(new Sid(sid));
         return ok().build();
