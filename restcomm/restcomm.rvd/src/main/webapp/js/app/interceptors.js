@@ -1,4 +1,4 @@
-var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('UnauthorizedResponseInterceptor', ['$q', '$location', '$rootScope', function($q, $location, $rootScope) {
+var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('UnauthorizedResponseInterceptor', function($q, $location, $rootScope, notifications) {
     var responseInterceptor = {
         responseError: function(response) {
         	//console.log("run UnauthorizedResponseInterceptor");
@@ -25,13 +25,16 @@ var UnauthorizedResponseInterceptor = angular.module('Rvd').factory('Unauthorize
 						return $q.reject(response);
 					}
 				}
-        	}        		
+        	} else
+            if (response.status == 403) {
+                notifications.put({type:'danger',message:"Unauthorized access"});
+            }
         	return $q.reject(response); //response;
         }
     };
 
     return responseInterceptor;
-}]);
+});
 
 angular.module('Rvd').config(['$httpProvider', function($httpProvider) {
     $httpProvider.interceptors.push('UnauthorizedResponseInterceptor');
