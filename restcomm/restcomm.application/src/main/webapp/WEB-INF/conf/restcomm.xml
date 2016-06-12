@@ -311,6 +311,14 @@
 				<response-timeout>500</response-timeout>
 				<!-- <external-address></external-address> -->
 			</mgcp-server>
+			<mgcp-server>
+				<local-address>192.168.8.2</local-address>
+				<local-port>2727</local-port>
+				<remote-address>192.168.8.2</remote-address>
+				<remote-port>2427</remote-port>
+				<response-timeout>500</response-timeout>
+				<!-- <external-address></external-address> -->
+			</mgcp-server>
 		</mgcp-servers>
 	</media-server-manager>
 	<!-- media-server-routing Defines routing rules for media server traffic with following paratemeters:
