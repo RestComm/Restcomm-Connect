@@ -64,7 +64,7 @@ public class MultitenancyDenyAccessApiTest {
     private final static String secondaryApplicationSid = "AP908a3a52b8a548cc9db97f1a1dd9d23b";
     private final static String accountsPassword = "RestComm";
 
-    private final static int httpUnauthorized = 401;
+    private final static int httpUnauthorized = 403;
 
     private final static String apiPath = "2012-04-24/Accounts/";
     private final static String jsonExtension = ".json";

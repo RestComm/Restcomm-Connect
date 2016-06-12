@@ -39,7 +39,6 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
@@ -129,21 +128,12 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
 
     protected Response getClient(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Read:Clients");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Read:Clients");
         final Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-               // secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
-                secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(client);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -156,12 +146,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getClients(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
-           // secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
         final List<Client> clients = dao.getClients(new Sid(accountSid));
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ClientList(clients));
@@ -193,12 +178,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
-           // secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -229,21 +209,12 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     protected Response updateClient(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Modify:Clients");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Modify:Clients");
         final Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                //  secureLevelControl(accountsDao, accountSid, String.valueOf(client.getAccountSid()));
-                secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
             dao.updateClient(update(client, data));
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(client);
