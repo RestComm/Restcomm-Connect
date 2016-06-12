@@ -59,7 +59,7 @@ public class RoleSensitiveTest extends EndpointTest {
     static String powerUserAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     static String guestSid = "AC44444444444444444444444444444444";
-    static String guestUsername = "guestcompany.com";
+    static String guestUsername = "guest@company.com";
     static String guestAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @Test
@@ -74,7 +74,7 @@ public class RoleSensitiveTest extends EndpointTest {
         MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
         applicationParams.add("FriendlyName", "Test User UPDATED");
         response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, applicationParams);
-        Assert.assertEquals(401, response.getStatus());
+        Assert.assertEquals(403, response.getStatus());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class RoleSensitiveTest extends EndpointTest {
         Client jersey = getClient(userUsername, userAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + developerSid) );
         ClientResponse response = resource.get(ClientResponse.class);
-        Assert.assertEquals(401, response.getStatus());
+        Assert.assertEquals(403, response.getStatus());
     }
 
     @Test
@@ -107,7 +107,7 @@ public class RoleSensitiveTest extends EndpointTest {
         Client jersey = getClient(guestUsername, guestAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + guestSid) );
         ClientResponse response = resource.get(ClientResponse.class);
-        Assert.assertEquals(401, response.getStatus());
+        Assert.assertEquals(403, response.getStatus());
     }
 
     @Deployment(name = "RoleSensitiveTest", managed = true, testable = false)

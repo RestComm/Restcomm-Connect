@@ -4,6 +4,14 @@
 ## Author     : George Vagenas
 #
 
+if [ $# -lt 6 ]; then
+    echo "No proper arguments provided: (1: $1) (2: $2) (3: $3) (4: $4) (5: $5) (6: $6) (7: $7)"
+    echo "Usage instructions: "
+    echo './run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME'
+    echo "Example: ./run.sh 192.168.1.11 192.168.1.12 100 10000 30 helloplay"
+    exit 1
+fi
+
 export CURRENT_FOLDER=`pwd`
 echo "Current folder $CURRENT_FOLDER"
 export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp
@@ -23,14 +31,6 @@ fi
 echo $'\n********** About to start preparing Restcomm\n'
 $CURRENT_FOLDER/prepare-restcomm-for-perf.sh
 echo $'\n********** Finished  preparing Restcomm\n'
-
-if [ $# -lt 6 ]; then
-    echo "No proper arguments provided"
-    echo "Usage instructions: "
-    echo './run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME'
-    echo "Example: ./run.sh 192.168.1.11 192.168.1.12 100 10000 30 Hello-Play"
-    exit 1
-fi
 
 stopRestcomm(){
 if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
@@ -111,6 +111,21 @@ case "$TEST_NAME" in
   stopRestcomm
   echo $'\n********** Restcomm stopped\n'
   ;;
+"gather")
+  #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+    $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+    sleep 5
+    echo "Testing Gather Application"
+    rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/
+    cp -ar $CURRENT_FOLDER/tests/gather/gather_app/ $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather
+    $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+    echo $'\n********** Restcomm started\n'
+    sleep 45
+    $CURRENT_FOLDER/tests/gather/gather.sh
+    sleep 45
+    stopRestcomm
+    echo $'\n********** Restcomm stopped\n'
+    ;;
 *) echo "Not known test: $TEST_NAME"
    ;;
 esac
