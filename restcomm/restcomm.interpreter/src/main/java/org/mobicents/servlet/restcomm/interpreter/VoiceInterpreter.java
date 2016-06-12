@@ -2346,9 +2346,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Tell the conference the moderator is now present
                 // Causes background music to stop playing and all participants will be unmuted
                 conference.tell(new ConferenceModeratorPresent(), source);
-                
-                //This codition will check that if the moderator is the only one in the call
-                 //  than play the waiturl until someone else join the call
+
+                // This codition will check that if the moderator is the only one in the call
+                // than play the waiturl until someone else join the call
                 if (conferenceInfo.participants().size() == 1) {
                     URI waitUrl = buildWaitURL(child, attribute, source, notifications);
                     conferenceStateModeratorPresentAlone(message, waitUrl, source);
