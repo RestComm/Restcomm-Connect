@@ -37,7 +37,6 @@ import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
@@ -87,21 +86,12 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
 
     protected Response getTranscription(final String accountSid, final String sid, final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        try {
-            secure(operatedAccount, "RestComm:Read:Transcriptions");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(operatedAccount, "RestComm:Read:Transcriptions");
         final Transcription transcription = dao.getTranscription(new Sid(sid));
         if (transcription == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                //secureLevelControl(accountsDao, accountSid, String.valueOf(transcription.getAccountSid()));
-                secure(operatedAccount, transcription.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(operatedAccount, transcription.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(transcription), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -114,12 +104,7 @@ public abstract class TranscriptionsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getTranscriptions(final String accountSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
-            //secureLevelControl(accountsDao, accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Transcriptions");
         final List<Transcription> transcriptions = dao.getTranscriptions(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(transcriptions), APPLICATION_JSON).build();
