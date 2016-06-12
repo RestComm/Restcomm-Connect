@@ -2307,7 +2307,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (logger.isInfoEnabled()) {
-                logger.info("At conferencing, state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+                logger.info("At conferencing, state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+"  conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
             }
             if (playMusicForConference && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter
