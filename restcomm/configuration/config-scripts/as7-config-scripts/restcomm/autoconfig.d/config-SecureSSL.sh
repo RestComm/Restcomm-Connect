@@ -11,7 +11,8 @@ RESTCOMM_DARS=$RESTCOMM_HOME/standalone/configuration/dars
 RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
 
-#funcitions for  SECURESSL=false
+###Functions for SECURESSL=false###
+#Disable HTTPS when SECURESSL=false for RC.
 NoSslRestConf(){
 	FILE=$RESTCOMM_CONF/standalone-sip.xml
 	sed -e "s/<connector name=\"https\" \(.*\)>/<\!--connector name=\"https\" \1>/" \
@@ -21,6 +22,7 @@ NoSslRestConf(){
 	mv $FILE.bak $FILE
 }
 
+#Disable HTTPS (certificate use) when SECURESSL=false for RMS.
 NoSslRmsConf(){
 	FILE=$MMS_HOME/bin/run.sh
 	sed -e "/# Setup MMS specific properties/ {
@@ -29,10 +31,13 @@ NoSslRmsConf(){
 	mv $FILE.bak $FILE
 }
 
-#funcitions for  SECURESSL=SELF" ||  "AUTH"
+####funcitions for SECURESSL="SELF" || SECURESSL="AUTH" ####
+#HTTPS configuration.
+#Usage of certificate.
 SslRestCommConf(){
 	FILE=$RESTCOMM_CONF/standalone-sip.xml
 	echo "Will properly configure HTTPS Connector ";
+	#Disable HTTP if set to true.
 	if [  "${DISABLE_HTTP^^}" = "TRUE"  ]; then
 		echo "DISABLE_HTTP is '$DISABLE_HTTP'. Will disable HTTP Connector"
 		sed -e "s/<connector name=\"http\" \(.*\)\/>/<\!--connector name=\"http\" \1-->/" $FILE > $FILE.bak
@@ -41,11 +46,13 @@ SslRestCommConf(){
 		sed -e "s/<\!--connector name=\"http\" \(.*\)-->/<connector name=\"http\" \1\/>/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
 	fi
+	#If File contains path, or just the name.
 	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
 		CERTIFICATION_FILE=$TRUSTSTORE_FILE
 	else
 		CERTIFICATION_FILE="\\\${jboss.server.config.dir}/$TRUSTSTORE_FILE"
 	fi
+	#enable HTTPS and certificate file.
 	echo "Will use trust store at location: $CERTIFICATION_FILE"
 	sed -e "s/<\!--connector name=\"https\" \(.*\)>/<connector name=\"https\" \1>/" \
 	-e "s|<ssl name=\"https\" key-alias=\".*\" password=\".*\" certificate-key-file=\".*\" \(.*\) verify-client=\".*\" \/>|<ssl name=\"https\" key-alias=\"$TRUSTSTORE_ALIAS\" password=\"$TRUSTSTORE_PASSWORD\" certificate-key-file=\"$CERTIFICATION_FILE\" cipher-suite=\"TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA\" verify-client=\"false\" \1\/>|" \
@@ -54,6 +61,7 @@ SslRestCommConf(){
 	echo "Properly configured HTTPS Connector to use trustStore file $CERTIFICATION_FILE"
 }
 
+#SSL configuration for RMS. Use certificate at JAVA_OPTS.
 SslRmsConf(){
 	echo "TRUSTSTORE_PASSWORD is set to '$TRUSTSTORE_PASSWORD' will properly configure MMS";
 	FILE=$MMS_HOME/bin/run.sh
@@ -69,7 +77,8 @@ SslRmsConf(){
 	mv $FILE.bak $FILE
 	echo "Properly configured MMS to use trustStore file $RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE"
 }
-
+#If self-sighned create certificate.
+#else use authorized.
 CertConfigure(){
   #Certificate setup (Authority certificate or self-signed)
   if [ "$SECURESSL" = "AUTH" ]; then
@@ -85,9 +94,10 @@ CertConfigure(){
 
 	 echo "TRUSTSTORE_LOCATION: $TRUSTSTORE_LOCATION"
 	 echo "PUBLIC_IP: $PUBLIC_IP"
-	 echo "RESTCOMM_HOST: $RESTCOMM_HOST"
-	if [ -n "$RESTCOMM_HOST" ]; then
-		HOSTNAME="${RESTCOMM_HOST}"
+	 echo "RESTCOMM_HOSTNAME: $RESTCOMM_HOSTNAME"
+	 #Use HOSTNAME to create certificate is used. Else use STATIC_ADDRESS
+	if [ -n "$RESTCOMM_HOSTNAME" ]; then
+		HOSTNAME="${RESTCOMM_HOSTNAME}"
 		keytool -genkey -alias $TRUSTSTORE_ALIAS -keyalg RSA -keystore $TRUSTSTORE_LOCATION -dname "CN=$HOSTNAME" -storepass $TRUSTSTORE_PASSWORD -keypass $TRUSTSTORE_PASSWORD
 	else
 		HOSTNAME="${PUBLIC_IP}"
@@ -97,14 +107,15 @@ CertConfigure(){
 	echo "The generated truststore file at $TRUSTSTORE_LOCATION "
   fi
 
-
+  #Final necessary configuration. Protocols permitted, etc.
   sed -i "s|protocol=\"TLSv1,TLSv1.1,TLSv1.2\"|protocol=\"TLSv1,TLSv1.1,TLSv1.2,SSLv2Hello\"|" $RESTCOMM_CONF/standalone-sip.xml
   grep -q 'ephemeralDHKeySize' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Djdk.tls.ephemeralDHKeySize=2048|" $RESTCOMM_BIN/standalone.conf
   grep -q 'https.protocols' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $RESTCOMM_BIN/standalone.conf
 }
 
+#SIP-Servlets configuration for HTTPS.
+#For both Self-signed and Authorized certificate.
 MssStackConf(){
-
 	FILE=$RESTCOMM_CONF/mss-sip-stack.properties
 
 	if  grep -q 'gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled' "$FILE"; then

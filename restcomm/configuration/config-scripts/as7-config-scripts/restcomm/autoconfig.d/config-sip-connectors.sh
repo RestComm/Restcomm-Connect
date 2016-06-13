@@ -5,7 +5,6 @@
 
 ## Description: Configures the connectors for RestComm & configures Proxy if enabled
 ## Parameters : 1.Public IP
-## Parameters : 2.Proxy IP
 configConnectors() {
 	FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 	static_address="$1"
@@ -19,6 +18,7 @@ configConnectors() {
 		local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
 	fi
 
+    #IF LB activated. (Algorithm "use-load-balancer" used).
 	if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
 		if [ -z "$LB_INTERNAL_IP" ]; then
       		LB_INTERNAL_IP=$LB_PUBLIC_IP
@@ -49,8 +49,10 @@ configConnectors() {
 	echo "Configured gather-statistics"
 }
 
+#Socket Binding configuration for standalone-sip.xml
 configSocketbinding() {
 FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
+	#check for port offset
 	if (( $PORT_OFFSET > 0 )); then
     	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
 	else
