@@ -13,6 +13,7 @@ if [ ! -d "$BASEDIR/standalone/deployments/olympus.war" ]; then
     mv -f $BASEDIR/standalone/deployments/olympus-exploded.war $BASEDIR/standalone/deployments/olympus.war
 fi
 
+#Set Olympus port if WSS is used.
 olympusPortConf(){
 FILE=$BASEDIR/standalone/deployments/olympus.war/resources/js/controllers/register.js
 
