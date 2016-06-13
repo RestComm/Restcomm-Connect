@@ -4,7 +4,7 @@
 ## Author     : George Vagenas
 #
 
-export PR_RESULTS_FOLDER=$RESULTS_FOLDER/perfRecorder
+export PR_RESULTS_FOLDER=$RESULTS_FOLDER
 if [ ! -d "$PR_RESULTS_FOLDER" ]; then
   mkdir $PR_RESULTS_FOLDER
 fi
