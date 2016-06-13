@@ -12,41 +12,83 @@ if [ $# -lt 6 ]; then
     exit 1
 fi
 
-export CURRENT_FOLDER=`pwd`
-echo "Current folder $CURRENT_FOLDER"
-export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp
-echo "SIPP Executable $SIPP_EXECUTABLE"
-export JVMTOP_EXECUTABLE=$CURRENT_FOLDER/jvmtop.sh
-echo "JVMTOP Executable $JVMTOP_EXECUTABLE"
-export SIPP_REPORT_EXECUTABLE="java -jar $CURRENT_FOLDER/sipp-report-0.2-SNAPSHOT-with-dependencies.jar -a"
+if [[ -z $VOICERSS ]] || [ "$VOICERSS" == ''  ]; then
+  echo "VoiceRSS TTS Service key is not set! Will exit"
+  exit 1
+fi
 
-echo "Collect JMAP: $COLLECT_JMAP"
+export CURRENT_FOLDER=`pwd`
+export SIPP_EXECUTABLE=$CURRENT_FOLDER/sipp
+export JVMTOP_EXECUTABLE=$CURRENT_FOLDER/jvmtop.sh
+export SIPP_REPORT_EXECUTABLE="java -jar $CURRENT_FOLDER/sipp-report-0.2-SNAPSHOT-with-dependencies.jar -a"
 
 export RESULTS_FOLDER=$CURRENT_FOLDER/results
 if [ ! -d "$RESULTS_FOLDER" ]; then
   mkdir $RESULTS_FOLDER
 fi
 
-#First prepare Restcomm
-echo $'\n********** About to start preparing Restcomm\n'
-$CURRENT_FOLDER/prepare-restcomm-for-perf.sh
-echo $'\n********** Finished  preparing Restcomm\n'
+echo "Current folder $CURRENT_FOLDER"
+echo "SIPP Executable $SIPP_EXECUTABLE"
+echo "JVMTOP Executable $JVMTOP_EXECUTABLE"
+echo "Collect JMAP: $COLLECT_JMAP"
+
+
+prepareRestcomm() {
+  #First prepare Restcomm
+  echo $'\n********** About to start preparing Restcomm\n'
+  $CURRENT_FOLDER/prepare-restcomm-for-perf.sh
+  echo $'\n********** Finished  preparing Restcomm\n'
+}
+
+getPID(){
+   RESTCOMM_PID=" "
+   RMS_PID=""
+
+   export RESTCOMM_PID=$(jps | grep jboss-modules.jar | cut -d " " -f 1)
+   echo "Restcomm PID: $RESTCOMM_PID"
+
+   while read -r line
+   do
+    if  ps -ef | grep $line | grep -q  mediaserver
+    then
+          export RMS_PID=$line
+          echo "RMS PID: $RMS_PID"
+   fi
+   done < <(jps | grep Main | cut -d " " -f 1)
+}
+
 
 stopRestcomm(){
 if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
     $CURRENT_FOLDER/collect_jmap.sh
     sleep 1
+    $CURRENT_FOLDER/perfRecorder.sh
+    sleep 1
 fi
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
+}
+
+startRestcomm(){
+  $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+  if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
+      sleep 30
+      getPID
+      ###start data collection
+      cd $TOOLS_DIR
+      $TOOLS_DIR/jvmdump.sh $RESTCOMM_PID
+      $TOOLS_DIR/pc_start_collect.sh $RESTCOMM_PID
+      cd $CURRENT_FOLDER
+  fi
 }
 
 case "$TEST_NAME" in
 "helloplay")
     echo "Testing Hello-Play"
+    prepareRestcomm
     #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     sleep 5
-    $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+    startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
     $CURRENT_FOLDER/tests/hello-play/helloplay.sh
@@ -56,11 +98,12 @@ case "$TEST_NAME" in
     ;;
 "conference")
     echo "Testing Conference"
+    prepareRestcomm
     #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     sleep 5
     cp $CURRENT_FOLDER/tests/conference/conference-app.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/conference-app.xml
-    $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+    startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
     echo $'\nChange default administrator password\n'
@@ -75,13 +118,15 @@ case "$TEST_NAME" in
     echo $'\n********** Restcomm stopped\n'
     ;;
 "helloplay-one-minute")
-	#In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+    echo "Testing Hello-Play with one minute anno"
+    prepareRestcomm
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     sleep 5
     echo "Testing Hello-Play One Minute"
     cp -ar $CURRENT_FOLDER/resources/audio/demo-prompt-one-minute.wav $RESTCOMM_HOME/standalone/deployments/restcomm.war/audio/demo-prompt.wav
     rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/cache/AC*
-    $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+    startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
@@ -90,13 +135,15 @@ case "$TEST_NAME" in
     echo $'\n********** Restcomm stopped\n'
     ;;
 "dialclient")
-#In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+  echo "Testing DialClient"
+  prepareRestcomm
+  #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
   $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
   sleep 5
   echo "Testing Dial Client Application"
   cp -ar $CURRENT_FOLDER/tests/dialclient/DialClientApp.xml $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/
   sed -i "s/SIPP_SERVER_IP_HERE/$LOCAL_ADDRESS/g" $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/DialClientApp.xml
-  $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+  startRestcomm
   echo $'\n********** Restcomm started\n'
   sleep 45
   echo $'\nChange default administrator password\n'
@@ -112,13 +159,15 @@ case "$TEST_NAME" in
   echo $'\n********** Restcomm stopped\n'
   ;;
 "gather")
-  #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
+    echo "Testing Gather"
+    prepareRestcomm
+    #In case a previous CI job killed, Restcomm will be still running, so make sure we first stop Restcomm
     $RESTCOMM_HOME/bin/restcomm/stop-restcomm.sh
     sleep 5
     echo "Testing Gather Application"
     rm -rf $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather/
     cp -ar $CURRENT_FOLDER/tests/gather/gather_app/ $RESTCOMM_HOME/standalone/deployments/restcomm.war/demos/gather
-    $RESTCOMM_HOME/bin/restcomm/start-restcomm.sh
+    startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
     $CURRENT_FOLDER/tests/gather/gather.sh
