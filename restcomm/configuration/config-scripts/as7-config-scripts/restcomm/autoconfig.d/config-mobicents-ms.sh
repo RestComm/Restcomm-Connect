@@ -35,9 +35,10 @@ configRMSJavaOpts() {
     FILE=$MMS_HOME/bin/run.sh
 	echo "Add mediasercer extra java options: $RMS_JAVA_OPTS"
 
-	# patch mediaserver java opts
-	sed -i '/JAVA_OPTS=\"-Dprogram.name=$PROGNAME $JAVA_OPTS\"/{n;d}' $FILE
-	sed -i '/JAVA_OPTS="-Dprogram.name=$PROGNAME $JAVA_OPTS"/ a JAVA_OPTS="'"$RMS_JAVA_OPTS"'"' $FILE
+	sed -e "/# Setup MMS specific properties/ {
+	  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME $RMS_JAVA_OPTS\"|
+	}" $FILE > $FILE.bak
+	mv $FILE.bak $FILE
 }
 
 ## Description: Configures Media Server Log Directory
