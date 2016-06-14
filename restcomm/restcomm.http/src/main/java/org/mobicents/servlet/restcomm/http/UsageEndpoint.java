@@ -25,7 +25,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -38,7 +37,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
@@ -95,11 +93,7 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
   }
 
   protected Response getUsage(final String accountSid, final String subresource, UriInfo info, final MediaType responseType) {
-    try {
-      secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
-    } catch (final AuthorizationException exception) {
-      return status(UNAUTHORIZED).build();
-    }
+    secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
 
     String categoryStr = info.getQueryParameters().getFirst("Category");
     String startDateStr = info.getQueryParameters().getFirst("StartDate");
