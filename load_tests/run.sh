@@ -41,10 +41,11 @@ prepareRestcomm() {
 }
 
 getPID(){
-   RESTCOMM_PID=" "
+   RESTCOMM_PID=""
    RMS_PID=""
 
    export RESTCOMM_PID=$(jps | grep jboss-modules.jar | cut -d " " -f 1)
+   export JBOSS_PID=$RESTCOMM_PID
    echo "Restcomm PID: $RESTCOMM_PID"
 
    while read -r line
