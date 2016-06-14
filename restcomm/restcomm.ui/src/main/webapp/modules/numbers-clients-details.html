@@ -83,7 +83,10 @@
     </fieldset>
 </div-->
 <div class="">
-    <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)">Save Changes</button>
-    <a href="#/numbers/clients" class="btn">Close</a>
-    <button class="btn btn-danger pull-right" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
+    <span class="pull-right">
+        <a href="#/numbers/clients" class="btn btn-default">Close</a>
+        <button class="btn btn-primary" ng-click="updateSIPClient(clientDetails)">Save Changes</button>
+    </span>
+    <button class="btn btn-danger" ng-click="confirmClientDelete(clientDetails)">Delete Client</button>
 </div>
+
