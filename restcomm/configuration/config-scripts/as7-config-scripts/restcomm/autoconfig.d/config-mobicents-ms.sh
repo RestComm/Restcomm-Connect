@@ -34,12 +34,13 @@ configServerBeans() {
 configRMSJavaOpts() {
     FILE=$MMS_HOME/bin/run.sh
 	echo "Add mediasercer extra java options: $RMS_JAVA_OPTS"
-	# patch mediaserver java opts
 
+	# patch mediaserver java opts
 	sed -i '/JAVA_OPTS=\"-Dprogram.name=$PROGNAME $JAVA_OPTS\"/{n;d}' $FILE
 	sed -i '/JAVA_OPTS="-Dprogram.name=$PROGNAME $JAVA_OPTS"/ a JAVA_OPTS="'"$RMS_JAVA_OPTS"'"' $FILE
 }
 
+## Description: Configures Media Server Log Directory
 configLogDirectory() {
 	FILE=$MMS_HOME/conf/log4j.xml
 	DIRECTORY=$MMS_HOME/log
