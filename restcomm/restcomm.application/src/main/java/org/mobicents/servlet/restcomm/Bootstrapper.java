@@ -191,19 +191,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     }
 
     private List<ActorRef> gateways(final Configuration settings, final ClassLoader loader) throws UnknownHostException {
-        final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                final String classpath = settings.getString("mgcp-servers[@class]");
-                return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
-            }
-        }));
         // List of available gateways
         List<ActorRef> gateways = new ArrayList<ActorRef>(1);
-
-        final String mgcpMediaServerName = settings.getString("mgcp-servers[@name]");
         logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ New Edition $$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 
         List<Object> mgcpMediaServers = settings.getList("mgcp-servers.mgcp-server.local-address");
@@ -212,8 +201,17 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
 
         for (int count = 0; count < mgcpMediaServerListSize; count++) {
+            final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    final String classpath = settings.getString("mgcp-servers[@class]");
+                    return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
+                }
+            }));
             final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
-            builder.setName(settings.getString(mgcpMediaServerName));
+            builder.setName(settings.getString("mgcp-servers[@name]"));
             String address = settings.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
             logger.info("mgcp-servers.mgcp-server(" + count + ").local-address: "+address);
             builder.setLocalIP(InetAddress.getByName(address));
@@ -237,8 +235,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             final String timeout = settings.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
             builder.setTimeout(Long.parseLong(timeout));
             final PowerOnMediaGateway powerOn = builder.build();
-            gateways.add(gateway);
             gateway.tell(powerOn, null);
+            gateways.add(gateway);
         }
 
         return gateways;
