@@ -109,14 +109,16 @@ public class MainConfigurationSet extends ConfigurationSet {
 
     private void initIdentity(ConfigurationSource source) {
         // identity.auth-server-url
-        this.identityAuthServerUrl = source.getProperty(IDENTITY_REALM_PUBLIC_KEY);
-        this.identityRealm = source.getProperty(IDENTITY_REALM);
-        this.identityRealmPublicKey = source.getProperty(IDENTITY_REALM_PUBLIC_KEY);
+        String identityAuthServerUrl = source.getProperty(IDENTITY_REALM_PUBLIC_KEY);
+        String identityRealm = source.getProperty(IDENTITY_REALM);
+        String identityRealmPublicKey = source.getProperty(IDENTITY_REALM_PUBLIC_KEY);
         if (!StringUtils.isEmpty(this.identityAuthServerUrl)) {
             if (StringUtils.isEmpty(this.identityRealm) || StringUtils.isEmpty(this.identityRealmPublicKey)) {
-                logger.error("Inconsistent identity configuration! Keycloak based authorization will not work.");
-                return;
+                throw new RuntimeException("Inconsistent identity configuration! Keycloak based authorization will not work.");
             }
+            this.identityAuthServerUrl = identityAuthServerUrl;
+            this.identityRealm = identityRealm;
+            this.identityRealmPublicKey = identityRealmPublicKey;
         }
     }
 

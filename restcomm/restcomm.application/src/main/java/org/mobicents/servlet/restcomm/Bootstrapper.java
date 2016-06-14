@@ -303,7 +303,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create high-level restcomm configuration
             RestcommConfiguration.createOnce(xml);
             // Initialize identityContext
-            IdentityContext identityContext = new IdentityContext(xml);
+            IdentityContext identityContext = new IdentityContext(xml, RestcommConfiguration.getInstance().getMain());
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
             // Create the media gateway.

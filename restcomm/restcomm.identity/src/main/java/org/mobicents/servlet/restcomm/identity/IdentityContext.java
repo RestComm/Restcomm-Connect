@@ -20,8 +20,8 @@
 package org.mobicents.servlet.restcomm.identity;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.lang.StringUtils;
 import org.keycloak.adapters.KeycloakDeployment;
+import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -49,22 +49,33 @@ public class IdentityContext {
     IdentityInstancesDao dao;
 
     /**
+     *
      * @param restcommConfiguration An apache configuration object representing <restcomm/> element of restcomm.xml
+     * @param mainConfig
      */
-    public IdentityContext(Configuration restcommConfiguration) {
-        this.restcommRoles = new RestcommRoles(restcommConfiguration.subset("runtime-settings").subset("security-roles"));
+    public IdentityContext(Configuration restcommConfiguration, MainConfigurationSet mainConfig) {
+        RestcommRoles roles = new RestcommRoles(restcommConfiguration.subset("runtime-settings").subset("security-roles"));
+        if (mainConfig != null) {
+            init(roles, mainConfig.getIdentityRealm(), mainConfig.getIdentityRealmPublicKey(), mainConfig.getIdentityAuthServerUrl());
+        } else {
+            init(roles, null, null, null);
+        }
     }
 
     // no-keycloak constructor
     public IdentityContext(RestcommRoles restcommRoles) {
+        init(restcommRoles, null, null, null);
+    }
+
+    public IdentityContext(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl) {
+        init(restcommRoles, realmName, realmKey, authServerUrl);
+    }
+
+    private void init(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl) {
         if (restcommRoles == null)
             throw  new IllegalArgumentException("Cannot create an IdentityContext object with null roles!");
         this.restcommRoles = restcommRoles;
-    }
-
-    public IdentityContext(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl, IdentityInstancesDao dao) {
-        this(restcommRoles);
-        if (StringUtils.isEmpty(realmKey) || StringUtils.isEmpty(realmName) || StringUtils.isEmpty(authServerUrl) || dao == null)
+        if ( authServerUrl != null && (realmKey == null || realmName == null))
             throw new IllegalArgumentException();
         this.realmName = realmName;
         this.realmKey= realmKey;
@@ -76,7 +87,6 @@ public class IdentityContext {
      *
      * @param instance
      * @return
-     * @throws KeycloakDeploymentAlreadyCreated
      */
     public KeycloakDeployment addDeployment( IdentityInstance instance ) {
         KeycloakDeployment existingDeployment = deployments.get(instance.getSid());

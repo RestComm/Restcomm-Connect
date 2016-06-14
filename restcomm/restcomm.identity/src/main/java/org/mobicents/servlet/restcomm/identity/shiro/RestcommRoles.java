@@ -45,6 +45,10 @@ public class RestcommRoles {
         loadSecurityRoles(configuration);
     }
 
+    public RestcommRoles(Map<String, SimpleRole> roles) {
+        this.roles = roles;
+    }
+
     public SimpleRole getRole(final String role) {
         return roles.get(role);
     }
