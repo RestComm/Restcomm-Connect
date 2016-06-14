@@ -90,8 +90,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * Grants general purpose access if any valid token exists in the request
      */
     protected void checkAuthenticatedAccount() {
-        if (userIdentityContext.getEffectiveAccount() == null)
+        if (userIdentityContext.getEffectiveAccount() == null) {
             throw new NotAuthenticated();
+        }
     }
 
     /**

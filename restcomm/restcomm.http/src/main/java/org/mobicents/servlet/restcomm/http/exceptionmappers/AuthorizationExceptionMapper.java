@@ -39,8 +39,9 @@ import javax.ws.rs.ext.Provider;
 public class AuthorizationExceptionMapper implements ExceptionMapper<AuthorizationException> {
     @Override
     public Response toResponse(AuthorizationException e) {
-        if (e instanceof NotAuthenticated)
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+        if (e instanceof NotAuthenticated) {
+            return Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate","Basic realm=\"Restcomm realm\"").build();
+        }
         else
         if (e instanceof InsufficientPermission)
             return Response.status(Response.Status.FORBIDDEN).build();
