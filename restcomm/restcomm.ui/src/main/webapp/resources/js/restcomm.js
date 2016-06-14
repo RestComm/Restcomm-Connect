@@ -81,8 +81,6 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         }
     }
   });
-  $stateProvider.state('public.registerinstance',{
-  });
   // 'restcomm' state assumes (requires) an authorized restcomm Account to have been determined. Child states can take that for granted.
   $stateProvider.state('restcomm',{
     templateUrl:'templates/restcomm-state.html',
@@ -93,6 +91,16 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         },
         identity: function (IdentityConfig) {
             return IdentityConfig.getIdentity();
+        }
+    }
+  });
+  $stateProvider.state('restcomm.identity-register',{
+    url:'/identity/register',
+    templateUrl:'modules/identity-unregistered.html',
+    controller: 'IdentityRegistrationCtrl',
+    resolve: {
+        authorize: function (AuthService) {
+            return AuthService.checkAccess();
         }
     }
   });

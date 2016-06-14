@@ -72,7 +72,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //  - rejected:
     //      MISSING_ACCOUNT_SID,
     //      KEYCLCOAK_NO_LINKED_ACCOUNT
-    //      KEYCLOAK_INSTANCE_NOT_REGISTERED
+    //      KEYCLOAK_INSTANCE_NOT_REGISTERED - not used
     //      RESTCOMM_ACCOUNT_NOT_INITIALIZED - applies to Restcomm auth mode
     //      RESTCOMM_AUTH_FAILED - could not authenticate to Restcomm
     //      RESTCOMM_NOT_AUTHENTICATED - the user is not authenticated and there are no cached credentials. Applies to restcomm auth mode
@@ -132,10 +132,11 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
                 } else
                     throw 'RESTCOMM_NOT_AUTHENTICATED';
             }
-        } else {
-            // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
-            throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
         }
+//        else {
+//            // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
+//            throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
+//        }
         return deferred.promise;
     }
 
@@ -288,7 +289,7 @@ function IdentityConfig(server, instance,$q) {
     }
     // True if Restcomm is used for authorization (legacy mode). No keycloak needs to be present.
     function securedByRestcomm() {
-        return !identityServerConfigured();
+        return !securedByKeycloak();
     }
     // returns identity instance if applicable (as a promise) or null if not (as null, not promise)
     // Returns:
@@ -299,14 +300,10 @@ function IdentityConfig(server, instance,$q) {
     //  not-applicable - Restcomm does not use keycloak for external authorization
     //      - null
     function getIdentity() {
-        if (!identityServerConfigured())
-            return null;
-        var deferred = $q.defer();
-        if (!!This.instance && !!This.instance.name)
-            deferred.resolve(This.instance);
+        if (securedByKeycloak())
+          return This.instance;
         else
-            deferred.reject("KEYCLOAK_INSTANCE_NOT_REGISTERED");
-        return deferred.promise;
+          return null;
     }
 
     // Public interface
