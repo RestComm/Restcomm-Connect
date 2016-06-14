@@ -1121,7 +1121,7 @@ public class MmsCallController extends MediaServerController {
                     logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridgeEndpoint.path());
                 }
 
-            mediaGatewayy = mediaSessionVSGatewayMap.get(session);           
+            mediaGatewayy = mediaSessionVSGatewayMap.get(session);
             mediaGatewayy.tell(new DestroyEndpoint(bridgeEndpoint), self());
 
                 context().stop(bridgeEndpoint);
