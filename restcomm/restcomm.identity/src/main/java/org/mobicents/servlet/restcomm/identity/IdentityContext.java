@@ -109,6 +109,8 @@ public class IdentityContext {
      * @return existing keycloak deployment object of null
      */
     public KeycloakDeployment getDeployment(Sid identityInstanceSid) {
+        if (identityInstanceSid == null)
+            return null;
         KeycloakDeployment deployment = deployments.get(identityInstanceSid);
         if (deployment == null) {
             IdentityInstance addedInstance = dao.getIdentityInstance(identityInstanceSid);

@@ -85,8 +85,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
         this.identityInstance = findCurrentIdentityInstance(request, storage.getIdentityInstancesDao());
-        KeycloakDeployment deployment = identityContext.getDeployment(identityInstance.getSid());
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
+        KeycloakDeployment deployment = null;
+        if (this.identityInstance != null)
+            deployment = identityContext.getDeployment(identityInstance.getSid());
         this.userIdentityContext = new UserIdentityContext(deployment, request, accountsDao);
     }
 
