@@ -22,15 +22,6 @@ NoSslRestConf(){
 	mv $FILE.bak $FILE
 }
 
-#Disable HTTPS (certificate use) when SECURESSL=false for RMS.
-NoSslRmsConf(){
-	FILE=$MMS_HOME/bin/run.sh
-	sed -e "/# Setup MMS specific properties/ {
-		N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME \\\$JAVA_OPTS\"|
-	}" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
-}
-
 ####funcitions for SECURESSL="SELF" || SECURESSL="AUTH" ####
 #HTTPS configuration.
 #Usage of certificate.
@@ -55,7 +46,7 @@ SslRestCommConf(){
 	#enable HTTPS and certificate file.
 	echo "Will use trust store at location: $CERTIFICATION_FILE"
 	sed -e "s/<\!--connector name=\"https\" \(.*\)>/<connector name=\"https\" \1>/" \
-	-e "s|<ssl name=\"https\" key-alias=\".*\" password=\".*\" certificate-key-file=\".*\" \(.*\) verify-client=\".*\" \/>|<ssl name=\"https\" key-alias=\"$TRUSTSTORE_ALIAS\" password=\"$TRUSTSTORE_PASSWORD\" certificate-key-file=\"$CERTIFICATION_FILE\" cipher-suite=\"TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA\" verify-client=\"false\" \1\/>|" \
+	-e "s|<ssl name=\"https\" \(.*\)>|<ssl name=\"https\" key-alias=\"$TRUSTSTORE_ALIAS\" password=\"$TRUSTSTORE_PASSWORD\" certificate-key-file=\"$CERTIFICATION_FILE\" cipher-suite=\"TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA\" verify-client=\"false\" protocol=\"TLSv1,TLSv1.1,TLSv1.2,SSLv2Hello\" />|" \
 	-e "s/<\/connector-->/<\/connector>/" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
 	echo "Properly configured HTTPS Connector to use trustStore file $CERTIFICATION_FILE"
@@ -72,7 +63,7 @@ SslRmsConf(){
 	fi
 	JAVA_OPTS_TRUSTORE="-Djavax.net.ssl.trustStore=$CERTIFICATION_FILE -Djavax.net.ssl.trustStorePassword=$TRUSTSTORE_PASSWORD"
 	sed -e "/# Setup MMS specific properties/ {
-	  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME \\\$JAVA_OPTS $JAVA_OPTS_TRUSTORE\"|
+	  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME $RMS_JAVA_OPTS $JAVA_OPTS_TRUSTORE\"|
 	}" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
 	echo "Properly configured MMS to use trustStore file $RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE"
@@ -108,7 +99,6 @@ CertConfigure(){
   fi
 
   #Final necessary configuration. Protocols permitted, etc.
-  sed -i "s|protocol=\"TLSv1,TLSv1.1,TLSv1.2\"|protocol=\"TLSv1,TLSv1.1,TLSv1.2,SSLv2Hello\"|" $RESTCOMM_CONF/standalone-sip.xml
   grep -q 'ephemeralDHKeySize' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Djdk.tls.ephemeralDHKeySize=2048|" $RESTCOMM_BIN/standalone.conf
   grep -q 'https.protocols' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $RESTCOMM_BIN/standalone.conf
 }
@@ -152,7 +142,6 @@ if [[ "$SECURESSL" = "SELF" ||  "$SECURESSL" = "AUTH" ]]; then
 	fi
 elif [[ "${SECURESSL^^}" = "FALSE"  ]]; then
 	NoSslRestConf
-	NoSslRmsConf
 else
     echo "Allowed values for SECURESSL: SELF, AUTH, FALSE"
 fi
