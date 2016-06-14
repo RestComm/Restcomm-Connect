@@ -19,6 +19,7 @@ DTAR="true"
 ## FUNCTIONS
 ##
 getPID(){
+  if [[ -z $RESTCOMM_PID ]] || [[ -z $RMS_PID ]]; then
    RESTCOMM_PID=" "
    RMS_PID=""
 
@@ -31,6 +32,7 @@ getPID(){
           RMS_PID=$line
    fi
    done < <(jps | grep Main | cut -d " " -f 1)
+ fi
 
 }
 
