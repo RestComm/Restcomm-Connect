@@ -98,7 +98,7 @@ public class IdentityInstancesJsonEndpoint extends IdentityInstancesEndpoint {
     @DELETE
     @Path("/{identityInstanceSid}")
     public Response unregisterIdentityInstance(@PathParam("identityInstanceSid") String identityInstanceSid) {
-        if (identityConfig.externalAuthEnabled())
+        if (mainConfig.getIdentityAuthServerUrl() != null)
             return super.unregisterIdentityInstance(identityInstanceSid);
         else
             return Response.status(Response.Status.NOT_FOUND).build();

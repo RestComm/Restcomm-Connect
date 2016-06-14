@@ -70,7 +70,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
     protected IdentityContext identityContext;
-    IdentityInstance identityInstance;
+    private IdentityInstance identityInstance;
     @Context
     protected ServletContext context;
     @Context
@@ -84,7 +84,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
-        IdentityInstance identityInstance = getCurrentIdentityInstance(request, storage.getIdentityInstancesDao());
+        this.identityInstance = findCurrentIdentityInstance(request, storage.getIdentityInstancesDao());
         KeycloakDeployment deployment = identityContext.getDeployment(identityInstance.getSid());
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
         this.userIdentityContext = new UserIdentityContext(deployment, request, accountsDao);
@@ -331,13 +331,21 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param identityInstancesDao
      * @return the IdentityInstance object mapped or null
      */
-    protected IdentityInstance getCurrentIdentityInstance(HttpServletRequest request, IdentityInstancesDao identityInstancesDao) {
+    private IdentityInstance findCurrentIdentityInstance(HttpServletRequest request, IdentityInstancesDao identityInstancesDao) {
         // TODO here determine current organization based on request, conf etc.
         Sid organizationSid = getCurrentOrganizationSid();
         // TODO throw an error if organizationSid is not found. There has to be one, right ?
         // ...
         IdentityInstance identityInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
         return identityInstance;
+    }
+
+    protected IdentityInstance getIdentityInstance() {
+        return this.identityInstance;
+    }
+
+    protected void setIdentityInstance(IdentityInstance instance) {
+        this.identityInstance = instance;
     }
 
     protected Sid getCurrentOrganizationSid() {

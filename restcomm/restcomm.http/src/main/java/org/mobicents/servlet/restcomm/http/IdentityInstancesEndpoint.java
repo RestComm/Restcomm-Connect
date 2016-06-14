@@ -66,10 +66,9 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         // determine keycloakBaseUrl based on configuration and defaults
         String keycloakBaseUrl = keycloakBaseUrlParam;
         if (StringUtils.isEmpty(keycloakBaseUrl))
-            keycloakBaseUrl = mainConfig.getIdentityAuthServerUrl()
+            keycloakBaseUrl = mainConfig.getIdentityAuthServerUrl();
         // is there an IdentityInstance already for this organization ?
-        IdentityInstance existingInstance = getActiveIdentityInstance();
-        if (existingInstance == null) {
+        if (getIdentityInstance() == null) {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, mainConfig.getIdentityRealm());
             IdentityInstance storedInstance;
             try {
@@ -92,11 +91,11 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
 
     protected Response getCurrentIdentityInstance() {
         // TODO use a proper converter here
-        if (identityInstance == null)
+        if (getIdentityInstance() == null)
             return Response.status(Response.Status.NOT_FOUND).build();
         else {
             Gson gson = new Gson();
-            String json = gson.toJson(new IdentityInstanceEntity(identityInstance));
+            String json = gson.toJson(new IdentityInstanceEntity(getIdentityInstance()));
             return Response.ok(json).header("Content-Type", "application/json").build();
         }
     }
