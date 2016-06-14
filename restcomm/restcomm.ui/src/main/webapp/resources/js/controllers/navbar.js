@@ -65,6 +65,38 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
+rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RCommAccounts,Notifications) {
+	$scope.predicate = 'name';  
+    $scope.reverse = false;  
+    $scope.currentPage = 1;  
+     $scope.maxSize = 5; //pagination max size
+    $scope.entryLimit = 10; //max rows for data table
+     $scope.order = function (predicate) {  
+    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;  
+     $scope.predicate = predicate; 
+    };  
+  
+    var subAccountsList = RCommAccounts.query(function() {
+      $scope.subAccountsList = subAccountsList;
+      $scope.totalItems = subAccountsList.length; 
+    });
+    
+    $scope.setEntryLimit = function(limit) {
+        $scope.entryLimit = limit;
+        $scope.numPerPage = Math.ceil($scope.subAccountsList.length / $scope.entryLimit);
+      }; 
+  
+    $scope.paginate = function (value) {  
+      var begin, end, index;  
+      begin = ($scope.currentPage - 1) * $scope.entryLimit;  
+      end = begin + $scope.entryLimit;  
+      index = $scope.subAccountsList.indexOf(value);  
+      return (begin <= index && index < end);  
+    };  
+  }); 
+
+
+
 rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5) {
   //$scope.sid = SessionService.get('sid');
 
