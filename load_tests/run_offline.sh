@@ -5,9 +5,11 @@
 #
 
 export CURRENT_FOLDER=`pwd`
-export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/toRelease/Restcomm-JBoss-AS7-7.7.0.925
+export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/Restcomm-JBoss-AS7-7.8.0.938
 export WARMUP=false
 export COLLECT_JMAP=true
+
+export PERFRECORDER_VERSION=14
 
 export RESULTS_FOLDER=$CURRENT_FOLDER/results
 if [ ! -d "$RESULTS_FOLDER" ]; then
@@ -25,7 +27,26 @@ export CALL_RATE=$5
 
 export TEST_NAME="${6,,}"
 
-export VOICERSS=
+export VOICERSS=c58e134224704b0182f2e2eaef59f8d8
+#export VOICERSS=
 export RESTCOMM_NEW_PASSWORD='NewPassword'
+
+if [[  -z $VOICERSS ]] || [ "$VOICERSS" == ''  ]; then
+  echo "VoiceRSS TTS Service key is not set! Will exit"
+  exit 1
+fi
+
+#prepare PerfCorder tool
+echo "Preparing PerfRecorder"
+cp -ar ../../telscale-commons/jenkins-aws/Jenkins-Jobs/performance/mss-proxy-goals.xsl ./
+export TOOLS_DIR=$CURRENT_FOLDER/report-tools
+export GOALS_FILE=$CURRENT_FOLDER/mss-proxy-goals.xsl
+rm -fr $TOOLS_DIR/*
+mkdir -p $TOOLS_DIR
+cd $TOOLS_DIR
+wget -q -c --auth-no-challenge https://mobicents.ci.cloudbees.com/job/PerfCorder/$PERFRECORDER_VERSION/artifact/target/sipp-report-0.2.$PERFRECORDER_VERSION-with-dependencies.jar
+unzip -q sipp-report-0.2.$PERFRECORDER_VERSION-with-dependencies.jar
+chmod 777 $TOOLS_DIR/*.sh
+cd $CURRENT_FOLDER
 
 $CURRENT_FOLDER/run.sh $RESTCOMM_ADDRESS $LOCAL_ADDRESS $SIMULTANEOUS_CALLS $MAXIMUM_CALLS $CALL_RATE $TEST_NAME

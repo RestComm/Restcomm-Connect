@@ -194,6 +194,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private boolean muteCall;
     private boolean startConferenceOnEnter = true;
     private boolean endConferenceOnExit = false;
+    private boolean confModeratorPresent = false;
     private ActorRef confSubVoiceInterpreter;
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
@@ -2359,19 +2360,33 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final Mute mute = new Mute();
                 call.tell(mute, source);
             }
-
-            if (logger.isInfoEnabled()) {
-                logger.info("At conferencing, state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+            // Parse start conference.
+            Attribute attribute = child.attribute("startConferenceOnEnter");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    startConferenceOnEnter = Boolean.parseBoolean(value);
+                }
+            } else {
+                //Default values is startConferenceOnEnter = true
+                startConferenceOnEnter = true;
             }
-            if (playMusicForConference && startConferenceOnEnter) {
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 4");
+
+            confModeratorPresent = startConferenceOnEnter;
+            if (logger.isInfoEnabled()) {
+                logger.info("At conferencing, VI state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+" startConferenceOnEnter: "+startConferenceOnEnter+"  conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+            }
+            if (playMusicForConference) { // && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter
                 if (conferenceInfo.participants().size() == 1) {
                     logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 5");
                     startConferenceOnEnter = false;
-                } else  if (conferenceInfo.participants().size() > 1) {
-                    logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 6");
-                    startConferenceOnEnter = true;
+                } else if (conferenceInfo.participants().size() > 1) {
+                    if (startConferenceOnEnter || conferenceInfo.isModeratorPresent()) {
+                        startConferenceOnEnter = true;
+                    } else {
+                        startConferenceOnEnter = false;
+                    }
                 }
             }
 
@@ -2398,7 +2413,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 9");
                     // Parse wait url.
                     URI waitUrl = new URI("/restcomm/music/electronica/teru_-_110_Downtempo_Electronic_4.wav");
-                    Attribute attribute = child.attribute("waitUrl");
+                    attribute = child.attribute("waitUrl");
                     if (attribute != null) {
                         logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 10");
                         String value = attribute.value();
@@ -2504,11 +2519,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
     protected void playWaitUrl(final List<URI> waitUrls, final ActorRef source) {
-        conference.tell(new Play(waitUrls, Short.MAX_VALUE), source);
+        conference.tell(new Play(waitUrls, Short.MAX_VALUE, confModeratorPresent), source);
     }
 
     protected void playWaitUrl(final URI waitUrl, final ActorRef source) {
-        conference.tell(new Play(waitUrl, Short.MAX_VALUE), source);
+        conference.tell(new Play(waitUrl, Short.MAX_VALUE, confModeratorPresent), source);
     }
 
     protected void updateMuteAndHoldStatusOfAllConferenceCalls(final Sid accountSid, final Sid conferenceSid, final boolean mute, final boolean hold) throws ParseException{

@@ -80,6 +80,8 @@ public final class Conference extends UntypedActor {
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
 
+    private boolean moderatorPresent = false;
+
     // Media Session Controller
     private final ActorRef mscontroller;
 
@@ -328,11 +330,11 @@ public final class Conference extends UntypedActor {
     private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
         ConferenceInfo information = null;
         if (is(waiting)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
         } else if (is(running)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent);
         }
         sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
     }
@@ -421,6 +423,7 @@ public final class Conference extends UntypedActor {
 
     private void onPlay(Play message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
+            moderatorPresent = message.isConfModeratorPresent();
             // Forward message to media server controller
             this.mscontroller.tell(message, sender);
         }
