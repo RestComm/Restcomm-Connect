@@ -1,6 +1,7 @@
 package org.mobicents.servlet.restcomm;
 
-
+//TODO: REMOVE THIS CLASS AFTER TESTING
+//THIS IS A TEST CLASS, for some quick local tests, MUST BE IGNORED
 public class Robin {
 
     private final int numberOfMediaGateways;

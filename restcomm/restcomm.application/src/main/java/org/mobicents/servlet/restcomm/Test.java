@@ -7,7 +7,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 
-
+// TODO: REMOVE THIS CLASS AFTER TESTING
+// THIS IS A TEST CLASS, for some quick local tests, MUST BE IGNORED
 public class Test {
 
     public static void main(String[] args) {
