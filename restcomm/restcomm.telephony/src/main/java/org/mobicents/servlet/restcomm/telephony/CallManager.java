@@ -992,18 +992,31 @@ public final class CallManager extends UntypedActor {
             List<ActorRef> calls = new CopyOnWriteArrayList<>();
             for (Registration registration : registrationToDial) {
                 logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
+                String transport;
                 if (registration.getLocation().contains("transport")) {
-                    String transport = registration.getLocation().split(";")[1].replace("transport=", "");
+                    transport = registration.getLocation().split(";")[1].replace("transport=", "");
                     outboundIntf = outboundInterface(transport);
                 } else {
-                    outboundIntf = outboundInterface("udp");
+                    transport = "udp";
+                    outboundIntf = outboundInterface(transport);
+                }
+                if (outboundIntf == null) {
+                    String errMsg = "The outbound interface for transport: "+transport+" is NULL, something is wrong with container, cannot proceed to call client "+request.to();
+                    logger.error(errMsg);
+                    sendNotification(errMsg, 11008, "error", true);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    return;
                 }
                 if (request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
                     // to use it directly
                     from = (SipURI) sipFactory.createURI(request.from());
                 } else if (request.from() != null) {
-                    from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                    if (outboundIntf != null) {
+                        from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                    } else {
+                        logger.error("Outbound interface is null, cannot create From header to be used to Dial client: "+client);
+                    }
                 } else {
                     from = outboundIntf;
                 }
