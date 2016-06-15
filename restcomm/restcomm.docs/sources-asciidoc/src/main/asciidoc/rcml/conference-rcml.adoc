@@ -39,6 +39,24 @@ or an example of how to use the <Conference> noun see below.
 </Response>
 ----
 
+== Music on hold for conference
+
+By default Restcomm will play music on hold for the first participant to join a conference room even if you have *startConference=true*. This feature can be disabled, check configuration section of the docs.
+
+Check the table below description how the feature will work.
+
+.Conference Music On Hold
+[width="100%",options="header,footer"]
+|====================
+| # | First Participant  | Music | Second Participant | Music
+|1  | not a moderator  | play music on hold  | not a moderator  | continue playing music on hold
+|2  | not a moderator  | play music on hold  | moderator  | stop music on hold
+|3  | moderator  | play music on hold  | not a moderator  | stop music on hold
+|4  | moderator  | play music on hold  | moderator  | stop music on hold
+|====================
+* Moderator participant is the call with *startConferenceOnEnter=true*
+* Not a moderator participant is the call with *startConferenceOnEnter=false*
+
 [[uri-noun-deprecated]]
 == Uri noun deprecated
 
