@@ -46,6 +46,7 @@ import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.EndpointState;
 import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
+import org.mobicents.servlet.restcomm.mgcp.MediaGateways;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
@@ -93,7 +94,10 @@ public class MmsBridgeController extends MediaServerController {
     private Boolean fail;
 
     // MGCP runtime stuff
-    private final ActorRef mediaGateway;
+    //private final ActorRef mediaGateway;
+    // TODO rename following variable to 'mediaGateway'
+    private ActorRef mediaGatewayy;
+    private final MediaGateways mediaGateways;
     private MediaSession mediaSession;
     private ActorRef endpoint;
 
@@ -109,7 +113,7 @@ public class MmsBridgeController extends MediaServerController {
     // Observers
     private final List<ActorRef> observers;
 
-    public MmsBridgeController(ActorRef mediaGateway) {
+    public MmsBridgeController(final List<ActorRef> mediaGateways, final Configuration configuration) {
         final ActorRef self = self();
 
         // Finite states
@@ -138,7 +142,8 @@ public class MmsBridgeController extends MediaServerController {
         this.fail = Boolean.FALSE;
 
         // Media Components
-        this.mediaGateway = mediaGateway;
+        //this.mediaGateway = mediaGateway;
+        this.mediaGateways = new MediaGateways(mediaGateways , configuration);
 
         // Media Operations
         this.recording = Boolean.FALSE;
@@ -380,7 +385,8 @@ public class MmsBridgeController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
+            mediaGatewayy = mediaGateways.getMediaGateway();
+            mediaGatewayy.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
         }
     }
 
@@ -393,7 +399,7 @@ public class MmsBridgeController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             final CreateConferenceEndpoint createEndpoint = new CreateConferenceEndpoint(mediaSession);
-            mediaGateway.tell(createEndpoint, super.source);
+            mediaGatewayy.tell(createEndpoint, super.source);
         }
     }
 
@@ -409,7 +415,7 @@ public class MmsBridgeController extends MediaServerController {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
+                    return new MgcpMediaGroup(mediaGatewayy, mediaSession, endpoint);
                 }
             }));
         }
@@ -492,7 +498,7 @@ public class MmsBridgeController extends MediaServerController {
         public void execute(Object message) throws Exception {
             // Cleanup resources
             if (endpoint != null) {
-                mediaGateway.tell(new DestroyEndpoint(endpoint), super.source);
+                mediaGatewayy.tell(new DestroyEndpoint(endpoint), super.source);
                 endpoint = null;
             }
 

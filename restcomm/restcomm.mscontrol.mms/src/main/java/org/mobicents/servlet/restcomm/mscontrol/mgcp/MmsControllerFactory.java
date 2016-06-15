@@ -81,7 +81,6 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            System.out.println("MmsControllerFactory: %%%%%%%%%%%%%%%%% mediaGateways size:"+mediaGateways);
             return new MmsCallController(mediaGateways, configuration);
         }
 
@@ -93,8 +92,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            //TODO modify according to multiple media servers
-            return new MmsConferenceController(mediaGateways.get(0));
+            return new MmsConferenceController(mediaGateways, configuration);
         }
 
     }
@@ -105,8 +103,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            //TODO modify according to multiple media servers
-            return new MmsBridgeController(mediaGateways.get(0));
+            return new MmsBridgeController(mediaGateways, configuration);
         }
 
     }

@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.fsm.Action;
@@ -37,6 +38,7 @@ import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.EndpointState;
 import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
+import org.mobicents.servlet.restcomm.mgcp.MediaGateways;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
@@ -87,7 +89,10 @@ public final class MmsConferenceController extends MediaServerController {
     private Boolean fail;
 
     // MGCP runtime stuff.
-    private final ActorRef mediaGateway;
+    //private final ActorRef mediaGateway;
+    // TODO rename following variable to 'mediaGateway'
+    private ActorRef mediaGatewayy;
+    private final MediaGateways mediaGateways;
     private MediaSession mediaSession;
     private ActorRef cnfEndpoint;
 
@@ -103,7 +108,7 @@ public final class MmsConferenceController extends MediaServerController {
     // Observers
     private final List<ActorRef> observers;
 
-    public MmsConferenceController(ActorRef mediaGateway) {
+    public MmsConferenceController(final List<ActorRef> mediaGateways, final Configuration configuration) {
         super();
         final ActorRef source = self();
 
@@ -136,7 +141,8 @@ public final class MmsConferenceController extends MediaServerController {
         this.fail = Boolean.FALSE;
 
         // MGCP runtime stuff
-        this.mediaGateway = mediaGateway;
+        //this.mediaGateway = mediaGateway;
+        this.mediaGateways = new MediaGateways(mediaGateways , configuration);
 
         // Runtime media operations
         this.playing = Boolean.FALSE;
@@ -373,7 +379,8 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
+            mediaGatewayy = mediaGateways.getMediaGateway();
+            mediaGatewayy.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
         }
     }
 
@@ -385,7 +392,7 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new CreateConferenceEndpoint(mediaSession), super.source);
+            mediaGatewayy.tell(new CreateConferenceEndpoint(mediaSession), super.source);
         }
     }
 
@@ -401,7 +408,7 @@ public final class MmsConferenceController extends MediaServerController {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new MgcpMediaGroup(mediaGateway, mediaSession, cnfEndpoint);
+                    return new MgcpMediaGroup(mediaGatewayy, mediaSession, cnfEndpoint);
                 }
             }));
         }
@@ -468,7 +475,7 @@ public final class MmsConferenceController extends MediaServerController {
         public void execute(Object message) throws Exception {
             // Cleanup resources
             if (cnfEndpoint != null) {
-                mediaGateway.tell(new DestroyEndpoint(cnfEndpoint), super.source);
+                mediaGatewayy.tell(new DestroyEndpoint(cnfEndpoint), super.source);
                 cnfEndpoint = null;
             }
 

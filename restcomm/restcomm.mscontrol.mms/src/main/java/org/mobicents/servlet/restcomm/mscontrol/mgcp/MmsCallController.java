@@ -151,6 +151,7 @@ public class MmsCallController extends MediaServerController {
 
     // MGCP runtime stuff
     //private final ActorRef mediaGateway;
+    // TODO rename following variable to 'mediaGateway'
     private ActorRef mediaGatewayy;
     private final MediaGateways mediaGateways;
     private MediaGatewayInfo gatewayInfo;
@@ -177,7 +178,7 @@ public class MmsCallController extends MediaServerController {
     // Observer pattern
     private final List<ActorRef> observers;
 
-    public MmsCallController(final List<ActorRef> mediaGateways, Configuration configuration) {
+    public MmsCallController(final List<ActorRef> mediaGateways, final Configuration configuration) {
         super();
         final ActorRef source = self();
 
@@ -264,7 +265,6 @@ public class MmsCallController extends MediaServerController {
 
         // MGCP runtime stuff
         //this.mediaGateway = mediaGateway;
-        logger.info("%%%%%%%%%%%%%%%%% mediaGateways size:"+mediaGateways);
         this.mediaGateways = new MediaGateways(mediaGateways , configuration);
         this.mediaSessionVSGatewayMap = new HashMap<MediaSession,ActorRef>();
 
