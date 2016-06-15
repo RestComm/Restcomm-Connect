@@ -46,12 +46,12 @@ import org.mobicents.servlet.restcomm.entities.Account;
 public class UserIdentityContext {
     protected Logger logger = Logger.getLogger(UserIdentityContext.class);
 
-    final AccountKey accountKey;
-    final Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
+    AccountKey accountKey;
+    Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
     Set<String> effectiveAccountRoles;
     // keycloak related properties
     final String oauthTokenString;
-    final AccessToken oauthToken;
+    final AccessToken oauthToken; // verified token
     final KeycloakDeployment keycloakDeployment;
 
     /**
@@ -76,22 +76,30 @@ public class UserIdentityContext {
             if (!StringUtils.isEmpty(tokenString)) {
                 this.oauthToken = verifyToken(tokenString, keycloakDeployment);
                 this.oauthTokenString = tokenString;
+                if (this.oauthToken != null) {
+                    //ok, we have a verified token, let's try to load the account
+                    this.effectiveAccount = accountsDao.getAccountToAuthenticate(oauthToken.getPreferredUsername());
+                }
+
             } else {
                 this.oauthToken = null;
                 this.oauthTokenString = null;
             }
         }
-        this.accountKey = extractAccountKey(request, accountsDao);
-        if (accountKey != null) {
-            if (accountKey.isVerified()) {
-                effectiveAccount = accountKey.getAccount();
+        // if we failed getting an effective account using oauth tokens, try basic auth too
+        if (this.effectiveAccount == null) {
+            this.accountKey = extractAccountKey(request, accountsDao);
+            if (accountKey != null) {
+                if (accountKey.isVerified()) {
+                    effectiveAccount = accountKey.getAccount();
+                } else
+                    effectiveAccount = null;
             } else
                 effectiveAccount = null;
-        } else
-            effectiveAccount = null;
 
-        if (effectiveAccount != null)
-            effectiveAccountRoles = extractAccountRoles(effectiveAccount);
+            if (effectiveAccount != null)
+                effectiveAccountRoles = extractAccountRoles(effectiveAccount);
+        }
     }
 
     private String extractOauthTokenString(HttpServletRequest request) {

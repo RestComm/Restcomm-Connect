@@ -1,32 +1,30 @@
 <rc-page-title icon="lock" title="Identity" sub-title="Unregistered"></rc-page-title>
 
-<div class="row">
-    <div class="col-md-12">
-        <alert>
-            <p>This restcomm instance is not registered with an identity server yet. </p>
-            <p>Registration will enable Oauth based authorization and SSO features but will require creating additional accounts in the configured Keycloak authorization server.</p>
-        </alert>
-        <form name="form">
+<form name="form" ng-submit="submitRegistrationDetails(details)">
+    <div class="row">
+        <div class="col-md-12">
+            <alert>
+                This restcomm instance is not registered with an identity server yet.
+            </alert>
+
             <div class="form-group">
                 <div class="input-group">
                     <span class="input-group-addon">Redirect URL</span>
-                    <input class="form-control" model="form.redirectUrl">
+                    <input class="form-control" ng-model="details.RedirectUrl">
                 </div>
-                <p class="help-block">asdf</p>
+                <p class="help-block">After login, authenticated cliends will be redirected under this URL.</p>
             </div>
 
             <div class="form-group">
                 <div class="input-group">
                     <span class="input-group-addon">Initial access token</span>
-                    <input class="form-control" model="form.iat">
+                    <input class="form-control" ng-model="details.InitialAccessToken">
                 </div>
-                <p class="help-block">asdfas</p>
+                <p class="help-block">If you don't know what this is click <a href title="TODO">here</a>.</p>
             </div>
-        </form>
+        </div>
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary pull-right">Register</button>
+        </div>
     </div>
-    <div class="col-md-12">
-        <button class="btn btn-primary pull-right">Register</button>
-    </div>
-</div>
-
-
+</form>

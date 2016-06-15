@@ -32,6 +32,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.responseentities.IdentityInstanceEntity;
 import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
+import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -78,7 +79,9 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
                 storedInstance = identityInstancesDao.getIdentityInstanceByName(instance.getName());
             } catch (AuthServerAuthorizationError authServerAuthorizationError) {
                 String errorResponse = "{\"error\":\"KEYCLOAK_ACCESS_ERROR\"}";
-                return Response.status(Response.Status.UNAUTHORIZED).entity(errorResponse).header("Content-Type", "application/json").build();
+                return Response.status(Response.Status.FORBIDDEN).entity(errorResponse).header("Content-Type", "application/json").build();
+            } catch (IdentityClientRegistrationError identityClientRegistrationError) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
             logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
             // TODO use a proper converter here

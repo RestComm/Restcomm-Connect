@@ -72,22 +72,17 @@ public class IdentityRegistrationTool {
      * @return the new IdentityInstance or null
      * @throws AuthServerAuthorizationError
      */
-    public IdentityInstance registerInstanceWithIAT(String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError {
+    public IdentityInstance registerInstanceWithIAT(String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         String instanceName = generateName();
         KeycloakClient restcommRestClient;
         KeycloakClient restcommUiClient;
         KeycloakClient rvdRestClient;
         KeycloakClient rvdUiClient;
         // create client application at keycloak side
-        try {
-            restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
-            restcommUiClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
-            rvdRestClient = registerRvdRestClient(instanceName,iat,null,restcommClientSecret,false,false);
-            rvdUiClient = registerRvdUiClient(instanceName,iat,null,restcommClientSecret,false,true);
-        } catch (IdentityClientRegistrationError e) {
-            logger.error(e);
-            return null;
-        }
+        restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
+        restcommUiClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
+        rvdRestClient = registerRvdRestClient(instanceName,iat,null,restcommClientSecret,false,false);
+        rvdUiClient = registerRvdUiClient(instanceName,iat,null,restcommClientSecret,false,true);
         // for each client created, there is a Registration Access token that allows further modifying that client in the future. We keep that.
         IdentityInstance identityInstance = new IdentityInstance();
         identityInstance.setName(instanceName);
@@ -155,7 +150,7 @@ public class IdentityRegistrationTool {
             KeycloakClient createdClient = gson.fromJson(data, KeycloakClient.class);
             return createdClient;
         } else
-        if (response.getStatus() == 403){
+        if (response.getStatus() == 403 || response.getStatus() == 401){
             throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
         } else {
             throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus());

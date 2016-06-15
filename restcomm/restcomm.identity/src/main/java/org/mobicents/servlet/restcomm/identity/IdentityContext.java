@@ -53,33 +53,34 @@ public class IdentityContext {
      * @param restcommConfiguration An apache configuration object representing <restcomm/> element of restcomm.xml
      * @param mainConfig
      */
-    public IdentityContext(Configuration restcommConfiguration, MainConfigurationSet mainConfig) {
+    public IdentityContext(Configuration restcommConfiguration, MainConfigurationSet mainConfig, IdentityInstancesDao dao) {
         RestcommRoles roles = new RestcommRoles(restcommConfiguration.subset("runtime-settings").subset("security-roles"));
         if (mainConfig != null) {
-            init(roles, mainConfig.getIdentityRealm(), mainConfig.getIdentityRealmPublicKey(), mainConfig.getIdentityAuthServerUrl());
+            init(roles, mainConfig.getIdentityRealm(), mainConfig.getIdentityRealmPublicKey(), mainConfig.getIdentityAuthServerUrl(), dao);
         } else {
-            init(roles, null, null, null);
+            init(roles, null, null, null, null);
         }
     }
 
     // no-keycloak constructor
     public IdentityContext(RestcommRoles restcommRoles) {
-        init(restcommRoles, null, null, null);
+        init(restcommRoles, null, null, null, null);
     }
 
-    public IdentityContext(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl) {
-        init(restcommRoles, realmName, realmKey, authServerUrl);
+    public IdentityContext(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl, IdentityInstancesDao dao) {
+        init(restcommRoles, realmName, realmKey, authServerUrl, dao);
     }
 
-    private void init(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl) {
+    private void init(RestcommRoles restcommRoles, String realmName, String realmKey, String authServerUrl, IdentityInstancesDao dao) {
         if (restcommRoles == null)
             throw  new IllegalArgumentException("Cannot create an IdentityContext object with null roles!");
         this.restcommRoles = restcommRoles;
-        if ( authServerUrl != null && (realmKey == null || realmName == null))
+        if ( authServerUrl != null && (realmKey == null || realmName == null || dao == null))
             throw new IllegalArgumentException();
         this.realmName = realmName;
         this.realmKey= realmKey;
         this.authServerUrl = authServerUrl;
+        this.dao = dao;
     }
 
     /**

@@ -21,7 +21,7 @@
 package org.mobicents.servlet.restcomm.identity.exceptions;
 
 /**
- * Thrown when a keycloak Client registration fails.
+ * Thrown when a keycloak Client registration fails for an unknown reason.
  *
  * @author Orestis Tsakiridis
  */
