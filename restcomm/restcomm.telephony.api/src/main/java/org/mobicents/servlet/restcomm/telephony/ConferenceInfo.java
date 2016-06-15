@@ -36,13 +36,16 @@ public final class ConferenceInfo {
     private final List<ActorRef> participants;
     private final ConferenceStateChanged.State state;
     private final String name;
+    private final boolean moderatorPresent;
 
-    public ConferenceInfo(final Sid sid, final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name) {
+    public ConferenceInfo(final Sid sid, final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name, final boolean moderatorPresent) {
+
         super();
         this.sid = sid;
         this.participants = participants;
         this.state = state;
         this.name = name;
+        this.moderatorPresent = moderatorPresent;
     }
 
     public List<ActorRef> participants() {
@@ -60,5 +63,7 @@ public final class ConferenceInfo {
     public Sid sid() {
         return sid;
     }
+
+    public boolean isModeratorPresent() { return moderatorPresent; }
 
 }
