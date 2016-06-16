@@ -192,26 +192,37 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
   };
 };
 
-var AboutModalCtrl = function ($scope, $modalInstance, RCommJMX, RCVersion) {
+var AboutModalCtrl = function($scope, $modalInstance, RCommJMX, RCVersion) {
 
-  $scope.Math = window.Math;
+	$scope.Math = window.Math;
 
-  $scope.getData = function() {
-    $scope.version = RCVersion.get({accountSid: $scope.sid});
-    $scope.info = RCommJMX.get({path: 'java.lang:type=*'},
-      function(data){
-        $scope.OS = data.value['java.lang:type=OperatingSystem'];
-        $scope.JVM = data.value['java.lang:type=Runtime'];
-        $scope.Memory = data.value['java.lang:type=Memory'];
-        $scope.Threads = data.value['java.lang:type=Threading'];
-      },
-      function(){}
-    );
-  };
+	$scope.getData = function() {
+		$scope.version = RCVersion.get({
+			accountSid : $scope.sid
+		}, function(data) {
+			if (data) {
+				var version = $scope.version;
+				var pattern = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/;
+				$scope.releaseDate = new Date(data.Date.replace(pattern,
+						'$1-$2-$3 $4:$5'));
+			}
 
-  $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
+		}, function() {
+		});
+		$scope.info = RCommJMX.get({
+			path : 'java.lang:type=*'
+		}, function(data) {
+			$scope.OS = data.value['java.lang:type=OperatingSystem'];
+			$scope.JVM = data.value['java.lang:type=Runtime'];
+			$scope.Memory = data.value['java.lang:type=Memory'];
+			$scope.Threads = data.value['java.lang:type=Threading'];
+		}, function() {
+		});
+	};
 
-  $scope.getData();
+	$scope.cancel = function() {
+		$modalInstance.dismiss('cancel');
+	};
+
+	$scope.getData();
 };
