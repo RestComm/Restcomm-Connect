@@ -157,6 +157,14 @@ if [ -d "$LOGS_DIR_ZIP" ]; then
    exit 1
 }
 
+jvm_top() {
+if [ -d "$LOGS_DIR_ZIP" ]; then
+    ./jvmtop.sh --once > $LOGS_DIR_ZIP/jvm_top.txt
+  return 0
+ fi
+   exit 1
+}
+
 sys_date() {
 if [ -d "$LOGS_DIR_ZIP" ]; then
   echo `date` >  $LOGS_DIR_ZIP/sys_date.txt
@@ -241,6 +249,7 @@ jvm_process_info
 LWP_threads_logs
 system_usage_info
 netstat_stats
+jvm_top
 sys_date
 
 if $tflag ; then
