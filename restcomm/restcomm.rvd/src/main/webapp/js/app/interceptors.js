@@ -70,3 +70,28 @@ angular.module('Rvd').config( function($httpProvider, IdentityConfig) {
     if (IdentityConfig.securedByRestcomm())
         $httpProvider.interceptors.push('RestcommAuthenticationInterceptor');
 });
+
+// Authorization interceptor. It's effective when restcomm is secured by Keycloak.
+angular.module('Rvd').factory('KeycloakAuthInterceptor', function($q, KeycloakAuth) {
+    return {
+        request: function (config) {
+            if (KeycloakAuth.authz && (config.url.startsWith('services/') || config.url.startsWith('/restcomm-rvd/services/') || config.url.startsWith('/restcomm/2012-04-24/')) ) {
+                var deferred = $q.defer();
+                if (KeycloakAuth.authz.token) {
+                    KeycloakAuth.authz.updateToken(5).success(function() {
+                        config.headers = config.headers || {};
+                        config.headers.Authorization = 'Bearer ' + KeycloakAuth.authz.token;
+                        deferred.resolve(config);
+                    }).error(function() {
+                        deferred.reject('Failed to refresh token');
+                    });
+                }
+                return deferred.promise;
+            } else
+                return config;
+        }
+    };
+}).config( function($httpProvider, IdentityConfig) {
+    if (IdentityConfig.securedByKeycloak())
+        $httpProvider.interceptors.push('KeycloakAuthInterceptor');
+});

@@ -90,7 +90,7 @@ angular.module('Rvd').service('initializer',function (authentication, storage,  
     };
 });
 
-angular.module('Rvd').service('authentication', function ($http, $q, IdentityConfig, storage, $state, md5) {
+angular.module('Rvd').service('authentication', function ($http, $q, IdentityConfig, storage, $state, md5, KeycloakAuth) {
     var authInfo = null;
 	var account = null; // if this is set it means that user logged in: authentication succeeded and account was retrieved
 
@@ -110,16 +110,22 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
 	    return authInfo;
 	}
 
-	function getUsername() {
-	    if (account)
-	        return account.email_address;
-	    return null;
-	}
+    // Returns the username (email address) for the logged  user. It's only available when keycloak is used for authorization.
+    function getKeycloakUsername() {
+        if (IdentityConfig.securedByKeycloak() && KeycloakAuth.loggedIn)
+            return KeycloakAuth.authz.tokenParsed.preferred_username;
+        return null;
+    }
 
 	function getAuthHeader() {
-	    if (account)
-	        return "Basic " + btoa(account.email_address + ":" + account.auth_token);
-	     return null;
+	    if (account) {
+	        if (IdentityConfig.securedByKeycloak()) {
+                return "Bearer " + KeycloakAuth.authz.token;
+	        } else
+	        if (identityConfig.securedByRestcomm())
+	            return "Basic " + btoa(account.email_address + ":" + account.auth_token);
+	    }
+	    return null;
 	}
 
     /*
@@ -139,7 +145,7 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
             $http({method:'GET', url:'services/auth/keepalive', headers: {Authorization: "Basic " + btoa(acc.email_address + ":" +acc.auth_token)}}).then(function (response) {
                 // ok, access to both restcomm and RVD is verified
                 setAccount(acc);
-                authInfo = {username:acc.email_address}; // TODO will probably add other fields here too that are not necessarily tied with the Restcomm account notion
+                //authInfo = {username:acc.email_address}; // TODO will probably add other fields here too that are not necessarily tied with the Restcomm account notion
                 storage.setCredentials(username,password,acc.sid);
                 deferredLogin.resolve();
             }, function (response) {
@@ -180,6 +186,30 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
             } else {
                 return; // everythig is OK!
             }
+	    } else
+	    if (IdentityConfig.securedByKeycloak()) {
+	        if ( !KeycloakAuth.loggedIn )
+	            throw "KEYCLOAK_NOT_LOGGED_IN";
+            if (!account) {
+                var promisedAccount = $q.defer();
+                var username = getKeycloakUsername();  // since we're logged in, there MUST be a username available
+                $http({method:'GET', url:'/restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
+                .success(function (data,status) {
+                    // TODO we need to handle UNINITIALIZED accounts
+                    promisedAccount.resolve(data);
+                })
+                .error(function (data,status) {
+                    promisedAccount.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
+                });
+                // when the account becomes available, make sure the username/email_address match
+                return promisedAccount.promise.then(function (fetchedAccount) {
+                    if (username.toLowerCase() == fetchedAccount.email_address.toLowerCase()) {
+                        setAccount(fetchedAccount);
+                    }
+                });
+            } else {
+                return; // account is in place, job done!
+            }
 	    } else {
 	        throw 'UNSUPPORTED_AUTH_TYPE';
 	    }
@@ -204,7 +234,6 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
 
     return {
         getAccount: getAccount,
-        getUsername: getUsername,
         checkRvdAccess: checkRvdAccess,
         doLogin: doLogin,
         doLogout: doLogout,
