@@ -1,6 +1,8 @@
 package org.mobicents.servlet.restcomm.rvd.identity;
 
+import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.http.client.utils.URIBuilder;
 import org.keycloak.adapters.KeycloakDeployment;
@@ -114,8 +116,12 @@ public class IdentityProvider {
     private IdentityInstanceResponse fetchIdentityInstance(URI uri) {
         Client jerseyClient = Client.create();
         WebResource webResource = jerseyClient.resource(uri);
-        IdentityInstanceResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(IdentityInstanceResponse.class);
-        return response;
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        String string_response = response.getEntity(String.class);
+        Gson gson = new Gson();
+        return gson.fromJson(string_response, IdentityInstanceResponse.class);
+
+
     }
 
     private KeycloakDeployment buildDeployment(String instanceName) {

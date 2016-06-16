@@ -14,7 +14,7 @@ public class RequestOrigin {
     public RequestOrigin(String scheme, String host, Integer port) {
         if (port == 80 || port == -1)
             port = null;
-        this.origin = scheme + "://" + host + (port == null ? "" : port);
+        this.origin = scheme + "://" + host + (port == null ? "" : (":" + port));
     }
 
     public RequestOrigin(HttpServletRequest request) {
