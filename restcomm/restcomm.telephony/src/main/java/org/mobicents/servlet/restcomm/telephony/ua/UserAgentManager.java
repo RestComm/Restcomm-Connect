@@ -90,7 +90,7 @@ public final class UserAgentManager extends UntypedActor {
         pingInterval = runtime.getInt("ping-interval", 60);
         getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
         logger.info("About to run firstTimeCleanup()");
-        firstTimeCleanup();
+//        firstTimeCleanup();
     }
 
     private void firstTimeCleanup() {
