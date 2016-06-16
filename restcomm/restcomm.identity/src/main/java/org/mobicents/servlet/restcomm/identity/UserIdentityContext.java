@@ -96,10 +96,10 @@ public class UserIdentityContext {
                     effectiveAccount = null;
             } else
                 effectiveAccount = null;
-
-            if (effectiveAccount != null)
-                effectiveAccountRoles = extractAccountRoles(effectiveAccount);
         }
+        // setup roles for effective account
+        if (effectiveAccount != null)
+            effectiveAccountRoles = extractAccountRoles(effectiveAccount);
     }
 
     private String extractOauthTokenString(HttpServletRequest request) {
