@@ -80,6 +80,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -964,6 +965,14 @@ public final class CallManager extends UntypedActor {
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
 
         List<Registration> registrations = registrationsDao.getRegistrations(client);
+        if (logger.isInfoEnabled()) {
+            logger.info("&&&& CallManager, About to create call for client: "+client+". There are "+registrations.size()+" registrations at the database for this client");
+            Iterator<Registration> iterator = registrations.iterator();
+            while(iterator.hasNext()) {
+                Registration registration = iterator.next();
+                logger.info("&&&& CallManager, registration at DB for Client "+client+" location: "+registration.getLocation()+" registration instanceId: "+registration.getInstanceId()+" own instanceId: "+RestcommConfiguration.getInstance().getMain().getInstanceId());
+            }
+        }
         if (registrations != null && registrations.size() > 0) {
             for (Registration registration : registrations) {
                 if (registration.isWebRTC()) {
@@ -989,6 +998,16 @@ public final class CallManager extends UntypedActor {
         }
 
         if (registrationToDial.size() > 0) {
+            if (logger.isInfoEnabled()) {
+                if (registrationToDial.size()>1) {
+                    logger.info("&&&& CallManager, after WebRTC check, Restcomm have to dial :"+registrationToDial.size()+" registrations for client: "+client);
+                    Iterator<Registration> iterator = registrationToDial.iterator();
+                    while (iterator.hasNext()) {
+                        Registration registration = iterator.next();
+                        logger.info("&&&& CallManager after WebRTC check, Client "+client+" location: "+registration.getLocation()+" registration instanceId: "+registration.getInstanceId()+" own instanceId: "+RestcommConfiguration.getInstance().getMain().getInstanceId());
+                    }
+                }
+            }
             List<ActorRef> calls = new CopyOnWriteArrayList<>();
             for (Registration registration : registrationToDial) {
                 logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
