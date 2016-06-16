@@ -1560,6 +1560,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
+            if (logger.isInfoEnabled()) {
+                logger.info("At StartDialing state, preparing Dial for RCML: "+verb.toString().trim().replace("\\n",""));
+            }
             final String text = verb.text();
             if (text != null && !text.isEmpty()) {
                 // Build the appropriate tag for the text, such as Number, Client or SIP
@@ -1606,6 +1609,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     isForking = true;
                     final StartForking start = StartForking.instance();
                     source.tell(start, source);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Dial verb "+verb.toString().replace("\\n","")+" with more that one element, will start forking. Dial Children size: "+dialChildren.size());
+                    }
                 }
             } else {
                 // Ask the parser for the next action to take.
