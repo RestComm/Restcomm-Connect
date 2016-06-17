@@ -81,7 +81,7 @@ public class RestcommAccountsTool {
             params.add("Password", password);
         if (authToken != null)
             params.add("Auth_Token", authToken);
-        // role update is not supported yet!
+        // role update is now supported yet!
         if (role != null)
             params.add("Role", role);
         if (status != null)
