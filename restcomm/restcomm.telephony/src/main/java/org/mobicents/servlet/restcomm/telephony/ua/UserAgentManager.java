@@ -90,7 +90,7 @@ public final class UserAgentManager extends UntypedActor {
         pingInterval = runtime.getInt("ping-interval", 60);
         getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
         logger.info("About to run firstTimeCleanup()");
-//        firstTimeCleanup();
+        firstTimeCleanup();
     }
 
     private void firstTimeCleanup() {
@@ -452,7 +452,7 @@ public final class UserAgentManager extends UntypedActor {
                         try {
                             request.getApplicationSession().setInvalidateWhenReady(true);
                         } catch (IllegalStateException exception) {
-                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session");
+                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session, exception: "+exception);
                         }
                     }
                 } else {
@@ -466,7 +466,7 @@ public final class UserAgentManager extends UntypedActor {
                 }
             }
         } catch (Exception e) {
-            logger.error("Exception while trying to setInvalidateWhenReady(true) after sent response to register : "+response.toString());
+            logger.error("Exception while trying to setInvalidateWhenReady(true) after sent response to register : "+response.toString()+" exception: "+e);
         }
     }
 
