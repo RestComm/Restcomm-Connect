@@ -53,6 +53,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
     public MmsControllerFactory(ActorSystem system, List<ActorRef> mediaGateways, Configuration configuration) {
         super();
         this.system = system;
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MmsControllerFactory mediaGateways list size: "+ mediaGateways.size());
         this.mediaGateways = mediaGateways;
         this.callControllerFactory = new CallControllerFactory();
         this.conferenceControllerFactory = new ConferenceControllerFactory();
@@ -92,7 +93,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
-            return new MmsConferenceController(mediaGateways, configuration);
+            return new MmsConferenceController(mediaGateways.get(0));
         }
 
     }

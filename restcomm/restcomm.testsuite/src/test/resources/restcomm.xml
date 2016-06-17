@@ -202,6 +202,7 @@
 		Media Server using MGCP driver) -->
 	<mscontrol>
 		<compatibility>mms</compatibility>
+		<!-- media-servers defines: multiple media-server entities -->
 		<media-servers>
 			<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
 				<address>127.0.0.1</address>
