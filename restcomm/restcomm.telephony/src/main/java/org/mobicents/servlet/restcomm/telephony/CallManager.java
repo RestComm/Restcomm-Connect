@@ -80,7 +80,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -965,29 +964,25 @@ public final class CallManager extends UntypedActor {
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
 
         List<Registration> registrations = registrationsDao.getRegistrations(client);
-        if (logger.isInfoEnabled()) {
-            logger.info("&&&& CallManager, About to create call for client: "+client+". There are "+registrations.size()+" registrations at the database for this client");
-            Iterator<Registration> iterator = registrations.iterator();
-            while(iterator.hasNext()) {
-                Registration registration = iterator.next();
-                logger.info("&&&& CallManager, registration at DB for Client "+client+" location: "+registration.getLocation()+" registration instanceId: "+registration.getInstanceId()+" own instanceId: "+RestcommConfiguration.getInstance().getMain().getInstanceId());
-            }
-        }
         if (registrations != null && registrations.size() > 0) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Preparing call for client: "+client+". There are "+registrations.size()+" registrations at the database for this client");
+            }
             for (Registration registration : registrations) {
                 if (registration.isWebRTC()) {
+                    //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
                     if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
-                        Registration webRtcRegistration = registrationsDao.getRegistrationByInstanceId(client, RestcommConfiguration.getInstance().getMain().getInstanceId());
-                        if (webRtcRegistration == null) {
-                            logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
-                            break;
-                        } else {
-                            registrationToDial.add(webRtcRegistration);
-                            break;
-                        }
+                        logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
+                    } else {
+                        if (logger.isInfoEnabled())
+                            logger.info("Will add WebRTC registration: "+registration.getLocation()+" to the list to be dialed for client: "+client);
+                        registrationToDial.add(registration);
                     }
+                } else {
+                    if (logger.isInfoEnabled())
+                        logger.info("Will add registration: "+registration.getLocation()+" to the list to be dialed for client: "+client);
+                    registrationToDial.add(registration);
                 }
-                registrationToDial.add(registration);
             }
         } else {
             String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
@@ -1000,17 +995,13 @@ public final class CallManager extends UntypedActor {
         if (registrationToDial.size() > 0) {
             if (logger.isInfoEnabled()) {
                 if (registrationToDial.size()>1) {
-                    logger.info("&&&& CallManager, after WebRTC check, Restcomm have to dial :"+registrationToDial.size()+" registrations for client: "+client);
-                    Iterator<Registration> iterator = registrationToDial.iterator();
-                    while (iterator.hasNext()) {
-                        Registration registration = iterator.next();
-                        logger.info("&&&& CallManager after WebRTC check, Client "+client+" location: "+registration.getLocation()+" registration instanceId: "+registration.getInstanceId()+" own instanceId: "+RestcommConfiguration.getInstance().getMain().getInstanceId());
-                    }
+                    logger.info("Preparing call for client: "+client+", after WebRTC check, Restcomm have to dial :"+registrationToDial.size()+" registrations");
                 }
             }
             List<ActorRef> calls = new CopyOnWriteArrayList<>();
             for (Registration registration : registrationToDial) {
-                logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
+                if (logger.isInfoEnabled())
+                    logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
                 String transport;
                 if (registration.getLocation().contains("transport")) {
                     transport = registration.getLocation().split(";")[1].replace("transport=", "");
