@@ -137,23 +137,28 @@ public class IdentityRegistrationTool {
 
     KeycloakClient registerClient(String iat, KeycloakClient repr) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         // create the Keycloak Client entity (not related to the jersey client class)
-        Client jersey = Client.create();
-        WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl());
-        // build a client representation as a JSON object
+        try {
+            Client jersey = Client.create();
+            WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl());
+            // build a client representation as a JSON object
 
-        Gson gson = new Gson();
-        String json = gson.toJson(repr);
-        // do create the client
-        ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + iat).post(ClientResponse.class, json);
-        if (response.getStatus() == 201) {
-            String data = response.getEntity(String.class);
-            KeycloakClient createdClient = gson.fromJson(data, KeycloakClient.class);
-            return createdClient;
-        } else
-        if (response.getStatus() == 403 || response.getStatus() == 401){
-            throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
-        } else {
-            throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus());
+            Gson gson = new Gson();
+            String json = gson.toJson(repr);
+            // do create the client
+            ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + iat).post(ClientResponse.class, json);
+            if (response.getStatus() == 201) {
+                String data = response.getEntity(String.class);
+                KeycloakClient createdClient = gson.fromJson(data, KeycloakClient.class);
+                return createdClient;
+            } else if (response.getStatus() == 403 || response.getStatus() == 401) {
+                throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
+            } else {
+                throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus());
+            }
+        } catch ( IdentityClientRegistrationError | AuthServerAuthorizationError e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IdentityClientRegistrationError("Error creating client " + repr.getClientId(),e);
         }
     }
 

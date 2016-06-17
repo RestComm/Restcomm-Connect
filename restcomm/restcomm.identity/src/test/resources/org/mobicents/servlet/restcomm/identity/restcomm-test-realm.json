@@ -1,0 +1,69 @@
+{
+  "id" : "restcomm-test",
+  "realm" : "restcomm-test",
+  "enabled": true,
+  "privateKey" : "MIIEowIBAAKCAQEAmnekczL6HB4bVVBJOnxOxJHHIktTzKMIwCTE1BuO7mrc5lB3ij3XSZGcCkN6CUK7lHo6bo1Gjl/YC8UhO7q56NHtgvVyhkOL3xOakkxMgHC6qfOb6tG/tMUMncPXAMDYz/2raVRh1WjNuHgnPNiiWNeNhG/3nACoR2b9OJR49nxftjfr0c3rc/rQb1LEYGgD0u6UYA/HvenyedmofdJMMflzUYvKAHAWebeyKTk10GFi+LVpbpVT922t+e9owcYqfGPgddkcfNsHzAmxUgIfO1WFzeMEmXzv5oxBbhx6hM4EK+9jzcpIJ03Fo6c5+ZYHWFpjKhJoj7xBFJo/qUzZpwIDAQABAoIBADsL2RUgO3NcHt6x3gw5UHLbtt9pJBNpjwLEC2l5T13cA60WvVte4FkDDD7wJEo99C6Buqxf3MS35oI5TMbkTgStmrkg0jJ4x5Lyj3e1Ktk+PlyQ/tz4aOvVF0mHfzyOe1KmiUuuMee+NEV7yKP9u7FyVGp30pMTvT/uIoXqW4L81qnRis3mcy65EWrsr9Ii6I3qexIhfslKDWNH/DOxCyEP8CEL2W2LY8Ff1fJzujfG5nxzvdkXsmQi0FQX3GQ/YC+Bn0wQ2PqkUuowJECfyF9FWuI4bHGkQ1RzqrbVUa72s6bHjmKaosjVl7ogKUGu6CjGotpg3tSjimLBTOe7mqECgYEA5HpMscDWtI2819E5mLje4IPDdTDEGtrfj0Z/zMp1en4pbH5SoFCov6y0OGEzqQgkT83+P/vUka63lYWI0cBI1L3jpUf6yXGejbrDCI206t4U4wOTEQ2LB/KX7aFuQr9zQm9XNEKsRun2tI8Rg8iQCOqeELF5X/QIuhMvMzx3BkMCgYEArRMKsbaJk6H6cbrvPuCxIIV11Mk5mWblCpHr817ce9fqLKpOwqrdhVmBS7uUHXGc8cdTXNHP+D2fM2cIXjq3iVb8qrWxzQUh7tzNW7WrAKBPiIMTBTlztw8lgirGPz+GoTnX8FQhQroLungd1OkfZjamAhm60ytPzWjgPZZRcs0CgYEA1TcIcW07MF2BGIoozMvhOfXcpnVu3Hza2hL5WrypKzmnIJc2NmNvRwg9Wsvi8OAnOs5KcZ1qPtWkfwWRq+RcUyQt1+U3NVwxkaPzM/1CE1hSd5OzX9uanj0W6OyYP/P39MyAvcVmjfryfodw2eGGALwp6/wi/5d1uWgDyTWpAY8CgYB7Rznx1ZxvLQwv4EAzoGZqTMXeeCpv6wuwGLphUqtoByaFBBYvsPcy2csv/3+D7X4l9Z2aWtRw9KumOHiMbfR3fh9hFSR9bW97LYmVDnSscIPWL87nhMG4nbBQ5FjrijtCMepvA+3hEpXyD0boddjovHpIur0JVytzm4VGOQDw7QKBgCQbMHAYwwph0XzGsxhmPFE02DJqA5f8/nCiMsvX6KG3Br77maB+n8Y7mXHy/4lVNIA4O+i4IOlXEiq0SU/tXil/yQSuAZAwqfNX4fYuj5EWN2dQVSQkgN37uVtJ/Fqjor/2k4S5CJDVdzB05otn2wR6YCAgZSziCSHqNFqsH2fn",
+  "publicKey" : "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmnekczL6HB4bVVBJOnxOxJHHIktTzKMIwCTE1BuO7mrc5lB3ij3XSZGcCkN6CUK7lHo6bo1Gjl/YC8UhO7q56NHtgvVyhkOL3xOakkxMgHC6qfOb6tG/tMUMncPXAMDYz/2raVRh1WjNuHgnPNiiWNeNhG/3nACoR2b9OJR49nxftjfr0c3rc/rQb1LEYGgD0u6UYA/HvenyedmofdJMMflzUYvKAHAWebeyKTk10GFi+LVpbpVT922t+e9owcYqfGPgddkcfNsHzAmxUgIfO1WFzeMEmXzv5oxBbhx6hM4EK+9jzcpIJ03Fo6c5+ZYHWFpjKhJoj7xBFJo/qUzZpwIDAQAB",
+  "certificate" : "MIICnzCCAYcCBgFRXhKFCTANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDDAhyZXN0Y29tbTAeFw0xNTEyMDExNTAyMzBaFw0yNTEyMDExNTA0MTBaMBMxETAPBgNVBAMMCHJlc3Rjb21tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmnekczL6HB4bVVBJOnxOxJHHIktTzKMIwCTE1BuO7mrc5lB3ij3XSZGcCkN6CUK7lHo6bo1Gjl/YC8UhO7q56NHtgvVyhkOL3xOakkxMgHC6qfOb6tG/tMUMncPXAMDYz/2raVRh1WjNuHgnPNiiWNeNhG/3nACoR2b9OJR49nxftjfr0c3rc/rQb1LEYGgD0u6UYA/HvenyedmofdJMMflzUYvKAHAWebeyKTk10GFi+LVpbpVT922t+e9owcYqfGPgddkcfNsHzAmxUgIfO1WFzeMEmXzv5oxBbhx6hM4EK+9jzcpIJ03Fo6c5+ZYHWFpjKhJoj7xBFJo/qUzZpwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQAeMSRVNgCexNdfOFfHsWLX1WxnADBVXmFeN2lkICcn8osv/l7YZBEspiUVN4qGIRlOqwVaPN0m9tzinkjx+LA1p5u0z0fBn6n8zTb+xR6uMU+07HrVAfRw//mP8cmq7focLx2j1WgM+RK6MYIL4GvKmOuVwiyYW5kIB5Qm67q/SzUHAqFnAIgbCbSZXj7xAiHXS7uZbe+Kqh7QuNUrG10eA4ZCspPatXi13QKvLsIUOGrS5pnpc17OPepGvpPaL+XTiegBwJOd4TpP+ho6uwIQ15b2BxxyP3NPlYbdF/QpOu5zR9Y4nYp6VF70/5Ra3ISqFzZuHFg7/DNKXJRYnKr0",
+  "codeSecret" : "7ba62df3-1e96-443a-8233-1af3f0982912",
+  "users": [
+    {
+      "username" : "administrator@company.com",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "firstName" : "Restcomm Administrator",
+      "credentials" : [ {
+        "type" : "password",
+        "hashedSaltedValue" : "TKgYTZxR7kTEJugk8EWoVwClVAUruEJIRItkQ06kOHGy4KW9uDODJjzndCYBcj/Lq2jIGEtN7xC7KuAhCiDWSQ==",
+        "salt" : "2c4pmvMeyryk/0k05YOc1A==",
+        "hashIterations" : 1,
+        "counter" : 0,
+        "digits" : 0,
+        "temporary" : false
+      } ],
+      "realmRoles" : [ "offline_access" ],
+      "clientRoles" : {
+        "realm-management" : [ "manage-realm", "realm-admin" ],
+        "account" : [ "view-profile", "manage-account" ]
+      }
+    },
+    {
+      "username" : "service-account-service-client",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "email" : "service-account-service-client@placeholder.org",
+      "serviceAccountClientId" : "service-client",
+      "realmRoles" : [ "offline_access" ],
+      "clientRoles" : {
+        "realm-management" : [ "manage-realm", "realm-admin" ],
+        "account" : [ "view-profile", "manage-account" ]
+      }
+    }
+  ],
+  "clients": [
+    {
+        "clientId": "service-client",
+        "surrogateAuthRequired": false,
+        "enabled": true,
+        "clientAuthenticatorType": "client-secret",
+        "secret": "client-secret",
+        "redirectUris": [
+            "/"
+        ],
+        "webOrigins": [],
+        "notBefore": 0,
+        "bearerOnly": false,
+        "consentRequired": false,
+        "standardFlowEnabled": true,
+        "implicitFlowEnabled": false,
+        "directAccessGrantsEnabled": true,
+        "serviceAccountsEnabled": true,
+        "publicClient": false,
+        "frontchannelLogout": false,
+        "protocol": "openid-connect",
+        "fullScopeAllowed": true
+    }
+  ]
+}
