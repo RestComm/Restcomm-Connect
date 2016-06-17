@@ -26,15 +26,19 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   };
 
   //if(AuthService.isLoggedIn()) {
-    var accountsList = RCommAccounts.query(function() {
-      $scope.accountsList = accountsList;
-      for (var x in accountsList){
-        if(accountsList[x].sid == $scope.sid) {
-          $scope.currentAccount = accountsList[x];
+  var accountsList;
+  $scope.getAccountList = function() {
+   accountsList = RCommAccounts.query(function() {
+        $scope.accountsList = accountsList;
+        for (var x in accountsList){
+          if(accountsList[x].sid == $scope.sid) {
+            $scope.currentAccount = accountsList[x];
+          }
         }
-      }
-    });
-  //}
+      });
+  };
+
+  $scope.getAccountList();
 
   // add account -------------------------------------------------------------
 
@@ -51,6 +55,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
       },
       function () {
         // what to do on modal dismiss...
+    	  $scope.subAccountsList = accountsList;
       }
     );
   };
