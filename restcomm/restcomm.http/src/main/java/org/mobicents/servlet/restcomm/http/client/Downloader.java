@@ -19,13 +19,10 @@
  */
 package org.mobicents.servlet.restcomm.http.client;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -33,26 +30,29 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.http.CustomHttpClientBuilder;
-
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import org.mobicents.servlet.restcomm.util.StringUtils;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLStreamException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -70,14 +70,18 @@ public final class Downloader extends UntypedActor {
             URISyntaxException, XMLStreamException {
         int code = -1;
         HttpRequest request = null;
-        HttpResponse response = null;
+        CloseableHttpResponse response = null;
         HttpRequestDescriptor temp = descriptor;
+        CloseableHttpClient client = null;
+        HttpResponseDescriptor responseDescriptor = null;
+        try {
         do {
-            final HttpClient client = CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
-            client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
+                client = (CloseableHttpClient) CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
+    //            client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
 //            client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
             request = request(temp);
-//            request.setHeader(CoreProtocolPNames.HTTP_CONTENT_CHARSET, Consts.UTF_8.name());
+                request.setHeader("http.protocol.content-charset", "UTF-8");
+
             response = client.execute((HttpUriRequest) request);
             code = response.getStatusLine().getStatusCode();
             if (isRedirect(code)) {
@@ -91,6 +95,8 @@ public final class Downloader extends UntypedActor {
                     break;
                 }
             }
+//                HttpResponseDescriptor httpResponseDescriptor = response(request, response);
+                responseDescriptor = validateXML(response(request, response));
         } while (isRedirect(code));
         if (isHttpError(code)) {
             String requestUrl = request.getRequestLine().getUri();
@@ -100,7 +106,16 @@ public final class Downloader extends UntypedActor {
                     code, errorReason);
             logger.warning(httpErrorMessage);
         }
-        return  validateXML(response(request, response));
+        } catch (IllegalArgumentException | URISyntaxException | IOException e) {
+            logger.error("Exception during HTTP request execution: "+e);
+            HttpClientUtils.closeQuietly(client);
+            client = null;
+        } finally {
+            response.close();
+            HttpClientUtils.closeQuietly(client);
+            client = null;
+        }
+        return responseDescriptor;
     }
 
     private boolean isRedirect(final int code) {
@@ -188,6 +203,8 @@ public final class Downloader extends UntypedActor {
         builder.setHeaders(response.getAllHeaders());
         final HttpEntity entity = response.getEntity();
         if (entity != null) {
+            InputStream stream = entity.getContent();
+            try {
             final Header contentEncoding = entity.getContentEncoding();
             if (contentEncoding != null) {
                 builder.setContentEncoding(contentEncoding.getValue());
@@ -196,9 +213,12 @@ public final class Downloader extends UntypedActor {
             if (contentType != null) {
                 builder.setContentType(contentType.getValue());
             }
-            builder.setContent(entity.getContent());
+                builder.setContent(StringUtils.toString(stream));
             builder.setContentLength(entity.getContentLength());
             builder.setIsChunked(entity.isChunked());
+            } finally {
+                stream.close();
+            }
         }
         return builder.build();
     }

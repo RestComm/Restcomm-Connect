@@ -524,4 +524,10 @@ public class MmsBridgeController extends MediaServerController {
 
     }
 
+    @Override
+    public void postStop() {
+        this.mediaSession = null;
+        this.observers.clear();
+        super.postStop();
+    }
 }

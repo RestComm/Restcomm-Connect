@@ -183,6 +183,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private ConferenceStateChanged.State conferenceState;
     private boolean muteCall;
     private boolean startConferenceOnEnter = true;
+    private boolean confModeratorPresent = false;
     private ActorRef confSubVoiceInterpreter;
     private Attribute dialRecordAttribute;
     private boolean dialActionExecuted = false;
@@ -1559,6 +1560,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (Tag.class.equals(klass)) {
                 verb = (Tag) message;
             }
+            if (logger.isInfoEnabled()) {
+                logger.info("At StartDialing state, preparing Dial for RCML: "+verb.toString().trim().replace("\\n",""));
+            }
             final String text = verb.text();
             if (text != null && !text.isEmpty()) {
                 // Build the appropriate tag for the text, such as Number, Client or SIP
@@ -1605,6 +1609,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     isForking = true;
                     final StartForking start = StartForking.instance();
                     source.tell(start, source);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Dial verb "+verb.toString().replace("\\n","")+" with more that one element, will start forking. Dial Children size: "+dialChildren.size());
+                    }
                 }
             } else {
                 // Ask the parser for the next action to take.
@@ -2060,7 +2067,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
                 dialChildren = null;
-                outboundCall = null;
+//                outboundCall = null;
                 callback();
                 return;
             }
@@ -2096,6 +2103,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                        }
                         //Instead move the FSM to finished
                         dialChildren = null;
+                        callManager.tell(new DestroyCall(outboundCall));
                         outboundCall = null;
                         callback();
                         fsm.transition(message, finished);
@@ -2111,6 +2119,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
 
                         dialChildren = null;
+                        callManager.tell(new DestroyCall(outboundCall));
                         outboundCall = null;
                         return;
                     }
@@ -2171,7 +2180,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             dialChildren = null;
-            outboundCall = null;
+//            fsm.transition(message, finished);
+//            callManager.tell(new DestroyCall(outboundCall));
+//            outboundCall = null;
         }
     }
 
@@ -2300,17 +2311,26 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (value != null && !value.isEmpty()) {
                     startConferenceOnEnter = Boolean.parseBoolean(value);
                 }
+            } else {
+                //Default values is startConferenceOnEnter = true
+                startConferenceOnEnter = true;
             }
 
+            confModeratorPresent = startConferenceOnEnter;
+
             if (logger.isInfoEnabled()) {
-                logger.info("At conferencing, state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
+                logger.info("At conferencing, VI state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+" startConferenceOnEnter: "+startConferenceOnEnter+"  conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
             }
-            if (playMusicForConference && startConferenceOnEnter) {
+            if (playMusicForConference) { // && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter
                 if (conferenceInfo.participants().size() == 1) {
                     startConferenceOnEnter = false;
-                } else  if (conferenceInfo.participants().size() > 1) {
-                    startConferenceOnEnter = true;
+                } else if (conferenceInfo.participants().size() > 1) {
+                    if (startConferenceOnEnter || conferenceInfo.isModeratorPresent()) {
+                        startConferenceOnEnter = true;
+                    } else {
+                        startConferenceOnEnter = false;
+                    }
                 }
             }
 
@@ -2409,11 +2429,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
     protected void playWaitUrl(final List<URI> waitUrls, final ActorRef source) {
-        conference.tell(new Play(waitUrls, Short.MAX_VALUE), source);
+        conference.tell(new Play(waitUrls, Short.MAX_VALUE, confModeratorPresent), source);
     }
 
     protected void playWaitUrl(final URI waitUrl, final ActorRef source) {
-        conference.tell(new Play(waitUrl, Short.MAX_VALUE), source);
+        conference.tell(new Play(waitUrl, Short.MAX_VALUE, confModeratorPresent), source);
     }
 
     private final class FinishConferencing extends AbstractDialAction {

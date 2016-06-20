@@ -332,8 +332,13 @@ public final class Call extends UntypedActor {
         try {
             String realIP = message.getInitialRemoteAddr();
             Integer realPort = message.getInitialRemotePort();
-            if (realPort == null || realPort == -1)
+            if (realPort == null || realPort == -1) {
                 realPort = 5060;
+            }
+
+            if (realPort == 0) {
+                realPort = message.getRemotePort();
+            }
 
             final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
             final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
@@ -370,7 +375,7 @@ public final class Call extends UntypedActor {
                 uri = factory.createSipURI(null, realIP);
             }
         } catch (Exception e) {
-            logger.warning("Exception while trying to get the Initial IP Address and Port");
+            logger.warning("Exception while trying to get the Initial IP Address and Port: "+e);
 
         }
         return uri;
@@ -692,7 +697,7 @@ public final class Call extends UntypedActor {
 
                 // final UntypedActorContext context = getContext();
                 // context.setReceiveTimeout(Duration.Undefined());
-                SipURI initialInetUri = getInitialIpAddressPort(invite);
+                SipURI initialInetUri = getInitialIpAddressPort((SipServletResponse)message);
 
                 if (initialInetUri != null) {
                     ((SipServletResponse)message).getSession().setAttribute("realInetUri", initialInetUri);
@@ -1344,7 +1349,7 @@ public final class Call extends UntypedActor {
         if (is(ringing)) {
             fsm.transition(message, failingNoAnswer);
         } else if(logger.isInfoEnabled()) {
-            logger.info("Call : "+self().path()+" isTerminated(): "+self().isTerminated()+" timeout received. Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+            logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
                 + " Direction: " + direction + " From: " + from + " To: " + to);
         }
     }
@@ -1793,6 +1798,7 @@ public final class Call extends UntypedActor {
     public void postStop() {
         try {
             onStopObserving(new StopObserving(), self(), null);
+            getContext().stop(msController);
         } catch (Exception exception) {
             if(logger.isInfoEnabled()) {
                 logger.info("Exception during Call postStop while trying to remove observers: "+exception);

@@ -252,6 +252,10 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         }
     }
 
+    function onError403() {
+        Notifications.error("Unauthorized access.");
+    }
+
     // Returns the username (email address) for the logged  user. It's only available when keycloak is used for authorization.
     function getUsername() {
         if (IdentityConfig.securedByKeycloak() && KeycloakAuth.loggedIn)
@@ -269,6 +273,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         checkAccess: checkAccess,
         isUninitialized: isUninitialized,
         onAuthError: onAuthError,
+        onError403: onError403,
         updatePassword: updatePassword
     }
 });

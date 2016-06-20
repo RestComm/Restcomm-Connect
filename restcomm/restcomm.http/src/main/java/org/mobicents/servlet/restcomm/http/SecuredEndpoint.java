@@ -24,7 +24,6 @@ import java.util.Set;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
-import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
@@ -35,6 +34,9 @@ import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
+import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
+import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
@@ -96,8 +98,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * Grants general purpose access if any valid token exists in the request
      */
     protected void checkAuthenticatedAccount() {
-        if (userIdentityContext.getEffectiveAccount() == null)
-            throw new AuthorizationException();
+        if (userIdentityContext.getEffectiveAccount() == null) {
+            throw new NotAuthenticated();
+        }
     }
 
     /**
@@ -108,9 +111,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @param permission - e.g. 'RestComm:Create:Accounts'
      */
     protected void checkPermission(final String permission) {
-        checkAuthenticatedAccount(); // ok there is a valid authenticated account
+        //checkAuthenticatedAccount(); // ok there is a valid authenticated account
         if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
-            throw new AuthorizationException();
+            throw new InsufficientPermission();
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
@@ -136,32 +139,34 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
+        checkAuthenticatedAccount();
+        checkPermission(permission); // check an authbenticated account allowed to do "permission" is available
         if (operatedAccount == null)
             throw new AuthorizationException();
-        checkPermission(permission); // check an authbenticated account allowed to do "permission" is available
         if (type == SecuredType.SECURED_STANDARD) {
             if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, null) != AuthOutcome.OK )
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_APP) {
             if (secureLevelControlApplications(userIdentityContext.getEffectiveAccount(),operatedAccount,null) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT) {
             if (secureLevelControlAccounts(userIdentityContext.getEffectiveAccount(), operatedAccount) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         }
     }
 
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
+        checkAuthenticatedAccount();
         String resourceAccountSidString = resourceAccountSid == null ? null : resourceAccountSid.toString();
         if (type == SecuredType.SECURED_APP) {
             if (secureLevelControlApplications(userIdentityContext.getEffectiveAccount(), operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_STANDARD){
             if (secureLevelControl(userIdentityContext.getEffectiveAccount(), operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
-                throw new AuthorizationException();
+                throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT)
             throw new IllegalStateException("Account security is not supported when using sub-resources");
@@ -274,7 +279,21 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return AuthOutcome.OK;
     }
 
-
+    /** Applies the following access control rules
+     *
+     * If an application Account Sid is given:
+     *  - If operatingAccount is the same as the operated account and application resource belongs to operated account too
+     *    acces is granted.
+     * If no application Accouns Sid is given:
+     *  - If operatingAccount is the same as the operated account access is granted.
+     *
+     * NOTE: Parent relationships on accounts do not grant access here.
+     *
+     * @param operatingAccount
+     * @param operatedAccount
+     * @param applicationAccountSid
+     * @return
+     */
     private AuthOutcome secureLevelControlApplications(Account operatingAccount, Account operatedAccount, String applicationAccountSid) {
         String operatingAccountSid = null;
         if (operatingAccount != null)
@@ -291,6 +310,17 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return AuthOutcome.OK;
     }
 
+    /** Applies the following access control rules:
+     *
+     * If the operating account is an administrator:
+     *  - If it is the same or parent of the operated account access is granted.
+     * If the operating accoutn is NOT an administrator:
+     *  - If it is the same as the operated account access is granted.
+     *
+     * @param operatingAccount
+     * @param operatedAccount
+     * @return
+     */
     private AuthOutcome secureLevelControlAccounts(Account operatingAccount, Account operatedAccount) {
         if (operatingAccount == null || operatedAccount == null)
             return AuthOutcome.FAILED;

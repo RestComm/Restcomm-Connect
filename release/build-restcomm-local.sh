@@ -3,12 +3,13 @@ export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m"
 export ANT_HOME=/opt/ant/apache-ant-1.8.3
 export WORKSPACE=/tmp/workspace
 mkdir $WORKSPACE
-cp -ar /data/devWorkspace/telWorkspace/telscale-restcomm/* $WORKSPACE
+cp -ar ../* $WORKSPACE
 
-export MAJOR_VERSION_NUMBER=7.7.0
-export RESTCOMM_BRANCH=master
+CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+export MAJOR_VERSION_NUMBER=7.8.0
+export RESTCOMM_BRANCH=$CURRENT_BRANCH
 export RUN_TESTSUITE=false
-export BUILD_NUMBER=$RESTCOMM_BRANCH-test
+export BUILD_NUMBER=$RESTCOMM_BRANCH-local
 
 rm Mobicents-Restcomm*.zip
 rm dependencies -rf

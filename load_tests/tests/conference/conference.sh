@@ -53,7 +53,7 @@ fi
 
 echo "About to launch rocket... SIMULTANEOUS_CALLS: $SIMULTANEOUS_CALLS, MAXIMUM_CALLS: $MAXIMUM_CALLS, CALL_RATE: $CALL_RATE"
 sleep 3
-$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/conference/conference-sipp.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_stat -stf $RESULTS_FOLDER/conference-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/conference-$DATE-screens.log
+$SIPP_EXECUTABLE -sf $CURRENT_FOLDER/tests/conference/conference-sipp.xml -s 2222 $RESTCOMM_ADDRESS:5080 -p 5090 -mi $LOCAL_ADDRESS -l $SIMULTANEOUS_CALLS -m $MAXIMUM_CALLS -r $CALL_RATE -recv_timeout 10000 -t un -nr -fd 1 -trace_rtt -trace_stat -stf $RESULTS_FOLDER/conference-$DATE.csv -trace_screen -screen_file $RESULTS_FOLDER/conference-$DATE-screens.log
 echo $?
 
 

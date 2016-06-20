@@ -256,7 +256,7 @@ angular.element(document).ready(['$http',function ($http) {
   $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
     instancePromise.resolve(instance);
   }).error(function (response) {
-    if (response.status == 404)
+   if (response.status == 404)
       instancePromise.resolve(null);
     else
       instancePromise.reject();
@@ -391,7 +391,7 @@ angular
 // There is a circular dependency issue when directly injecting AuthService in the function. A workaround using $injector has
 // been used - http://stackoverflow.com/questions/20647483/angularjs-injecting-service-into-a-http-interceptor-circular-dependency
 rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location','$injector','IdentityConfig',function($q,$location,$injector,IdentityConfig){
+  factory('authHttpResponseInterceptor',['$q','$location','$injector','IdentityConfig','Notifications',function($q,$location,$injector,IdentityConfig, Notifications){
     return {
       request: function(config) {
           var restcomm_prefix = "/restcomm/"
@@ -413,6 +413,9 @@ rcMod.
             var AuthService = $injector.get('AuthService');
             if (response.status === 401) {
               AuthService.onAuthError();
+            } else
+            if (response.status === 403) {
+              AuthService.onError403();
             }
             return response || $q.when(response);
       },
@@ -420,6 +423,9 @@ rcMod.
             var AuthService = $injector.get('AuthService');
             if (rejection.status === 401) {
               AuthService.onAuthError();
+            } else
+            if (rejection.status === 403) {
+              AuthService.onError403();
             }
             return $q.reject(rejection);
       }

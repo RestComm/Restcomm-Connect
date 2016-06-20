@@ -20,27 +20,23 @@
 
 package org.mobicents.servlet.restcomm.http;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.mobicents.servlet.restcomm.HttpConnector;
 import org.mobicents.servlet.restcomm.HttpConnectorList;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.util.UriUtils;
+
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -56,42 +52,44 @@ public class CustomHttpClientBuilder {
 
     public static HttpClient build(MainConfigurationSet config) {
         SslMode mode = config.getSslMode();
-        HttpParams httpParameters = new BasicHttpParams();
         int timeoutConnection = config.getResponseTimeout();
-        HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
-        if ( mode == SslMode.strict )
-            return new DefaultHttpClient(httpParameters);
-        else
-            return buildAllowallClient(httpParameters);
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(timeoutConnection)
+                .setConnectionRequestTimeout(timeoutConnection)
+                .setSocketTimeout(timeoutConnection)
+                .setCookieSpec(CookieSpecs.DEFAULT).build();
+        if ( mode == SslMode.strict ) {
+            return  HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
+        } else {
+            return buildAllowallClient(requestConfig);
+        }
     }
 
-    private static HttpClient buildAllowallClient(HttpParams httpParameters) {
+    private static HttpClient buildAllowallClient(RequestConfig requestConfig) {
         HttpConnectorList httpConnectorList = UriUtils.getHttpConnectorList();
-        HttpClient httpClient = new DefaultHttpClient(httpParameters);
+        HttpClient httpClient = null;
         //Enable SSL only if we have HTTPS connector
         List<HttpConnector> connectors = httpConnectorList.getConnectors();
         Iterator<HttpConnector> iterator = connectors.iterator();
         while (iterator.hasNext()) {
             HttpConnector connector = iterator.next();
             if (connector.isSecure()) {
-                SSLSocketFactory sslsf;
+                SSLConnectionSocketFactory sslsf;
                 try {
-                    sslsf = new SSLSocketFactory(new TrustStrategy() {
-                        public boolean isTrusted(
-                            final X509Certificate[] chain, String authType) throws CertificateException {
-                            // Oh, I am easy...
-                            return true;
-                        }
-                    });
-                } catch (KeyManagementException | UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException e) {
+                    SSLContextBuilder builder = new SSLContextBuilder();
+                    builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+                    sslsf = new SSLConnectionSocketFactory(builder.build());
+                    httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).setSSLSocketFactory(sslsf).build();
+                } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
                     throw new RuntimeException("Error creating HttpClient", e);
                 }
-                httpClient.getConnectionManager().getSchemeRegistry().register(new Scheme(connector.getScheme(), connector.getPort(), sslsf));
                 break;
             }
+        }
+        if (httpClient == null) {
+            httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
         }
 
         return httpClient;
     }
-
 }

@@ -18,6 +18,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -279,52 +280,60 @@ public class ExternalServiceStep extends Step {
             } else
                 throw new InterpreterException("Unknonwn HTTP method specified: " + getMethod() );
 
-            statusCode = response.getStatusLine().getStatusCode();
+            // got response
+            try {
 
-            // In  case of error in the service no need to proceed. Just continue the "onException" module if set
-            if ( statusCode >= 400 && statusCode < 600 ) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("Remote service failed with: " + response.getStatusLine());
-                }
-                if ( ! RvdUtils.isEmpty( getExceptionNext()) )
-                    return getExceptionNext();
-                else
-                    throw new RemoteServiceError("Service " + url + " failed with: " + response.getStatusLine() +". Throwing an error since no 'On Remote Exception' has been defined.");
-            }
+                statusCode = response.getStatusLine().getStatusCode();
 
-            // Parse the response if (a) there are assignments or (b) there is dynamic or mapped routing
-            if ( getAssignments() != null && getAssignments().size() > 0
-                    || getDoRouting() && ("responseBased".equals(getNextType()) || "mapped".equals(getNextType())) ) {
-                HttpEntity entity = response.getEntity();
-                if ( entity != null ) {
-                    JsonParser parser = new JsonParser();
-                    String entity_string = EntityUtils.toString(entity);
-                    //logger.info("ES: Received " + entity_string.length() + " bytes");
-                    //logger.debug("ES Response: " + entity_string);
-                    if ( interpreter.getRvdContext().getProjectSettings().getLogging() )
-                        interpreter.getProjectLogger().log(entity_string).tag("app",interpreter.getAppName()).tag("ES").tag("RESPONSE").done();
-                    response_element = parser.parse(entity_string);
+                // In  case of error in the service no need to proceed. Just continue the "onException" module if set
+                if (statusCode >= 400 && statusCode < 600) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Remote service failed with: " + response.getStatusLine());
+                    }
+                    if (!RvdUtils.isEmpty(getExceptionNext()))
+                        return getExceptionNext();
+                    else
+                        throw new RemoteServiceError("Service " + url + " failed with: " + response.getStatusLine() + ". Throwing an error since no 'On Remote Exception' has been defined.");
                 }
-            } else if(logger.isDebugEnabled()) {
-                logger.debug("ES: No parsing will be done to the response");
+
+                // Parse the response if (a) there are assignments or (b) there is dynamic or mapped routing
+                if (getAssignments() != null && getAssignments().size() > 0
+                        || getDoRouting() && ("responseBased".equals(getNextType()) || "mapped".equals(getNextType()))) {
+                    HttpEntity entity = response.getEntity();
+                    if (entity != null) {
+                        JsonParser parser = new JsonParser();
+                        String entity_string = EntityUtils.toString(entity);
+                        //logger.info("ES: Received " + entity_string.length() + " bytes");
+                        //logger.debug("ES Response: " + entity_string);
+                        if (interpreter.getRvdContext().getProjectSettings().getLogging())
+                            interpreter.getProjectLogger().log(entity_string).tag("app", interpreter.getAppName()).tag("ES").tag("RESPONSE").done();
+                        response_element = parser.parse(entity_string);
+                    }
+                } else if (logger.isDebugEnabled()) {
+                    logger.debug("ES: No parsing will be done to the response");
+                }
+            } finally {
+                if (response != null) {
+                    response.close();
+                    HttpClientUtils.closeQuietly(client);
+                    client = null;
+                }
             }
 
             // *** Determine what to do next. Find the next module name or whether to continue in the current module ***
 
-            if ( getDoRouting() ) {
-                if ( "fixed".equals( getNextType() ) )
+            if (getDoRouting()) {
+                if ("fixed".equals(getNextType()))
                     next = getNext();
-                else
-                if ( "responseBased".equals(getNextType()) || "mapped".equals(getNextType())) {
+                else if ("responseBased".equals(getNextType()) || "mapped".equals(getNextType())) {
                     String nextValue = interpreter.evaluateExtractorExpression(getNextValueExtractor(), response_element);
 
-                    if ( "responseBased".equals(getNextType()) ) {
-                        next = interpreter.getNodeNameByLabel( nextValue );
-                    } else
-                    if ( "mapped".equals(getNextType()) ) {
-                        if ( getRouteMappings() != null ) {
-                            for ( RouteMapping mapping : getRouteMappings() ) {
-                                if ( nextValue != null && nextValue.equals(mapping.getValue()) ) {
+                    if ("responseBased".equals(getNextType())) {
+                        next = interpreter.getNodeNameByLabel(nextValue);
+                    } else if ("mapped".equals(getNextType())) {
+                        if (getRouteMappings() != null) {
+                            for (RouteMapping mapping : getRouteMappings()) {
+                                if (nextValue != null && nextValue.equals(mapping.getValue())) {
                                     next = mapping.getNext();
                                     break;
                                 }
@@ -333,14 +342,13 @@ public class ExternalServiceStep extends Step {
                     }
                 }
                 // if no next route has been found throw an error
-                if ( "fixed".equals(getNextType()) && RvdUtils.isEmpty(next) ) {
+                if ("fixed".equals(getNextType()) && RvdUtils.isEmpty(next)) {
                     throw new InterpreterException("No valid module could be found for ES routing"); // use a general exception for now.
                 }
-                if(logger.isInfoEnabled()) {
-                    logger.info( "Routing enabled. Chosen target: " + next);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Routing enabled. Chosen target: " + next);
                 }
             }
-
 
             // *** Perform the assignments ***
 
