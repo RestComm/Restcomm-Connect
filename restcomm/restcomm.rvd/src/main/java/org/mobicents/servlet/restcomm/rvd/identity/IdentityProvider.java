@@ -66,8 +66,6 @@ public class IdentityProvider {
         } else {
             URI uri = buildIdentityInstanceQueryUrl(parsedOrigin);
             IdentityInstanceResponse identity = fetchIdentityInstance(uri);
-            // TODO error handling ?
-            // no identity instance is available for this origin. Let's return null
             if (identity == null)
                 return null;
             instanceId = identity.getName();
@@ -112,16 +110,20 @@ public class IdentityProvider {
         }
     }
 
-    // TODO add error-handling
     private IdentityInstanceResponse fetchIdentityInstance(URI uri) {
         Client jerseyClient = Client.create();
         WebResource webResource = jerseyClient.resource(uri);
         ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-        String string_response = response.getEntity(String.class);
-        Gson gson = new Gson();
-        return gson.fromJson(string_response, IdentityInstanceResponse.class);
-
-
+        if (response.getStatus() == 200) {
+            String string_response = response.getEntity(String.class);
+            Gson gson = new Gson();
+            return gson.fromJson(string_response, IdentityInstanceResponse.class);
+        } else {
+            if (response.getStatus() == 404)
+                return null;
+            else
+                throw new RuntimeException("Failed resolving Identity Instance for: " + uri.toString());
+        }
     }
 
     private KeycloakDeployment buildDeployment(String instanceName) {

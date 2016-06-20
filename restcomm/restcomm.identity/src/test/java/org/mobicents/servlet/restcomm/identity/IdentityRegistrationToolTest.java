@@ -35,9 +35,11 @@ import java.io.IOException;
  */
 public class IdentityRegistrationToolTest {
     IdentityRegistrationTool tool;
-
-    //static String IAT = "eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiIwOWRjYTNiMi04ZGZjLTRlM2EtYTIwNi02NDg5N2QyNTAyMWUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNDU4NjUzNTkzLCJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwODAvYXV0aC9yZWFsbXMvcmVzdGNvbW0tdGVzdCIsImF1ZCI6Imh0dHA6Ly8xMjcuMC4wLjE6ODA4MC9hdXRoL3JlYWxtcy9yZXN0Y29tbS10ZXN0IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.VehnxN_OC-JiFgUQEghIyoFwaWvP1EOVzof6sCTR52baCtsuCjS6omO_FVs3f9vzclX85Go7vf19F1mBBAXyHy3-fzJgJZ6wdk5AAAWbnmt0TkNM60irXa3sKvqMZnDae0L9dPRNoYEhe6_s6AUVZ25basb7uxLSDntNC4a-v0xI1gug_m-TKsjj967eIqJyUHknCbjKTjBewyFyCnSbWkQzCTojmCQ4QiYHGoLYpWYxpUlLI-iv-eOnlwQwcbDA9AbEf7vrk3FaykhnVisP-FmMhYUUYn11XUqkbIkFosE3mZKDMlvPW-j7r50bR4bIzVhXubw1IQBqoqB9AG0Dnw";
-    static String keycloakUrl = "http://127.0.0.1:8081/auth";
+    // these depend on your keycloak installation
+    static String KEYCLOAK_URL = "http://127.0.0.1:8081/auth";
+    static String ADMIN_USERNAME = "admin";
+    static String ADMIN_PASSWORD = "admin";
+    // this does not depend on it
     static String testRealm = "restcomm-test";
 
     static IdentityTestingTool testingTool;
@@ -45,10 +47,10 @@ public class IdentityRegistrationToolTest {
 
     @BeforeClass
     public static void beforeClass() throws IOException {
-        testingTool = new IdentityTestingTool(keycloakUrl, "admin", "admin");
+        testingTool = new IdentityTestingTool(KEYCLOAK_URL, ADMIN_USERNAME, ADMIN_PASSWORD);
         testingTool.importRealm("restcomm-test-realm.json");
         String powerfulToken = testingTool.getTokenWithClientGrant("service-client","client-secret",testRealm);
-        iat = testingTool.getIAT(powerfulToken,10,1000,testRealm);
+        iat = testingTool.getIAT(powerfulToken,0,1000,testRealm);
     }
 
     @AfterClass
@@ -58,9 +60,29 @@ public class IdentityRegistrationToolTest {
 
     @Test
     public void identityRegistrationSucceeds() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
-        tool = new IdentityRegistrationTool(keycloakUrl,testRealm);
+        tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
         IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
         String token = testingTool.getTokenWithDirectAccessGrant("administrator@company.com", "RestComm", "service-client", "client-secret", "restcomm-test");
+        // check *-restcomm-ui Client
+        JsonObject restcommUI = testingTool.getClient(token, ii.getName() + "-restcomm-ui", testRealm);
+        Assert.assertEquals("http://restcomm-server:8080", restcommUI.get("baseUrl").getAsString());
+        Assert.assertEquals("http://restcomm-server:8080/*", restcommUI.get("redirectUris").getAsString());
+        Assert.assertEquals("http://restcomm-server:8080", restcommUI.get("webOrigins").getAsString());
+        // check *-rvd-ui Client
+        JsonObject rvdUI = testingTool.getClient(token, ii.getName() + "-rvd-ui", testRealm);
+        Assert.assertEquals("http://restcomm-server:8080/restcomm-rvd", rvdUI.get("baseUrl").getAsString());
+        Assert.assertEquals("http://restcomm-server:8080/restcomm-rvd/*", rvdUI.get("redirectUris").getAsString());
+        Assert.assertEquals("http://restcomm-server:8080", rvdUI.get("webOrigins").getAsString());
+        // check trailing '/' character is removed from root url
+
+    }
+
+    @Test
+    public void trailingSlashIsRemoved() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
+        tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
+        IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080/","client-secret1");
+        String token = testingTool.getTokenWithDirectAccessGrant("administrator@company.com", "RestComm", "service-client", "client-secret", "restcomm-test");
+        // check *-restcomm-ui Client. No need to test the rest since trimming is done on a higher level
         JsonObject restcommUI = testingTool.getClient(token, ii.getName() + "-restcomm-ui", testRealm);
         Assert.assertEquals("http://restcomm-server:8080", restcommUI.get("baseUrl").getAsString());
         Assert.assertEquals("http://restcomm-server:8080/*", restcommUI.get("redirectUris").getAsString());
@@ -69,7 +91,7 @@ public class IdentityRegistrationToolTest {
 
     @Test(expected=AuthServerAuthorizationError.class)
     public void badIATShouldFail() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
-        tool = new IdentityRegistrationTool(keycloakUrl,testRealm);
+        tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
         tool.registerInstanceWithIAT("bad_IAT", "http://restcomm-server:8080","client-secret1");
     }
 

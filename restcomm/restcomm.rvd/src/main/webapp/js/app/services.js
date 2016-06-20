@@ -122,7 +122,7 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
 	        if (IdentityConfig.securedByKeycloak()) {
                 return "Bearer " + KeycloakAuth.authz.token;
 	        } else
-	        if (identityConfig.securedByRestcomm())
+	        if (IdentityConfig.securedByRestcomm())
 	            return "Basic " + btoa(account.email_address + ":" + account.auth_token);
 	    }
 	    return null;
@@ -832,7 +832,7 @@ function IdentityConfig(server, instance,$q) {
     }
     // True if Restcomm is used for authorization (legacy mode). No keycloak needs to be present.
     function securedByRestcomm() {
-        return !identityServerConfigured();
+        return !securedByKeycloak();
     }
     function getIdentity() {
         if (!identityServerConfigured())

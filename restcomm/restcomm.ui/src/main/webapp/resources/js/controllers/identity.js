@@ -22,6 +22,7 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 		var redirectUrl = locationAbsUrl.substring(0, locationAbsUrl.indexOf(locationUrl));
 		if (redirectUrl && redirectUrl.endsWith("#")) // trim last # character if present
 			redirectUrl = redirectUrl.substring(0, redirectUrl.length-1)
+
 		return redirectUrl;
 	}
 });

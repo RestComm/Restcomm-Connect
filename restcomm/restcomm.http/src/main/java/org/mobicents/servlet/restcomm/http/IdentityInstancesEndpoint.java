@@ -29,6 +29,7 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.responseentities.IdentityInstanceEntity;
 import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
@@ -104,12 +105,15 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
     }
 
     protected Response unregisterIdentityInstance(String sid) {
+        if ( ! hasAccountRole(getAdministratorRole()) )
+            throw new AuthorizationException();
         Sid instanceSid = new Sid(sid);
         IdentityInstance instance = identityInstancesDao.getIdentityInstance(instanceSid);
         if (instance != null) {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(mainConfig.getIdentityAuthServerUrl(), mainConfig.getIdentityRealm());
             tool.unregisterInstanceWithRAT(instance);
             identityInstancesDao.removeIdentityInstance(instanceSid);
+            logger.info("Removed identity instance " + instanceSid);
             return Response.ok().build();
         } else {
             return Response.status(Response.Status.NOT_FOUND).build();
