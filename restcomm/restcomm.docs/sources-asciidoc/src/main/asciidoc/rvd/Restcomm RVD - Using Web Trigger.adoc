@@ -119,7 +119,7 @@ Application behaviour can be further enhanced by adding parameters to your trigg
 
 image:./images/add_variables_to_the_mix.png[add_variables_to_the_mix,width=763,height=341]
 
-* Modify the trigger URL by adding _firstname_ and _lastname_ custom parameters. It should look like the following:http://RESTCOMM_HOST:PORT/restcomm-rvd/services/apps/TestWebTrigger/start?token=ToPsEcReT**&firstname=foo&lastname=bar**
+* Modify the trigger URL by adding _firstname_ and _lastname_ custom parameters. It should look like the following:http://RESTCOMM_HOSTNAME:PORT/restcomm-rvd/services/apps/TestWebTrigger/start?token=ToPsEcReT**&firstname=foo&lastname=bar**
 
 RVD will detect these additional parameters and create variables using the same name.
 
@@ -133,7 +133,7 @@ Override destination of the call
 
 You can explicitly specify the destination of the call by adding the special *to* parameter to your URL. This won't create an RVD variable but will change the destination of the call instead.
 
-* Modify the trigger URL so that is calls *bob* instead of **alice**. The URL should now look like this: http://RESTCOMM_HOST:PORT/restcomm-rvd/services/apps/TestWebTrigger/start?token=ToPsEcReT&firstname=foo&lastname=bar&**to=client:bob**
+* Modify the trigger URL so that is calls *bob* instead of **alice**. The URL should now look like this: http://RESTCOMM_HOSTNAME:PORT/restcomm-rvd/services/apps/TestWebTrigger/start?token=ToPsEcReT&firstname=foo&lastname=bar&**to=client:bob**
 * Register your SIP phone as *bob* instead of *alice*
 * Make the HTTP request
 
@@ -178,7 +178,7 @@ credentials
   
 URL
 
-  http://RESTCOMM_HOST:PORT/restcomm-rvd/services/apps/TestWebTrigger/start
+  http://RESTCOMM_HOSTNAME:PORT/restcomm-rvd/services/apps/TestWebTrigger/start
   
 Headers
 
