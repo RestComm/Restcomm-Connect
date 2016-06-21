@@ -16,8 +16,8 @@ configSipStack() {
 	lb_sipstack_file="$RESTCOMM_HOME/standalone/configuration/mss-sip-stack.properties"
 
         if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-		sed -e 's|^#org.mobicents.ha.javax.sip.BALANCERS=|org.mobicents.ha.javax.sip.BALANCERS=|' \
-		    -e "s|org.mobicents.ha.javax.sip.BALANCERS=.*|org.mobicents.ha.javax.sip.BALANCERS=$LB_ADDRESS:$LB_INTERNAL_PORT|" \
+		sed -e 's|^#gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=|gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=|' \
+		    -e "s|gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=.*|gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=false|" \
    		    -e 's|^#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \
 		    -e "s|org.mobicents.ha.javax.sip.REACHABLE_CHECK=.*|org.mobicents.ha.javax.sip.REACHABLE_CHECK=false|" \
 		    $lb_sipstack_file > $lb_sipstack_file.bak
