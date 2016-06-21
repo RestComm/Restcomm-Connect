@@ -345,8 +345,11 @@ updateRecordingsPath() {
 	if [ -n "$RECORDINGS_PATH" ]; then
 		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://${RECORDINGS_PATH}<\/recordings-path>|" $FILE > $FILE.bak
 		echo "Updated RECORDINGS_PATH "
-		mv $FILE.bak $FILE
+
+	else
+		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path><recordings-path>file://\${restcomm:home}/recordings<\/recordings-path>|" $FILE > $FILE.bak
 	fi
+	mv $FILE.bak $FILE
 	echo 'Configured Recordings path'
 }
 
@@ -370,10 +373,14 @@ configHypertextPort(){
 ## Description: Other single configuration
 #enable/disable SSLSNI (default:false)
 otherRestCommConf(){
+
+    #Remove if is set in earlier run.
+    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
+
 	if [  "${SSLSNI^^}" = "FALSE"  ]; then
-		 grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false|" $RESTCOMM_BIN/standalone.conf
+		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $RESTCOMM_BIN/standalone.conf
 	else
-	 	grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true|" $RESTCOMM_BIN/standalone.conf
+	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
 	fi
 		echo 'Configured Other RestComm confs..'
 }

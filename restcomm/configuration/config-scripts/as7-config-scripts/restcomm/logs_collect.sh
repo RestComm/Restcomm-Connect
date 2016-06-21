@@ -173,7 +173,6 @@ if [ -d "$LOGS_DIR_ZIP" ]; then
    exit 1
 }
 
-
 getPID(){
    RESTCOMM_PID=$(jps | grep jboss-modules.jar | cut -d " " -f 1)
 
