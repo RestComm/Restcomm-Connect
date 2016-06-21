@@ -347,7 +347,7 @@ updateRecordingsPath() {
 		echo "Updated RECORDINGS_PATH "
 
 	else
-		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path><recordings-path>file://\${restcomm:home}/recordings<\/recordings-path>|" $FILE > $FILE.bak
+		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://\${restcomm:home}/recordings<\/recordings-path>|" $FILE > $FILE.bak
 	fi
 	mv $FILE.bak $FILE
 	echo 'Configured Recordings path'
