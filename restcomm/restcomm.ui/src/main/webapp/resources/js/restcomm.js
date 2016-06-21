@@ -104,6 +104,16 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         }
     }
   });
+  $stateProvider.state('restcomm.identity-edit',{
+    url:'/identity/edit',
+    templateUrl:'modules/identity-edit.html',
+    controller: 'IdentityEditCtrl',
+    resolve: {
+        authorize: function (AuthService) {
+            return AuthService.checkAccess();
+        }
+    }
+  });
   $stateProvider.state('restcomm.dashboard',{
     url:'/dashboard',
     templateUrl:'modules/dashboard.html',

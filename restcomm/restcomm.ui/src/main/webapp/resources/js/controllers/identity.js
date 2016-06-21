@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope, $location, RCommIdentityInstances, Notifications) {
+angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications) {
 
     $scope.details = {
 		RedirectUrl: parseRootUrl($location.absUrl(), $location.url()),
@@ -8,14 +8,19 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 	}
 
     $scope.submitRegistrationDetails = function (details) {
-		console.log("submitting details");
-		RCommIdentityInstances.register(details).catch(function (response) {
+		RCommIdentityInstances.register(details).then(function (response) {
+		    Notifications.info('Registered Identity Instance with ID ' );
+		}, function (response) {
 			if (response.status == 500)
 				Notifications.error("Internal server error");
 			else
 			if (response.status == 409)
 				Norifications.error("Already registered!");
 		});
+	}
+
+	$scope.resetRegistrationToken = function(clientSuffix, newtoken) {
+	    console.log("resetting registation token for client " + clientSuffix);
 	}
 
     function parseRootUrl(locationAbsUrl, locationUrl) {
@@ -26,3 +31,13 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 		return redirectUrl;
 	}
 });
+
+angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, IdentityConfig) {
+
+    $scope.identity = IdentityConfig.getIdentity();
+
+	$scope.resetRegistrationToken = function(clientSuffix, newtoken) {
+	    console.log("resetting registation token for client " + clientSuffix);
+	}
+});
+

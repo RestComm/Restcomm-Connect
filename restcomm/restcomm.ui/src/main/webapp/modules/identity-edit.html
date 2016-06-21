@@ -1,0 +1,50 @@
+<rc-page-title icon="lock" title="Identity" sub-title="{{identity.name}}"></rc-page-title>
+
+<form name="form">
+    <h3>Registration tokens</h3>
+    <div class="row">
+        <div class="col-md-12">
+
+            <form ng-submit="resetRegistrationToken('restcomm-ui',newToken)">
+                <div class="row">
+                    <div class="col-md-10">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <span class="input-group-addon">Admin UI registration token</span>
+                                <input class="form-control" ng-model="newToken">
+                            </div>
+                            <p class="help-block">Refresh AdminUI registration token</p>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary pull-right">Reset token</button>
+                    </div>
+                </div>
+            </form>
+
+            <form ng-submit="resetRegistrationToken('rvd-ui',newToken)">
+                <div class="row">
+                    <div class="col-md-10">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <span class="input-group-addon">RVD UI registration token</span>
+                                <input class="form-control" ng-model="details.InitialAccessToken">
+                            </div>
+                            <p class="help-block">Refresh RVD UI registration token.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary pull-right">Reset token</button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-danger" title="Unregister identity from Keycloak server"><i class="fa fa-unlock"></i> Unregister Identity</button>
+        </div>
+    </div>
+</form>
