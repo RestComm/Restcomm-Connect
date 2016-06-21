@@ -9,6 +9,10 @@ configConnectors() {
 	FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 	static_address="$1"
 
+    #delete additional connectors if any added to erlier run of the script.
+    grep -q "###new-conectors###" $FILE && sed '/###new-conectors###/,/###new-conectors###/d' $FILE > $FILE.bak
+    mv $FILE.bak $FILE
+
 	#Check for Por Offset
 	if (( $PORT_OFFSET > 0 )); then
 		local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
@@ -52,6 +56,11 @@ configConnectors() {
 #Socket Binding configuration for standalone-sip.xml
 configSocketbinding() {
 FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
+
+    #delete additional bindings if any added to erlier run of the script.
+    grep -q "###new-conectors###" $FILE && sed '/###new-bindings###/,/###new-bindings###/d' $FILE > $FILE.bak
+    mv $FILE.bak $FILE
+
 	#check for port offset
 	if (( $PORT_OFFSET > 0 )); then
     	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
@@ -69,8 +78,101 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
         mv $FILE.bak $FILE
 }
 
+setMoreConnectors(){
+flag1=false
+flag2=false
+    for i in $( set -o posix ; set | grep ^ADDITIONAL_CONNECTOR_ | sort -rn ); do
+        connector=$(echo ${i} | cut -d = -f2  | cut -d _ -f2 | cut -d : -f1)
+        port=$(echo ${i} | cut -d = -f2 | cut -d _ -f2 | cut -d : -f2)
+        if [ "$flag1" = false ] ; then
+            setInitialSign
+            flag1=true
+        fi
+        addConector $connector $port
+        addSocketBinding $connector $port
+        echo "Configuring log level for: $connector -> $port"
+        flag2=true
+    done
+
+    if [ "$flag2" = true ] ; then
+        setFinalSign
+    fi
+}
+
+addConector(){
+FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
+connector=$1
+port=$2
+
+    #check for port offset at the new connectors.
+    if (( $PORT_OFFSET > 0 )); then
+        local port=$((port + PORT_OFFSET))
+    fi
+
+    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
+		if [ -z "$LB_INTERNAL_IP" ]; then
+      		LB_INTERNAL_IP=$LB_PUBLIC_IP
+		fi
+         grep -q "connector name=\"${connector}\"" $FILE || sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
+               <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${LB_PUBLIC_IP}\" static-server-port=\"${port}\" use-load-balancer=\"true\" load-balancer-address=\"${LB_INTERNAL_IP}\" load-balancer-rmi-port=\"${LB_RMI_PORT}\"  load-balancer-sip-port=\"${LB_SIP_PORT_UDP}\"/>" $FILE > $FILE.bak
+
+    else
+         grep -q "connector name=\"${connector}\"" $FILE || sed -e "/path-name=\"org.mobicents.ext\"/a\
+			   <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${static_address}\" static-server-port=\"${port}\"/>" $FILE > $FILE.bak
+	fi
+	mv $FILE.bak $FILE
+	echo 'Configured SIP Connectors and Bindings'
+}
+
+addSocketBinding(){
+FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
+connector=$1
+port=$2
+
+  grep -q "socket-binding name=\"${connector}\"" $FILE || sed "/name=\"management-https\"/a <socket-binding name=\"${connector}\" port=\"${port}\"/>" $FILE > $FILE.bak
+  mv $FILE.bak $FILE
+}
+
+setInitialSign(){
+    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
+		if [ -z "$LB_INTERNAL_IP" ]; then
+      		LB_INTERNAL_IP=$LB_PUBLIC_IP
+		fi
+         sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
+               ###new-conectors###" $FILE > $FILE.bak
+
+    else
+          sed -e "/path-name=\"org.mobicents.ext\"/a\
+			   ###new-conectors###" $FILE > $FILE.bak
+	fi
+	mv $FILE.bak $FILE
+
+	sed "/name=\"management-https\"/a ###new-bindings###" $FILE > $FILE.bak
+  mv $FILE.bak $FILE
+
+}
+
+setFinalSign(){
+    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
+		if [ -z "$LB_INTERNAL_IP" ]; then
+      		LB_INTERNAL_IP=$LB_PUBLIC_IP
+		fi
+         sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
+               ###new-conectors###" $FILE > $FILE.bak
+
+    else
+          sed -e "/path-name=\"org.mobicents.ext\"/a\
+			   ###new-conectors###" $FILE > $FILE.bak
+	fi
+	mv $FILE.bak $FILE
+
+	sed "/name=\"management-https\"/a ###new-bindings###" $FILE > $FILE.bak
+  mv $FILE.bak $FILE
+}
+
 #MAIN
 echo 'Configuring Application Server...'
 configSocketbinding
 configConnectors "$PUBLIC_IP"
+setMoreConnectors
 echo 'Finished configuring Application Server!'
