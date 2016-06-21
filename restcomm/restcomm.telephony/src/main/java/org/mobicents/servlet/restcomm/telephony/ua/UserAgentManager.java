@@ -89,6 +89,7 @@ public final class UserAgentManager extends UntypedActor {
         this.storage = storage;
         pingInterval = runtime.getInt("ping-interval", 60);
         getContext().setReceiveTimeout(Duration.create(pingInterval, TimeUnit.SECONDS));
+        logger.info("About to run firstTimeCleanup()");
         firstTimeCleanup();
     }
 
@@ -444,11 +445,28 @@ public final class UserAgentManager extends UntypedActor {
         // if(request.getSession().isValid()) {
         // request.getSession().invalidate();
         // }
-        if (request.getApplicationSession().isValid()) {
-            try {
-                request.getApplicationSession().invalidate();
-            } catch (IllegalStateException exception) {
+        try {
+            if (request != null) {
+                if (request.getApplicationSession() != null) {
+                    if (request.getApplicationSession().isValid()) {
+                        try {
+                            request.getApplicationSession().setInvalidateWhenReady(true);
+                        } catch (IllegalStateException exception) {
+                            logger.error("Exception while trying to setInvalidateWhenReady(true) for application session, exception: "+exception);
+                        }
+                    }
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("After sent response: "+response.toString()+" for Register request, application session is NULL!");
+                    }
+                }
+            } else {
+                if (logger.isInfoEnabled()) {
+                    logger.info("After sent response: "+response.toString()+" for Register request, request is NULL!");
+                }
             }
+        } catch (Exception e) {
+            logger.error("Exception while trying to setInvalidateWhenReady(true) after sent response to register : "+response.toString()+" exception: "+e);
         }
     }
 
