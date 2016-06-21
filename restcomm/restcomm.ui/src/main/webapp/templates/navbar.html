@@ -32,7 +32,7 @@
                             <li><a href="#/profile/{{sid}}"><i class="fa fa-cog"></i> Account Settings</a></li>
                             <li class="divider"></li>
                             <li class="navbar-header text-muted" style="margin-left: 10px;">Sub Accounts</li>
-                            <li ng-repeat="account in accountsList" ng-hide="account.sid == sid"><a href="#"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>
+                            <li ng-repeat="account in accountsList" ng-hide="account.sid == sid"><a href="#/profile/{{account.sid}}"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>
                             <li class="disabled"><a href="#"></a> </li>
                             <li class="disabled"><a href="#"></a> </li>
                             <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><i class="fa fa-plus"></i> Create New Account...</a> </li>
