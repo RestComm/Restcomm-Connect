@@ -27,7 +27,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
   //if(AuthService.isLoggedIn()) {
   var accountsList;
-  $scope.getAccountList = function() {
+  function getAccountList () {
    accountsList = RCommAccounts.query(function() {
         $scope.accountsList = accountsList;
         for (var x in accountsList){
@@ -37,8 +37,12 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
         }
       });
   };
+  getAccountList();
 
-  $scope.getAccountList();
+  // when new sub-account is created make sure the list is updated
+  $scope.$on("account-created", function () {
+    getAccountList();
+  });
   //}
 
   // add account -------------------------------------------------------------
@@ -177,7 +181,7 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
         }),
         function() { // success
           Notifications.success('Account  "' + account.friendlyName + '" created successfully!');
-          $scope.getAccountList();
+          $scope.$emit("account-created"); // handler should refresh sub-account list
           $modalInstance.close();
         },
         function(response) { // error
