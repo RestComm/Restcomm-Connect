@@ -24,7 +24,7 @@
                     <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
                     <!--<li class="divider-vertical"></li>-->
                 </ul>
-                <i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
+                <i ng-show="loggedAccount.role == 'Administrator'" class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
                 <ul class="nav navbar-nav pull-right">
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ friendlyName }} <b class="caret"></b></a>
