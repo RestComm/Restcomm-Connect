@@ -104,7 +104,7 @@ LB_HOME=$RESTCOMM_HOME/tools/sip-balancer
 echo BASEDIR: $BASEDIR
 echo RESTCOMM_HOME: $RESTCOMM_HOME
 source $BASEDIR/restcomm.conf
-source $BASEDIR/proxy.conf
+source $BASEDIR/advanced.conf
 
 # input parameters and default values
 RUN_MODE='standalone'
@@ -176,11 +176,13 @@ if [[ -z "$SMS_OUTBOUND_PROXY" ]]; then
 fi
 
 # configure restcomm installation
-source $BASEDIR/autoconfigure.sh
+if [ "${CONF_MANUAL^^}" = "FALSE"  ]; then
+    source $BASEDIR/autoconfigure.sh
+fi
 
-# start restcomm in selected run mode
 if [ "${MS_EXTERNAL^^}" = "FALSE"  ]; then
 	startMediaServer
 fi
+# start restcomm in selected run mode
 startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
 exit 0
