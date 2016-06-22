@@ -336,7 +336,7 @@ configSMPPAccount() {
 
 	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
 	#Add sourceMap && destinationMap
-	sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
+
 
 	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
 		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
@@ -355,6 +355,7 @@ configSMPPAccount() {
 
 		mv $FILE.bak $FILE
 
+        sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
 
 	else
@@ -373,6 +374,8 @@ configSMPPAccount() {
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
+
+        sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
 	fi
 }
