@@ -470,7 +470,7 @@ confRVD(){
 	if [ -n "$RVD_LOCATION" ]; then
   		echo "RVD_LOCATION $RVD_LOCATION"
   		mkdir -p `echo $RVD_LOCATION`
-  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>'${RVD_LOCATION}'</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
 
   		COPYFLAG=$RVD_LOCATION/.demos_initialized
   		if [ -f "$COPYFLAG" ]; then
