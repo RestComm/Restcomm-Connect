@@ -28,6 +28,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.log4j.Logger;
+import org.keycloak.representations.idm.ClientRepresentation;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.identity.entities.KeycloakClient;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
@@ -100,6 +101,63 @@ public class IdentityRegistrationTool {
         unregisterClient(identityInstance.getName() + "-" + RESTCOMM_UI_CLIENT_SUFFIX, identityInstance.getRestcommUiRAT());
         unregisterClient(identityInstance.getName() + "-" + RVD_REST_CLIENT_SUFFIX, identityInstance.getRvdRestRAT());
         unregisterClient(identityInstance.getName() + "-" + RVD_UI_CLIENT_SUFFIX, identityInstance.getRvdUiRAT());
+    }
+    
+    /**
+     * Updates a client specified in repr using a Registration Access Token (RAT). The refreshed RAT is returned.
+     * It also updated the IdentityInstance appropriately.
+     *
+     * Note that IdentityInstance object should be stored for future reference.
+     *
+     * @param repr
+     * @param identityInstance
+     * @param clientSuffix
+     * @return
+     * @throws IdentityClientRegistrationError
+     * @throws AuthServerAuthorizationError
+     */
+    public KeycloakClient updateRegisteredClientWithRAT(KeycloakClient repr, IdentityInstance identityInstance,  String clientSuffix) throws IdentityClientRegistrationError, AuthServerAuthorizationError {
+        repr.setClientId(identityInstance.getName() + "-" + clientSuffix);
+        String RAT = getRATForClientSuffix(identityInstance, clientSuffix);
+        try {
+            Client jersey = Client.create();
+            WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl() + "/" + repr.getClientId());
+            // build a client representation as a JSON object. Only non-null fields will be effective/present
+            Gson gson = new Gson();
+            String json = gson.toJson(repr);
+            // do create the client
+            ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + RAT).put(ClientResponse.class, json);
+            if (response.getStatus() >= 200 && response.getStatus() < 300) {
+                String data = response.getEntity(String.class);
+                KeycloakClient updatedClient = gson.fromJson(data, KeycloakClient.class);
+                setRATForClientSuffix(identityInstance, clientSuffix, updatedClient.getRegistrationAccessToken());
+                return updatedClient;
+            } else if (response.getStatus() == 403 || response.getStatus() == 401) {
+                throw new AuthServerAuthorizationError("Cannot update keycloak Client " + repr.getClientId());
+            } else {
+                throw new IdentityClientRegistrationError("Registered Client update failed for client '" + repr.getClientId() + "' failed with status " + response.getStatus());
+            }
+        } catch ( IdentityClientRegistrationError | AuthServerAuthorizationError e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IdentityClientRegistrationError("Error creating client " + repr.getClientId(),e);
+        }
+    }
+
+    private String getRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix) {
+        String RAT;
+        if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
+            RAT = identityInstance.getRestcommUiRAT();
+        } else
+            throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
+        return RAT;
+    }
+
+    private void setRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix, String RAT) {
+        if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
+            identityInstance.setRestcommUiRAT(RAT);
+        } else
+            throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
     }
 
     /**
@@ -184,5 +242,32 @@ public class IdentityRegistrationTool {
         WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl() + "/" + clientId);
         ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + registrationAccessToken).delete(ClientResponse.class);
         return response.getStatus();
+    }
+
+    void updateClient(String clientId, String registrationAccessToken, ClientRepresentation repr) throws IdentityClientRegistrationError, AuthServerAuthorizationError {
+        try {
+            Client jersey = Client.create();
+            WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl() + "/" + clientId);
+            // build a client representation as a JSON object
+
+            Gson gson = new Gson();
+            String json = gson.toJson(repr);
+            // do create the client
+            ClientResponse response = resource.path(clientId).type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + registrationAccessToken).put(ClientResponse.class, json);
+            if (response.getStatus() == 201) {
+                String data = response.getEntity(String.class);
+                logger.info(data);
+                //KeycloakClient createdClient = gson.fromJson(data, KeycloakClient.class);
+                //return createdClient;
+            } else if (response.getStatus() == 403 || response.getStatus() == 401) {
+                throw new AuthServerAuthorizationError("Cannot update keycloak Client " + repr.getClientId());
+            } else {
+                throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus());
+            }
+        } catch ( IdentityClientRegistrationError | AuthServerAuthorizationError e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IdentityClientRegistrationError("Error updating client " + repr.getClientId(),e);
+        }
     }
 }

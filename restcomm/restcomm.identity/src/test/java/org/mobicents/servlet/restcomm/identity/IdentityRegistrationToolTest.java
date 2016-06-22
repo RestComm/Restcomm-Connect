@@ -25,6 +25,7 @@ import junit.framework.Assert;
 import org.junit.*;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 //import org.mobicents.servlet.restcomm.identity.entities.ClientEntity;
+import org.mobicents.servlet.restcomm.identity.entities.KeycloakClient;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
 
@@ -99,6 +100,27 @@ public class IdentityRegistrationToolTest {
     public void badKeycloakAddressShouldFail() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
         tool = new IdentityRegistrationTool("badurl",testRealm);
         tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
+    }
+
+    @Test
+    public void registeredClientCanBeUpdated() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
+        // first create a new identity instance
+        // TODO, do that by importing a small realm instead of creating the instance each time
+        tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
+        IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
+        String oldRAT = ii.getRestcommUiRAT();
+        KeycloakClient client = new KeycloakClient();
+        client.setBearerOnly(true);
+        KeycloakClient updatedClient = tool.updateRegisteredClientWithRAT(client,ii, IdentityRegistrationTool.RESTCOMM_UI_CLIENT_SUFFIX);
+        Assert.assertTrue("Updated keycloak Client property was not really updated: BearerOnly", updatedClient.getBearerOnly().booleanValue());
+        Assert.assertFalse("Registration access token has not changed but should have.", oldRAT.equals(updatedClient.getRegistrationAccessToken()));
+        Assert.assertEquals("Updated client RAT was not properly updated inside Identity Instance", ii.getRestcommUiRAT(), updatedClient.getRegistrationAccessToken());
+        // make sure that the new RAT is still valid for another round of updates
+        KeycloakClient client2 = new KeycloakClient();
+        client2.setBaseUrl("/");
+        KeycloakClient updatedClient2 = tool.updateRegisteredClientWithRAT(client2, ii, IdentityRegistrationTool.RESTCOMM_UI_CLIENT_SUFFIX);
+        Assert.assertEquals("/", updatedClient2.getBaseUrl());
+
     }
 
 //    @Test
