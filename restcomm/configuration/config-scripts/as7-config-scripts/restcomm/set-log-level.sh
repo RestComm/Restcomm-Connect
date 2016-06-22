@@ -48,11 +48,12 @@ done
  n=0
    until [ $n -ge 5 ]
    do
-      $RESTCOMM_BIN/jboss-cli.sh --connect controller=localhost --file="$CLIFILE" && echo "LOG level changed properly" && break;  # substitute your command here
-      if [ $n -eq 5 ] && [ $? -ne 0 ]; then echo "Command Fail.. please try again" && break;
       n=$[$n+1]
-      sleep 5
-      fi
+      $RESTCOMM_BIN/jboss-cli.sh --connect controller=localhost --file="$CLIFILE" # substitute your command here
+      if [ $? -eq 0 ]; then echo "LOG level changed properly" && break; fi
+
+      if [ $n -eq 5 ]; then echo "Command Fail.. please try again"; fi
+      sleep 2
    done
 
 
