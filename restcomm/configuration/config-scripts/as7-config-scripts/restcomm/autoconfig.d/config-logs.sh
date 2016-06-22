@@ -60,7 +60,7 @@ if [ -n "$LOG_LEVEL" ]; then
             esac
 
         echo "Configuring log level for: $component -> $level"
-        configure_RC_component_log "$component" "$level"
+        configure_RC_component_log "$COMPONENT" "$level"
      done
  fi
 
