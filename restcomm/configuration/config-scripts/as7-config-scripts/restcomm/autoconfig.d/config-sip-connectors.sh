@@ -72,7 +72,7 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
     else
          echo "Additional Bindings not Created earlier"
     fi
-   
+
 	#check for port offset
 	if (( $PORT_OFFSET > 0 )); then
     	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
