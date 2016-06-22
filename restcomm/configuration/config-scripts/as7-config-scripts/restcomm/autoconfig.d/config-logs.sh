@@ -37,7 +37,7 @@ config_AKKA_logs(){
     sed -i "s|stdout-loglevel = \".*\"|stdout-loglevel = \"${AKKA_LOG_LEVEL}\"|" $FILE
 }
 
-LOG_LEVEL_COMPONENT_GOVNIST='INFO'
+
 #MAIN
 if [ -n "$LOG_LEVEL" ]; then
     configure_RMS_log
