@@ -10,6 +10,7 @@ RESTCOMM_BIN=$RESTCOMM_HOME/bin
 RESTCOMM_DARS=$RESTCOMM_HOME/standalone/configuration/dars
 RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
+RVD_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war
 
 ## FUNCTIONS
 
@@ -45,9 +46,6 @@ configRestcomm() {
 		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
 	fi
-
-	sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
 
 	#Configure RESTCOMM_HOSTNAME at restcomm.xml. If not set "STATIC_ADDRESS" will be used.
 	if [ -n "$RESTCOMM_HOSTNAME" ]; then
@@ -250,6 +248,70 @@ configMobicentsProperties() {
 	echo "Updated mobicents-dar properties"
 }
 
+## Description: Configures TeleStax Proxy
+## Parameters : 1.Enabled
+##              2.login
+##              3.password
+## 		4.Endpoint
+## 		5.Proxy IP
+configTelestaxProxy() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	enabled="$1"
+	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
+		sed -e "/<telestax-proxy>/ {
+			N; s|<enabled>.*</enabled>|<enabled>$1</enabled>|
+		N; s|<login>.*</login>|<login>$2</login>|
+		N; s|<password>.*</password>|<password>$3</password>|
+		N; s|<endpoint>.*</endpoint>|<endpoint>$4</endpoint>|
+		N; s|<siteId>.*</siteId>|<siteId>$6</siteId>|
+		N; s|<uri>.*</uri>|<uri>http:\/\/$5:2080</uri>|
+		}" $FILE > $FILE.bak
+
+		mv $FILE.bak $FILE
+		echo 'Enabled TeleStax Proxy'
+	else
+		sed -e "/<telestax-proxy>/ {
+			N; s|<enabled>.*</enabled>|<enabled>false</enabled>|
+			N; s|<login>.*</login>|<login></login>|
+			N; s|<password>.*</password>|<password></password>|
+			N; s|<endpoint>.*</endpoint>|<endpoint></endpoint>|
+			N; s|<siteid>.*</siteid>|<siteid></siteid>|
+			N; s|<uri>.*</uri>|<uri>http:\/\/127.0.0.1:2080</uri>|
+		}" $FILE > $FILE.bak
+
+		mv $FILE.bak $FILE
+		echo 'Disabled TeleStax Proxy'
+	fi
+}
+
+
+## Description: Configures Media Server Manager
+## Parameters : 1.Enabled
+## 		2.private IP
+## 		3.public IP
+
+configMediaServerManager() {
+	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	enabled="$1"
+	bind_address="$2"
+	ms_external_address="$3"
+
+	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
+		sed -e "/<mgcp-server class=\"org.mobicents.servlet.restcomm.mgcp.MediaGateway\">/ {
+			N
+			N; s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|
+			N; s|<local-port>.*</local-port>|<local-port>2727</local-port>|
+			N; s|<remote-address>127.0.0.1</remote-address>|<remote-address>$bind_address</remote-address>|
+			N; s|<remote-port>.*</remote-port>|<remote-port>2427</remote-port>|
+			N; s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|
+			N; s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|
+		}" $FILE > $FILE.bak
+
+		mv $FILE.bak $FILE
+		echo 'Configured Media Server Manager'
+	fi
+}
+
 ## Description: Configures SMPP Account Details
 ## Parameters : 1.activate
 ## 		2.systemID
@@ -257,6 +319,9 @@ configMobicentsProperties() {
 ## 		4.systemType
 ## 		5.peerIP
 ## 		6.peerPort
+##      7.sourceMap
+##      8.destinationMap
+
 configSMPPAccount() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	activate="$1"
@@ -265,8 +330,13 @@ configSMPPAccount() {
 	systemType="$4"
 	peerIP="$5"
 	peerPort="$6"
+	sourceMap="$7"
+	destinationMap="$8"
+
 
 	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
+	#Add sourceMap && destinationMap
+	sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
 
 	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
 		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
@@ -284,6 +354,7 @@ configSMPPAccount() {
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
+
 		echo 'Configured SMPP Account Details'
 
 	else
@@ -373,6 +444,9 @@ configHypertextPort(){
 ## Description: Other single configuration
 #enable/disable SSLSNI (default:false)
 otherRestCommConf(){
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
+	mv $FILE.bak $FILE
 
     #Remove if is set in earlier run.
     grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
@@ -382,8 +456,45 @@ otherRestCommConf(){
 	else
 	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
 	fi
-		echo 'Configured Other RestComm confs..'
+
+	if [ -n "$HSQL_DIR" ]; then
+  		echo "HSQL_DIR $HSQL_DIR"
+  		mkdir -p $HSQL_DIR
+  		sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
+  		cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
+	fi
+	echo 'Configured Other RestComm confs..'
 }
+
+confRVD(){
+	if [ -n "$RVD_LOCATION" ]; then
+  		echo "RVD_LOCATION $RVD_LOCATION"
+  		mkdir -p `echo $RVD_LOCATION`
+  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>'${RVD_LOCATION}'</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+
+  		COPYFLAG=$RVD_LOCATION/.demos_initialized
+  		if [ -f "$COPYFLAG" ]; then
+   			#Do nothing, we already copied the demo file to the new workspace
+    		echo "RVD demo application are already copied"
+  		else
+    		echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
+    		cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
+    		touch $COPYFLAG
+  		fi
+	fi
+
+	if [ -n "$RVD_PORT" ]; then
+        echo "RVD_PORT $RVD_PORI"
+        if [  "${DISABLE_HTTP^^}" = "TRUE"  ]; then
+			SCHEME='https'
+		else
+			SCHEME='http'
+		fi
+        #If used means that port mapping at docker (e.g: -p 445:443) is not the default (-p 443:443)
+        sed -i "s|<restcommBaseUrl>.*</restcommBaseUrl>|<restcommBaseUrl>${SCHEME}://${PUBLIC_IP}:${RVD_PORT}/</restcommBaseUrl>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+    fi
+}
+
 
 # MAIN
 echo 'Configuring RestComm...'
@@ -396,10 +507,14 @@ configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
-configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
+configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
+configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
+configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT" "$SMPP_SOURCE_MAP" "$SMPP_DEST_MAP"
+configMediaServerMSaddress "$BIND_ADDRESS"
 configRestCommURIs
 updateRecordingsPath
 configHypertextPort
 configOutboundProxy
 otherRestCommConf
+confRVD
 echo 'Configured RestComm!'
