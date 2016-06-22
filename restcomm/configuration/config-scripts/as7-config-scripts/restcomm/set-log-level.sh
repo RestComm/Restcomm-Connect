@@ -22,7 +22,13 @@ listlog(){
 EOT
 }
 
-arr=( "$@" )
+if [ $# -eq 0 ]
+  then
+    arr="help"
+else
+    arr=( "$@" )
+fi
+
 for compt in $arr
   do
     case "$compt" in
