@@ -55,7 +55,7 @@ if [ -n "$LOG_LEVEL" ]; then
                 COMPONENT=gov.nist
                 ;;
             *)
-                echo "$component not possible to configure"
+                echo "$component not possible to configure need to add it."
                 continue
             esac
 
