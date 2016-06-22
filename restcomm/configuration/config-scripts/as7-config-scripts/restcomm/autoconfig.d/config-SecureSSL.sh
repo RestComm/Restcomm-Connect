@@ -95,6 +95,10 @@ CertConfigure(){
 		keytool -genkey -alias $TRUSTSTORE_ALIAS -keyalg RSA -keystore $TRUSTSTORE_LOCATION -dname "CN=restcomm" -ext san=ip:"$HOSTNAME" -storepass $TRUSTSTORE_PASSWORD -keypass $TRUSTSTORE_PASSWORD
 	fi
 
+     #add the new certificate to java cacerts in order to be accepted for RCML download.
+     keytool -exportcert -alias $TRUSTSTORE_ALIAS -file $RESTCOMM_CONF/restcomm.crt  -keystore $TRUSTSTORE_LOCATION -storepass $TRUSTSTORE_PASSWORD
+     keytool -importcert -alias $TRUSTSTORE_ALIAS -keystore /usr/lib/jvm/java-7-oracle/jre/lib/security/cacerts -storepass changeit -file $RESTCOMM_CONF/restcomm.crt -noprompt
+
 	echo "The generated truststore file at $TRUSTSTORE_LOCATION "
   fi
 
