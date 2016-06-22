@@ -5,27 +5,28 @@
 
 # VARIABLES
 RESTCOMM_BIN=$RESTCOMM_HOME/bin
+RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 
 configure_RC_component_log(){
-  sed -i "/<logger category=\"${1}\">/ {N; s/<level name=\".*\"\/>/<level name=\"${2}\"\/>/}" $BASEDIR/standalone/configuration/standalone-sip.xml
+  sed -i "/<logger category=\"${1}\">/ {N; s/<level name=\".*\"\/>/<level name=\"${2}\"\/>/}" $RESTCOMM_CONF/standalone-sip.xml
 }
 
 configure_RC_logs(){
-    sed -i "s|<logger category=\"org.mobicents.servlet.sip\">|<logger category=\"org.mobicents.servlet\">|" $BASEDIR/standalone/configuration/standalone-sip.xml
+    sed -i "s|<logger category=\"org.mobicents.servlet.sip\">|<logger category=\"org.mobicents.servlet\">|" $RESTCOMM_CONF/standalone-sip.xml
 
     sed -i "/ <console-handler name=\"CONSOLE\">/ {
     N; s|<level name=\".*\"/>|<level name=\"${LOG_LEVEL}\"/>|
-	}" $RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
+	}" $RESTCOMM_CONF/standalone-sip.xml
 }
 
 configure_RMS_log(){
-    FILE=$MMS_HOME/deploy/conf/log4j.xml
+    FILE=$MMS_HOME/conf/log4j.xml
     sed -i  "s|<param name=\"Threshold\" value=\".*\" />|<param name=\"Threshold\" value=\"${LOG_LEVEL}\" />|"  $FILE
     sed -i  "s|<priority value=\".*\" />|<priority value=\"${LOG_LEVEL}\"/>|"  $FILE
 }
 
 config_on_thefly(){
-    FILE=$RESTCOMM_BIN/set-log-level.sh
+    FILE=$RESTCOMM_BIN/restcomm/set-log-level.sh
     sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=$PUBLIC_IP|" $FILE
 }
 
@@ -36,7 +37,7 @@ config_AKKA_logs(){
     sed -i "s|stdout-loglevel = \".*\"|stdout-loglevel = \"${AKKA_LOG_LEVEL}\"|" $FILE
 }
 
-
+LOG_LEVEL_COMPONENT_GOVNIST='INFO'
 #MAIN
 if [ -n "$LOG_LEVEL" ]; then
     configure_RMS_log
@@ -44,9 +45,9 @@ if [ -n "$LOG_LEVEL" ]; then
     config_on_thefly
     config_AKKA_logs
     for i in $( set -o posix ; set | grep ^LOG_LEVEL_COMPONENT_ | sort -rn ); do
-        component=$(echo ${i} | cut -d = -f2)
-        level=$(echo ${i} | cut -d = -f3)
-        case "$compt" in
+        component=$(echo ${i} | cut -d = -f1 | cut -d _ -f4 )
+        level=$(echo ${i} | cut -d = -f2)
+        case "$component" in
             SIPSERVLET)
                 COMPONENT=org.mobicents.servlet
                 ;;
