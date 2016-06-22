@@ -4,13 +4,14 @@
 
 
 # VARIABLES
-RESTCOMM_BIN=$RESTCOMM_HOME/bin
+BASE_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+RESTCOMM_BIN=$BASE_DIR/..
 CLIFILE=/tmp/log.cli
 
 
 changelog() {
     cat <<EOT >> $CLIFILE
-    /subsystem=logging/logger=$COMPONENT:write-attribute(name=level,value=$2)
+    /subsystem=logging/logger=$1:write-attribute(name=level,value=$2)
 EOT
 }
 
@@ -27,12 +28,12 @@ for compt in arr
     case "$compt" in
             servlet)
                 COMPONENT=org.mobicents.servlet
-                changelog
+                changelog $COMPONENT $2
                 ;;
 
             govnist)
                 COMPONENT=gov.nist
-                changelog
+                changelog $COMPONENT $2
                 ;;
             list)
                 listlog
@@ -47,10 +48,11 @@ done
  n=0
    until [ $n -ge 5 ]
    do
-      $RESTCOMM_HOME/jboss-cli.sh --connect controller=localhost --file=CLIFILE && echo "LOG level changed properly" && break;  # substitute your command here
+      $RESTCOMM_HOME/jboss-cli.sh --connect controller=localhost --file="$CLIFILE" && echo "LOG level changed properly" && break;  # substitute your command here
+      if [ $n -eq 5 ] && [ $? -ne 0 ]; then echo "Command Fail.. please try again" && break;
       n=$[$n+1]
-      if [ $n -eq 5 ]; then echo "Command Fail.. please try again" && break;  fi
       sleep 5
+      fi
    done
 
 
