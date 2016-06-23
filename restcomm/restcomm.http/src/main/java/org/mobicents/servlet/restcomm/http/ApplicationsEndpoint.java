@@ -30,9 +30,7 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLDecoder;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -126,6 +124,8 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (Sid.pattern.matcher(sid).matches()) {
             application = dao.getApplication(new Sid(sid));
         } else {
+            // disabled support for application retrieval based on FriendlyName. It makes no sense to have it if friendly-name based application uniqueness is no longer supported either.
+/*
             try {
                 // Once not a valid sid, search using the parameter as name
                 String name = URLDecoder.decode(String.valueOf(sid), "UTF-8");
@@ -133,6 +133,8 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             } catch (UnsupportedEncodingException e) {
                 return status(BAD_REQUEST).entity(e.getMessage()).build();
             }
+*/
+            return Response.status(BAD_REQUEST).build();
         }
         if (application == null) {
             return status(NOT_FOUND).build();
