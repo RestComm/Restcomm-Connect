@@ -97,11 +97,6 @@ CertConfigure(){
 	echo "The generated truststore file at $TRUSTSTORE_LOCATION "
   fi
 
-     #add the new certificate to java cacerts.
-     JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::") #Set JAVA_HOME to be able to add at the cacerts
-     keytool -exportcert -alias $TRUSTSTORE_ALIAS -file $RESTCOMM_CONF/restcomm.crt  -keystore $TRUSTSTORE_LOCATION -storepass $TRUSTSTORE_PASSWORD
-     keytool -importcert -alias $TRUSTSTORE_ALIAS -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit -file $RESTCOMM_CONF/restcomm.crt -noprompt
-
   #Final necessary configuration. Protocols permitted, etc.
   grep -q 'ephemeralDHKeySize' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Djdk.tls.ephemeralDHKeySize=2048|" $RESTCOMM_BIN/standalone.conf
   grep -q 'https.protocols' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $RESTCOMM_BIN/standalone.conf
