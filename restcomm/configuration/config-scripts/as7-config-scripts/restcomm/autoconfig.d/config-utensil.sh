@@ -73,8 +73,66 @@ configSMTP(){
     fi
 }
 
+configMonitoring(){
+    if [ -z ${GRAYLOG_SERVER} ]; then
+        echo "Graylog Monitoring is not configured";
+        crontab -l 2>/dev/null > mycron
+        crontab -l | grep -q 'HDmonitor' && sed -i '/HDmonitor/d' mycron
+        crontab -l | grep -q 'RMSJVMonitor' && sed -i '/RMSJVMonitor/d' mycron
+        crontab -l | grep -q 'RCJVMonitor' && sed -i '/RCJVMonitor/d' mycron
+        crontab -l | grep -q 'SERVERAMonitor' && sed -i '/SERVERAMonitor/d' mycron
+        #install new cron file
+        crontab mycron
+        rm mycron
+
+    else
+        echo "GRAYLOG_SERVER is: $GRAYLOG_SERVER";
+
+        #write out current crontab RMSJVMonitor
+        crontab -l 2>/dev/null > mycron
+
+        #echo new cron into cron file
+        crontab -l | grep -q 'MAILTO=""'  && echo 'entry exists' || echo "MAILTO=\"\"" >> mycron
+        if [ "${HD_MONITOR^^}" = "FALSE" ]; then
+            sed -i '/HDmonitor/d' mycron
+            echo "HD_MONITOR: $HD_MONITOR"
+        else
+            crontab -l | grep -q 'Graylog_Monitoring.sh HDmonitor' && echo 'entry exists' || echo "0/30 * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh HDmonitor" >> mycron;
+        fi
+
+        if [ "${RMSJVM_MONITOR^^}" = "FALSE" ]; then
+            sed -i '/RMSJVMonitor/d' mycron
+            echo "RMSJVM_MONITOR: $RMSJVM_MONITOR";
+        else
+            crontab -l | grep -q 'Graylog_Monitoring.sh RMSJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RMSJVMonitor" >> mycron;
+        fi
+
+        if [ "${RCJVM_MONITOR^^}" = "FALSE" ]; then
+            sed -i '/RCJVMonitor/d' mycron
+            echo "RCJVM_MONITOR: $RCJVM_MONITOR";
+        else
+            crontab -l | grep -q 'Graylog_Monitoring.sh RCJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RCJVMonitor" >> mycron;
+        fi
+
+        if [ "${RAM_MONITOR^^}" = "FALSE" ]; then
+            sed -i '/SERVERAMonitor/d' mycron
+            echo "RAM_MONITOR: $RAM_MONITOR";
+        else
+            crontab -l | grep -q 'Graylog_Monitoring.sh SERVERAMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh SERVERAMonitor" >> mycron;
+        fi
+
+        #install new cron file
+        crontab mycron
+        rm mycron
+
+        #set Server Label
+        sed -i "s|SERVERLABEL=.*|SERVERLABEL=\"${SERVERLABEL}\"|" $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh;
+        sed -i "s|GRAYLOG_SERVER=.*|GRAYLOG_SERVER=\"${GRAYLOG_SERVER}\"|" $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh;
+     fi
+}
 
 # MAIN
 configS3Bucket
 setINITPassword
 configSMTP
+configMonitoring

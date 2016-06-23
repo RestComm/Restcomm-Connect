@@ -49,19 +49,6 @@ startRestcomm() {
 			;;
 	esac
 
-
-	if [[ "$run_mode" == *"-lb" ]]; then
-		echo 'Starting SIP Load Balancer...'
-		if screen -ls | grep -q 'balancer'; then
-			echo 'SIP Load Balancer is already running on screen session "balancer"!'
-		else
-			screen -dmS 'balancer' java -DlogConfigFile=$LB_HOME/lb-log4j.xml \
-			-jar $LB_HOME/sip-balancer-jar-with-dependencies.jar \
-			-mobicents-balancer-config=$LB_HOME/lb-configuration.properties
-			echo 'SIP Load Balancer started running on screen session "balancer"!'
-			echo "Using IP Address: $BIND_ADDRESS"
-		fi
-	fi
 }
 
 startMediaServer() {

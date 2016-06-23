@@ -5,13 +5,7 @@
 ##
 
 echo 'shutting down telscale restcomm...'
-# stop load balancer if necessary
-if screen -ls | grep -q 'balancer'; then
-	screen -S 'balancer' -p 0 -X 'quit'
-	echo '...stopped SIP Load Balancer running on screen session "balancer"...'
-else 
-	echo '...load balancer is not running, skipping...'
-fi
+
 # stop Media Server if necessary
 if screen -ls | grep -q 'mms'; then
 	screen -S 'mms' -p 0 -X 'quit'
