@@ -149,6 +149,15 @@ public class IdentityRegistrationTool {
         if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
             RAT = identityInstance.getRestcommUiRAT();
         } else
+        if (clientSuffix.equals(RESTCOMM_REST_CLIENT_SUFFIX)) {
+            RAT = identityInstance.getRestcommRestRAT();
+        } else
+        if (clientSuffix.equals(RVD_UI_CLIENT_SUFFIX)) {
+            RAT = identityInstance.getRvdUiRAT();
+        } else
+        if (clientSuffix.equals(RVD_REST_CLIENT_SUFFIX)) {
+            RAT = identityInstance.getRvdRestRAT();
+        } else
             throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
         return RAT;
     }
@@ -156,6 +165,15 @@ public class IdentityRegistrationTool {
     public static void setRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix, String RAT) {
         if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
             identityInstance.setRestcommUiRAT(RAT);
+        } else
+        if (clientSuffix.equals(RESTCOMM_REST_CLIENT_SUFFIX)) {
+            identityInstance.setRestcommRestRAT(RAT);
+        } else
+        if (clientSuffix.equals(RVD_UI_CLIENT_SUFFIX)) {
+            identityInstance.setRvdUiRAT(RAT);
+        } else
+        if (clientSuffix.equals(RVD_REST_CLIENT_SUFFIX)) {
+            identityInstance.setRvdRestRAT(RAT);
         } else
             throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
     }

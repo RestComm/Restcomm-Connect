@@ -123,7 +123,13 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
 
     @Override
     public void updateIdentityInstance(IdentityInstance instance) {
-        throw new NotImplementedException();
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateIdentityInstance", toMap(instance));
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     private IdentityInstance toIdentityInstance(final Map<String, Object> map) {

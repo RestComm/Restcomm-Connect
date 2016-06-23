@@ -41,6 +41,15 @@
         SELECT * FROM "restcomm_identity_instances" WHERE "name"=#{name};
     </select>
 
+    <update id="updateIdentityInstance" parameterType="map">
+        UPDATE "restcomm_identity_instances" SET "date_updated"=#{date_updated},
+        "restcomm_rest_rat"=#{restcomm_rest_rat}, "restcomm_rest_status"=#{restcomm_rest_status},
+        "restcomm_ui_rat"=#{restcomm_ui_rat}, "restcomm_ui_status"=#{restcomm_ui_status},
+        "rvd_rest_rat"=#{rvd_rest_rat}, "rvd_rest_status"=#{rvd_rest_status},
+        "rvd_ui_rat"=#{rvd_ui_rat}, "rvd_ui_status"=#{rvd_ui_status}
+        WHERE "sid"=#{sid};
+    </update>
+
     <delete id="removeIdentityInstance" parameterType="string">
         DELETE FROM "restcomm_identity_instances" WHERE "sid"=#{sid};
     </delete>

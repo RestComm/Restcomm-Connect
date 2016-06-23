@@ -718,7 +718,7 @@ rcServices.factory('RCommJMX', function($resource) {
 
 rcServices.factory('RCommIdentityInstances', function ($resource,$http) {
     var instance = {};
-    instance.resource = $resource('/restcomm/2012-04-24/Identity/Instances');
+    //instance.resource = $resource('/restcomm/2012-04-24/Identity/Instances');
     instance.register = function (data, authorizationHeader) {
         var headers =  {'Content-Type': 'application/x-www-form-urlencoded'};
         if (authorizationHeader)
@@ -726,6 +726,15 @@ rcServices.factory('RCommIdentityInstances', function ($resource,$http) {
         return $http({
             method:'POST',
             url:'/restcomm/2012-04-24/Identity/Instances',
+            headers: headers,
+            data:$.param(data)
+        });
+    };
+    instance.resetClientToken = function (id,data) {
+		var headers =  {'Content-Type': 'application/x-www-form-urlencoded'};
+        return $http({
+            method:'PUT',
+            url:'/restcomm/2012-04-24/Identity/Instances/' + id,
             headers: headers,
             data:$.param(data)
         });

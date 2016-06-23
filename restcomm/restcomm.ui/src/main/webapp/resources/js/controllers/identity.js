@@ -19,10 +19,6 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 		});
 	}
 
-	$scope.resetRegistrationToken = function(clientSuffix, newtoken) {
-	    console.log("resetting registation token for client " + clientSuffix);
-	}
-
     function parseRootUrl(locationAbsUrl, locationUrl) {
 		var redirectUrl = locationAbsUrl.substring(0, locationAbsUrl.indexOf(locationUrl));
 		if (redirectUrl && redirectUrl.endsWith("#")) // trim last # character if present
@@ -32,12 +28,35 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 	}
 });
 
-angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, IdentityConfig) {
-
-    $scope.identity = IdentityConfig.getIdentity();
+angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity) {
+    $scope.identity = identity;
+    $scope.restcommUiDetails = {};
+    $scope.restcommRestDetails = {};
+    $scope.rvdUiDetails = {};
+    $scope.rvdRestDetails = {};
 
 	$scope.resetRegistrationToken = function(clientSuffix, newtoken) {
-	    console.log("resetting registation token for client " + clientSuffix);
+	    RCommIdentityInstances.resetClientToken(identity.Sid, {'client-suffix':clientSuffix, token:newtoken}).then(function () {
+	        Notifications.success("Registration token was reset for " + clientSuffixToName(clientSuffix));
+	    }, function () {
+	        Notifications.error("Registration Token reset failed for " + clientSuffixToName(clientSuffix));
+	    });
 	}
+
+	function clientSuffixToName(clientSuffix) {
+	    if (clientSuffix == 'restcomm-ui')
+	        return 'Admin UI';
+	    else
+	    if (clientSuffix == 'restcomm-rest')
+	        return 'Restcomm REST';
+        else
+	    if (clientSuffix == 'rvd-ui')
+	        return 'RVD UI';
+        else
+	    if (clientSuffix == 'rvd-rest')
+	        return 'RVD REST';
+
+	}
+
 });
 
