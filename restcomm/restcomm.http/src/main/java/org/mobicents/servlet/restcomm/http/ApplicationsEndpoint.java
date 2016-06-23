@@ -28,7 +28,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 import java.io.UnsupportedEncodingException;
@@ -176,15 +175,20 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
-        Application application = dao.getApplication(data.getFirst("FriendlyName"));
-        if (application == null) {
-            application = createFrom(new Sid(accountSid), data);
-            dao.addApplication(application);
-        } else if (!application.getAccountSid().toString().equals(account.getSid().toString())) {
-            return status(CONFLICT)
-                    .entity("A application with the same name was already created by another account. Please, choose a different name and try again.")
-                    .build();
-        }
+//        Application application = dao.getApplication(data.getFirst("FriendlyName"));
+//        if (application == null) {
+//            application = createFrom(new Sid(accountSid), data);
+//            dao.addApplication(application);
+//        } else if (!application.getAccountSid().toString().equals(account.getSid().toString())) {
+//            return status(CONFLICT)
+//                    .entity("A application with the same name was already created by another account. Please, choose a different name and try again.")
+//                    .build();
+//        }
+
+        // application uniqueness now relies only on application SID. No checks on the FriendlyName will be done.
+        Application application = createFrom(new Sid(accountSid), data);
+        dao.addApplication(application);
+
 
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(application);
