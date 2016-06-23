@@ -21,6 +21,8 @@
 package org.mobicents.servlet.restcomm.http;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
@@ -28,9 +30,11 @@ import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.converter.IdentityInstanceConverter;
+import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
-import org.mobicents.servlet.restcomm.http.responseentities.IdentityInstanceEntity;
 import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
 import org.mobicents.servlet.restcomm.identity.exceptions.AuthServerAuthorizationError;
 import org.mobicents.servlet.restcomm.identity.exceptions.IdentityClientRegistrationError;
@@ -41,7 +45,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 /**
+ * TODO support XML responses ? This endpoint is supposed to be used internally from AdminUI.
+ *
  * @author Orestis Tsakiridis
  */
 public class IdentityInstancesEndpoint extends SecuredEndpoint {
@@ -50,6 +58,8 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
     protected ServletContext context;
     MainConfigurationSet mainConfig;
     IdentityInstancesDao identityInstancesDao;
+    protected Gson gson;
+    protected XStream xstream;
 
     @PostConstruct
     private void init() {
@@ -60,6 +70,17 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.identityInstancesDao = daos.getIdentityInstancesDao();
         mainConfig = RestcommConfiguration.getInstance().getMain();
+        // converters
+        final IdentityInstanceConverter converter = new IdentityInstanceConverter(configuration);
+        final GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(IdentityInstance.class, converter);
+        builder.setPrettyPrinting();
+        gson = builder.create();
+        xstream = new XStream();
+        xstream.alias("RestcommResponse", RestCommResponse.class);
+        xstream.registerConverter(converter);
+        xstream.registerConverter(new RestCommResponseConverter(configuration));
+
     }
 
 
@@ -85,10 +106,7 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
             logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
-            // TODO use a proper converter here
-            Gson gson = new Gson();
-            String json = gson.toJson(new IdentityInstanceEntity(storedInstance));
-            return Response.ok(json).header("Content-Type", "application/json").build();
+            return Response.ok(gson.toJson(storedInstance), APPLICATION_JSON).build();
         } else
             return Response.status(Response.Status.CONFLICT).build();
     }
@@ -98,9 +116,7 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         if (getIdentityInstance() == null)
             return Response.status(Response.Status.NOT_FOUND).build();
         else {
-            Gson gson = new Gson();
-            String json = gson.toJson(new IdentityInstanceEntity(getIdentityInstance()));
-            return Response.ok(json).header("Content-Type", "application/json").build();
+            return Response.ok(gson.toJson(getIdentityInstance()), APPLICATION_JSON).build();
         }
     }
 
@@ -118,6 +134,21 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         } else {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
+    }
+
+    protected Response updateIdentityInstanceRAT(String sid, String clientSuffix, String registrationToken) {
+        if (StringUtils.isEmpty(clientSuffix) || StringUtils.isEmpty(registrationToken) || StringUtils.isEmpty(sid))
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        if (! (clientSuffix == IdentityRegistrationTool.RESTCOMM_UI_CLIENT_SUFFIX || clientSuffix == IdentityRegistrationTool.RESTCOMM_REST_CLIENT_SUFFIX || clientSuffix == IdentityRegistrationTool.RVD_UI_CLIENT_SUFFIX || clientSuffix == IdentityRegistrationTool.RVD_REST_CLIENT_SUFFIX))
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        Sid instanceSid = new Sid(sid);
+        IdentityInstance ii = identityInstancesDao.getIdentityInstance(instanceSid);
+        if (ii != null) {
+            IdentityRegistrationTool.setRATForClientSuffix(ii, clientSuffix, registrationToken);
+            identityInstancesDao.updateIdentityInstance(ii);
+            return Response.ok(gson.toJson(ii), APPLICATION_JSON).build();
+        } else
+            return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     private String generateClientSecret() {

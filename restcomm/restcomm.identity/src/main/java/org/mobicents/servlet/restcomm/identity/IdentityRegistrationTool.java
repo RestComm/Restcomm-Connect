@@ -102,7 +102,7 @@ public class IdentityRegistrationTool {
         unregisterClient(identityInstance.getName() + "-" + RVD_REST_CLIENT_SUFFIX, identityInstance.getRvdRestRAT());
         unregisterClient(identityInstance.getName() + "-" + RVD_UI_CLIENT_SUFFIX, identityInstance.getRvdUiRAT());
     }
-    
+
     /**
      * Updates a client specified in repr using a Registration Access Token (RAT). The refreshed RAT is returned.
      * It also updated the IdentityInstance appropriately.
@@ -144,7 +144,7 @@ public class IdentityRegistrationTool {
         }
     }
 
-    private String getRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix) {
+    public static String getRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix) {
         String RAT;
         if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
             RAT = identityInstance.getRestcommUiRAT();
@@ -153,7 +153,7 @@ public class IdentityRegistrationTool {
         return RAT;
     }
 
-    private void setRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix, String RAT) {
+    public static void setRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix, String RAT) {
         if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
             identityInstance.setRestcommUiRAT(RAT);
         } else

@@ -290,7 +290,7 @@ function IdentityConfig(server, instance,$q) {
     }
     // True is Restcomm is configured to use an authorization server and an identity instance is already in place
     function securedByKeycloak () {
-        return identityServerConfigured() && (!!This.instance) && (!!This.instance.name);
+        return identityServerConfigured() && (!!This.instance) && (!!This.instance.Name);
     }
     // True if Restcomm is used for authorization (legacy mode). No keycloak needs to be present.
     function securedByRestcomm() {
