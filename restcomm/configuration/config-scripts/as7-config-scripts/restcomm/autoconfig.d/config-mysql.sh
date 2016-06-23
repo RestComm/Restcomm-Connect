@@ -187,10 +187,12 @@ initPassword(){
          fi
     fi
 }
+
 populateDB(){
 
     #Change script to defined schema
-    sed -i "s|restcomm;|${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
+    sed -i "s|CREATE DATABASE IF NOT EXISTS .*| CREATE DATABASE IF NOT EXISTS ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
+    sed -i "s|USE .*|USE ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
 
     if mysql -u $2 -p$3 -h $1 -e "SELECT * FROM \`$4\`.restcomm_clients;" $database; then
             # Update config settings
