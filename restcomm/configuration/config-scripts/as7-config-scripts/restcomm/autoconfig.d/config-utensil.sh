@@ -25,7 +25,7 @@ configS3Bucket() {
 
         if [ -n "$S3_BUCKET_REGION" ]; then
             echo "S3_BUCKET_REGION $S3_BUCKET_REGION"
-            sed -i "s|<bucket-region>.*</bucket-region>|<bucket-region>${S3_BUCKET_REGION}</bucket-region>|" $FILE > $FILE.bak;
+            sed -e "s|<bucket-region>.*</bucket-region>|<bucket-region>${S3_BUCKET_REGION}</bucket-region>|" $FILE > $FILE.bak;
             mv $FILE.bak $FILE
         fi
     fi

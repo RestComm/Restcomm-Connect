@@ -92,6 +92,11 @@ set_pool_size () {
 			mv $FILE.bak $FILE
 }
 
+configOther(){
+    echo "MGCP_RESPONSE_TIMEOUT $MGCP_RESPONSE_TIMEOUT"
+    sed -i "s|<response-timeout>.*</response-timeout>|<response-timeout>${MGCP_RESPONSE_TIMEOUT}</response-timeout>|"  $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+}
+
 ## MAIN
 if [[ -z "$MEDIASERVER_LOWEST_PORT" ]]; then
 	MEDIASERVER_LOWEST_PORT="34534"
@@ -117,6 +122,7 @@ configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"
 configRMSJavaOpts
 configLogDirectory
 configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
+configOther
 #Contribution by: https://github.com/hamsterksu
 #set pool size of RMS resources
 for i in $( set -o posix ; set | grep ^RESOURCE_ | sort -rn ); do
