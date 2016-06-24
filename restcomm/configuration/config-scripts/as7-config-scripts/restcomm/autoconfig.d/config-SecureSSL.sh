@@ -29,7 +29,7 @@ SslRestCommConf(){
 	FILE=$RESTCOMM_CONF/standalone-sip.xml
 	echo "Will properly configure HTTPS Connector ";
 	#Disable HTTP if set to true.
-	if [  "${DISABLE_HTTP^^}" = "TRUE"  ]; then
+	if [[ "$DISABLE_HTTP" == "true" || "$DISABLE_HTTP" == "TRUE" ]]; then
 		echo "DISABLE_HTTP is '$DISABLE_HTTP'. Will disable HTTP Connector"
 		sed -e "s/<connector name=\"http\" \(.*\)\/>/<\!--connector name=\"http\" \1-->/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
@@ -139,7 +139,7 @@ if [[ "$SECURESSL" = "SELF" ||  "$SECURESSL" = "AUTH" ]]; then
 		CertConfigure
 		MssStackConf
 	fi
-elif [[ "${SECURESSL^^}" = "FALSE"  ]]; then
+elif [[ "$SECURESSL" == "false" || "$SECURESSL" == "FALSE" ]]; then
 	NoSslRestConf
 else
     echo "Allowed values for SECURESSL: SELF, AUTH, FALSE"

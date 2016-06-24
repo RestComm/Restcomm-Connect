@@ -454,7 +454,7 @@ otherRestCommConf(){
     #Remove if is set in earlier run.
     grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
 
-	if [  "${SSLSNI^^}" = "FALSE"  ]; then
+    if [[ "$SSLSNI" == "false" || "$SSLSNI" == "FALSE" ]]; then
 		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $RESTCOMM_BIN/standalone.conf
 	else
 	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
@@ -499,7 +499,7 @@ confRVD(){
 
 	if [ -n "$RVD_PORT" ]; then
         echo "RVD_PORT $RVD_PORI"
-        if [  "${DISABLE_HTTP^^}" = "TRUE"  ]; then
+        if [[ "$DISABLE_HTTP" == "true" || "$DISABLE_HTTP" == "TRUE" ]]; then
 			SCHEME='https'
 		else
 			SCHEME='http'
