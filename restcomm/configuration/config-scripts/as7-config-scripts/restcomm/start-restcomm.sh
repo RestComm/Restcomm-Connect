@@ -163,11 +163,12 @@ if [[ -z "$SMS_OUTBOUND_PROXY" ]]; then
 fi
 
 # configure restcomm installation
-if [ "${CONF_MANUAL^^}" = "FALSE"  ]; then
+
+if [[ "$CONF_MANUAL" == "false" || "$CONF_MANUAL" == "FALSE" ]]; then
     source $BASEDIR/autoconfigure.sh
 fi
 
-if [ "${MS_EXTERNAL^^}" = "FALSE"  ]; then
+if [[ "$MS_EXTERNAL" == "false" || "$MS_EXTERNAL" == "FALSE" ]]; then
 	startMediaServer
 fi
 # start restcomm in selected run mode

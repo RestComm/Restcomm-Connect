@@ -210,7 +210,7 @@ populateDB(){
 }
 
 # MAIN
-if [  "${ENABLE_MYSQL^^}" = "TRUE"  ]; then
+if [[ "$ENABLE_MYSQL" == "true" || "$ENABLE_MYSQL" == "TRUE" ]]; then
     if [[ -z $MYSQL_HOST || -z $MYSQL_USER || -z $MYSQL_PASSWORD || -z $MYSQL_SCHEMA ]]; then
         echo 'one or more variables are undefined'
         echo  'Not possible to continue with Mysql configuration'

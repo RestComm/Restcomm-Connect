@@ -12,7 +12,7 @@ RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
 configS3Bucket() {
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-    if [  "${ACTIVATE_S3_BUCKET^^}" = "TRUE"  ]; then
+    if [[ "$ACTIVATE_S3_BUCKET" == "true" || "$ACTIVATE_S3_BUCKET" == "TRUE" ]]; then
         echo "S3_BUCKET_NAME $S3_BUCKET_NAME S3_ACCESS_KEY $S3_ACCESS_KEY S3_SECURITY_KEY $S3_SECURITY_KEY"
         sed -e "/<amazon-s3>/ {
             N; s|<enabled>.*</enabled>|<enabled>true</enabled>|
@@ -95,28 +95,28 @@ configMonitoring(){
 
         #echo new cron into cron file
         crontab -l | grep -q 'MAILTO=""'  && echo 'entry exists' || echo "MAILTO=\"\"" >> mycron
-        if [ "${HD_MONITOR^^}" = "FALSE" ]; then
+        if [[ "$HD_MONITOR" == "false" || "$HD_MONITOR" == "FALSE" ]]; then
             sed -i '/HDmonitor/d' mycron
             echo "HD_MONITOR: $HD_MONITOR"
         else
             crontab -l | grep -q 'Graylog_Monitoring.sh HDmonitor' && echo 'entry exists' || echo "0/30 * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh HDmonitor" >> mycron;
         fi
 
-        if [ "${RMSJVM_MONITOR^^}" = "FALSE" ]; then
+        if [[ "$RMSJVM_MONITOR" == "false" || "$RMSJVM_MONITOR" == "FALSE" ]]; then
             sed -i '/RMSJVMonitor/d' mycron
             echo "RMSJVM_MONITOR: $RMSJVM_MONITOR";
         else
             crontab -l | grep -q 'Graylog_Monitoring.sh RMSJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RMSJVMonitor" >> mycron;
         fi
 
-        if [ "${RCJVM_MONITOR^^}" = "FALSE" ]; then
+        if [[ "$RCJVM_MONITOR" == "false" || "$RCJVM_MONITOR" == "FALSE" ]]; then
             sed -i '/RCJVMonitor/d' mycron
             echo "RCJVM_MONITOR: $RCJVM_MONITOR";
         else
             crontab -l | grep -q 'Graylog_Monitoring.sh RCJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RCJVMonitor" >> mycron;
         fi
 
-        if [ "${RAM_MONITOR^^}" = "FALSE" ]; then
+        if [[ "$RAM_MONITOR" == "false" || "$RAM_MONITOR" == "FALSE" ]]; then
             sed -i '/SERVERAMonitor/d' mycron
             echo "RAM_MONITOR: $RAM_MONITOR";
         else
