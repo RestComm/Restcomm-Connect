@@ -462,10 +462,21 @@ otherRestCommConf(){
 
 	if [ -n "$HSQL_DIR" ]; then
   		echo "HSQL_DIR $HSQL_DIR"
+  		FILE=$HSQL_DIR/restcomm.script
   		mkdir -p $HSQL_DIR
-  		sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
-  		cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
+  		if [ ! -f $FILE ]; then
+  		    sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
+  		    cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
+        fi
+
 	fi
+
+	if [ -n "$MGMT_PASS" ] && [ -n "$MGMT_USER" ]; then
+        grep -q "$MGMT_USER" $RESTCOMM_CONF/mgmt-users.properties || exec $RESTCOMM_BIN/add-user.sh "$MGMT_USER" "$MGMT_PASS" -s
+        #Management bind address
+        grep -q 'jboss.bind.address.management' $RESTCOMM_BIN/restcomm/start-restcomm.sh || sed -i 's|RESTCOMM_HOME/bin/standalone.sh -b .*|RESTCOMM_HOME/bin/standalone.sh -b $bind_address -Djboss.bind.address.management=$bind_address|' $RESTCOMM_BIN/restcomm/start-restcomm.sh
+    fi
+
 	echo 'Configured Other RestComm confs..'
 }
 
@@ -496,10 +507,6 @@ confRVD(){
         #If used means that port mapping at docker (e.g: -p 445:443) is not the default (-p 443:443)
         sed -i "s|<restcommBaseUrl>.*</restcommBaseUrl>|<restcommBaseUrl>${SCHEME}://${PUBLIC_IP}:${RVD_PORT}/</restcommBaseUrl>|" $RVD_DEPLOY/WEB-INF/rvd.xml
     fi
-
-    #Management bind address
-    grep -q 'jboss.bind.address.management' $BASEDIR/bin/restcomm/start-restcomm.sh || sed -i 's|RESTCOMM_HOME/bin/standalone.sh -b .*|RESTCOMM_HOME/bin/standalone.sh -b $bind_address -Djboss.bind.address.management=$bind_address|' $RESTCOMM_BIN/restcomm/start-restcomm.sh
-
 }
 
 
