@@ -74,7 +74,7 @@ CREATE TABLE restcomm_incoming_phone_numbers (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL,
-friendly_name VARCHAR(64) NOT NULL,
+friendly_name VARCHAR(256) NOT NULL,
 account_sid VARCHAR(34) NOT NULL,
 phone_number VARCHAR(30) NOT NULL,
 api_version VARCHAR(10) NOT NULL,
