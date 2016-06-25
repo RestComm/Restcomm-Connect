@@ -1489,7 +1489,6 @@ public final class Call extends UntypedActor {
             default: {
                 if (code >= 400 && code != 487) {
                     this.fail = true;
-                    sendCallInfoToObservers();
                     fsm.transition(message, stopping);
                 }
             }
