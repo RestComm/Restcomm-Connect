@@ -623,6 +623,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                         if (!sender.equals(call)) {
                             removeDialBranch(message, sender);
+                            callManager.tell(new DestroyCall(sender), self());
                             return;
                         } else {
                             fsm.transition(message, finishDialing);
@@ -662,6 +663,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Will cancel branch: " + branch.toString());
                         }
                         branch.tell(new Cancel(), self());
+                        callManager.tell(new DestroyCall(sender), self());
                         if (dialBranches.size() > 0) {
                             return;
                         } else if (attribute == null) {
@@ -1721,12 +1723,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final CallManagerResponse<ActorRef> response = (CallManagerResponse<ActorRef>) message;
                 outboundCall = response.get();
                 outboundCall.tell(new Observe(source), source);
+                if (monitoring != null) {
+                    outboundCall.tell(new Observe(monitoring), self());
+                }
                 outboundCall.tell(new Dial(), source);
             } else if (Fork.class.equals(klass)) {
                 final Observe observe = new Observe(source);
                 final Dial dial = new Dial();
                 for (final ActorRef branch : dialBranches) {
                     branch.tell(observe, source);
+                    if (monitoring != null) {
+                        branch.tell(new Observe(monitoring), self());
+                    }
                     branch.tell(dial, source);
                 }
             }
