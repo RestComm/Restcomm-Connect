@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.dao;
 
+import java.text.ParseException;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -51,6 +52,10 @@ public interface CallDetailRecordsDao {
     List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parentCallSid);
 
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
+
+    Double getAverageCallDurationLast24Hours(Sid instanceId) throws ParseException;
+
+    Double getAverageCallDurationLastHour(Sid instanceId) throws ParseException;
 
     void removeCallDetailRecord(Sid sid);
 
