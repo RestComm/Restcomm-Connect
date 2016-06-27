@@ -24,7 +24,7 @@ package org.mobicents.servlet.restcomm.telephony;
  * @author amit.bhayani@telestax.com (Amit Bhayani)
  */
 public final class ConferenceStateChanged {
-    public static enum State {
+    public enum State {
         RUNNING_MODERATOR_ABSENT, RUNNING_MODERATOR_PRESENT, COMPLETED, FAILED
     };
 
