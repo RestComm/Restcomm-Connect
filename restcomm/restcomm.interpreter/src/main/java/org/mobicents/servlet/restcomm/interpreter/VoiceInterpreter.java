@@ -623,7 +623,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                         if (!sender.equals(call)) {
                             removeDialBranch(message, sender);
-                            callManager.tell(new DestroyCall(sender), self());
+                            //Properly clean up FAILED or BUSY outgoing calls
+                            //callManager.tell(new DestroyCall(sender), self());
                             return;
                         } else {
                             fsm.transition(message, finishDialing);
@@ -663,7 +664,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Will cancel branch: " + branch.toString());
                         }
                         branch.tell(new Cancel(), self());
-                        callManager.tell(new DestroyCall(sender), self());
+                        //Properly clean up FAILED or BUSY outgoing calls
+                        //callManager.tell(new DestroyCall(sender), self());
                         if (dialBranches.size() > 0) {
                             return;
                         } else if (attribute == null) {
@@ -1025,6 +1027,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
                 //Since there are no more branches, ask for the next RCML
                 if (attribute == null) {
+                    callManager.tell(new DestroyCall(sender), self());
                     final GetNextVerb next = GetNextVerb.instance();
                     parser.tell(next, self());
                 } else {
@@ -1802,6 +1805,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 dialBranches.remove(outboundCall);
                 for (final ActorRef branch : dialBranches) {
                     branch.tell(new Cancel(), null);
+                    //Properly clean up Canceled branches
+                    callManager.tell(new DestroyCall(branch), self());
                     // Race condition here. Correct way is to ask Call to Cancel and when done Call will notify Observer with
                     // CallStateChanged.Cancelled then
                     // ask CallManager to destroy the call.
@@ -2156,8 +2161,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
 
                         dialChildren = null;
-                        callManager.tell(new DestroyCall(outboundCall));
-                        outboundCall = null;
+                        if (outboundCall != null) {
+                            callManager.tell(new DestroyCall(outboundCall));
+                            outboundCall = null;
+                        } else {
+                            callManager.tell(new DestroyCall(sender), self());
+                        }
                         return;
                     }
                 } else if (bridged.equals(state)) {
