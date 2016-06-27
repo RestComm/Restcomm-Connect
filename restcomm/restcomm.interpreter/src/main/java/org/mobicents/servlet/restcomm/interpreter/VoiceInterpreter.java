@@ -651,28 +651,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         //Move to finishDialing to clear the call and cancel all branches
                         fsm.transition(message, finishDialing);
                     } else if (dialBranches.contains(sender)) {
-                        Attribute attribute = null;
-                        if (verb != null) {
-                            attribute = verb.attribute("action");
-                        }
-                        //Busy was sent by one of the branches, remove the branch, execute dial action and continue
-                        if(logger.isInfoEnabled()){
-                            logger.info("call state changed. New call state: " + ((CallStateChanged) message).state() + "Sender in the dialBranches: " + dialBranches.contains(sender));
-                        }
-                        ActorRef branch = dialBranches.remove(dialBranches.indexOf(sender));
-                        if(logger.isInfoEnabled()) {
-                            logger.info("Will cancel branch: " + branch.toString());
-                        }
-                        branch.tell(new Cancel(), self());
-                        //Properly clean up FAILED or BUSY outgoing calls
-                        //callManager.tell(new DestroyCall(sender), self());
-                        if (dialBranches.size() > 0) {
-                            return;
-                        } else if (attribute == null) {
-                            fsm.transition(message, finishDialing);
-                        } else  {
-                            fsm.transition(ReceiveTimeout.getInstance(), finishDialing);
-                        }
+                        removeDialBranch(message, sender);
+                        return;
                     }
                 } else {
                     fsm.transition(message, finishDialing);
@@ -1018,6 +998,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                executeDialAction(message, sender);
 //            }
             sender.tell(new Cancel(), self());
+            if (outboundCall != null && outboundCall != sender) {
+                callManager.tell(new DestroyCall(sender), self());
+            }
             if (dialBranches.size() > 0) {
                 //Wait to check the response from the other branches
                 return;
@@ -1027,7 +1010,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callback();
                 //Since there are no more branches, ask for the next RCML
                 if (attribute == null) {
-                    callManager.tell(new DestroyCall(sender), self());
                     final GetNextVerb next = GetNextVerb.instance();
                     parser.tell(next, self());
                 } else {
