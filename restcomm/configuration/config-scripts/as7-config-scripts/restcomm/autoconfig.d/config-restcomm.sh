@@ -57,6 +57,7 @@ configRestcomm() {
 }
 ## Description: OutBoundProxy configuration.
 configOutboundProxy(){
+    echo "Configure outbound-proxy"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
 	-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
@@ -441,7 +442,7 @@ configHypertextPort(){
     sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|" \
      	-e	"s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
     mv $MSSFILE.bak $MSSFILE
-    echo 'Configured HTTPS/S ports'
+    echo "Configured HTTP ports"
 }
 
 ## Description: Other single configuration
@@ -477,10 +478,11 @@ otherRestCommConf(){
         grep -q 'jboss.bind.address.management' $RESTCOMM_BIN/restcomm/start-restcomm.sh || sed -i 's|RESTCOMM_HOME/bin/standalone.sh -b .*|RESTCOMM_HOME/bin/standalone.sh -b $bind_address -Djboss.bind.address.management=$bind_address|' $RESTCOMM_BIN/restcomm/start-restcomm.sh
     fi
 
-	echo 'Configured Other RestComm confs..'
+	echo "Rest RestComm configuration"
 }
 
 confRVD(){
+    echo "Configure RVD"
 	if [ -n "$RVD_LOCATION" ]; then
   		echo "RVD_LOCATION $RVD_LOCATION"
   		mkdir -p `echo $RVD_LOCATION`
