@@ -44,7 +44,7 @@ public class RvdUtils {
 
     // returns True when either the value is True OR null
     public static boolean isEmpty( Boolean value) {
-        if ( value == null || value == false )
+        if ( value == null || !value )
             return true;
         return false;
     }
