@@ -1139,7 +1139,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String sipCallId = lastResponse.getCallId();
                     parameters.add(new BasicNameValuePair("DialSipCallId", sipCallId));
                     parameters.add(new BasicNameValuePair("DialSipResponseCode", "" + statusCode));
-                    processCustomHeaders(lastResponse, "DialSipHeader_", parameters);
+                    processCustomAndDiversionHeaders(lastResponse, "DialSipHeader_", parameters);
                 }
             }
         }
@@ -1149,24 +1149,53 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // https://telestax.atlassian.net/browse/RESTCOMM-710
             final SipServletRequest invite = callInfo.invite();
             // For outbound calls created with Calls REST API, the invite at this point will be null
-            if (invite != null)
-                processCustomHeaders(invite, "SipHeader_", parameters);
+            if (invite != null) {
+                processCustomAndDiversionHeaders(invite, "SipHeader_", parameters);
+
+            }
         } else {
-            processCustomHeaders(lastResponse, "SipHeader_", parameters);
+            processCustomAndDiversionHeaders(lastResponse, "SipHeader_", parameters);
         }
 
         return parameters;
     }
 
-    private void processCustomHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
+    private void processCustomAndDiversionHeaders(SipServletMessage sipMessage, String prefix, List<NameValuePair> parameters) {
         Iterator<String> headerNames = sipMessage.getHeaderNames();
         while (headerNames.hasNext()) {
             String headerName = headerNames.next();
             if (headerName.startsWith("X-")) {
-                if(logger.isDebugEnabled()) {
-                    logger.debug("%%%%%%%%%%% Indetified customer header: " + headerName);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("%%%%%%%%%%% Identified customer header: " + headerName);
                 }
                 parameters.add(new BasicNameValuePair(prefix + headerName, sipMessage.getHeader(headerName)));
+            } else if (headerName.startsWith("Diversion")) {
+
+                final String sipDiversionHeader = sipMessage.getHeader(headerName);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("%%%%%%%%%%% Identified diversion header: " + sipDiversionHeader);
+                }
+                parameters.add(new BasicNameValuePair(prefix + headerName, sipDiversionHeader));
+
+                try {
+                    final String forwardedFrom = sipDiversionHeader.substring(sipDiversionHeader.indexOf("sip:") + 4,
+                            sipDiversionHeader.indexOf("@"));
+
+                    for(int i=0; i < parameters.size(); i++) {
+                        if (parameters.get(i).getName().equals("ForwardedFrom")) {
+                            if (parameters.get(i).getValue().equals("null")) {
+                                parameters.remove(i);
+                                parameters.add(new BasicNameValuePair("ForwardedFrom", forwardedFrom));
+                                break;
+                            } else {
+                                // Not null, so it's not going to be overwritten with Diversion Header
+                                break;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warning("Error parsing SIP Diversion header"+ e.getMessage());
+                }
             }
         }
     }
