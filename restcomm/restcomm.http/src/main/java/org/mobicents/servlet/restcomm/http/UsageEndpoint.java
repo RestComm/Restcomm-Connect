@@ -120,27 +120,27 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
     }
 
     final List<Usage> usage;
-    if (subresource.toLowerCase().equals("daily")) {
+    if (subresource.equalsIgnoreCase("daily")) {
       usage = dao.getUsageDaily(new Sid(accountSid), category, startDate, endDate);
     }
-    else if (subresource.toLowerCase().equals("monthly")) {
+    else if (subresource.equalsIgnoreCase("monthly")) {
       usage = dao.getUsageMonthly(new Sid(accountSid), category, startDate, endDate);
     }
-    else if (subresource.toLowerCase().equals("yearly")) {
+    else if (subresource.equalsIgnoreCase("yearly")) {
       usage = dao.getUsageYearly(new Sid(accountSid), category, startDate, endDate);
     }
-    else if (subresource.toLowerCase().equals("alltime")) {
+    else if (subresource.equalsIgnoreCase("alltime")) {
       usage = dao.getUsageAllTime(new Sid(accountSid), category, startDate, endDate);
-    } else if (subresource.toLowerCase().equals("today")) {
+    } else if (subresource.equalsIgnoreCase("today")) {
       usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now(), DateTime.now());
     }
-    else if (subresource.toLowerCase().equals("yesterday")) {
+    else if (subresource.equalsIgnoreCase("yesterday")) {
       usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().minusDays(1), DateTime.now().minusDays(1));
     }
-    else if (subresource.toLowerCase().equals("thismonth")) {
+    else if (subresource.equalsIgnoreCase("thismonth")) {
       usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().dayOfMonth().withMinimumValue(), DateTime.now().dayOfMonth().withMaximumValue());
     }
-    else if (subresource.toLowerCase().equals("lastmonth")) {
+    else if (subresource.equalsIgnoreCase("lastmonth")) {
       usage = dao.getUsageAllTime(new Sid(accountSid), category, DateTime.now().minusMonths(1).dayOfMonth().withMinimumValue(), DateTime.now().minusMonths(1).dayOfMonth().withMaximumValue());
     }
     else {
