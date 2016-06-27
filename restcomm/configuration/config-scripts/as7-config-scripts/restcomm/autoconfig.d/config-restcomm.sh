@@ -448,6 +448,7 @@ configHypertextPort(){
 ## Description: Other single configuration
 #enable/disable SSLSNI (default:false)
 otherRestCommConf(){
+    echo "Rest RestComm configuration"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
@@ -477,8 +478,7 @@ otherRestCommConf(){
         #Management bind address
         grep -q 'jboss.bind.address.management' $RESTCOMM_BIN/restcomm/start-restcomm.sh || sed -i 's|RESTCOMM_HOME/bin/standalone.sh -b .*|RESTCOMM_HOME/bin/standalone.sh -b $bind_address -Djboss.bind.address.management=$bind_address|' $RESTCOMM_BIN/restcomm/start-restcomm.sh
     fi
-
-	echo "Rest RestComm configuration"
+    echo "End Rest RestComm configuration"
 }
 
 confRVD(){
@@ -509,6 +509,8 @@ confRVD(){
         #If used means that port mapping at docker (e.g: -p 445:443) is not the default (-p 443:443)
         sed -i "s|<restcommBaseUrl>.*</restcommBaseUrl>|<restcommBaseUrl>${SCHEME}://${PUBLIC_IP}:${RVD_PORT}/</restcommBaseUrl>|" $RVD_DEPLOY/WEB-INF/rvd.xml
     fi
+
+     echo "End Configure RVD"
 }
 
 
