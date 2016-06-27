@@ -40,7 +40,7 @@ EOF
 
  if [ -n "$MYSQL_SNDHOST" ]; then
      # Update JBoss configuration to create a MariaDB datasource
-    grep -q 'driver name="com.mysql"' $FILE || sed -e '/<drivers>/ a\
+    grep -q 'driver name="com.mysql"' $STANDALONE_SIP || sed -e '/<drivers>/ a\
     \                    <driver name="com.mysql" module="com.mysql">\
     \			 <driver-class>com.mysql.jdbc.Driver</driver-class>\
     \                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>\
@@ -76,7 +76,7 @@ EOF
 
  else
     # Update JBoss configuration to create a MariaDB datasource
-    grep -q 'driver name="com.mysql"' $FILE || sed -e '/<drivers>/ a\
+    grep -q 'driver name="com.mysql"' $STANDALONE_SIP || sed -e '/<drivers>/ a\
     \                    <driver name="com.mysql" module="com.mysql">\
     \			 <driver-class>com.mysql.jdbc.Driver</driver-class>\
     \                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>\
