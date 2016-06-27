@@ -2068,6 +2068,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     //                        executeDialAction(message, branch);
     //                    }
                         branch.tell(new Cancel(), source);
+                        callManager.tell(new DestroyCall(branch), self());
                         if(logger.isInfoEnabled()) {
                             logger.info("Canceled branch: " + branch.path());
                         }
@@ -2116,6 +2117,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                                executeDialAction(message, branch);
 //                            }
                             branch.tell(new Cancel(), source);
+                            callManager.tell(new DestroyCall(branch), self());
                         }
                         if (dialBranches.size() > 0) {
                             dialBranches = null;
