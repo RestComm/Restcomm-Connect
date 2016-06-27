@@ -1,5 +1,6 @@
 package org.mobicents.servlet.restcomm.telephony;
 
+import com.github.tomakehurst.wiremock.common.Json;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
@@ -245,10 +246,11 @@ public class DialForkTest {
         //Wait to cancel the other branches
         Thread.sleep(2000);
 
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
 
         henriqueCall.listenForDisconnect();
 
@@ -362,8 +364,8 @@ public class DialForkTest {
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
 
         aliceCall.listenForDisconnect();
 
@@ -468,10 +470,11 @@ public class DialForkTest {
                 null, null));
         assertTrue(henriqueCall.waitForAck(50 * 1000));
 
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
 
         henriqueCall.listenForDisconnect();
 
@@ -581,8 +584,8 @@ public class DialForkTest {
 
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 1);
-        assertTrue(liveCallsArraySize == 1);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
 
         henriqueCall.listenForDisconnect();
 
@@ -701,6 +704,7 @@ public class DialForkTest {
 
         Thread.sleep(10000);
 
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertTrue(liveCalls == 0);
@@ -797,21 +801,46 @@ public class DialForkTest {
 
         assertTrue(bobCall.listenForDisconnect());
 
-        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
-        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
-        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
-        assertNotNull(georgeCancelTransaction);
-        assertNotNull(aliceCancelTransaction);
-        assertNotNull(henriqueCancelTransaction);
-        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
-        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
-        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
+        final SipTransaction[] henriqueCancelTransaction = {null};
+        final SipTransaction[] georgeCancelTransaction = {null};
+        final SipTransaction[] aliceCancelTransaction = {null};
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                henriqueCancelTransaction[0] = henriqueCall.waitForCancel(50 * 1000);
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                georgeCancelTransaction[0] = georgeCall.waitForCancel(50 * 1000);
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                aliceCancelTransaction[0] = aliceCall.waitForCancel(50 * 1000);
+            }
+        }).start();
+
+        assertNotNull(henriqueCancelTransaction[0]);
+        henriqueCall.respondToCancel(henriqueCancelTransaction[0], 200, "OK - Henrique", 600);
+
+        assertNotNull(georgeCancelTransaction[0]);
+        georgeCall.respondToCancel(georgeCancelTransaction[0], 200, "OK - George", 600);
+
+        assertNotNull(aliceCancelTransaction[0]);
+        aliceCall.respondToCancel(aliceCancelTransaction[0], 200, "OK - Alice", 600);
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         assertTrue(bobCall.waitForDisconnect(50 * 1000));
         assertTrue(bobCall.respondToDisconnect());
 
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertTrue(liveCalls == 0);
