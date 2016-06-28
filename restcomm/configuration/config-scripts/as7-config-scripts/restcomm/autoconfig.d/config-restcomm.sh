@@ -448,12 +448,10 @@ configHypertextPort(){
 ## Description: Other single configuration
 #enable/disable SSLSNI (default:false)
 otherRestCommConf(){
-    echo "Rest RestComm configuration0"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
 
-     echo "Rest RestComm configuration01"
     #Remove if is set in earlier run.
     grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
 
@@ -463,7 +461,6 @@ otherRestCommConf(){
 	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
 	fi
 
-    echo "Rest RestComm configuration02"
 	if [ -n "$HSQL_DIR" ]; then
   		echo "HSQL_DIR $HSQL_DIR"
   		FILE=$HSQL_DIR/restcomm.script
@@ -472,38 +469,35 @@ otherRestCommConf(){
   		    sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
   		    cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
         fi
- echo "Rest RestComm configuration03"
 	fi
- echo "Rest RestComm configuration04"
 	if [ -n "$MGMT_PASS" ] && [ -n "$MGMT_USER" ]; then
-        grep -q "$MGMT_USER" $RESTCOMM_CONF/mgmt-users.properties || exec $RESTCOMM_BIN/add-user.sh "$MGMT_USER" "$MGMT_PASS" -s
+	    echo "MGMT_PASS, MGMT_USER is set will be added to MGMNT configuration"
+        grep -q "$MGMT_USER" $RESTCOMM_CONF/mgmt-users.properties || $RESTCOMM_BIN/add-user.sh "$MGMT_USER" "$MGMT_PASS" -s
         #Management bind address
         grep -q 'jboss.bind.address.management' $RESTCOMM_BIN/restcomm/start-restcomm.sh || sed -i 's|RESTCOMM_HOME/bin/standalone.sh -b .*|RESTCOMM_HOME/bin/standalone.sh -b $bind_address -Djboss.bind.address.management=$bind_address|' $RESTCOMM_BIN/restcomm/start-restcomm.sh
     fi
-    echo "End Rest RestComm configuration05"
+    echo "End Rest RestComm configuration"
 }
 
 confRVD(){
-    echo "Configure RVD1"
+    echo "Configure RVD"
 	if [ -n "$RVD_LOCATION" ]; then
   		echo "RVD_LOCATION $RVD_LOCATION"
   		mkdir -p `echo $RVD_LOCATION`
   		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
-echo "Configure RVD2"
+
   		COPYFLAG=$RVD_LOCATION/.demos_initialized
   		if [ -f "$COPYFLAG" ]; then
    			#Do nothing, we already copied the demo file to the new workspace
     		echo "RVD demo application are already copied"
-    		echo "Configure RVD3"
   		else
-  		echo "Configure RVD4"
     		echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
     		cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
     		touch $COPYFLAG
   		fi
 
 	fi
-echo "Configure RVD5"
+
 	if [ -n "$RVD_PORT" ]; then
         echo "RVD_PORT $RVD_PORI"
         if [[ "$DISABLE_HTTP" == "true" || "$DISABLE_HTTP" == "TRUE" ]]; then
@@ -511,12 +505,9 @@ echo "Configure RVD5"
 		else
 			SCHEME='http'
 		fi
-		echo "Configure RVD6"
         #If used means that port mapping at docker (e.g: -p 445:443) is not the default (-p 443:443)
         sed -i "s|<restcommBaseUrl>.*</restcommBaseUrl>|<restcommBaseUrl>${SCHEME}://${PUBLIC_IP}:${RVD_PORT}/</restcommBaseUrl>|" $RVD_DEPLOY/WEB-INF/rvd.xml
     fi
-echo "Configure RVD7"
-     echo "End Configure RVD"
 }
 
 
