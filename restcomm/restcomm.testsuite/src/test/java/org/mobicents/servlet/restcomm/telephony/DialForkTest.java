@@ -801,39 +801,15 @@ public class DialForkTest {
 
         assertTrue(bobCall.listenForDisconnect());
 
-        final SipTransaction[] henriqueCancelTransaction = {null};
-        final SipTransaction[] georgeCancelTransaction = {null};
-        final SipTransaction[] aliceCancelTransaction = {null};
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                henriqueCancelTransaction[0] = henriqueCall.waitForCancel(50 * 1000);
-            }
-        }).start();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                georgeCancelTransaction[0] = georgeCall.waitForCancel(50 * 1000);
-            }
-        }).start();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                aliceCancelTransaction[0] = aliceCall.waitForCancel(50 * 1000);
-            }
-        }).start();
-
-        assertNotNull(henriqueCancelTransaction[0]);
-        henriqueCall.respondToCancel(henriqueCancelTransaction[0], 200, "OK - Henrique", 600);
-
-        assertNotNull(georgeCancelTransaction[0]);
-        georgeCall.respondToCancel(georgeCancelTransaction[0], 200, "OK - George", 600);
-
-        assertNotNull(aliceCancelTransaction[0]);
-        aliceCall.respondToCancel(aliceCancelTransaction[0], 200, "OK - Alice", 600);
+        SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
+        SipTransaction henriqueCancelTransaction = henriqueCall.waitForCancel(50 * 1000);
+        SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
+        assertNotNull(georgeCancelTransaction);
+        assertNotNull(aliceCancelTransaction);
+        assertNotNull(henriqueCancelTransaction);
+        georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
+        aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
+        henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
