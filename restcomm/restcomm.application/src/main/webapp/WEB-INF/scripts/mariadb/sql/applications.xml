@@ -16,7 +16,7 @@
   </select>
 
   <select id="getApplicationByFriendlyName" parameterType="string" resultType="hashmap">
-    SELECT * FROM restcomm_applications WHERE friendly_name=#{friendly_name};
+    SELECT * FROM restcomm_applications WHERE BINARY friendly_name=#{friendly_name};
   </select>
   
   <select id="getApplications" parameterType="string" resultType="hashmap">

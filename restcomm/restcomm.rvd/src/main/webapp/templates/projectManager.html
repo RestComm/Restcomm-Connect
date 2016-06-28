@@ -10,9 +10,10 @@
 		</div>
 	</nav>
 
+
 	<div class="row">
 		<div class="col-md-3 col-centered">
-		
+
 			<h3 class="text-center">{{'projectManagerExistingProjectsLabel1' | translate}} {{projectKind | translate}} {{'projectManagerExistingProjectsLabel2' | translate}}</h3>
 			<br />
 			<div class="text-center" ng-show="(projectList | filter:{kind:projectKind}).length==0"><em class="text-muted"><small>{{'projectManagerNoProjectFoundLabel' | translate}}</small></em></div>
@@ -20,16 +21,16 @@
 			<div ng-repeat="projectItem in filteredProjectList = (projectList | filter:{kind:projectKind})" class='row rvd-project-item' >
 				<div class="row">
 					<div class="col-md-12 text-center" ng-show="projectItem.viewMode=='view'" >
-							<a href="#/designer/{{projectItem.applicationSid}}={{projectItem.name}}" ng-click="openProject(projectItem.applicationSid)" style="margin-right:10px">{{projectItem.name}}</a>
-							<i ng-click="editProjectName(projectItem)" class="fa fa-pencil rvd-clickable" ></i>
-							<a href="/restcomm-rvd/services/projects/{{projectItem.applicationSid}}/archive?projectName={{projectItem.name}}"><i class="fa fa-download rvd-clickable" ></i></a>
-							<i ng-click="projectItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
+						<a href="#/designer/{{projectItem.applicationSid}}={{projectItem.name}}" ng-click="openProject(projectItem.applicationSid)" style="margin-right:10px" title="{{projectItem.applicationSid}}">{{projectItem.name}}</a>
+						<i ng-click="editProjectName(projectItem)" class="fa fa-pencil rvd-clickable" ></i>
+						<a href="/restcomm-rvd/services/projects/{{projectItem.applicationSid}}/archive?projectName={{projectItem.name}}"><i class="fa fa-download rvd-clickable" ></i></a>
+						<i ng-click="projectItem.viewMode='confirm-delete'" class="fa fa-trash-o rvd-clickable" ></i>
 					</div>
-					
+
 					<div class="col-md-12 text-center confirm-delete " ng-show="projectItem.viewMode=='confirm-delete'">
 						{{'projectManagerDeleteLabel1' | translate}} <em>{{projectItem.name}}</em> {{'projectManagerDeleteLabel2' | translate}} &nbsp;&nbsp;&nbsp;<i class="fa fa-trash-o rvd-clickable" ng-click="deleteProject(projectItem, authInfo.rvdticket)"></i> &nbsp; <a class="rvd-clickable" ng-click="projectItem.viewMode='view'">{{'projectManagerCalcelButoon' | translate}}</a>
 					</div>
-						
+
 					<div class="col-md-12" ng-show="projectItem.viewMode=='edit'" >
 						<form name="form{{$index}}">
 							<input name="newProjectName" type="text" class="form-control" ng-model="projectItem.newProjectName" ng-pattern="projectNameValidator" required />
@@ -44,13 +45,13 @@
 			</div>
 		</div>
 	</div>
-	
+
 	<div class="row">
 		<div class="col-md-3 col-centered">
 			<br />
 			<h3 class="text-center">{{'projectManagerCreateNewLabel' | translate}}</h3>
 			<br />
-			<form ng-submit="createNewProject(newProjectName, projectKind, authInfo.rvdticket)" name="form" novalidate>	
+			<form ng-submit="createNewProject(newProjectName, projectKind, authInfo.rvdticket)" name="form" novalidate>
 				<div class="row">
 					<div class="col-md-12">
 						<input name="newProjectName" type="text" class="form-control" ng-model="newProjectName" ng-pattern="projectNameValidator" required />
@@ -59,8 +60,8 @@
 				<br />
 				<div class="row form-group">
 					<div class="col-md-12">
-						<button type="submit" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid" 
-							class="btn btn-primary form-control">{{'projectManagerCreateButton' | translate}}</button>
+						<button type="submit" ng-disabled="form.newProjectName.$error.required || form.newProjectName.$invalid"
+								class="btn btn-primary form-control">{{'projectManagerCreateButton' | translate}}</button>
 					</div>
 				</div>
 				<!-- 
@@ -76,24 +77,24 @@
 		<div class="col-md-3 col-centered">
 			<div class="form-group">
 				<div class='drop-area' ng-file-drop="onFileSelect_ImportProject($files, authInfo.rvdticket)"
-					ng-file-drag-over-class="dropping" ng-show="dropSupported">
+					 ng-file-drag-over-class="dropping" ng-show="dropSupported">
 					<div class="drop-prompt">{{'projectManagerDropProjectsLabel' | translate}}</div>
 				</div>
 				<div ng-file-drop-available="dropSupported=true"
-					ng-show="!dropSupported">{{'projectManagerHtml5DropLabel' | translate}}</div>
-			</div>	
-		</div>		
-	</div>			
-					
-			
+					 ng-show="!dropSupported">{{'projectManagerHtml5DropLabel' | translate}}</div>
+			</div>
+		</div>
+	</div>
+
+
 	<div class="row">
-		<div class="col-md-3 col-centered">	
+		<div class="col-md-3 col-centered">
 			<div class="row text-center">
 				<div class="col-md-12">
 					{{'projectManagerChooseDifferentLabel1' | translate}} <a href="#/home">{{'projectManagerChooseDifferentLabel2' | translate}}</a>
 				</div>
-			</div>		
-			<br/>	
+			</div>
+			<br/>
 		</div>
 	</div>
 
