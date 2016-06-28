@@ -470,12 +470,7 @@ otherRestCommConf(){
   		    cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
         fi
 	fi
-	if [ -n "$MGMT_PASS" ] && [ -n "$MGMT_USER" ]; then
-	    echo "MGMT_PASS, MGMT_USER is set will be added to MGMNT configuration"
-        grep -q "$MGMT_USER" $RESTCOMM_CONF/mgmt-users.properties || $RESTCOMM_BIN/add-user.sh "$MGMT_USER" "$MGMT_PASS" -s
-        #Management bind address
-        grep -q 'jboss.bind.address.management' $RESTCOMM_BIN/restcomm/start-restcomm.sh || sed -i 's|RESTCOMM_HOME/bin/standalone.sh -b .*|RESTCOMM_HOME/bin/standalone.sh -b $bind_address -Djboss.bind.address.management=$bind_address|' $RESTCOMM_BIN/restcomm/start-restcomm.sh
-    fi
+
     echo "End Rest RestComm configuration"
 }
 
@@ -497,17 +492,6 @@ confRVD(){
   		fi
 
 	fi
-
-	if [ -n "$RVD_PORT" ]; then
-        echo "RVD_PORT $RVD_PORI"
-        if [[ "$DISABLE_HTTP" == "true" || "$DISABLE_HTTP" == "TRUE" ]]; then
-			SCHEME='https'
-		else
-			SCHEME='http'
-		fi
-        #If used means that port mapping at docker (e.g: -p 445:443) is not the default (-p 443:443)
-        sed -i "s|<restcommBaseUrl>.*</restcommBaseUrl>|<restcommBaseUrl>${SCHEME}://${PUBLIC_IP}:${RVD_PORT}/</restcommBaseUrl>|" $RVD_DEPLOY/WEB-INF/rvd.xml
-    fi
 }
 
 

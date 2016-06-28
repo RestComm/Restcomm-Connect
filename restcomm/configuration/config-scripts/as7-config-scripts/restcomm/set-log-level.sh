@@ -6,7 +6,7 @@
 # VARIABLES
 BASE_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 RESTCOMM_BIN=$BASE_DIR/..
-CLIFILE=/tmp/log.cli
+CLIFILE=$BASE_DIR/log.cli
 
 
 changelog() {

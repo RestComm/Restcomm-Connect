@@ -72,10 +72,14 @@ SslRmsConf(){
 #else use authorized.
 CertConfigure(){
   #Certificate setup (Authority certificate or self-signed)
+  FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
   if [ "$SECURESSL" = "AUTH" ]; then
       echo "Authorized certificate is used"
   elif [ "$SECURESSL" = "SELF"  ]; then
 	echo "TRUSTSTORE_FILE is not provided but SECURE is TRUE. We will create and configure self signed certificate"
+
+     sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/" $FILE > $FILE.bak #When Self-signed used ssl-mode must set to "allowall"
+	 mv $FILE.bak $FILE
 
 	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
 		TRUSTSTORE_LOCATION=$TRUSTSTORE_FILE
