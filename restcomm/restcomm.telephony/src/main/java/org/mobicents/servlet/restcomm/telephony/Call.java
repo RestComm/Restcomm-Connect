@@ -759,10 +759,10 @@ public final class Call extends UntypedActor {
             //since no-answer is a final state and we need to keep it so observer knows how the call ended
 //            if (!external.equals(CallStateChanged.State.NO_ANSWER)) {
                 external = CallStateChanged.State.CANCELED;
-                final CallStateChanged event = new CallStateChanged(external);
-                for (final ActorRef observer : observers) {
-                    observer.tell(event, source);
-                }
+//                final CallStateChanged event = new CallStateChanged(external);
+//                for (final ActorRef observer : observers) {
+//                    observer.tell(event, source);
+//                }
 //            }
 
             // Record call data
