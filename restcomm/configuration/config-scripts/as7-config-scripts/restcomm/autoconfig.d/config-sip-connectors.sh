@@ -64,7 +64,7 @@ configSocketbinding() {
 FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 
     #delete additional bindings if any added to erlier run of the script.
-    if grep -q "###new-binding###"  $FILE
+    if grep -q "<!-- new-bindings -->"  $FILE
     then
           echo "Additional Bindings Created earlier, going to delete the"
           sed '/<!-- new-bindings -->/,/<!-- new-bindings -->/d' $FILE > $FILE.bak
@@ -72,7 +72,7 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
     else
          echo "Additional Bindings not Created earlier"
     fi
-   
+
 	#check for port offset
 	if (( $PORT_OFFSET > 0 )); then
     	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
