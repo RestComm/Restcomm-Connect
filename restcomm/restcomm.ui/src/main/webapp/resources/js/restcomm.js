@@ -101,7 +101,11 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     resolve: {
         authorize: function (AuthService) {
             return AuthService.checkAccess();
-        }
+        },
+        noIdentity: function (identity) {
+			if (identity)
+				throw "KEYCLOAK_INSTANCE_ALREADY_REGISTERED";
+		}
     }
   });
   $stateProvider.state('restcomm.identity-edit',{
@@ -111,6 +115,10 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     resolve: {
         authorize: function (AuthService) {
             return AuthService.checkAccess();
+        },
+        hasIdentity: function (identity) {
+            if (!identity)
+                throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
         }
     }
   });

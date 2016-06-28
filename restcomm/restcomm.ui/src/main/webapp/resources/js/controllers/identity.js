@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications) {
+angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity) {
 
     $scope.details = {
 		RedirectUrl: parseRootUrl($location.absUrl(), $location.url()),
@@ -9,7 +9,8 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 
     $scope.submitRegistrationDetails = function (details) {
 		RCommIdentityInstances.register(details).then(function (response) {
-		    Notifications.info('Registered Identity Instance with ID ' );
+		    Notifications.info('Registered Identity Instance ' + response.data.Name + ". Please refresh to enable SSO." );
+		    $state.go('restcomm.dashboard');
 		}, function (response) {
 			if (response.status == 500)
 				Notifications.error("Internal server error");
@@ -26,9 +27,10 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 
 		return redirectUrl;
 	}
+
 });
 
-angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity) {
+angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity, $timeout, $window) {
     $scope.identity = identity;
     $scope.restcommUiDetails = {};
     $scope.restcommRestDetails = {};
@@ -41,6 +43,15 @@ angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state,
 	    }, function () {
 	        Notifications.error("Registration Token reset failed for " + clientSuffixToName(clientSuffix));
 	    });
+	}
+
+	$scope.unregisterInstance = function(identity) {
+	    RCommIdentityInstances.unregister(identity.Sid).then(function () {
+	        Notifications.info("Identity has been unregistered from authorization server. SSO disabled. Will now reload page...");
+	        $state.go('restcomm.dashboard').then(function () {
+                $window.location.reload();
+            });
+	    })
 	}
 
 	function clientSuffixToName(clientSuffix) {

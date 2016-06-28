@@ -123,7 +123,12 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
     protected Response unregisterIdentityInstance(String sid) {
         if ( ! hasAccountRole(getAdministratorRole()) )
             throw new AuthorizationException();
-        Sid instanceSid = new Sid(sid);
+        Sid instanceSid;
+        try {
+            instanceSid = new Sid(sid);
+        } catch (Exception e) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
         IdentityInstance instance = identityInstancesDao.getIdentityInstance(instanceSid);
         if (instance != null) {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(mainConfig.getIdentityAuthServerUrl(), mainConfig.getIdentityRealm());

@@ -37,12 +37,12 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	        //Notifications.error('Unauthorized access');
 	        $state.go("public.login");
 	    } else
-//	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
-//	        console.log("Identity Instance not registered.");
-//	        $state.go("public.identity-registration");
-//	    } else
+	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
+	       Notifications.error("Identity Instance not registered.");
+	        $state.go("restcomm.dashboard");
+	    } else
 	    if (error == "KEYCLOAK_INSTANCE_ALREADY_REGISTERED") {
-	        console.log("Identity Instance is already registered.");
+	        //Notifications.warn("Identity Instance is already registered.");
 	        $state.go("restcomm.dashboard");
 	    } else
 	    if (error == "IDENTITY_REGISTRATION_NOT_AVAILABLE") { // we are trying to access restcomm registration view while in restcomm-authentication mode

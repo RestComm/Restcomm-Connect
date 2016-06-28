@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, Notifications, RCommAccounts, $state) {
+rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $modal, AuthService, Notifications, RCommAccounts, $state, IdentityConfig) {
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
@@ -63,6 +63,8 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
       templateUrl: 'modules/modals/modal-about.html'
     });
   };
+
+  $scope.identity = IdentityConfig.getIdentity();
 
 });
 

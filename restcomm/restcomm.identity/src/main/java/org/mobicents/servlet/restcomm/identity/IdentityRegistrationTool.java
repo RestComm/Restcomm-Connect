@@ -259,6 +259,7 @@ public class IdentityRegistrationTool {
         Client jersey = Client.create();
         WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl() + "/" + clientId);
         ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + registrationAccessToken).delete(ClientResponse.class);
+        logger.info("Unregistering client '" + clientId + " - ' status: " + response.getStatus() );
         return response.getStatus();
     }
 

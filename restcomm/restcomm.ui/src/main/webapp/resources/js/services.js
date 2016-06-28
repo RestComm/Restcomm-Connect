@@ -739,6 +739,13 @@ rcServices.factory('RCommIdentityInstances', function ($resource,$http) {
             data:$.param(data)
         });
     }
+    instance.unregister = function (id) {
+        return $http({
+            method:'DELETE',
+            url:'/restcomm/2012-04-24/Identity/Instances/' + id,
+            //headers: headers
+        });
+    }
     return instance;
 });
 
