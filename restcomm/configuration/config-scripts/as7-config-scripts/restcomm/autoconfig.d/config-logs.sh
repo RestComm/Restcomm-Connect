@@ -27,7 +27,11 @@ configure_RMS_log(){
 
 config_on_thefly(){
     FILE=$RESTCOMM_BIN/restcomm/set-log-level.sh
-    sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=$BIND_ADDRESS --file=\"\$CLIFILE\"|" $FILE
+    if [ -n "$GRAYLOG_SERVER" ]; then
+        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=$BIND_ADDRESS --file=\"\$CLIFILE\"|" $FILE
+    else
+        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=127.0.0.1 --file=\"\$CLIFILE\"|" $FILE
+    fi
 }
 
 config_AKKA_logs(){
