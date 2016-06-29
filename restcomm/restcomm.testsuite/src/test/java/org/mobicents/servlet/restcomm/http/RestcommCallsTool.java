@@ -1,13 +1,10 @@
 package org.mobicents.servlet.restcomm.http;
 
-import java.io.StringReader;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import com.google.gson.stream.JsonReader;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.log4j.Logger;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordList;
 
@@ -16,6 +13,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;

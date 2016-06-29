@@ -22,27 +22,35 @@ package org.mobicents.servlet.restcomm.http;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria-farooq@live.com (Maria Farooq)
  */
-@Path("/Accounts/{accountSid}/Conferences.json")
+@Path("/Accounts/{accountSid}/Conferences/{conferenceSid}/Participants.json")
 @ThreadSafe
-public final class ConferencesJsonEndpoint extends ConferencesEndpoint {
-    public ConferencesJsonEndpoint() {
+public final class ParticipantsJsonEndpoint extends ParticipantsEndpoint {
+    public ParticipantsJsonEndpoint() {
         super();
     }
 
     @GET
-    public Response getConferences(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getConferences(accountSid, info, APPLICATION_JSON_TYPE);
+    public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
+        return getCalls(accountSid, conferenceSid, info, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{callSid}")
+    @POST
+    public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid,
+            final MultivaluedMap<String, String> data) {
+        return updateCall(accountSid, callSid, data, APPLICATION_JSON_TYPE);
     }
 }
