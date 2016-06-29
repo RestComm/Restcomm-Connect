@@ -332,8 +332,13 @@ public final class Call extends UntypedActor {
         try {
             String realIP = message.getInitialRemoteAddr();
             Integer realPort = message.getInitialRemotePort();
-            if (realPort == null || realPort == -1)
+            if (realPort == null || realPort == -1) {
                 realPort = 5060;
+            }
+
+            if (realPort == 0) {
+                realPort = message.getRemotePort();
+            }
 
             final ListIterator<String> recordRouteHeaders = message.getHeaders("Record-Route");
             final Address contactAddr = factory.createAddress(message.getHeader("Contact"));
@@ -692,7 +697,7 @@ public final class Call extends UntypedActor {
 
                 // final UntypedActorContext context = getContext();
                 // context.setReceiveTimeout(Duration.Undefined());
-                SipURI initialInetUri = getInitialIpAddressPort(invite);
+                SipURI initialInetUri = getInitialIpAddressPort((SipServletResponse)message);
 
                 if (initialInetUri != null) {
                     ((SipServletResponse)message).getSession().setAttribute("realInetUri", initialInetUri);
