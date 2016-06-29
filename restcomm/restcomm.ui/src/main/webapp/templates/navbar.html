@@ -24,7 +24,7 @@
                     <!--<li><a ng-href="#/usage"><i class="fa fa-bar-chart"></i> Usage</a></li>-->
                     <!--<li class="divider-vertical"></li>-->
                 </ul>
-                <i class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
+                <i ng-show="loggedAccount.role == 'Administrator'" class="fa fa-info-circle pull-right text-danger clickable" style="padding-top: 12px;" ng-click="showAboutModal()"></i>
                 <ul class="nav navbar-nav pull-right">
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> {{ friendlyName }} <b class="caret"></b></a>
@@ -32,7 +32,7 @@
                             <li><a href="#/profile/{{sid}}"><i class="fa fa-cog"></i> Account Settings</a></li>
                             <li class="divider"></li>
                             <li class="navbar-header text-muted" style="margin-left: 10px;">Sub Accounts</li>
-                            <li ng-repeat="account in accountsList" ng-hide="account.sid == sid"><a href="#"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>
+                            <li ng-repeat="account in accountsList" ng-hide="account.sid == sid"><a href="#/profile/{{account.sid}}"><i ng-class="account.type == 'Full' ? 'fa fa-suitcase' : 'fa fa-code'"> </i> {{account.friendly_name}}</a></li>
                             <li class="disabled"><a href="#"></a> </li>
                             <li class="disabled"><a href="#"></a> </li>
                             <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><i class="fa fa-plus"></i> Create New Account...</a> </li>

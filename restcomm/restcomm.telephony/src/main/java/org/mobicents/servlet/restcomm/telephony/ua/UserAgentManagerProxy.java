@@ -60,6 +60,7 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
 
     @Override
     public void destroy() {
+        logger.info("About to destroy UserAgentManager");
         if (system != null)
             system.stop(manager);
     }
@@ -111,6 +112,7 @@ public final class UserAgentManagerProxy extends SipServlet implements SipServle
             final SipFactory factory = (SipFactory) servletContext.getAttribute(SIP_FACTORY);
             final DaoManager storage = (DaoManager) servletContext.getAttribute(DaoManager.class.getName());
             system = (ActorSystem) servletContext.getAttribute(ActorSystem.class.getName());
+            logger.info("About to create new UserAgentManager");
             manager = manager(configuration, factory, storage);
         }
     }

@@ -549,6 +549,7 @@ angular.module('Rvd').service('variableRegistry', [function () {
 	registerVariable("core_Direction");
 	registerVariable("core_CallerName");
     registerVariable("core_CallTimestamp");
+    registerVariable("core_ForwardedFrom");
 	// after collect, record, ussdcollect
 	registerVariable("core_Digits");
 	// after dial
