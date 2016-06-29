@@ -193,7 +193,8 @@ public class IdentityRegistrationTool {
         repr.setProtocol("openid-connect");
         repr.setBearerOnly(bearerOnly);
         repr.setPublicClient(publicClient);
-        return registerClient(iat,repr);    }
+        return registerClient(iat,repr);
+    }
 
     KeycloakClient registerRestcommUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         KeycloakClient repr = new KeycloakClient();

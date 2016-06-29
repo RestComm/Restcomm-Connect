@@ -53,7 +53,7 @@ public class KeycloakAdapterConfBuilder {
         config.setRealm(realmName);
         config.setRealmKey(realmKey);
         config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("all");
+        config.setSslRequired("none");
         config.setResource(instanceId + "-restcomm-rest");
         config.setEnableBasicAuth(true);
         config.setCors(true);
@@ -74,7 +74,7 @@ public class KeycloakAdapterConfBuilder {
         config.setRealm(realmName);
         config.setRealmKey(realmKey);
         config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("all");
+        config.setSslRequired("none");
         config.setResource(instanceId + "-restcomm-ui");
         config.setPublicClient(true);
         config.setUseResourceRoleMappings(true);
@@ -90,7 +90,7 @@ public class KeycloakAdapterConfBuilder {
         config.setRealm(realmName);
         config.setRealmKey(realmKey);
         config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("all");
+        config.setSslRequired("none");
         config.setResource(instanceId + "-restcomm-rvd");
         config.setCors(true);
         config.setUseResourceRoleMappings(true);
@@ -110,7 +110,7 @@ public class KeycloakAdapterConfBuilder {
         config.setRealm(realmName);
         config.setRealmKey(realmKey);
         config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("all");
+        config.setSslRequired("none");
         config.setResource(instanceId + "-restcomm-rvd-ui");
         config.setPublicClient(true);
         config.setUseResourceRoleMappings(true);

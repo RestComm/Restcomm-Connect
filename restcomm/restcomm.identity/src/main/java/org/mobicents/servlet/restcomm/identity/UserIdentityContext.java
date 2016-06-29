@@ -130,8 +130,7 @@ public class UserIdentityContext {
             token = RSATokenVerifier.verifyToken(tokenString, deployment.getRealmKey(), deployment.getRealmInfoUrl());
             return token;
         } catch (VerificationException e) {
-            if (logger.isDebugEnabled())
-                logger.error("Cannot verity token", e);
+            logger.error("Cannot verity token", e);
             return null;
         }
     }
