@@ -40,7 +40,7 @@
                             <li ng-show="loggedAccount.role=='Administrator' && !!identity"><a href="#/identity/edit"><i class="fa fa-lock"></i> Identity Instance</a></li>
                             <li ng-show="loggedAccount.role=='Administrator' && !identity"><a href="#/identity/register"><i class="fa fa-unlock"></i> Register Identity</a></li>
                             <li class="divider"></li>
-                            <li><a href="#/login" ng-click="logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
+                            <li><a href ng-click="logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
                         </ul>
                     </li>
                 </ul>

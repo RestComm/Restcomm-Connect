@@ -198,7 +198,7 @@ angular.element(document).ready(['$http',function ($http) {
 			keycloak.init({ onLoad: 'login-required' }).success(function () {
 				keycloakAuth.loggedIn = true;
 				keycloakAuth.authz = keycloak;
-				keycloakAuth.logoutUrl = identityConfig.server.authServerUrl + "/realms/" + identityConfig.server.realm + "/protocol/openid-connect/logout?redirect_uri=" + window.location.origin;
+				keycloakAuth.logoutUrl = identityConfig.server.authServerUrl + "/realms/" + identityConfig.server.realm + "/protocol/openid-connect/logout?redirect_uri=" + window.location.origin + "/restcomm-rvd";
         angular.bootstrap(document, ["Rvd"]);
 			}).error(function (a, b) {
 					window.location.reload();

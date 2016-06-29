@@ -22,7 +22,8 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
   $scope.logout = function() {
     AuthService.logout();
-    $state.go('public.login');
+    if (IdentityConfig.securedByRestcomm())
+        $state.go('public.login');
   };
 
   //if(AuthService.isLoggedIn()) {

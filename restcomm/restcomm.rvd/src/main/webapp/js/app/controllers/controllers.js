@@ -117,13 +117,14 @@ angular.module('Rvd').controller('projectLogCtrl', ['$scope', '$stateParams', 'p
 	retrieveLog($scope.applicationSid);
 }]);
 
-App.controller('authMenuCtrl', function ($scope, authentication, $location, $modal, $q, $http, $state) {
+App.controller('authMenuCtrl', function ($scope, authentication, $location, $modal, $q, $http, $state, IdentityConfig) {
 	$scope.authInfo = authentication.getAuthInfo();
 	//$scope.username = authentication.getTicket(); //"Testuser@test.com";
 
 	function logout() {
 		authentication.doLogout();
-		$state.go('root.public.login');
+		if (IdentityConfig.securedByRestcomm())
+		    $state.go('root.public.login');
 	}
 	$scope.logout = logout;
 

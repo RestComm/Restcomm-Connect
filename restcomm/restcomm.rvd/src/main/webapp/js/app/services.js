@@ -228,6 +228,9 @@ angular.module('Rvd').service('authentication', function ($http, $q, IdentityCon
     function doLogout() {
         storage.clearCredentials();
         setAccount(null);
+        if (IdentityConfig.securedByKeycloak()) {
+            keycloakLogout(); // defined in app.js
+        }
     }
 
     // public interface
