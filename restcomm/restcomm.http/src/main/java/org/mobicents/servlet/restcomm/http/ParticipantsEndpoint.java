@@ -251,18 +251,15 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall started $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             secure(account, "RestComm:Modify:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 1 updateCall started $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         CallDetailRecord cdr = null;
         try {
-            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 2 updateCall started $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             cdr = dao.getCallDetailRecord(new Sid(callSid));
 
             if (cdr != null) {
@@ -279,12 +276,10 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
         }
 
         final String mutedStr = data.getFirst("Muted");
-        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall mutedStr = "+mutedStr+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
         // Mute/UnMute call
         if (mutedStr != null) {
 
             boolean muted = Boolean.parseBoolean(mutedStr);
-            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall muted = "+muted+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             String callPath = null;
             final ActorRef call;
             final CallInfo callInfo;
@@ -298,31 +293,24 @@ public abstract class ParticipantsEndpoint extends SecuredEndpoint {
                 CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
                         Duration.create(100000, TimeUnit.SECONDS));
                 callInfo = response.get();
-                logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall callInfo = "+callInfo+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
-            logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ updateCall callInfo.state().name() = "+callInfo.state().name()+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             if (callInfo.state().name().equalsIgnoreCase("IN_PROGRESS")){
                 if (muted) {
                     if (call != null) {
                         call.tell(new Mute(), call);
-                        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 3 updateCall muted call sent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
                     }
                 } else {
                     if (call != null) {
                         call.tell(new Unmute(), call);
-                        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 4 updateCall unmuted call sent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
                     }
                 }
                 cdr = cdr.setMuted(muted);
                 dao.updateCallDetailRecord(cdr);
-                logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 4.5 updateCall else $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-            }else{
-                logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 5 updateCall else $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
             }
         }
-        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 6 updateCall done $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(cdr), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE == responseType) {

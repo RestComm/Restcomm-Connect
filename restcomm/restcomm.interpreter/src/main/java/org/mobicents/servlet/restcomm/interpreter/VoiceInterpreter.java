@@ -2379,9 +2379,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             boolean onHoldInCDR = false;
             boolean onMuteInCDR = muteCall;
-            logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 1");
             if (message instanceof List<?>) {
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 2");
                 List<URI> waitUrls = (List<URI>) message;
                 playWaitUrl(waitUrls, self());
                 playWaitUrlPending = false;
@@ -2391,7 +2389,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final Tag child = conference(verb);
             conferenceVerb = verb;
             if (muteCall) {
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 3");
                 final Mute mute = new Mute();
                 call.tell(mute, source);
             }
@@ -2414,7 +2411,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (playMusicForConference) { // && startConferenceOnEnter) {
                 //playMusicForConference is true, take over control of startConferenceOnEnter
                 if (conferenceInfo.participants().size() == 1) {
-                    logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 5");
                     startConferenceOnEnter = false;
                 } else if (conferenceInfo.participants().size() > 1) {
                     if (startConferenceOnEnter || conferenceInfo.isModeratorPresent()) {
@@ -2426,9 +2422,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             if (!startConferenceOnEnter && conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 7");
                 if (!muteCall) {
-                    logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 8");
                     final Mute mute = new Mute();
                     if(logger.isInfoEnabled()) {
                         logger.info("Muting the call as startConferenceOnEnter =" + startConferenceOnEnter + " , callMuted = "
@@ -2445,16 +2439,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 boolean playBackground = conferenceInfo.participants().size() == 1;
                 if (playBackground) {
-                    logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 9");
                     // Parse wait url.
                     URI waitUrl = new URI("/restcomm/music/electronica/teru_-_110_Downtempo_Electronic_4.wav");
                     attribute = child.attribute("waitUrl");
                     if (attribute != null) {
-                        logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 10");
                         String value = attribute.value();
                         if (value != null && !value.isEmpty()) {
                             try {
-                                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 11");
                                 waitUrl = URI.create(value);
                             } catch (final Exception exception) {
                                 final Notification notification = notification(ERROR_NOTIFICATION, 13233, method
@@ -2475,24 +2466,20 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     String method = "POST";
                     attribute = child.attribute("waitMethod");
                     if (attribute != null) {
-                        logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 12");
                         method = attribute.value();
                         if (method != null && !method.isEmpty()) {
                             if (!"GET".equalsIgnoreCase(method) && !"POST".equalsIgnoreCase(method)) {
-                                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 13");
                                 final Notification notification = notification(WARNING_NOTIFICATION, 13234, method
                                         + " is not a valid waitMethod value for <Conference>");
                                 notifications.addNotification(notification);
                                 method = "POST";
                             }
                         } else {
-                            logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 14");
                             method = "POST";
                         }
                     }
 
                     if (!waitUrl.getPath().toLowerCase().endsWith("wav")) {
-                        logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 15");
                         if (logger.isInfoEnabled()) {
                             logger.info("WaitUrl for Conference will use RCML from URI: "+waitUrl.toString());
                         }
@@ -2505,13 +2492,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                     // Tell conference to play music to participants on hold
                     if (waitUrl != null && !playWaitUrlPending) {
-                        logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 16");
                         onHoldInCDR = true;
                         playWaitUrl(waitUrl, super.source);
                     }
                 }
             } else if (conferenceState == ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT) {
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 17");
                 // Tell the conference the moderator is now present
                 // Causes background music to stop playing and all participants will be unmuted
                 conference.tell(new ConferenceModeratorPresent(), source);
@@ -2529,17 +2514,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     records.updateConferenceDetailRecord(conferenceDetailRecord);
                 }
                 // Call is no more on hold
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 17.5");
                 updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
             } else {
                 // Call is no more on hold
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 17.6");
                 updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
             }
-            logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 18");
             // update Call hold and mute status
             if(callRecord != null){
-                logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 18.5");
                 callRecord = callRecord.setOnHold(onHoldInCDR);
                 callRecord = callRecord.setMuted(onMuteInCDR);
                 final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
@@ -2567,9 +2548,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             CallDetailRecordsDao callRecordsDAO = storage.getCallDetailRecordsDao();
             List<CallDetailRecord> conferenceCallRecords = callRecordsDAO.getCallDetailRecords(filter);
             if(conferenceCallRecords != null){
-                logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ conferenceCallRecords size:"+conferenceCallRecords.size());
                 for(CallDetailRecord singleRecord:conferenceCallRecords){
-                    logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ singleRecord sid updated: "+singleRecord.getSid());
                     singleRecord.setMuted(mute);
                     singleRecord.setOnHold(hold);
                     callRecordsDAO = storage.getCallDetailRecordsDao();

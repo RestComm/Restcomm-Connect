@@ -31,6 +31,7 @@ import javax.ws.rs.core.UriInfo;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
+ * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria-farooq@live.com (Maria Farooq)
  */
 @Path("/Accounts/{accountSid}/Conferences.json")
