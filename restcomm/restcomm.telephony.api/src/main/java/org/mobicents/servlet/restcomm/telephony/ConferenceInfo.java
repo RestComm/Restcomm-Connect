@@ -35,13 +35,15 @@ public final class ConferenceInfo {
     private final ConferenceStateChanged.State state;
     private final String name;
     private final boolean moderatorPresent;
+    private final ActorRef mediaGateway;
 
-    public ConferenceInfo(final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name, final boolean moderatorPresent) {
+    public ConferenceInfo(final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name, final boolean moderatorPresent, final ActorRef mediaGateway) {
         super();
         this.participants = participants;
         this.state = state;
         this.name = name;
         this.moderatorPresent = moderatorPresent;
+        this.mediaGateway = mediaGateway;
     }
 
     public List<ActorRef> participants() {
@@ -54,6 +56,10 @@ public final class ConferenceInfo {
 
     public String name() {
         return name;
+    }
+
+    public ActorRef mediaGateway() {
+        return mediaGateway;
     }
 
     public boolean isModeratorPresent() { return moderatorPresent; }

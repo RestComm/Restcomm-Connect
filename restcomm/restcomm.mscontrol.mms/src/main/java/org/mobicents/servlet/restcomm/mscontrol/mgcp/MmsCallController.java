@@ -479,6 +479,10 @@ public class MmsCallController extends MediaServerController {
         this.callOutbound = message.isOutbound();
         this.remoteSdp = message.getSessionDescription();
         this.webrtc = message.isWebrtc();
+        if(message.getMediaGateway() != null){
+            logger.info("%%%%%%%%%%%%%%%%%%%%% media gateway receieved. ");
+            this.mediaGatewayy = message.getMediaGateway();
+        }
 
         fsm.transition(message, acquiringMediaGatewayInfo);
     }
@@ -650,7 +654,9 @@ public class MmsCallController extends MediaServerController {
 
     private void onJoinConference(JoinConference message, ActorRef self, ActorRef sender) throws Exception {
         // Ask the remote media session controller for the bridge endpoint
+    	//Why ??
         this.bridge = sender;
+        //internalLinkEndpoint is basically conference endpoint where master participant is connected.
         this.internalLinkEndpoint = (ActorRef) message.getEndpoint();
         this.internalLinkMode = message.getConnectionMode();
 
@@ -733,7 +739,10 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGatewayy = mediaGateways.getMediaGateway();
+            if(mediaGatewayy == null){
+                logger.info("===========================================If this is conference This is First Call in confrence=====================================================================");
+                mediaGatewayy = mediaGateways.getMediaGateway();
+            }
             mediaGatewayy.tell(new GetMediaGatewayInfo(), self());
         }
     }
@@ -839,7 +848,7 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             if (is(updatingInternalLink)) {
-                call.tell(new JoinComplete(), super.source);
+                call.tell(new JoinComplete(null,mediaGatewayy), super.source);
             } else if (is(closingInternalLink)) {
                 call.tell(new Left(), super.source);
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
@@ -877,6 +886,9 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
+            // YES here made a sesssion with master RMS and probably switch everything to that
+            // otherwise if nothing is done
+            // this will send message to
             mediaGatewayy = mediaSessionVSGatewayMap.get(session);
             mediaGatewayy.tell(new CreateLink(session), source);
         }

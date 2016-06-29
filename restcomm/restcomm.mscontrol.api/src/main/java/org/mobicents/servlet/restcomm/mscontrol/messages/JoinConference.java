@@ -21,9 +21,10 @@
 
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+
+import akka.actor.ActorRef;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telesta.com)
@@ -34,10 +35,12 @@ public final class JoinConference {
 
     private final Object endpoint;
     private final ConnectionMode connectionMode;
+    private final ActorRef mediaGateway;
 
-    public JoinConference(final Object endpoint, final ConnectionMode connectionMode) {
+    public JoinConference(final Object endpoint, final ConnectionMode connectionMode, final ActorRef mediaGateway) {
         this.endpoint = endpoint;
         this.connectionMode = connectionMode;
+        this.mediaGateway = mediaGateway;
     }
 
     public Object getEndpoint() {
@@ -46,6 +49,10 @@ public final class JoinConference {
 
     public ConnectionMode getConnectionMode() {
         return connectionMode;
+    }
+
+    public ActorRef getMediaGateway() {
+        return mediaGateway;
     }
 
 }
