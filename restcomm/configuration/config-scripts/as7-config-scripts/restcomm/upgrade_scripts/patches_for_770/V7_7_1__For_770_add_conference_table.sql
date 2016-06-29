@@ -6,12 +6,14 @@
 
 USE ${RESTCOMM_DBNAME};
 DELIMITER //
+DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
-	IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'restcomm_conference_detail_records'))
-		THEN
-		-- do nothing! table already exists.
-	ELSE
+ SELECT IFNULL(table_name, '') INTO @tblName
+ FROM information_schema.columns
+ WHERE table_name = 'restcomm_conference_detail_records';
+
+	IF @tblName IS NULL THEN
 		CREATE TABLE restcomm_conference_detail_records (
 		sid VARCHAR(34) NOT NULL PRIMARY KEY,
 		date_created DATETIME NOT NULL,
