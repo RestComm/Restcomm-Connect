@@ -21,6 +21,8 @@ package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
+import akka.actor.ActorRef;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
@@ -28,16 +30,22 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 public final class JoinComplete {
 
     private final Object endpoint;
+    private ActorRef mediaGateway;
 
-    public JoinComplete(final Object endpoint) {
+    public JoinComplete(final Object endpoint, ActorRef mediaGateway) {
         this.endpoint = endpoint;
+        this.mediaGateway = mediaGateway;
     }
 
     public JoinComplete() {
-        this(null);
+        this(null, null);
     }
 
     public Object endpoint() {
         return endpoint;
+    }
+
+    public ActorRef mediaGateway() {
+        return mediaGateway;
     }
 }

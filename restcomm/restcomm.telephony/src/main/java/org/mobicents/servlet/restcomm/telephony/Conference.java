@@ -77,6 +77,7 @@ public final class Conference extends UntypedActor {
     private final String name;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
+    private ActorRef mediaGateway;
 
     private boolean moderatorPresent = false;
 
@@ -327,11 +328,11 @@ public final class Conference extends UntypedActor {
     private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
         ConferenceInfo information = null;
         if (is(waiting)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent, mediaGateway);
         } else if (is(running)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent);
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent, mediaGateway);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent);
+            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent, mediaGateway);
         }
         sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
     }
@@ -415,6 +416,14 @@ public final class Conference extends UntypedActor {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+        // if it is first participant
+        if(calls.isEmpty()){
+            this.mediaGateway = message.mediaGateway(); //media gateway of this call.
+            logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% this.mediaGateway: "+ this.mediaGateway);
+        }else{
+        	// change mediagateway of call.
+        	//qkwdqisender.tell(message, sender); 
+        }
         this.calls.add(sender);
     }
 

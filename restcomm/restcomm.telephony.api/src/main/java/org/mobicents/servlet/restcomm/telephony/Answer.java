@@ -21,12 +21,25 @@ package org.mobicents.servlet.restcomm.telephony;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
+import akka.actor.ActorRef;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class Answer {
-    public Answer() {
+    private final ActorRef mediaGateway;
+
+    public Answer(ActorRef mediaGateway) {
         super();
+        this.mediaGateway = mediaGateway;
+    }
+
+    public Answer() {
+        this(null);
+    }
+
+    public ActorRef getMediaGateway() {
+        return mediaGateway;
     }
 }

@@ -93,6 +93,7 @@ public class MmsControllerFactory implements MediaServerControllerFactory {
 
         @Override
         public Actor create() throws Exception {
+            //return new MmsConferenceController(mediaGateways, configuration);
             return new MmsConferenceController(mediaGateways.get(0));
         }
 
