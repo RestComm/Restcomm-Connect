@@ -24,6 +24,7 @@ import akka.actor.ActorRef;
 import java.util.List;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -31,13 +32,16 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 @Immutable
 public final class ConferenceInfo {
 
+    private final Sid sid;
     private final List<ActorRef> participants;
     private final ConferenceStateChanged.State state;
     private final String name;
     private final boolean moderatorPresent;
 
-    public ConferenceInfo(final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name, final boolean moderatorPresent) {
+    public ConferenceInfo(final Sid sid, final List<ActorRef> participants, final ConferenceStateChanged.State state, final String name, final boolean moderatorPresent) {
+
         super();
+        this.sid = sid;
         this.participants = participants;
         this.state = state;
         this.name = name;
@@ -54,6 +58,10 @@ public final class ConferenceInfo {
 
     public String name() {
         return name;
+    }
+
+    public Sid sid() {
+        return sid;
     }
 
     public boolean isModeratorPresent() { return moderatorPresent; }

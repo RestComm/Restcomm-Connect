@@ -17,32 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.http;
+package org.mobicents.servlet.restcomm.entities;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import java.util.List;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria-farooq@live.com (Maria Farooq)
  */
-@Path("/Accounts/{accountSid}/Conferences.json")
-@ThreadSafe
-public final class ConferencesJsonEndpoint extends ConferencesEndpoint {
-    public ConferencesJsonEndpoint() {
+@NotThreadSafe
+public final class ConferenceDetailRecordList {
+    private final List<ConferenceDetailRecord> cdrs;
+
+    public ConferenceDetailRecordList(final List<ConferenceDetailRecord> cdrs) {
         super();
+        this.cdrs = cdrs;
     }
 
-    @GET
-    public Response getConferences(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getConferences(accountSid, info, APPLICATION_JSON_TYPE);
+    public List<ConferenceDetailRecord> getConferenceDetailRecords() {
+        return cdrs;
     }
 }
