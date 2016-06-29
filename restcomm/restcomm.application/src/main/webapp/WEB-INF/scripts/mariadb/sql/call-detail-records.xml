@@ -5,10 +5,10 @@
 -->
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
-    INSERT INTO restcomm_call_detail_records (sid, instanceid, parent_call_sid, conference_sid, date_created, date_updated, account_sid, recipient, sender, phone_number_sid, status,
-    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration, muted, start_conference_on_enter, end_conference_on_exit, on_hold) VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{conference_sid},
+    INSERT INTO restcomm_call_detail_records (sid, instanceid, parent_call_sid, date_created, date_updated, account_sid, recipient, sender, phone_number_sid, status,
+    start_time, end_time, duration, price, direction, answered_by, api_version, forwarded_from, caller_name, uri, call_path, ring_duration, conference_sid, muted, start_conference_on_enter, end_conference_on_exit, on_hold) VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, 
 		#{date_created}, #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price},
-		#{direction},	#{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold});
+		#{direction},	#{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold});
   </insert>
   
   <select id="getCallDetailRecord" parameterType="string" resultType="hashmap">
