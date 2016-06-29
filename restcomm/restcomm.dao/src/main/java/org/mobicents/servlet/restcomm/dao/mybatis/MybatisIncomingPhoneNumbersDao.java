@@ -128,10 +128,13 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     }
 
     @Override
-    public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter) {
+    public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter, boolean withApplicationNames) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersByFriendlyName",
+            String mybatisClause = "getIncomingPhoneNumbersByFriendlyName";
+            if (withApplicationNames)
+                mybatisClause = "getIncomingPhoneNumbersByFriendlyNameWithApplicationNames";
+            final List<Map<String, Object>> results = session.selectList(namespace + mybatisClause,
                     filter);
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {
@@ -209,10 +212,15 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final Boolean faxCapable = readBoolean(map.get("fax_capable"));
         final Boolean pureSip = readBoolean(map.get("pure_sip"));
         final String cost = readString(map.get("cost"));
+        // foreign properties loaded from applications table
+        final String voiceApplicationName = readString(map.get("voice_application_name"));
+        final String smsApplicationName = readString(map.get("sms_application_name"));
+        final String ussdApplicationName = readString(map.get("ussd_application_name"));
+
         return new IncomingPhoneNumber(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion,
                 hasVoiceCallerIdLookup, voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback,
                 statusCallbackMethod, voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod,
-                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip);
+                smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, voiceApplicationName, smsApplicationName, ussdApplicationName);
     }
 
     private Map<String, Object> toMap(final IncomingPhoneNumber incomingPhoneNumber) {

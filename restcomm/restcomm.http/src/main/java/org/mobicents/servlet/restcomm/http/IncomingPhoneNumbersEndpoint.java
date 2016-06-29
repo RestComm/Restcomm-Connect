@@ -258,7 +258,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             PhoneNumberType phoneNumberType, final MediaType responseType) {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
         IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter);
-        final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+        final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter, );
 
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(incomingPhoneNumbers), APPLICATION_JSON).build();
