@@ -128,13 +128,10 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     }
 
     @Override
-    public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter, boolean withApplicationNames) {
+    public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter) {
         final SqlSession session = sessions.openSession();
         try {
-            String mybatisClause = "getIncomingPhoneNumbersByFriendlyName";
-            if (withApplicationNames)
-                mybatisClause = "getIncomingPhoneNumbersByFriendlyNameWithApplicationNames";
-            final List<Map<String, Object>> results = session.selectList(namespace + mybatisClause,
+            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersByFriendlyName",
                     filter);
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {

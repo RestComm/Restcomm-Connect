@@ -594,6 +594,18 @@ public final class IncomingPhoneNumber {
         this.ussdApplicationName = ussdApplicationName;
     }
 
+    public String getVoiceApplicationName() {
+        return voiceApplicationName;
+    }
+
+    public String getSmsApplicationName() {
+        return smsApplicationName;
+    }
+
+    public String getUssdApplicationName() {
+        return ussdApplicationName;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
