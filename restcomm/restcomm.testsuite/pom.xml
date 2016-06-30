@@ -37,7 +37,7 @@
 			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.sms</artifactId> 
 			<version>${project.version}</version> <scope>provided</scope> </dependency> 
 			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.http</artifactId> 
-			<version>${project.version}</version> <scope>provided</scope> </dependency> 
+			<version>${project.version}</version> <scope>provided</scope> </dependency>
 			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.telephony</artifactId> 
 			<version>${project.version}</version> <scope>provided</scope> </dependency> 
 			<dependency> <groupId>com.telestax.servlet</groupId> <artifactId>restcomm.telephony.api</artifactId> 
@@ -319,7 +319,7 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.email.api</artifactId>
-			<version>7.8.0-SNAPSHOT</version>
+			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
