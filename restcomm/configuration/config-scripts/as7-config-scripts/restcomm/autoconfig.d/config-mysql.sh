@@ -44,10 +44,13 @@ cat > $MYSQLDB_MODULE/module.xml << 'EOF'
 </module>
 EOF
 
-if [ -z "(grep -q 'driver name=\"com.mysql\"' $STANDALONE_SIP)" ]; then
+query=$(grep -q 'driver name=\"com.mysql\"' $STANDALONE_SIP)
+if [ $? -eq 0 ]; then
+  echo "Datasource already populated"
+else
+  echo "Going to populate the datasource"
 
-
-     if [ -n "$MYSQL_SNDHOST" ]; then
+   if [ -n "$MYSQL_SNDHOST" ]; then
          # Update JBoss configuration to create a MariaDB datasource
          sed -e '/<drivers>/ a\
         \                    <driver name="com.mysql" module="com.mysql">\
@@ -83,7 +86,7 @@ if [ -z "(grep -q 'driver name=\"com.mysql\"' $STANDALONE_SIP)" ]; then
         \                </datasource>' $STANDALONE_SIP > $STANDALONE_SIP.bak
             mv $STANDALONE_SIP.bak $STANDALONE_SIP
 
-     else
+    else
         # Update JBoss configuration to create a MariaDB datasource
          sed -e '/<drivers>/ a\
         \                    <driver name="com.mysql" module="com.mysql">\
@@ -109,11 +112,8 @@ if [ -z "(grep -q 'driver name=\"com.mysql\"' $STANDALONE_SIP)" ]; then
         \                    </statement> \
         \                </datasource>' $STANDALONE_SIP > $STANDALONE_SIP.bak
             mv $STANDALONE_SIP.bak $STANDALONE_SIP
-    fi
+   fi
 fi
-
-echo "create mysql datasource done"
-
 }
 
 ## Description: Configures MyBatis for MySQL
