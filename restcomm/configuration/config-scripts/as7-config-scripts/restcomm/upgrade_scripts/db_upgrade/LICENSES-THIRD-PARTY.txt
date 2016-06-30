@@ -1167,7 +1167,7 @@ DAMAGES.
 
 
 
-MariaDB Java Client 1.3.6 (drivers/mariadb-java-client-1.3.6.jar)
+MariaDB Java Client 1.4.5 (drivers/mariadb-java-client-1.4.5.jar)
 -----------------------------------------------------------------
 Source: https://mariadb.com/kb/en/mariadb/client-libraries/mariadb-java-client/
 
