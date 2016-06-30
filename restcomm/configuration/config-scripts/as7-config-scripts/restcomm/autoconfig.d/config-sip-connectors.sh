@@ -12,7 +12,7 @@ configConnectors() {
     #delete additional connectors if any added to erlier run of the script.
     if  grep -q "<!-- new-conectors -->" $FILE
     then
-          echo "Additional Connectors Created earlier, going to delete the"
+          echo "Additional Connectors Created earlier, going to delete the connectors"
           sed '/<!-- new-conectors -->/,/<!-- new-conectors -->/d' $FILE > $FILE.bak
           mv $FILE.bak $FILE
     else
@@ -66,7 +66,7 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
     #delete additional bindings if any added to erlier run of the script.
     if grep -q "<!-- new-bindings -->"  $FILE
     then
-          echo "Additional Bindings Created earlier, going to delete the"
+          echo "Additional Bindings Created earlier, going to delete the old bindings"
           sed '/<!-- new-bindings -->/,/<!-- new-bindings -->/d' $FILE > $FILE.bak
           mv $FILE.bak $FILE
     else
@@ -133,7 +133,7 @@ port=$2
 			   <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${static_address}\" static-server-port=\"${port}\"/>" $FILE > $FILE.bak
 	fi
 	mv $FILE.bak $FILE
-	echo 'Configured SIP Connectors and Bindings'
+	echo 'Configured additional SIP Connectors and Bindings'
 }
 
 addSocketBinding(){
