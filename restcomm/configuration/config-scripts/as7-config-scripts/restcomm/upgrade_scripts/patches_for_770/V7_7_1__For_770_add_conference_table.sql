@@ -6,10 +6,9 @@
 
 USE ${RESTCOMM_DBNAME};
 DELIMITER //
-DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT IFNULL(table_name, '') INTO @tblName
+ SELECT DISTINCTROW IFNULL(table_name, '') INTO @tblName
  FROM information_schema.columns
  WHERE table_name = 'restcomm_conference_detail_records';
 
@@ -27,6 +26,6 @@ CREATE PROCEDURE updateProcedure()
 	END IF;
 END //
 
-DELIMITER;
+DELIMITER ;
 CALL updateProcedure();
 drop procedure updateProcedure;

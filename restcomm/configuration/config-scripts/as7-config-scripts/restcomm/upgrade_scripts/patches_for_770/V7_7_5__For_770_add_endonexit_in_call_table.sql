@@ -8,7 +8,7 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT IFNULL(column_name, '') INTO @colName
+ SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName
  FROM information_schema.columns
  WHERE table_name = 'restcomm_call_detail_records'
  AND column_name = 'end_conference_on_exit';
@@ -69,6 +69,6 @@ INSERT INTO temp_table
 END IF;
 END //
 
-DELIMITER;
+DELIMITER ;
 CALL updateProcedure();
 drop procedure updateProcedure;
