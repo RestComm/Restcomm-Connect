@@ -46,11 +46,13 @@ public final class IncomingPhoneNumber {
     private URI statusCallback;
     private String statusCallbackMethod;
     private Sid voiceApplicationSid;
+    private String voiceApplicationName;
     private URI smsUrl;
     private String smsMethod;
     private URI smsFallbackUrl;
     private String smsFallbackMethod;
     private Sid smsApplicationSid;
+    private String smsApplicationName;
     private URI uri;
 
     private URI ussdUrl;
@@ -58,6 +60,7 @@ public final class IncomingPhoneNumber {
     private URI ussdFallbackUrl;
     private String ussdFallbackMethod;
     private Sid ussdApplicationSid;
+    private String ussdApplicationName;
 
     // Capabilities
     private Boolean voiceCapable;
@@ -79,13 +82,26 @@ public final class IncomingPhoneNumber {
     }
 
     public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
+                               final String friendlyName, final Sid accountSid, final String phoneNumber, final String cost, final String apiVersion,
+                               final Boolean hasVoiceCallerIdLookup, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
+                               final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
+                               final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
+                               final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
+                               final String ussdFallbackMethod, final Sid ussdApplicationSid, final Boolean voiceCapable,
+                               final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip) {
+        this(sid, dateCreated, dateUpdated, friendlyName, accountSid, phoneNumber, cost, apiVersion, hasVoiceCallerIdLookup,
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, statusCallback, statusCallbackMethod,
+                voiceApplicationSid, smsUrl, smsMethod, smsFallbackUrl, smsFallbackMethod, smsApplicationSid, uri, ussdUrl, ussdMethod, ussdFallbackUrl, ussdFallbackMethod, ussdApplicationSid, voiceCapable, smsCapable, mmsCapable, faxCapable, pureSip, null, null, null);
+    }
+
+    public IncomingPhoneNumber(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
             final String friendlyName, final Sid accountSid, final String phoneNumber, final String cost, final String apiVersion,
             final Boolean hasVoiceCallerIdLookup, final URI voiceUrl, final String voiceMethod, final URI voiceFallbackUrl,
             final String voiceFallbackMethod, final URI statusCallback, final String statusCallbackMethod,
             final Sid voiceApplicationSid, final URI smsUrl, final String smsMethod, final URI smsFallbackUrl,
             final String smsFallbackMethod, final Sid smsApplicationSid, final URI uri, final URI ussdUrl, final String ussdMethod, final URI ussdFallbackUrl,
             final String ussdFallbackMethod, final Sid ussdApplicationSid, final Boolean voiceCapable,
-            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip) {
+            final Boolean smsCapable, final Boolean mmsCapable, final Boolean faxCapable, final Boolean pureSip, final String voiceApplicationName, final String smsApplicationName, final String ussdApplicationName) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -119,6 +135,9 @@ public final class IncomingPhoneNumber {
         this.mmsCapable = mmsCapable;
         this.faxCapable = faxCapable;
         this.pureSip = pureSip;
+        this.voiceApplicationName = voiceApplicationName;
+        this.smsApplicationName = smsApplicationName;
+        this.ussdApplicationName = ussdApplicationName;
     }
 
     /**
@@ -563,6 +582,30 @@ public final class IncomingPhoneNumber {
         this.pureSip = pureSip;
     }
 
+    public void setVoiceApplicationName(String voiceApplicationName) {
+        this.voiceApplicationName = voiceApplicationName;
+    }
+
+    public void setSmsApplicationName(String smsApplicationName) {
+        this.smsApplicationName = smsApplicationName;
+    }
+
+    public void setUssdApplicationName(String ussdApplicationName) {
+        this.ussdApplicationName = ussdApplicationName;
+    }
+
+    public String getVoiceApplicationName() {
+        return voiceApplicationName;
+    }
+
+    public String getSmsApplicationName() {
+        return smsApplicationName;
+    }
+
+    public String getUssdApplicationName() {
+        return ussdApplicationName;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -602,6 +645,7 @@ public final class IncomingPhoneNumber {
         private Boolean mmsCapable;
         private Boolean faxCapable;
         private Boolean pureSip;
+
 
         private Builder() {
             super();
