@@ -19,12 +19,39 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
+import static akka.pattern.Patterns.ask;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -37,9 +64,12 @@ import org.mobicents.servlet.restcomm.asr.AsrResponse;
 import org.mobicents.servlet.restcomm.cache.DiskCacheResponse;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
+import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Notification;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fax.FaxResponse;
@@ -98,40 +128,16 @@ import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -170,6 +176,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     // FSM.
     // The conference manager.
     private final ActorRef conferenceManager;
+    // A conference detail record.
+    private ConferenceDetailRecord  conferenceDetailRecord = null;
 
     // State for outbound calls.
     private boolean isForking;
@@ -177,12 +185,15 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private List<Tag> dialChildren;
     private Map<ActorRef, Tag> dialChildrenWithAttributes;
 
-    // The conferencing stuff.
+    // The conferencing stuff
+    private int maxParticipantLimit = 40;
     private ActorRef conference;
+    private String conferenceFriendlyName;
     private ConferenceInfo conferenceInfo;
     private ConferenceStateChanged.State conferenceState;
     private boolean muteCall;
     private boolean startConferenceOnEnter = true;
+    private boolean endConferenceOnExit = false;
     private boolean confModeratorPresent = false;
     private ActorRef confSubVoiceInterpreter;
     private Attribute dialRecordAttribute;
@@ -724,7 +735,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     break;
                 case COMPLETED:
                     conferenceState = event.state();
-                    // At this point i think we should call finishConferencing,
+                 // At this point i think we should call finishConferencing,
                     // who will tell conference center to destroy the conference.
                     fsm.transition(message, finishConferencing);
                     break;
@@ -1313,6 +1324,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 builder.setDirection(callInfo.direction());
                 builder.setApiVersion(version);
                 builder.setPrice(new BigDecimal("0.00"));
+                builder.setMuted(false);
+                builder.setOnHold(false);
                 // TODO implement currency property to be read from Configuration
                 builder.setPriceUnit(Currency.getInstance("USD"));
                 final StringBuilder buffer = new StringBuilder();
@@ -1628,6 +1641,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final String name = child.text();
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
+                    conferenceFriendlyName = name;
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
                 } else {
@@ -2244,19 +2258,18 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final Tag child = conference(verb);
 
             // If there is room join the conference.
-            int max = 40;
             Attribute attribute = child.attribute("maxParticipants");
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
                     try {
-                        max = Integer.parseInt(value);
+                        maxParticipantLimit = Integer.parseInt(value);
                     } catch (final NumberFormatException ignored) {
                     }
                 }
             }
 
-            if (conferenceInfo.participants().size() < max) {
+            if (conferenceInfo.participants().size() < maxParticipantLimit) {
                 // Play beep.
                 boolean beep = true;
                 attribute = child.attribute("beep");
@@ -2299,6 +2312,61 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final GetNextVerb next = GetNextVerb.instance();
                 parser.tell(next, source);
             }
+            final Sid conferenceSid = conferenceInfo.sid();
+
+            //Adding conference record in DB
+            final ConferenceDetailRecordsDao conferenceDao = storage.getConferenceDetailRecordsDao();
+            conferenceDetailRecord = conferenceDao.getConferenceDetailRecord(conferenceSid);
+            if(conferenceDetailRecord == null){
+                final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+                conferenceBuilder.setSid(conferenceSid);
+                conferenceBuilder.setDateCreated(callRecord.getDateCreated());
+                conferenceBuilder.setAccountSid(accountId);/* I am not sure about this parameter */
+                conferenceBuilder.setStatus(conferenceState.name());
+                conferenceBuilder.setApiVersion(version);
+                final StringBuilder UriBuffer = new StringBuilder();
+                UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
+                UriBuffer.append(conferenceSid);
+                final URI uri = URI.create(UriBuffer.toString());
+                conferenceBuilder.setUri(uri);
+                conferenceBuilder.setFriendlyName(conferenceFriendlyName);
+                conferenceDetailRecord = conferenceBuilder.build();
+                conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
+            }
+            // parse mute
+            attribute = child.attribute("muted");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    muteCall = Boolean.parseBoolean(value);
+                }
+            }
+            // parse startConferenceOnEnter.
+            attribute = child.attribute("startConferenceOnEnter");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    startConferenceOnEnter = Boolean.parseBoolean(value);
+                }
+            }
+            // Parse "endConferenceOnExit"
+            attribute = child.attribute("endConferenceOnExit");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    endConferenceOnExit = Boolean.parseBoolean(value);
+                }
+            }
+
+            //updating conferenceSid and other conference related info in cdr
+            if (callRecord != null) {
+                callRecord = callRecord.setConferenceSid(conferenceSid);
+                callRecord = callRecord.setMuted(muteCall);
+                callRecord = callRecord.setStartConferenceOnEnter(startConferenceOnEnter);
+                callRecord = callRecord.setEndConferenceOnExit(endConferenceOnExit);
+                final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                records.updateCallDetailRecord(callRecord);
+            }
         }
     }
 
@@ -2309,6 +2377,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(final Object message) throws Exception {
+            boolean onHoldInCDR = false;
+            boolean onMuteInCDR = muteCall;
             if (message instanceof List<?>) {
                 List<URI> waitUrls = (List<URI>) message;
                 playWaitUrl(waitUrls, self());
@@ -2318,23 +2388,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             final NotificationsDao notifications = storage.getNotificationsDao();
             final Tag child = conference(verb);
             conferenceVerb = verb;
-
-            // Mute
-            Attribute attribute = child.attribute("muted");
-            if (attribute != null) {
-                final String value = attribute.value();
-                if (value != null && !value.isEmpty()) {
-                    muteCall = Boolean.parseBoolean(value);
-                }
-            }
-
             if (muteCall) {
                 final Mute mute = new Mute();
                 call.tell(mute, source);
             }
-
             // Parse start conference.
-            attribute = child.attribute("startConferenceOnEnter");
+            Attribute attribute = child.attribute("startConferenceOnEnter");
             if (attribute != null) {
                 final String value = attribute.value();
                 if (value != null && !value.isEmpty()) {
@@ -2346,7 +2405,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
 
             confModeratorPresent = startConferenceOnEnter;
-
             if (logger.isInfoEnabled()) {
                 logger.info("At conferencing, VI state: "+fsm.state()+" , playMusicForConference: "+playMusicForConference+" ConferenceState: "+conferenceState.name()+" startConferenceOnEnter: "+startConferenceOnEnter+"  conferenceInfo.participants().size(): "+conferenceInfo.participants().size());
             }
@@ -2371,6 +2429,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             + muteCall);
                     }
                     call.tell(mute, source);
+                    onMuteInCDR = true;
                 }
 
                 // Only play background music if conference is not doing that already
@@ -2433,6 +2492,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                     // Tell conference to play music to participants on hold
                     if (waitUrl != null && !playWaitUrlPending) {
+                        onHoldInCDR = true;
                         playWaitUrl(waitUrl, super.source);
                     }
                 }
@@ -2447,8 +2507,25 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     // XXX get record limit etc from dial verb
                     recordConference();
                 }
+                // update conference state in DB
+                if (conferenceDetailRecord != null) {
+                    conferenceDetailRecord = conferenceDetailRecord.setStatus(ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT.name());
+                    final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
+                    records.updateConferenceDetailRecord(conferenceDetailRecord);
+                }
+                // Call is no more on hold
+                updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
+            } else {
+                // Call is no more on hold
+                updateMuteAndHoldStatusOfAllConferenceCalls(conferenceDetailRecord.getAccountSid(), conferenceDetailRecord.getSid(), false, false);
             }
-
+            // update Call hold and mute status
+            if(callRecord != null){
+                callRecord = callRecord.setOnHold(onHoldInCDR);
+                callRecord = callRecord.setMuted(onMuteInCDR);
+                final CallDetailRecordsDao callRecords = storage.getCallDetailRecordsDao();
+                callRecords.updateCallDetailRecord(callRecord);
+            }
             // Set timer.
             final int timeLimit = timeLimit(verb);
             final UntypedActorContext context = getContext();
@@ -2465,6 +2542,23 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         conference.tell(new Play(waitUrl, Short.MAX_VALUE, confModeratorPresent), source);
     }
 
+    protected void updateMuteAndHoldStatusOfAllConferenceCalls(final Sid accountSid, final Sid conferenceSid, final boolean mute, final boolean hold) throws ParseException{
+        if (conferenceSid != null){
+            CallDetailRecordFilter filter = new CallDetailRecordFilter(accountSid.toString(), null, null, "in-progress", null, null, null, conferenceSid.toString(), 50, 0);
+            CallDetailRecordsDao callRecordsDAO = storage.getCallDetailRecordsDao();
+            List<CallDetailRecord> conferenceCallRecords = callRecordsDAO.getCallDetailRecords(filter);
+            if(conferenceCallRecords != null){
+                for(CallDetailRecord singleRecord:conferenceCallRecords){
+                    singleRecord.setMuted(mute);
+                    singleRecord.setOnHold(hold);
+                    callRecordsDAO = storage.getCallDetailRecordsDao();
+                    callRecordsDAO.updateCallDetailRecord(singleRecord);
+                }
+            }
+        }
+    }
+
+
     private final class FinishConferencing extends AbstractDialAction {
         public FinishConferencing(final ActorRef source) {
             super(source);
@@ -2478,7 +2572,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 final RemoveParticipant remove = new RemoveParticipant(call);
                 conference.tell(remove, source);
             }
-
             // Clean up
             if (message instanceof ConferenceStateChanged) {
                 // Destroy conference if state changed to completed (last participant in call)
@@ -2486,6 +2579,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (ConferenceStateChanged.State.COMPLETED.equals(confStateChanged.state())) {
                     DestroyConference destroyConference = new DestroyConference(conferenceInfo.name());
                     conferenceManager.tell(destroyConference, super.source);
+                }
+                // update conference state in DB
+                if (conferenceDetailRecord != null) {
+                    conferenceDetailRecord = conferenceDetailRecord.setStatus(confStateChanged.state().name());
+                    final ConferenceDetailRecordsDao records = storage.getConferenceDetailRecordsDao();
+                    records.updateConferenceDetailRecord(conferenceDetailRecord);
                 }
             }
             conference = null;
@@ -2587,18 +2686,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
             // If the call is in a conference remove it.
             if (conference != null) {
-                // Parse "endConferenceOnExit"
-                boolean endOnExit = false;
-                final Tag child = conference(conferenceVerb);
-                Attribute attribute = child.attribute("endConferenceOnExit");
-
-                if (attribute != null) {
-                    final String value = attribute.value();
-                    if (value != null && !value.isEmpty()) {
-                        endOnExit = Boolean.parseBoolean(value);
-                    }
-                }
-
                 // Stop Observing the conference
                 conference.tell(new StopObserving(super.source), null);
 
@@ -2626,8 +2713,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final Play play = new Play(uri, 1);
                     conference.tell(play, source);
                 }
-
-                if (endOnExit) {
+                if (endConferenceOnExit) {
                     // Stop the conference if endConferenceOnExit is true
                     final StopConference stop = new StopConference();
                     conference.tell(stop, super.source);

@@ -149,6 +149,12 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mscontrol.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<!-- Testing -->
 
 		<dependency>
