@@ -19,6 +19,19 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBigDecimal;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readCurrency;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readInteger;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readUri;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeBigDecimal;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeDateTime;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeUri;
+
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
@@ -30,14 +43,11 @@ import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
-
-import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
-
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -156,6 +166,11 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     }
 
     @Override
+    public List<CallDetailRecord> getCallDetailRecordsByConferenceSid(final Sid conferenceSid) {
+        return getCallDetailRecords(namespace + "getCallDetailRecordsByConferenceSid", conferenceSid.toString());
+    }
+
+    @Override
     public List<CallDetailRecord> getCallDetailRecordsByInstanceId(final Sid instanceId) {
         return getCallDetailRecords(namespace + "getCallDetailRecordsByInstanceId", instanceId.toString());
     }
@@ -211,6 +226,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final Sid sid = readSid(map.get("sid"));
         final String instanceId = readString(map.get("instanceid"));
         final Sid parentCallSid = readSid(map.get("parent_call_sid"));
+        final Sid conferenceSid = readSid(map.get("conference_sid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
         final DateTime dateUpdated = readDateTime(map.get("date_updated"));
         final Sid accountSid = readSid(map.get("account_sid"));
@@ -231,9 +247,13 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final String callerName = readString(map.get("caller_name"));
         final URI uri = readUri(map.get("uri"));
         final String callPath = readString(map.get("call_path"));
-        return new CallDetailRecord(sid, instanceId, parentCallSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
+        final Boolean muted = readBoolean(map.get("muted"));
+        final Boolean startConferenceOnEnter = readBoolean(map.get("start_conference_on_enter"));
+        final Boolean endConferenceOnExit = readBoolean(map.get("end_conference_on_exit"));
+        final Boolean onHold = readBoolean(map.get("on_hold"));
+        return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
                 startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName,
-                uri, callPath, ringDuration);
+                uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit, onHold);
     }
 
     private Map<String, Object> toMap(final CallDetailRecord cdr) {
@@ -241,6 +261,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         map.put("sid", writeSid(cdr.getSid()));
         map.put("instanceid", cdr.getInstanceId());
         map.put("parent_call_sid", writeSid(cdr.getParentCallSid()));
+        map.put("conference_sid", writeSid(cdr.getConferenceSid()));
         map.put("date_created", writeDateTime(cdr.getDateCreated()));
         map.put("date_updated", writeDateTime(cdr.getDateUpdated()));
         map.put("account_sid", writeSid(cdr.getAccountSid()));
@@ -260,6 +281,10 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         map.put("caller_name", cdr.getCallerName());
         map.put("uri", writeUri(cdr.getUri()));
         map.put("call_path", cdr.getCallPath());
+        map.put("muted", cdr.isMuted());
+        map.put("start_conference_on_enter", cdr.isStartConferenceOnEnter());
+        map.put("end_conference_on_exit", cdr.isEndConferenceOnExit());
+        map.put("on_hold", cdr.isOnHold());
         return map;
     }
 }

@@ -19,14 +19,44 @@
  */
 package org.mobicents.servlet.restcomm.http;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
+@Path("/Accounts/{accountSid}/Conferences")
 @ThreadSafe
 public final class ConferencesXmlEndpoint extends ConferencesEndpoint {
     public ConferencesXmlEndpoint() {
         super();
     }
+
+    @Path("/{sid}.json")
+    @GET
+    public Response getConferenceAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getConference(accountSid, sid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{sid}")
+    @GET
+    public Response getConferenceAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getConference(accountSid, sid, APPLICATION_XML_TYPE);
+    }
+
+    @GET
+    public Response getConferences(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
+        return getConferences(accountSid, info, APPLICATION_XML_TYPE);
+    }
+
 }

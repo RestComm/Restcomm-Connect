@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -75,6 +76,7 @@ public final class Conference extends UntypedActor {
 
     // Runtime stuff
     private final String name;
+    private final Sid sid;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
 
@@ -89,7 +91,7 @@ public final class Conference extends UntypedActor {
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
-        this.initializing = new State("initialiing", new Initializing(source));
+        this.initializing = new State("initializing", new Initializing(source));
         this.waiting = new State("waiting", new Waiting(source));
         this.running = new State("running", new Running(source));
         this.evicting = new State("evicting", new Evicting(source));
@@ -117,6 +119,7 @@ public final class Conference extends UntypedActor {
 
         // Runtime stuff
         this.name = name;
+        this.sid = Sid.generate(Sid.Type.CONFERENCE);
         this.mscontroller = msController;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
@@ -327,11 +330,11 @@ public final class Conference extends UntypedActor {
     private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
         ConferenceInfo information = null;
         if (is(waiting)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
         } else if (is(running)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent);
         }
         sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
     }
