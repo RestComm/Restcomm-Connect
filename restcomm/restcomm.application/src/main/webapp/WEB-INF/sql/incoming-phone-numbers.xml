@@ -24,14 +24,8 @@
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number"=#{phone_number};
   </select>
 
-  <!--
   <select id="getIncomingPhoneNumbers" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{account_sid};
-  </select>
-  -->
-
-  <select id="getIncomingPhoneNumbers" parameterType="string" resultType="hashmap">
-    SELECT n.*,a.friendly_name application_name  from restcomm_incoming_phone_numbers n LEFT OUTER JOIN restcomm_applications a  ON n.voice_application_sid = a.sid WHERE "n.account_sid"=#{account_sid};
   </select>
 
   <select id="getAllIncomingPhoneNumbers" resultType="hashmap">
