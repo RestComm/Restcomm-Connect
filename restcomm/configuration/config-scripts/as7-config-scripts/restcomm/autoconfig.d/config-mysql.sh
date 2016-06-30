@@ -30,9 +30,6 @@ creteMysqlDataSource(){
               echo "Mysql driver already downloaded"
     fi
 
-    wget http://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.36/mysql-connector-java-5.1.36.jar -O /tmp/mysql-connector-java-5.1.36.jar
-    cp /tmp/mysql-connector-java-5.1.36.jar $MYSQLDB_MODULE
-    rm -f /tmp/mysql-connector-java-5.1.36.jar
 
 cat > $MYSQLDB_MODULE/module.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8" ?>
