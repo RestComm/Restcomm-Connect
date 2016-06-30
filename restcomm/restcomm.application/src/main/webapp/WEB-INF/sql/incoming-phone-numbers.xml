@@ -38,6 +38,7 @@
   	SELECT * FROM "restcomm_incoming_phone_numbers";
   </select>
 
+  <!--
   <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{accountSid}
     <if test="friendlyName != null">
@@ -47,8 +48,10 @@
 			AND "phone_number" like #{phoneNumber}
 	</if>
   </select>
+  -->
 
-  <select id="getIncomingPhoneNumbersByFriendlyNameWithApplicationNames" parameterType="string" resultType="hashmap">
+  <!-- along with the DID it returns the application frien-->
+  <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
     SELECT
     "n".*,
     "a_voice"."friendly_name" "voice_application_name",

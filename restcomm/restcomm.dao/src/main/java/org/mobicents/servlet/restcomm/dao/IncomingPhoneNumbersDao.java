@@ -36,7 +36,7 @@ public interface IncomingPhoneNumbersDao {
 
     List<IncomingPhoneNumber> getIncomingPhoneNumbers(Sid accountSid);
 
-    List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter incomingPhoneNumberFilter, boolean withApplicationNames);
+    List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter incomingPhoneNumberFilter);
 
     IncomingPhoneNumber getIncomingPhoneNumber(String phoneNumber);
 
