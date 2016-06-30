@@ -108,7 +108,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
         CallDetailRecordFilter filterForTotal;
         try {
             filterForTotal = new CallDetailRecordFilter("", null, null, null, null,null,
-                    null, null, null);
+                    null, null, null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }

@@ -29,7 +29,7 @@ SslRestCommConf(){
 	FILE=$RESTCOMM_CONF/standalone-sip.xml
 	echo "Will properly configure HTTPS Connector ";
 	#Disable HTTP if set to true.
-	if [  "${DISABLE_HTTP^^}" = "TRUE"  ]; then
+	if [[ "$DISABLE_HTTP" == "true" || "$DISABLE_HTTP" == "TRUE" ]]; then
 		echo "DISABLE_HTTP is '$DISABLE_HTTP'. Will disable HTTP Connector"
 		sed -e "s/<connector name=\"http\" \(.*\)\/>/<\!--connector name=\"http\" \1-->/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
@@ -72,10 +72,14 @@ SslRmsConf(){
 #else use authorized.
 CertConfigure(){
   #Certificate setup (Authority certificate or self-signed)
+  FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
   if [ "$SECURESSL" = "AUTH" ]; then
       echo "Authorized certificate is used"
   elif [ "$SECURESSL" = "SELF"  ]; then
 	echo "TRUSTSTORE_FILE is not provided but SECURE is TRUE. We will create and configure self signed certificate"
+
+     sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/" $FILE > $FILE.bak #When Self-signed used ssl-mode must set to "allowall"
+	 mv $FILE.bak $FILE
 
 	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
 		TRUSTSTORE_LOCATION=$TRUSTSTORE_FILE
@@ -94,7 +98,6 @@ CertConfigure(){
 		HOSTNAME="${PUBLIC_IP}"
 		keytool -genkey -alias $TRUSTSTORE_ALIAS -keyalg RSA -keystore $TRUSTSTORE_LOCATION -dname "CN=restcomm" -ext san=ip:"$HOSTNAME" -storepass $TRUSTSTORE_PASSWORD -keypass $TRUSTSTORE_PASSWORD
 	fi
-
 	echo "The generated truststore file at $TRUSTSTORE_LOCATION "
   fi
 
@@ -140,7 +143,7 @@ if [[ "$SECURESSL" = "SELF" ||  "$SECURESSL" = "AUTH" ]]; then
 		CertConfigure
 		MssStackConf
 	fi
-elif [[ "${SECURESSL^^}" = "FALSE"  ]]; then
+elif [[ "$SECURESSL" == "false" || "$SECURESSL" == "FALSE" ]]; then
 	NoSslRestConf
 else
     echo "Allowed values for SECURESSL: SELF, AUTH, FALSE"
