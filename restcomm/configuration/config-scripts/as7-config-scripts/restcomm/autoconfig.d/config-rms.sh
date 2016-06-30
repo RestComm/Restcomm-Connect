@@ -22,8 +22,8 @@ configServerBeans() {
 		-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MSERVER_EXTERNAL_ADDRESS</property>|" \
 	    -e "s|<property name=\"localNetwork\">.*<\/property>|<property name=\"localNetwork\">$2<\/property>|" \
 	    -e "s|<property name=\"localSubnet\">.*<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
-	    -e 's|<property name="useSbc">.*</property>|<property name="useSbc">true</property>|' \
-	    -e 's|<property name="dtmfDetectorDbi">.*</property>|<property name="dtmfDetectorDbi">0</property>|' \
+	    -e "s|<property name=\"useSbc\">.*</property>|<property name=\"useSbc\">$USESBC</property>|" \
+	    -e "s|<property name=\"dtmfDetectorDbi\">.*</property>|<property name=\"dtmfDetectorDbi\">$DTMFDBI</property>|" \
 	    -e "s|<property name=\"lowestPort\">.*</property>|<property name=\"lowestPort\">$MEDIASERVER_LOWEST_PORT</property>|" \
 	    -e "s|<property name=\"highestPort\">.*</property>|<property name=\"highestPort\">$MEDIASERVER_HIGHEST_PORT</property>|" \
 	    $FILE > $FILE.bak
@@ -79,6 +79,24 @@ configMediaServerManager() {
 		echo 'Configured Media Server Manager'
 }
 
+set_pool_size () {
+    local property=$1
+    local value=$2
+    FILE=$MMS_HOME/deploy/server-beans.xml
+
+    sed -e	"/<bean class=\"org.mobicents.media.core.endpoints.VirtualEndpointInstaller\" name=\"${property}\">/{
+			N
+			N
+			N; s|<property name=\"initialSize\">.*</property>|<property name=\"initialSize\">${value}</property>|
+			}" $FILE > $FILE.bak
+			mv $FILE.bak $FILE
+}
+
+configOther(){
+    echo "MGCP_RESPONSE_TIMEOUT $MGCP_RESPONSE_TIMEOUT"
+    sed -i "s|<response-timeout>.*</response-timeout>|<response-timeout>${MGCP_RESPONSE_TIMEOUT}</response-timeout>|"  $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+}
+
 ## MAIN
 if [[ -z "$MEDIASERVER_LOWEST_PORT" ]]; then
 	MEDIASERVER_LOWEST_PORT="34534"
@@ -104,4 +122,14 @@ configServerBeans "$MS_ADDRESS" "$MS_NETWORK" "$MS_SUBNET_MASK"
 configRMSJavaOpts
 configLogDirectory
 configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
+configOther
+#Contribution by: https://github.com/hamsterksu
+#set pool size of RMS resources
+for i in $( set -o posix ; set | grep ^RESOURCE_ | sort -rn ); do
+    reg=$(echo ${i} | cut -d = -f1 | cut -c 10-)
+    val=$(echo ${i} | cut -d = -f2)
+
+    echo "Update resources pool size: $reg -> $val"
+    set_pool_size $reg $val
+done
 echo 'Finished configuring Mobicents Media Server!'

@@ -1030,6 +1030,105 @@ public class TestDialVerbPartTwo {
         assertTrue(georgeCall.respondToDisconnect());
     }
 
+    private String didRcml = "<Response><Play>/restcomm/audio/demo-prompt.wav</Play></Response>";
+    @Test
+    public synchronized void testDialNumberWithPlusSign() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/12349876543"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(didRcml)));
+
+        // Prepare George phone to receive call
+        georgePhone.setLoopback(true);
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:+12349876543@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCall.listenForDisconnect();
+
+        Thread.sleep(3000);
+        assertTrue(bobCall.waitForDisconnect(10000));
+        assertTrue(bobCall.respondToDisconnect());
+    }
+
+    @Test
+    public synchronized void testDialNumberWithOUTPlusSign() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/12349876543"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(didRcml)));
+
+        // Prepare George phone to receive call
+        georgePhone.setLoopback(true);
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:12349876543@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCall.listenForDisconnect();
+
+        Thread.sleep(3000);
+        assertTrue(bobCall.waitForDisconnect(10000));
+        assertTrue(bobCall.respondToDisconnect());
+    }
+
+    @Test
+    public synchronized void testDialNumberNoCountryAccessCode() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/12349876543"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(didRcml)));
+
+        // Prepare George phone to receive call
+        georgePhone.setLoopback(true);
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:2349876543@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.NOT_FOUND);
+    }
+
     @Deployment(name = "TestDialVerbPartTwo", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
