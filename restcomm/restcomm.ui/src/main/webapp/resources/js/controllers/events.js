@@ -56,6 +56,9 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    } else
 	    if (error == 'UNKWNOWN_ERROR') {
 	        console.log('internal error');
+	    } else
+	    if (error == 'KEYCLCOAK_NO_LINKED_ACCOUNT') {
+	        $state.go('root.unlinked',{evaluateAccess:false});
 	    }
 	});
 });

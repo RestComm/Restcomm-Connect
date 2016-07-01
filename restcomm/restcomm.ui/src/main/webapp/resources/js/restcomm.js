@@ -54,6 +54,29 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         }
     }
   });
+  // TODO will use 'root' state as the root state of all at some point (but not yet to fascilitate merging and maintenance until SSO is complete
+  $stateProvider.state('root',{
+    abstract: true,
+    templateUrl: 'templates/state-root.html'
+  })
+  .state('root.unlinked',{
+    url:'/unlinked',
+    views: {
+        /*'usermenu': { template:'<span>here goes the usermenu</span>'},*/
+        'content': {
+            templateUrl: 'modules/identity-account-unlinked.html',
+            controller: 'AccountUnlinkedCtrl',
+            resolve: {
+                init: function (AuthService, $stateParams) {
+                    if ($stateParams.evaluateAccess)
+                        return AuthService.assertUnlinked();
+                    // otherwise return nothing. Controller can rely on existing state of AuthService.
+                }
+            }
+        }
+    },
+    params: { evaluateAccess: true }
+  });
   // 'restcomm' state assumes (requires) an authorized restcomm Account to have been determined. Child states can take that for granted.
   $stateProvider.state('restcomm',{
     templateUrl:'templates/restcomm-state.html',

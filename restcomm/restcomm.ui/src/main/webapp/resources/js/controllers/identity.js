@@ -28,9 +28,8 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 		return redirectUrl;
 	}
 
-});
-
-angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity, $timeout, $window) {
+})
+.controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity, $timeout, $window) {
     $scope.identity = identity;
     $scope.restcommUiDetails = {};
     $scope.restcommRestDetails = {};
@@ -68,6 +67,16 @@ angular.module('rcApp').controller('IdentityEditCtrl', function ($scope, $state,
 	        return 'RVD REST';
 
 	}
+
+})
+.controller('AccountUnlinkedCtrl', function ($scope, $stateParams, AuthService) {
+    $scope.unlinkedUsername = AuthService.getKeycloakUsername();
+    console.log("evaluateAccess: " + $stateParams.evaluateAccess);
+
+    $scope.verifyAccountPassword = function(password) {
+        console.log('verifying password');
+    }
+
 
 });
 

@@ -171,7 +171,7 @@ public class UserIdentityContext {
      * @return
      */
     public Account getEffectiveAccount() {
-        return getEffectiveAccount();
+        return effectiveAccount;
     }
 
     /**

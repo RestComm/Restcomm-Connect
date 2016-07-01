@@ -85,7 +85,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
             if (!KeycloakAuth.loggedIn) {
                 throw "KEYCLOAK_NOT_LOGGED_IN"; // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
             }
-            var username = getUsername();  // since we're logged in, there MUST be a username available
+            var username = getKeycloakUsername();  // since we're logged in, there MUST be a username available
             var promisedAccount = $q.defer();
             if (!account) {
                 $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
@@ -138,6 +138,17 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
 //            throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
 //        }
         return deferred.promise;
+    }
+
+    function assertUnlinked() {
+        try {
+            return checkAccess();
+        } catch (error) {
+            if (error == 'KEYCLCOAK_NO_LINKED_ACCOUNT')
+                return; // not really an error if we're checking for Unlinked
+            else
+                throw error; // re-throw
+        }
     }
 
     // updates all necessary state
@@ -257,7 +268,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     }
 
     // Returns the username (email address) for the logged  user. It's only available when keycloak is used for authorization.
-    function getUsername() {
+    function getKeycloakUsername() {
         if (IdentityConfig.securedByKeycloak() && KeycloakAuth.loggedIn)
             return KeycloakAuth.authz.tokenParsed.preferred_username;
         return null;
@@ -271,10 +282,12 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         getAccount: getAccount,
         getFrientlyName: getFriendlyName,
         checkAccess: checkAccess,
+        assertUnlinked: assertUnlinked,
         isUninitialized: isUninitialized,
         onAuthError: onAuthError,
         onError403: onError403,
-        updatePassword: updatePassword
+        updatePassword: updatePassword,
+        getKeycloakUsername: getKeycloakUsername
     }
 });
 
