@@ -54,33 +54,6 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         }
     }
   });
-  $stateProvider.state('public.identity-registration',{
-    url:"/identity-registration",
-    templateUrl:'modules/identity-registration.html',
-    controller:'IdentityRegistrationCtrl',
-    resolve: {
-        identity: function (IdentityConfig, $state, Notifications,$q) {
-            var deferred = $q.defer();
-            var valueOrPromise = IdentityConfig.getIdentity();
-            if (valueOrPromise === null) // identity notion is not applicable - keycloak is not used
-                deferred.reject('IDENTITY_REGISTRATION_NOT_AVAILABLE');
-            else {
-                valueOrPromise.then(function (registeredInstance) {
-                    deferred.reject("KEYCLOAK_INSTANCE_ALREADY_REGISTERED");
-                }, function (value) {
-                    if (value == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
-                        deferred.resolve(null); // no instance registered - that's prefectly fine for this view
-                    } else {
-                        // we shouldn't be here
-                        Notifications.error('Invalid state error');
-                        deferred.reject(value);
-                    }
-                });
-            }
-            return deferred.promise;
-        }
-    }
-  });
   // 'restcomm' state assumes (requires) an authorized restcomm Account to have been determined. Child states can take that for granted.
   $stateProvider.state('restcomm',{
     templateUrl:'templates/restcomm-state.html',
