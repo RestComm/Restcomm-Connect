@@ -31,6 +31,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -85,7 +86,7 @@ public class ConferenceParticipantsEndpointTest {
         assertTrue(totalSize == 0);
     }
 
-    @Test
+    @Test @Ignore //Pending issue https://github.com/RestComm/Restcomm-Connect/issues/1135
     public void muteParticipant() {
         JsonObject page = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid,
         		runningConferenceSid, adminAuthToken);
