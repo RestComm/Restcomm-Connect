@@ -34,6 +34,7 @@ import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.exceptions.AccountNotLinked;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
@@ -41,6 +42,7 @@ import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
+import org.mobicents.servlet.restcomm.identity.UserIdentityContext.AuthKind;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -98,9 +100,13 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * Grants general purpose access if any valid token exists in the request
      */
     protected void checkAuthenticatedAccount() {
-        if (userIdentityContext.getEffectiveAccount() == null) {
-            throw new NotAuthenticated();
+        if (userIdentityContext.getEffectiveAccount() != null)
+            return;
+        if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth && userIdentityContext.getKeycloakMappedAccount() != null) {
+            if (userIdentityContext.getKeycloakMappedAccount().getLinked() == false)
+                throw new AccountNotLinked();
         }
+        throw new NotAuthenticated();
     }
 
     /**
