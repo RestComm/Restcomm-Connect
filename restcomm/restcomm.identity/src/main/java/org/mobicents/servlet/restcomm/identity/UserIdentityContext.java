@@ -46,13 +46,18 @@ import org.mobicents.servlet.restcomm.entities.Account;
 public class UserIdentityContext {
     protected Logger logger = Logger.getLogger(UserIdentityContext.class);
 
-    AccountKey accountKey;
-    Account effectiveAccount; // if oauthToken is set get the account that maps to it. Otherwise use account from accountKey
-    Set<String> effectiveAccountRoles;
-    // keycloak related properties
-    final String oauthTokenString;
-    final AccessToken oauthToken; // verified token
+    // authorization types. One for each different type of credentials that can be used for authorization
+    public enum AuthKind {
+        KeycloakAuth, RestcommAuth
+    }
+    AuthKind authKind; // set this based on which set of credentials granted access to the request
+
     final KeycloakDeployment keycloakDeployment;
+    Account effectiveAccount;
+    Set<String> effectiveAccountRoles;
+    // keycloak specifics properties that are meaningfull when in KeycloakAuth auth kind
+    Account keycloakMappedAccount;
+
 
     /**
      * After successfull creation of a UserIdentityContext object the following stands:
@@ -67,39 +72,40 @@ public class UserIdentityContext {
     public UserIdentityContext(KeycloakDeployment keycloakDeployment, HttpServletRequest request, AccountsDao accountsDao) {
         // identityContext should be there for any oauth-related operation to take place
         this.keycloakDeployment = keycloakDeployment;
-        if (keycloakDeployment == null) {
-            oauthTokenString = null;
-            oauthToken = null;
-        } else {
+        authKind = null;
+        effectiveAccount = null;
+        if (keycloakDeployment != null) {
             // try to initialize oauth token from request
             final String tokenString = extractOauthTokenString(request);
             if (!StringUtils.isEmpty(tokenString)) {
-                this.oauthToken = verifyToken(tokenString, keycloakDeployment);
-                this.oauthTokenString = tokenString;
-                if (this.oauthToken != null) {
+                // keycloak auth it is
+                authKind = AuthKind.KeycloakAuth;
+                AccessToken oauthToken = verifyToken(tokenString, keycloakDeployment);
+                if (oauthToken != null) {
                     //ok, we have a verified token, let's try to load the account
-                    this.effectiveAccount = accountsDao.getAccountToAuthenticate(oauthToken.getPreferredUsername());
+                    keycloakMappedAccount = accountsDao.getAccountToAuthenticate(oauthToken.getPreferredUsername());
+                    if (keycloakMappedAccount != null) {
+                        if (keycloakMappedAccount.getLinked() == true) {
+                            effectiveAccount = keycloakMappedAccount;
+                            effectiveAccountRoles = extractAccountRoles(effectiveAccount);
+                        }
+                    }
                 }
 
-            } else {
-                this.oauthToken = null;
-                this.oauthTokenString = null;
             }
         }
         // if we failed getting an effective account using oauth tokens, try basic auth too
-        if (this.effectiveAccount == null) {
-            this.accountKey = extractAccountKey(request, accountsDao);
+        if (authKind == null) {
+            AccountKey accountKey = extractAccountKey(request, accountsDao);
             if (accountKey != null) {
+                // basic auth it is
+                authKind = AuthKind.RestcommAuth;
                 if (accountKey.isVerified()) {
                     effectiveAccount = accountKey.getAccount();
-                } else
-                    effectiveAccount = null;
-            } else
-                effectiveAccount = null;
+                    effectiveAccountRoles = extractAccountRoles(effectiveAccount);
+                }
+            }
         }
-        // setup roles for effective account
-        if (effectiveAccount != null)
-            effectiveAccountRoles = extractAccountRoles(effectiveAccount);
     }
 
     private String extractOauthTokenString(HttpServletRequest request) {
@@ -154,24 +160,52 @@ public class UserIdentityContext {
         return null;
     }
 
-    public AccessToken getOauthToken() {
-        return oauthToken;
-    }
-
-    public String getOauthTokenString() {
-        return oauthTokenString;
-    }
-
-    public AccountKey getAccountKey() {
-        return accountKey;
-    }
-
+    /**
+     * Returns a valid ready-to-use (linked if in KeycloakAuth auth kind) account that was authorized using the
+     * credentials in the request and can be used to do operations on his behalf.
+     *
+     * If null is returned, that can mean a number of things:
+     * - no credentials were used whatsoever
+     * - valid oauth token was used but no account was mapped
+     * - valid oauth token was used but an UNLINKED account was mapped
+     * @return
+     */
     public Account getEffectiveAccount() {
-        return effectiveAccount;
+        return getEffectiveAccount();
+    }
+
+    /**
+     * Returns a valid verified account mapped from a keycloak bearer token. The account may NOT be
+     * yet linked so it can't be really trusted. It's applicable only in KeycloakAuth auth kind.
+     *
+     * @return a valid restcomm account or null
+     */
+    public Account getKeycloakMappedAccount() {
+        if (authKind == AuthKind.KeycloakAuth && keycloakMappedAccount != null) {
+            return keycloakMappedAccount;
+        }
+        return null;
     }
 
     public Set<String> getEffectiveAccountRoles() {
         return effectiveAccountRoles;
     }
 
+    // user was authenticated and a valid restcomm account was found
+    public boolean accountIsAuthorized() {
+        if (getEffectiveAccount() != null)
+            return true;
+        return false;
+    }
+
+    /**
+     * Returns whethere keycloak oauth credentials (KeycloakAuth) or restcomm basic credentials (RestcommAuth)
+     * were used for authorization. If no credentials were found it returns null. If both credentials exist
+     * KeycloakAuth takes precedence. The state of the object reflects the AuthKind returned by this method.
+     *
+     * @return KeycloakAuth, RestcommAuth of null if no credentials present
+     */
+    public AuthKind getAuthKind() {
+        return authKind;
+    }
 }
