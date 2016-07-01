@@ -1,4 +1,4 @@
---SQL Script for MySQL/MariaDB to update DB with the schema changes for issue #5
+-- SQL Script for MySQL/MariaDB to update DB with the schema changes for issue #5
 -- #Author: Maria Farooq
 
 -- #To run the script use mysql client:
