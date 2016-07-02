@@ -53,9 +53,13 @@ import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
+import org.mobicents.servlet.restcomm.http.converter.ErrorResponseConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
+import org.mobicents.servlet.restcomm.http.responses.ErrorResponse;
+import org.mobicents.servlet.restcomm.identity.RestcommAuthenticator;
 import org.mobicents.servlet.restcomm.util.StringUtils;
+import org.mobicents.servlet.restcomm.identity.UserIdentityContext.AuthKind;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -88,8 +92,6 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new AccountListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        // Make sure there is an authenticated account present when this endpoint is used
-        checkAuthenticatedAccount();
     }
 
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -126,6 +128,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
         checkPermission("RestComm:Read:Accounts");
@@ -160,6 +163,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response deleteAccount(final String operatedSid) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Delete:Accounts");
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
@@ -184,6 +188,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAccounts(final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");
         final Account account = userIdentityContext.getEffectiveAccount();
@@ -205,6 +210,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
@@ -308,6 +314,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response updateAccount(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
+        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Modify:Accounts");
         final Sid sid = new Sid(accountSid);
@@ -350,6 +357,64 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             } else {
                 return null;
             }
+        }
+    }
+
+    protected Response linkAccountToUser(String password, String accountUsername, MediaType responseType) {
+        Account operatedAccount = accountsDao.getAccountToAuthenticate(accountUsername); // the account targetted in the URL path
+        if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
+            Account mappedAccount = userIdentityContext.getKeycloakMappedAccount();  // that's the operating account mapped from the bearer token
+            if (operatedAccount == null)
+                return Response.status(FORBIDDEN).build(); // FORBIDDEN seems better that NOT_FOUND for this case
+            if (mappedAccount != null ) {
+                if (!operatedAccount.getSid().toString().equals(mappedAccount.getSid().toString()))
+                    return Response.status(FORBIDDEN).build(); // tampering with other accounts in KeycloakAuth mode is  not allowed
+                if ( mappedAccount.getLinked() == false ) {
+                    if (RestcommAuthenticator.verifyPassword(mappedAccount, password) == true) {
+                        mappedAccount.setLinked(true);
+                        accountsDao.updateAccount(mappedAccount);
+                        return Response.ok().build();
+                    } else {
+                        ErrorResponse response = new ErrorResponse(ErrorResponse.ErrorCode.INVALID_LINKING_PASSWORD);
+                        xstream.registerConverter(new ErrorResponseConverter(configuration));
+                        return buildResponse(response, FORBIDDEN, responseType, gson, xstream);
+                    }
+                } else {
+                    // already linked
+                    return Response.status(CONFLICT).build(); // since it's a linked account, no need to check for the password too
+                }
+            } else {
+                ErrorResponse response = new ErrorResponse(ErrorResponse.ErrorCode.NO_MAPPED_ACCOUNT);
+                xstream.registerConverter(new ErrorResponseConverter(configuration));
+                return buildResponse(response, FORBIDDEN, responseType, gson, xstream);
+            }
+        } else
+        if (userIdentityContext.getAuthKind() == AuthKind.RestcommAuth) {
+            // TODO is it right to use this permission ? Maybe use RestComm:Link:Accounts OR Restcomm:Modify:AccountLining ?
+            secure(operatedAccount,"RestComm:Modify:Accounts",SecuredType.SECURED_ACCOUNT);
+            if (operatedAccount.getLinked())
+                return Response.status(CONFLICT).build();
+            operatedAccount.setLinked(true);
+            return Response.ok().build();
+        } else {
+            throw new UnsupportedOperationException(); // this is not supposed to happen
+        }
+    }
+
+    protected Response unlinkAccountFromUser(String unlinkedAccountSid) {
+        checkAuthenticatedAccount();
+        Sid sid = new Sid(unlinkedAccountSid);
+        Account unlinkedAccount = accountsDao.getAccount(sid);
+        if (unlinkedAccount == null)
+             return Response.status(NOT_FOUND).build();
+        // TODO is it right to use this permission ? Maybe use RestComm:Link:Accounts OR Restcomm:Modify:AccountLining ?
+        secure(unlinkedAccount,"RestComm:Modify:Accounts",SecuredType.SECURED_ACCOUNT);
+        if (unlinkedAccount.getLinked() == false) {
+            return Response.ok().build(); // already done
+        } else {
+            unlinkedAccount.setLinked(false);
+            accountsDao.updateAccount(unlinkedAccount);
+            return Response.ok().build();
         }
     }
 

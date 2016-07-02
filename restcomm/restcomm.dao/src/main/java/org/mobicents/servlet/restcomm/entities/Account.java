@@ -143,6 +143,11 @@ public final class Account {
                 role, uri, linked);
     }
 
+    public Account setLinked(final Boolean linked) {
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, accountSid, type, status, authToken,
+                role, uri, linked);
+    }
+
     public enum Status {
         ACTIVE("active"), CLOSED("closed"), SUSPENDED("suspended"), INACTIVE("inactive"), UNINITIALIZED("uninitialized");
 

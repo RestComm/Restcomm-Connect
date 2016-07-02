@@ -30,6 +30,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -98,5 +99,19 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     public Response updateAccountAsXmlPut(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{accountSid}/linking")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @PUT
+    public Response linkAccountToUser(@PathParam("accountSid") final String accountUsernameOrSid, @FormParam("password") final String password) {
+        return super.linkAccountToUser(password, accountUsernameOrSid, APPLICATION_JSON_TYPE);
+    }
+
+    @Path("/{accountSid}/linking")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @DELETE
+    public Response unlinkAccountFromUser(@PathParam("accountSid") final String accountSid) {
+        return super.unlinkAccountFromUser(accountSid);
     }
 }

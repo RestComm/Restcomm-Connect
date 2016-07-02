@@ -37,9 +37,9 @@ import java.io.IOException;
 public class IdentityRegistrationToolTest {
     IdentityRegistrationTool tool;
     // these depend on your keycloak installation
-    static String KEYCLOAK_URL = "http://127.0.0.1:8081/auth";
+    static String KEYCLOAK_URL = "https://identity.restcomm.com:8443/auth";
     static String ADMIN_USERNAME = "admin";
-    static String ADMIN_PASSWORD = "admin";
+    static String ADMIN_PASSWORD = "43stc0mm";
     // this does not depend on it
     static String testRealm = "restcomm-test";
 

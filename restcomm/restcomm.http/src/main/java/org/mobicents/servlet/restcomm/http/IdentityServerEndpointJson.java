@@ -25,7 +25,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
-import org.mobicents.servlet.restcomm.http.responseentities.IdentityServerEntity;
+import org.mobicents.servlet.restcomm.http.responses.IdentityServerEntity;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;

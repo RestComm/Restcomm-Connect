@@ -21,15 +21,24 @@ package org.mobicents.servlet.restcomm.http;
 
 import java.net.URI;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import com.google.gson.Gson;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.http.converter.ErrorResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -129,5 +138,24 @@ public abstract class AbstractEndpoint {
         if ( value.equals("") )
             return true;
         return false;
+    }
+
+    // TODO move this to lower in the hierarchy when refactoring time comes
+    /**
+     * Build response in content-type agnostic way.
+     *
+     * @param response
+     * @param status
+     * @param responseType
+     * @param gson
+     * @param xstream
+     * @return
+     */
+    Response buildResponse(Object response, Response.StatusType status, MediaType responseType, Gson gson, XStream xstream) {
+        if (responseType == APPLICATION_JSON_TYPE) {
+            return Response.status(status).entity(gson.toJson(response)).build();
+        }  else {
+            return Response.status(status).type(APPLICATION_JSON).entity(xstream.toXML(response)).build();
+        }
     }
 }

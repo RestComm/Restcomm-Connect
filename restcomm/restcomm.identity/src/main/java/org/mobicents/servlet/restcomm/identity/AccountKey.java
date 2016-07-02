@@ -30,11 +30,10 @@ public class AccountKey {
 
     private void verify(AccountsDao dao) {
         if ( account != null ) {
-            if ( challengedKey != null )
-                // Compare both the plaintext version of the token and md5'ed version of it
-                if ( challengedKey.equals(account.getAuthToken()) || DigestUtils.md5Hex(challengedKey).equals(account.getAuthToken())  ) {
+            if ( challengedKey != null ) {
+                if (RestcommAuthenticator.verifyPassword(account, challengedKey))
                     verified = true;
-                }
+            }
         }
     }
 

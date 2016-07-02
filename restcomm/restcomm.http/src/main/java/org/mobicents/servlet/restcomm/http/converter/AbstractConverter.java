@@ -62,6 +62,14 @@ public abstract class AbstractConverter implements Converter {
         return null;
     }
 
+    protected void writeAny(final String nodeName, final String nodeValue, final HierarchicalStreamWriter writer ) {
+        if (nodeValue != null ) {
+            writer.startNode(nodeName);
+            writer.setValue(nodeValue);
+            writer.endNode();
+        }
+    }
+
     protected void writeAccountSid(final Sid accountSid, final HierarchicalStreamWriter writer) {
         if (accountSid != null) {
             writer.startNode("AccountSid");
