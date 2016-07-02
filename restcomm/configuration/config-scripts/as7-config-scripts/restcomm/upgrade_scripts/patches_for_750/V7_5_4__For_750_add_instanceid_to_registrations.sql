@@ -8,12 +8,13 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName
+ SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName754
  FROM information_schema.columns
- WHERE table_name = 'restcomm_registrations'
+ WHERE table_schema='${RESTCOMM_DBNAME}'
+ AND table_name = 'restcomm_registrations'
  AND column_name = 'instanceid';
 
-IF @colName IS NULL THEN
+IF @colName754 IS NULL THEN
 CREATE TABLE temp_table LIKE restcomm_registrations;
 ALTER TABLE temp_table ADD instanceid VARCHAR(255);
 INSERT INTO temp_table
