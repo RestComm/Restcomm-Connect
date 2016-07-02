@@ -5,12 +5,13 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
- SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName
+ SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName751
  FROM information_schema.columns
- WHERE table_name = 'restcomm_instance_id'
+ WHERE table_schema='${RESTCOMM_DBNAME}'
+ AND table_name = 'restcomm_instance_id'
  AND column_name = 'host';
 
-IF @colName IS NULL THEN
+IF @colName751 IS NULL THEN
   CREATE TABLE temp_table LIKE restcomm_instance_id;
   ALTER TABLE temp_table ADD host VARCHAR(255);
   INSERT INTO temp_table
