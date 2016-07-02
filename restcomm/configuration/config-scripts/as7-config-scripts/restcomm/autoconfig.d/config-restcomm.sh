@@ -50,9 +50,9 @@ configRestcomm() {
 	#Configure RESTCOMM_HOSTNAME at restcomm.xml. If not set "STATIC_ADDRESS" will be used.
 	if [ -n "$RESTCOMM_HOSTNAME" ]; then
   		echo "HOSTNAME $RESTCOMM_HOSTNAME"
-  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+  		sed -i '' "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	else
-  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+  		sed -i '' "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
  	fi
 }
 ## Description: OutBoundProxy configuration.
@@ -335,7 +335,7 @@ configSMPPAccount() {
 	destinationMap="$8"
 
 
-	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
+	sed -i '' "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
 	#Add sourceMap && destinationMap
 
 
@@ -356,7 +356,7 @@ configSMPPAccount() {
 
 		mv $FILE.bak $FILE
 
-        sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
+        sed -i '' "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
 
 	else
@@ -376,7 +376,7 @@ configSMPPAccount() {
 
 		mv $FILE.bak $FILE
 
-        sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|" $FILE
+        sed -i '' "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
 	fi
 }
@@ -453,12 +453,12 @@ otherRestCommConf(){
 	mv $FILE.bak $FILE
 
     #Remove if is set in earlier run.
-    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
+    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i '' "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
 
     if [[ "$SSLSNI" == "false" || "$SSLSNI" == "FALSE" ]]; then
-		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $RESTCOMM_BIN/standalone.conf
+		  sed -i '' "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $RESTCOMM_BIN/standalone.conf
 	else
-	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
+	 	  sed -i '' "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
 	fi
 
 	if [ -n "$HSQL_DIR" ]; then
@@ -479,7 +479,7 @@ confRVD(){
 	if [ -n "$RVD_LOCATION" ]; then
   		echo "RVD_LOCATION $RVD_LOCATION"
   		mkdir -p `echo $RVD_LOCATION`
-  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+  		sed -i '' "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
 
   		COPYFLAG=$RVD_LOCATION/.demos_initialized
   		if [ -f "$COPYFLAG" ]; then

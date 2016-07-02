@@ -23,12 +23,12 @@ FILE=$BASEDIR/standalone/deployments/olympus.war/resources/js/controllers/regist
 		local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
 
 		#change port due to Port-Offset
-		sed -i "s|5082|${SIP_PORT_WS}|" $FILE
+		sed -i '' "s|5082|${SIP_PORT_WS}|" $FILE
 	fi
 
     if [ -n "$SECURESSL" ]; then
-        sed -i "s|ws:|wss:|" $FILE
-        sed -i "s|${SIP_PORT_WS}|${SIP_PORT_WSS}|" $FILE
+        sed -i '' "s|ws:|wss:|" $FILE
+        sed -i '' "s|${SIP_PORT_WS}|${SIP_PORT_WSS}|" $FILE
     fi
 }
 

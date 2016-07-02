@@ -16,8 +16,8 @@
   <property name="sipservlets-build" value="708"/>
   <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-  <property name="restcomm-media.version" value="4.1.0"/>
-  <property name="restcomm-media.build" value="59"/>
+  <property name="restcomm-media.version" value="4.2.0"/>
+  <property name="restcomm-media.build" value="77"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
@@ -129,6 +129,7 @@
       <fileset dir="${release.as7.dir}/mediaserver/restcomm-media-server"/>
     </move>
     <copy failonerror="true" file="${configuration.directory}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml"/>
+    <copy failonerror="true" file="${configuration.directory}/mms.xml" tofile="${release.as7.dir}/mediaserver/conf/mediaserver.xml"/>
   </target>
 
   <target name="build-restcomm">
