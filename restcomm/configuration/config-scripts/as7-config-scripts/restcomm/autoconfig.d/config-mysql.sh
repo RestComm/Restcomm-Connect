@@ -21,9 +21,15 @@ creteMysqlDataSource(){
 
     # Download and install MariaDB driver as a JBoss module
     mkdir -p $MYSQLDB_MODULE
-    wget http://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.36/mysql-connector-java-5.1.36.jar -O /tmp/mysql-connector-java-5.1.36.jar
-    cp /tmp/mysql-connector-java-5.1.36.jar $MYSQLDB_MODULE
-    rm -f /tmp/mysql-connector-java-5.1.36.jar
+    if [ ! -f $MYSQLDB_MODULE/mysql-connector-java-5.1.36.jar ]; then
+             echo "Mysql driver not found!"
+              wget http://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.36/mysql-connector-java-5.1.36.jar -O /tmp/mysql-connector-java-5.1.36.jar
+              cp /tmp/mysql-connector-java-5.1.36.jar $MYSQLDB_MODULE
+              rm -f /tmp/mysql-connector-java-5.1.36.jar
+    else
+              echo "Mysql driver already downloaded"
+    fi
+
 
 cat > $MYSQLDB_MODULE/module.xml << 'EOF'
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -38,72 +44,76 @@ cat > $MYSQLDB_MODULE/module.xml << 'EOF'
 </module>
 EOF
 
- if [ -n "$MYSQL_SNDHOST" ]; then
-     # Update JBoss configuration to create a MariaDB datasource
-    grep -q 'driver name="com.mysql"' $STANDALONE_SIP || sed -e '/<drivers>/ a\
-    \                    <driver name="com.mysql" module="com.mysql">\
-    \			 <driver-class>com.mysql.jdbc.Driver</driver-class>\
-    \                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>\
-    \                    </driver>' \
-        -e '/<datasources>/ a\
-    \                <datasource jta="true" jndi-name="java:/MySqlDS" pool-name="MySqlDS_Pool" enabled="true" use-java-context="true" use-ccm="true"> \
-    \                    <connection-url>jdbc:mysql://localhost:3306/restcomm</connection-url> \
-    \                       <url-delimiter>|</url-delimiter>                                   \
-    \                        <connection-property name="readOnly">false</connection-property>  \
-    \                    <driver>com.mysql</driver> \
-    \                      <driver-class>com.mysql.jdbc.Driver</driver-class>        \
-    \                    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation> \
-    \                    <pool> \
-    \                        <min-pool-size>5</min-pool-size> \
-    \                        <max-pool-size>50</max-pool-size> \
-    \                    </pool> \
-    \                    <security> \
-    \                        <user-name>username</user-name> \
-    \                        <password>password</password> \
-    \                    </security> \
-    \                    <statement> \
-    \                        <prepared-statement-cache-size>100</prepared-statement-cache-size> \
-    \                        <share-prepared-statements/> \
-    \                    </statement> \
-    \                    <validation> \
-    \                       <background-validation>true</background-validation> \
-    \                       <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker"></valid-connection-checker> \
-    \                       <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter"></exception-sorter> \
-    \                       <check-valid-connection-sql>select 1</check-valid-connection-sql> \
-    \                   </validation> \
-    \                </datasource>' $STANDALONE_SIP > $STANDALONE_SIP.bak
-        mv $STANDALONE_SIP.bak $STANDALONE_SIP
+query=$(grep -q 'driver name=\"com.mysql\"' $STANDALONE_SIP)
+if [ $? -eq 0 ]; then
+  echo "Datasource already populated"
+else
+  echo "Going to populate the datasource"
 
- else
-    # Update JBoss configuration to create a MariaDB datasource
-    grep -q 'driver name="com.mysql"' $STANDALONE_SIP || sed -e '/<drivers>/ a\
-    \                    <driver name="com.mysql" module="com.mysql">\
-    \			 <driver-class>com.mysql.jdbc.Driver</driver-class>\
-    \                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>\
-    \                    </driver>' \
-        -e '/<datasources>/ a\
-    \                <datasource jta="true" jndi-name="java:/MySqlDS" pool-name="MySqlDS_Pool" enabled="true" use-java-context="true" use-ccm="true"> \
-    \                    <connection-url>jdbc:mysql://localhost:3306/restcomm</connection-url> \
-    \                    <driver>com.mysql</driver> \
-    \                    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation> \
-    \                    <pool> \
-    \                        <min-pool-size>100</min-pool-size> \
-    \                        <max-pool-size>200</max-pool-size> \
-    \                    </pool> \
-    \                    <security> \
-    \                        <user-name>username</user-name> \
-    \                        <password>password</password> \
-    \                    </security> \
-    \                    <statement> \
-    \                        <prepared-statement-cache-size>100</prepared-statement-cache-size> \
-    \                        <share-prepared-statements/> \
-    \                    </statement> \
-    \                </datasource>' $STANDALONE_SIP > $STANDALONE_SIP.bak
-        mv $STANDALONE_SIP.bak $STANDALONE_SIP
+   if [ -n "$MYSQL_SNDHOST" ]; then
+         # Update JBoss configuration to create a MariaDB datasource
+         sed -e '/<drivers>/ a\
+        \                    <driver name="com.mysql" module="com.mysql">\
+        \			 <driver-class>com.mysql.jdbc.Driver</driver-class>\
+        \                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>\
+        \                    </driver>' \
+            -e '/<datasources>/ a\
+        \                <datasource jta="true" jndi-name="java:/MySqlDS" pool-name="MySqlDS_Pool" enabled="true" use-java-context="true" use-ccm="true"> \
+        \                    <connection-url>jdbc:mysql://localhost:3306/restcomm</connection-url> \
+        \                       <url-delimiter>|</url-delimiter>                                   \
+        \                        <connection-property name="readOnly">false</connection-property>  \
+        \                    <driver>com.mysql</driver> \
+        \                      <driver-class>com.mysql.jdbc.Driver</driver-class>        \
+        \                    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation> \
+        \                    <pool> \
+        \                        <min-pool-size>5</min-pool-size> \
+        \                        <max-pool-size>50</max-pool-size> \
+        \                    </pool> \
+        \                    <security> \
+        \                        <user-name>username</user-name> \
+        \                        <password>password</password> \
+        \                    </security> \
+        \                    <statement> \
+        \                        <prepared-statement-cache-size>100</prepared-statement-cache-size> \
+        \                        <share-prepared-statements/> \
+        \                    </statement> \
+        \                    <validation> \
+        \                       <background-validation>true</background-validation> \
+        \                       <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker"></valid-connection-checker> \
+        \                       <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter"></exception-sorter> \
+        \                       <check-valid-connection-sql>select 1</check-valid-connection-sql> \
+        \                   </validation> \
+        \                </datasource>' $STANDALONE_SIP > $STANDALONE_SIP.bak
+            mv $STANDALONE_SIP.bak $STANDALONE_SIP
+
+    else
+        # Update JBoss configuration to create a MariaDB datasource
+         sed -e '/<drivers>/ a\
+        \                    <driver name="com.mysql" module="com.mysql">\
+        \			 <driver-class>com.mysql.jdbc.Driver</driver-class>\
+        \                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>\
+        \                    </driver>' \
+            -e '/<datasources>/ a\
+        \                <datasource jta="true" jndi-name="java:/MySqlDS" pool-name="MySqlDS_Pool" enabled="true" use-java-context="true" use-ccm="true"> \
+        \                    <connection-url>jdbc:mysql://localhost:3306/restcomm</connection-url> \
+        \                    <driver>com.mysql</driver> \
+        \                    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation> \
+        \                    <pool> \
+        \                        <min-pool-size>100</min-pool-size> \
+        \                        <max-pool-size>200</max-pool-size> \
+        \                    </pool> \
+        \                    <security> \
+        \                        <user-name>username</user-name> \
+        \                        <password>password</password> \
+        \                    </security> \
+        \                    <statement> \
+        \                        <prepared-statement-cache-size>100</prepared-statement-cache-size> \
+        \                        <share-prepared-statements/> \
+        \                    </statement> \
+        \                </datasource>' $STANDALONE_SIP > $STANDALONE_SIP.bak
+            mv $STANDALONE_SIP.bak $STANDALONE_SIP
+   fi
 fi
-
-echo "create mysql datasource done"
-
 }
 
 ## Description: Configures MyBatis for MySQL
@@ -170,6 +180,7 @@ configDaoManager() {
 	echo 'Configured MySQL Dao Manager for MySQL'
 }
 
+## Description: Set Password for Adminitrator@company.com user. Only for fresh installation.
 initPassword(){
     SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
     if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
@@ -188,15 +199,15 @@ initPassword(){
     fi
 }
 
+## Description: populated DB with necessary starting point data if not done.
 populateDB(){
-
     #Change script to defined schema
     sed -i "s|CREATE DATABASE IF NOT EXISTS .*| CREATE DATABASE IF NOT EXISTS ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
     sed -i "s|USE .*|USE ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
 
-    if mysql -u $2 -p$3 -h $1 -e "SELECT * FROM \`$4\`.restcomm_clients;" $database; then
-            # Update config settings
-            echo "Database already populated"
+    if mysql -u $2 -p$3 -h $1 -e "SELECT * FROM \`$4\`.restcomm_clients;" &>/dev/null ; then
+        # Update config settings
+        echo "Database already populated"
     else
         echo "Database not populated, importing schema and updating config file"
         echo "Create RestComm Database"
@@ -205,8 +216,8 @@ populateDB(){
         mysql -u $2 -p$3 -h $1 < $FILE
         mysql -u $2 -p$3 -h $1 --execute='show databases;'
         mysql -u $2 -p$3 -h $1 --execute='show tables;' $4;
+        echo "Database population done"
     fi
-      echo "Database population done"
 }
 
 # MAIN
