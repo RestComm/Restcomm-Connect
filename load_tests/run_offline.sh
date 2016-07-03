@@ -5,9 +5,11 @@
 #
 
 export CURRENT_FOLDER=`pwd`
-export RESTCOMM_HOME=/home/gvagenas/Downloads/Restcomm/Restcomm-JBoss-AS7-7.8.0.938
+export RESTCOMM_HOME=/tmp/workspace/Restcomm-JBoss-AS7-7.8.0.master-local
 export WARMUP=false
 export COLLECT_JMAP=true
+
+export LOGLEVEL=INFO
 
 export PERFRECORDER_VERSION=14
 
