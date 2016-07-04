@@ -9,7 +9,7 @@ Example
 ^^^^^^^
 
 ....
-docker run -e SECURESSL="SELF" -e SSL_MODE="allowall" -e USE_STANDARD_PORTS="true" -e VOICERSS_KEY="VOICERSS_KEY_HERE" --name=restcomm -d -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run -e SECURESSL="SELF" -e SSL_MODE="allowall"  -e VOICERSS_KEY="VOICERSS_KEY_HERE" --name=restcomm -d -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ....
 
 The generated truststore file will be located at `/opt/Mobicents-Restcomm-JBoss-AS7/standalone/configuration/restcomm-combined.jks` and the password `$TRUSTSTORE_PASSWORD`

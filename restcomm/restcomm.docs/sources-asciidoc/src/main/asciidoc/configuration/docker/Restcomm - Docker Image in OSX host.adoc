@@ -15,8 +15,9 @@ Use a Linux Virtual Image to run Docker
 
 [source,lang:default,decode:true]
 ----
-sudo docker run -e SECURESSL="true" -e SSL_MODE="allowall" -e USE_STANDARD_PORTS="true" -e VOICERSS_KEY="VOICERSS_KEY_HERE" --name=restcomm -d -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+sudo docker run -e SECURESSL="true" -e SSL_MODE="allowall" -e VOICERSS_KEY="VOICERSS_KEY_HERE" --name=restcomm -d -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
 * The RestComm installation is available from the host system at: `https://<guest_ip>/`
 * You can use the Olympus WebRTC Web App at: `https://<guest_ip>/olympus`
+* For more Info on available configuration options http://documentation.telestax.com/connect/configuration/index.html#Configuration[HERE]
