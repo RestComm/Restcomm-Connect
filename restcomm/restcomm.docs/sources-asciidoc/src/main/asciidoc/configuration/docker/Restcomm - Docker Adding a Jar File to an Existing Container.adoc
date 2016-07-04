@@ -6,7 +6,7 @@ Apply new JAR to an already running container
 
 The steps below will explain how to apply/overide specific jar on a running container. Default jar files are located in the directory below
 
-* /opt/TelScale-Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/lib/
+* /opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/lib/
 
 To be able to change Restcomm jars in the WEB-INF/lib/ directory, you must : 
 
@@ -19,7 +19,7 @@ How to update the jar file:
 3.  Get the Restcomm docker container ID : *sudo docker ps*
 4.  Launch an interactive bash shell inside running container (enter to the container running) using:
 5.  **sudo docker exec -it container_ID bash**
-6.  Go to the directory :  *cd /opt/TelScale-Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/lib/*
+6.  Go to the directory :  *cd /opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/lib/*
 7.  copy all jars to the new directory.
 8.  *cp * /tmp/lib/*
 9.  Type *exit* to get out of the bash container
@@ -27,7 +27,7 @@ How to update the jar file:
 11. Copy the new jar provided by Telestax to the **/tmp/lib**/ directory
 12. The above step will replace one of the existing jar files
 13. Add the following option to the docker run startup command
-14. *-v  /tmp/lib/:/opt/TelScale-Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/lib/*
+14. *-v  /tmp/lib/:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/lib/*
 15. This will override the jars in the *WEB-INF/lib/* with the jars in the */tmp/lib/* directory
 16. Start the container for the changes to take effect
 17. *sudo docker start Restcomm_container_ID*
