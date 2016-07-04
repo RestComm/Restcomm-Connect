@@ -113,7 +113,7 @@ LB_RMI_PORT='2000'          #The port used from RMI connection between RC and LB
 RVD_LOCATION='
 ----
 
-* Section *#RMS pool size.
+* Section *#RMS pool size*.
 [source,bash]
 ----
 #Un-comment the resource that you want to set the pool size.
@@ -124,7 +124,7 @@ RVD_LOCATION='
 #RESOURCE_Relay=0 #Not used
 ----
 
-* Section *#RestComm Monitoring.
+* Section *#RestComm Monitoring*.
 [source,bash]
 ----
 #Enabling following means that there is Graylog server running somewhere as well.
@@ -142,7 +142,7 @@ MGMT_USER='' #Management Interface User configuration.
 MGMT_PASS='' #Management Interface Password configuration.
 ----
 
-* Section *#Other.
+* Section *#Other*.
 [source,bash]
 ----
 #Other General configuration Options
