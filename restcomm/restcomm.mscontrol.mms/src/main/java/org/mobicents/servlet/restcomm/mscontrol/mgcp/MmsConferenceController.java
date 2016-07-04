@@ -305,7 +305,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         // Tell call to join conference by passing reference to the media mixer
-        final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode());
+        final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode(), mediaGateway);
         message.getCall().tell(join, sender);
     }
 
