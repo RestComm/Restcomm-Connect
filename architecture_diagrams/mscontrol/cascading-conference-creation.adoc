@@ -1,4 +1,4 @@
-[plantuml, diagram-classes, png]     
+[plantuml, cascading-conference-creation, png]     
 ....
 actor Participant1
 actor Participant2
