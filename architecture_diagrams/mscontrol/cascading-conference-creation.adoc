@@ -1,0 +1,107 @@
+[plantuml, diagram-classes, png]     
+....
+actor Participant1
+actor Participant2
+Participant1 -> Restcomm: sip/sdp Call1
+Restcomm -->Participant1: sip 100/Trying
+Restcomm -> RMS1: mgcp CRCX:\n{Primary: mobicents/bridge/$@RMS1:2427\nsecondary mobicents/ivr/$@RMS1:2427}
+RMS1 -> Restcomm: mgcp Success:\n{mobicents/bridge/1@RMS1:2427\nsecondary mobicents/ivr/1@RMS1:2427}
+
+Restcomm -> RMS1: mgcp/sdp CRCX: sendrcv: callID1: notification entity restcomm\nmobicents/bridge1@RMS1:2427\nSDP (sip client's info, IP etc)
+RMS1 -> Restcomm: mgcp/sdp Success: SDP (media server info, connection and media info)
+Restcomm ->Participant1: sip/sdp 200|OK (SIP invite)
+Participant1 -> Restcomm: sip ACK
+== call is in progress ==
+Participant1 <--> RMS1: RTP
+alt Play Announcement
+    Restcomm -> RMS1: mgcp RQNT: notification entity restcomm\nmobicents/ivr/1@RMS1:2427\naudio file url
+    RMS1 -> Restcomm: mgcp Success
+    RMS1 --> Participant1: playing announcement.
+    RMS1 -> Restcomm: mgcp NTFY: notification entity restcomm\nmobicents/ivr/1@RMS1:2427\nObservedEvents AUC/oc(rc=100)\ntransactionID=7
+    Restcomm -> RMS1: mgcp Transaction executed succesfully\ntransactionID=7
+end
+
+== dial conference ==
+
+Restcomm -> RMS1: mgcp CRCX\nmobicents/cnf$@RMS1:2427\nsecondaryEndpoint: mobicents/ivr/$@RMS1:2427
+RMS1 -> Restcomm: mgcp Success\nmobicents/cnf1@RMS1:2427\nsecondaryEndpoint: mobicents/ivr/2@RMS1:2427
+
+Restcomm -> RMS1: mgcp CRCX\n endpoint: mobicents/bridge/1@RMS1:2427\nconnectionMode=Confrnce\n2ndaryEP: mobicents/cnf/1@RMS1@2427
+RMS1 -> Restcomm: mgcp Success\n provides Connection identifier for both endpoint connections.
+Restcomm -> RMS1: mgcp MDCX:\nmobicents/cnf/1@RMS1:2427\n{CallID:1, ConnectionMode: sendrecv}
+RMS1 -> Restcomm: mgcp Success\n Connection identifier
+
+== conference is joined ==
+
+alt Play Wait Music
+    Restcomm -> RMS1: MDCX:\nmobicents/bridge/1@RMS1:2427\n{CallID:1, ConnectionMode: sendonly}
+    RMS1 --> Restcomm: 200\nSDP {conn & media info of RMS}
+    Restcomm -> RMS1: RQNT mobicents/ivr/2@RMS1:2427\n signalRequest: audio file url
+    RMS1 -> Restcomm: success
+    RMS1 --> Participant1: music (RTP)
+end
+
+== second participants call sip number ==
+
+Participant2-> Restcomm: Call2\nSIP/SDP INVITE
+Restcomm -->Participant2: 100/Trying
+Restcomm -> RMS2: CRCX:\n{Primary: mobicents/bridge/$@RMS2:2427\nsecondary mobicents/ivr/$@RMS2:2427}
+RMS2 -> Restcomm: Success:\n{mobicents/bridge/2@RMS2:2427\nsecondary mobicents/ivr/3@RMS2:2427}
+
+Restcomm -> RMS2: CRCX: sendrcv: callID: notification entity restcomm\nmobicents/bridge2@RMS2:2427\nSDP (sip client's info, IP etc)
+RMS2 -> Restcomm: Success: SDP (RMS2 media session info)
+Restcomm ->Participant2: sip/sdp 200|OK (SIP, SDP)
+Participant2 -> Restcomm: ACK
+== second particpants call is in progress and it is connected to RMS2 ==
+Participant2 <--> RMS2: RTP
+alt Play Announcement
+    Restcomm -> RMS2: RQNT: notification entity restcomm\nmobicents/ivr/3@RMS2:2427\naudio file url
+    RMS2 -> Restcomm: Success
+    RMS2 --> Participant2: playing announcement.
+    RMS2 -> Restcomm: NTFY: notification entity restcomm\nmobicents/ivr/3@RMS2:2427\nObservedEvents AUC/oc(rc=100)
+    Restcomm -> RMS2: Transaction executed succesfully
+end
+
+== time to create conference endpoint on RMS2 ==
+
+Restcomm -> RMS2: CRCX\nmobicents/cnf$@RMS2:2427\nsecondaryEndpoint: mobicents/ivr/$@RMS2:2427
+RMS2 -> Restcomm: Success\nmobicents/cnf2@RMS2:2427\nsecondaryEndpoint: mobicents/ivr/4@RMS2:2427
+
+Restcomm -> RMS2: CRCX\n endpoint: mobicents/bridge/2@RMS2:2427\nconnectionMode=Confrnce\n2ndaryEP: mobicents/cnf/2@RMS2@2427
+RMS2 -> Restcomm: Success\n provides Connection identifier for both endpoint connections.
+Restcomm -> RMS2: MDCX:\nmobicents/cnf/2@RMS2:2427\n{ConnectionMode: sendrecv}
+RMS2 -> Restcomm: Success\n Connection identifier
+
+== create a new bridge on RMS1 ==
+
+Restcomm -> RMS1: CRCX: {sendrcv}\n{Primary: mobicents/bridge/$@RMS1:2427}
+RMS1 ->Restcomm: {Primary: mobicents/bridge/3@RMS1:2427} \n and SDP offer RMS1
+
+== create a connection between new bridge and conference1 endpoint on RMS1 ==
+
+Restcomm -> RMS1: mgcp CRCX\n endpoint: mobicents/bridge/3@RMS1:2427\nconnectionMode=Confrnce\n2ndaryEP: mobicents/cnf/1@RMS1@2427
+RMS1 -> Restcomm: mgcp Success\n provides Connection identifier for both endpoint connections.
+Restcomm -> RMS1: mgcp MDCX:\nmobicents/cnf/1@RMS1:2427 {sendrecv}
+RMS1 -> Restcomm: mgcp Success\n Connection identifier
+
+== pass SDP offer from RMS1 to RMS2 ==
+
+Restcomm -> RMS2: CRCX: {sendrcv}\n{Primary: mobicents/bridge/$@RMS2:2427} \n and SDP offer from RMS1
+RMS2 ->Restcomm: {Primary: mobicents/bridge/4@RMS2:2427} \n and SDP offer RMS2
+
+== create a connection between new bridge and conference2 endpoint on RMS2 ==
+
+Restcomm -> RMS2: mgcp CRCX\n endpoint: mobicents/bridge/4@RMS1:2427\nconnectionMode=Confrnce\n2ndaryEP: mobicents/cnf/2@RMS1@2427
+RMS2 -> Restcomm: mgcp Success\n provides Connection identifier for both endpoint connections.
+Restcomm -> RMS2: mgcp MDCX:\nmobicents/cnf/2@RMS1:2427 {sendrecv}
+RMS2 -> Restcomm: mgcp Success\n Connection identifier
+
+== pass sdp msg from RMS2 to RMS1 ==
+
+Restcomm -> RMS2: RQNT ivr/3
+RMS2 -> Restcomm: Success\n executed normally
+Restcomm -> RMS1: MDCX:\nmobicents/bridge/3@RMS1:2427\nand SDP offer from RMS2
+RMS1 -> Restcomm: 200\n SDP (RMS1 media session info)
+RMS1 <--> RMS2: RTP
+Participant2 <--> Participant1: talk talk
+....

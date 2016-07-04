@@ -26,7 +26,8 @@
   <select id="getIncomingPhoneNumbers" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{account_sid};
   </select>
-  
+
+  <!--
   <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{accountSid}
     <if test="friendlyName != null">
@@ -35,6 +36,27 @@
 	<if test="phoneNumber != null">
 			AND "phone_number" like #{phoneNumber}
 	</if>
+  </select>
+  -->
+
+  <!-- along with the DID it returns the application frien-->
+  <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
+    SELECT
+    "n".*,
+    "a_voice"."friendly_name" "voice_application_name",
+    "a_sms"."friendly_name" "sms_application_name",
+    "a_ussd"."friendly_name" "ussd_application_name"
+    FROM "restcomm_incoming_phone_numbers" "n"
+    LEFT OUTER JOIN "restcomm_applications" "a_voice"  ON "n"."voice_application_sid" = "a_voice"."sid"
+    LEFT OUTER JOIN "restcomm_applications" "a_sms" ON "n"."sms_application_sid" = "a_sms"."sid"
+    LEFT OUTER JOIN "restcomm_applications" "a_ussd" ON "n"."ussd_application_sid" = "a_ussd"."sid"
+    WHERE "account_sid"=#{accountSid}
+    <if test="friendlyName != null">
+      AND "n"."friendly_name"=#{friendlyName}
+    </if>
+    <if test="phoneNumber != null">
+      AND "n"."phone_number" like #{phoneNumber}
+    </if>
   </select>
   
   <delete id="removeIncomingPhoneNumber" parameterType="string">

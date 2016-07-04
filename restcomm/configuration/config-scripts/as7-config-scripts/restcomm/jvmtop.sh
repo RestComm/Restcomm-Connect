@@ -12,7 +12,7 @@ if [ -z "$JAVA_HOME" ] ; then
         sed 's/\/bin\/java//'`
 fi
 
-TOOLSJAR="$JAVA_HOME/lib/tools.jar"
+TOOLSJAR="$JAVA_HOME/../lib/tools.jar"
 
 if [ ! -f "$TOOLSJAR" ] ; then
         echo "$JAVA_HOME seems to be no JDK!" >&2
