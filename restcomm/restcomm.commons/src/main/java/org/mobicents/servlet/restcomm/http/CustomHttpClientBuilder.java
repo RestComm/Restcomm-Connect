@@ -57,7 +57,7 @@ public class CustomHttpClientBuilder {
                 .setConnectTimeout(timeoutConnection)
                 .setConnectionRequestTimeout(timeoutConnection)
                 .setSocketTimeout(timeoutConnection)
-                .setCookieSpec(CookieSpecs.DEFAULT).build();
+                .setCookieSpec(CookieSpecs.STANDARD).build();
         if ( mode == SslMode.strict ) {
             return  HttpClients.custom().setDefaultRequestConfig(requestConfig).build();
         } else {
