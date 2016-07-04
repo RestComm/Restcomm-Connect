@@ -1,0 +1,38 @@
+[plantuml, cascading-conference-cleanup, png]     
+....
+actor Participant1
+actor Participant2
+Participant1 -> Restcomm: sip: BYE
+Restcomm ->Participant1: sip: 200|OK
+
+== delete local connection b/w cnf/1 and bridge/1 ==
+Restcomm --> RMS1: DLCX mobicents/bridge/1@RMS1\ncallid=xyz, connectionid=abc
+RMS1 --> Restcomm: tx was executed normaly
+Restcomm --> RMS1: DLCX mobicents/cnf/1@RMS1\ncallid=xyz, connectionid=abc
+RMS1 --> Restcomm: tx was executed normaly
+
+== delete bridge/1 and ivr/1==
+Restcomm -> RMS1: DLCX mobicents/ivr/1@RMS1
+RMS1 -> Restcomm: tx was executed normaly
+Restcomm -> RMS1: DLCX mobicents/bridge/1@RMS1
+RMS1 -> Restcomm: tx was executed normaly
+
+alt If this is last participant on this RMS
+
+== delete local connection b/w cnf/1 and bridge/3 (the one connecting with RMS2) ==
+    Restcomm --> RMS1: DLCX mobicents/bridge/3@RMS1\ncallid=xyz, connectionid=abc
+    RMS1 --> Restcomm: tx was executed normaly
+    Restcomm --> RMS1: DLCX mobicents/cnf/1@RMS1\ncallid=xyz, connectionid=abc
+    RMS1 --> Restcomm: tx was executed normaly
+    
+== delete bridge/3 (the one connecting RMS1 with RMS2) ==
+    Restcomm --> RMS1: DLCX mobicents/bridge/3@RMS1
+    RMS1 --> Restcomm: tx was executed normaly
+
+== delete cnf/1 and it's ivr/2 ==
+    Restcomm --> RMS1: DLCX mobicents/ivr/2@RMS1
+    RMS1 --> Restcomm: tx was executed normaly
+    Restcomm --> RMS1: DLCX mobicents/cnf/1@RMS1
+    RMS1 --> Restcomm: tx was executed normaly
+end
+....
