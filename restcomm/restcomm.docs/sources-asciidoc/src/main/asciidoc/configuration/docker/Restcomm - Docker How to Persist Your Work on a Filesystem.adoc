@@ -20,3 +20,5 @@ If you are using specific log paths (CORE_LOGS_LOCATION, MEDIASERVER_LOGS_LOCATI
 ----
 docker run --name=restcomm --restart=always -d -e VOICERSS_KEY="YOUR_VOICERSS_KEY" -p 8080:8080 -p 5080:5080 -p 5080:5080/udp -p 65000-65050:65000-65050/udp -v /opt/restcomm_workspace/restcomm/log:/opt/Restcomm-JBoss-AS7/standalone/log -v /opt/restcomm_workspace/restcomm/recordings:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings -v /opt/restcomm_workspace/restcomm/cache:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/cache -v /opt/restcomm_workspace/restcomm/data:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/WEB-INF/data/hsql -v /opt/restcomm_workspace/mms/log:/opt/Restcomm-JBoss-AS7/mediaserver/log -v /opt/restcomm_workspace/rvd/workspace:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm-rvd.war/workspace restcomm/restcomm:latest
 ----
+
+* For more Info on available configuration options http://documentation.telestax.com/connect/configuration/index.html#Configuration[HERE]

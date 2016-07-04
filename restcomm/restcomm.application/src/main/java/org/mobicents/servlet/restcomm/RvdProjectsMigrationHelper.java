@@ -41,6 +41,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
+import org.apache.ibatis.exceptions.TooManyResultsException;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.api.EmailRequest;
 import org.mobicents.servlet.restcomm.api.Mail;
@@ -209,20 +210,28 @@ public class RvdProjectsMigrationHelper {
         return items;
     }
 
-    public String searchApplicationSid(String projectName) {
-        currentApplication = null;
-        String applicationSid = null;
-        currentApplication = applicationDao.getApplication(projectName);
-        if (currentApplication != null) {
-            applicationSid = currentApplication.getSid().toString();
-        } else if (Sid.pattern.matcher(projectName).matches()) {
-            Sid sid = new Sid(projectName);
-            currentApplication = applicationDao.getApplication(sid);
+    public String searchApplicationSid(String projectName) throws RvdProjectsMigrationException {
+        try {
+            currentApplication = null;
+            String applicationSid = null;
+            currentApplication = applicationDao.getApplication(projectName);
             if (currentApplication != null) {
                 applicationSid = currentApplication.getSid().toString();
+            } else if (Sid.pattern.matcher(projectName).matches()) {
+                Sid sid = new Sid(projectName);
+                currentApplication = applicationDao.getApplication(sid);
+                if (currentApplication != null) {
+                    applicationSid = currentApplication.getSid().toString();
+                }
             }
+            return applicationSid;
+        } catch ( TooManyResultsException e) {
+            /* This happens when a non-upgraded project whose friendly-name exists in several applications is upgraded.
+               The old bahaviour was a broken upgrade attempt for the whole workspace.
+               Now, the failure should be limited to this project
+               */
+            throw new RvdProjectsMigrationException("[ERROR-CODE:14] Error while upgrading project '" + projectName + "'. Several applications with such a FriendlyName were found. You have to manually restore this project.", 14);
         }
-        return applicationSid;
     }
 
     public void renameProjectUsingNewConvention(String projectName, String applicationSid) throws RvdProjectsMigrationException {

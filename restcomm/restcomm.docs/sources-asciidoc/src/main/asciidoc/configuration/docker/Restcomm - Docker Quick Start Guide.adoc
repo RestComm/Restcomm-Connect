@@ -16,7 +16,7 @@ Supported Tags
 
 * Tag "latest". Points to the latest binary from the Continuous Delivery server. Uses the https://github.com/RestComm/Restcomm-Connect[master] development branch : restcomm/restcomm:latest. *We don't advice to use "latest" tag for production as it is constantly changing, and as well new features and fixes may not be documented.
 * Tag "stable". Points to the latest/current GA release (current: https://github.com/RestComm/Restcomm-Connect/releases/tag/7.6.0.879/[7.6.0.GA]) use tag :  restcomm/restcomm:stable
-* Tags "7.6.0" or "7.5.0" etc, are pointing to a specific GA release. For example:  restcomm/restcomm:7.6.0 restcomm/restcomm:7.5.0 etc.
+* Tag "7.7.0" pointing to current specific GA release (v770ga).
 
 To pull the "**latest**" image from the RestComm docker hub repository please use:
 
@@ -36,7 +36,7 @@ Install and Run Restcomm Docker
 
 [source,lang:default,decode:true]
 ----
-docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/scripts/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+docker run  -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/var/log/restcomm/ -e STATIC_ADDRESS="YOUR_ETHERNET_IP" -e ENVCONFURL="https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
 [[text-to-speech-with-voicerss]]
@@ -44,7 +44,7 @@ Text-to-Speech with VoiceRSS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * The above command comes with a community version of VoiceRSS key. This version has limited features. You may get a free VoiceRSS API key from http://www.voicerss.org/from
-*  See the documentation about adding your own VoiceRSS API Key https://docs.telestax.com/restcomm-docker-advanced-configuration/
+*  See the documentation about adding your own VoiceRSS API Key http://documentation.telestax.com/connect/configuration/docker/Restcomm%20-%20Docker%20Environment%20Variables.html[RestComm-Docker Documentation].
 
 [[quick-test]]
 Quick test
@@ -58,16 +58,21 @@ Quick test
 3.  Your browser will ask for permission to share microphone and camera, press allow
 4.  Go to "Contact", click on the "**+1234**" and press the "Audio Call" button (phone icon)
 5.  You should hear the "Welcome to RestComm, a Telestax Sponsored project" announcement
-6.  You can also make a calll to the "**+123**5" to test your Text-to-Speech configuration
+6.  You can also make a calll to the "**+1235**" to test your Text-to-Speech configuration
 
 [[accessing-the-admin-ui]]
 Accessing the Admin UI
 ^^^^^^^^^^^^^^^^^^^^^^
 
-* Go to https://DOCKER_IP_ADDRESS
-* Username = administrator@company.com
-* Password = RestComm
-* Change the default password
+1.  Go to https://DOCKER_IP_ADDRESS
+2.  Username = administrator@company.com
+3.  Password = RestComm
+4.  Change the default password
+
+[NOTE]
+Using the flag "INIT_PASSWORD" you can set administrator password when running RestComm for first time.
+    More info http://documentation.telestax.com/connect/configuration/docker/Restcomm%20-%20Docker%20Environment%20Variables.html[RestComm-Docker Documentation]
+
 
 [[basic-docker-commands]]
 Basic Docker commands
@@ -96,9 +101,15 @@ You can start the container and get a bash console to manually setup Restcomm an
 docker run --name=restcomm-myInstance --entrypoint=/bin/bash -it -p 80:80 -p 5060:5060 -p 5082:5082 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
 
+Get a bash console for a running RestComm container:
+[source,lang:default,decode:true]
+----
+docker exec -it RESTCOMM_Container_ID bash
+----
+
 '''''
 
-* Excessive demand on memory when exposing a big range of ports *
+*Excessive demand on memory when exposing a big range of ports.*
 
 Due to a known https://github.com/docker/docker/issues/11185[issue] on Docker, exposing a big range of ports produce a big need in RAM. On RestComm the issue arises when a big range of RTP ports is exposed. For a system with 4Gb of RAM a range of 50 ports is a good approach (e.g -p 65000-65050:65000-65050/udp). *We are expecting that this issue will be solved soon from Docker team. 
 

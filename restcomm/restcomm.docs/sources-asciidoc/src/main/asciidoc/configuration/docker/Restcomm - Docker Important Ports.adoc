@@ -5,6 +5,7 @@ Important Ports
 RestComm binds to the ip address of the host and following ports:
 
 * **http**: 8080
+* **https**: 8443
 * **sip/udp**: 5080
 * **sip/tcp**: 5080
 * **sip/tls**: 5081
@@ -12,12 +13,16 @@ RestComm binds to the ip address of the host and following ports:
 * **sip/wss**: 5083 (Used for WebRTC - Secure SIP Over WebSockets)
 * **rtp/udp**: 65000 - 65535
 
-If you use -e USE_STANDARD_PORTS, RestComm will binds to the ip address of the host and following ports:
+If you use -e USE_STANDARD_SIP_PORTS -e USE_STANDARD_HTTP_PORTS, RestComm will binds to the ip address of the host and following ports:
 
 * **http**: 80
+* **https**: 443
 * **sip/udp**: 5060
 * **sip/tcp**: 5060
 * **sip/tls**: 5061
 * **sip/ws**: 5062 (Used for WebRTC - SIP Over WebSockets)
 * **sip/wss**: 5063 (Used for WebRTC - Secure SIP Over WebSockets)
 * **rtp/udp**: 65000 - 65535
+
+
+*To specify additional custom port connectors use -e ADDITIONAL_CONNECTOR_1=second-sip-udp:5090  -e ADDITIONAL_CONNECTOR_2=second-sip-tcpp:5090 etc.More info http://documentation.telestax.com/core/sip_servlets/SIP_Servlets_Server_User_Guide.html[HERE]*

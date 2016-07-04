@@ -21,17 +21,21 @@ package org.mobicents.servlet.restcomm.dao.mybatis;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.List;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 import org.junit.After;
 import static org.junit.Assert.*;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumber;
+import org.mobicents.servlet.restcomm.entities.IncomingPhoneNumberFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
@@ -158,6 +162,18 @@ public class IncomingPhoneNumbersDaoTest {
         numbers.removeIncomingPhoneNumber(sid);
         // Validate that the incoming phone number was removed.
         assertTrue(numbers.getIncomingPhoneNumber(sid) == null);
+    }
+
+    @Test
+    public void applicationFriendlyNameReturned() {
+        final IncomingPhoneNumbersDao dao = manager.getIncomingPhoneNumbersDao();
+        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter("ACae6e420f425248d6a26948c17a9e2acf", null, null);
+        List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+        Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
+        IncomingPhoneNumber number = phoneNumbers.get(0);
+        Assert.assertEquals(number.getVoiceApplicationName(), "app0");
+        Assert.assertEquals(number.getSmsApplicationName(), "app1");
+        Assert.assertEquals(number.getUssdApplicationName(), "app2");
     }
 
     @Test

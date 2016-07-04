@@ -8,12 +8,13 @@ USE ${RESTCOMM_DBNAME};
 DELIMITER //
 CREATE PROCEDURE updateProcedure()
  BEGIN
-   SELECT IFNULL(column_name, '') INTO @colName
+   SELECT DISTINCTROW IFNULL(column_name, '') INTO @colName752
    FROM information_schema.columns
-   WHERE table_name = 'restcomm_incoming_phone_numbers'
+   WHERE table_schema='${RESTCOMM_DBNAME}'
+   AND table_name = 'restcomm_incoming_phone_numbers'
    AND column_name = 'ussd_url';
 
-  IF @colName IS NULL THEN
+  IF @colName752 IS NULL THEN
   CREATE TABLE temp_table LIKE restcomm_incoming_phone_numbers;
   ALTER TABLE temp_table ADD ussd_url MEDIUMTEXT;
   ALTER TABLE temp_table ADD ussd_method VARCHAR(4);
