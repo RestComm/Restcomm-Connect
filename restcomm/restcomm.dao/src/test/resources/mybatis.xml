@@ -22,6 +22,7 @@
     <mapper resource="applications.xml"/>
     <mapper resource="available-phone-numbers.xml"/>
     <mapper resource="call-detail-records.xml"/>
+    <mapper resource="conference-detail-records.xml"/>    
     <mapper resource="clients.xml"/>
     <mapper resource="http-cookies.xml"/>
     <mapper resource="incoming-phone-numbers.xml"/>
