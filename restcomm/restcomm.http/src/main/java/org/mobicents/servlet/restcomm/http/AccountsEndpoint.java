@@ -412,7 +412,7 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if (unlinkedAccount.getLinked() == false) {
             return Response.ok().build(); // already done
         } else {
-            unlinkedAccount.setLinked(false);
+            unlinkedAccount = unlinkedAccount.setLinked(false);
             accountsDao.updateAccount(unlinkedAccount);
             return Response.ok().build();
         }

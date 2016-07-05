@@ -69,7 +69,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5, Notifications) {
   //$scope.sid = SessionService.get('sid');
 
   var accountBackup;
@@ -151,7 +151,21 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
     });
   };
 
+  $scope.linkAccount = function(account) {
+    RCommAccounts.link({accountSid: account.sid}, null, function () {
+        Notifications.success('Linked to user ' + account.email_address);
+    });
+  }
+
+  $scope.unlinkAccount = function(account) {
+    RCommAccounts.unlink({accountSid: account.sid},function () {
+        Notifications.info("Link with keycloak user " + account.email_address + ' broken');
+    });
+  }
+
   $scope.getAccounts();
+
+
 
 });
 
