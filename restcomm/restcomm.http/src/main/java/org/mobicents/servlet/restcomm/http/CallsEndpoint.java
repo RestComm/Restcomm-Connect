@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.http;
 
 import akka.actor.ActorRef;
 import akka.util.Timeout;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -97,17 +98,17 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    private ActorRef callManager;
-    private DaoManager daos;
-    private Gson gson;
-    private GsonBuilder builder;
-    private XStream xstream;
-    private CallDetailRecordListConverter listConverter;
-    private AccountsDao accountsDao;
-    private RecordingsDao recordingsDao;
-    private String instanceId;
+    protected ActorRef callManager;
+    protected DaoManager daos;
+    protected Gson gson;
+    protected GsonBuilder builder;
+    protected XStream xstream;
+    protected CallDetailRecordListConverter listConverter;
+    protected AccountsDao accountsDao;
+    protected RecordingsDao recordingsDao;
+    protected String instanceId;
 
-    private boolean normalizePhoneNumbers;
+    protected boolean normalizePhoneNumbers;
 
     public CallsEndpoint() {
         super();
@@ -187,6 +188,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
+        String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
 
         if (pageSize == null) {
             pageSize = "50";
@@ -204,12 +206,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         CallDetailRecordFilter filterForTotal;
         try {
+
             if (localInstanceOnly) {
                 filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, null);
+                        parentCallSid, conferenceSid, null, null);
             } else {
                 filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, null, instanceId);
+                        parentCallSid, conferenceSid, null, null, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -225,10 +228,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         try {
             if (localInstanceOnly) {
                 filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, limit, offset);
+                        parentCallSid, conferenceSid, limit, offset);
             } else {
                 filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, limit, offset, instanceId);
+                        parentCallSid, conferenceSid, limit, offset, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();

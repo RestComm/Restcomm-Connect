@@ -1,5 +1,11 @@
 = RestComm Connect Documentation
 
+Restcomm-Connect is an API Exposure layer allowing Web developers to embed Communications as a Feature without having to know anything about telecommunications as can be seen below
+
+image::images/bridge-the-gap.png[bridgethegap,width=370,height=370,align="center"]
+
+You can read <<tutorials/index.adoc#tutorials,Restcomm Connect Tutorials>> to learn more on how to build powerful apps or learn to master the platform.
+
 There is multiple ways to interact with Restcomm Connect to build applications
 
 * By using the <<rvd/index.adoc#RVD,Restcomm Visual Designer (RVD)>> to build applications easily with drag and drop without knowing anything about programming

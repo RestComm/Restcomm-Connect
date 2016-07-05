@@ -58,6 +58,9 @@ getPID(){
    done < <(jps | grep Main | cut -d " " -f 1)
 }
 
+collectMonitoringServiceMetrics() {
+  curl http://ACae6e420f425248d6a26948c17a9e2acf:$RESTCOMM_NEW_PASSWORD@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Supervisor.json/metrics -o $RESULTS_FOLDER/MonitoringService_$TEST_NAME_$(date +%F_%H_%M)
+}
 
 stopRestcomm(){
 if [ "$COLLECT_JMAP" == "true"  ] || [ "$COLLECT_JMAP" == "TRUE"  ]; then
@@ -92,8 +95,14 @@ case "$TEST_NAME" in
     startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
+    echo $'\nChange default administrator password\n'
+    curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+    echo ""
+    sleep 15
     $CURRENT_FOLDER/tests/hello-play/helloplay.sh
     sleep 60
+    collectMonitoringServiceMetrics
+    sleep 5
     stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;
@@ -115,6 +124,8 @@ case "$TEST_NAME" in
     sleep 15
     $CURRENT_FOLDER/tests/conference/conference.sh
     sleep 45
+    collectMonitoringServiceMetrics
+    sleep 5
     stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;
@@ -130,8 +141,14 @@ case "$TEST_NAME" in
     startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
+    echo $'\nChange default administrator password\n'
+    curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+    echo ""
+    sleep 15
     $CURRENT_FOLDER/tests/hello-play-one-minute/helloplay-one-minute.sh
     sleep 45
+    collectMonitoringServiceMetrics
+    sleep 5
     stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;
@@ -156,6 +173,8 @@ case "$TEST_NAME" in
   #Next run the client script that will initiate callls to Restcomm
   $CURRENT_FOLDER/tests/dialclient/dialclient-client.sh
   sleep 45
+  collectMonitoringServiceMetrics
+  sleep 5
   stopRestcomm
   echo $'\n********** Restcomm stopped\n'
   ;;
@@ -171,8 +190,14 @@ case "$TEST_NAME" in
     startRestcomm
     echo $'\n********** Restcomm started\n'
     sleep 45
+    echo $'\nChange default administrator password\n'
+    curl -X PUT http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@$RESTCOMM_ADDRESS:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf -d "Password=$RESTCOMM_NEW_PASSWORD"
+    echo ""
+    sleep 15
     $CURRENT_FOLDER/tests/gather/gather.sh
     sleep 45
+    collectMonitoringServiceMetrics
+    sleep 5
     stopRestcomm
     echo $'\n********** Restcomm stopped\n'
     ;;

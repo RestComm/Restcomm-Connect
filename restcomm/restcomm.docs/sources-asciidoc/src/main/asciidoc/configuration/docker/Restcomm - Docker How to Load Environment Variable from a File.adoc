@@ -13,5 +13,7 @@ Run the following command :
 
 [source,lang:default,decode:true]
 ----
-sudo docker run -i -d --name=restcomm -v /var/log/restcomm:/var/log/restcomm/ --env-file="/PATH/TO/FILE/restcomm_localenv_basic" -e STATIC_ADDRESS="IP_OF_SERVER" -e RESTCOMMHOST="ADD_HOSTNAME" -e LOG_LEVEL="INFO" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
+sudo docker run -i -d --name=restcomm -v /var/log/restcomm:/var/log/restcomm/ --env-file="/PATH/TO/FILE/restcomm_localenv_basic" -e STATIC_ADDRESS="IP_OF_SERVER" -e RESTCOMM_HOSTNAME="ADD_HOSTNAME" -e LOG_LEVEL="INFO" -p 80:80 -p 443:443 -p 9990:9990 -p 5060:5060 -p 5061:5061 -p 5062:5062 -p 5063:5063 -p 5060:5060/udp -p 65000-65050:65000-65050/udp restcomm/restcomm:latest
 ----
+
+* For more Info on available configuration options http://documentation.telestax.com/connect/configuration/index.html#Configuration[HERE]

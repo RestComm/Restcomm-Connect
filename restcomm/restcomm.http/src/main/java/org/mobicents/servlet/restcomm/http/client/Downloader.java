@@ -107,7 +107,7 @@ public final class Downloader extends UntypedActor {
             logger.warning(httpErrorMessage);
         }
         } catch (IllegalArgumentException | URISyntaxException | IOException e) {
-            logger.error("Exception during HTTP request execution: "+e);
+            logger.error("Exception during HTTP request execution: "+e.getCause());
             HttpClientUtils.closeQuietly(client);
             client = null;
         } finally {
