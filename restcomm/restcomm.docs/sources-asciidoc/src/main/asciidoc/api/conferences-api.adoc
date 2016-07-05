@@ -1,3 +1,4 @@
+[[conferenceapi]]
 = Restcomm API – Conferences
 
 == Conference
@@ -26,7 +27,7 @@ The <Conference> represents a single conference originated and terminated from a
 |======================================================================================================================================================================
 
 === Supported Operations
-**HTTP GET**. Returns the representation of a Conference resource, including the properties above. 
+**HTTP GET**. Returns the representation of a Conference resource, including the properties above.
 
 ==== Example: Get Conference by ConferenceSid
 
@@ -35,16 +36,16 @@ curl -H "Authorization: Basic <MY_ENCODED_CREDENTIALS>" http://IP:8080/restcomm/
 ....
 
 
-**HTTP POST**. 
+**HTTP POST**.
 Not supported
 
-**HTTP PUT**. 
+**HTTP PUT**.
 Not supported
 
-**HTTP DELETE**. 
+**HTTP DELETE**.
 Not supported
 
-**Conference Subresources**. 
+**Conference Subresources**.
 <Participants> represent set/list of in-progress calls in a running conference room.
 
 ....
@@ -59,14 +60,14 @@ Not supported
 ....
 
 === Supported Operations
-**HTTP GET**. 
-Returns the list representation of all the Conference resources for this Account, including the properties above. 
+**HTTP GET**.
+Returns the list representation of all the Conference resources for this Account, including the properties above.
 
-**HTTP POST**. 
+**HTTP POST**.
 Not supported
 
-**HTTP PUT**. 
+**HTTP PUT**.
 Not supported
 
-**HTTP DELETE**. 
+**HTTP DELETE**.
 Not supported
