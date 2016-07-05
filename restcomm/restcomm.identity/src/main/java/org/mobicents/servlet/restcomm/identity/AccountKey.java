@@ -1,6 +1,5 @@
 package org.mobicents.servlet.restcomm.identity;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 

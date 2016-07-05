@@ -59,6 +59,9 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    } else
 	    if (error == 'KEYCLCOAK_NO_LINKED_ACCOUNT') {
 	        $state.go('root.unlinked',{evaluateAccess:false});
+	    } else
+	    if (error == 'KEYCLOAK_ACCOUNT_ALREADY_LINKED') {
+	        $state.go('restcomm.dashboard');
 	    }
 	});
 });

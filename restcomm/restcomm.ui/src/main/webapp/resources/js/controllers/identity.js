@@ -69,12 +69,24 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 	}
 
 })
-.controller('AccountUnlinkedCtrl', function ($scope, $stateParams, AuthService) {
+.controller('AccountUnlinkedCtrl', function ($scope, $state, $stateParams, AuthService, RCommAccounts, Notifications) {
     $scope.unlinkedUsername = AuthService.getKeycloakUsername();
+    $scope.accountPassword = '';
     console.log("evaluateAccess: " + $stateParams.evaluateAccess);
 
     $scope.verifyAccountPassword = function(password) {
         console.log('verifying password');
+        RCommAccounts.link({accountSid:AuthService.getKeycloakUsername(), format:null}, $.param({password:password}), function (a,b) {
+            console.log("success");
+            // refresh AuthService ??
+            $state.go('restcomm.dashboard');
+        }, function (response) {
+            if (response.status == 403 && response.data && response.data.code == 'INVALID_LINKING_PASSWORD') {
+                Notifications.error("Invalid account password for " + AuthService.getKeycloakUsername());
+                $scope.accountPassword = '';
+            }
+
+        });
     }
 
 

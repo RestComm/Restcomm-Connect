@@ -365,13 +365,13 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
         if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
             Account mappedAccount = userIdentityContext.getKeycloakMappedAccount();  // that's the operating account mapped from the bearer token
             if (operatedAccount == null)
-                return Response.status(FORBIDDEN).build(); // FORBIDDEN seems better that NOT_FOUND for this case
+                return Response.status(NOT_FOUND).build(); // FORBIDDEN seems better that NOT_FOUND for this case
             if (mappedAccount != null ) {
                 if (!operatedAccount.getSid().toString().equals(mappedAccount.getSid().toString()))
                     return Response.status(FORBIDDEN).build(); // tampering with other accounts in KeycloakAuth mode is  not allowed
                 if ( mappedAccount.getLinked() == false ) {
                     if (RestcommAuthenticator.verifyPassword(mappedAccount, password) == true) {
-                        mappedAccount.setLinked(true);
+                        mappedAccount = mappedAccount.setLinked(true);
                         accountsDao.updateAccount(mappedAccount);
                         return Response.ok().build();
                     } else {

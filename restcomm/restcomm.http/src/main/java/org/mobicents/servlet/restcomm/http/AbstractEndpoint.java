@@ -30,7 +30,6 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.http.converter.ErrorResponseConverter;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;

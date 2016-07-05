@@ -77,6 +77,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //      RESTCOMM_AUTH_FAILED - could not authenticate to Restcomm
     //      RESTCOMM_NOT_AUTHENTICATED - the user is not authenticated and there are no cached credentials. Applies to restcomm auth mode
     //      UNKNOWN_ERROR - an unknown server error has occured
+    //      KEYCLOAK_ACCOUNT_ALREADY_LINKED
     //
     //  - resolved: returns a valid Restcomm account for the logged user
     function checkAccess() {
@@ -142,7 +143,11 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
 
     function assertUnlinked() {
         try {
-            return checkAccess();
+            return checkAccess().then(function (existingLinkedAccount) {
+                // if the account is already linked, make this an error
+                throw 'KEYCLOAK_ACCOUNT_ALREADY_LINKED';
+                return existingLinkedAccount;
+            });
         } catch (error) {
             if (error == 'KEYCLCOAK_NO_LINKED_ACCOUNT')
                 return; // not really an error if we're checking for Unlinked
@@ -475,6 +480,13 @@ rcServices.factory('RCommAccounts', function($resource) {
         }
       },
       update: {
+        method:'PUT',
+        headers : {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      },
+      link: {
+        url:'/restcomm/2012-04-24/Accounts/:accountSid/linking',
         method:'PUT',
         headers : {
           'Content-Type': 'application/x-www-form-urlencoded'
