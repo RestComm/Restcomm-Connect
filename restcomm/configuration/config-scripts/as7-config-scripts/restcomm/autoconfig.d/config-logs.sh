@@ -29,9 +29,9 @@ config_on_thefly(){
     FILE=$RESTCOMM_BIN/restcomm/set-log-level.sh
     MNGMTPORT=$((9999 + PORT_OFFSET))
     if [ -n "$GRAYLOG_SERVER" ]; then
-        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=$BIND_ADDRESS --file=\"\$CLIFILE\"|" $FILE
+        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=$BIND_ADDRESS:${MNGMTPORT} --file=\"\$CLIFILE\"|" $FILE
     else
-        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=127.0.0.1 --file=\"\$CLIFILE\"|" $FILE
+        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=127.0.0.1:${MNGMTPORT} --file=\"\$CLIFILE\"|" $FILE
     fi
 }
 
