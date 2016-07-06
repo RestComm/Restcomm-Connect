@@ -184,7 +184,7 @@ configDaoManager() {
 initPassword(){
     SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
     if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
-        # chnange admin password
+        echo "chnange admin password"
         if grep -q "uninitialized" $SQL_FILE; then
             PASSWORD_ENCRYPTED=`echo -n "${INITIAL_ADMIN_PASSWORD}" | md5sum |cut -d " " -f1`
             #echo "Update password to ${INITIAL_ADMIN_PASSWORD}($PASSWORD_ENCRYPTED)"
@@ -202,6 +202,7 @@ initPassword(){
 ## Description: populated DB with necessary starting point data if not done.
 populateDB(){
     #Change script to defined schema
+    echo "Use RestComm Database:$MYSQL_SCHEMA "
     sed -i "s|CREATE DATABASE IF NOT EXISTS .*| CREATE DATABASE IF NOT EXISTS ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
     sed -i "s|USE .*|USE ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
 
@@ -210,8 +211,6 @@ populateDB(){
         echo "Database already populated"
     else
         echo "Database not populated, importing schema and updating config file"
-        echo "Create RestComm Database"
-        echo "Configuring RestComm Database MySQL"
         FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
         mysql -u $2 -p$3 -h $1 < $FILE
         mysql -u $2 -p$3 -h $1 --execute='show databases;'
