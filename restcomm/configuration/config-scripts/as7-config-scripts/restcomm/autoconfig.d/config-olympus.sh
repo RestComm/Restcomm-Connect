@@ -18,10 +18,8 @@ olympusPortConf(){
 FILE=$BASEDIR/standalone/deployments/olympus.war/resources/js/controllers/register.js
 
  #Check for Por Offset
-    if (( $PORT_OFFSET > 0 )); then
       local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
       local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
-   fi
 
    if [ -n "$SECURESSL" ]; then
        sed -i "s|ws:|wss:|" $FILE

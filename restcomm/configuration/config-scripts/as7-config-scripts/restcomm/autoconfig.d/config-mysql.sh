@@ -184,7 +184,7 @@ configDaoManager() {
 initPassword(){
     SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
     if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
-        echo "chnange admin password"
+        echo "change admin password"
         if grep -q "uninitialized" $SQL_FILE; then
             PASSWORD_ENCRYPTED=`echo -n "${INITIAL_ADMIN_PASSWORD}" | md5sum |cut -d " " -f1`
             #echo "Update password to ${INITIAL_ADMIN_PASSWORD}($PASSWORD_ENCRYPTED)"
