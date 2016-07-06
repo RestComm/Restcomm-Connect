@@ -51,6 +51,16 @@ configRestcomm() {
 	if [ -n "$RESTCOMM_HOSTNAME" ]; then
   		echo "HOSTNAME $RESTCOMM_HOSTNAME"
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+        if hash host 2>/dev/null; then
+            if ! host ${RESTCOMM_HOSTNAME} > /dev/null
+            then
+                echo "${BIND_ADDRESS}  ${RESTCOMM_HOSTNAME}" >> /etc/hosts
+            fi
+        else
+            echo "INFO: \"host\" programm does not exist ('dnsutils' package) please make sure that used hostname has a valid DNS resolution."
+            echo "INFO:IF not add the necessary hostname Ip resolution at /etc/hosts file: e.g  echo RestC0mm_BIND_IP RESTCOMM_HOSTNAME >> /etc/hosts "
+        fi
 	else
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
  	fi
@@ -440,7 +450,7 @@ configHypertextPort(){
 	fi
 
     sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|" \
-     	-e	"s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
+     	-e "s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
     mv $MSSFILE.bak $MSSFILE
     echo "Configured HTTP ports"
 }

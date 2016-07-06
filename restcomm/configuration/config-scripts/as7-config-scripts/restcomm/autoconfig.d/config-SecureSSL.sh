@@ -121,6 +121,11 @@ MssStackConf(){
 		TRUSTSTORE_LOCATION=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE
 	fi
 
+    #check for port offset
+	if (( $PORT_OFFSET > 0 )); then
+		local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+	fi
+
    sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT='"$HTTPS_PORT"'/ a \
   \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled\
   \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
