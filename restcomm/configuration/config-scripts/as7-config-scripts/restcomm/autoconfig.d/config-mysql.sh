@@ -181,8 +181,18 @@ configDaoManager() {
 }
 
 ## Description: Set Password for Adminitrator@company.com user. Only for fresh installation.
-initPassword(){
+initUserPassword(){
     SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
+     if [ -n "$INITIAL_ADMIN_USER" ]; then
+        # change admin user
+        if grep -q "uninitialized" $SQL_FILE; then
+            echo "Update Admin user"
+            sed -i "s/administrator@company.com/${INITIAL_ADMIN_USER}/g" $SQL_FILE
+        else
+            echo "Adminitrator User Already changed"
+        fi
+    fi
+
     if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
         echo "change admin password"
         if grep -q "uninitialized" $SQL_FILE; then
@@ -232,7 +242,7 @@ if [[ "$ENABLE_MYSQL" == "true" || "$ENABLE_MYSQL" == "TRUE" ]]; then
 	    configMybatis
 	    configDaoManager
 	    configureMySQLDataSource $MYSQL_HOST $MYSQL_USER $MYSQL_PASSWORD $MYSQL_SCHEMA $MYSQL_SNDHOST
-	    initPassword
+	    initUserPassword
 	    populateDB $MYSQL_HOST $MYSQL_USER $MYSQL_PASSWORD $MYSQL_SCHEMA
 	echo 'Finished configuring MySQL datasource!'
     fi
