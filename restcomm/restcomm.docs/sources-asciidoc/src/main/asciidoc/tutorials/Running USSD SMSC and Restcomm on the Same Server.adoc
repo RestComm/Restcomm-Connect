@@ -55,7 +55,7 @@ You need to change the default CLI port 3435 to an offset (200) that will match 
 * Save and exit the file
 * Access the USSD command line interface as follows
 * Execute :  *$USSD_HOME/jboss-5.1.0.GA/bin/ss7-cli.sh*
-* Execute the following command to acccess the CLI : *connect IP_ADDRESS 3645*
+* Execute the following command to acccess the CLI : *connect IP_ADDRESS 3635*
 
 NOTE: You need to specify the IP address and the new port offset
 
@@ -67,7 +67,7 @@ NOTE: The above steps can also be used to offset the default CLI Port for SMSC
 Other Ports to take into consideration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-SMSC Gateway listerns for incoming SMPP connections (SMPP server port) on the default port value of *2776.*
+SMSC Gateway listens for incoming SMPP connections (SMPP server port) on the default port value of *2776.*
 
 * You might need to change the ports if you have multiple server instances.
 * Go to *http://IP_ADDRESS:8080/smsc-management/#*
