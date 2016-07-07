@@ -109,7 +109,7 @@ CertConfigure(){
   fi
 
   if !  grep -q 'https.protocols' $FILE; then
-    sed -e "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $FILE.bak > $FILE.bak
+    sed -e "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $FILE > $FILE.bak
     mv $FILE.bak $FILE
   fi
 }
