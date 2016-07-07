@@ -80,7 +80,7 @@ set_pool_size () {
     local value=$2
     FILE=$MMS_HOME/conf/mediaserver.xml
 
-	sed -e "s|<endpoint name=\"\(.*\)\" class=\"\(.*\)${property}\" poolSize=\"\(.*\)\" \/>|<endpoint name=\"\1\" class=\"\2${property}\" poolSize=\"${value}\" \/>|" \
+	sed -e "s|<endpoint name=\"\(.*\)/${property}/\" class=\"\(.*\)\" poolSize=\"\(.*\)\" \/>|<endpoint name=\"\1/${property}/\" class=\"\2\" poolSize=\"${value}\" \/>|" \
 	$FILE > $FILE.bak
 	mv $FILE.bak $FILE
 }
