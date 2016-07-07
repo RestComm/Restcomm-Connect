@@ -129,7 +129,7 @@ port=$2
     else
          if ! grep -q "connector name=\"${connector}\"" $FILE; then
             sed -e "/path-name=\"org.mobicents.ext\"/a\
-			   <connector name=\"${connector}\" protocol=\"SIP/2.0\ scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${static_address}\" static-server-port=\"${port}\"/>" $FILE > $FILE.bak
+			   <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${static_address}\" static-server-port=\"${port}\"/>" $FILE > $FILE.bak
 	     fi
 	fi
 	mv $FILE.bak $FILE
