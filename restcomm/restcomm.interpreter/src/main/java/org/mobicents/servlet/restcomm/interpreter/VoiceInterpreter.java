@@ -77,6 +77,9 @@ import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
+import org.mobicents.servlet.restcomm.fsm.TransitionFailedException;
+import org.mobicents.servlet.restcomm.fsm.TransitionNotFoundException;
+import org.mobicents.servlet.restcomm.fsm.TransitionRollbackException;
 import org.mobicents.servlet.restcomm.http.client.DownloaderResponse;
 import org.mobicents.servlet.restcomm.http.client.HttpRequestDescriptor;
 import org.mobicents.servlet.restcomm.interpreter.rcml.Attribute;
@@ -540,156 +543,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         } else if (CallResponse.class.equals(klass)) {
-            if (forking.equals(state)) {
-                // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
-                // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest
-                // response received
-                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == call) {
-                    callInfo = response.get();
-                } else {
-                    outboundCallInfo = response.get();
-                }
-            } else if (acquiringCallInfo.equals(state)) {
-                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                // Check from whom is the message (initial call or outbound call) and update info accordingly
-                if (sender == call) {
-                    callInfo = response.get();
-                    if (callInfo.state() == CallStateChanged.State.CANCELED || (callInfo.invite() != null && callInfo.invite().getSession().getState().equals(SipSession.State.TERMINATED))) {
-                        fsm.transition(message, finished);
-                        return;
-                    } else {
-                        call.tell(new Observe(self()), self());
-                        //Enable Monitoring Service for the call
-                        if (monitoring != null)
-                            call.tell(new Observe(monitoring), self());
-                    }
-                } else {
-                    outboundCallInfo = response.get();
-                }
-
-                final String direction = callInfo.direction();
-                if ("inbound".equals(direction)) {
-                    if (rcml!=null && !rcml.isEmpty()) {
-                        if (logger.isInfoEnabled()) {
-                            logger.info("System app is present will proceed to ready state, system app: "+rcml);
-                        }
-                        createInitialCallRecord((CallResponse<CallInfo>) message);
-                        fsm.transition(message, ready);
-                    } else {
-                        fsm.transition(message, downloadingRcml);
-                    }
-                } else {
-                    fsm.transition(message, initializingCall);
-                }
-            } else if (acquiringOutboundCallInfo.equals(state)) {
-                final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
-                this.outboundCallInfo = response.get();
-                fsm.transition(message, creatingBridge);
-            }
+            onCallResponse(message, state);
         } else if (CallStateChanged.class.equals(klass)) {
-            final CallStateChanged event = (CallStateChanged) message;
-            callState = event.state();
-            if(logger.isInfoEnabled()){
-                logger.info("VoiceInterpreter received CallStateChanged event: "+callState);
-            }
-            if (CallStateChanged.State.RINGING == event.state()) {
-                if (forking.equals(state)) {
-                    outboundCall = sender;
-                }
-                // update db and callback statusCallback url.
-            } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
-                if (initializingCall.equals(state) || rejecting.equals(state)) {
-                    if (parser != null) {
-                        fsm.transition(message, ready);
-                    } else {
-                        fsm.transition(message, downloadingRcml);
-                    }
-                } else if (joiningConference.equals(state)) {
-                    fsm.transition(message, conferencing);
-                } else if (forking.equals(state)) {
-                    if (outboundCall == null || !sender.equals(call)) {
-                        outboundCall = sender;
-                    }
-                    fsm.transition(message, acquiringOutboundCallInfo);
-                } else if (conferencing.equals(state)) {
-                    // Call left the conference successfully
-                    if (!liveCallModification) {
-                        // Hang up the call
-                        final Hangup hangup = new Hangup();
-                        call.tell(hangup, self);
-                    } else {
-                        // XXX start processing new RCML and give instructions to call
-                    }
-                }
-            } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
-                    || CallStateChanged.State.FAILED == event.state()) {
-                if (bridging.equals(state)) {
-                    fsm.transition(message, finishDialing);
-                } else if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
-                    fsm.transition(message, finishDialing);
-                } else
-                    // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
-                    if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
-                        if (!sender.equals(call)) {
-                            removeDialBranch(message, sender);
-                            //Properly clean up FAILED or BUSY outgoing calls
-                            //callManager.tell(new DestroyCall(sender), self());
-                            return;
-                        } else {
-                            fsm.transition(message, finishDialing);
-                        }
-                    } else if (creatingRecording.equals(state)) {
-                        // Ask callMediaGroup to stop recording so we have the recording file available
-                        // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
-                        call.tell(new StopMediaGroup(), null);
-                        fsm.transition(message, finishRecording);
-                    } else if ((bridged.equals(state) || forking.equals(state)) && call == sender()) {
-                        if (!dialActionExecuted) {
-                            fsm.transition(message, finishDialing);
-                        }
-                    } else if (finishDialing.equals(state)) {
-                        removeDialBranch(message, sender);
-                        return;
-                    } else {
-                        if (!finishDialing.equals(state))
-                            fsm.transition(message, finished);
-                    }
-            } else if (CallStateChanged.State.BUSY == event.state()) {
-                if (forking.equals(state)) {
-                    if (sender==call) {
-                        //Move to finishDialing to clear the call and cancel all branches
-                        fsm.transition(message, finishDialing);
-                    } else if (dialBranches.contains(sender)) {
-                        removeDialBranch(message, sender);
-                        return;
-                    }
-                } else {
-                    fsm.transition(message, finishDialing);
-                }
-            } else if (CallStateChanged.State.CANCELED == event.state()) {
-                if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging) {
-                    //This is a canceled branch from a previous forking. We need to destroy the branch
-                    callManager.tell(new DestroyCall(sender), self());
-                    return;
-                } else {
-                    if (sender == call) {
-                        //Move to finished state only if the call actor send the Cancel.
-                        fsm.transition(message, finished);
-                    } else {
-                        //Do nothing, this is a Cancel from a dial branch previously canceled
-                        callManager.tell(new DestroyCall(sender), self());
-                        if (dialBranches != null && dialBranches.contains(sender)) {
-                            dialBranches.remove(sender);
-                        }
-                        if (dialBranches == null || dialBranches.size() == 0) {
-                            fsm.transition(message, finished);
-                        }
-                        return;
-                    }
-                }
-            }
+            onCallStateChanged(message, state, sender);
         } else if (CallManagerResponse.class.equals(klass)) {
             final CallManagerResponse<Object> response = (CallManagerResponse<Object>) message;
             if (response.succeeded()) {
@@ -741,51 +597,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             // When a conference stops it will ask all its calls to Leave
             // Then the call state will change and the voice interpreter will take proper action then
         } else if (DownloaderResponse.class.equals(klass)) {
-            final DownloaderResponse response = (DownloaderResponse) message;
-            if (logger.isDebugEnabled()) {
-                logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
-                    + ", statusCode " + response.get().getStatusCode());
-            }
-            if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-                if (conferencing.equals(state)) {
-                    //This is the downloader response for Conferencing waitUrl
-                    if (parser != null) {
-                        getContext().stop(parser);
-                        parser = null;
-                    }
-                    final String type = response.get().getContentType();
-                    if (type != null) {
-                        if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
-                            parser = parser(response.get().getContentAsString());
-                        } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
-                            parser = parser("<Play>" + request.getUri() + "</Play>");
-                        } else if (type.contains("text/plain")) {
-                            parser = parser("<Say>" + response.get().getContentAsString() + "</Say>");
-                        }
-                    } else {
-                        //If the waitUrl is invalid then move to notFound
-                        fsm.transition(message, hangingUp);
-                    }
-                    final GetNextVerb next = GetNextVerb.instance();
-                    parser.tell(next, self());
-                    return;
-                }
-                if (dialBranches == null || dialBranches.size()==0) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Downloader response is success, moving to Ready state");
-                    }
-                    fsm.transition(message, ready);
-                } else {
-                    return;
-                }
-            } else if (downloadingRcml.equals(state) && fallbackUrl != null) {
-                fsm.transition(message, downloadingFallbackRcml);
-            } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
-                fsm.transition(message, notFound);
-            } else {
-                call.tell(new CallFail(response.error()), self);
-//                    fsm.transition(message, finished);
-            }
+            onDownloaderResponse(message, state);
         } else if (DiskCacheResponse.class.equals(klass)) {
             final DiskCacheResponse response = (DiskCacheResponse) message;
             if (response.succeeded()) {
@@ -1001,6 +813,209 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (GetRelatedCall.class.equals(klass)) {
             onGetRelatedCall((GetRelatedCall) message, self, sender);
+        }
+    }
+
+    private void onCallResponse(Object message, State state) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (forking.equals(state)) {
+            // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
+            // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest
+            // response received
+            final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
+            // Check from whom is the message (initial call or outbound call) and update info accordingly
+            if (sender == call) {
+                callInfo = response.get();
+            } else {
+                outboundCallInfo = response.get();
+            }
+        } else if (acquiringCallInfo.equals(state)) {
+            final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
+            // Check from whom is the message (initial call or outbound call) and update info accordingly
+            if (sender == call) {
+                callInfo = response.get();
+                if (callInfo.state() == CallStateChanged.State.CANCELED || (callInfo.invite() != null && callInfo.invite().getSession().getState().equals(SipSession.State.TERMINATED))) {
+                    fsm.transition(message, finished);
+                    return;
+                } else {
+                    call.tell(new Observe(self()), self());
+                    //Enable Monitoring Service for the call
+                    if (monitoring != null)
+                        call.tell(new Observe(monitoring), self());
+                }
+            } else {
+                outboundCallInfo = response.get();
+            }
+
+            final String direction = callInfo.direction();
+            if ("inbound".equals(direction)) {
+                if (rcml!=null && !rcml.isEmpty()) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("System app is present will proceed to ready state, system app: "+rcml);
+                    }
+                    createInitialCallRecord((CallResponse<CallInfo>) message);
+                    fsm.transition(message, ready);
+                } else {
+                    fsm.transition(message, downloadingRcml);
+                }
+            } else {
+                fsm.transition(message, initializingCall);
+            }
+        } else if (acquiringOutboundCallInfo.equals(state)) {
+            final CallResponse<CallInfo> response = (CallResponse<CallInfo>) message;
+            this.outboundCallInfo = response.get();
+            fsm.transition(message, creatingBridge);
+        }
+    }
+
+    private void onDownloaderResponse(Object message, State state) throws IOException, TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final DownloaderResponse response = (DownloaderResponse) message;
+        if (logger.isDebugEnabled()) {
+            logger.debug("Rcml URI : " + response.get().getURI() + "response succeeded " + response.succeeded()
+                + ", statusCode " + response.get().getStatusCode());
+        }
+        if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
+            if (conferencing.equals(state)) {
+                //This is the downloader response for Conferencing waitUrl
+                if (parser != null) {
+                    getContext().stop(parser);
+                    parser = null;
+                }
+                final String type = response.get().getContentType();
+                if (type != null) {
+                    if (type.contains("text/xml") || type.contains("application/xml") || type.contains("text/html")) {
+                        parser = parser(response.get().getContentAsString());
+                    } else if (type.contains("audio/wav") || type.contains("audio/wave") || type.contains("audio/x-wav")) {
+                        parser = parser("<Play>" + request.getUri() + "</Play>");
+                    } else if (type.contains("text/plain")) {
+                        parser = parser("<Say>" + response.get().getContentAsString() + "</Say>");
+                    }
+                } else {
+                    //If the waitUrl is invalid then move to notFound
+                    fsm.transition(message, hangingUp);
+                }
+                final GetNextVerb next = GetNextVerb.instance();
+                parser.tell(next, self());
+                return;
+            }
+            if (dialBranches == null || dialBranches.size()==0) {
+                if(logger.isInfoEnabled()) {
+                    logger.info("Downloader response is success, moving to Ready state");
+                }
+                fsm.transition(message, ready);
+            } else {
+                return;
+            }
+        } else if (downloadingRcml.equals(state) && fallbackUrl != null) {
+            fsm.transition(message, downloadingFallbackRcml);
+        } else if (response.succeeded() && HttpStatus.SC_NOT_FOUND == response.get().getStatusCode()) {
+            fsm.transition(message, notFound);
+        } else {
+            call.tell(new CallFail(response.error()), self());
+//                    fsm.transition(message, finished);
+        }
+    }
+
+    private void onCallStateChanged(Object message, State state, ActorRef sender) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final CallStateChanged event = (CallStateChanged) message;
+        callState = event.state();
+        if(logger.isInfoEnabled()){
+            logger.info("VoiceInterpreter received CallStateChanged event: "+callState);
+        }
+        if (CallStateChanged.State.RINGING == event.state()) {
+            if (forking.equals(state)) {
+                outboundCall = sender;
+            }
+            // update db and callback statusCallback url.
+        } else if (CallStateChanged.State.IN_PROGRESS == event.state()) {
+            if (initializingCall.equals(state) || rejecting.equals(state)) {
+                if (parser != null) {
+                    fsm.transition(message, ready);
+                } else {
+                    fsm.transition(message, downloadingRcml);
+                }
+            } else if (joiningConference.equals(state)) {
+                fsm.transition(message, conferencing);
+            } else if (forking.equals(state)) {
+                if (outboundCall == null || !sender.equals(call)) {
+                    outboundCall = sender;
+                }
+                fsm.transition(message, acquiringOutboundCallInfo);
+            } else if (conferencing.equals(state)) {
+                // Call left the conference successfully
+                if (!liveCallModification) {
+                    // Hang up the call
+                    final Hangup hangup = new Hangup();
+                    call.tell(hangup, sender);
+                } else {
+                    // XXX start processing new RCML and give instructions to call
+                }
+            }
+        } else if (CallStateChanged.State.NO_ANSWER == event.state() || CallStateChanged.State.COMPLETED == event.state()
+                || CallStateChanged.State.FAILED == event.state()) {
+            if (bridging.equals(state)) {
+                fsm.transition(message, finishDialing);
+            } else if (bridged.equals(state) && (sender.equals(outboundCall) || outboundCall != null)) {
+                fsm.transition(message, finishDialing);
+            } else
+                // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
+                if (forking.equals(state) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
+                    if (!sender.equals(call)) {
+                        removeDialBranch(message, sender);
+                        //Properly clean up FAILED or BUSY outgoing calls
+                        //callManager.tell(new DestroyCall(sender), self());
+                        return;
+                    } else {
+                        fsm.transition(message, finishDialing);
+                    }
+                } else if (creatingRecording.equals(state)) {
+                    // Ask callMediaGroup to stop recording so we have the recording file available
+                    // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
+                    call.tell(new StopMediaGroup(), null);
+                    fsm.transition(message, finishRecording);
+                } else if ((bridged.equals(state) || forking.equals(state)) && call == sender()) {
+                    if (!dialActionExecuted) {
+                        fsm.transition(message, finishDialing);
+                    }
+                } else if (finishDialing.equals(state)) {
+                    removeDialBranch(message, sender);
+                    return;
+                } else {
+                    if (!finishDialing.equals(state))
+                        fsm.transition(message, finished);
+                }
+        } else if (CallStateChanged.State.BUSY == event.state()) {
+            if (forking.equals(state)) {
+                if (sender==call) {
+                    //Move to finishDialing to clear the call and cancel all branches
+                    fsm.transition(message, finishDialing);
+                } else if (dialBranches.contains(sender)) {
+                    removeDialBranch(message, sender);
+                    return;
+                }
+            } else {
+                fsm.transition(message, finishDialing);
+            }
+        } else if (CallStateChanged.State.CANCELED == event.state()) {
+            if (state == initializingBridge || state == acquiringOutboundCallInfo || state == bridging) {
+                //This is a canceled branch from a previous forking. We need to destroy the branch
+                callManager.tell(new DestroyCall(sender), self());
+                return;
+            } else {
+                if (sender == call) {
+                    //Move to finished state only if the call actor send the Cancel.
+                    fsm.transition(message, finished);
+                } else {
+                    //Do nothing, this is a Cancel from a dial branch previously canceled
+                    callManager.tell(new DestroyCall(sender), self());
+                    if (dialBranches != null && dialBranches.contains(sender)) {
+                        dialBranches.remove(sender);
+                    }
+                    if (dialBranches == null || dialBranches.size() == 0) {
+                        fsm.transition(message, finished);
+                    }
+                    return;
+                }
+            }
         }
     }
 
