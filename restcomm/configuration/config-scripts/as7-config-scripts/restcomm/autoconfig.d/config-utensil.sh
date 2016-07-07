@@ -37,7 +37,7 @@ initUserPassword(){
         # change admin user
         if grep -q "uninitialized" $SQL_FILE; then
             echo "Update Admin user"
-            sed -i "s/administrator@company.com/${INITIAL_ADMIN_USER}/g" $SQL_FILE
+            sed -e "s/administrator@company.com/${INITIAL_ADMIN_USER}/g" $SQL_FILE > $SQL_FILE
         else
             echo "Adminitrator User Already changed"
         fi
@@ -48,10 +48,10 @@ initUserPassword(){
         if grep -q "uninitialized" $SQL_FILE; then
            PASSWORD_ENCRYPTED=`echo -n "${INITIAL_ADMIN_PASSWORD}" | md5sum |cut -d " " -f1`
             #echo "Update password to ${INITIAL_ADMIN_PASSWORD}($PASSWORD_ENCRYPTED)"
-            sed -i "s/uninitialized/active/g" $SQL_FILE
-            sed -i "s/77f8c12cc7b8f8423e5c38b035249166/$PASSWORD_ENCRYPTED/g" $SQL_FILE
-            sed -i "s/2012-04-24 00:00:00.000000000/`echo "$(date +'%Y-%m-%d %H:%M:%S.%N')"`/" $SQL_FILE
-            sed -i "s/2012-04-24 00:00:00.000000000/`echo "$(date +'%Y-%m-%d %H:%M:%S.%N')"`/" $SQL_FILE
+            sed -e "s/uninitialized/active/g" $SQL_FILE > $SQL_FILE
+            sed -e "s/77f8c12cc7b8f8423e5c38b035249166/$PASSWORD_ENCRYPTED/g" $SQL_FILE > $SQL_FILE
+            sed -e "s/2012-04-24 00:00:00.000000000/`echo "$(date +'%Y-%m-%d %H:%M:%S.%N')"`/" $SQL_FILE > $SQL_FILE
+            sed -ie "s/2012-04-24 00:00:00.000000000/`echo "$(date +'%Y-%m-%d %H:%M:%S.%N')"`/" $SQL_FILE > $SQL_FILE
         else
             echo "Adminitrator Password Already changed"
         fi
@@ -65,20 +65,20 @@ configSMTP(){
             echo  'Not possible to continue with SMTP configuration'
 
     else
-            echo "SMTP_USER $SMTP_USER SMTP_PASSWORD $SMTP_PASSWORD SMTP_HOST $SMTP_HOST"
-            sed -i "/<smtp-notify>/ {
+        echo "SMTP_USER $SMTP_USER SMTP_PASSWORD $SMTP_PASSWORD SMTP_HOST $SMTP_HOST"
+        sed -e "/<smtp-notify>/ {
             N; s|<host>.*</host>|<host>${SMTP_HOST}</host>|
             N; s|<user>.*</user>|<user>${SMTP_USER}</user>|
             N; s|<password>.*</password>|<password>${SMTP_PASSWORD}</password>|
             N; s|<port>.*</port>|<port>${SMTP_PORT}</port>|
-            }" $FILE
+            }" $FILE > $FILE
 
-            sed -i "/<smtp-service>/ {
+        sed -e "/<smtp-service>/ {
             N; s|<host>.*</host>|<host>${SMTP_HOST}</host>|
             N; s|<user>.*</user>|<user>${SMTP_USER}</user>|
             N; s|<password>.*</password>|<password>${SMTP_PASSWORD}</password>|
             N; s|<port>.*</port>|<port>${SMTP_PORT}</port>|
-            }" $FILE
+            }" $FILE > $FILE
     fi
 }
 
@@ -86,10 +86,10 @@ configMonitoring(){
     if [ -z ${GRAYLOG_SERVER} ]; then
         echo "Graylog Monitoring is not configured";
         crontab -l 2>/dev/null > mycron
-        crontab -l | grep -q 'HDmonitor' && sed -i '/HDmonitor/d' mycron
-        crontab -l | grep -q 'RMSJVMonitor' && sed -i '/RMSJVMonitor/d' mycron
-        crontab -l | grep -q 'RCJVMonitor' && sed -i '/RCJVMonitor/d' mycron
-        crontab -l | grep -q 'SERVERAMonitor' && sed -i '/SERVERAMonitor/d' mycron
+        crontab -l | grep -q 'HDmonitor' && sed -e '/HDmonitor/d' mycron > mycron
+        crontab -l | grep -q 'RMSJVMonitor' && sed -e '/RMSJVMonitor/d' mycron > mycron
+        crontab -l | grep -q 'RCJVMonitor' && sed -e '/RCJVMonitor/d' mycron > mycron
+        crontab -l | grep -q 'SERVERAMonitor' && sed -e '/SERVERAMonitor/d' mycron > mycron
         #install new cron file
         crontab mycron
         rm mycron
@@ -103,28 +103,28 @@ configMonitoring(){
         #echo new cron into cron file
         crontab -l | grep -q 'MAILTO=""'  && echo 'entry exists' || echo "MAILTO=\"\"" >> mycron
         if [[ "$HD_MONITOR" == "false" || "$HD_MONITOR" == "FALSE" ]]; then
-            sed -i '/HDmonitor/d' mycron
+            sed -e '/HDmonitor/d' mycron > mycron
             echo "HD_MONITOR: $HD_MONITOR"
         else
             crontab -l | grep -q 'Graylog_Monitoring.sh HDmonitor' && echo 'entry exists' || echo "0/30 * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh HDmonitor" >> mycron;
         fi
 
         if [[ "$RMSJVM_MONITOR" == "false" || "$RMSJVM_MONITOR" == "FALSE" ]]; then
-            sed -i '/RMSJVMonitor/d' mycron
+            sed -e '/RMSJVMonitor/d' mycron > mycron
             echo "RMSJVM_MONITOR: $RMSJVM_MONITOR";
         else
             crontab -l | grep -q 'Graylog_Monitoring.sh RMSJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RMSJVMonitor" >> mycron;
         fi
 
         if [[ "$RCJVM_MONITOR" == "false" || "$RCJVM_MONITOR" == "FALSE" ]]; then
-            sed -i '/RCJVMonitor/d' mycron
+            sed -e '/RCJVMonitor/d' mycron > mycron
             echo "RCJVM_MONITOR: $RCJVM_MONITOR";
         else
             crontab -l | grep -q 'Graylog_Monitoring.sh RCJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RCJVMonitor" >> mycron;
         fi
 
         if [[ "$RAM_MONITOR" == "false" || "$RAM_MONITOR" == "FALSE" ]]; then
-            sed -i '/SERVERAMonitor/d' mycron
+            sed -e '/SERVERAMonitor/d' mycron > mycron
             echo "RAM_MONITOR: $RAM_MONITOR";
         else
             crontab -l | grep -q 'Graylog_Monitoring.sh SERVERAMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh SERVERAMonitor" >> mycron;
@@ -135,8 +135,9 @@ configMonitoring(){
         rm mycron
 
         #set Server Label
-        sed -i "s|SERVERLABEL=.*|SERVERLABEL=\"${SERVERLABEL}\"|" $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh;
-        sed -i "s|GRAYLOG_SERVER=.*|GRAYLOG_SERVER=\"${GRAYLOG_SERVER}\"|" $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh;
+        FILE=$RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh;
+        sed -e "s|SERVERLABEL=.*|SERVERLABEL=\"${SERVERLABEL}\"|" $FILE > $FILE
+        sed -e "s|GRAYLOG_SERVER=.*|GRAYLOG_SERVER=\"${GRAYLOG_SERVER}\"|" $FILE > $FILE
      fi
 }
 

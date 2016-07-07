@@ -54,7 +54,7 @@ configConnectors() {
 
 
 	#Enable SipServlet statistics
-	grep -q 'gather-statistics' $FILE || sed -i "s|congestion-control-interval=\".*\"|& gather-statistics=\"true\"|" $FILE
+	grep -q 'gather-statistics' $FILE || sed -e "s|congestion-control-interval=\".*\"|& gather-statistics=\"true\"|" $FILE > $FILE
 	echo "Configured gather-statistics"
 }
 
@@ -73,7 +73,7 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
     fi
 
 	#check for port offset
-    sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
+    sed -e "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE > $FILE
 
 	sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|" \
         -e "s|<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" \
@@ -82,8 +82,8 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
         -e "s|<socket-binding name=\"sip-tls\" port=\".*\"/>|<socket-binding name=\"sip-tls\" port=\"$SIP_PORT_TLS\"/>|" \
         -e "s|<socket-binding name=\"sip-ws\" port=\".*\"/>|<socket-binding name=\"sip-ws\" port=\"$SIP_PORT_WS\"/>|" \
         -e "s|<socket-binding name=\"sip-wss\" port=\".*\"/>|<socket-binding name=\"sip-wss\" port=\"$SIP_PORT_WSS\"/>|" \
-        $FILE > $FILE.bak
-        mv $FILE.bak $FILE
+        $FILE > $FILE
+
 }
 
 setMoreConnectors(){
