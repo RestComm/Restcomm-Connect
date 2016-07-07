@@ -363,30 +363,41 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
     protected Response linkAccountToUser(String password, String accountUsername, MediaType responseType) {
         Account operatedAccount = accountsDao.getAccountToAuthenticate(accountUsername); // the account targetted in the URL path
         if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
-            Account mappedAccount = userIdentityContext.getKeycloakMappedAccount();  // that's the operating account mapped from the bearer token
+            Account operatingAccount;
             if (operatedAccount == null)
                 return Response.status(NOT_FOUND).build(); // FORBIDDEN seems better that NOT_FOUND for this case
-            if (mappedAccount != null ) {
-                if (!operatedAccount.getSid().toString().equals(mappedAccount.getSid().toString()))
-                    return Response.status(FORBIDDEN).build(); // tampering with other accounts in KeycloakAuth mode is  not allowed
-                if ( mappedAccount.getLinked() == false ) {
-                    if (RestcommAuthenticator.verifyPassword(mappedAccount, password) == true) {
-                        mappedAccount = mappedAccount.setLinked(true);
-                        accountsDao.updateAccount(mappedAccount);
-                        return Response.ok().build();
-                    } else {
-                        ErrorResponse response = new ErrorResponse(ErrorResponse.ErrorCode.INVALID_LINKING_PASSWORD);
-                        xstream.registerConverter(new ErrorResponseConverter(configuration));
-                        return buildResponse(response, FORBIDDEN, responseType, gson, xstream);
-                    }
-                } else {
-                    // already linked
-                    return Response.status(CONFLICT).build(); // since it's a linked account, no need to check for the password too
-                }
+            if ( userIdentityContext.getEffectiveAccount() != null ) {
+                // ok, we have a trusted operating account
+                // let's see if it can really modify the operated account
+                // TODO maybe define a new permission here ? or just use accounts:modify ?
+                operatingAccount = userIdentityContext.getEffectiveAccount();
+                secure(operatedAccount, "Restcomm:Accounts:Modify", SecuredType.SECURED_ACCOUNT);
             } else {
-                ErrorResponse response = new ErrorResponse(ErrorResponse.ErrorCode.NO_MAPPED_ACCOUNT);
-                xstream.registerConverter(new ErrorResponseConverter(configuration));
-                return buildResponse(response, FORBIDDEN, responseType, gson, xstream);
+                // no trusted operating account
+                operatingAccount = userIdentityContext.getKeycloakMappedAccount();  // that's the operating account mapped from the bearer token
+                if (operatingAccount == null) {
+                    ErrorResponse response = new ErrorResponse(ErrorResponse.ErrorCode.NO_MAPPED_ACCOUNT);
+                    xstream.registerConverter(new ErrorResponseConverter(configuration));
+                    return buildResponse(response, FORBIDDEN, responseType, gson, xstream);
+                }
+                if (!operatingAccount.getSid().toString().equals(operatedAccount.getSid().toString()))
+                    return Response.status(FORBIDDEN).build(); // only self-linking allowed
+                // authorize using password from POST
+                if (! RestcommAuthenticator.verifyPassword(operatedAccount, password) ) {
+                    ErrorResponse response = new ErrorResponse(ErrorResponse.ErrorCode.INVALID_LINKING_PASSWORD);
+                    xstream.registerConverter(new ErrorResponseConverter(configuration));
+                    return buildResponse(response, FORBIDDEN, responseType, gson, xstream);
+                }
+            }
+            // at this point operating account has the permission to link/unlink the operated account
+
+            if ( operatedAccount.getLinked() == false ) {
+                operatedAccount = operatedAccount.setLinked(true);
+                accountsDao.updateAccount(operatedAccount);
+                return Response.ok().build();
+            } else {
+                // already linked
+                return Response.status(CONFLICT).build(); // since it's a linked account, no need to check for the password too
             }
         } else
         if (userIdentityContext.getAuthKind() == AuthKind.RestcommAuth) {

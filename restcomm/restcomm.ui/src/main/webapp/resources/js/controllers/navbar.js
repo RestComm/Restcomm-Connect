@@ -69,7 +69,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5, Notifications) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5, Notifications, $window, AuthService) {
   //$scope.sid = SessionService.get('sid');
 
   var accountBackup;
@@ -153,20 +153,23 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
 
   $scope.linkAccount = function(account) {
     RCommAccounts.link({accountSid: account.sid}, null, function () {
-        Notifications.success('Linked to user ' + account.email_address);
+        Notifications.success("Linked '" + account.friendly_name + "' account to Restcomm Identity user " + account.email_address);
+        $scope.getAccounts();
     });
   }
 
   $scope.unlinkAccount = function(account) {
     RCommAccounts.unlink({accountSid: account.sid},function () {
-        Notifications.info("Link with keycloak user " + account.email_address + ' broken');
+        Notifications.success("Link with Restcomm Identity user " + account.email_address + ' broken');
+        if (AuthService.getAccountSid() == account.sid) {
+            $window.location.reload(); // reload if operating on the logged user
+        } else {
+            $scope.getAccounts();
+        }
     });
   }
 
   $scope.getAccounts();
-
-
-
 });
 
 // Register Account Modal

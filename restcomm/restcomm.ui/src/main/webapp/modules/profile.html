@@ -88,12 +88,8 @@
                 <label class="col-md-4 control-label" for="linked">
                     <h5 class="no-margins">Linked</h5>
                 </label>
-                <div class="col-md-4">
-                    <input id="linked" type="text" class="form-control" placeholder="Friendly Name" maxlength="64" ng-model="account.linked" />
-                </div>
-                <div class="col-md-4">
-                    <button ng-click="unlinkAccount(account)" ng-show="account.linked" type="button" class="btn btn-info"><i class="fa fa-chain-broken"></i> Unlink</button>
-                    <button ng-click="linkAccount(account)" ng-show="!account.linked" type="button" class="btn btn-info"><i class="fa fa-chain"></i> Link</button>
+                <div class="col-md-2">
+                    <input id="linked" type="text" class="form-control" placeholder="Friendly Name" maxlength="64" readonly value="{{account.linked ? 'Yes' : 'No'}}" />
                 </div>
             </div>
             <div class="row form-horizontal">
@@ -105,6 +101,9 @@
         </form>
 
         <div class="">
+            <button ng-click="unlinkAccount(account)" ng-show="(account.sid != loggedAccount.sid) && account.linked" type="button" class="btn btn-info pull-right margin-left-10" title='Unlink account from Restcomm Identity user'><i class="fa fa-chain-broken"></i> Unlink</button>
+            <button ng-click="linkAccount(account)" ng-show="!account.linked && (account.sid != loggedAccount.sid)" type="button" class="btn btn-info pull-right margin-left-10" title='Link account to Restcomm Identity user'><i class="fa fa-chain"></i> Link</button>
+
             <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="accountChanged" ng-disabled="(newPassword && pwdStrength < 50) || !accountValid">Save</button>
             <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="accountChanged">Reset Changes</button>
             <button class="btn btn-danger pull-left disabled">Delete Account</button>

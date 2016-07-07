@@ -314,27 +314,33 @@ angular.element(document).ready(['$http',function ($http) {
 
 
 // Authorization interceptor. It's effective when restcomm is secured by Keycloak.
-angular.module('rcApp').factory('authInterceptor', function($q) {
-    return {
-        request: function (config) {
-            if (!keycloakAuth.authz)
-                return config;
-            var deferred = $q.defer();
-            if (keycloakAuth.authz.token) {
-                keycloakAuth.authz.updateToken(5).success(function() {
-                    config.headers = config.headers || {};
-                    config.headers.Authorization = 'Bearer ' + keycloakAuth.authz.token;
-                    deferred.resolve(config);
-                }).error(function() {
-                    deferred.reject('Failed to refresh token');
-                });
-            }
-            return deferred.promise;
-        }
-    };
-}).config(['$httpProvider','IdentityConfig', function($httpProvider,IdentityConfig) {
+angular.module('rcApp').config(['$httpProvider','IdentityConfig', function($httpProvider,IdentityConfig) {
     if ( IdentityConfig.securedByKeycloak() ) {
-        $httpProvider.interceptors.push('authInterceptor');
+        $httpProvider.interceptors.push(function($q, $location, $rootScope) {
+            return {
+                request: function (config) {
+                    if (!keycloakAuth.authz)
+                        return config;
+                    var deferred = $q.defer();
+                    if (keycloakAuth.authz.token) {
+                        keycloakAuth.authz.updateToken(5).success(function() {
+                            config.headers = config.headers || {};
+                            config.headers.Authorization = 'Bearer ' + keycloakAuth.authz.token;
+                            deferred.resolve(config);
+                        }).error(function() {
+                            deferred.reject('Failed to refresh token');
+                        });
+                    }
+                    return deferred.promise;
+                },
+                responseError: function(response){
+                    if (response.status == 403 && response.data.error == 'ACCOUNT_NOT_LINKED') {
+                        $rootScope.$broadcast('RC_ERROR', 'KEYCLOAK_ACCOUNT_NOT_LINKED')
+                    }
+                    return $q.reject(response);
+                },
+            };
+        });
     }
 }]);
 

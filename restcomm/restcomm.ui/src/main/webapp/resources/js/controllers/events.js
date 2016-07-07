@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappService, $state, Notifications) {
+angular.module('rcApp').controller('EventsCtrl', function ($rootScope, AuthService, rappService, $state, Notifications) {
 	//console.log("INSIDE EventsCtrl");
 	$rootScope.$on("incoming-number-updated", function (event, data) {
         //console.log("new incoming-number-updated event with the following data: ");
@@ -23,7 +23,7 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	});
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
-	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
+	    console.log("switching states: " + fromState.name + " -> " + toState.name);
 	});
 
 	$rootScope.$on('$stateChangeError',  function(event, toState, toParams, fromState, fromParams, error){
@@ -62,6 +62,19 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    } else
 	    if (error == 'KEYCLOAK_ACCOUNT_ALREADY_LINKED') {
 	        $state.go('restcomm.dashboard');
+	    }
+	});
+
+    // This error is thrown from the interceptors
+	$rootScope.$on('RC_ERROR', function (event, error) {
+	    if (error == 'KEYCLOAK_ACCOUNT_NOT_LINKED') {
+            if ( $state.$current.name != 'unlinked' ) {
+                console.log('redirecting to unlinked state');
+                AuthService.clear();
+                $state.go('root.unlinked', {evaluateAccess:false});
+            }
+	    } else {
+	        console.log('Unknown error: ', error);
 	    }
 	});
 });

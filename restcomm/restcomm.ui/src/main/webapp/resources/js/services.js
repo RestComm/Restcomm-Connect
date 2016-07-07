@@ -141,6 +141,13 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         return deferred.promise;
     }
 
+    function reload() {
+        account = null;
+        uninitialized = null;
+        SessionService.clearStoredCredentials();
+        return checkAccess();
+    }
+
     function assertUnlinked() {
         try {
             return checkAccess().then(function (existingLinkedAccount) {
@@ -279,6 +286,10 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         return null;
     }
 
+    function clear() {
+        clearActiveAccount();
+    }
+
     // public interface
     return {
         login: login,
@@ -292,7 +303,9 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         onAuthError: onAuthError,
         onError403: onError403,
         updatePassword: updatePassword,
-        getKeycloakUsername: getKeycloakUsername
+        getKeycloakUsername: getKeycloakUsername,
+        reload: reload,
+        clear: clear
     }
 });
 
