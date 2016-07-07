@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is free software; you can redistribute it and/or modify it under
+	the terms of the GNU Lesser General Public License as published by the Free
+	Software Foundation; either version 2.1 of the License, or (at your option)
+	any later version. This software is distributed in the hope that it will
+	be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+	Public License for more details. You should have received a copy of the GNU
+	Lesser General Public License along with this software; if not, write to
+	the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
+<mediaserver>
+	<network>
+		<bindAddress>127.0.0.1</bindAddress>
+		<externalAddress>127.0.0.1</externalAddress>
+		<network>127.0.0.1</network>
+		<subnet>255.255.255.255</subnet>
+		<sbc>false</sbc>
+	</network>
+
+	<controller protocol="mgcp">
+		<address>127.0.0.1</address>
+		<port>2427</port>
+		<endpoints>
+			<endpoint name="mobicents/bridge/" class="org.mobicents.media.server.mgcp.endpoint.BridgeEndpoint" poolSize="50" />
+			<endpoint name="mobicents/ivr/" class="org.mobicents.media.server.mgcp.endpoint.IvrEndpoint" poolSize="50" />
+			<endpoint name="mobicents/cnf/" class="org.mobicents.media.server.mgcp.endpoint.ConferenceEndpoint" poolSize="50" />
+		</endpoints>
+		<configuration>mgcp-conf.xml</configuration>
+		<poolSize>25</poolSize>
+	</controller>
+
+	<media>
+		<timeout>0</timeout>
+		<lowPort>34534</lowPort>
+		<highPort>65534</highPort>
+		<jitterBuffer size="50" />
+		<codecs>
+			<codec name="l16" />
+			<codec name="pcmu" />
+			<codec name="pcma" />
+			<codec name="gsm" />
+			<!-- RestComm Media Server ships with G.729 codec. G.729 includes patents
+				from several companies and is licensed by Sipro Lab Telecom. Sipro Lab Telecom
+				is the authorized Intellectual Property Licensing Administrator for G.729
+				technology and patent pool. In a number of countries, the use of G.729 may
+				require a license fee and/or royalty fee. For more information please visit
+				http://www.sipro.com/G-729.html -->
+			<codec name="g729" />
+		</codecs>
+	</media>
+
+	<resources>
+		<localConnection poolSize="100" />
+		<remoteConnection poolSize="50" />
+		<player poolSize="50" />
+		<recorder poolSize="50" />
+		<dtmfDetector poolSize="50" dbi="-35" />
+		<dtmfGenerator poolSize="50" toneVolume="-20" toneDuration="80" />
+		<signalDetector poolSize="0" />
+		<signalGenerator poolSize="0" />
+	</resources>
+</mediaserver>
