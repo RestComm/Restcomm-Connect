@@ -128,7 +128,7 @@ configMybatis() {
 	\			<property name="data_source" value="java:/MySqlDS" />\
 	\		</dataSource>\
 	\	</environment>\
-	' $FILE > $FILE > $FILE.bak
+	' $FILE > $FILE.bak
 
 	sed -e '/<environments.*>/ s|default=".*"|default="mysql"|' $FILE.bak > $FILE
 	echo 'Activated mybatis environment for MySQL';
@@ -146,7 +146,7 @@ configureMySQLDataSource() {
 	fi
 
 	sed -e "s|<user-name>.*</user-name>|<user-name>$2</user-name>|g" \
-	sed -e "s|<password>.*</password>|<password>$3</password>|g" $FILE.bak > $FILE
+	    -e "s|<password>.*</password>|<password>$3</password>|g" $FILE.bak > $FILE
 	echo 'Updated MySQL DataSource Configuration'
 }
 

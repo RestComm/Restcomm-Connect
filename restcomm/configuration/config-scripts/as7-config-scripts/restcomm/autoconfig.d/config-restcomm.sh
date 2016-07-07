@@ -459,9 +459,10 @@ otherRestCommConf(){
 
     #Remove if is set in earlier run.
     FILE=$RESTCOMM_BIN/standalone.conf
-    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -e "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $FILE > $FILE.bak
-    mv $FILE.bak $FILE
-
+    if  grep -q 'allowLegacyHelloMessages' $FILE; then
+        sed -e "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $FILE > $FILE.bak
+        mv $FILE.bak $FILE
+    fi
 
     if [[ "$SSLSNI" == "false" || "$SSLSNI" == "FALSE" ]]; then
 		  sed -e "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $FILE > $FILE.bak

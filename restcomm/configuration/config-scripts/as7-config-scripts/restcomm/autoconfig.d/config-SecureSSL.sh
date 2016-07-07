@@ -103,8 +103,15 @@ CertConfigure(){
 
   #Final necessary configuration. Protocols permitted, etc.
   FILE=$RESTCOMM_BIN/standalone.conf
-  grep -q 'ephemeralDHKeySize' $RESTCOMM_BIN/standalone.conf || sed -e "s|-Djava.awt.headless=true|& -Djdk.tls.ephemeralDHKeySize=2048|" $FILE > $FILE.bak
-  grep -q 'https.protocols' $RESTCOMM_BIN/standalone.conf || sed -e "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $FILE.bak > $FILE
+  if ! grep -q 'ephemeralDHKeySize' $FILE; then
+    sed -e "s|-Djava.awt.headless=true|& -Djdk.tls.ephemeralDHKeySize=2048|" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
+  fi
+
+  if !  grep -q 'https.protocols' $FILE; then
+    sed -e "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $FILE.bak > $FILE.bak
+    mv $FILE.bak $FILE
+  fi
 }
 
 #SIP-Servlets configuration for HTTPS.
@@ -113,7 +120,8 @@ MssStackConf(){
 	FILE=$RESTCOMM_CONF/mss-sip-stack.properties
 
 	if  grep -q 'gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled' "$FILE"; then
-   		sed -e '/gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled/,+5d' $FILE > $FILE
+   		sed -e '/gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled/,+5d' $FILE > $FILE.bak
+   		mv $FILE.bak $FILE
  	fi
 
 	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
@@ -132,7 +140,8 @@ MssStackConf(){
     \javax.net.ssl.keyStorePassword='" $TRUSTSTORE_PASSWORD"'\
     \javax.net.ssl.trustStorePassword='"$TRUSTSTORE_PASSWORD"'\
     \javax.net.ssl.trustStore='"$TRUSTSTORE_LOCATION"'\
-    \javax.net.ssl.keyStoreType=JKS' $FILE > $FILE
+    \javax.net.ssl.keyStoreType=JKS' $FILE > $FILE.bak
+    mv $FILE.bak $FILE
 }
 
 # MAIN
