@@ -36,39 +36,21 @@ public class IdentityInstance {
     private String name;
     private DateTime dateCreated;
     private DateTime dateUpdated;
-    private String restcommRestRAT;
-    private DateTime restcommRestLastRegistrationDate;
-    private Status restcommRestStatus;
-    private String restcommRestClientSecret; // ++
-    private String restcommUiRAT;
-    private DateTime restcommUiLastRegistrationDate;
-    private Status restcommUiStatus;
-    private String rvdRestRAT;
-    private DateTime rvdRestLastRegistrationDate;
-    private Status rvdRestStatus;
-    private String rvdUiRAT;
-    private DateTime rvdUiLastRegistrationDate;
-    private Status rvdUiStatus;
+    private String restcommRAT;
+    private DateTime restcommLastRegistrationDate;
+    private Status restcommStatus;
+    private String restcommClientSecret; // ++
 
-    public IdentityInstance(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRestRAT, DateTime restcommRestLastRegistrationDate, Status restcommRestStatus, String restcommRestClientSecret, String restcommUiRAT, DateTime restcommUiLastRegistrationDate, Status restcommUiStatus, String rvdRestRAT, DateTime rvdRestLastRegistrationDate, Status rvdRestStatus, String rvdUiRAT, DateTime rvdUiLastRegistrationDate, Status rvdUiStatus) {
+    public IdentityInstance(Sid sid, Sid organizationSid, String name, DateTime dateCreated, DateTime dateUpdated, String restcommRAT, DateTime restcommLastRegistrationDate, Status restcommStatus, String restcommClientSecret) {
         this.sid = sid;
         this.organizationSid = organizationSid;
         this.name = name;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
-        this.restcommRestRAT = restcommRestRAT;
-        this.restcommRestLastRegistrationDate = restcommRestLastRegistrationDate;
-        this.restcommRestStatus = restcommRestStatus;
-        this.restcommRestClientSecret = restcommRestClientSecret;
-        this.restcommUiRAT = restcommUiRAT;
-        this.restcommUiLastRegistrationDate = restcommUiLastRegistrationDate;
-        this.restcommUiStatus = restcommUiStatus;
-        this.rvdRestRAT = rvdRestRAT;
-        this.rvdRestLastRegistrationDate = rvdRestLastRegistrationDate;
-        this.rvdRestStatus = rvdRestStatus;
-        this.rvdUiRAT = rvdUiRAT;
-        this.rvdUiLastRegistrationDate = rvdUiLastRegistrationDate;
-        this.rvdUiStatus = rvdUiStatus;
+        this.restcommRAT = restcommRAT;
+        this.restcommLastRegistrationDate = restcommLastRegistrationDate;
+        this.restcommStatus = restcommStatus;
+        this.restcommClientSecret = restcommClientSecret;
     }
 
     public IdentityInstance() {
@@ -91,52 +73,16 @@ public class IdentityInstance {
         return name;
     }
 
-    public String getRestcommRestRAT() {
-        return restcommRestRAT;
+    public String getRestcommRAT() {
+        return restcommRAT;
     }
 
-    public DateTime getRestcommRestLastRegistrationDate() {
-        return restcommRestLastRegistrationDate;
+    public DateTime getRestcommLastRegistrationDate() {
+        return restcommLastRegistrationDate;
     }
 
-    public Status getRestcommRestStatus() {
-        return restcommRestStatus;
-    }
-
-    public String getRestcommUiRAT() {
-        return restcommUiRAT;
-    }
-
-    public DateTime getRestcommUiLastRegistrationDate() {
-        return restcommUiLastRegistrationDate;
-    }
-
-    public Status getRestcommUiStatus() {
-        return restcommUiStatus;
-    }
-
-    public String getRvdRestRAT() {
-        return rvdRestRAT;
-    }
-
-    public DateTime getRvdRestLastRegistrationDate() {
-        return rvdRestLastRegistrationDate;
-    }
-
-    public Status getRvdRestStatus() {
-        return rvdRestStatus;
-    }
-
-    public String getRvdUiRAT() {
-        return rvdUiRAT;
-    }
-
-    public DateTime getRvdUiLastRegistrationDate() {
-        return rvdUiLastRegistrationDate;
-    }
-
-    public Status getRvdUiStatus() {
-        return rvdUiStatus;
+    public Status getRestcommStatus() {
+        return restcommStatus;
     }
 
     public void setSid(Sid sid) {
@@ -151,52 +97,16 @@ public class IdentityInstance {
         this.name = name;
     }
 
-    public void setRestcommRestRAT(String restcommRestRAT) {
-        this.restcommRestRAT = restcommRestRAT;
+    public void setRestcommRAT(String restcommRAT) {
+        this.restcommRAT = restcommRAT;
     }
 
-    public void setRestcommRestLastRegistrationDate(DateTime restcommRestLastRegistrationDate) {
-        this.restcommRestLastRegistrationDate = restcommRestLastRegistrationDate;
+    public void setRestcommLastRegistrationDate(DateTime restcommLastRegistrationDate) {
+        this.restcommLastRegistrationDate = restcommLastRegistrationDate;
     }
 
-    public void setRestcommRestStatus(Status restcommRestStatus) {
-        this.restcommRestStatus = restcommRestStatus;
-    }
-
-    public void setRestcommUiRAT(String restcommUiRAT) {
-        this.restcommUiRAT = restcommUiRAT;
-    }
-
-    public void setRestcommUiLastRegistrationDate(DateTime restcommUiLastRegistrationDate) {
-        this.restcommUiLastRegistrationDate = restcommUiLastRegistrationDate;
-    }
-
-    public void setRestcommUiStatus(Status restcommUiStatus) {
-        this.restcommUiStatus = restcommUiStatus;
-    }
-
-    public void setRvdRestRAT(String rvdRestRAT) {
-        this.rvdRestRAT = rvdRestRAT;
-    }
-
-    public void setRvdRestLastRegistrationDate(DateTime rvdRestLastRegistrationDate) {
-        this.rvdRestLastRegistrationDate = rvdRestLastRegistrationDate;
-    }
-
-    public void setRvdRestStatus(Status rvdRestStatus) {
-        this.rvdRestStatus = rvdRestStatus;
-    }
-
-    public void setRvdUiRAT(String rvdUiRAT) {
-        this.rvdUiRAT = rvdUiRAT;
-    }
-
-    public void setRvdUiLastRegistrationDate(DateTime rvdUiLastRegistrationDate) {
-        this.rvdUiLastRegistrationDate = rvdUiLastRegistrationDate;
-    }
-
-    public void setRvdUiStatus(Status rvdUiStatus) {
-        this.rvdUiStatus = rvdUiStatus;
+    public void setRestcommStatus(Status restcommStatus) {
+        this.restcommStatus = restcommStatus;
     }
 
     public DateTime getDateCreated() {
@@ -215,12 +125,12 @@ public class IdentityInstance {
         this.dateUpdated = dateUpdated;
     }
 
-    public String getRestcommRestClientSecret() {
-        return restcommRestClientSecret;
+    public String getRestcommClientSecret() {
+        return restcommClientSecret;
     }
 
-    public void setRestcommRestClientSecret(String restcommRestClientSecret) {
-        this.restcommRestClientSecret = restcommRestClientSecret;
+    public void setRestcommClientSecret(String restcommClientSecret) {
+        this.restcommClientSecret = restcommClientSecret;
     }
 
     public enum Status {

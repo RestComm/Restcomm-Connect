@@ -139,24 +139,12 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
 
-        final String restcommRestRAT = DaoUtils.readString(map.get("restcomm_rest_rat"));
-        final DateTime restcommRestLastRegistrationDate = DaoUtils.readDateTime(map.get("restcomm_rest_last_registration_date"));
-        final Status restcommRestStatus = Status.getValueOf(DaoUtils.readString(map.get("restcomm_rest_status")));
-        final String restcommRestClientSecret = DaoUtils.readString(map.get("restcomm_rest_client_secret"));
+        final String restcommRestRAT = DaoUtils.readString(map.get("restcomm_rat"));
+        final DateTime restcommRestLastRegistrationDate = DaoUtils.readDateTime(map.get("restcomm_last_registration_date"));
+        final Status restcommRestStatus = Status.getValueOf(DaoUtils.readString(map.get("restcomm_status")));
+        final String restcommRestClientSecret = DaoUtils.readString(map.get("restcomm_client_secret"));
 
-        final String restcommUiRAT = DaoUtils.readString(map.get("restcomm_ui_rat"));
-        final DateTime restcommUiLastRegistrationDate = DaoUtils.readDateTime(map.get("restcomm_ui_last_registration_date"));
-        final Status restcommUiStatus = Status.getValueOf(DaoUtils.readString(map.get("restcomm_ui_status")));
-
-        final String rvdRestRAT = DaoUtils.readString(map.get("rvd_rest_rat"));
-        final DateTime rvdRestLastRegistrationDate = DaoUtils.readDateTime(map.get("rvd_rest_last_registration_date"));
-        final Status rvdRestStatus = Status.getValueOf(DaoUtils.readString(map.get("rvd_rest_status")));
-
-        final String rvdUiRAT = DaoUtils.readString(map.get("rvd_ui_rat"));
-        final DateTime rvdUiLastRegistrationDate = DaoUtils.readDateTime(map.get("rvd_ui_last_registration_date"));
-        final Status rvdUiStatus = Status.getValueOf(DaoUtils.readString(map.get("rvd_ui_status")));
-
-        return new IdentityInstance(sid,organizationSid,name, dateCreated, dateUpdated, restcommRestRAT,restcommRestLastRegistrationDate,restcommRestStatus, restcommRestClientSecret, restcommUiRAT,restcommUiLastRegistrationDate,restcommUiStatus,rvdRestRAT,rvdRestLastRegistrationDate,rvdRestStatus,rvdUiRAT,rvdUiLastRegistrationDate,rvdUiStatus);
+        return new IdentityInstance(sid,organizationSid,name, dateCreated, dateUpdated, restcommRestRAT,restcommRestLastRegistrationDate,restcommRestStatus, restcommRestClientSecret);
     }
 
     private Map<String, Object> toMap(final IdentityInstance instance) {
@@ -167,22 +155,10 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
         map.put("date_created", DaoUtils.writeDateTime(instance.getDateCreated()));
         map.put("date_updated", DaoUtils.writeDateTime(instance.getDateUpdated()));
 
-        map.put("restcomm_rest_rat", instance.getRestcommRestRAT());
-        map.put("restcomm_rest_last_registration_date", DaoUtils.writeDateTime(instance.getRestcommRestLastRegistrationDate()));
-        map.put("restcomm_rest_status", instance.getRestcommRestStatus());
-        map.put("restcomm_rest_client_secret", instance.getRestcommRestClientSecret());
-
-        map.put("restcomm_ui_rat", instance.getRestcommUiRAT());
-        map.put("restcomm_ui_last_registration_date", DaoUtils.writeDateTime(instance.getRestcommUiLastRegistrationDate()));
-        map.put("restcomm_ui_status", instance.getRestcommUiStatus());
-
-        map.put("rvd_rest_rat", instance.getRvdRestRAT());
-        map.put("rvd_rest_last_registration_date", DaoUtils.writeDateTime(instance.getRvdRestLastRegistrationDate()));
-        map.put("rvd_rest_status", instance.getRvdRestStatus());
-
-        map.put("rvd_ui_rat", instance.getRvdUiRAT());
-        map.put("rvd_ui_last_registration_date", DaoUtils.writeDateTime(instance.getRvdUiLastRegistrationDate()));
-        map.put("rvd_ui_status", instance.getRvdUiStatus());
+        map.put("restcomm_rat", instance.getRestcommRAT());
+        map.put("restcomm_last_registration_date", DaoUtils.writeDateTime(instance.getRestcommLastRegistrationDate()));
+        map.put("restcomm_status", instance.getRestcommStatus());
+        map.put("restcomm_client_secret", instance.getRestcommClientSecret());
 
         return map;
     }

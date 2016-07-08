@@ -45,10 +45,7 @@ public class IdentityRegistrationTool {
 
     private String keycloakBaseUrl;
     private String realm;
-    public static String RESTCOMM_REST_CLIENT_SUFFIX = "restcomm-rest";
-    public static String RESTCOMM_UI_CLIENT_SUFFIX = "restcomm-ui";
-    public static String RVD_REST_CLIENT_SUFFIX = "rvd-rest";
-    public static String RVD_UI_CLIENT_SUFFIX = "rvd-ui";
+    public static String RESTCOMM_CLIENT_SUFFIX = "restcomm";
 
     public String getClientRegistrationRelativeUrl() {
         return "/realms/" + realm + "/clients-registrations/default";
@@ -77,30 +74,18 @@ public class IdentityRegistrationTool {
         if (redirectUrls != null && redirectUrls.endsWith("/"))
             redirectUrls = redirectUrls.substring(0, redirectUrls.length()-1); //trim trailing '/' character if present
         String instanceName = generateName();
-        KeycloakClient restcommRestClient;
-        KeycloakClient restcommUiClient;
-        KeycloakClient rvdRestClient;
-        KeycloakClient rvdUiClient;
+        KeycloakClient restcommClient;
         // create client application at keycloak side
-        restcommRestClient = registerRestcommRestClient(instanceName,iat,null,restcommClientSecret,true,false);
-        restcommUiClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
-        rvdRestClient = registerRvdRestClient(instanceName,iat,null,restcommClientSecret,false,false);
-        rvdUiClient = registerRvdUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
+        restcommClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
         // for each client created, there is a Registration Access token that allows further modifying that client in the future. We keep that.
         IdentityInstance identityInstance = new IdentityInstance();
         identityInstance.setName(instanceName);
-        identityInstance.setRestcommRestRAT(restcommRestClient.getRegistrationAccessToken());
-        identityInstance.setRestcommUiRAT(restcommUiClient.getRegistrationAccessToken());
-        identityInstance.setRvdRestRAT(rvdRestClient.getRegistrationAccessToken());
-        identityInstance.setRvdUiRAT(rvdUiClient.getRegistrationAccessToken());
+        identityInstance.setRestcommRAT(restcommClient.getRegistrationAccessToken());
         return identityInstance;
     }
 
     public void unregisterInstanceWithRAT(IdentityInstance identityInstance) {
-        unregisterClient(identityInstance.getName() + "-" + RESTCOMM_REST_CLIENT_SUFFIX, identityInstance.getRestcommRestRAT());
-        unregisterClient(identityInstance.getName() + "-" + RESTCOMM_UI_CLIENT_SUFFIX, identityInstance.getRestcommUiRAT());
-        unregisterClient(identityInstance.getName() + "-" + RVD_REST_CLIENT_SUFFIX, identityInstance.getRvdRestRAT());
-        unregisterClient(identityInstance.getName() + "-" + RVD_UI_CLIENT_SUFFIX, identityInstance.getRvdUiRAT());
+        unregisterClient(identityInstance.getName() + "-" + RESTCOMM_CLIENT_SUFFIX, identityInstance.getRestcommRAT());
     }
 
     /**
@@ -146,34 +131,16 @@ public class IdentityRegistrationTool {
 
     public static String getRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix) {
         String RAT;
-        if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
-            RAT = identityInstance.getRestcommUiRAT();
-        } else
-        if (clientSuffix.equals(RESTCOMM_REST_CLIENT_SUFFIX)) {
-            RAT = identityInstance.getRestcommRestRAT();
-        } else
-        if (clientSuffix.equals(RVD_UI_CLIENT_SUFFIX)) {
-            RAT = identityInstance.getRvdUiRAT();
-        } else
-        if (clientSuffix.equals(RVD_REST_CLIENT_SUFFIX)) {
-            RAT = identityInstance.getRvdRestRAT();
+        if (clientSuffix.equals(RESTCOMM_CLIENT_SUFFIX)) {
+            RAT = identityInstance.getRestcommRAT();
         } else
             throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
         return RAT;
     }
 
     public static void setRATForClientSuffix(IdentityInstance identityInstance, String clientSuffix, String RAT) {
-        if (clientSuffix.equals(RESTCOMM_UI_CLIENT_SUFFIX)) {
-            identityInstance.setRestcommUiRAT(RAT);
-        } else
-        if (clientSuffix.equals(RESTCOMM_REST_CLIENT_SUFFIX)) {
-            identityInstance.setRestcommRestRAT(RAT);
-        } else
-        if (clientSuffix.equals(RVD_UI_CLIENT_SUFFIX)) {
-            identityInstance.setRvdUiRAT(RAT);
-        } else
-        if (clientSuffix.equals(RVD_REST_CLIENT_SUFFIX)) {
-            identityInstance.setRvdRestRAT(RAT);
+        if (clientSuffix.equals(RESTCOMM_CLIENT_SUFFIX)) {
+            identityInstance.setRestcommRAT(RAT);
         } else
             throw new IllegalArgumentException("While trying to update client invalid client suffix was specified: " + clientSuffix );
     }
@@ -187,45 +154,15 @@ public class IdentityRegistrationTool {
         return UUID.randomUUID().toString().split("-")[0];
     }
 
-    KeycloakClient registerRestcommRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
-        KeycloakClient repr = new KeycloakClient();
-        repr.setClientId(instanceName + "-" + RESTCOMM_REST_CLIENT_SUFFIX);
-        repr.setProtocol("openid-connect");
-        repr.setBearerOnly(bearerOnly);
-        repr.setPublicClient(publicClient);
-        return registerClient(iat,repr);
-    }
-
     KeycloakClient registerRestcommUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         KeycloakClient repr = new KeycloakClient();
-        repr.setClientId(instanceName + "-" + RESTCOMM_UI_CLIENT_SUFFIX);
+        repr.setClientId(instanceName + "-" + RESTCOMM_CLIENT_SUFFIX);
         repr.setProtocol("openid-connect");
         repr.setBearerOnly(bearerOnly);
         repr.setPublicClient(publicClient);
         repr.setRedirectUris(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl+"/*"}));
         repr.setWebOrigins(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl}));
         repr.setBaseUrl(rootUrl);
-        return registerClient(iat,repr);
-    }
-
-    KeycloakClient registerRvdRestClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
-        KeycloakClient repr = new KeycloakClient();
-        repr.setClientId(instanceName + "-" + RVD_REST_CLIENT_SUFFIX);
-        repr.setProtocol("openid-connect");
-        repr.setBearerOnly(bearerOnly);
-        repr.setPublicClient(publicClient);
-        return registerClient(iat,repr);
-    }
-
-    KeycloakClient registerRvdUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
-        KeycloakClient repr = new KeycloakClient();
-        repr.setClientId(instanceName + "-" + RVD_UI_CLIENT_SUFFIX);
-        repr.setProtocol("openid-connect");
-        repr.setBearerOnly(bearerOnly);
-        repr.setPublicClient(publicClient);
-        repr.setRedirectUris(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl+"/restcomm-rvd/*"}));
-        repr.setWebOrigins(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl}));
-        repr.setBaseUrl(rootUrl+"/restcomm-rvd");
         return registerClient(iat,repr);
     }
 

@@ -65,15 +65,10 @@ public class IdentityRegistrationToolTest {
         IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
         String token = testingTool.getTokenWithDirectAccessGrant("administrator@company.com", "RestComm", "service-client", "client-secret", "restcomm-test");
         // check *-restcomm-ui Client
-        JsonObject restcommUI = testingTool.getClient(token, ii.getName() + "-restcomm-ui", testRealm);
-        Assert.assertEquals("http://restcomm-server:8080", restcommUI.get("baseUrl").getAsString());
-        Assert.assertEquals("http://restcomm-server:8080/*", restcommUI.get("redirectUris").getAsString());
-        Assert.assertEquals("http://restcomm-server:8080", restcommUI.get("webOrigins").getAsString());
-        // check *-rvd-ui Client
-        JsonObject rvdUI = testingTool.getClient(token, ii.getName() + "-rvd-ui", testRealm);
-        Assert.assertEquals("http://restcomm-server:8080/restcomm-rvd", rvdUI.get("baseUrl").getAsString());
-        Assert.assertEquals("http://restcomm-server:8080/restcomm-rvd/*", rvdUI.get("redirectUris").getAsString());
-        Assert.assertEquals("http://restcomm-server:8080", rvdUI.get("webOrigins").getAsString());
+        JsonObject restcommClient = testingTool.getClient(token, ii.getName() + "-restcomm", testRealm);
+        Assert.assertEquals("http://restcomm-server:8080", restcommClient.get("baseUrl").getAsString());
+        Assert.assertEquals("http://restcomm-server:8080/*", restcommClient.get("redirectUris").getAsString());
+        Assert.assertEquals("http://restcomm-server:8080", restcommClient.get("webOrigins").getAsString());
         // check trailing '/' character is removed from root url
 
     }
@@ -84,7 +79,7 @@ public class IdentityRegistrationToolTest {
         IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080/","client-secret1");
         String token = testingTool.getTokenWithDirectAccessGrant("administrator@company.com", "RestComm", "service-client", "client-secret", "restcomm-test");
         // check *-restcomm-ui Client. No need to test the rest since trimming is done on a higher level
-        JsonObject restcommUI = testingTool.getClient(token, ii.getName() + "-restcomm-ui", testRealm);
+        JsonObject restcommUI = testingTool.getClient(token, ii.getName() + "-restcomm", testRealm);
         Assert.assertEquals("http://restcomm-server:8080", restcommUI.get("baseUrl").getAsString());
         Assert.assertEquals("http://restcomm-server:8080/*", restcommUI.get("redirectUris").getAsString());
         Assert.assertEquals("http://restcomm-server:8080", restcommUI.get("webOrigins").getAsString());
@@ -108,17 +103,17 @@ public class IdentityRegistrationToolTest {
         // TODO, do that by importing a small realm instead of creating the instance each time
         tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
         IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
-        String oldRAT = ii.getRestcommUiRAT();
+        String oldRAT = ii.getRestcommRAT();
         KeycloakClient client = new KeycloakClient();
         client.setBearerOnly(true);
-        KeycloakClient updatedClient = tool.updateRegisteredClientWithRAT(client,ii, IdentityRegistrationTool.RESTCOMM_UI_CLIENT_SUFFIX);
+        KeycloakClient updatedClient = tool.updateRegisteredClientWithRAT(client,ii, IdentityRegistrationTool.RESTCOMM_CLIENT_SUFFIX);
         Assert.assertTrue("Updated keycloak Client property was not really updated: BearerOnly", updatedClient.getBearerOnly().booleanValue());
         Assert.assertFalse("Registration access token has not changed but should have.", oldRAT.equals(updatedClient.getRegistrationAccessToken()));
-        Assert.assertEquals("Updated client RAT was not properly updated inside Identity Instance", ii.getRestcommUiRAT(), updatedClient.getRegistrationAccessToken());
+        Assert.assertEquals("Updated client RAT was not properly updated inside Identity Instance", ii.getRestcommRAT(), updatedClient.getRegistrationAccessToken());
         // make sure that the new RAT is still valid for another round of updates
         KeycloakClient client2 = new KeycloakClient();
         client2.setBaseUrl("/");
-        KeycloakClient updatedClient2 = tool.updateRegisteredClientWithRAT(client2, ii, IdentityRegistrationTool.RESTCOMM_UI_CLIENT_SUFFIX);
+        KeycloakClient updatedClient2 = tool.updateRegisteredClientWithRAT(client2, ii, IdentityRegistrationTool.RESTCOMM_CLIENT_SUFFIX);
         Assert.assertEquals("/", updatedClient2.getBaseUrl());
 
     }

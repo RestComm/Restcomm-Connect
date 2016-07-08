@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.keycloak.representations.adapters.config.AdapterConfig;
-import org.keycloak.representations.adapters.config.BaseAdapterConfig;
 
 /**
  * Creates keycloak adapter configuration objects for various keycloak clients/applications.
@@ -33,18 +32,6 @@ public class KeycloakAdapterConfBuilder {
         this(realmName, realmKey, authServerUrl, null, null);
     }
 
-    public AdapterConfig getUnregisteredRestcommConfig() {
-        AdapterConfig config = new AdapterConfig();
-        config.setRealm(realmName);
-        config.setRealmKey(realmKey);
-        config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("all");
-        config.setResource("unregistered-restcomm");
-        config.setPublicClient(true);
-
-        return config;
-    }
-
     // Returns null if no instanceId is set
     public AdapterConfig getRestcommConfig() {
         if ( StringUtils.isEmpty(instanceId) )
@@ -54,7 +41,7 @@ public class KeycloakAdapterConfBuilder {
         config.setRealmKey(realmKey);
         config.setAuthServerUrl(authServerUrl);
         config.setSslRequired("none");
-        config.setResource(instanceId + "-restcomm-rest");
+        config.setResource(instanceId + "-restcomm");
         config.setEnableBasicAuth(true);
         config.setCors(true);
         config.setUseResourceRoleMappings(true);
@@ -62,58 +49,6 @@ public class KeycloakAdapterConfBuilder {
         Map<String,Object> credentials = new HashMap<String,Object>();
         credentials.put("secret", clientSecret);
         config.setCredentials(credentials);
-
-        return config;
-    }
-
-    // Returns null if no instanceId is set
-    public BaseAdapterConfig getRestcommUIConfig() {
-        if ( StringUtils.isEmpty(instanceId))
-            return null;
-        BaseAdapterConfig config = new BaseAdapterConfig();
-        config.setRealm(realmName);
-        config.setRealmKey(realmKey);
-        config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("none");
-        config.setResource(instanceId + "-restcomm-ui");
-        config.setPublicClient(true);
-        config.setUseResourceRoleMappings(true);
-
-        return config;
-    }
-
-    // Returns null if no instanceId is set
-    public AdapterConfig getRestcommRvdConfig() {
-        if ( StringUtils.isEmpty(instanceId))
-            return null;
-        AdapterConfig config = new AdapterConfig();
-        config.setRealm(realmName);
-        config.setRealmKey(realmKey);
-        config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("none");
-        config.setResource(instanceId + "-restcomm-rvd");
-        config.setCors(true);
-        config.setUseResourceRoleMappings(true);
-
-        Map<String,Object> credentials = new HashMap<String,Object>();
-        credentials.put("secret", clientSecret);
-        config.setCredentials(credentials);
-
-        return config;
-    }
-
-    // Returns null if no instanceId is set
-    public BaseAdapterConfig getRestcommRvdUIConfig() {
-        if ( StringUtils.isEmpty(instanceId))
-            return null;
-        BaseAdapterConfig config = new BaseAdapterConfig();
-        config.setRealm(realmName);
-        config.setRealmKey(realmKey);
-        config.setAuthServerUrl(authServerUrl);
-        config.setSslRequired("none");
-        config.setResource(instanceId + "-restcomm-rvd-ui");
-        config.setPublicClient(true);
-        config.setUseResourceRoleMappings(true);
 
         return config;
     }

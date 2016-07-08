@@ -144,7 +144,7 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
     protected Response updateIdentityInstanceRAT(String sid, String clientSuffix, String registrationToken) {
         if (StringUtils.isEmpty(clientSuffix) || StringUtils.isEmpty(registrationToken) || StringUtils.isEmpty(sid))
             return Response.status(Response.Status.BAD_REQUEST).build();
-        if (! (clientSuffix.equals(IdentityRegistrationTool.RESTCOMM_UI_CLIENT_SUFFIX) || clientSuffix.equals(IdentityRegistrationTool.RESTCOMM_REST_CLIENT_SUFFIX) || clientSuffix.equals(IdentityRegistrationTool.RVD_UI_CLIENT_SUFFIX) || clientSuffix.equals(IdentityRegistrationTool.RVD_REST_CLIENT_SUFFIX)) )
+        if (! (clientSuffix.equals(IdentityRegistrationTool.RESTCOMM_CLIENT_SUFFIX) ) )
             return Response.status(Response.Status.BAD_REQUEST).build();
         Sid instanceSid = new Sid(sid);
         IdentityInstance ii = identityInstancesDao.getIdentityInstance(instanceSid);
