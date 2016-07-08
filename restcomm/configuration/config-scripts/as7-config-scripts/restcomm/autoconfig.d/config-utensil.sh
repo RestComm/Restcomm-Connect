@@ -87,60 +87,69 @@ configSMTP(){
 }
 
 configMonitoring(){
+
+    if hash crontab 2>/dev/null; then
+        echo "Ok crontab installed. Can proceed with monitoring configuration"
+    else
+        echo "INFO: \"crontab\" programm does not exist ('dnsutils' package) please make sure that crontab is installed or disable Graylog configuration."
+        return 0
+    fi
+
     if [ -z ${GRAYLOG_SERVER} ]; then
         echo "Graylog Monitoring is not configured";
-        crontab -l 2>/dev/null > mycron
-        crontab -l | grep -q 'HDmonitor' && sed -e '/HDmonitor/d' mycron > mycron.new
-        crontab -l | grep -q 'RMSJVMonitor' && sed -e '/RMSJVMonitor/d' mycron.new > mycron
-        crontab -l | grep -q 'RCJVMonitor' && sed -e '/RCJVMonitor/d' mycron > mycron.new
-        crontab -l | grep -q 'SERVERAMonitor' && sed -e '/SERVERAMonitor/d' mycron.new > mycron
-        #install new cron file
-        crontab mycron
-        rm mycron
+        FILE=mycron
 
+        crontab -l 2>/dev/null > $FILE
+        crontab -l | grep -q 'HDmonitor' && sed -e '/HDmonitor/d' $FILE > $FILE.new
+        crontab -l | grep -q 'RMSJVMonitor' && sed -e '/RMSJVMonitor/d' $FILE.new > $FILE
+        crontab -l | grep -q 'RCJVMonitor' && sed -e '/RCJVMonitor/d' $FILE > $FILE.new
+        crontab -l | grep -q 'SERVERAMonitor' && sed -e '/SERVERAMonitor/d' $FILE.new > $FILE
+        #install new cron file
+        crontab $FILE
+        rm $FILE
     else
         echo "GRAYLOG_SERVER is: $GRAYLOG_SERVER";
-
+         FILE=mycron
         #write out current crontab RMSJVMonitor
-        crontab -l 2>/dev/null > mycron
+        crontab -l 2>/dev/null > $FILE
 
         #echo new cron into cron file
-        crontab -l | grep -q 'MAILTO=""'  && echo 'entry exists' || echo "MAILTO=\"\"" >> mycron
+        crontab -l | grep -q 'MAILTO=""'  && echo 'entry exists' || echo "MAILTO=\"\"" >> $FILE
         if [[ "$HD_MONITOR" == "false" || "$HD_MONITOR" == "FALSE" ]]; then
-            sed -e '/HDmonitor/d' mycron > mycron.bak
-            mv mycron.bak mycron
+            sed -e '/HDmonitor/d' mycron > $FILE.bak
+            mv $FILE.bak $FILE
             echo "HD_MONITOR: $HD_MONITOR"
         else
-            crontab -l | grep -q 'Graylog_Monitoring.sh HDmonitor' && echo 'entry exists' || echo "0/30 * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh HDmonitor" >> mycron;
+            crontab -l | grep -q 'Graylog_Monitoring.sh HDmonitor' && echo 'entry exists' || echo "*/30 * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh HDmonitor" >> $FILE;
         fi
 
         if [[ "$RMSJVM_MONITOR" == "false" || "$RMSJVM_MONITOR" == "FALSE" ]]; then
-            sed -e '/RMSJVMonitor/d' mycron > mycron.bak
-            mv mycron.bak mycron
+            sed -e '/RMSJVMonitor/d' $FILE > $FILE.bak
+            mv $FILE.bak $FILE
             echo "RMSJVM_MONITOR: $RMSJVM_MONITOR";
         else
-            crontab -l | grep -q 'Graylog_Monitoring.sh RMSJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RMSJVMonitor" >> mycron;
+            crontab -l | grep -q 'Graylog_Monitoring.sh RMSJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RMSJVMonitor" >> $FILE;
         fi
 
         if [[ "$RCJVM_MONITOR" == "false" || "$RCJVM_MONITOR" == "FALSE" ]]; then
-            sed -e '/RCJVMonitor/d' mycron > mycron.bak
-            mv mycron.bak mycron
+            sed -e '/RCJVMonitor/d' $FILE > $FILE.bak
+            mv $FILE.bak $FILE
             echo "RCJVM_MONITOR: $RCJVM_MONITOR";
         else
-            crontab -l | grep -q 'Graylog_Monitoring.sh RCJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RCJVMonitor" >> mycron;
+            crontab -l | grep -q 'Graylog_Monitoring.sh RCJVMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh RCJVMonitor" >> $FILE;
         fi
 
         if [[ "$RAM_MONITOR" == "false" || "$RAM_MONITOR" == "FALSE" ]]; then
-            sed -e '/SERVERAMonitor/d' mycron > mycron.bak
-            mv mycron.bak mycron
+            sed -e '/SERVERAMonitor/d' $FILE > $FILE.bak
+            mv $FILE.bak $FILE
             echo "RAM_MONITOR: $RAM_MONITOR";
         else
-            crontab -l | grep -q 'Graylog_Monitoring.sh SERVERAMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh SERVERAMonitor" >> mycron;
+            crontab -l | grep -q 'Graylog_Monitoring.sh SERVERAMonitor' && echo 'entry exists' || echo "* * * * * $RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh SERVERAMonitor" >> $FILE;
         fi
 
         #install new cron file
-        crontab mycron
-        rm mycron
+        crontab $FILE
+        rm $FILE
 
         #set Server Label
         FILE=$RESTCOMM_BIN/restcomm/monitoring/Graylog_Monitoring.sh;

@@ -76,20 +76,35 @@ configMediaServerManager() {
 }
 
 set_pool_size () {
-    local property=$1
-    local value=$2
+    property=$1
+    value=$2
     FILE=$MMS_HOME/conf/mediaserver.xml
 
-	sed -e "s|<endpoint name=\"\(.*\)/${property}/\" class=\"\(.*\)\" poolSize=\"\(.*\)\" \/>|<endpoint name=\"\1/${property}/\" class=\"\2\" poolSize=\"${value}\" \/>|" \
-	$FILE > $FILE.bak
-	mv $FILE.bak $FILE
+    case $property  in
+        "ivr"|"bridge"|"cnf" )
+            sed -e "s|<endpoint name=\"\(.*\)/${property}/\" class=\"\(.*\)\" poolSize=\"\(.*\)\" \/>|<endpoint name=\"\1/${property}/\" class=\"\2\" poolSize=\"${value}\" \/>|" \
+            $FILE > $FILE.bak
+	        mv $FILE.bak $FILE;;
+        "localConnection"|"remoteConnection"|"player"|"recorder" )
+            sed -e "s|<${property} poolSize=\".*\" />|<${property} poolSize=\"${value}\" />|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+         "dtmfDetector" )
+            sed -e "s|<${property} poolSize=\".*\" \(.*\) />|<${property} poolSize=\"${value}\" \1 />|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+          "dtmfGenerator" )
+            sed -e "s|<${property} poolSize=\".*\" \(.*\) \(.*\) />|<${property} poolSize=\"${value}\" \1 \2 />|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+        "mgcp" )
+            sed -e "s|<poolSize>.*</poolSize>|<poolSize>${value}</poolSize>|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+        *) echo "This property ${property} can not be configured";;
+    esac
 }
 
 configOther(){
     echo "MGCP_RESPONSE_TIMEOUT $MGCP_RESPONSE_TIMEOUT"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed -e "s|<response-timeout>.*</response-timeout>|<response-timeout>${MGCP_RESPONSE_TIMEOUT}</response-timeout>|"  $FILE > $FILE.bak
-    mv $FILE.bak $FILE
 }
 
 ## MAIN
@@ -120,8 +135,8 @@ configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_AD
 configOther
 #Contribution by: https://github.com/hamsterksu
 #set pool size of RMS resources
-for i in $( set -o posix ; set | grep ^RESOURCE_ | sort -rn ); do
-    reg=$(echo ${i} | cut -d = -f1 | cut -c 10-)
+for i in $( set -o posix ; set |  grep -e ^MGCPCONTROLLER_ -e ^RESOURCE_  | sort -rn ); do
+    reg=$(echo ${i} | cut -d = -f1 | cut -d _ -f2)
     val=$(echo ${i} | cut -d = -f2)
 
     echo "Update resources pool size: $reg -> $val"
