@@ -373,6 +373,7 @@ public final class UserAgentManager extends UntypedActor {
             //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
             transport = request.getInitialTransport();
         }
+        boolean isLBPresent = false;
         //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
         final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
         final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
@@ -381,6 +382,7 @@ public final class UserAgentManager extends UntypedActor {
                 logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
             }
             patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
+            isLBPresent = true;
         } else {
             if(logger.isInfoEnabled()) {
                 logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
@@ -411,7 +413,7 @@ public final class UserAgentManager extends UntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC);
+        final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
@@ -420,7 +422,7 @@ public final class UserAgentManager extends UntypedActor {
             response.setHeader("Expires", "0");
             monitoringService.tell(new UserRegistration(user, address, false), self());
             if(logger.isInfoEnabled()) {
-                logger.info("The user agent manager unregistered " + user + " at address "+address);
+                logger.info("The user agent manager unregistered " + user + " at address "+address+":"+port);
             }
         } else {
             monitoringService.tell(new UserRegistration(user, address, true), self());
@@ -428,13 +430,13 @@ public final class UserAgentManager extends UntypedActor {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
                 if(logger.isInfoEnabled()) {
-                    logger.info("The user agent manager updated " + user + " at address " + address);
+                    logger.info("The user agent manager updated " + user + " at address " + address+":"+port);
                 }
             } else {
                 // Add registration since it doesn't exists on the DB
                 registrations.addRegistration(registration);
                 if(logger.isInfoEnabled()) {
-                    logger.info("The user agent manager registered " + user + " at address " + address);
+                    logger.info("The user agent manager registered " + user + " at address " + address+":"+port);
                 }
             }
             response.setHeader("Contact", contact(uri, ttl));
