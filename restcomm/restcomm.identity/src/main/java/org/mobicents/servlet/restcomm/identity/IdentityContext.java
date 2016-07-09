@@ -126,4 +126,7 @@ public class IdentityContext {
 
     public RestcommRoles getRestcommRoles() { return restcommRoles; }
 
+    public String getAuthServerUrl() {
+        return authServerUrl;
+    }
 }

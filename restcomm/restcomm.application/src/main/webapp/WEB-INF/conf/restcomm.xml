@@ -326,7 +326,7 @@
 	<!--
 	<identity>
 		<auth-server-url>https://identity.restcomm.com/auth</auth-server-url>
-		<realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrVrCuTtArbgaZzL1hvh0xtL5mc7o0NqPVnYXkLvgcwiC3BjLGw1tGEGoJaXDuSaRllobm53JBhjx33UNv+5z/UMG4kytBWxheNVKnL6GgqlNabMaFfPLPCF8kAgKnsi79NMo+n6KnSY8YeUmec/p2vjO2NjsSAVcWEQMVhJ31LwIDAQAB</realm-public-key>
+		<realm-public-key>MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnxG03GY7KX5SIvEGnHcGi/7npaLF6ROwc63v3Yhn4a62zASkJD6edprGJvrGgHMPXtf8/y7RtusTRVtHKw0OXZdCnKx7VYN3tABrwZldX/DZNLEdaKHv2XCuQnbMnwRhaELAe9lavPymXlpx4QUI93JhGhS6P9F0+YM7H57bovDaR4vsCD7xmtsvyxjLaRLTzMYJWGMHT3hoDuM3mTJFdHp7occ3znKt7JkiHkr+6ljKup6+R8OSjm0WTdxEYyZRGfhOejDV9NmqclmQjxw5rlka1iYk0K8Hu70J/eWDff5bYixyBXmAUlOmhYaXqgmwKKU2dNXnF5b32bnOLQfERQIDAQAB</realm-public-key>
 		<realm>restcomm</realm>
 	</identity>
 	-->
