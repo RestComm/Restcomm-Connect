@@ -29,6 +29,10 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     resolve: {
         identity: function (IdentityConfig) {
             return IdentityConfig.getIdentity();
+        },
+        enter: function (IdentityConfig) {
+            if (IdentityConfig.securedByKeycloak())
+                throw "LOCAL_LOGIN_NOT_AVAILABLE";
         }
     }
   });

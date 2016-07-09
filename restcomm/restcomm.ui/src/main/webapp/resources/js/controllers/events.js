@@ -23,7 +23,7 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, AuthServi
 	});
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
-	    console.log("switching states: " + fromState.name + " -> " + toState.name);
+	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
 	});
 
 	$rootScope.$on('$stateChangeError',  function(event, toState, toParams, fromState, fromParams, error){
@@ -61,6 +61,9 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, AuthServi
 	        $state.go('root.unlinked',{evaluateAccess:false});
 	    } else
 	    if (error == 'KEYCLOAK_ACCOUNT_ALREADY_LINKED') {
+	        $state.go('restcomm.dashboard');
+	    } else
+	    if (error == 'LOCAL_LOGIN_NOT_AVAILABLE') {
 	        $state.go('restcomm.dashboard');
 	    }
 	});

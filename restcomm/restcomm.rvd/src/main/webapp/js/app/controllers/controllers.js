@@ -36,6 +36,9 @@ App.controller('AppCtrl', function ($rootScope, $location, $scope, Idle, keepAli
 	    } else
 	    if (error == "UNSUPPORTED_AUTH_TYPE") {
 	        $state.go('root.public.login')
+	    } else
+	    if (error == "LOCAL_LOGIN_NOT_AVAILABLE") {
+	        $state.go('root.rvd.home')
 	    }
 	});
 

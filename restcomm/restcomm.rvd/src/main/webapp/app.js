@@ -37,6 +37,12 @@ App.config(['$stateProvider','$urlRouterProvider', '$translateProvider', functio
                 templateUrl: 'templates/login.html',
                 controller: 'loginCtrl'
             }
+        },
+        resolve: {
+            enter: function (IdentityConfig) {
+                if (IdentityConfig.securedByKeycloak())
+                    throw "LOCAL_LOGIN_NOT_AVAILABLE";
+            }
         }
     });
     $stateProvider.state('root.public.notready',{
