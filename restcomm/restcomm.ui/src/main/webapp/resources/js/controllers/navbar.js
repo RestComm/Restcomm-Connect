@@ -27,14 +27,23 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   };
 
   //if(AuthService.isLoggedIn()) {
-    var accountsList = RCommAccounts.query(function() {
-      $scope.accountsList = accountsList;
-      for (var x in accountsList){
-        if(accountsList[x].sid == $scope.sid) {
-          $scope.currentAccount = accountsList[x];
+  var accountsList;
+  function getAccountList () {
+   accountsList = RCommAccounts.query(function() {
+        $scope.accountsList = accountsList;
+        for (var x in accountsList){
+          if(accountsList[x].sid == $scope.sid) {
+            $scope.currentAccount = accountsList[x];
+          }
         }
-      }
-    });
+      });
+  };
+  getAccountList();
+
+  // when new sub-account is created make sure the list is updated
+  $scope.$on("account-created", function () {
+    getAccountList();
+  });
   //}
 
   // add account -------------------------------------------------------------
@@ -191,7 +200,8 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
           FriendlyName: account.friendlyName ? account.friendlyName : account.email
         }),
         function() { // success
-          Notifications.success('Account "' + account.friendlyName + '" created successfully!');
+          Notifications.success('Account  "' + account.friendlyName + '" created successfully!');
+          $scope.$emit("account-created"); // handler should refresh sub-account list
           $modalInstance.close();
         },
         function(response) { // error
@@ -206,7 +216,7 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
       Notifications.error('Required fields are missing.');
     }
   };
-
+  
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };

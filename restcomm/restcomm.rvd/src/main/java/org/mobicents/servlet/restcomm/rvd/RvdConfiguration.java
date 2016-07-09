@@ -39,11 +39,15 @@ public class RvdConfiguration {
     public static final String PACKAGING_DIRECTORY_NAME = "packaging";
     public static final String TICKET_COOKIE_NAME = "rvdticket"; // the name of the cookie that is used to store ticket ids for authentication
     // the names of the parameters supplied by restcomm request when starting an application
-    private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName","CallTimestamp"}));
+    private static Set<String> restcommParameterNames  = new HashSet<String>(Arrays.asList(new String[] {"CallSid",
+            "AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName","CallTimestamp",
+            "ForwardedFrom"}));
     public static final String PROJECT_LOG_FILENAME = "projectLog";
     public static final String DEFAULT_APPSTORE_DOMAIN = "apps.restcomm.com";
     // TODO investigate duplicate static parameters restcommParameterNames VS builtinRestcommParameters
-    public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[] {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName","CallTimestamp"}));
+    public static final HashSet<String> builtinRestcommParameters = new HashSet<String>(Arrays.asList(new String[]
+            {"CallSid","AccountSid","From","To","Body","CallStatus","ApiVersion","Direction","CallerName",
+                    "CallTimestamp", "ForwardedFrom"}));
     public static final String RESTCOMM_HEADER_PREFIX = "SipHeader_"; // the prefix added to HTTP headers from Restcomm
     public static final String RESTCOMM_HEADER_PREFIX_DIAL = "DialSipHeader_"; // another prefix
 

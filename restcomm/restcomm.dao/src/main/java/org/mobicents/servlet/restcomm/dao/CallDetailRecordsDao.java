@@ -50,6 +50,8 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByParentCall(Sid parentCallSid);
 
+    List<CallDetailRecord> getCallDetailRecordsByConferenceSid(Sid conferenceSid);
+
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
 
     void removeCallDetailRecord(Sid sid);

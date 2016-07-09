@@ -101,6 +101,7 @@ The following table have details about troubleshooting to each error code, also 
 |11 |Potential problem while communicating with database. Check if the database service is online and available to use. |Yes
 |12 |The file system can be inaccessible or with insufficient permission to write. Check $RESTCOMM_HOME permissions before a new attempt. This error implies that was not be possible to store the result of the migration inside RVD's workspace, so a new attempt of execution is encouraged to keep data integrity. |Yes
 |13 |The file system can be inaccessible, with insufficient permission to write or without enough space to make a copy of the workspace. Check workspace location, permissions and available free space in the partition before a new attempt. |Yes
+|14 |Multiple applications are using the same FriendlyName for a project that has not been upgraded. One of them is probably already linked to the project. The rest will need to be taken care of manually. |No
 |==========================================================================================================================================================================================================================================================================================================================
 
 Based on the table above, if a new attempt of execution is recommended, follow the steps below:

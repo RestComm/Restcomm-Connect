@@ -33,6 +33,7 @@ import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
 import org.mobicents.servlet.restcomm.dao.AvailablePhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.ClientsDao;
+import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
@@ -63,6 +64,7 @@ public final class MybatisDaoManager implements DaoManager {
     private ApplicationsDao applicationsDao;
     private AvailablePhoneNumbersDao availablePhoneNumbersDao;
     private CallDetailRecordsDao callDetailRecordsDao;
+    private ConferenceDetailRecordsDao conferenceDetailRecordsDao;
     private ClientsDao clientsDao;
     private HttpCookiesDao httpCookiesDao;
     private IncomingPhoneNumbersDao incomingPhoneNumbersDao;
@@ -113,6 +115,11 @@ public final class MybatisDaoManager implements DaoManager {
     @Override
     public CallDetailRecordsDao getCallDetailRecordsDao() {
         return callDetailRecordsDao;
+    }
+
+    @Override
+    public ConferenceDetailRecordsDao getConferenceDetailRecordsDao() {
+        return conferenceDetailRecordsDao;
     }
 
     @Override
@@ -233,6 +240,7 @@ public final class MybatisDaoManager implements DaoManager {
         announcementsDao = new MybatisAnnouncementsDao(sessions);
         availablePhoneNumbersDao = new MybatisAvailablePhoneNumbersDao(sessions);
         callDetailRecordsDao = new MybatisCallDetailRecordsDao(sessions);
+        conferenceDetailRecordsDao = new MybatisConferenceDetailRecordsDao(sessions);
         clientsDao = new MybatisClientsDao(sessions);
         httpCookiesDao = new MybatisHttpCookiesDao(sessions);
         incomingPhoneNumbersDao = new MybatisIncomingPhoneNumbersDao(sessions);
