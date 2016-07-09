@@ -31,10 +31,7 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 })
 .controller('IdentityEditCtrl', function ($scope, $state, $location, RCommIdentityInstances, Notifications, identity, $timeout, $window) {
     $scope.identity = identity;
-    $scope.restcommUiDetails = {};
-    $scope.restcommRestDetails = {};
-    $scope.rvdUiDetails = {};
-    $scope.rvdRestDetails = {};
+    $scope.restcommDetails = {};
 
 	$scope.resetRegistrationToken = function(clientSuffix, newtoken) {
 	    RCommIdentityInstances.resetClientToken(identity.Sid, {'client-suffix':clientSuffix, token:newtoken}).then(function () {
@@ -54,18 +51,8 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 	}
 
 	function clientSuffixToName(clientSuffix) {
-	    if (clientSuffix == 'restcomm-ui')
-	        return 'Admin UI';
-	    else
-	    if (clientSuffix == 'restcomm-rest')
-	        return 'Restcomm REST';
-        else
-	    if (clientSuffix == 'rvd-ui')
-	        return 'RVD UI';
-        else
-	    if (clientSuffix == 'rvd-rest')
-	        return 'RVD REST';
-
+	    if (clientSuffix == 'restcomm')
+	        return 'Restcomm';
 	}
 
 })

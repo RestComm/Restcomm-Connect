@@ -43,7 +43,7 @@
 
     <update id="updateIdentityInstance" parameterType="map">
         UPDATE "restcomm_identity_instances" SET "date_updated"=#{date_updated},
-        "restcomm_rat"=#{restcomm_rat}, "restcomm_status"=#{restcomm_status},
+        "restcomm_rat"=#{restcomm_rat}, "restcomm_status"=#{restcomm_status}
         WHERE "sid"=#{sid};
     </update>
 

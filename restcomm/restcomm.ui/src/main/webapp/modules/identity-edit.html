@@ -5,66 +5,15 @@
 <div class="row">
     <div class="col-md-12">
 
-        <form ng-submit="resetRegistrationToken('restcomm-ui',restcommUiDetails.newToken)">
+        <form ng-submit="resetRegistrationToken('restcomm',restcommDetails.newToken)">
             <div class="row">
                 <div class="col-md-10">
                     <div class="form-group">
                         <div class="input-group">
-                            <span class="input-group-addon">Admin UI registration token</span>
-                            <input class="form-control" ng-model="restcommUiDetails.newToken">
+                            <span class="input-group-addon">Restcomm</span>
+                            <input class="form-control" ng-model="restcommDetails.newToken">
                         </div>
-                        <p class="help-block">Refresh AdminUI registration token</p>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary pull-right">Reset token</button>
-                </div>
-            </div>
-        </form>
-
-        <form ng-submit="resetRegistrationToken('rvd-ui',rvdUiDetails.newToken)">
-            <div class="row">
-                <div class="col-md-10">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">RVD UI registration token</span>
-                            <input class="form-control" ng-model="rvdUiDetails.newToken">
-                        </div>
-                        <p class="help-block">Refresh RVD UI registration token.</p>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary pull-right">Reset token</button>
-                </div>
-            </div>
-        </form>
-
-        <form ng-submit="resetRegistrationToken('restcomm-rest',restcommRestDetails.newToken)">
-            <div class="row">
-                <div class="col-md-10">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">Restcomm REST registration token</span>
-                            <input class="form-control" ng-model="restcommRestDetails.newToken">
-                        </div>
-                        <p class="help-block">Refresh Restcomm REST registration token.</p>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary pull-right">Reset token</button>
-                </div>
-            </div>
-        </form>
-
-        <form ng-submit="resetRegistrationToken('rvd-rest',rvdRestDetails.newToken)">
-            <div class="row">
-                <div class="col-md-10">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <span class="input-group-addon">RVD REST registration token</span>
-                            <input class="form-control" ng-model="rvdRestDetails.newToken">
-                        </div>
-                        <p class="help-block">Refresh RVD REST registration token.</p>
+                        <p class="help-block">Refresh Restcomm registration token</p>
                     </div>
                 </div>
                 <div class="col-md-2">
