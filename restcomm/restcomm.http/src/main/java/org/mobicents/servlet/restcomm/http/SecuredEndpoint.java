@@ -88,8 +88,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
-        this.identityInstance = findCurrentIdentityInstance(request, storage.getIdentityInstancesDao());
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
+        this.identityInstance = findCurrentIdentityInstance(request, storage.getIdentityInstancesDao());
         KeycloakDeployment deployment = null;
         if (this.identityInstance != null)
             deployment = identityContext.getDeployment(identityInstance.getSid());
@@ -359,7 +359,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
 
     /**
-     * Returns an IdentityInstance for a request.
+     * Returns an IdentityInstance for a request. If in restcomm-auth mode it returns null.
      *
      * It tries to determine the organization from the request and then map this organization to an
      * IdentityInstance. Since organization support is not yet ready, all requests are mapped to
@@ -370,12 +370,15 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @return the IdentityInstance object mapped or null
      */
     private IdentityInstance findCurrentIdentityInstance(HttpServletRequest request, IdentityInstancesDao identityInstancesDao) {
-        // TODO here determine current organization based on request, conf etc.
-        Sid organizationSid = getCurrentOrganizationSid();
-        // TODO throw an error if organizationSid is not found. There has to be one, right ?
-        // ...
-        IdentityInstance identityInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
-        return identityInstance;
+        if (identityContext.getAuthServerUrl() != null) {
+            // TODO here determine current organization based on request, conf etc.
+            Sid organizationSid = getCurrentOrganizationSid();
+            // TODO throw an error if organizationSid is not found. There has to be one, right ?
+            // ...
+            IdentityInstance identityInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
+            return identityInstance;
+        } else
+            return null;
     }
 
     protected IdentityInstance getIdentityInstance() {
