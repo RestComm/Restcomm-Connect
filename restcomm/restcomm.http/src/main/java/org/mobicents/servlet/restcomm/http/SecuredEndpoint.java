@@ -38,6 +38,7 @@ import org.mobicents.servlet.restcomm.http.exceptions.AccountNotLinked;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
+import org.mobicents.servlet.restcomm.http.exceptions.NoMappedAccount;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
@@ -106,6 +107,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             if (userIdentityContext.getKeycloakMappedAccount().getLinked() == false)
                 throw new AccountNotLinked();
         }
+        if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth && userIdentityContext.getKeycloakMappedAccount() == null) {
+            throw new NoMappedAccount();
+        }
+
         throw new NotAuthenticated();
     }
 

@@ -65,6 +65,9 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, AuthServi
 	    } else
 	    if (error == 'LOCAL_LOGIN_NOT_AVAILABLE') {
 	        $state.go('restcomm.dashboard');
+	    } else
+	    if (error == 'KEYCLOAK_NO_ACCOUNT') {
+	        $state.go('root.noaccount');
 	    }
 	});
 

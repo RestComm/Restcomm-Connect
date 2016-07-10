@@ -80,6 +80,20 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         }
     },
     params: { evaluateAccess: true }
+  })
+  .state('root.noaccount', {
+    url:'/noaccount',
+    views: {
+        'content': {
+            templateUrl: 'modules/identity-noaccount.html',
+            controller: 'NoAccountCtrl',
+            resolve: {
+                enter: function (AuthService) {
+                    return AuthService.assertNoAccount(); // if there is indeed no account we're at the right place
+                }
+            }
+        }
+    }
   });
   // 'restcomm' state assumes (requires) an authorized restcomm Account to have been determined. Child states can take that for granted.
   $stateProvider.state('restcomm',{

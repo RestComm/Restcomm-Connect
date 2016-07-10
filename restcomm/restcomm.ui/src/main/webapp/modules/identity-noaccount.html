@@ -1,0 +1,16 @@
+<rc-page-title icon="ban" title="Unauthorized" sub-title="no account"></rc-page-title>
+
+<div class="row">
+    <div class="column-md-12">
+        <p>
+            Hello {{oauthUsername}}.
+        </p>
+        <p>
+            Unfortunately no account could be found for your Identity user in this restcomm instance and thus
+            your access is prohibited.
+        </p>
+    </div>
+    <div class="column-md-2">
+        <button ng-click="logoutKeycloak()" type="submit" class="btn btn-primary">Logout {{oauthUsername}}</button>
+    </div>
+</div>

@@ -75,6 +75,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   };
 
   $scope.identity = IdentityConfig.getIdentity();
+  $scope.identityServerConfigured = IdentityConfig.identityServerConfigured();
 
 });
 
@@ -161,14 +162,14 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   };
 
   $scope.linkAccount = function(account) {
-    RCommAccounts.link({accountSid: account.sid}, null, function () {
+    RCommAccounts.link({accountSid: account.sid, format:null}, null, function () {
         Notifications.success("Linked '" + account.friendly_name + "' account to Restcomm Identity user " + account.email_address);
         $scope.getAccounts();
     });
   }
 
   $scope.unlinkAccount = function(account) {
-    RCommAccounts.unlink({accountSid: account.sid},function () {
+    RCommAccounts.unlink({accountSid: account.sid, format:null},function () {
         Notifications.success("Link with Restcomm Identity user " + account.email_address + ' broken');
         if (AuthService.getAccountSid() == account.sid) {
             $window.location.reload(); // reload if operating on the logged user

@@ -405,7 +405,8 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             secure(operatedAccount,"RestComm:Modify:Accounts",SecuredType.SECURED_ACCOUNT);
             if (operatedAccount.getLinked())
                 return Response.status(CONFLICT).build();
-            operatedAccount.setLinked(true);
+            operatedAccount = operatedAccount.setLinked(true);
+            accountsDao.updateAccount(operatedAccount);
             return Response.ok().build();
         } else {
             throw new UnsupportedOperationException(); // this is not supposed to happen

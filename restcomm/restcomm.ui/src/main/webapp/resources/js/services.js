@@ -42,6 +42,7 @@ rcServices.factory('SessionService', function() {
 rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth){
     var account = null;
     var uninitialized = null;
+    var accessEvaluated = false; // used internally
 
     function getAccountSid() {
         if (!!account)
@@ -66,11 +67,10 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         return auth_header;
     }
 
-    // Checks access for typical restcomm operations. It resolves to a valid, authorized restcomm Account.
+    // Checks access for typical restcomm operations. It returns nothing if OK.
     // It Returns a promise.
     //
     //  - rejected:
-    //      MISSING_ACCOUNT_SID,
     //      KEYCLCOAK_NO_LINKED_ACCOUNT
     //      KEYCLOAK_INSTANCE_NOT_REGISTERED - not used
     //      RESTCOMM_ACCOUNT_NOT_INITIALIZED - applies to Restcomm auth mode
@@ -78,6 +78,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //      RESTCOMM_NOT_AUTHENTICATED - the user is not authenticated and there are no cached credentials. Applies to restcomm auth mode
     //      UNKNOWN_ERROR - an unknown server error has occured
     //      KEYCLOAK_ACCOUNT_ALREADY_LINKED
+    //      KEYCLOAK_NO_ACCOUNT - there is no mapped account whatsoever. user should not be allowed access to the instance
     //
     //  - resolved: returns a valid Restcomm account for the logged user
     function checkAccess() {
@@ -89,14 +90,24 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
             var username = getKeycloakUsername();  // since we're logged in, there MUST be a username available
             var promisedAccount = $q.defer();
             if (!account) {
-                $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
-                .success(function (data,status) {
-                    // TODO we need to handle UNINITIALIZED accounts
-                    promisedAccount.resolve(data);
-                })
-                .error(function (data,status) {
-                    promisedAccount.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
-                });
+                if (!accessEvaluated) {
+                    $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
+                    .success(function (data,status) {
+                        // TODO we need to handle UNINITIALIZED accounts
+                        promisedAccount.resolve(data);
+                    })
+                    .error(function (data,status) {
+                        if (status == 403) {
+                            if (data.error == 'ACCOUNT_NOT_LINKED')
+                                promisedAccount.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
+                            else
+                            if (data.error == 'NO_MAPPED_ACCOUNT')
+                                promisedAccount.reject('KEYCLOAK_NO_ACCOUNT');
+                        }
+                    });
+                } else {
+                    promisedAccount.reject('KEYCLOAK_NO_ACCOUNT');
+                }
             } else {
                 promisedAccount.resolve(account);
             }
@@ -138,10 +149,13 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
 //            // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
 //            throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
 //        }
+
+        accessEvaluated = true; // we should evaluate access only once
         return deferred.promise;
     }
 
     function reload() {
+        accessEvaluated = false;
         account = null;
         uninitialized = null;
         SessionService.clearStoredCredentials();
@@ -161,6 +175,13 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
             else
                 throw error; // re-throw
         }
+    }
+
+    function assertNoAccount() {
+        return checkAccess().catch(function (error) {
+            if (error == 'KEYCLOAK_NO_ACCOUNT')
+                return; // ok, no account
+        });
     }
 
     // updates all necessary state
@@ -299,6 +320,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         getFrientlyName: getFriendlyName,
         checkAccess: checkAccess,
         assertUnlinked: assertUnlinked,
+        assertNoAccount: assertNoAccount,
         isUninitialized: isUninitialized,
         onAuthError: onAuthError,
         onError403: onError403,

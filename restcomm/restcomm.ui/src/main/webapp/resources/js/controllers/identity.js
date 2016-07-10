@@ -76,7 +76,11 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 
         });
     }
-
-
+})
+.controller('NoAccountCtrl', function ($scope, AuthService) {
+    $scope.oauthUsername = AuthService.getKeycloakUsername();
+    $scope.logoutKeycloak = function () {
+        keycloakLogout(); // defined in restcomm.js
+    }
 });
 
