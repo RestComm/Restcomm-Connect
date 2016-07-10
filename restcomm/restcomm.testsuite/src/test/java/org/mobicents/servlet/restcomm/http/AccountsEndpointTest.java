@@ -156,6 +156,8 @@ public class AccountsEndpointTest {
         assertTrue(getAccountResponse.get("auth_token").getAsString().equals(createdAuthToken));
         assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertTrue(createAccountResponse.get("auth_token").getAsString().equals(createdAuthToken));
+        assertFalse(createAccountResponse.get("linked").getAsBoolean());
+
     }
 
     @Test
