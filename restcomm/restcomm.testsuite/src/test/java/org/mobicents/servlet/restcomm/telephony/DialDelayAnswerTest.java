@@ -683,14 +683,10 @@ public class DialDelayAnswerTest {
         assertTrue(georgeCall.disconnect());
     }
 
-    private String dialFirstClientRcml = "<Response><Dial timeout=\"3\" action=\"http://127.0.0.1:8090/action1\" method=\"GET\">" +
-            "<Client>alice</Client></Dial></Response>";
-    private String firstActionRcml = "<Response><Dial timeout=\"3\" action=\"http://127.0.0.1:8090/action2\" method=\"GET\">\" +\n" +
-            "<Sip>sip:henrique@127.0.0.1:5092</Sip></Dial></Response>";
-    private String secondActionRcml = "<Response><Dial timeout=\"3\">\" +\n" +
-            "<Sip>sip:fotini@127.0.0.1:5093</Sip></Dial></Response>";
-    private String dialSubsequentialDialing = "<Response><Dial timeout=\"3\">" +
-            "<Client>alice</Client></Dial><Dial timeout=\"3\"><Sip>sip:henrique@127.0.0.1:5092</Sip></Dial</Response>";
+    private String dialFirstClientRcml = "<Response><Dial timeout=\"3\" action=\"http://127.0.0.1:8090/action1\" method=\"GET\"><Client>alice</Client></Dial></Response>";
+    private String firstActionRcml = "<Response><Dial timeout=\"3\" action=\"http://127.0.0.1:8090/action2\" method=\"GET\"><Sip>sip:henrique@127.0.0.1:5092</Sip></Dial></Response>";
+    private String secondActionRcml = "<Response><Dial timeout=\"3\"><Sip>sip:fotini@127.0.0.1:5093</Sip></Dial></Response>";
+    private String dialSubsequentialDialing = "<Response><Dial timeout=\"3\"><Client>alice</Client></Dial><Dial timeout=\"3\"><Sip>sip:henrique@127.0.0.1:5092</Sip></Dial</Response>";
 
     @Test
     public void testSubsequentDialing() throws InterruptedException, ParseException, MalformedURLException {
@@ -698,7 +694,7 @@ public class DialDelayAnswerTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialSubsequentialDialing)));
+                        .withBody(dialFirstClientRcml)));
 
         stubFor(get(urlPathEqualTo("/action1"))
                 .willReturn(aResponse()
