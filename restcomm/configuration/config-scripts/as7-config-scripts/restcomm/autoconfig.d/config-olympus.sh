@@ -23,14 +23,14 @@ FILE=$BASEDIR/standalone/deployments/olympus.war/resources/js/controllers/regist
       local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
 
       #change port due to Port-Offset
-      sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WS}'|" $FILE
-      sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WS}';|" $FILE
+      sed -i '' "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WS}'|" $FILE
+      sed -i '' "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WS}';|" $FILE
    fi
 
    if [ -n "$SECURESSL" ]; then
-       sed -i "s|ws:|wss:|" $FILE
-       sed -i "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WSS}'|" $FILE
-       sed -i "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WSS}';|" $FILE
+       sed -i '' "s|ws:|wss:|" $FILE
+       sed -i '' "s|\$scope.serverAddress + ':[0-9][0-9]*'|\$scope.serverAddress + ':${SIP_PORT_WSS}'|" $FILE
+       sed -i '' "s|\$scope.serverPort = '[0-9][0-9]*';|\$scope.serverPort = '${SIP_PORT_WSS}';|" $FILE
    fi
 }
 

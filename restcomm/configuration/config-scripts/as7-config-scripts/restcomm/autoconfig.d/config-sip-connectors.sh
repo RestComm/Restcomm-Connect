@@ -55,7 +55,7 @@ configConnectors() {
 
 
 	#Enable SipServlet statistics
-	grep -q 'gather-statistics' $FILE || sed -i "s|congestion-control-interval=\".*\"|& gather-statistics=\"true\"|" $FILE
+	grep -q 'gather-statistics' $FILE || sed -i '' "s|congestion-control-interval=\".*\"|& gather-statistics=\"true\"|" $FILE
 	echo "Configured gather-statistics"
 }
 
@@ -75,9 +75,9 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 
 	#check for port offset
 	if (( $PORT_OFFSET > 0 )); then
-    	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
+    	sed -i '' "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
 	else
-		sed -i "s|\port-offset=\".*\"|port-offset=\"\$\{jboss\.socket\.binding\.port\-offset\:0\}\"|" $FILE
+		sed -i '' "s|\port-offset=\".*\"|port-offset=\"\$\{jboss\.socket\.binding\.port\-offset\:0\}\"|" $FILE
 	fi
 	sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|" \
         -e "s|<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" \
