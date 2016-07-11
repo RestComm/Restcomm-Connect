@@ -6,9 +6,9 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.RegistrationsDao">
   <insert id="addRegistration" parameterType="map">
     INSERT INTO restcomm_registrations (sid, date_created, date_updated, date_expires, address_of_record, display_name,
-    user_name, user_agent, ttl,  location, webrtc, instanceid)
+    user_name, user_agent, ttl,  location, webrtc, instanceid, isLBPresent)
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{date_expires}, #{address_of_record}, #{display_name}, #{user_name}, #{user_agent},
-    #{ttl}, #{location}, #{webrtc}, #{instanceid});
+    #{ttl}, #{location}, #{webrtc}, #{instanceid}, #{isLBPresent});
   </insert>
 
   <select id="getRegistrations" resultType="hashmap">
