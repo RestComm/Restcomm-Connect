@@ -270,6 +270,7 @@ public final class Call extends UntypedActor {
         transitions.add(new Transition(this.updatingMediaSession, this.failed));
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
+        transitions.add(new Transition(this.failed, this.completed));
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
