@@ -26,14 +26,23 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   };
 
   //if(AuthService.isLoggedIn()) {
-    var accountsList = RCommAccounts.query(function() {
-      $scope.accountsList = accountsList;
-      for (var x in accountsList){
-        if(accountsList[x].sid == $scope.sid) {
-          $scope.currentAccount = accountsList[x];
+  var accountsList;
+  function getAccountList () {
+   accountsList = RCommAccounts.query(function() {
+        $scope.accountsList = accountsList;
+        for (var x in accountsList){
+          if(accountsList[x].sid == $scope.sid) {
+            $scope.currentAccount = accountsList[x];
+          }
         }
-      }
-    });
+      });
+  };
+  getAccountList();
+
+  // when new sub-account is created make sure the list is updated
+  $scope.$on("account-created", function () {
+    getAccountList();
+  });
   //}
 
   // add account -------------------------------------------------------------
@@ -58,6 +67,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   $scope.showAboutModal = function () {
     $modal.open({
       controller: AboutModalCtrl,
+      scope: $scope,
       windowClass: 'temp-modal-lg',
       templateUrl: 'modules/modals/modal-about.html'
     });
@@ -170,7 +180,8 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
           FriendlyName: account.friendlyName ? account.friendlyName : account.email
         }),
         function() { // success
-          Notifications.success('Account "' + account.friendlyName + '" created successfully!');
+          Notifications.success('Account  "' + account.friendlyName + '" created successfully!');
+          $scope.$emit("account-created"); // handler should refresh sub-account list
           $modalInstance.close();
         },
         function(response) { // error
@@ -185,32 +196,43 @@ var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, 
       Notifications.error('Required fields are missing.');
     }
   };
-
+  
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };
 };
 
-var AboutModalCtrl = function ($scope, $modalInstance, RCommJMX, RCVersion) {
+var AboutModalCtrl = function($scope, $modalInstance, RCommJMX, RCVersion) {
 
-  $scope.Math = window.Math;
+	$scope.Math = window.Math;
 
-  $scope.getData = function() {
-    $scope.version = RCVersion.get({accountSid: $scope.sid});
-    $scope.info = RCommJMX.get({path: 'java.lang:type=*'},
-      function(data){
-        $scope.OS = data.value['java.lang:type=OperatingSystem'];
-        $scope.JVM = data.value['java.lang:type=Runtime'];
-        $scope.Memory = data.value['java.lang:type=Memory'];
-        $scope.Threads = data.value['java.lang:type=Threading'];
-      },
-      function(){}
-    );
-  };
+	$scope.getData = function() {
+		$scope.version = RCVersion.get({
+			accountSid : $scope.sid
+		}, function(data) {
+			if (data) {
+				var version = $scope.version;
+				var pattern = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/;
+				$scope.releaseDate = new Date(data.Date.replace(pattern,
+						'$1-$2-$3 $4:$5'));
+			}
 
-  $scope.cancel = function () {
-    $modalInstance.dismiss('cancel');
-  };
+		}, function() {
+		});
+		$scope.info = RCommJMX.get({
+			path : 'java.lang:type=*'
+		}, function(data) {
+			$scope.OS = data.value['java.lang:type=OperatingSystem'];
+			$scope.JVM = data.value['java.lang:type=Runtime'];
+			$scope.Memory = data.value['java.lang:type=Memory'];
+			$scope.Threads = data.value['java.lang:type=Threading'];
+		}, function() {
+		});
+	};
 
-  $scope.getData();
+	$scope.cancel = function() {
+		$modalInstance.dismiss('cancel');
+	};
+
+	$scope.getData();
 };

@@ -28,13 +28,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLDecoder;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -45,7 +41,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.ApplicationsDao;
@@ -124,15 +119,13 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
 
     protected Response getApplication(final String accountSid, final String sid, final MediaType responseType) {
         Account account;
-        try {
-            secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
         Application application = null;
         if (Sid.pattern.matcher(sid).matches()) {
             application = dao.getApplication(new Sid(sid));
-        } else {
+        } /*else {
+            // disabled support for application retrieval based on FriendlyName. It makes no sense to have it if friendly-name based application uniqueness is no longer supported either.
+
             try {
                 // Once not a valid sid, search using the parameter as name
                 String name = URLDecoder.decode(String.valueOf(sid), "UTF-8");
@@ -140,16 +133,11 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             } catch (UnsupportedEncodingException e) {
                 return status(BAD_REQUEST).entity(e.getMessage()).build();
             }
-        }
+        }*/
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                //secureLevelControlApplications(accountSid, application);
-                secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
-            } catch (AuthorizationException e) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(application);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -163,12 +151,8 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
 
     protected Response getApplications(final String accountSid, final MediaType responseType) {
         Account account;
-        try {
-            account = accountsDao.getAccount(accountSid);
-            secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        account = accountsDao.getAccount(accountSid);
+        secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
         final List<Application> applications = dao.getApplications(account.getSid());
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
@@ -183,27 +167,28 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     public Response putApplication(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         Account account;
-        try {
-            account = accountsDao.getAccount(accountSid);
-            secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        account = accountsDao.getAccount(accountSid);
+        secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
-        Application application = dao.getApplication(data.getFirst("FriendlyName"));
-        if (application == null) {
-            application = createFrom(new Sid(accountSid), data);
-            dao.addApplication(application);
-        } else if (!application.getAccountSid().toString().equals(account.getSid().toString())) {
-            return status(CONFLICT)
-                    .entity("A application with the same name was already created by another account. Please, choose a different name and try again.")
-                    .build();
-        }
+//        Application application = dao.getApplication(data.getFirst("FriendlyName"));
+//        if (application == null) {
+//            application = createFrom(new Sid(accountSid), data);
+//            dao.addApplication(application);
+//        } else if (!application.getAccountSid().toString().equals(account.getSid().toString())) {
+//            return status(CONFLICT)
+//                    .entity("A application with the same name was already created by another account. Please, choose a different name and try again.")
+//                    .build();
+//        }
+
+        // application uniqueness now relies only on application SID. No checks on the FriendlyName will be done.
+        Application application = createFrom(new Sid(accountSid), data);
+        dao.addApplication(application);
+
 
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(application);
@@ -224,21 +209,12 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
     protected Response updateApplication(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         Account account;
-        try {
-            secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications");
         final Application application = dao.getApplication(new Sid(sid));
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                //secureLevelControlApplications(accountSid, application);
-                secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
-            } catch (AuthorizationException e) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
             final Application applicationUpdate = update(application, data);
             dao.updateApplication(applicationUpdate);
             if (APPLICATION_XML_TYPE == responseType) {

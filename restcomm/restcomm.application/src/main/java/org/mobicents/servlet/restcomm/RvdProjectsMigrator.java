@@ -140,7 +140,7 @@ public class RvdProjectsMigrator {
         this.projectNames = migrationHelper.listProjects();
     }
 
-    private String searchApplicationSid(String projectName) {
+    private String searchApplicationSid(String projectName) throws RvdProjectsMigrationException {
         return migrationHelper.searchApplicationSid(projectName);
     }
 

@@ -25,7 +25,6 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.Version;
 import org.mobicents.servlet.restcomm.VersionEntity;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
@@ -42,9 +41,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -81,11 +78,7 @@ public class VersionEndpoint extends SecuredEndpoint {
     }
 
     protected Response getVersion(final String accountSid, final MediaType mediaType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
 
         VersionEntity versionEntity = Version.getVersionEntity();
 

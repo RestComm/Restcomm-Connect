@@ -129,7 +129,23 @@ CREATE TABLE "restcomm_call_detail_records" (
 "forwarded_from" VARCHAR(15),
 "caller_name" VARCHAR(30),
 "uri" LONGVARCHAR NOT NULL,
-"ring_duration" INT
+"ring_duration" INT,
+"conference_sid" VARCHAR(34), 
+"muted" BOOLEAN, 
+"start_conference_on_enter" BOOLEAN,
+"end_conference_on_exit" BOOLEAN,
+"on_hold" BOOLEAN
+);
+
+CREATE TABLE "restcomm_conference_detail_records" (
+"sid" VARCHAR(34) NOT NULL PRIMARY KEY,
+"date_created" DATETIME NOT NULL,
+"date_updated" DATETIME NOT NULL,
+"account_sid" VARCHAR(34) NOT NULL,
+"status" VARCHAR(100) NOT NULL,
+"friendly_name" VARCHAR(60),
+"api_version" VARCHAR(10) NOT NULL,
+"uri" LONGVARCHAR NOT NULL
 );
 
 CREATE TABLE "restcomm_clients" (

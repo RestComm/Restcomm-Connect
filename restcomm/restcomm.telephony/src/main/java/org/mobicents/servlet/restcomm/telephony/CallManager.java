@@ -141,6 +141,10 @@ public final class CallManager extends UntypedActor {
     private String myHostIp;
     private String proxyIp;
 
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    private CreateCall createCallRequest;
+    private SwitchProxy switchProxyRequest;
+
     //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
 
@@ -168,10 +172,6 @@ public final class CallManager extends UntypedActor {
         }
 
     }
-
-    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-    private CreateCall createCallRequest;
-    private SwitchProxy switchProxyRequest;
 
     public CallManager(final Configuration configuration, final ServletContext context, final ActorSystem system,
                        final MediaServerControllerFactory msControllerFactory, final ActorRef conferences, final ActorRef bridges,
@@ -954,6 +954,7 @@ public final class CallManager extends UntypedActor {
         SipURI from = null;
         SipURI to = null;
         boolean webRTC = false;
+        boolean isLBPresent = false;
 
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
         final String client = request.to().replaceFirst("client:", "");
@@ -965,20 +966,30 @@ public final class CallManager extends UntypedActor {
 
         List<Registration> registrations = registrationsDao.getRegistrations(client);
         if (registrations != null && registrations.size() > 0) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Preparing call for client: "+client+". There are "+registrations.size()+" registrations at the database for this client");
+            }
             for (Registration registration : registrations) {
                 if (registration.isWebRTC()) {
-                    if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
-                        Registration webRtcRegistration = registrationsDao.getRegistrationByInstanceId(client, RestcommConfiguration.getInstance().getMain().getInstanceId());
-                        if (webRtcRegistration == null) {
+                    if (registration.isLBPresent()) {
+                        if (logger.isInfoEnabled())
+                            logger.info("WebRTC registration behind LB. Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
+                        registrationToDial.add(registration);
+                    } else {
+                        //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
+                        if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
                             logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
-                            break;
                         } else {
-                            registrationToDial.add(webRtcRegistration);
-                            break;
+                            if (logger.isInfoEnabled())
+                                logger.info("Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
+                            registrationToDial.add(registration);
                         }
                     }
+                } else {
+                    if (logger.isInfoEnabled())
+                        logger.info("Will add registration: "+registration.getLocation()+" to the list to be dialed for client: "+client);
+                    registrationToDial.add(registration);
                 }
-                registrationToDial.add(registration);
             }
         } else {
             String errMsg = "The SIP Client "+request.to()+" is not registered or does not exist";
@@ -989,21 +1000,40 @@ public final class CallManager extends UntypedActor {
         }
 
         if (registrationToDial.size() > 0) {
+            if (logger.isInfoEnabled()) {
+                if (registrationToDial.size()>1) {
+                    logger.info("Preparing call for client: "+client+", after WebRTC check, Restcomm have to dial :"+registrationToDial.size()+" registrations");
+                }
+            }
             List<ActorRef> calls = new CopyOnWriteArrayList<>();
             for (Registration registration : registrationToDial) {
-                logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
+                if (logger.isInfoEnabled())
+                    logger.info("Will proceed to create call for client: " + registration.getLocation() + " registration instanceId: " + registration.getInstanceId() + " own InstanceId: " + RestcommConfiguration.getInstance().getMain().getInstanceId());
+                String transport;
                 if (registration.getLocation().contains("transport")) {
-                    String transport = registration.getLocation().split(";")[1].replace("transport=", "");
+                    transport = registration.getLocation().split(";")[1].replace("transport=", "");
                     outboundIntf = outboundInterface(transport);
                 } else {
-                    outboundIntf = outboundInterface("udp");
+                    transport = "udp";
+                    outboundIntf = outboundInterface(transport);
+                }
+                if (outboundIntf == null) {
+                    String errMsg = "The outbound interface for transport: "+transport+" is NULL, something is wrong with container, cannot proceed to call client "+request.to();
+                    logger.error(errMsg);
+                    sendNotification(errMsg, 11008, "error", true);
+                    sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), this.createCallRequest), self());
+                    return;
                 }
                 if (request.from() != null && request.from().contains("@")) {
                     // https://github.com/Mobicents/RestComm/issues/150 if it contains @ it means this is a sip uri and we allow
                     // to use it directly
                     from = (SipURI) sipFactory.createURI(request.from());
                 } else if (request.from() != null) {
-                    from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                    if (outboundIntf != null) {
+                        from = sipFactory.createSipURI(request.from(), mediaExternalIp + ":" + outboundIntf.getPort());
+                    } else {
+                        logger.error("Outbound interface is null, cannot create From header to be used to Dial client: "+client);
+                    }
                 } else {
                     from = outboundIntf;
                 }

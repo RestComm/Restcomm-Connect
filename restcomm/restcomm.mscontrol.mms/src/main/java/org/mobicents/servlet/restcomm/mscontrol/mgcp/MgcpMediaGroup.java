@@ -572,8 +572,8 @@ public class MgcpMediaGroup extends MediaGroup {
                 observer.tell(event, source);
             }
 
-            // Terminate the actor
-            getContext().stop(self());
+//            // Terminate the actor
+//            getContext().stop(self());
         }
     }
 
@@ -625,6 +625,8 @@ public class MgcpMediaGroup extends MediaGroup {
             getContext().stop(link);
             link = null;
         }
+        getContext().stop(self());
+        super.postStop();
     }
 
 }

@@ -21,6 +21,7 @@ package org.mobicents.servlet.restcomm.http;
 
 import akka.actor.ActorRef;
 import akka.util.Timeout;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -28,7 +29,6 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
@@ -84,7 +84,6 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
@@ -99,17 +98,17 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
-    private ActorRef callManager;
-    private DaoManager daos;
-    private Gson gson;
-    private GsonBuilder builder;
-    private XStream xstream;
-    private CallDetailRecordListConverter listConverter;
-    private AccountsDao accountsDao;
-    private RecordingsDao recordingsDao;
-    private String instanceId;
+    protected ActorRef callManager;
+    protected DaoManager daos;
+    protected Gson gson;
+    protected GsonBuilder builder;
+    protected XStream xstream;
+    protected CallDetailRecordListConverter listConverter;
+    protected AccountsDao accountsDao;
+    protected RecordingsDao recordingsDao;
+    protected String instanceId;
 
-    private boolean normalizePhoneNumbers;
+    protected boolean normalizePhoneNumbers;
 
     public CallsEndpoint() {
         super();
@@ -148,22 +147,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
     protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        try {
-            secure(account, "RestComm:Read:Calls");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(account, "RestComm:Read:Calls");
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(sid));
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-               // secureLevelControl(daos.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
-                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
-            }
+            secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -179,12 +169,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        try {
-            secure(account, "RestComm:Read:Calls");
-           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(account, "RestComm:Read:Calls");
 
         boolean localInstanceOnly = true;
         try {
@@ -203,6 +188,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
+        String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
 
         if (pageSize == null) {
             pageSize = "50";
@@ -220,12 +206,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         CallDetailRecordFilter filterForTotal;
         try {
+
             if (localInstanceOnly) {
                 filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, null);
+                        parentCallSid, conferenceSid, null, null);
             } else {
                 filterForTotal = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, null, null, instanceId);
+                        parentCallSid, conferenceSid, null, null, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -241,10 +228,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         try {
             if (localInstanceOnly) {
                 filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, limit, offset);
+                        parentCallSid, conferenceSid, limit, offset);
             } else {
                 filter = new CallDetailRecordFilter(accountSid, recipient, sender, status, startTime, endTime,
-                        parentCallSid, limit, offset, instanceId);
+                        parentCallSid, conferenceSid, limit, offset, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -299,12 +286,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     @SuppressWarnings("unchecked")
     protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountId = new Sid(accountSid);
-        try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
-           // secureLevelControl(daos.getAccountsDao(), accountSid, null);
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
         try {
             validate(data);
             if (normalizePhoneNumbers)
@@ -408,11 +390,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        try {
-            secure(account, "RestComm:Modify:Calls");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(account, "RestComm:Modify:Calls");
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
@@ -422,12 +400,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             cdr = dao.getCallDetailRecord(new Sid(callSid));
 
             if (cdr != null) {
-                try {
-                    //secureLevelControl(daos.getAccountsDao(), sid, String.valueOf(cdr.getAccountSid()));
-                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-                } catch (final AuthorizationException exception) {
-                    return status(UNAUTHORIZED).build();
-                }
+                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             } else {
                 return Response.status(NOT_ACCEPTABLE).build();
             }
@@ -537,11 +510,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
 
         final List<Recording> recordings = recordingsDao.getRecordingsByCall(new Sid(callSid));
         if (APPLICATION_JSON_TYPE == responseType) {

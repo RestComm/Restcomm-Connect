@@ -33,11 +33,28 @@ public final class Play {
 
     private final List<URI> uris;
     private final int iterations;
+    private boolean confModeratorPresent = false;
+
+    public Play(final List<URI> uris, final int iterations, final boolean confModeratorPresent) {
+        super();
+        this.uris = uris;
+        this.iterations = iterations;
+        this.confModeratorPresent = confModeratorPresent;
+    }
 
     public Play(final List<URI> uris, final int iterations) {
         super();
         this.uris = uris;
         this.iterations = iterations;
+    }
+
+
+    public Play(final URI uri, final int iterations, final boolean confModeratorPresent) {
+        super();
+        this.uris = new ArrayList<URI>();
+        uris.add(uri);
+        this.iterations = iterations;
+        this.confModeratorPresent = confModeratorPresent;
     }
 
     public Play(final URI uri, final int iterations) {
@@ -54,5 +71,7 @@ public final class Play {
     public int iterations() {
         return iterations;
     }
+
+    public boolean isConfModeratorPresent() { return confModeratorPresent; }
 
 }

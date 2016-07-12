@@ -6,8 +6,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
@@ -23,7 +21,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.log4j.Logger;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.cache.DiskCache;
 import org.mobicents.servlet.restcomm.cache.DiskCacheRequest;
 import org.mobicents.servlet.restcomm.entities.Announcement;
@@ -94,11 +91,7 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
 
     public Response putAnnouncement(final String accountSid, final MultivaluedMap<String, String> data,
             final MediaType responseType) throws Exception {
-        try {
-            secure(accountsDao.getAccount(accountSid), "RestComm:Create:Announcements");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Announcements");
         if(cache == null)
             createCacheActor(accountSid);
 

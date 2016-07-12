@@ -140,6 +140,7 @@
 			<role name="Unprivileged">
 				<permission>RestComm:Read:Accounts</permission>
 			</role>
+			<role name="Guest"></role>
 		</security-roles>
 	</runtime-settings>
 

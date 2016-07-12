@@ -1,3 +1,22 @@
+/*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
 package org.mobicents.servlet.restcomm.entities;
 
 import java.text.ParseException;
@@ -20,17 +39,18 @@ public class CallDetailRecordFilter {
     private final Date startTime;  // to initialize it pass string arguments with  yyyy-MM-dd format
     private final Date endTime;
     private final String parentCallSid;
+    private final String conferenceSid;
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
 
     public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, Integer limit, Integer offset) throws ParseException {
-        this(accountSid,recipient,sender,status,startTime,endTime,parentCallSid,limit,offset,null);
+            String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
+        this(accountSid,recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,null);
     }
 
     public CallDetailRecordFilter(String accountSid, String recipient, String sender, String status, String startTime, String endTime,
-            String parentCallSid, Integer limit, Integer offset, String instanceId) throws ParseException {
+            String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
         this.accountSid = accountSid;
 
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -44,6 +64,7 @@ public class CallDetailRecordFilter {
         this.sender = sender;
         this.status = status;
         this.parentCallSid = parentCallSid;
+        this.conferenceSid = conferenceSid;
         this.limit = limit;
         this.offset = offset;
         if (startTime != null) {
@@ -93,6 +114,10 @@ public class CallDetailRecordFilter {
 
     public String getParentCallSid() {
         return parentCallSid;
+    }
+
+    public String getConferenceSid() {
+        return conferenceSid;
     }
 
     public int getLimit() {

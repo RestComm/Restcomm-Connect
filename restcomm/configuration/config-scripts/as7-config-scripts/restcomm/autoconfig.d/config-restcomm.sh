@@ -8,87 +8,37 @@
 # VARIABLES
 RESTCOMM_BIN=$RESTCOMM_HOME/bin
 RESTCOMM_DARS=$RESTCOMM_HOME/standalone/configuration/dars
+RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
+RVD_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war
 
 ## FUNCTIONS
 
 ## Description: Configures Java Options for Application Server
 ## Parameters : none
-configJavaOpts() {
+configRCJavaOpts() {
 	FILE=$RESTCOMM_BIN/standalone.conf
-
-	# Find total available memory on the instance
-    TOTAL_MEM=$(free -m -t | grep 'Total:' | awk '{print $2}')
-    # get 70 percent of available memory
-    # need to use division by 1 for scale to be read
-    CHUNK_MEM=$(echo "scale=0; ($TOTAL_MEM * 0.7)/1" | bc -l)
-    # divide chunk memory into units of 64mb
-    MULTIPLIER=$(echo "scale=0; $CHUNK_MEM/64" | bc -l)
-    # use multiples of 64mb to know effective memory
-    FINAL_MEM=$(echo "$MULTIPLIER * 64" | bc -l)
-    MEM_UNIT='m'
-
-    RESTCOMM_OPTS="-Xms$FINAL_MEM$MEM_UNIT -Xmx$FINAL_MEM$MEM_UNIT -XX:MaxPermSize=256m -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
-
-	sed -e "/if \[ \"x\$JAVA_OPTS\" = \"x\" \]; then/ {
-		N; s|JAVA_OPTS=.*|JAVA_OPTS=\"$RESTCOMM_OPTS\"|
+    echo "RestComm java options with: $RC_JAVA_OPTS"
+    sed -e "/if \[ \"x\$JAVA_OPTS\" = \"x\" \]; then/ {
+		N; s|JAVA_OPTS=.*|JAVA_OPTS=\"$RC_JAVA_OPTS\"|
 	}" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
-	echo "Configured JVM for RestComm: $RESTCOMM_OPTS"
 }
 
 ## Description: Updates RestComm configuration file
-## Parameters : 1.Private IP
-## 		2.Public IP
+## Parameters : 1.STATIC_ADDRESS
 configRestcomm() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-	bind_address="$1"
-	static_address="$2"
-	outbound_proxy="$3"
-	outbound_proxy_user="$4"
-	outbound_proxy_password="$5"
-	ms_external_address="$6"
-	recording_address=$bind_address
-	if [ -n "$static_address" ]; then
-		recording_address=$static_address
-	fi
+	static_address="$1"
 
-	if [ "$ACTIVE_PROXY" == "true" ] || [ "$ACTIVE_PROXY" == "TRUE" ]; then
-			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$bind_address<\/external-ip>|" \
-			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$bind_address<\/external-ip>|" \
-			-e "s|<external-address>.*<\/external-address>|<external-address>$ms_external_address<\/external-address>|" \
- 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$ms_external_address<\/external-address>|" \
-			-e "s|<normalize-numbers-for-outbound-calls>.*<\/normalize-numbers-for-outbound-calls>|<normalize-numbers-for-outbound-calls>false<\/normalize-numbers-for-outbound-calls>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
-			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
-			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
+		-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
+		 $FILE > $FILE.bak;
 
-	else
-		if [ -n "$static_address" ]; then
-			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-			-e "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-			-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
-			-e "s|<external-address>.*<\/external-address>|<external-address>$ms_external_address<\/external-address>|" \
- 			-e "s|<\!--.*<external-address>.*<\/external-address>.*-->|<external-address>$ms_external_address<\/external-address>|" \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|" \
-			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
-			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
-		else
-			sed -e "s|<local-address>.*<\/local-address>|<local-address>$bind_address<\/local-address>|" \
-			-e "s|<remote-address>.*<\/remote-address>|<remote-address>$bind_address<\/remote-address>|" \
-			-e 's|<external-ip>.*</external-ip>|<external-ip></external-ip>|' \
-			-e 's|<external-address>.*</external-address>|<external-address></external-address>|' \
-			-e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$outbound_proxy<\/outbound-proxy-uri>|"  \
-			-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$outbound_proxy_user<\/outbound-proxy-user>|"  \
-			-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$outbound_proxy_password<\/outbound-proxy-password>|" $FILE > $FILE.bak;
-		fi
-	fi
 	mv $FILE.bak $FILE
 	echo 'Updated RestComm configuration'
 
+    #If "STRICT" no self-signed certificate is permitted.
 	if [ "$SSL_MODE" == "strict" ] || [ "$SSL_MODE" == "STRICT" ]; then
 		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>strict<\/ssl-mode>/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
@@ -96,6 +46,23 @@ configRestcomm() {
 		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
 	fi
+
+	#Configure RESTCOMM_HOSTNAME at restcomm.xml. If not set "STATIC_ADDRESS" will be used.
+	if [ -n "$RESTCOMM_HOSTNAME" ]; then
+  		echo "HOSTNAME $RESTCOMM_HOSTNAME"
+  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+	else
+  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+ 	fi
+}
+## Description: OutBoundProxy configuration.
+configOutboundProxy(){
+    echo "Configure outbound-proxy"
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
+	-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
+	-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+	mv $FILE.bak $FILE
 }
 
 ## Description: Configures Voip Innovations Credentials
@@ -115,32 +82,29 @@ configVoipInnovations() {
 	echo 'Configured Voip Innovation credentials'
 }
 
+## Description: PROVISION MANAGER configuration.
+# MANAGERS : VI (Voip innovations),NX (nexmo),VB (Voxbone), BW(Bandwidth).
 configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
-		sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
-		# -e "s|<bandwidth>|<!\-\-<bandwidth>|" \
-		# -e "s|<\/bandwidth>|<\/bandwidth>\-\->|" \
-		# -e "s|<!\-\- <voip-innovations>|<voip-innovations>|" \
-		# -e "s|<\/voip-innovations>\-\->|<\/voip-innovations>|" \
-		# $FILE > $FILE.bak
+	#Check for port offset.
+	if (( $PORT_OFFSET > 0 )); then
+		local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+	fi
 
-		sed -e "/<voip-innovations>/ {
-			N; s|<login>.*</login>|<login>$1</login>|
-			N; s|<password>.*</password>|<password>$2</password>|
-			N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
-		}" $FILE.bak > $FILE
-		sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
-		echo 'Configured Voip Innovation credentials'
+		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
+			sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
+
+			sed -e "/<voip-innovations>/ {
+				N; s|<login>.*</login>|<login>$1</login>|
+				N; s|<password>.*</password>|<password>$2</password>|
+				N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+			}" $FILE.bak > $FILE
+			sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+			echo 'Configured Voip Innovation credentials'
 		else
 			if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
 			sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
-			# -e "s|<voip-innovations>|<!\-\-<voip-innovations>|" \
-			# -e "s|<\/voip-innovations>|<\/voip-innovations>\-\->|" \
-			# -e "s|<!\-\- <bandwidth>|<bandwidth>|" \
-			# -e "s|<\/bandwidth>\-\->|<\/bandwidth>|" \
-			# $FILE > $FILE.bak
 
 			sed -e "/<bandwidth>/ {
 				N; s|<username>.*</username>|<username>$1</username>|
@@ -150,50 +114,49 @@ configDidProvisionManager() {
 			}" $FILE.bak > $FILE
 			sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 			echo 'Configured Bandwidth credentials'
-		else
-			if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
-				echo "Nexmo PROVISION_PROVIDER"
-				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
+			else
+				if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
+					echo "Nexmo PROVISION_PROVIDER"
+					sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
-				sed -i "/<callback-urls>/ {
-					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:5080\" method=\"SIP\" />|
-					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
-					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
-					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
-				}" $FILE
+					sed -i "/<callback-urls>/ {
+						N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+						N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
+						N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
+						N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
+					}" $FILE
 
-				sed -i "/<nexmo>/ {
-					N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
-					N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
-					N
-					N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
-				}" $FILE
+					sed -i "/<nexmo>/ {
+						N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
+						N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
+						N
+						N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
+					}" $FILE
 
-				sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
+					sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
 
-		else
-			if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
-				echo "Voxbone PROVISION_PROVIDER"
-				sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
+				else
+					if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
+					echo "Voxbone PROVISION_PROVIDER"
+					sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
 
-				sed -i "/<callback-urls>/ {
-					N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
-					N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
-					N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
-					N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:5080\" method=\"SIP\" />|
-				}" $FILE
+					sed -i "/<callback-urls>/ {
+						N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+						N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+						N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+						N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+					}" $FILE
 
-				sed -i "/<voxbone>/ {
-					N; s|<username>.*</username>|<username>$1</username>|
-					N; s|<password>.*</password>|<password>$2</password>|
-				}" $FILE
-				sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+					sed -i "/<voxbone>/ {
+						N; s|<username>.*</username>|<username>$1</username>|
+						N; s|<password>.*</password>|<password>$2</password>|
+					}" $FILE
+					sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 
+					fi
+				fi
+			fi
 		fi
-		fi
-		fi
-		fi
-
 }
 
 ## Description: Configures Fax Service Credentials
@@ -357,6 +320,8 @@ configMediaServerManager() {
 ## 		4.systemType
 ## 		5.peerIP
 ## 		6.peerPort
+##      7.sourceMap
+##      8.destinationMap
 
 configSMPPAccount() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
@@ -366,9 +331,13 @@ configSMPPAccount() {
 	systemType="$4"
 	peerIP="$5"
 	peerPort="$6"
+	sourceMap="$7"
+	destinationMap="$8"
 
 
 	sed -i "s|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
+	#Add sourceMap && destinationMap
+
 
 	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
 		sed -e	"/<smpp class=\"org.mobicents.servlet.restcomm.smpp.SmppService\"/{
@@ -386,6 +355,8 @@ configSMPPAccount() {
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
+
+        sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
 
 	else
@@ -404,34 +375,34 @@ configSMPPAccount() {
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
+
+        sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
-
-
-	fi
-}
-configMediaServerMSaddress() {
-	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-
-	if [ -n "$MS_ADDRESS" ]; then
-		sed -e  "s|<remote-address>.*<\/remote-address>|<remote-address>$MS_ADDRESS<\/remote-address>|" $FILE > $FILE.bak
-		mv $FILE.bak $FILE
-		echo "Updated MSaddress"
 	fi
 }
 
+## Description: Configures RestComm "prompts & cache" URIs
+#Mostly used for external MS.
 configRestCommURIs() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
+	#check for port offset
+	if (( $PORT_OFFSET > 0 )); then
+		local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+		local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+	fi
+
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
-			PORT=8443
-			SCHEME='https'
+            PORT="$HTTPS_PORT"
+            SCHEME='https'
 		else
-			PORT=8080
+			PORT="$HTTP_PORT"
 			SCHEME='http'
-		fi    	
-		# STATIC_ADDRESS will be populated by user or script before 
-		REMOTE_ADDRESS="${SCHEME}://${STATIC_ADDRESS}:${PORT}"
+		fi
+
+		# STATIC_ADDRESS will be populated by user or script before
+		REMOTE_ADDRESS="${SCHEME}://${PUBLIC_IP}:${PORT}"
 		sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" \
 		-e "s|<cache-uri>.*/cache-uri>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" \
 		-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
@@ -439,31 +410,96 @@ configRestCommURIs() {
 		mv $FILE.bak $FILE
 		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
 	fi
+	echo 'Configured RestCommURIs'
 }
 
-
+## Description: Specify the path where Recordings are saved.
 updateRecordingsPath() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	if [ -n "$RECORDINGS_PATH" ]; then
 		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://${RECORDINGS_PATH}<\/recordings-path>|" $FILE > $FILE.bak
 		echo "Updated RECORDINGS_PATH "
-		mv $FILE.bak $FILE
+
+	else
+		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://\${restcomm:home}/recordings<\/recordings-path>|" $FILE > $FILE.bak
 	fi
+	mv $FILE.bak $FILE
+	echo 'Configured Recordings path'
 }
 
+## Description: Specify HTTP/S ports used.
+#Needed when port offset is set.
+configHypertextPort(){
+    MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
+
+    #Check for Por Offset
+	if (( $PORT_OFFSET > 0 )); then
+		local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+		local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+	fi
+
+    sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|" \
+     	-e	"s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
+    mv $MSSFILE.bak $MSSFILE
+    echo "Configured HTTP ports"
+}
+
+## Description: Other single configuration
+#enable/disable SSLSNI (default:false)
 otherRestCommConf(){
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
+
+    #Remove if is set in earlier run.
+    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
+
+    if [[ "$SSLSNI" == "false" || "$SSLSNI" == "FALSE" ]]; then
+		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $RESTCOMM_BIN/standalone.conf
+	else
+	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
+	fi
+
+	if [ -n "$HSQL_DIR" ]; then
+  		echo "HSQL_DIR $HSQL_DIR"
+  		FILE=$HSQL_DIR/restcomm.script
+  		mkdir -p $HSQL_DIR
+  		if [ ! -f $FILE ]; then
+  		    sed -i "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|"  $FILE
+  		    cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
+        fi
+	fi
+
+    echo "End Rest RestComm configuration"
+}
+
+confRVD(){
+    echo "Configure RVD"
+	if [ -n "$RVD_LOCATION" ]; then
+  		echo "RVD_LOCATION $RVD_LOCATION"
+  		mkdir -p `echo $RVD_LOCATION`
+  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
+
+  		COPYFLAG=$RVD_LOCATION/.demos_initialized
+  		if [ -f "$COPYFLAG" ]; then
+   			#Do nothing, we already copied the demo file to the new workspace
+    		echo "RVD demo application are already copied"
+  		else
+    		echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
+    		cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
+    		touch $COPYFLAG
+  		fi
+
+	fi
 }
 
 
 # MAIN
 echo 'Configuring RestComm...'
-#configJavaOpts
+configRCJavaOpts
 configMobicentsProperties
-configRestcomm "$BIND_ADDRESS" "$STATIC_ADDRESS" "$OUTBOUND_PROXY" "$OUTBOUND_PROXY_USERNAME" "$OUTBOUND_PROXY_PASSWORD" "$MEDIASERVER_EXTERNAL_ADDRESS"
+configRestcomm "$PUBLIC_IP"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
@@ -472,9 +508,11 @@ configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
 configMediaServerManager "$ACTIVE_PROXY" "$BIND_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
-configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT"
-configMediaServerMSaddress "$BIND_ADDRESS"
+configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT" "$SMPP_SOURCE_MAP" "$SMPP_DEST_MAP"
 configRestCommURIs
 updateRecordingsPath
+configHypertextPort
+configOutboundProxy
 otherRestCommConf
+confRVD
 echo 'Configured RestComm!'

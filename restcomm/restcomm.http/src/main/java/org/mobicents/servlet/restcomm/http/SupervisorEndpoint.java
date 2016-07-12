@@ -28,7 +28,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.text.ParseException;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +41,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
-import org.apache.shiro.authz.AuthorizationException;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
@@ -106,15 +104,11 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     }
 
     protected Response pong(final String accountSid, final MediaType responseType) {
-        try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         CallDetailRecordFilter filterForTotal;
         try {
             filterForTotal = new CallDetailRecordFilter("", null, null, null, null,null,
-                    null, null, null);
+                    null, null, null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
@@ -130,11 +124,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     }
 
     protected Response getMetrics(final String accountSid, MediaType responseType) {
-        try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse monitoringServiceResponse;
         try {
@@ -165,11 +155,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
 
     //Register a remote location where Restcomm will send monitoring updates
     protected Response registerForUpdates(final String accountSid, final MultivaluedMap<String, String> data, MediaType responseType) {
-        try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
         //Get the list of live calls from Monitoring Service
         MonitoringServiceResponse liveCalls;
         try {
@@ -197,11 +183,7 @@ public class SupervisorEndpoint extends SecuredEndpoint{
 
     //Register a remote location where Restcomm will send monitoring updates for a specific Call
     protected Response registerForCallUpdates(final String accountSid, final String callSid, final MultivaluedMap<String, String> data, MediaType responseType) {
-        try {
-            secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Read:Calls");
 
         final String url = data.getFirst("Url");
         final String refresh = data.getFirst("Refresh");

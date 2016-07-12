@@ -36,6 +36,8 @@ public interface DaoManager extends Configurable, LifeCycle {
 
     CallDetailRecordsDao getCallDetailRecordsDao();
 
+    ConferenceDetailRecordsDao getConferenceDetailRecordsDao();
+
     ClientsDao getClientsDao();
 
     HttpCookiesDao getHttpCookiesDao();
