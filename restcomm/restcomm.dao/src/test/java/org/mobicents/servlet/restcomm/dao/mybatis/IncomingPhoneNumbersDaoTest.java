@@ -40,6 +40,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public class IncomingPhoneNumbersDaoTest {
     private static MybatisDaoManager manager;
@@ -211,6 +212,11 @@ public class IncomingPhoneNumbersDaoTest {
         IncomingPhoneNumber result = numbers.getIncomingPhoneNumber("+12223334444");
         assert (result != null);
         assertTrue(result.getSid().equals(number.getSid()));
+
+        // test getIncomingPhoneNumbersByFilter
+        IncomingPhoneNumberFilter filter= new IncomingPhoneNumberFilter(account.toString(), "Incoming Phone Number Test", null);
+        assertTrue(numbers.getIncomingPhoneNumbersByFilter(filter).size() == 1);
+
         // Delete the incoming phone number.
         numbers.removeIncomingPhoneNumber(sid);
         // Validate that the incoming phone number was removed.

@@ -20,6 +20,9 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.Account.Type;
 import static org.junit.Assert.*;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public class AccountsDaoTest {
     private static MybatisDaoManager manager;
 

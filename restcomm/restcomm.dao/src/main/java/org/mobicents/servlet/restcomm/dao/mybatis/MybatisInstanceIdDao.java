@@ -27,6 +27,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
 import org.mobicents.servlet.restcomm.entities.InstanceId;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.InstanceIdMapper;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,7 +42,6 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
  */
 @ThreadSafe
 public class MybatisInstanceIdDao implements InstanceIdDao{
-    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.InstanceIdDao.";
     private final SqlSessionFactory sessions;
 
     public MybatisInstanceIdDao(final SqlSessionFactory sessions) {
@@ -53,7 +53,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public InstanceId getInstanceId() {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace+"getInstanceId");
+        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+        	final Map<String, Object> result = mapper.getInstanceId();
             if (result != null) {
                 return toInstanceId(result);
             } else {
@@ -68,7 +69,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public InstanceId getInstanceIdByHost(String host) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace+"getInstanceIdByHost", host);
+        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+        	final Map<String, Object> result = mapper.getInstanceIdByHost(host);
             if (result != null) {
                 return toInstanceId(result);
             } else {
@@ -86,7 +88,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public void addInstancecId(InstanceId instanceId) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addInstanceId", toMap(instanceId));
+        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+        	mapper.addInstanceId(toMap(instanceId));
             session.commit();
         } finally {
             session.close();
@@ -97,7 +100,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public void updateInstanceId(InstanceId instanceId) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateInstanceId", toMap(instanceId));
+        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+        	mapper.updateInstanceId(toMap(instanceId));
             session.commit();
         } finally {
             session.close();

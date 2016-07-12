@@ -13,6 +13,9 @@ import org.junit.Test;
 import org.mobicents.servlet.restcomm.dao.AvailablePhoneNumbersDao;
 import org.mobicents.servlet.restcomm.entities.AvailablePhoneNumber;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public class AvailablePhoneNumbersDaoTest {
 
 	private static MybatisDaoManager manager;

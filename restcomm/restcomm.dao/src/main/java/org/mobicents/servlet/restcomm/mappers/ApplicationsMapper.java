@@ -8,6 +8,9 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface ApplicationsMapper {
 
     String SELECT_APPLICATIN="SELECT * FROM \"restcomm_applications\" WHERE \"sid\"=#{sid}";

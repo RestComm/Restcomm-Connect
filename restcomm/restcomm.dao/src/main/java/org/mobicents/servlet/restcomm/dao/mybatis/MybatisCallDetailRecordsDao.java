@@ -48,6 +48,8 @@ import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.CallDetailRecordMapper;
+
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -66,7 +68,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public void addCallDetailRecord(final CallDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addCallDetailRecord", toMap(cdr));
+        	CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+        	mapper.addCallDetailRecord(toMap(cdr));
             session.commit();
         } finally {
             session.close();
@@ -77,7 +80,8 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
     public CallDetailRecord getCallDetailRecord(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getCallDetailRecord", sid.toString());
+        	CallDetailRecordMapper mapper=session.getMapper(CallDetailRecordMapper.class);
+        	final Map<String, Object> result = mapper.getCallDetailRecord(sid.toString());
             if (result != null) {
                 return toCallDetailRecord(result);
             } else {

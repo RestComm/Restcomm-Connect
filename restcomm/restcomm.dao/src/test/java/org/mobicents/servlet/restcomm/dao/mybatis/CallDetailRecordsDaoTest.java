@@ -39,6 +39,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public class CallDetailRecordsDaoTest {
     private static MybatisDaoManager manager;
