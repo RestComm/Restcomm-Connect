@@ -917,7 +917,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private void onCallStateChanged(Object message, State state, ActorRef sender) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final CallStateChanged event = (CallStateChanged) message;
-        callState = event.state();
+        if (sender == call)
+            callState = event.state();
         if(logger.isInfoEnabled()){
             logger.info("VoiceInterpreter received CallStateChanged event: "+callState);
         }
@@ -1033,7 +1034,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 //                executeDialAction(message, sender);
 //            }
             sender.tell(new Cancel(), self());
-            if (outboundCall != null && outboundCall != sender) {
+            if (sender != outboundCall) {
                 callManager.tell(new DestroyCall(sender), self());
             }
             if (dialBranches.size() > 0) {
@@ -2673,10 +2674,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.info("At Finished state, state: " + fsm.state());
             }
             final Class<?> klass = message.getClass();
-            if (CallStateChanged.class.equals(klass)) {
-                final CallStateChanged event = (CallStateChanged) message;
-                callState = event.state();
-            }
+
                 if (callRecord != null) {
                     callRecord = callRecord.setStatus(callState.toString());
                     final DateTime end = DateTime.now();
@@ -2748,6 +2746,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 callManager.tell(new DestroyCall(call), super.source);
                 if (outboundCall != null) {
                     callManager.tell(new DestroyCall(outboundCall), super.source);
+                } if (sender != call) {
+                    callManager.tell(new DestroyCall(sender), super.source);
                 }
             } else {
                 // Make sure the media operations of the call are stopped
