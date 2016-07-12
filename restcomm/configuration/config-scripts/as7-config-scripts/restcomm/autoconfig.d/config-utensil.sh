@@ -31,14 +31,21 @@ configS3Bucket() {
     fi
 }
 
-setINITPassword(){
-    if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
-        # chnange admin password
-         SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/data/hsql/restcomm.script
-         PATTERN="'ACae6e420f425248d6a26948c17a9e2acf','2012-04-24 00:00:00.000000000','2012-04-24 00:00:00.000000000','administrator@company.com',\
-'Default Administrator Account',NULL,'Full','uninitialized','77f8c12cc7b8f8423e5c38b035249166','Administrator','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf'"
+initUserPassword(){
+     SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/data/hsql/restcomm.script
+    if [ -n "$INITIAL_ADMIN_USER" ]; then
+        # change admin user
+        if grep -q "uninitialized" $SQL_FILE; then
+            echo "Update Admin user"
+            sed -i "s/administrator@company.com/${INITIAL_ADMIN_USER}/g" $SQL_FILE
+        else
+            echo "Adminitrator User Already changed"
+        fi
+    fi
 
-        if grep -q "$PATTERN" $SQL_FILE; then
+    if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
+        # change admin password
+        if grep -q "uninitialized" $SQL_FILE; then
            PASSWORD_ENCRYPTED=`echo -n "${INITIAL_ADMIN_PASSWORD}" | md5sum |cut -d " " -f1`
             #echo "Update password to ${INITIAL_ADMIN_PASSWORD}($PASSWORD_ENCRYPTED)"
             sed -i "s/uninitialized/active/g" $SQL_FILE
@@ -135,6 +142,6 @@ configMonitoring(){
 
 # MAIN
 configS3Bucket
-setINITPassword
+initUserPassword
 configSMTP
 configMonitoring
