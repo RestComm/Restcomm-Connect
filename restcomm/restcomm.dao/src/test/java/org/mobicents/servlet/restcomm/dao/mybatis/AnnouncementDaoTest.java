@@ -15,6 +15,9 @@ import org.mobicents.servlet.restcomm.dao.AnnouncementsDao;
 import org.mobicents.servlet.restcomm.entities.Announcement;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public class AnnouncementDaoTest {
 	private static MybatisDaoManager manager;
 	
