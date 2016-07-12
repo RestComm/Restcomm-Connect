@@ -102,8 +102,16 @@ CertConfigure(){
   fi
 
   #Final necessary configuration. Protocols permitted, etc.
-  grep -q 'ephemeralDHKeySize' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Djdk.tls.ephemeralDHKeySize=2048|" $RESTCOMM_BIN/standalone.conf
-  grep -q 'https.protocols' $RESTCOMM_BIN/standalone.conf || sed -i "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $RESTCOMM_BIN/standalone.conf
+  FILE=$RESTCOMM_BIN/standalone.conf
+  if ! grep -q 'ephemeralDHKeySize' $FILE; then
+    sed -e "s|-Djava.awt.headless=true|& -Djdk.tls.ephemeralDHKeySize=2048|" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
+  fi
+
+  if !  grep -q 'https.protocols' $FILE; then
+    sed -e "s|-Djava.awt.headless=true|& -Dhttps.protocols=TLSv1.1,TLSv1.2|" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
+  fi
 }
 
 #SIP-Servlets configuration for HTTPS.
@@ -112,7 +120,8 @@ MssStackConf(){
 	FILE=$RESTCOMM_CONF/mss-sip-stack.properties
 
 	if  grep -q 'gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled' "$FILE"; then
-   		sed -i '/gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled/,+5d' $FILE
+   		sed -e '/gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled/,+5d' $FILE > $FILE.bak
+   		mv $FILE.bak $FILE
  	fi
 
 	if [[ "$TRUSTSTORE_FILE" = /* ]]; then
@@ -121,13 +130,18 @@ MssStackConf(){
 		TRUSTSTORE_LOCATION=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE
 	fi
 
-   sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT='"$HTTPS_PORT"'/ a \
-  \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled\
-  \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
-  \javax.net.ssl.keyStorePassword='" $TRUSTSTORE_PASSWORD"'\
-  \javax.net.ssl.trustStorePassword='"$TRUSTSTORE_PASSWORD"'\
-  \javax.net.ssl.trustStore='"$TRUSTSTORE_LOCATION"'\
-  \javax.net.ssl.keyStoreType=JKS' $RESTCOMM_CONF/mss-sip-stack.properties
+    #check for port offset
+	local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+
+
+    sed -e '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT='"$HTTPS_PORT"'/ a \
+    \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled\
+    \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
+    \javax.net.ssl.keyStorePassword='" $TRUSTSTORE_PASSWORD"'\
+    \javax.net.ssl.trustStorePassword='"$TRUSTSTORE_PASSWORD"'\
+    \javax.net.ssl.trustStore='"$TRUSTSTORE_LOCATION"'\
+    \javax.net.ssl.keyStoreType=JKS' $FILE > $FILE.bak
+    mv $FILE.bak $FILE
 }
 
 # MAIN

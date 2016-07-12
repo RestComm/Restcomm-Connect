@@ -20,13 +20,12 @@ configConnectors() {
     fi
 
 	#Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-		local SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
-		local SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
-		local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
-		local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
-	fi
+    local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+    local SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
+    local SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
+    local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
+    local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
+
 
     #IF LB activated. (Algorithm "use-load-balancer" used).
 	if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
@@ -55,8 +54,10 @@ configConnectors() {
 
 
 	#Enable SipServlet statistics
-	grep -q 'gather-statistics' $FILE || sed -i "s|congestion-control-interval=\".*\"|& gather-statistics=\"true\"|" $FILE
-	echo "Configured gather-statistics"
+	if ! grep -q 'gather-statistics' $FILE; then
+        sed -e "s|congestion-control-interval=\".*\"|& gather-statistics=\"true\"|" $FILE > $FILE.bak
+        mv $FILE.bak $FILE
+    fi
 }
 
 #Socket Binding configuration for standalone-sip.xml
@@ -74,11 +75,8 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
     fi
 
 	#check for port offset
-	if (( $PORT_OFFSET > 0 )); then
-    	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
-	else
-		sed -i "s|\port-offset=\".*\"|port-offset=\"\$\{jboss\.socket\.binding\.port\-offset\:0\}\"|" $FILE
-	fi
+    sed -e "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE > $FILE.bak
+
 	sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|" \
         -e "s|<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" \
         -e "s|<socket-binding name=\"sip-udp\" port=\".*\"/>|<socket-binding name=\"sip-udp\" port=\"$SIP_PORT_UDP\"/>|" \
@@ -86,8 +84,8 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
         -e "s|<socket-binding name=\"sip-tls\" port=\".*\"/>|<socket-binding name=\"sip-tls\" port=\"$SIP_PORT_TLS\"/>|" \
         -e "s|<socket-binding name=\"sip-ws\" port=\".*\"/>|<socket-binding name=\"sip-ws\" port=\"$SIP_PORT_WS\"/>|" \
         -e "s|<socket-binding name=\"sip-wss\" port=\".*\"/>|<socket-binding name=\"sip-wss\" port=\"$SIP_PORT_WSS\"/>|" \
-        $FILE > $FILE.bak
-        mv $FILE.bak $FILE
+        $FILE.bak > $FILE
+
 }
 
 setMoreConnectors(){
@@ -117,20 +115,22 @@ connector=$1
 port=$2
 
     #check for port offset at the new connectors.
-    if (( $PORT_OFFSET > 0 )); then
-        local port=$((port + PORT_OFFSET))
-    fi
+    local port=$((port + PORT_OFFSET))
+
 
     if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
 		if [ -z "$LB_INTERNAL_IP" ]; then
       		LB_INTERNAL_IP=$LB_PUBLIC_IP
 		fi
-         grep -q "connector name=\"${connector}\"" $FILE || sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
+		 if ! grep -q "connector name=\"${connector}\"" $FILE; then
+            sed -e "/path-name=\"org.mobicents.ha.balancing.only\"/a\
                <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${LB_PUBLIC_IP}\" static-server-port=\"${port}\" use-load-balancer=\"true\" load-balancer-address=\"${LB_INTERNAL_IP}\" load-balancer-rmi-port=\"${LB_RMI_PORT}\"  load-balancer-sip-port=\"${LB_SIP_PORT_UDP}\"/>" $FILE > $FILE.bak
-
+         fi
     else
-         grep -q "connector name=\"${connector}\"" $FILE || sed -e "/path-name=\"org.mobicents.ext\"/a\
+         if ! grep -q "connector name=\"${connector}\"" $FILE; then
+            sed -e "/path-name=\"org.mobicents.ext\"/a\
 			   <connector name=\"${connector}\" protocol=\"SIP/2.0\" scheme=\"sip\" socket-binding=\"${connector}\" use-static-address=\"true\" static-server-address=\"${static_address}\" static-server-port=\"${port}\"/>" $FILE > $FILE.bak
+	     fi
 	fi
 	mv $FILE.bak $FILE
 	echo 'Configured additional SIP Connectors and Bindings'
@@ -141,8 +141,10 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
 connector=$1
 port=$2
 
-  grep -q "socket-binding name=\"${connector}\"" $FILE || sed "/name=\"management-https\"/a <socket-binding name=\"${connector}\" port=\"${port}\"/>" $FILE > $FILE.bak
-  mv $FILE.bak $FILE
+ if ! grep -q "socket-binding name=\"${connector}\"" $FILE; then
+    sed "/name=\"management-https\"/a <socket-binding name=\"${connector}\" port=\"${port}\"/>" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
+ fi
 }
 
 setInitialSign(){

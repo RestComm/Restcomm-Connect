@@ -121,17 +121,16 @@ fi
 configMybatis() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/mybatis.xml
 
-	grep -q '<environment id="mysql">' $FILE || sed -i '/<environments.*>/ a \
+	grep -q '<environment id="mysql">' $FILE || sed -e '/<environments.*>/ a \
 	\	<environment id="mysql">\
 	\		<transactionManager type="JDBC"/>\
 	\		<dataSource type="JNDI">\
 	\			<property name="data_source" value="java:/MySqlDS" />\
 	\		</dataSource>\
 	\	</environment>\
-	' $FILE
+	' $FILE > $FILE.bak
 
-	sed -e '/<environments.*>/ s|default=".*"|default="mysql"|' $FILE > $FILE.bak
-	mv $FILE.bak $FILE
+	sed -e '/<environments.*>/ s|default=".*"|default="mysql"|' $FILE.bak > $FILE
 	echo 'Activated mybatis environment for MySQL';
 }
 
@@ -145,11 +144,9 @@ configureMySQLDataSource() {
 		# Update DataSource
 		sed -e "s|<connection-url>.*</connection-url>|<connection-url>jdbc:mysql://$1:3306/$4</connection-url>|g" $FILE > $FILE.bak
 	fi
-	mv $FILE.bak $FILE
-	sed -e "s|<user-name>.*</user-name>|<user-name>$2</user-name>|g" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
-	sed -e "s|<password>.*</password>|<password>$3</password>|g" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
+
+	sed -e "s|<user-name>.*</user-name>|<user-name>$2</user-name>|g" \
+	    -e "s|<password>.*</password>|<password>$3</password>|g" $FILE.bak > $FILE
 	echo 'Updated MySQL DataSource Configuration'
 }
 
@@ -173,25 +170,36 @@ configDaoManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	sed -e "s|<data-files>.*</data-files>|<data-files></data-files>|g" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
-	sed -e "s|<sql-files>.*</sql-files>|<sql-files>\${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>|g" $FILE > $FILE.bak
-	mv $FILE.bak $FILE
+	sed -e "s|<sql-files>.*</sql-files>|<sql-files>\${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>|g" $FILE.bak > $FILE
+
 
 	echo 'Configured MySQL Dao Manager for MySQL'
 }
 
 ## Description: Set Password for Adminitrator@company.com user. Only for fresh installation.
-initPassword(){
+initUserPassword(){
     SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
+     if [ -n "$INITIAL_ADMIN_USER" ]; then
+        # change admin user
+        if grep -q "uninitialized" $SQL_FILE; then
+            echo "Update Admin user"
+            sed -e "s/administrator@company.com/${INITIAL_ADMIN_USER}/g" $SQL_FILE > $SQL_FILE.bak
+            mv $SQL_FILE.bak $SQL_FILE
+        else
+            echo "Adminitrator User Already changed"
+        fi
+    fi
+
     if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
-        # chnange admin password
+        echo "change admin password"
         if grep -q "uninitialized" $SQL_FILE; then
             PASSWORD_ENCRYPTED=`echo -n "${INITIAL_ADMIN_PASSWORD}" | md5sum |cut -d " " -f1`
             #echo "Update password to ${INITIAL_ADMIN_PASSWORD}($PASSWORD_ENCRYPTED)"
-            sed -i "s/uninitialized/active/g" $SQL_FILE
-            sed -i "s/77f8c12cc7b8f8423e5c38b035249166/$PASSWORD_ENCRYPTED/g" $SQL_FILE
-            sed -i 's/Date("2012-04-24")/now()/' $SQL_FILE
-            sed -i 's/Date("2012-04-24")/now()/' $SQL_FILE
+            sed -e "s/uninitialized/active/g" \
+                -e "s/77f8c12cc7b8f8423e5c38b035249166/$PASSWORD_ENCRYPTED/g" \
+                -e 's/Date("2012-04-24")/now()/' \
+                -e 's/Date("2012-04-24")/now()/' $SQL_FILE > $SQL_FILE.bak
+	        mv $SQL_FILE.bak $SQL_FILE
             # end
          else
             echo "Adminitrator Password Already changed"
@@ -201,17 +209,18 @@ initPassword(){
 
 ## Description: populated DB with necessary starting point data if not done.
 populateDB(){
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
     #Change script to defined schema
-    sed -i "s|CREATE DATABASE IF NOT EXISTS .*| CREATE DATABASE IF NOT EXISTS ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
-    sed -i "s|USE .*|USE ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
+    echo "Use RestComm Database:$MYSQL_SCHEMA "
+    sed -e "s|CREATE DATABASE IF NOT EXISTS .*| CREATE DATABASE IF NOT EXISTS ${MYSQL_SCHEMA};|" \
+        -e "s|USE .*|USE ${MYSQL_SCHEMA};|" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
 
     if mysql -u $2 -p$3 -h $1 -e "SELECT * FROM \`$4\`.restcomm_clients;" &>/dev/null ; then
         # Update config settings
         echo "Database already populated"
     else
         echo "Database not populated, importing schema and updating config file"
-        echo "Create RestComm Database"
-        echo "Configuring RestComm Database MySQL"
         FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
         mysql -u $2 -p$3 -h $1 < $FILE
         mysql -u $2 -p$3 -h $1 --execute='show databases;'
@@ -233,7 +242,7 @@ if [[ "$ENABLE_MYSQL" == "true" || "$ENABLE_MYSQL" == "TRUE" ]]; then
 	    configMybatis
 	    configDaoManager
 	    configureMySQLDataSource $MYSQL_HOST $MYSQL_USER $MYSQL_PASSWORD $MYSQL_SCHEMA $MYSQL_SNDHOST
-	    initPassword
+	    initUserPassword
 	    populateDB $MYSQL_HOST $MYSQL_USER $MYSQL_PASSWORD $MYSQL_SCHEMA
 	echo 'Finished configuring MySQL datasource!'
     fi
