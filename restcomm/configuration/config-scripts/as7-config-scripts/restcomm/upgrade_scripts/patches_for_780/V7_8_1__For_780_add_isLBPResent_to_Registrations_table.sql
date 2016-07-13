@@ -15,7 +15,7 @@ CREATE PROCEDURE updateProcedure()
  AND column_name = 'isLBPresent';
 
 IF @colName781 IS NULL THEN
-CREATE TABLE temp_table LIKE restcomm_call_detail_records;
+CREATE TABLE temp_table LIKE restcomm_registrations;
 ALTER TABLE temp_table ADD isLBPresent BOOLEAN NOT NULL DEFAULT FALSE;
 INSERT INTO temp_table
   (
