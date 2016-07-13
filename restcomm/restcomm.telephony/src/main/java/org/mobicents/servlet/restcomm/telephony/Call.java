@@ -841,9 +841,15 @@ public final class Call extends UntypedActor {
 
             // Send SIP BUSY to remote peer
             if (Reject.class.equals(klass) && is(ringing) && isInbound()) {
-                final SipServletResponse busy = invite.createResponse(SipServletResponse.SC_BUSY_HERE);
-                addCustomHeaders(busy);
-                busy.send();
+                Reject reject = (Reject) message;
+                SipServletResponse rejectResponse;
+                if (reject.getReason().equalsIgnoreCase("busy")) {
+                    rejectResponse = invite.createResponse(SipServletResponse.SC_BUSY_HERE);
+                } else {
+                    rejectResponse = invite.createResponse(SipServletResponse.SC_DECLINE);
+                }
+                addCustomHeaders(rejectResponse);
+                rejectResponse.send();
             }
 
             // Explicitly invalidate the application session.
