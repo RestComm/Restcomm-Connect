@@ -12,6 +12,7 @@ import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.impl.client.deployment.ThreadContext;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -82,6 +83,7 @@ public class ClientsDialTest {
     private static SipStackTool tool6;
     private static SipStackTool tool7;
     private static SipStackTool tool8;
+    private static SipStackTool tool9;
 
     private String pstnNumber = "+151261006100";
 
@@ -126,6 +128,11 @@ public class ClientsDialTest {
     private SipPhone bobPhoneTcp;
     private String bobContactTcp = "sip:bob@127.0.0.1:5097";
 
+    private SipStack leftySipStack;
+    private SipPhone leftyPhone;
+    private String leftyContact = "sip:lefty@127.0.0.1:5098";
+    private String leftyRestcommClientSid;
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -139,6 +146,7 @@ public class ClientsDialTest {
         tool6 = new SipStackTool("ClientsDialTest6");
         tool7 = new SipStackTool("ClientsDialTest7");
         tool8 = new SipStackTool("ClientsDialTest8");
+        tool9 = new SipStackTool("ClientsDialTest9");
     }
 
     @Before
@@ -172,6 +180,9 @@ public class ClientsDialTest {
 
         bobSipStackTcp = tool8.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", "5097", "127.0.0.1:5080");
         bobPhoneTcp = bobSipStackTcp.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, 5080, bobContactTcp);
+
+        leftySipStack = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5098", "127.0.0.1:5080");
+        leftyPhone = leftySipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, leftyContact);
     }
 
     @After
@@ -224,7 +235,7 @@ public class ClientsDialTest {
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
-        Thread.sleep(2000);
+        Thread.sleep(3000);
     }
 
     @Test
@@ -257,7 +268,7 @@ public class ClientsDialTest {
         //        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         //        Thread.sleep(3000);
         assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 3600, 3600));
-        Thread.sleep(3000);
+        Thread.sleep(5000);
         assertTrue(dimitriPhone.register(uri, "dimitri", "1234", dimitriContact, 3600, 3600));
         Thread.sleep(3000);
 
@@ -335,6 +346,91 @@ public class ClientsDialTest {
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
         assertTrue(cdrsArray.size() == 1);
 
+    }
+
+    @Test
+    public void testClientsCallEachOtherWithFriendlyNameSetKouKouRouKou() throws ParseException, InterruptedException {
+
+        assertNotNull(mariaRestcommClientSid);
+
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        Thread.sleep(1000);
+        assertTrue(mariaPhone.register(uri, "maria", "1234", mariaContact, 3600, 3600));
+        Thread.sleep(3000);
+        assertTrue(leftyPhone.register(uri, "lefty", "1234", leftyContact, 3600, 3600));
+        Thread.sleep(3000);
+
+        Credential c = new Credential("127.0.0.1", "maria", "1234");
+        mariaPhone.addUpdateCredential(c);
+
+        Thread.sleep(1000);
+
+        // Maria initiates a call to Dimitri
+        long startTime = System.currentTimeMillis();
+        final SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.initiateOutgoingCall(mariaContact, leftyContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
+
+        final SipCall leftyCall = leftyPhone.createSipCall();
+        leftyCall.listenForIncomingCall();
+
+        assertTrue(leftyCall.waitForIncomingCall(3000));
+        assertTrue(leftyCall.sendIncomingCallResponse(100, "Trying-Lefty", 1800));
+        assertTrue(leftyCall.sendIncomingCallResponse(180, "Ringing-Lefty", 1800));
+        String receivedBody = new String(leftyCall.getLastReceivedRequest().getRawContent());
+        assertTrue(leftyCall.sendIncomingCallResponse(Response.OK, "OK-Lefty", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+//        // Start a new thread for Dimitri to wait disconnect
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                assertTrue(leftyCall.waitForIncomingCall(3000));
+//                assertTrue(leftyCall.sendIncomingCallResponse(100, "Trying-Lefty", 1800));
+//                assertTrue(leftyCall.sendIncomingCallResponse(180, "Ringing-Lefty", 1800));
+//                String receivedBody = new String(leftyCall.getLastReceivedRequest().getRawContent());
+//                assertTrue(leftyCall.sendIncomingCallResponse(Response.OK, "OK-Lefty", 3600, receivedBody, "application", "sdp", null,
+//                        null));
+//                //                assertTrue(dimitriCall.sendIncomingCallResponse(200, "OK", 1800));
+//                //                assertTrue(dimitriCall.waitForAck(3000));
+//            }
+//        }).run(); //.start();
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
+
+        Dialog mariaDialog = null;
+
+        if (responseMaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+            mariaDialog = mariaCall.getDialog();
+        }
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
+        mariaCall.sendInviteOkAck();
+        assertTrue(mariaCall.getDialog().equals(mariaDialog));
+
+        assertTrue(!(mariaCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(leftyCall.waitForAck(3000));
+
+        //Talk time ~ 3sec
+        Thread.sleep(3000);
+        leftyCall.listenForDisconnect();
+        assertTrue(mariaCall.disconnect());
+
+        assertTrue(leftyCall.waitForDisconnect(5 * 1000));
+        assertTrue(leftyCall.respondToDisconnect());
+        long endTime   = System.currentTimeMillis();
+
+        double totalTime = (endTime - startTime)/1000.0;
+        assertTrue(3.0 <= totalTime);
+        assertTrue(totalTime <= 4.0);
     }
 
     @Test
