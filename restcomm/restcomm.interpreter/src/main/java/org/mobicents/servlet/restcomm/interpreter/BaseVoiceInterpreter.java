@@ -96,7 +96,6 @@ import org.mobicents.servlet.restcomm.sms.SmsSessionAttribute;
 import org.mobicents.servlet.restcomm.sms.SmsSessionInfo;
 import org.mobicents.servlet.restcomm.sms.SmsSessionRequest;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
-import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
 import org.mobicents.servlet.restcomm.telephony.GetCallInfo;
@@ -856,11 +855,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
                 }
             }
             // Reject the call.
-            if ("rejected".equals(reason)) {
-                call.tell(new Answer(), source);
-            } else {
-                call.tell(new Reject(), source);
-            }
+            call.tell(new Reject(reason), source);
         }
     }
 

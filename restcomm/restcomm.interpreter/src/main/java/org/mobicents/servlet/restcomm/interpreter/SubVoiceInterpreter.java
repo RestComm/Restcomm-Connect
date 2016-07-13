@@ -68,7 +68,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
-import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
@@ -579,11 +578,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             // Reject the call.
-            if ("rejected".equals(reason)) {
-                call.tell(new Answer(), source);
-            } else {
-                call.tell(new Reject(), source);
-            }
+            call.tell(new Reject(reason), source);
         }
     }
 
