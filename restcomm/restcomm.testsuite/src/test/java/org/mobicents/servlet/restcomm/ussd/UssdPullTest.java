@@ -73,7 +73,8 @@ public class UssdPullTest {
     private String ussdPullDid2 = "sip:*777#@127.0.0.1:5080";
     private String ussdPullWithCollectDID = "sip:5555@127.0.0.1:5080";
     private String ussdPullMessageLengthExceeds = "sip:5566@127.0.0.1:5080";
-    
+    private String ussdPullDidNoHttpMethod = "sip:5577@127.0.0.1:5080";
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("UssdPullTest");
@@ -120,6 +121,37 @@ public class UssdPullTest {
         
         assertTrue(bobCall.listenForDisconnect());
         
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        bobCall.respondToDisconnect();
+        SipRequest bye = bobCall.getLastReceivedRequest();
+        String receivedUssdPayload = new String(bye.getRawContent());
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
+        bobCall.dispose();
+    }
+
+    @Test
+    public void testUssdPullNoHttpMethod() {
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, ussdPullDidNoHttpMethod, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        } else {
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(bobCall.getDialog().getState().getValue()==DialogState._CONFIRMED);
+
+        assertTrue(bobCall.listenForDisconnect());
+
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
         bobCall.respondToDisconnect();
         SipRequest bye = bobCall.getLastReceivedRequest();
