@@ -28,6 +28,7 @@
     <mapper class="org.mobicents.servlet.restcomm.mappers.IncomingPhoneNumbersMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.InstanceIdMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.NotificationsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.OutgoingCallerIdsMapper" />
   </mappers>
   <!-- <mappers>
     <mapper resource="accounts.xml"/>
