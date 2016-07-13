@@ -27,6 +27,7 @@
     <mapper class="org.mobicents.servlet.restcomm.mappers.HttpCookiesMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.IncomingPhoneNumbersMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.InstanceIdMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.NotificationsMapper" />
   </mappers>
   <!-- <mappers>
     <mapper resource="accounts.xml"/>
