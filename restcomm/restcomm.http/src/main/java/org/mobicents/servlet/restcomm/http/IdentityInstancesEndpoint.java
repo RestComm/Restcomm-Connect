@@ -105,7 +105,8 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
             } catch (IdentityClientRegistrationError identityClientRegistrationError) {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
-            logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
+            if (logger.isInfoEnabled())
+                logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
             return Response.ok(gson.toJson(storedInstance), APPLICATION_JSON).build();
         } else
             return Response.status(Response.Status.CONFLICT).build();
@@ -134,7 +135,8 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(mainConfig.getIdentityAuthServerUrl(), mainConfig.getIdentityRealm());
             tool.unregisterInstanceWithRAT(instance);
             identityInstancesDao.removeIdentityInstance(instanceSid);
-            logger.info("Removed identity instance " + instanceSid);
+            if (logger.isInfoEnabled())
+                logger.info("Removed identity instance " + instanceSid);
             return Response.ok().build();
         } else {
             return Response.status(Response.Status.NOT_FOUND).build();

@@ -306,7 +306,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(xml, RestcommConfiguration.getInstance().getMain(), storage.getIdentityInstancesDao());
             context.setAttribute(IdentityContext.class.getName(), identityContext);
             if (identityContext.getAuthServerUrl() != null) {
-                logger.info("Restcomm configured to use external authorization server: http://identity.restcomm.com/auth");
+                if (logger.isInfoEnabled())
+                    logger.info("Restcomm configured to use external authorization server: http://identity.restcomm.com/auth");
             }
 
             // Create the media gateway.

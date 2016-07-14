@@ -197,7 +197,8 @@ public class IdentityRegistrationTool {
         Client jersey = Client.create();
         WebResource resource = jersey.resource(keycloakBaseUrl + getClientRegistrationRelativeUrl() + "/" + clientId);
         ClientResponse response = resource.type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + registrationAccessToken).delete(ClientResponse.class);
-        logger.info("Unregistering client '" + clientId + " - ' status: " + response.getStatus() );
+        if (logger.isInfoEnabled())
+            logger.info("Unregistering client '" + clientId + " - ' status: " + response.getStatus() );
         return response.getStatus();
     }
 
@@ -213,7 +214,8 @@ public class IdentityRegistrationTool {
             ClientResponse response = resource.path(clientId).type(MediaType.APPLICATION_JSON_TYPE).header("Authorization", "Bearer " + registrationAccessToken).put(ClientResponse.class, json);
             if (response.getStatus() == 201) {
                 String data = response.getEntity(String.class);
-                logger.info(data);
+                if (logger.isInfoEnabled())
+                    logger.info(data);
                 //KeycloakClient createdClient = gson.fromJson(data, KeycloakClient.class);
                 //return createdClient;
             } else if (response.getStatus() == 403 || response.getStatus() == 401) {
