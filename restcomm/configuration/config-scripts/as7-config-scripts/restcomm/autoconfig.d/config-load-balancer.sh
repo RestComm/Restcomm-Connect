@@ -15,22 +15,30 @@
 configSipStack() {
 	lb_sipstack_file="$RESTCOMM_HOME/standalone/configuration/mss-sip-stack.properties"
 
-        if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
-		sed -e 's|^#gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=|gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=|' \
-		    -e "s|gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=.*|gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=false|" \
-   		    -e 's|^#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \
-		    -e "s|org.mobicents.ha.javax.sip.REACHABLE_CHECK=.*|org.mobicents.ha.javax.sip.REACHABLE_CHECK=false|" \
-		    $lb_sipstack_file > $lb_sipstack_file.bak
+     #delete additional connectors if any added to erlier run of the script.
+    if  grep -q "## lb-configuration ##" $lb_sipstack_file
+    then
+          echo "Additional Connectors Created earlier, going to delete the connectors"
+          sed '/## lb-configuration ##/,/## lb-configuration ##/d' $lb_sipstack_file > $lb_sipstack_file.bak
+          mv $lb_sipstack_file.bak $lb_sipstack_file
+    else
+         echo "LB was not configured earlier"
+    fi
 
-		echo 'Load Balancer has been activated and mss-sip-stack.properties file updated'
-	else
-			sed -e 's|^org.mobicents.ha.javax.sip.BALANCERS=|#org.mobicents.ha.javax.sip.BALANCERS=|' \
-			    -e 's|^org.mobicents.ha.javax.sip.REACHABLE_CHECK=|#org.mobicents.ha.javax.sip.REACHABLE_CHECK=|' \
-				$lb_sipstack_file > $lb_sipstack_file.bak
-			echo 'Deactivated Load Balancer on SIP stack configuration file'
+    if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
+    if [ -z "$LB_INTERNAL_IP" ]; then
+      		LB_INTERNAL_IP=$LB_PUBLIC_IP
+		fi
+      sed -e "/Mobicents Load Balancer/a\
+         ## lb-configuration ##\n\
+         gov.nist.javax.sip.PATCH_SIP_WEBSOCKETS_HEADERS=false\n\
+         org.mobicents.ha.javax.sip.REACHABLE_CHECK=false\n\
+         org.mobicents.ha.javax.sip.LoadBalancerHeartBeatingServiceClassName=org.mobicents.ha.javax.sip.MultiNetworkLoadBalancerHeartBeatingServiceImpl\n\
+         ## lb-configuration ##"  $lb_sipstack_file > $lb_sipstack_file.bak
 
-	fi
-	mv $lb_sipstack_file.bak $lb_sipstack_file
+         mv $lb_sipstack_file.bak $lb_sipstack_file
+        echo 'Load Balancer has been activated and mss-sip-stack.properties file updated'
+    fi
 }
 
 
@@ -50,6 +58,6 @@ configStandalone() {
 
 ## MAIN
 configSipStack 
-configStandalone
+#configStandalone
 
 

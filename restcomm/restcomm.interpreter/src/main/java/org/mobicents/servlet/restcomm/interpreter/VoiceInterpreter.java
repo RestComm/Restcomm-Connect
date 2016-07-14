@@ -1518,11 +1518,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             // Reject the call.
-            if ("rejected".equals(reason)) {
-                call.tell(new Answer(), source);
-            } else {
-                call.tell(new Reject(), source);
-            }
+            call.tell(new Reject(reason), source);
         }
     }
 

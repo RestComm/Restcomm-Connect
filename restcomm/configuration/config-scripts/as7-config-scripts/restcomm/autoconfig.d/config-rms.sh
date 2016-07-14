@@ -11,9 +11,8 @@ configServerBeans() {
 	fi
 
 	#Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
-	fi
+	local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
+
 	sed -i 's|<property name="port">.*</property>|<property name="port">'"${REMOTEMGCP}"'</property>|' $FILE
 
 
@@ -63,20 +62,19 @@ configMediaServerManager() {
 	ms_external_address="$3"
 
 	#Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
-		local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
-	fi
-		sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
-			-e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
-			-e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
-			-e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
-			-e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
-			-e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
-			-e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+    local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
+    local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 
-		mv $FILE.bak $FILE
-		echo 'Configured Media Server Manager'
+    sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
+        -e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
+        -e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
+        -e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
+        -e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
+        -e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
+        -e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+
+    mv $FILE.bak $FILE
+    echo 'Configured Media Server Manager'
 }
 
 set_pool_size () {

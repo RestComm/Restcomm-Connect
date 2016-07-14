@@ -161,9 +161,9 @@
                  builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                  builder.setDateCreated(DateTime.now());
                  builder.setAccountSid(client.getAccountSid());
-                 builder.setTo(toClient.getFriendlyName());
+                 builder.setTo(toClient.getLogin());
                  builder.setCallerName(client.getFriendlyName());
-                 builder.setFrom(client.getFriendlyName());
+                 builder.setFrom(client.getLogin());
                  // builder.setForwardedFrom(callInfo.forwardedFrom());
                  // builder.setPhoneNumberSid(phoneId);
                  builder.setStatus(CallStateChanged.State.QUEUED.name());
