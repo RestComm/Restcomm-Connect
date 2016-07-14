@@ -121,7 +121,7 @@ public class ProjectServiceTest {
 
         Client jersey = getClient(username, password);
         WebResource resource = jersey.resource( getResourceUrl("/services/projects/newapplication?kind=voice") );
-        ClientResponse response = resource.post(ClientResponse.class);
+        ClientResponse response = resource.put(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
 
         String json = response.getEntity(String.class);
