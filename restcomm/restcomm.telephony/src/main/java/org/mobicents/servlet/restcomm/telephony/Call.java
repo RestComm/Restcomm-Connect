@@ -1172,11 +1172,11 @@ public final class Call extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
-            // if (!receivedBye) {
-            // // Conference was stopped and this call was asked to leave
-            // // Send BYE to remote client
-            // sendBye();
-            // }
+             if (!receivedBye) {
+             // Conference was stopped and this call was asked to leave
+             // Send BYE to remote client
+             sendBye(new Hangup("Conference time limit reached"));
+             }
             msController.tell(message, super.source);
         }
 

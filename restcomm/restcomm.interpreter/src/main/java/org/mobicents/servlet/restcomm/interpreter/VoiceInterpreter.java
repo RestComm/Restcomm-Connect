@@ -397,6 +397,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(finishConferencing, hangingUp));
         transitions.add(new Transition(finishConferencing, finished));
         transitions.add(new Transition(hangingUp, finished));
+        transitions.add(new Transition(hangingUp, finishConferencing));
         transitions.add(new Transition(hangingUp, finishDialing));
         transitions.add(new Transition(uninitialized, finished));
         // Initialize the FSM.
