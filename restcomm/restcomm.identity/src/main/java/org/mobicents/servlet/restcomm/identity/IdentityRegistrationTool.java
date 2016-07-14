@@ -45,7 +45,7 @@ public class IdentityRegistrationTool {
 
     private String keycloakBaseUrl;
     private String realm;
-    public static String RESTCOMM_CLIENT_SUFFIX = "restcomm";
+    public static String RESTCOMM_CLIENT_SUFFIX = "restcomm_connect";
 
     public String getClientRegistrationRelativeUrl() {
         return "/realms/" + realm + "/clients-registrations/default";

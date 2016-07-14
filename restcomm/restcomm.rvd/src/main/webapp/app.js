@@ -199,7 +199,7 @@ angular.element(document).ready(['$http',function ($http) {
     });
     if ( identityConfig.securedByKeycloak() ) {
       // if the instance is already secured by keycloak
-      var keycloak = new Keycloak({ url: identityConfig.server.authServerUrl, realm: identityConfig.server.realm, clientId: identityConfig.instance.Name + "-restcomm" });
+      var keycloak = new Keycloak({ url: identityConfig.server.authServerUrl, realm: identityConfig.server.realm, clientId: identityConfig.instance.Name + "-restcomm_connect" });
 			keycloakAuth.loggedIn = false;
 			keycloak.init({ onLoad: 'login-required' }).success(function () {
 				keycloakAuth.loggedIn = true;
