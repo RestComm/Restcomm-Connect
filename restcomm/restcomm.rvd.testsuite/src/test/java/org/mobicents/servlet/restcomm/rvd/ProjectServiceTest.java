@@ -21,10 +21,7 @@
 package org.mobicents.servlet.restcomm.rvd;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -99,6 +96,40 @@ public class ProjectServiceTest {
         JsonParser parser = new JsonParser();
         JsonArray array = parser.parse(json).getAsJsonArray();
         Assert.assertEquals("Invalid number of project returned", 3, array.size());
+    }
+
+    @Test
+    public void createProject() {
+        // create application stub
+        stubFor(post(urlMatching("/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"sid\":\"AP03d28db981ee4aa0888ebebd35b4dd4f\",\"friendly_name\":\"newapplication\"}")));
+        // retrieve project created
+        stubFor(get(urlMatching("/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP03d28db981ee4aa0888ebebd35b4dd4f.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"sid\":\"AP03d28db981ee4aa0888ebebd35b4dd4f\",\"friendly_name\":\"newapplication\"}")));
+        // update project
+        stubFor(post(urlMatching("/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Applications/AP03d28db981ee4aa0888ebebd35b4dd4f.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"sid\":\"AP03d28db981ee4aa0888ebebd35b4dd4f\",\"friendly_name\":\"newapplication\"}")));
+
+        Client jersey = getClient(username, password);
+        WebResource resource = jersey.resource( getResourceUrl("/services/projects/newapplication?kind=voice") );
+        ClientResponse response = resource.post(ClientResponse.class);
+        Assert.assertEquals(200, response.getStatus());
+
+        String json = response.getEntity(String.class);
+        JsonParser parser = new JsonParser();
+        JsonObject object = parser.parse(json).getAsJsonObject();
+        Assert.assertEquals("Invalid project friendly name", "newapplication", object.get("name").getAsString());
+        Assert.assertEquals("Invalid project sid", "AP03d28db981ee4aa0888ebebd35b4dd4f", object.get("sid").getAsString());
+        Assert.assertEquals("Invalid project kind", "voice", object.get("kind").getAsString());
     }
 
     protected Client getClient(String username, String password) {
