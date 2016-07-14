@@ -186,8 +186,8 @@ public class DialConferenceTest {
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
 
-        assertTrue(georgeCall.waitForDisconnect(30 * 1000));
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+        assertTrue(georgeCall.waitForDisconnect(50 * 1000));
     }
 
     private String dialConfernceRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
