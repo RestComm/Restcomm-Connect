@@ -168,6 +168,12 @@ NOTE: the **SID**, Email and the *AuthToken* (see output below) of the sub-accou
 [[delete-sub-accounts]]
 === Delete Sub-Accounts
 
+.XML Account Deletion
 ----
 curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts/<Sub-Account-SID>
+----
+
+.JSON Account Deletion
+----
+curl -X DELETE http://ACae6e420f425248d6a26948c17a9e2acf:PWD@192.168.1.3:8080/restcomm/2012-04-24/Accounts.json/<Sub-Account-SID>.json
 ----

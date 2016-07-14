@@ -51,6 +51,16 @@ configRestcomm() {
 	if [ -n "$RESTCOMM_HOSTNAME" ]; then
   		echo "HOSTNAME $RESTCOMM_HOSTNAME"
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+        if hash host 2>/dev/null; then
+            if ! host ${RESTCOMM_HOSTNAME} > /dev/null
+            then
+                echo "${BIND_ADDRESS}  ${RESTCOMM_HOSTNAME}" >> /etc/hosts
+            fi
+        else
+            echo "INFO: \"host\" programm does not exist ('dnsutils' package) please make sure that used hostname has a valid DNS resolution."
+            echo "INFO:IF not add the necessary hostname Ip resolution at /etc/hosts file: e.g  echo RestC0mm_BIND_IP RESTCOMM_HOSTNAME >> /etc/hosts "
+        fi
 	else
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
  	fi
@@ -87,76 +97,75 @@ configVoipInnovations() {
 configDidProvisionManager() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	#Check for port offset.
-	if (( $PORT_OFFSET > 0 )); then
-		local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-	fi
+    #Check for port offset.
+    local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
 
-		if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
-			sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
-			sed -e "/<voip-innovations>/ {
-				N; s|<login>.*</login>|<login>$1</login>|
-				N; s|<password>.*</password>|<password>$2</password>|
-				N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
-			}" $FILE.bak > $FILE
-			sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
-			echo 'Configured Voip Innovation credentials'
-		else
-			if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
-			sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
+    if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
+        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
-			sed -e "/<bandwidth>/ {
-				N; s|<username>.*</username>|<username>$1</username>|
-				N; s|<password>.*</password>|<password>$2</password>|
-				N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
-				N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
-			}" $FILE.bak > $FILE
-			sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
-			echo 'Configured Bandwidth credentials'
-			else
-				if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
-					echo "Nexmo PROVISION_PROVIDER"
-					sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
+        sed -e "/<voip-innovations>/ {
+            N; s|<login>.*</login>|<login>$1</login>|
+            N; s|<password>.*</password>|<password>$2</password>|
+            N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+        }" $FILE.bak > $FILE
+        sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+        echo 'Configured Voip Innovation credentials'
+    else
+        if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
+        sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
 
-					sed -i "/<callback-urls>/ {
-						N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-						N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
-						N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
-						N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
-					}" $FILE
+        sed -e "/<bandwidth>/ {
+            N; s|<username>.*</username>|<username>$1</username>|
+            N; s|<password>.*</password>|<password>$2</password>|
+            N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
+            N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
+        }" $FILE.bak > $FILE
+        sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+        echo 'Configured Bandwidth credentials'
+        else
+            if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
+                echo "Nexmo PROVISION_PROVIDER"
+                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
-					sed -i "/<nexmo>/ {
-						N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
-						N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
-						N
-						N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
-					}" $FILE
+                sed -i "/<callback-urls>/ {
+                    N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+                    N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
+                    N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
+                    N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
+                }" $FILE
 
-					sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
+                sed -i "/<nexmo>/ {
+                    N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
+                    N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
+                    N
+                    N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
+                }" $FILE
 
-				else
-					if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
-					echo "Voxbone PROVISION_PROVIDER"
-					sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
+                sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
 
-					sed -i "/<callback-urls>/ {
-						N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-						N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-						N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-						N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
-					}" $FILE
+            else
+                if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
+                echo "Voxbone PROVISION_PROVIDER"
+                sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.mobicents.servlet.restcomm.provisioning.number.voxbone.VoxbonePhoneNumberProvisioningManager\"|" $FILE
 
-					sed -i "/<voxbone>/ {
-						N; s|<username>.*</username>|<username>$1</username>|
-						N; s|<password>.*</password>|<password>$2</password>|
-					}" $FILE
-					sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+                sed -i "/<callback-urls>/ {
+                    N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+                    N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+                    N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+                    N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$SIP_PORT_UDP\" method=\"SIP\" />|
+                }" $FILE
 
-					fi
-				fi
-			fi
-		fi
+                sed -i "/<voxbone>/ {
+                    N; s|<username>.*</username>|<username>$1</username>|
+                    N; s|<password>.*</password>|<password>$2</password>|
+                }" $FILE
+                sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+
+                fi
+            fi
+        fi
+    fi
 }
 
 ## Description: Configures Fax Service Credentials
@@ -387,10 +396,8 @@ configRestCommURIs() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	#check for port offset
-	if (( $PORT_OFFSET > 0 )); then
-		local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
-		local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
-	fi
+    local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+    local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
 
 	if [ -n "$MS_ADDRESS" ] && [ "$MS_ADDRESS" != "$BIND_ADDRESS" ]; then
 		if [ "$DISABLE_HTTP" = "true" ]; then
@@ -434,13 +441,11 @@ configHypertextPort(){
     MSSFILE=$RESTCOMM_CONF/mss-sip-stack.properties
 
     #Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
-		local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
-	fi
+    local HTTP_PORT=$((HTTP_PORT + PORT_OFFSET))
+    local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
 
     sed -e "s|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_HTTP_PORT=$HTTP_PORT|" \
-     	-e	"s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
+     	-e "s|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*|org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=$HTTPS_PORT|" $MSSFILE > $MSSFILE.bak
     mv $MSSFILE.bak $MSSFILE
     echo "Configured HTTP ports"
 }
