@@ -29,6 +29,8 @@
     <mapper class="org.mobicents.servlet.restcomm.mappers.InstanceIdMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.NotificationsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.OutgoingCallerIdsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.RecordingsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.RegistrationsMapper" />
   </mappers>
   <!-- <mappers>
     <mapper resource="accounts.xml"/>
