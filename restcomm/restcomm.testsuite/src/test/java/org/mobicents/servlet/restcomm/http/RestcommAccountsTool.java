@@ -94,13 +94,17 @@ public class RestcommAccountsTool {
         return jsonResponse;
     }
 
+    public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress, String password) {
+        return createAccount(deploymentUrl,adminUsername,adminAuthToken, emailAddress, password, null);
+    }
+
     public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
-            String password) {
+            String password, Boolean linked) {
 
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
         try {
-            ClientResponse clientResponse = createAccountResponse(deploymentUrl,adminUsername,adminAuthToken,emailAddress,password);
+            ClientResponse clientResponse = createAccountResponse(deploymentUrl,adminUsername,adminAuthToken,emailAddress,password,linked);
             jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
         } catch (Exception e) {
             logger.info("Exception: "+e);
@@ -108,8 +112,13 @@ public class RestcommAccountsTool {
         return jsonResponse;
     }
 
+
+    public ClientResponse createAccountResponse(String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress, String password) {
+        return createAccountResponse(deploymentUrl,operatorUsername,operatorAuthtoken,emailAddress,password,null);
+    }
+
     public ClientResponse createAccountResponse(String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
-                                    String password) {
+                                    String password, Boolean linked) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
@@ -122,6 +131,8 @@ public class RestcommAccountsTool {
         params.add("EmailAddress", emailAddress);
         params.add("Password", password);
         params.add("Role", "Administartor");
+        if (linked != null)
+            params.add("Linked",linked.toString());
 
         ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         return response;

@@ -149,14 +149,14 @@ public class AccountsEndpointTest {
     @Test
     public void testCreateAccount() {
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme, createdPassword);
+                adminUsername, adminAuthToken, createdUsernanme, createdPassword,true);
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
                 adminAuthToken, createdUsernanme);
         assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertTrue(getAccountResponse.get("auth_token").getAsString().equals(createdAuthToken));
         assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertTrue(createAccountResponse.get("auth_token").getAsString().equals(createdAuthToken));
-        assertFalse(createAccountResponse.get("linked").getAsBoolean());
+        assertTrue(createAccountResponse.get("linked").getAsBoolean());
 
     }
 
