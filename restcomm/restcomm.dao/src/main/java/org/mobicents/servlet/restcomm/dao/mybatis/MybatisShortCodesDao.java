@@ -34,10 +34,12 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
 import org.mobicents.servlet.restcomm.entities.ShortCode;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mappers.ShortCodesMapper;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisShortCodesDao implements ShortCodesDao {
@@ -53,7 +55,8 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     public void addShortCode(final ShortCode shortCode) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addShortCode", toMap(shortCode));
+            ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            mapper.addShortCode(toMap(shortCode));
             session.commit();
         } finally {
             session.close();
@@ -64,7 +67,8 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     public ShortCode getShortCode(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getShortCode", sid.toString());
+        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            final Map<String, Object> result = mapper.getShortCode(sid.toString());
             if (result != null) {
                 return toShortCode(result);
             } else {
@@ -79,7 +83,8 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     public List<ShortCode> getShortCodes(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getShortCodes", accountSid.toString());
+        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+        	final List<Map<String, Object>> results =mapper.getShortCodes(accountSid.toString());
             final List<ShortCode> shortCodes = new ArrayList<ShortCode>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -94,18 +99,10 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
 
     @Override
     public void removeShortCode(final Sid sid) {
-        removeShortCodes(namespace + "removeShortCode", sid);
-    }
-
-    @Override
-    public void removeShortCodes(final Sid accountSid) {
-        removeShortCodes(namespace + "removeShortCodes", accountSid);
-    }
-
-    private void removeShortCodes(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(selector, sid.toString());
+        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            mapper.removeShortCode(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -113,10 +110,24 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     }
 
     @Override
+    public void removeShortCodes(final Sid accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            mapper.removeShortCode(accountSid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+
+    @Override
     public void updateShortCode(final ShortCode shortCode) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateShortCode", toMap(shortCode));
+        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+        	mapper.updateShortCode(toMap(shortCode));
             session.commit();
         } finally {
             session.close();

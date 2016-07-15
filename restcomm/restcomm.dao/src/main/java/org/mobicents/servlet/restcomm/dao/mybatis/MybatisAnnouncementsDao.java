@@ -19,6 +19,7 @@ import org.mobicents.servlet.restcomm.mappers.AnnouncementsMapper;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 
 public final class MybatisAnnouncementsDao implements AnnouncementsDao {

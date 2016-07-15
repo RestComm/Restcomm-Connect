@@ -7,6 +7,9 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface NotificationsMapper {
 
     String INSERT_NOTIFICATION="INSERT INTO \"restcomm_notifications\" (\"sid\", \"date_created\", "

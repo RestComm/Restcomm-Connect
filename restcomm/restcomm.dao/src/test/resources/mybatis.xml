@@ -31,6 +31,7 @@
     <mapper class="org.mobicents.servlet.restcomm.mappers.OutgoingCallerIdsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.RecordingsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.RegistrationsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.ShortCodesMapper" />
   </mappers>
   <!-- <mappers>
     <mapper resource="accounts.xml"/>

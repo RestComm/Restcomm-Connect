@@ -38,6 +38,7 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  *
  */
 @ThreadSafe

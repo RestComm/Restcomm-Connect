@@ -39,6 +39,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @NotThreadSafe
 public final class MybatisClientsDao implements ClientsDao {

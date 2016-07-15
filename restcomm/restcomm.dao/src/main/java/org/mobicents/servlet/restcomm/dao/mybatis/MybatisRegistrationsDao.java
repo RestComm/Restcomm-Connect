@@ -46,6 +46,7 @@ import org.mobicents.servlet.restcomm.mappers.RegistrationsMapper;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@gmail.com (Jean Deruelle)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisRegistrationsDao implements RegistrationsDao {

@@ -13,6 +13,9 @@ import org.mobicents.servlet.restcomm.dao.RecordingsDao;
 import org.mobicents.servlet.restcomm.entities.Recording;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public class RecordingsDaoTest {
     private static MybatisDaoManager manager;
 
