@@ -66,11 +66,11 @@ public class RestcommConferenceParticipantsTool {
         return accountsUrl;
     }
 
-    public JsonObject getParticipants(String deploymentUrl, String username, String conferenceSid, String authToken) {
-        return (JsonObject) getParticipants(deploymentUrl, username, conferenceSid, authToken, null, null, true);
+    public JsonObject getParticipants(String deploymentUrl, String username, String authToken, String conferenceSid) {
+        return (JsonObject) getParticipants(deploymentUrl, username, authToken, conferenceSid, null, null, true);
     }
 
-    public JsonObject getParticipants(String deploymentUrl, String username, String conferenceSid, String authToken, Integer page, Integer pageSize,
+    public JsonObject getParticipants(String deploymentUrl, String username, String authToken, String conferenceSid, Integer page, Integer pageSize,
             Boolean json) {
 
         Client jerseyClient = Client.create();
