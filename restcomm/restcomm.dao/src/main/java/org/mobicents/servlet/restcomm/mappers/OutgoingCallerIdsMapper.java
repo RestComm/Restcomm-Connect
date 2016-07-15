@@ -8,6 +8,9 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface OutgoingCallerIdsMapper {
 
     String INSERT_OUTGOING_CALLER_ID="INSERT INTO \"restcomm_outgoing_caller_ids\" (\"sid\", \"date_created\", \"date_updated\", \"friendly_name\", \"account_sid\", \"phone_number\", \"uri\") VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{account_sid}, #{phone_number}, #{uri})";

@@ -16,6 +16,9 @@ import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
 import org.mobicents.servlet.restcomm.entities.OutgoingCallerId;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public class OutgoingCallerIdsDaoTest {
     private static MybatisDaoManager manager;
 

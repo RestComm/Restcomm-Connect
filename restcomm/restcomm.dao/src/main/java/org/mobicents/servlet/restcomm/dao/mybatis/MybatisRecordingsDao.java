@@ -48,6 +48,7 @@ import org.mobicents.servlet.restcomm.util.UriUtils;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisRecordingsDao implements RecordingsDao {

@@ -8,6 +8,9 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface RecordingsMapper {
 
     String INSERT_RECORDING="INSERT INTO \"restcomm_recordings\" (\"sid\", \"date_created\", \"date_updated\", "

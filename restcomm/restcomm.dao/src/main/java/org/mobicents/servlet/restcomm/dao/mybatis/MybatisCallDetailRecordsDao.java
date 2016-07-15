@@ -53,6 +53,7 @@ import org.mobicents.servlet.restcomm.mappers.CallDetailRecordMapper;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {

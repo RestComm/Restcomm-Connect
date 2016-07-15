@@ -37,6 +37,7 @@ import org.mobicents.servlet.restcomm.mappers.HttpCookiesMapper;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.HttpCookiesDao.";

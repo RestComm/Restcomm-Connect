@@ -8,6 +8,9 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
+ */
 public interface RegistrationsMapper {
 
     String INSERT_REGISTRATION="INSERT INTO \"restcomm_registrations\" (\"sid\", \"date_created\", \"date_updated\", "

@@ -47,6 +47,7 @@ import org.mobicents.servlet.restcomm.mappers.IncomingPhoneNumbersMapper;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author jean.deruelle@telestax.com
+ * @author zahid.med@gmail.com (Mohammed ZAHID)
  */
 @ThreadSafe
 public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumbersDao {
