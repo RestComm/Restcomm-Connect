@@ -98,7 +98,7 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
                 IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, redirectUrl, clientSecret);
                 instance.setOrganizationSid(getCurrentOrganizationSid());
                 identityInstancesDao.addIdentityInstance(instance);
-                storedInstance = identityInstancesDao.getIdentityInstanceByName(instance.getName());
+                storedInstance = instance;
             } catch (AuthServerAuthorizationError authServerAuthorizationError) {
                 String errorResponse = "{\"error\":\"KEYCLOAK_ACCESS_ERROR\"}";
                 return Response.status(Response.Status.FORBIDDEN).entity(errorResponse).header("Content-Type", "application/json").build();
