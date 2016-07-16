@@ -1,0 +1,18 @@
+[plantuml, cascading-conference-mrb-state-machine, png]     
+....
+title MediaResourceBroker FSM
+[*] --> uninitialized
+uninitialized-->active
+active-->inactive
+active-->acquiringMediaGatewayInfo
+acquiringMediaGatewayInfo-->initiateBridging
+initiateBridging-->acquiringBridge
+acquiringBridge-->acquiringRemoteConnection
+acquiringRemoteConnection-->initializingRemoteConnection
+initializingRemoteConnection-->openingRemoteConnection
+openingRemoteConnection-->BridgingComplete
+BridgingComplete-->updatingRemoteConnection
+updatingRemoteConnection-->closingRemoteConnection
+closingRemoteConnection-->inactive
+inactive--> [*]
+....

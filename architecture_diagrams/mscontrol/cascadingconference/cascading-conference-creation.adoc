@@ -1,5 +1,6 @@
 [plantuml, cascading-conference-creation, png]     
 ....
+title cascading conference creation sequence (2 participants, 2 RMS)
 actor Participant1
 actor Participant2
 Participant1 -> Restcomm: sip/sdp Call1

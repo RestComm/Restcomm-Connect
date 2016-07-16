@@ -1,5 +1,6 @@
 [plantuml, cascading-conference-cleanup, png]     
 ....
+title cascading conference cleanup (2 participants)
 actor Participant1
 actor Participant2
 Participant1 -> Restcomm: sip: BYE
