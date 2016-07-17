@@ -20,13 +20,12 @@ configConnectors() {
     fi
 
 	#Check for Por Offset
-	if (( $PORT_OFFSET > 0 )); then
-		local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
-		local SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
-		local SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
-		local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
-		local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
-	fi
+    local SIP_PORT_UDP=$((SIP_PORT_UDP + PORT_OFFSET))
+    local SIP_PORT_TCP=$((SIP_PORT_TCP + PORT_OFFSET))
+    local SIP_PORT_TLS=$((SIP_PORT_TLS + PORT_OFFSET))
+    local SIP_PORT_WS=$((SIP_PORT_WS + PORT_OFFSET))
+    local SIP_PORT_WSS=$((SIP_PORT_WSS + PORT_OFFSET))
+
 
     #IF LB activated. (Algorithm "use-load-balancer" used).
 	if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
@@ -74,11 +73,8 @@ FILE=$RESTCOMM_HOME/standalone/configuration/standalone-sip.xml
     fi
 
 	#check for port offset
-	if (( $PORT_OFFSET > 0 )); then
-    	sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
-	else
-		sed -i "s|\port-offset=\".*\"|port-offset=\"\$\{jboss\.socket\.binding\.port\-offset\:0\}\"|" $FILE
-	fi
+    sed -i "s|\port-offset=\".*\"|port-offset=\"${PORT_OFFSET}\"|" $FILE
+
 	sed -e "s|<socket-binding name=\"http\" port=\".*\"/>|<socket-binding name=\"http\" port=\"$HTTP_PORT\"/>|" \
         -e "s|<socket-binding name=\"https\" port=\".*\"/>|<socket-binding name=\"https\" port=\"$HTTPS_PORT\"/>|" \
         -e "s|<socket-binding name=\"sip-udp\" port=\".*\"/>|<socket-binding name=\"sip-udp\" port=\"$SIP_PORT_UDP\"/>|" \
@@ -117,9 +113,8 @@ connector=$1
 port=$2
 
     #check for port offset at the new connectors.
-    if (( $PORT_OFFSET > 0 )); then
-        local port=$((port + PORT_OFFSET))
-    fi
+    local port=$((port + PORT_OFFSET))
+
 
     if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
 		if [ -z "$LB_INTERNAL_IP" ]; then
