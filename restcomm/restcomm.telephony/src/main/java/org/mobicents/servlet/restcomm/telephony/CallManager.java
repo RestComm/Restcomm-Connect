@@ -755,7 +755,8 @@ public final class CallManager extends UntypedActor {
         // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
         if (response != null) {
             SipServletRequest ack = response.createAck();
-            if (!ack.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+//            if (!ack.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+            if (patchForNatB2BUASessions) {
                 InetAddress ackRURI = null;
                 try {
                     ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
@@ -776,6 +777,28 @@ public final class CallManager extends UntypedActor {
                             + " as a request uri of the ACK request");
                     }
                     ack.setRequestURI(toInetUri);
+                } else if (toInetUri == null
+                        && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
+                    }
+                    final String initialIpBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                    String initialPortBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemotePort");
+                    if (initialIpBeforeLB != null) {
+                        if (initialPortBeforeLB == null)
+                            initialPortBeforeLB = "5060";
+                        if (logger.isInfoEnabled()) {
+                            logger.info("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for the ACK request");
+                        }
+                        String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                        SipURI uri = sipFactory.createSipURI(null, realIP);
+                        ack.setRequestURI(uri);
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("LB Headers are also null");
+                        }
+                    }
                 }
             }
             ack.send();
