@@ -375,9 +375,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             Properties loadBalancerCustomInfo = new Properties();
             loadBalancerCustomInfo.setProperty("Restcomm-Instance-Id", instanceId.getId().toString());
             for (SipConnector sipConnector : connectors) {
-            	if (logger.isDebugEnabled()) {
-            		logger.debug("Passing InstanceId " + instanceId.getId().toString() + " to connector " + sipConnector);
-            	}
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Passing InstanceId " + instanceId.getId().toString() + " to connector " + sipConnector);
+                }
                 sipConnector.setLoadBalancerCustomInformation(loadBalancerCustomInfo);
             }
             //Depreciated
