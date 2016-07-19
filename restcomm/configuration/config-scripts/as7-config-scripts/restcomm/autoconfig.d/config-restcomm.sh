@@ -249,9 +249,9 @@ configVoiceRSS() {
 	echo 'Configured VoiceRSS Speech Synthesizer'
 }
 
-## Description: Updates Mobicents properties for RestComm
+## Description: Updates RestComm DARS properties for RestComm
 ## Parameters : none
-configMobicentsProperties() {
+configDARSProperties() {
 	FILE=$RESTCOMM_DARS/mobicents-dar.properties
 	sed -e 's|^ALL=.*|ALL=("RestComm", "DAR\:From", "NEUTRAL", "", "NO_ROUTE", "0")|' $FILE > $FILE.bak
 	mv $FILE.bak $FILE
@@ -503,7 +503,7 @@ confRVD(){
 # MAIN
 echo 'Configuring RestComm...'
 configRCJavaOpts
-configMobicentsProperties
+configDARSProperties
 configRestcomm "$PUBLIC_IP"
 #configVoipInnovations "$VI_LOGIN" "$VI_PASSWORD" "$VI_ENDPOINT"
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$PUBLIC_IP" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE"
