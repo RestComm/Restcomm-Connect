@@ -27,11 +27,11 @@
             </div>
              <div class="form-group" >
                 <label class="col-md-4 control-label" for="role">Role</label>
-                <div class="col-md-8" ng-hide="currentAccountRole=='Administrator'">
-                    <input id="role" type="text" class="form-control" placeholder="Role" ng-value="account.role" ng-readonly="account.role=='Developer'" />
+                <div class="col-md-8" ng-show="account.sid == sid">
+                    <input id="role" type="text" class="form-control" placeholder="Role" ng-value="account.role" readonly/>
 
                 </div>
-                <div class="col-md-8" ng-show="currentAccountRole=='Administrator'">
+                <div class="col-md-8" ng-hide="account.sid == sid">
                      <select id="role" ng-model='account.role' class="form-control">
                     <option value="Administrator">Administrator</option>
                     <option value="Developer">Developer</option>
