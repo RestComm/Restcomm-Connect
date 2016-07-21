@@ -145,7 +145,8 @@ conference_sid VARCHAR(34),
 muted BOOLEAN, 
 start_conference_on_enter BOOLEAN,
 end_conference_on_exit BOOLEAN,
-on_hold BOOLEAN
+on_hold BOOLEAN, 
+ms_id VARCHAR(34)
 );
 
 CREATE TABLE restcomm_conference_detail_records (
@@ -156,7 +157,8 @@ account_sid VARCHAR(34) NOT NULL,
 status VARCHAR(100) NOT NULL,
 friendly_name VARCHAR(60),
 api_version VARCHAR(10) NOT NULL,
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL, 
+ms_id VARCHAR(34)
 );
 
 CREATE TABLE restcomm_clients (

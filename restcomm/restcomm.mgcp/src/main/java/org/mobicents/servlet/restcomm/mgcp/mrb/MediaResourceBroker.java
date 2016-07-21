@@ -65,14 +65,17 @@ public class MediaResourceBroker extends UntypedActor{
     public void onReceive(Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final ActorRef sender = sender();
+        ActorRef self = self();
+
+        if (logger.isInfoEnabled()) {
+            logger.info(" ********** MediaResourceBroker " + self().path() + " Processing Message: " + klass.getName());
+        }
         if (GetMediaGateway.class.equals(klass)) {
-            getMediaGateway(message, sender);
+            getMediaGateway(message, self, sender);
         }
     }
 
-    private void getMediaGateway(Object message, ActorRef sender) {
-        final ActorRef self = self();
-
+    private void getMediaGateway(Object message, ActorRef self, ActorRef sender) {
         final GetMediaGateway request = (GetMediaGateway) message;
         final boolean conference = request.conference();
         final Sid callSid = request.callSid();
@@ -95,13 +98,16 @@ public class MediaResourceBroker extends UntypedActor{
 
     private void updateMSIdinCallDetailRecord(String mediaServerId, Sid callSid){
         if(callSid == null){
-            logger.warning("Call Id is not specisfied");
+            logger.info("Call Id is not specisfied");
         }else{
             CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
             CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
-
-            cdr.setMsId(mediaServerId);
-            dao.updateCallDetailRecord(cdr);
+            if(cdr != null){
+                cdr.setMsId(mediaServerId);
+                dao.updateCallDetailRecord(cdr);
+            }else{
+                logger.info("provided call id did not found");
+            }
         }
 
     }
