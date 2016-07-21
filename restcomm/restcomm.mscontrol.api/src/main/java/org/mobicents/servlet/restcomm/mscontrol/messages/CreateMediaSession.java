@@ -22,8 +22,7 @@
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-
-import akka.actor.ActorRef;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -35,19 +34,23 @@ public final class CreateMediaSession {
     private final String connectionMode;
     private final String sessionDescription;
     private final boolean webrtc;
-    private final ActorRef mediaGateway;
+    private final Sid callSid;
 
-    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, ActorRef mediaGateway) {
+    public CreateMediaSession(String connectionMode, String sessionDescription, boolean outbound, boolean webrtc, Sid callSid) {
         super();
         this.connectionMode = connectionMode;
         this.sessionDescription = sessionDescription;
         this.outbound = outbound;
         this.webrtc = webrtc;
-        this.mediaGateway = mediaGateway;
+        this.callSid = callSid;
     }
 
     public CreateMediaSession(String connectionMode) {
         this("sendrecv", "", false, false, null);
+    }
+
+    public CreateMediaSession(Sid callSid) {
+        this("", "", false, false, callSid);
     }
 
     public CreateMediaSession() {
@@ -70,8 +73,8 @@ public final class CreateMediaSession {
         return webrtc;
     }
 
-    public ActorRef getMediaGateway() {
-        return mediaGateway;
+    public Sid callSid() {
+        return callSid;
     }
 
 }

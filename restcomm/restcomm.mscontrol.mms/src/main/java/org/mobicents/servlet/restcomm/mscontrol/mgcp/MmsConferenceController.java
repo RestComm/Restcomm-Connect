@@ -36,7 +36,9 @@ import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.EndpointState;
 import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
+import org.mobicents.servlet.restcomm.mgcp.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
+import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
@@ -77,6 +79,7 @@ public final class MmsConferenceController extends MediaServerController {
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
+    private final State getMediaGatewayFromMRB;
     private final State active;
     private final State inactive;
     private final State failed;
@@ -87,7 +90,7 @@ public final class MmsConferenceController extends MediaServerController {
     private Boolean fail;
 
     // MGCP runtime stuff.
-    private final ActorRef mediaGateway;
+    private ActorRef mediaGateway;
     // TODO rename following variable to 'mediaGateway'
     //private ActorRef mediaGatewayy;
     //private final MediaGateways mediaGateways;
@@ -106,13 +109,17 @@ public final class MmsConferenceController extends MediaServerController {
     // Observers
     private final List<ActorRef> observers;
 
+    private final ActorRef mrb;
+
     //public MmsConferenceController(final List<ActorRef> mediaGateways, final Configuration configuration) {
-    public MmsConferenceController(final ActorRef mediaGateway) {
+    //public MmsConferenceController(final ActorRef mediaGateway) {
+    public MmsConferenceController(final ActorRef mrb) {
         super();
         final ActorRef source = self();
 
         // Finite States
         this.uninitialized = new State("uninitialized", null, null);
+        this.getMediaGatewayFromMRB = new State("get media gateway from mrb", new GetMediaGatewayFromMRB(source), null);
         this.active = new State("active", new Active(source), null);
         this.inactive = new State("inactive", new Inactive(source), null);
         this.failed = new State("failed", new Failed(source), null);
@@ -123,7 +130,8 @@ public final class MmsConferenceController extends MediaServerController {
 
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(uninitialized, acquiringMediaSession));
+        transitions.add(new Transition(uninitialized, getMediaGatewayFromMRB));
+        transitions.add(new Transition(getMediaGatewayFromMRB, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, acquiringEndpoint));
         transitions.add(new Transition(acquiringMediaSession, inactive));
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
@@ -140,8 +148,9 @@ public final class MmsConferenceController extends MediaServerController {
         this.fail = Boolean.FALSE;
 
         // MGCP runtime stuff
-        this.mediaGateway = mediaGateway;
+        //this.mediaGateway = mrb.getNextMediaServerKey();
         //this.mediaGateways = new MediaGateways(mediaGateways , configuration);
+        this.mrb = mrb;
 
         // Runtime media operations
         this.playing = Boolean.FALSE;
@@ -210,7 +219,16 @@ public final class MmsConferenceController extends MediaServerController {
             onMediaGroupResponse((MediaGroupResponse<String>) message, self, sender);
         } else if(EndpointStateChanged.class.equals(klass)) {
             onEndpointStateChanged((EndpointStateChanged) message, self, sender);
+        } else if (MediaResourceBrokerResponse.class.equals(klass)) {
+            onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
         }
+    }
+
+    private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
+        logger.info("got MRB response in conference controller");
+        this.mediaGateway = (ActorRef) message.get();
+        fsm.transition(message, acquiringMediaSession);
+
     }
 
     private void onObserve(Observe message, ActorRef self, ActorRef sender) {
@@ -233,7 +251,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onCreateMediaSession(CreateMediaSession message, ActorRef self, ActorRef sender) throws Exception {
         if (is(uninitialized)) {
             this.conference = sender;
-            fsm.transition(message, acquiringMediaSession);
+            fsm.transition(message, getMediaGatewayFromMRB);
         }
     }
 
@@ -367,6 +385,19 @@ public final class MmsConferenceController extends MediaServerController {
         public AbstractAction(final ActorRef source) {
             super();
             this.source = source;
+        }
+    }
+
+    private final class GetMediaGatewayFromMRB extends AbstractAction {
+
+        public GetMediaGatewayFromMRB(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            CreateMediaSession createMediaSession = (CreateMediaSession) message;
+            mrb.tell(new GetMediaGateway(createMediaSession.callSid()), self());
         }
     }
 

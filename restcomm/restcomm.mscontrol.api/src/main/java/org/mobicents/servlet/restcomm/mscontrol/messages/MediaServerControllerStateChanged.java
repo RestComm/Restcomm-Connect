@@ -22,6 +22,7 @@
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.mgcp.MediaGatewayInfo;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -36,14 +37,20 @@ public final class MediaServerControllerStateChanged {
 
     private final MediaServerControllerState state;
     private final MediaSessionInfo mediaSession;
+    private final MediaGatewayInfo mediaGatewayInfo;
 
-    public MediaServerControllerStateChanged(MediaServerControllerState state, MediaSessionInfo mediaSession) {
+    public MediaServerControllerStateChanged(MediaServerControllerState state, MediaSessionInfo mediaSession, MediaGatewayInfo mediaGatewayInfo) {
         this.state = state;
         this.mediaSession = mediaSession;
+        this.mediaGatewayInfo = mediaGatewayInfo;
+    }
+
+    public MediaServerControllerStateChanged(MediaServerControllerState state, MediaSessionInfo mediaSession) {
+        this(state, mediaSession, null);
     }
 
     public MediaServerControllerStateChanged(MediaServerControllerState state) {
-        this(state, null);
+        this(state, null, null);
     }
 
     public MediaServerControllerState getState() {
@@ -54,4 +61,7 @@ public final class MediaServerControllerStateChanged {
         return mediaSession;
     }
 
+    public MediaGatewayInfo getMediaGatewayInfo(){
+        return mediaGatewayInfo;
+    }
 }

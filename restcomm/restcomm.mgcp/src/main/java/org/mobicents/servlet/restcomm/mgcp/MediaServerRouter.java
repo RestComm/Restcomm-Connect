@@ -19,7 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.mgcp;
 
-import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
@@ -31,18 +31,20 @@ import akka.actor.ActorRef;
  * @author Maria Farooq (maria.farooq@live.com)
  */
 @Immutable
-public final class MediaGateways {
+public final class MediaServerRouter {
     public static enum Algorithm {
         ROUNDROBIN, CUSTOM
     };
 
-    private final List<ActorRef> mediaGateways;
+    private final String[] mediaServerKeys;
+    private final Map<String, ActorRef> mediaServerMap;
     private Algorithm algorithm;
 
     //maybe make this class singleton
-    public MediaGateways(final List<ActorRef> mediaGateways, Configuration configuration) {
+    public MediaServerRouter(final Map<String, ActorRef> ServerMap, Configuration configuration) {
         super();
-        this.mediaGateways = mediaGateways;
+        this.mediaServerMap = ServerMap;
+        this.mediaServerKeys = ServerMap.keySet().toArray(new String[0]);
 
         if(configuration == null || configuration.getString("algorithm") == null || configuration.getString("algorithm").equalsIgnoreCase("roundrobin")){
             this.algorithm = Algorithm.ROUNDROBIN;
@@ -51,24 +53,25 @@ public final class MediaGateways {
         }
     }
 
-    public ActorRef getMediaGateway() {
+    public String getNextMediaServerKey() {
         if(algorithm == Algorithm.ROUNDROBIN){
-            return getMediaGatewayViaRoundRobin();
+            return getMediaServerViaRoundRobin();
         }else{
-            return getMediaGatewayViaCustomeAlgo();
+            return getMediaServerViaCustomeAlgo();
         }
     }
 
-    private ActorRef getMediaGatewayViaRoundRobin(){
-        if(!mediaGateways.isEmpty()){
-            return mediaGateways.get(SimpleRoundRobin.getInstance(mediaGateways.size()).getNextMediaGatewayIndex());
+    private String getMediaServerViaRoundRobin(){
+        if(mediaServerKeys !=null && mediaServerKeys.length>0){
+            int roundIndex = SimpleRoundRobin.getInstance(mediaServerKeys.length).getNextMediaServerIndex();
+            return mediaServerKeys[roundIndex];
         }
         return null;
     }
 
-    private ActorRef getMediaGatewayViaCustomeAlgo(){
+    private String getMediaServerViaCustomeAlgo(){
         //NOT SUPPORTED FOR NOW
-        return getMediaGatewayViaRoundRobin();
+        return getMediaServerViaRoundRobin();
     }
 
 }

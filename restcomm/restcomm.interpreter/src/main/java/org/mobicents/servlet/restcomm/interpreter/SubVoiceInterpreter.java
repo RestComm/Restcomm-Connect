@@ -580,7 +580,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Reject the call.
             if ("rejected".equals(reason)) {
-                call.tell(new Answer(), source);
+                call.tell(new Answer(callRecord.getSid()), source);
             } else {
                 call.tell(new Reject(), source);
             }

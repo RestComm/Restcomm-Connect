@@ -136,6 +136,11 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
+    public List<ConferenceDetailRecord> getConferenceDetailRecordsByMsId(final String msId) {
+        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByMsId", msId);
+    }
+
+    @Override
     public void updateConferenceDetailRecord(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {
@@ -181,7 +186,8 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         final String friendlyName = readString(map.get("friendly_name"));
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
-        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri);
+        final String msId = readString(map.get("ms_id"));
+        return new ConferenceDetailRecord(sid, dateCreated, dateUpdated, accountSid, status, friendlyName, apiVersion, uri, msId);
     }
 
     private Map<String, Object> toMap(final ConferenceDetailRecord cdr) {
@@ -194,6 +200,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("friendly_name", cdr.getFriendlyName());
         map.put("api_version", cdr.getApiVersion());
         map.put("uri", writeUri(cdr.getUri()));
+        map.put("ms_id", cdr.getMsId());
         return map;
     }
 }

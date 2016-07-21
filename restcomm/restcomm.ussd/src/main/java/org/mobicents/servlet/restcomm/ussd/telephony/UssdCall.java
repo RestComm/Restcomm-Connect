@@ -68,12 +68,12 @@ import org.mobicents.servlet.restcomm.telephony.InitializeOutbound;
 import org.mobicents.servlet.restcomm.ussd.commons.UssdRestcommResponse;
 import org.mobicents.servlet.restcomm.ussd.interpreter.UssdInterpreter;
 
-import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

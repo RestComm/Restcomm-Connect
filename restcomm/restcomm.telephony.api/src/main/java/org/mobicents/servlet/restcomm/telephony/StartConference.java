@@ -20,13 +20,22 @@
 package org.mobicents.servlet.restcomm.telephony;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
 public final class StartConference {
-    public StartConference() {
+
+    private final Sid callSid;
+
+    public StartConference(final Sid callSid) {
         super();
+        this.callSid = callSid;
+    }
+
+    public Sid callSid(){
+        return callSid;
     }
 }

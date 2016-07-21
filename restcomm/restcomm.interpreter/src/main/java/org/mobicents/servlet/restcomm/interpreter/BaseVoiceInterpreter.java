@@ -857,7 +857,7 @@ public abstract class BaseVoiceInterpreter extends UntypedActor {
             }
             // Reject the call.
             if ("rejected".equals(reason)) {
-                call.tell(new Answer(), source);
+                call.tell(new Answer(callRecord.getSid()), source);
             } else {
                 call.tell(new Reject(), source);
             }

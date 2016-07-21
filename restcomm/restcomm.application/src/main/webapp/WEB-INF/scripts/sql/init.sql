@@ -289,3 +289,11 @@ CREATE TABLE "update_scripts" (
 "script" VARCHAR(255) NOT NULL,
 "date_executed" DATETIME NOT NULL
 );
+
+CREATE TABLE "media_servers" (
+"ms_id" VARCHAR(34) NOT NULL PRIMARY KEY, 
+"ms_ip_address" VARCHAR(34), 
+"ms_port" VARCHAR(34), 
+"compatibility" VARCHAR(34), 
+"timeout" VARCHAR(34)
+);

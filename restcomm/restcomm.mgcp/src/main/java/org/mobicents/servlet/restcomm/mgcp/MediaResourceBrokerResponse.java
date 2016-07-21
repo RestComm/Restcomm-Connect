@@ -17,25 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.mgcp;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.patterns.StandardResponse;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author Maria Farooq (maria.farooq@telestax.com)
  */
-@Immutable
-public final class Answer {
-
-    private final Sid callSid;
-
-    public Answer(Sid callSid) {
-        super();
-        this.callSid = callSid;
+public final class MediaResourceBrokerResponse<T> extends StandardResponse<T> {
+    public MediaResourceBrokerResponse(final T object) {
+        super(object);
     }
 
-    public Sid callSid() {
-        return callSid;
+    public MediaResourceBrokerResponse(final Throwable cause) {
+        super(cause);
+    }
+
+    public MediaResourceBrokerResponse(final Throwable cause, final String message) {
+        super(cause, message);
     }
 }

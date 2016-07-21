@@ -1280,7 +1280,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final CreateConference create = new CreateConference(buffer.toString());
                     conferenceManager.tell(create, source);
                 } */
-                call.tell(new Answer(), source);
+                call.tell(new Answer(callRecord.getSid()), source);
             }
         }
     }
@@ -1520,7 +1520,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // Reject the call.
             if ("rejected".equals(reason)) {
-                call.tell(new Answer(), source);
+                call.tell(new Answer(callRecord.getSid()), source);
             } else {
                 call.tell(new Reject(), source);
             }
@@ -1655,7 +1655,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     final StringBuilder buffer = new StringBuilder();
                     buffer.append(accountId.toString()).append(":").append(name);
                     conferenceFriendlyName = name;
-                    final CreateConference create = new CreateConference(buffer.toString());
+                    final CreateConference create = new CreateConference(buffer.toString(), callRecord.getSid());
                     conferenceManager.tell(create, source);
                 } else {
                     // Handle forking.
