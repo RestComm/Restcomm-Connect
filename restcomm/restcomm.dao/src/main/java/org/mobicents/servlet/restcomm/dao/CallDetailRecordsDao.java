@@ -54,6 +54,8 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);
 
+    List<CallDetailRecord> getCallDetailRecordsByMsId(String msId);
+
     void removeCallDetailRecord(Sid sid);
 
     void removeCallDetailRecords(Sid accountSid);

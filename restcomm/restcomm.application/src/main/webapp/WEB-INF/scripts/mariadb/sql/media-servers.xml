@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author maria.farooq@telestax.com (Maria Farooq)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.MediaServersDao">
+
+  <insert id="addMediaServer" parameterType="map">
+    INSERT INTO media_servers (ms_id, ms_ip_address, ms_port, compatibility, timeout) 
+    VALUES (#{ms_id}, #{ms_ip_address}, #{ms_port}, #{compatibility}, #{timeout});
+  </insert>
+  
+  <select id="getMediaServerEntity" parameterType="string" resultType="hashmap">
+    SELECT * FROM media_servers WHERE ms_id=#{ms_id};
+  </select>
+  
+  <select id="getMediaServers" resultType="hashmap">
+    SELECT * FROM media_servers;
+  </select>
+  
+  <delete id="removeMediaServerEntity" parameterType="string">
+    DELETE FROM media_servers WHERE ms_id=#{ms_id};
+  </delete>
+  
+  <update id="updateMediaServer" parameterType="map">
+    UPDATE media_servers 
+    	SET ms_ip_address=#{ms_ip_address}, ms_port=#{ms_port}, compatibility=#{compatibility}, timeout=#{timeout} 
+    WHERE ms_id=#{ms_id};
+  </update>
+
+</mapper>

@@ -19,32 +19,35 @@
  */
 package org.mobicents.servlet.restcomm.mgcp.routing;
 
+import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
+
+@ThreadSafe
 public class SimpleRoundRobin {
 
-    private final int numberOfMediaGateways;
+    private final int numberOfMediaServers;
     private int round;
     private static SimpleRoundRobin robin=null;
 
     //Singleton
-    private SimpleRoundRobin(final int numberOfMediaGateways){
-        this.numberOfMediaGateways = numberOfMediaGateways;
+    private SimpleRoundRobin(final int numberOfMediaServers){
+        this.numberOfMediaServers = numberOfMediaServers;
         round = 0;
     }
 
-    public static SimpleRoundRobin getInstance(final int numberOfMediaGateways){
+    public static SimpleRoundRobin getInstance(final int numberOfMediaServers){
         if(robin == null){
-            robin = new SimpleRoundRobin(numberOfMediaGateways);
+            robin = new SimpleRoundRobin(numberOfMediaServers);
             return robin;
         }
         return robin;
     }
 
-    public int getNextMediaGatewayIndex(){
+    public int getNextMediaServerIndex(){
         return getRound();
     }
 
     private int getRound(){
-        if(round >= numberOfMediaGateways){
+        if(round >= numberOfMediaServers){
             this.round=1;
             return 0;
         }else{

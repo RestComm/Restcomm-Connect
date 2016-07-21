@@ -60,6 +60,7 @@ public final class ConferenceCenter extends UntypedActor {
 
             @Override
             public UntypedActor create() throws Exception {
+                //Here Here we can pass Gateway where call is connected
                 return new Conference(name, factory.provideConferenceController());
             }
         }));
@@ -174,7 +175,7 @@ public final class ConferenceCenter extends UntypedActor {
             observers.add(sender);
             conference = getConference(name);
             conference.tell(new Observe(self), self);
-            conference.tell(new StartConference(), self);
+            conference.tell(new StartConference(request.initialitingCallSid()), self);
             initializing.put(name, observers);
         }
     }

@@ -26,6 +26,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class CreateMediaSession {
+
     public CreateMediaSession() {
         super();
     }

@@ -2,8 +2,9 @@ package org.mobicents.servlet.restcomm;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.media.mscontrol.MsControlException;
@@ -30,21 +31,22 @@ import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.loader.ObjectInstantiationException;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
+import org.mobicents.servlet.restcomm.mgcp.mrb.MediaResourceBroker;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerControllerFactory;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
 
+import com.telestax.servlet.MonitoringService;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-
-import com.telestax.servlet.MonitoringService;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 /**
  *
@@ -68,7 +70,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         system.awaitTermination();
     }
 
-    private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader)
+    private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader, DaoManager storage)
             throws ServletException {
         Configuration settings ;
         String compatibility = configuration.subset("mscontrol").getString("compatibility", "mms");
@@ -76,11 +78,13 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         MediaServerControllerFactory factory;
         switch (compatibility) {
             case "mms":
-                List<ActorRef> gateways;
+                //List<ActorRef> gateways;
+                Map<String, ActorRef> gateways;
                 try {
                     settings = configuration.subset("media-server-manager");
                     gateways = gateways(settings, loader);
-                    factory = new MmsControllerFactory(this.system, gateways, configuration.subset("media-server-routing"));
+                    ActorRef mrb = mediaResourceBroker(gateways, settings, storage);
+                    factory = new MmsControllerFactory(this.system, mrb, configuration.subset("media-server-routing"));
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
                 }
@@ -190,10 +194,21 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return result;
     }
 
-    private List<ActorRef> gateways(final Configuration settings, final ClassLoader loader) throws UnknownHostException {
+    private ActorRef mediaResourceBroker(final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage) {
+        return system.actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new MediaResourceBroker(system, gateways, configuration, storage);
+            }
+        }));
+    }
+
+    private Map<String, ActorRef> gateways(final Configuration settings, final ClassLoader loader) throws UnknownHostException {
         // List of available gateways
-        List<ActorRef> gateways = new ArrayList<ActorRef>(1);
-        logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ New Edition $$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+        //List<ActorRef> gateways = new ArrayList<ActorRef>(1);
+        Map<String, ActorRef> gateways = new HashMap<String, ActorRef>();
 
         List<Object> mgcpMediaServers = settings.getList("mgcp-servers.mgcp-server.local-address");
         int mgcpMediaServerListSize = mgcpMediaServers.size();
@@ -236,7 +251,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             builder.setTimeout(Long.parseLong(timeout));
             final PowerOnMediaGateway powerOn = builder.build();
             gateway.tell(powerOn, null);
-            gateways.add(gateway);
+
+            String msId = settings.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
+            gateways.put(msId, gateway);
         }
 
         return gateways;
@@ -350,7 +367,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create the media server controller factory
             MediaServerControllerFactory mscontrollerFactory = null;
             try {
-                mscontrollerFactory = mediaServerControllerFactory(xml, loader);
+                mscontrollerFactory = mediaServerControllerFactory(xml, loader, storage);
             } catch (ServletException exception) {
                 logger.error("ServletException during initialization: ", exception);
             }

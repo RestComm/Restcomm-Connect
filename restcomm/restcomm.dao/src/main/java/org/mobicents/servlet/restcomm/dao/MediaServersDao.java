@@ -17,25 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
+package org.mobicents.servlet.restcomm.dao;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.entities.Sid;
+import java.util.List;
+
+import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
-@Immutable
-public final class Answer {
+public interface MediaServersDao {
 
-    private final Sid callSid;
+    void addMediaServer(MediaServerEntity ms);
 
-    public Answer(Sid callSid) {
-        super();
-        this.callSid = callSid;
-    }
+    MediaServerEntity getMediaServerEntity(String msId);
 
-    public Sid callSid() {
-        return callSid;
-    }
+    List<MediaServerEntity> getMediaServers();
+
+    void removeMediaServerEntity(String msId);
+
+    void updateMediaServer(MediaServerEntity ms);
 }

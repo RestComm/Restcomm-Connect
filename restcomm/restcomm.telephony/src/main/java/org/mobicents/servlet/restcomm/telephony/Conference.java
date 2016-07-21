@@ -207,12 +207,13 @@ public final class Conference extends UntypedActor {
 
         @Override
         public void execute(Object message) throws Exception {
+            StartConference startConference = (StartConference) message;
             // Start observing state changes in the MSController
             final Observe observe = new Observe(super.source);
             mscontroller.tell(observe, super.source);
 
             // Initialize the MS Controller
-            final CreateMediaSession createMediaSession = new CreateMediaSession();
+            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid());
             mscontroller.tell(createMediaSession, super.source);
         }
 

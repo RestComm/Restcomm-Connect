@@ -194,7 +194,7 @@ public final class Call extends UntypedActor {
     private Configuration configuration;
     private boolean disableSdpPatchingOnUpdatingMediaSession;
 
-    private ActorRef mediaGateway = null;
+    private Sid inboundCallSid;
 
     public Call(final SipFactory factory, final ActorRef mediaSessionController, final Configuration configuration) {
         super();
@@ -968,7 +968,7 @@ public final class Call extends UntypedActor {
             // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv", "", true, webrtc, mediaGateway);
+                command = new CreateMediaSession("sendrecv", "", true, webrtc, id);
             } else {
                 if (!liveCallModification) {
                     command = generateRequest(invite);
@@ -998,7 +998,7 @@ public final class Call extends UntypedActor {
             }
             final byte[] sdp = sipMessage.getRawContent();
             final String offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
-            return new CreateMediaSession("sendrecv", offer, false, webrtc, mediaGateway);
+            return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
         }
     }
 
@@ -1318,8 +1318,8 @@ public final class Call extends UntypedActor {
     }
 
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
+        inboundCallSid = message.callSid();
         if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
-                this.mediaGateway = message.getMediaGateway();
                 fsm.transition(message, initializing);
         } else {
             fsm.transition(message, canceled);

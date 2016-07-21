@@ -138,4 +138,9 @@ RMS3<-->RMS1: RTP
 participant3<-->participant1: RTP
 participant3<-->participant2: RTP
 
+== everything well mixed by far ==
+== Jean decides to leave ==
+
+participant1 -> Restcomm: BYE
+
 ....

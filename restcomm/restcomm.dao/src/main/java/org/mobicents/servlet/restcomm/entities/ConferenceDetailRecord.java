@@ -38,9 +38,10 @@ public final class ConferenceDetailRecord {
     private final String friendlyName;
     private final String apiVersion;
     private final URI uri;
+    private final String msId;
 
     public ConferenceDetailRecord(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
-            final Sid accountSid, final String status, final String friendlyName, final String apiVersion, final URI uri) {
+            final Sid accountSid, final String status, final String friendlyName, final String apiVersion, final URI uri, final String msId) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -50,6 +51,7 @@ public final class ConferenceDetailRecord {
         this.friendlyName = friendlyName;
         this.apiVersion = apiVersion;
         this.uri = uri;
+        this.msId = msId;
     }
 
     public static Builder builder() {
@@ -88,16 +90,24 @@ public final class ConferenceDetailRecord {
         return uri;
     }
 
+    public String getMsId() {
+        return msId;
+    }
+
     public ConferenceDetailRecord setStatus(final String status) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
     }
 
     public ConferenceDetailRecord setStartTime(final DateTime startTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
     }
 
     public ConferenceDetailRecord setEndTime(final DateTime endTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
+    }
+
+    public ConferenceDetailRecord setMsId(final String msId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
     }
 
     @NotThreadSafe
@@ -110,6 +120,7 @@ public final class ConferenceDetailRecord {
         private String friendlyName;
         private String apiVersion;
         private URI uri;
+        private String msId;
 
         private Builder() {
             super();
@@ -121,15 +132,20 @@ public final class ConferenceDetailRecord {
             friendlyName = null;
             apiVersion = null;
             uri = null;
+            msId = null;
         }
 
         public ConferenceDetailRecord build() {
             return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid,
-                    status, friendlyName, apiVersion, uri);
+                    status, friendlyName, apiVersion, uri, msId);
         }
 
         public void setSid(final Sid sid) {
             this.sid = sid;
+        }
+
+        public void setMsId(final String msId) {
+            this.msId = msId;
         }
 
         public void setDateCreated(final DateTime dateCreated) {
