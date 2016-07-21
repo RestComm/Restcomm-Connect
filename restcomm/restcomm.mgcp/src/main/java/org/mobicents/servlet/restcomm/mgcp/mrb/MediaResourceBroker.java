@@ -85,25 +85,33 @@ public class MediaResourceBroker extends UntypedActor{
         // if its not request for conference return media-gateway according to algo.
         if(!conference){
             msId = msRouter.getNextMediaServerKey();
+            logger.info("msId: "+msId);
             mediaGateway = mediaGatewayMap.get(msId);
             updateMSIdinCallDetailRecord(msId, callSid);
         }else{
             // get the call and see where it is connected and return same msid so call and its conferenceendpoint are on same mediaserver
             msId = getMSIdinCallDetailRecord(callSid);
+            if(msId == null){
+            	//TODO handle it more gracefully
+            	logger.info("invalid callsid");
+            	return;
+            }
             mediaGateway = mediaGatewayMap.get(msId);
         }
 
         sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
     }
 
-    private void updateMSIdinCallDetailRecord(String mediaServerId, Sid callSid){
+    private void updateMSIdinCallDetailRecord(String msId, Sid callSid){
+        logger.info("msId: "+msId+" callSid: "+ callSid.toString());
+
         if(callSid == null){
             logger.info("Call Id is not specisfied");
         }else{
             CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
             CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
             if(cdr != null){
-                cdr.setMsId(mediaServerId);
+                cdr = cdr.setMsId(msId);
                 dao.updateCallDetailRecord(cdr);
             }else{
                 logger.info("provided call id did not found");

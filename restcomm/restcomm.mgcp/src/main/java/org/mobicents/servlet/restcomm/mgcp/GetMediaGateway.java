@@ -30,32 +30,26 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 @Immutable
 public final class GetMediaGateway {
     private final Sid callSid;
-    private final String mediaServerPreference;
     private final boolean conference;
     private final String conferenceName;
 
-    public GetMediaGateway(final Sid sid, final String mediaServerPreference, final boolean conference, final String conferenceName) {
+    public GetMediaGateway(final Sid callSid, final boolean conference, final String conferenceName) {
         super();
-        this.callSid = sid;
-        this.mediaServerPreference = mediaServerPreference;
+        this.callSid = callSid;
         this.conference = conference;
         this.conferenceName = conferenceName;
     }
 
-    public GetMediaGateway(final Sid sid, final String mediaServerPreference){
-        this(sid, mediaServerPreference, false, null);
+    public GetMediaGateway(final Sid callSid, final boolean conference){
+        this(callSid, conference, null);
     }
 
     public GetMediaGateway(final Sid callSid){
-        this(callSid, null, false, null);
+        this(callSid, false, null);
     }
 
     public Sid callSid() {
         return callSid;
-    }
-
-    public String mediaServerPreference() {
-        return mediaServerPreference;
     }
 
     public boolean conference() {

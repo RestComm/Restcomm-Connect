@@ -1417,9 +1417,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 // Update the storage.
                 if (callRecord != null) {
+                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
+                    callRecord = records.getCallDetailRecord(callRecord.getSid());
                     callRecord = callRecord.setStatus(callState.toString());
                     callRecord = callRecord.setStartTime(DateTime.now());
-                    final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                     records.updateCallDetailRecord(callRecord);
                 }
 

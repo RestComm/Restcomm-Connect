@@ -397,7 +397,7 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             CreateMediaSession createMediaSession = (CreateMediaSession) message;
-            mrb.tell(new GetMediaGateway(createMediaSession.callSid()), self());
+            mrb.tell(new GetMediaGateway(createMediaSession.callSid(), true), self());
         }
     }
 
