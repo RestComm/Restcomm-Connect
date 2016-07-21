@@ -53,6 +53,7 @@ import org.mobicents.servlet.restcomm.mgcp.DestroyLink;
 import org.mobicents.servlet.restcomm.mgcp.EndpointState;
 import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.GetMediaGateway;
+import org.mobicents.servlet.restcomm.mgcp.GetMediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
 import org.mobicents.servlet.restcomm.mgcp.LinkStateChanged;
@@ -761,7 +762,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mrb.tell(new GetMediaGateway(callId), self());
+            mediaGatewayy.tell(new GetMediaGatewayInfo(), self());
         }
     }
 

@@ -134,7 +134,8 @@ CREATE TABLE "restcomm_call_detail_records" (
 "muted" BOOLEAN, 
 "start_conference_on_enter" BOOLEAN,
 "end_conference_on_exit" BOOLEAN,
-"on_hold" BOOLEAN
+"on_hold" BOOLEAN, 
+"ms_id" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_conference_detail_records" (
@@ -145,7 +146,8 @@ CREATE TABLE "restcomm_conference_detail_records" (
 "status" VARCHAR(100) NOT NULL,
 "friendly_name" VARCHAR(60),
 "api_version" VARCHAR(10) NOT NULL,
-"uri" LONGVARCHAR NOT NULL
+"uri" LONGVARCHAR NOT NULL, 
+"ms_id" VARCHAR(34)
 );
 
 CREATE TABLE "restcomm_clients" (
