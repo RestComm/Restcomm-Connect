@@ -39,7 +39,14 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.sip</groupId>
+			<groupId>com.telestax.servlet</groupId>
+			<artifactId>restcomm.mgcp</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>			
+ 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<scope>provided</scope>
 		</dependency>
