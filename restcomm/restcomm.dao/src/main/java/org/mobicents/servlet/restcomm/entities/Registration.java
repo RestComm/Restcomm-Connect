@@ -41,17 +41,18 @@ public final class Registration implements Comparable<Registration> {
     private final String location;
     private final String userAgent;
     private final boolean webrtc;
+    private final boolean isLBPresent;
 
     public Registration(final Sid sid, final String instanceId, final DateTime dateCreated, final DateTime dateUpdated, final String addressOfRecord,
             final String displayName, final String userName, final String userAgent, final int timeToLive,
-            final String location, final boolean webRTC) {
+            final String location, final boolean webRTC, final boolean isLBPresent) {
         this(sid, instanceId, dateCreated, dateUpdated, DateTime.now().plusSeconds(timeToLive), addressOfRecord, displayName, userName,
-                userAgent, timeToLive, location, webRTC);
+                userAgent, timeToLive, location, webRTC, isLBPresent);
     }
 
     public Registration(final Sid sid, final String instanceId, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateExpires,
             final String addressOfRecord, final String displayName, final String userName, final String userAgent,
-            final int timeToLive, final String location, final boolean webRTC) {
+            final int timeToLive, final String location, final boolean webRTC, final boolean isLBPresent) {
         super();
         this.sid = sid;
         this.instanceId = instanceId;
@@ -65,6 +66,7 @@ public final class Registration implements Comparable<Registration> {
         this.userAgent = userAgent;
         this.timeToLive = timeToLive;
         this.webrtc = webRTC;
+        this.isLBPresent = isLBPresent; //(isLBPresent != null) ? isLBPresent : false;
     }
 
     public Sid getSid() {
@@ -113,15 +115,19 @@ public final class Registration implements Comparable<Registration> {
         return webrtc;
     }
 
+    public boolean isLBPresent() {
+        return isLBPresent;
+    }
+
     public Registration setTimeToLive(final int timeToLive) {
         final DateTime now = DateTime.now();
         return new Registration(sid, instanceId, dateCreated, now, now.plusSeconds(timeToLive), addressOfRecord, displayName, userName,
-                userAgent, timeToLive, location, webrtc);
+                userAgent, timeToLive, location, webrtc, isLBPresent);
     }
 
     public Registration updated() {
         final DateTime now = DateTime.now();
-        return new Registration(sid, instanceId, dateCreated, now, dateExpires, addressOfRecord, displayName, userName, userAgent, timeToLive, location, webrtc);
+        return new Registration(sid, instanceId, dateCreated, now, dateExpires, addressOfRecord, displayName, userName, userAgent, timeToLive, location, webrtc, isLBPresent);
     }
 
     @Override

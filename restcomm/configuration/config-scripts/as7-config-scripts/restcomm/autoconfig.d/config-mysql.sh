@@ -181,10 +181,20 @@ configDaoManager() {
 }
 
 ## Description: Set Password for Adminitrator@company.com user. Only for fresh installation.
-initPassword(){
+initUserPassword(){
     SQL_FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
+     if [ -n "$INITIAL_ADMIN_USER" ]; then
+        # change admin user
+        if grep -q "uninitialized" $SQL_FILE; then
+            echo "Update Admin user"
+            sed -i "s/administrator@company.com/${INITIAL_ADMIN_USER}/g" $SQL_FILE
+        else
+            echo "Adminitrator User Already changed"
+        fi
+    fi
+
     if [ -n "$INITIAL_ADMIN_PASSWORD" ]; then
-        # chnange admin password
+        echo "change admin password"
         if grep -q "uninitialized" $SQL_FILE; then
             PASSWORD_ENCRYPTED=`echo -n "${INITIAL_ADMIN_PASSWORD}" | md5sum |cut -d " " -f1`
             #echo "Update password to ${INITIAL_ADMIN_PASSWORD}($PASSWORD_ENCRYPTED)"
@@ -202,6 +212,7 @@ initPassword(){
 ## Description: populated DB with necessary starting point data if not done.
 populateDB(){
     #Change script to defined schema
+    echo "Use RestComm Database:$MYSQL_SCHEMA "
     sed -i "s|CREATE DATABASE IF NOT EXISTS .*| CREATE DATABASE IF NOT EXISTS ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
     sed -i "s|USE .*|USE ${MYSQL_SCHEMA};|" $RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
 
@@ -210,8 +221,6 @@ populateDB(){
         echo "Database already populated"
     else
         echo "Database not populated, importing schema and updating config file"
-        echo "Create RestComm Database"
-        echo "Configuring RestComm Database MySQL"
         FILE=$RESTCOMM_DEPLOY/WEB-INF/scripts/mariadb/init.sql
         mysql -u $2 -p$3 -h $1 < $FILE
         mysql -u $2 -p$3 -h $1 --execute='show databases;'
@@ -233,7 +242,7 @@ if [[ "$ENABLE_MYSQL" == "true" || "$ENABLE_MYSQL" == "TRUE" ]]; then
 	    configMybatis
 	    configDaoManager
 	    configureMySQLDataSource $MYSQL_HOST $MYSQL_USER $MYSQL_PASSWORD $MYSQL_SCHEMA $MYSQL_SNDHOST
-	    initPassword
+	    initUserPassword
 	    populateDB $MYSQL_HOST $MYSQL_USER $MYSQL_PASSWORD $MYSQL_SCHEMA
 	echo 'Finished configuring MySQL datasource!'
     fi

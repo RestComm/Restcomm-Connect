@@ -64,7 +64,7 @@ public final class RegistrationsDaoTest {
         String username = "tom_" + now;
         String displayName = "Tom_" + now;
         Registration registration = new Registration(sid, "instanceId", now, now, now, "sip:tom@company.com", displayName, username,
-                "TestUserAgent/1.0", 3600, "sip:tom@company.com", true);
+                "TestUserAgent/1.0", 3600, "sip:tom@company.com", true, false);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));
@@ -115,7 +115,7 @@ public final class RegistrationsDaoTest {
         String username = "tom_" + now;
         String displayName = "Tom_" + now;
         Registration registration = new Registration(sid, "instanceId", now, now, now, "sip:tom@company.com", displayName, username, null,
-                3600, "sip:tom@company.com", true);
+                3600, "sip:tom@company.com", true, false);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));
@@ -133,7 +133,7 @@ public final class RegistrationsDaoTest {
         String username = "tom_" + now;
         String displayName = null;
         Registration registration = new Registration(sid, "instanceId",  now, now, now, "sip:tom@company.com", displayName, username,
-                "TestUserAgent/1.0", 3600, "sip:tom@company.com", false);
+                "TestUserAgent/1.0", 3600, "sip:tom@company.com", false, false);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));

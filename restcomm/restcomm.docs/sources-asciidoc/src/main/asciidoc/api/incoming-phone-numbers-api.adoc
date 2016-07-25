@@ -341,10 +341,44 @@ Not Supported.  
 
 == Attach a phone number to an application
 
+=== Attach a DID phone number to an application
+
 This one uses the default application
 
 ....
-curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=+15105555555" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+....
+
+Result of the above command
+
+....
+{
+  "sid": "PNdd7a0a0248244615978bd5781598e5eb",
+  "account_sid": "ACae6e420f425248d6a26948c17a9e2acf",
+  "friendly_name": "15105555555",
+  "phone_number": "+15105555555",
+  "voice_url": "http://127.0.0.1:8080/restcomm/demos/hello-play.xml",
+  "voice_method": "POST",
+  "voice_fallback_method": "POST",
+  "status_callback_method": "POST",
+  "voice_caller_id_lookup": false,
+  "date_created": "2013-10-04T17:42:02.500-06:00",
+  "date_updated": "2013-10-04T17:42:02.500-06:00",
+  "sms_method": "POST",
+  "sms_fallback_method": "POST",
+  "api_version": "2012-04-24",
+  "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb.json"
+
+....
+
+IMPORTANT: If you are trying to attach a number that you didn't look up previously from <<available-phone-numbers-api.adoc#available-phone-numbers,Restcomm API – AvailablePhoneNumbers>> ie if you want to attach a number that is Virtual (SIP Number) and not attached to a particular DID provider, you need to add -D "isSIP=true" as show below
+
+=== Attach a SIP Virtual number to an application
+
+This one uses the default application
+
+....
+curl -X POST  http://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers.json -d "PhoneNumber=1234" -d "VoiceUrl=http://127.0.0.1:8080/restcomm/demos/hello-play.xml" -d "isSIP=true"
 ....
 
 Result of the above command
@@ -368,6 +402,7 @@ Result of the above command
   "uri": "/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PNdd7a0a0248244615978bd5781598e5eb.json"
 
 ....
+
 
 == Delete a phone number
 
