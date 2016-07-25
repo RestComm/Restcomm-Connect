@@ -62,7 +62,7 @@ public class IdentityRegistrationToolTest {
     @Test
     public void identityRegistrationSucceeds() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
         tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
-        IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
+        IdentityInstance ii = tool.registerInstanceWithIAT("telestax1", iat, "http://restcomm-server:8080","client-secret1");
         String token = testingTool.getTokenWithDirectAccessGrant("administrator@company.com", "RestComm", "service-client", "client-secret", "restcomm-test");
         // check *-restcomm-ui Client
         JsonObject restcommClient = testingTool.getClient(token, ii.getName() + "-restcomm", testRealm);
@@ -76,7 +76,7 @@ public class IdentityRegistrationToolTest {
     @Test
     public void trailingSlashIsRemoved() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
         tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
-        IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080/","client-secret1");
+        IdentityInstance ii = tool.registerInstanceWithIAT("telestax2", iat, "http://restcomm-server:8080/","client-secret1");
         String token = testingTool.getTokenWithDirectAccessGrant("administrator@company.com", "RestComm", "service-client", "client-secret", "restcomm-test");
         // check *-restcomm-ui Client. No need to test the rest since trimming is done on a higher level
         JsonObject restcommUI = testingTool.getClient(token, ii.getName() + "-restcomm", testRealm);
@@ -88,13 +88,13 @@ public class IdentityRegistrationToolTest {
     @Test(expected=AuthServerAuthorizationError.class)
     public void badIATShouldFail() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
         tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
-        tool.registerInstanceWithIAT("bad_IAT", "http://restcomm-server:8080","client-secret1");
+        tool.registerInstanceWithIAT("telestax3", "bad_IAT", "http://restcomm-server:8080","client-secret1");
     }
 
     @Test(expected=IdentityClientRegistrationError.class)
     public void badKeycloakAddressShouldFail() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
         tool = new IdentityRegistrationTool("badurl",testRealm);
-        tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
+        tool.registerInstanceWithIAT("telestax4", iat, "http://restcomm-server:8080","client-secret1");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class IdentityRegistrationToolTest {
         // first create a new identity instance
         // TODO, do that by importing a small realm instead of creating the instance each time
         tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
-        IdentityInstance ii = tool.registerInstanceWithIAT(iat, "http://restcomm-server:8080","client-secret1");
+        IdentityInstance ii = tool.registerInstanceWithIAT("telestax5", iat, "http://restcomm-server:8080","client-secret1");
         String oldRAT = ii.getRestcommRAT();
         KeycloakClient client = new KeycloakClient();
         client.setBearerOnly(true);

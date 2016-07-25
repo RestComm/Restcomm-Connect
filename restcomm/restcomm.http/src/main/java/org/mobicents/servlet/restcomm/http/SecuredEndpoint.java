@@ -28,17 +28,20 @@ import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.keycloak.adapters.KeycloakDeployment;
+import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.entities.Account;
 import org.mobicents.servlet.restcomm.entities.IdentityInstance;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.http.exceptions.AccountNotLinked;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
+import org.mobicents.servlet.restcomm.http.exceptions.OrganizationAccessForbidden;
+import org.mobicents.servlet.restcomm.http.exceptions.AccountNotLinked;
 import org.mobicents.servlet.restcomm.http.exceptions.NoMappedAccount;
+import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
 import org.mobicents.servlet.restcomm.identity.AuthOutcome;
 import org.mobicents.servlet.restcomm.identity.IdentityContext;
 import org.mobicents.servlet.restcomm.identity.UserIdentityContext;
@@ -95,6 +98,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         if (this.identityInstance != null)
             deployment = identityContext.getDeployment(identityInstance.getSid());
         this.userIdentityContext = new UserIdentityContext(deployment, request, accountsDao);
+        checkOrganizationIdentity(); // check bearer-based access to organization in all Secured endpoints
     }
 
     /**
@@ -125,6 +129,29 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         //checkAuthenticatedAccount(); // ok there is a valid authenticated account
         if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
             throw new InsufficientPermission();
+    }
+
+    /**
+     * Checks if the incoming request contains the required roles for accessing the organization specified
+     * in the URL
+     */
+    protected void checkOrganizationIdentity() {
+        if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
+            String neededRole = IdentityRegistrationTool.buildKeycloakClientRole(identityInstance.getName()); // the following role should be present in the bearer token in order to allow access to the instance
+            String keycloakClientName = IdentityRegistrationTool.buildKeycloakClientName(identityInstance.getName());
+            AccessToken oauthToken = userIdentityContext.getOauthToken();
+            try {
+                if (oauthToken == null) {
+                    // looks like the there was a bearer token that couldn't be verified.
+                    throw new NotAuthenticated();
+                }
+                if (!oauthToken.getResourceAccess().get(keycloakClientName).getRoles().contains(neededRole)) {
+                    throw new OrganizationAccessForbidden();
+                }
+            } catch (NullPointerException e) {
+                throw new OrganizationAccessForbidden();
+            }
+        }
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
@@ -397,6 +424,11 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected Sid getCurrentOrganizationSid() {
         // TODO
         return new Sid("OR00000000000000000000000000000000");
+    }
+
+    protected String getCurrentOrganizationName() {
+        // TODO replace this hardcoded value with a proper one
+        return "telestax";
     }
 
 }

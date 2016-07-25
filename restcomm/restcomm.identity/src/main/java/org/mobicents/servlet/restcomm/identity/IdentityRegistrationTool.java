@@ -70,16 +70,16 @@ public class IdentityRegistrationTool {
      * @return the new IdentityInstance or null
      * @throws AuthServerAuthorizationError
      */
-    public IdentityInstance registerInstanceWithIAT(String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
+    public IdentityInstance registerInstanceWithIAT(String organizationIdentityName, String iat, String redirectUrls, String restcommClientSecret) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         if (redirectUrls != null && redirectUrls.endsWith("/"))
             redirectUrls = redirectUrls.substring(0, redirectUrls.length()-1); //trim trailing '/' character if present
-        String instanceName = generateName();
+        //String instanceName = generateName(); //
         KeycloakClient restcommClient;
         // create client application at keycloak side
-        restcommClient = registerRestcommUiClient(instanceName,iat,redirectUrls,restcommClientSecret,false,true);
+        restcommClient = registerRestcommUiClient(organizationIdentityName,iat,redirectUrls,restcommClientSecret,false,true);
         // for each client created, there is a Registration Access token that allows further modifying that client in the future. We keep that.
         IdentityInstance identityInstance = new IdentityInstance();
-        identityInstance.setName(instanceName);
+        identityInstance.setName(organizationIdentityName);
         identityInstance.setRestcommRAT(restcommClient.getRegistrationAccessToken());
         return identityInstance;
     }
@@ -156,13 +156,14 @@ public class IdentityRegistrationTool {
 
     KeycloakClient registerRestcommUiClient(String instanceName, String iat, String rootUrl, String restcommClientSecret, Boolean bearerOnly, Boolean publicClient ) throws AuthServerAuthorizationError, IdentityClientRegistrationError {
         KeycloakClient repr = new KeycloakClient();
-        repr.setClientId(instanceName + "-" + RESTCOMM_CLIENT_SUFFIX);
+        repr.setClientId(buildKeycloakClientName(instanceName));
         repr.setProtocol("openid-connect");
         repr.setBearerOnly(bearerOnly);
         repr.setPublicClient(publicClient);
         repr.setRedirectUris(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl+"/*"}));
         repr.setWebOrigins(rootUrl == null ? null : Arrays.asList(new String[] {rootUrl}));
         repr.setBaseUrl(rootUrl);
+        repr.setDefaultRoles(Arrays.asList(new String[] {buildKeycloakClientRole(instanceName)}));
         return registerClient(iat,repr);
     }
 
@@ -228,5 +229,33 @@ public class IdentityRegistrationTool {
         } catch (Exception e) {
             throw new IdentityClientRegistrationError("Error updating client " + repr.getClientId(),e);
         }
+    }
+
+    /**
+     * Builds the name of the role needed to access an Organization Identity.
+     *
+     * Example
+     *
+     *  telestax-access
+     *
+     * @param orgIdentityName
+     * @return the name of the role
+     */
+    public static String buildKeycloakClientRole(String orgIdentityName) {
+        return orgIdentityName + "-access";
+    }
+
+    /**
+     * Builds the name of the Keycloak Client that corresponds to the specified
+     * Organization Identity name passed.
+     *
+     * Example
+     *  telestax-restcomm
+     *
+     * @param orgIdentityName
+     * @return the nanme of the Keycloak Client
+     */
+    public static String buildKeycloakClientName(String orgIdentityName) {
+        return orgIdentityName + "-" + RESTCOMM_CLIENT_SUFFIX;
     }
 }

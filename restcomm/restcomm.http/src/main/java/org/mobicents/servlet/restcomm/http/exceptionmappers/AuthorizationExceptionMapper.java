@@ -25,6 +25,7 @@ import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.http.exceptions.NotAuthenticated;
 import org.mobicents.servlet.restcomm.http.exceptions.NoMappedAccount;
+import org.mobicents.servlet.restcomm.http.exceptions.OrganizationAccessForbidden;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -54,6 +55,9 @@ public class AuthorizationExceptionMapper implements ExceptionMapper<Authorizati
         } else
         if (e instanceof NoMappedAccount) {
             return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"NO_MAPPED_ACCOUNT\"}").type(MediaType.APPLICATION_JSON_TYPE).build();
+        } else
+        if (e instanceof OrganizationAccessForbidden) {
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"error\":\"ORGANIZATION_ACCESS_FORBIDDEN\"}").type(MediaType.APPLICATION_JSON_TYPE).build();
         }
         else {
             // map all other types of auth errors to 403

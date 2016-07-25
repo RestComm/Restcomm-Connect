@@ -57,6 +57,7 @@ public class UserIdentityContext {
     Set<String> effectiveAccountRoles;
     // keycloak specifics properties that are meaningfull when in KeycloakAuth auth kind
     Account keycloakMappedAccount;
+    AccessToken oauthToken;
 
 
     /**
@@ -82,6 +83,7 @@ public class UserIdentityContext {
                 authKind = AuthKind.KeycloakAuth;
                 AccessToken oauthToken = verifyToken(tokenString, keycloakDeployment);
                 if (oauthToken != null) {
+                    this.oauthToken = oauthToken;
                     //ok, we have a verified token, let's try to load the account
                     keycloakMappedAccount = accountsDao.getAccountToAuthenticate(oauthToken.getPreferredUsername());
                     if (keycloakMappedAccount != null) {
@@ -207,5 +209,9 @@ public class UserIdentityContext {
      */
     public AuthKind getAuthKind() {
         return authKind;
+    }
+
+    public AccessToken getOauthToken() {
+        return oauthToken;
     }
 }

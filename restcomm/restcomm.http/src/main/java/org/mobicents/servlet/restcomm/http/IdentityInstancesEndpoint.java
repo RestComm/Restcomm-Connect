@@ -95,7 +95,8 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, mainConfig.getIdentityRealm());
             IdentityInstance storedInstance;
             try {
-                IdentityInstance instance = tool.registerInstanceWithIAT(initialAccessToken, redirectUrl, clientSecret);
+                String organizationName = getCurrentOrganizationName();
+                IdentityInstance instance = tool.registerInstanceWithIAT(organizationName, initialAccessToken, redirectUrl, clientSecret);
                 instance.setOrganizationSid(getCurrentOrganizationSid());
                 identityInstancesDao.addIdentityInstance(instance);
                 storedInstance = instance;
