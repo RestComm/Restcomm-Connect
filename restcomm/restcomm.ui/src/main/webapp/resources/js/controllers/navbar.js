@@ -87,7 +87,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
        // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
      }
       if ( $scope.accountChanged  && angular.equals(accountBackup.sid, loggedUserAccount.sid)) {
-         Notifications.warn("You will loss some privileges due to this change.");
+         Notifications.warn("You will loose some privileges due to this change.");
      }
    }, true);
 
@@ -116,7 +116,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   };
 
   $scope.updateProfile = function() {
-    var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status,Role: $scope.account.status,Role: $scope.account.role};
+    var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status,Role: $scope.account.role};
 
     if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
       params['Auth_Token'] = md5.createHash($scope.newPassword);
