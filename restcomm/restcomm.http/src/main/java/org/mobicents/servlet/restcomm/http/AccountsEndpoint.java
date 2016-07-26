@@ -54,6 +54,7 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.converter.AccountConverter;
 import org.mobicents.servlet.restcomm.http.converter.AccountListConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
+import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
 import org.mobicents.servlet.restcomm.util.StringUtils;
 
@@ -292,7 +293,12 @@ public abstract class AccountsEndpoint extends SecuredEndpoint {
             result = result.setStatus(Account.Status.ACTIVE);
         }
         if (data.containsKey("Role")) {
-            result = result.setRole(data.getFirst("Role"));
+            Account operatingAccount = userIdentityContext.getEffectiveAccount();
+            // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
+            if ( userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
+                result = result.setRole(data.getFirst("Role"));
+            } else
+                throw new AuthorizationException();
         }
         if (data.containsKey("Password")) {
             final String hash = new Md5Hash(data.getFirst("Password")).toString();
