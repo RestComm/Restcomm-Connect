@@ -18,13 +18,13 @@
             <div class="form-group">
                 <div class="input-group">
                     <span class="input-group-addon">Initial access token</span>
-                    <input class="form-control" ng-model="details.InitialAccessToken">
+                    <input name="iat" class="form-control" ng-model="details.InitialAccessToken">
                 </div>
                 <p class="help-block">If you don't know what this is click <a href title="TODO">here</a>.</p>
             </div>
         </div>
         <div class="col-md-12">
-            <button type="submit" class="btn btn-primary pull-right">Register</button>
+            <button type="submit" ng-disabled="!details.InitialAccessToken || !details.RedirectUrl" class="btn btn-primary pull-right">Register</button>
         </div>
     </div>
 </form>
