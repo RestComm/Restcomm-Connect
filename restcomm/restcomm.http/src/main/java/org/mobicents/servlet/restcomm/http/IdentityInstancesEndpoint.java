@@ -181,6 +181,11 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
      * @return
      */
     private String pickOrganizationIdentityName() {
-        return getCurrentOrganizationName();
+        if ("random".equals(mainConfig.getOrgIdentityNamingMode())) {
+            return UUID.randomUUID().toString().split("-")[0];
+        } else {
+            // default to "organization" setting
+            return getCurrentOrganizationName();
+        }
     }
 }
