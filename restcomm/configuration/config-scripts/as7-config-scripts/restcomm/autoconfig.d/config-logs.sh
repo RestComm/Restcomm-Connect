@@ -8,38 +8,46 @@ RESTCOMM_BIN=$RESTCOMM_HOME/bin
 RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 
 configure_RC_component_log(){
-  sed -i "/<logger category=\"${1}\">/ {N; s/<level name=\".*\"\/>/<level name=\"${2}\"\/>/}" $RESTCOMM_CONF/standalone-sip.xml
+    FILE=$RESTCOMM_CONF/standalone-sip.xml
+    sed -e "/<logger category=\"${1}\">/ {
+    N; s|<level name=\".*\"\/>|<level name=\"${2}\"\/>|
+    }" $FILE > $FILE.bak
+    mv $FILE.bak $FILE
 }
 
 configure_RC_logs(){
-    sed -i "s|<logger category=\"org.mobicents.servlet.sip\">|<logger category=\"org.mobicents.servlet\">|" $RESTCOMM_CONF/standalone-sip.xml
+    FILE=$RESTCOMM_CONF/standalone-sip.xml
+    sed -e  "s|<logger category=\"org.mobicents.servlet.sip\">|<logger category=\"org.mobicents.servlet\">|" $FILE > $FILE.bak
 
-    sed -i "/ <console-handler name=\"CONSOLE\">/ {
+    sed -e "/ <console-handler name=\"CONSOLE\">/ {
     N; s|<level name=\".*\"/>|<level name=\"${LOG_LEVEL}\"/>|
-	}" $RESTCOMM_CONF/standalone-sip.xml
+	}" $FILE.bak > $FILE
 }
 
 configure_RMS_log(){
     FILE=$MMS_HOME/conf/log4j.xml
-    sed -i  "s|<param name=\"Threshold\" value=\".*\" />|<param name=\"Threshold\" value=\"${LOG_LEVEL}\" />|"  $FILE
-    sed -i  "s|<priority value=\".*\"/>|<priority value=\"${LOG_LEVEL}\"/>|"  $FILE
+    sed -e "s|<param name=\"Threshold\" value=\".*\" />|<param name=\"Threshold\" value=\"${LOG_LEVEL}\" />|" \
+        -e "s|<priority value=\".*\"/>|<priority value=\"${LOG_LEVEL}\"/>|"  $FILE > $FILE.bak;
+	mv $FILE.bak $FILE
 }
 
 config_on_thefly(){
     FILE=$RESTCOMM_BIN/restcomm/set-log-level.sh
     MNGMTPORT=$((9999 + PORT_OFFSET))
     if [ -n "$GRAYLOG_SERVER" ]; then
-        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=$BIND_ADDRESS:${MNGMTPORT} --file=\"\$CLIFILE\"|" $FILE
+        sed -e "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=$BIND_ADDRESS:${MNGMTPORT} --file=\"\$CLIFILE\"|" $FILE > $FILE.bak;
     else
-        sed -i "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=127.0.0.1:${MNGMTPORT} --file=\"\$CLIFILE\"|" $FILE
+        sed -e "s|jboss-cli.sh --connect controller=.*|jboss-cli.sh --connect controller=127.0.0.1:${MNGMTPORT} --file=\"\$CLIFILE\"|" $FILE > $FILE.bak;
     fi
+    mv $FILE.bak $FILE
 }
 
 config_AKKA_logs(){
     FILE=$RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/classes/application.conf
     echo "Update AKKA log level to ${AKKA_LOG_LEVEL}"
-    sed -i "s|loglevel = \".*\"|loglevel = \"${AKKA_LOG_LEVEL}\"|" $FILE
-    sed -i "s|stdout-loglevel = \".*\"|stdout-loglevel = \"${AKKA_LOG_LEVEL}\"|" $FILE
+    sed  -e "s|loglevel = \".*\"|loglevel = \"${AKKA_LOG_LEVEL}\"|" \
+         -e "s|stdout-loglevel = \".*\"|stdout-loglevel = \"${AKKA_LOG_LEVEL}\"|"  $FILE > $FILE.bak;
+    mv $FILE.bak $FILE
 }
 
 

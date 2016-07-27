@@ -3,7 +3,7 @@
 ## Author: Henrique Rosa (henrique.rosa@telestax.com)
 
 configServerBeans() {
-	FILE=$MMS_HOME/deploy/server-beans.xml
+	FILE=$MMS_HOME/conf/mediaserver.xml
 	MSERVER_EXTERNAL_ADDRESS="$MEDIASERVER_EXTERNAL_ADDRESS"
 
 	if [ "$MSERVER_EXTERNAL_ADDRESS" = "$1" ]; then
@@ -13,18 +13,16 @@ configServerBeans() {
 	#Check for Por Offset
 	local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 
-	sed -i 's|<property name="port">.*</property>|<property name="port">'"${REMOTEMGCP}"'</property>|' $FILE
-
-
-	sed -e "s|<property name=\"bindAddress\">.*<\/property>|<property name=\"bindAddress\">$1<\/property>|" \
-	    -e "s|<property name=\"localBindAddress\">.*<\/property>|<property name=\"localBindAddress\">$1<\/property>|" \
-		-e "s|<property name=\"externalAddress\">.*</property>|<property name=\"externalAddress\">$MSERVER_EXTERNAL_ADDRESS</property>|" \
-	    -e "s|<property name=\"localNetwork\">.*<\/property>|<property name=\"localNetwork\">$2<\/property>|" \
-	    -e "s|<property name=\"localSubnet\">.*<\/property>|<property name=\"localSubnet\">$3<\/property>|" \
-	    -e "s|<property name=\"useSbc\">.*</property>|<property name=\"useSbc\">$USESBC</property>|" \
-	    -e "s|<property name=\"dtmfDetectorDbi\">.*</property>|<property name=\"dtmfDetectorDbi\">$DTMFDBI</property>|" \
-	    -e "s|<property name=\"lowestPort\">.*</property>|<property name=\"lowestPort\">$MEDIASERVER_LOWEST_PORT</property>|" \
-	    -e "s|<property name=\"highestPort\">.*</property>|<property name=\"highestPort\">$MEDIASERVER_HIGHEST_PORT</property>|" \
+	sed -e "s|<bindAddress>.*<\/bindAddress>|<bindAddress>$1<\/bindAddress>|" \
+		-e "s|<externalAddress>.*</externalAddress>|<externalAddress>$MSERVER_EXTERNAL_ADDRESS</externalAddress>|" \
+	    -e "s|<network>.*<\/network>|<network>$2<\/network>|" \
+	    -e "s|<subnet>.*<\/subnet>|<subnet>$3<\/subnet>|" \
+	    -e "s|<sbc>.*<\/sbc>|<sbc>$USESBC<\/sbc>|" \
+	    -e "s|<address>.*<\/address>|<address>$1<\/address>|" \
+    	-e "s|<port>.*<\/port>|<port>${REMOTEMGCP}<\/port>|" \
+	    -e "s|<lowPort>.*<\/lowPort>|<lowPort>$MEDIASERVER_LOWEST_PORT<\/lowPort>|" \
+	    -e "s|<highPort>.*<\/highPort>|<highPort>$MEDIASERVER_HIGHEST_PORT<\/highPort>|" \
+	    -e "s|<dtmfDetector poolSize=\"\(.*\)\" dbi=\"\(.*\)\" \/>|<dtmfDetector poolSize=\"\1\" dbi=\"$DTMFDBI\" \/>|" \
 	    $FILE > $FILE.bak
 	mv $FILE.bak $FILE
 	echo 'Configured UDP Manager'
@@ -32,7 +30,7 @@ configServerBeans() {
 
 configRMSJavaOpts() {
     FILE=$MMS_HOME/bin/run.sh
-	echo "Add mediasercer extra java options: $RMS_JAVA_OPTS"
+	echo "Add mediaserver extra java options: $RMS_JAVA_OPTS"
 
 	sed -e "/# Setup MMS specific properties/ {
 	  N; s|JAVA_OPTS=.*|JAVA_OPTS=\"-Dprogram\.name=\\\$PROGNAME $RMS_JAVA_OPTS\"|
@@ -61,38 +59,52 @@ configMediaServerManager() {
 	ms_address="$2"
 	ms_external_address="$3"
 
-	#Check for Por Offset
-    local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
-    local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
+	    #Check for Por Offset
+		local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
+		local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 
-    sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
-        -e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
-        -e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
-        -e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
-        -e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
-        -e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
-        -e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+		sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
+			-e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
+			-e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
+			-e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
+			-e "s|<response-timeout>.*</response-timeout>|<response-timeout>500</response-timeout>|" \
+			-e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
+			-e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
 
-    mv $FILE.bak $FILE
-    echo 'Configured Media Server Manager'
+		mv $FILE.bak $FILE
+		echo 'Configured Media Server Manager'
 }
 
 set_pool_size () {
-    local property=$1
-    local value=$2
-    FILE=$MMS_HOME/deploy/server-beans.xml
+    property=$1
+    value=$2
+    FILE=$MMS_HOME/conf/mediaserver.xml
 
-    sed -e	"/<bean class=\"org.mobicents.media.core.endpoints.VirtualEndpointInstaller\" name=\"${property}\">/{
-			N
-			N
-			N; s|<property name=\"initialSize\">.*</property>|<property name=\"initialSize\">${value}</property>|
-			}" $FILE > $FILE.bak
-			mv $FILE.bak $FILE
+    case $property  in
+        "ivr"|"bridge"|"cnf" )
+            sed -e "s|<endpoint name=\"\(.*\)/${property}/\" class=\"\(.*\)\" poolSize=\"\(.*\)\" \/>|<endpoint name=\"\1/${property}/\" class=\"\2\" poolSize=\"${value}\" \/>|" \
+            $FILE > $FILE.bak
+	        mv $FILE.bak $FILE;;
+        "localConnection"|"remoteConnection"|"player"|"recorder" )
+            sed -e "s|<${property} poolSize=\".*\" />|<${property} poolSize=\"${value}\" />|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+         "dtmfDetector" )
+            sed -e "s|<${property} poolSize=\".*\" \(.*\) />|<${property} poolSize=\"${value}\" \1 />|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+          "dtmfGenerator" )
+            sed -e "s|<${property} poolSize=\".*\" \(.*\) \(.*\) />|<${property} poolSize=\"${value}\" \1 \2 />|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+        "mgcp" )
+            sed -e "s|<poolSize>.*</poolSize>|<poolSize>${value}</poolSize>|"  $FILE > $FILE.bak
+            mv $FILE.bak $FILE ;;
+        *) echo "This property ${property} can not be configured";;
+    esac
 }
 
 configOther(){
     echo "MGCP_RESPONSE_TIMEOUT $MGCP_RESPONSE_TIMEOUT"
-    sed -i "s|<response-timeout>.*</response-timeout>|<response-timeout>${MGCP_RESPONSE_TIMEOUT}</response-timeout>|"  $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<response-timeout>.*</response-timeout>|<response-timeout>${MGCP_RESPONSE_TIMEOUT}</response-timeout>|"  $FILE > $FILE.bak
 }
 
 ## MAIN
@@ -123,8 +135,8 @@ configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_AD
 configOther
 #Contribution by: https://github.com/hamsterksu
 #set pool size of RMS resources
-for i in $( set -o posix ; set | grep ^RESOURCE_ | sort -rn ); do
-    reg=$(echo ${i} | cut -d = -f1 | cut -c 10-)
+for i in $( set -o posix ; set |  grep -e ^MGCPCONTROLLER_ -e ^RESOURCE_  | sort -rn ); do
+    reg=$(echo ${i} | cut -d = -f1 | cut -d _ -f2)
     val=$(echo ${i} | cut -d = -f2)
 
     echo "Update resources pool size: $reg -> $val"
