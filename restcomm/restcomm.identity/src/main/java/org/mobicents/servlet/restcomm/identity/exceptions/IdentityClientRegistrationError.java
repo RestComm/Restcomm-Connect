@@ -26,6 +26,9 @@ package org.mobicents.servlet.restcomm.identity.exceptions;
  * @author Orestis Tsakiridis
  */
 public class IdentityClientRegistrationError extends Exception {
+    public enum Reason {CLIENT_ALREADY_THERE}
+    Reason reason;
+
     public IdentityClientRegistrationError() {
     }
 
@@ -35,5 +38,14 @@ public class IdentityClientRegistrationError extends Exception {
 
     public IdentityClientRegistrationError(String s, Throwable throwable) {
         super(s, throwable);
+    }
+
+    public IdentityClientRegistrationError(String s, Reason reason) {
+        super(s);
+        this.reason = reason;
+    }
+
+    public Reason getReason() {
+        return reason;
     }
 }

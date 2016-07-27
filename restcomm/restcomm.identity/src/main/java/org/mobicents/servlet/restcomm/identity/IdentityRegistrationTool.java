@@ -184,6 +184,9 @@ public class IdentityRegistrationTool {
                 return createdClient;
             } else if (response.getStatus() == 403 || response.getStatus() == 401) {
                 throw new AuthServerAuthorizationError("Cannot create keycloak Client " + repr.getClientId());
+            } else
+            if (response.getStatus() == 400) {
+                throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus() + ". Reason: " + IdentityClientRegistrationError.Reason.CLIENT_ALREADY_THERE, IdentityClientRegistrationError.Reason.CLIENT_ALREADY_THERE);
             } else {
                 throw new IdentityClientRegistrationError("Client registration for client '" + repr.getClientId() + "' failed with status " + response.getStatus());
             }

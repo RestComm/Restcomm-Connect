@@ -16,7 +16,7 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
 				Notifications.error("Internal server error");
 			else
 			if (response.status == 409)
-				Norifications.error("Already registered!");
+				Notifications.error("Organization Identity '" + response.data.occupiedName + "' seems already registered!");
 		});
 	}
 

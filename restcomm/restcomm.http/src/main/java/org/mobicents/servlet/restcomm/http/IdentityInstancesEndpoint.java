@@ -46,6 +46,7 @@ import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
  * TODO support XML responses ? This endpoint is supposed to be used internally from AdminUI.
@@ -94,17 +95,24 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         if (getIdentityInstance() == null) {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, mainConfig.getIdentityRealm());
             IdentityInstance storedInstance;
+            String orgIdentityName = null;
             try {
-                String organizationName = getCurrentOrganizationName();
-                IdentityInstance instance = tool.registerInstanceWithIAT(organizationName, initialAccessToken, redirectUrl, clientSecret);
+                orgIdentityName = pickOrganizationIdentityName();
+                IdentityInstance instance = tool.registerInstanceWithIAT(orgIdentityName, initialAccessToken, redirectUrl, clientSecret);
                 instance.setOrganizationSid(getCurrentOrganizationSid());
                 identityInstancesDao.addIdentityInstance(instance);
                 storedInstance = instance;
-            } catch (AuthServerAuthorizationError authServerAuthorizationError) {
+            } catch (AuthServerAuthorizationError e) {
+                logger.error(e);
                 String errorResponse = "{\"error\":\"KEYCLOAK_ACCESS_ERROR\"}";
                 return Response.status(Response.Status.FORBIDDEN).entity(errorResponse).header("Content-Type", "application/json").build();
-            } catch (IdentityClientRegistrationError identityClientRegistrationError) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            } catch (IdentityClientRegistrationError e) {
+                logger.error(e);
+                if (IdentityClientRegistrationError.Reason.CLIENT_ALREADY_THERE.equals(e.getReason())) {
+                    String errorResponse = "{\"error\":\""+e.getReason()+"\",\"occupiedName\":\""+orgIdentityName+"\"}";
+                    return Response.status(Response.Status.CONFLICT).entity(errorResponse).type(APPLICATION_JSON_TYPE).build();
+                } else
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
             if (logger.isInfoEnabled())
                 logger.info("registered NEW identity instance named '" + storedInstance.getName() + "' with sid: '" + storedInstance.getSid().toString() + "'");
@@ -161,5 +169,18 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
 
     private String generateClientSecret() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * Implements logic for picking a name for the OrganizationIdentity. This may vary according to whether this is
+     * a cloud or standalone installation. Usually the organization name itself is used or a random value to avoid
+     * conflicts.
+     *
+     * NOTE: The algorithm is still under construction
+     *
+     * @return
+     */
+    private String pickOrganizationIdentityName() {
+        return getCurrentOrganizationName();
     }
 }

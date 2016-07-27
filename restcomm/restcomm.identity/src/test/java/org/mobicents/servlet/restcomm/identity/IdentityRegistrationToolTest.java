@@ -118,6 +118,19 @@ public class IdentityRegistrationToolTest {
 
     }
 
+    @Test
+    public void registeringExistingClientShouldReturnConflictReason() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
+        tool = new IdentityRegistrationTool(KEYCLOAK_URL,testRealm);
+        try {
+            IdentityInstance ii = tool.registerInstanceWithIAT("existing-client", iat, "http://restcomm-server:8080", "client-secret1");
+        } catch (IdentityClientRegistrationError e) {
+            Assert.assertEquals("An IdentityClientRegistrationError with reason ", IdentityClientRegistrationError.Reason.CLIENT_ALREADY_THERE, e.getReason());
+            return;
+        }
+        // we should never reach here since the exception should be thrown
+        Assert.assertTrue("An IdentityClientRegistrationError exception should have been thrown",false);
+    }
+
 //    @Test
 //    public void testClientCreationAndRemoval() throws IdentityClientRegistrationError, AuthServerAuthorizationError {
 //        // create client
