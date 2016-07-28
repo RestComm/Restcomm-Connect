@@ -56,42 +56,42 @@ public final class MediaResourceBrokerEntity {
     }
 
     public Sid getCallSid() {
-		return callSid;
-	}
+        return callSid;
+    }
 
-	public Sid getConferenceSid() {
-		return conferenceSid;
-	}
+    public Sid getConferenceSid() {
+        return conferenceSid;
+    }
 
-	public String getMasterMsId() {
-		return masterMsId;
-	}
+    public String getMasterMsId() {
+        return masterMsId;
+    }
 
-	public String getMasterMsBridgeEpId() {
-		return masterMsBridgeEpId;
-	}
+    public String getMasterMsBridgeEpId() {
+        return masterMsBridgeEpId;
+    }
 
-	public String getMasterMsCnfEpId() {
-		return masterMsCnfEpId;
-	}
+    public String getMasterMsCnfEpId() {
+        return masterMsCnfEpId;
+    }
 
-	public String getSlaveMsId() {
-		return slaveMsId;
-	}
+    public String getSlaveMsId() {
+        return slaveMsId;
+    }
 
-	public String getSlaveMsBridgeEpId() {
-		return slaveMsBridgeEpId;
-	}
+    public String getSlaveMsBridgeEpId() {
+        return slaveMsBridgeEpId;
+    }
 
-	public String getSlaveMsCnfEpId() {
-		return slaveMsCnfEpId;
-	}
+    public String getSlaveMsCnfEpId() {
+        return slaveMsCnfEpId;
+    }
 
-	public boolean isBridgedTogether() {
-		return isBridgedTogether;
-	}
+    public boolean isBridgedTogether() {
+        return isBridgedTogether;
+    }
 
-	@NotThreadSafe
+    @NotThreadSafe
     public static final class Builder {
         private Sid callSid;
         private Sid conferenceSid;
@@ -119,40 +119,40 @@ public final class MediaResourceBrokerEntity {
             return new MediaResourceBrokerEntity(callSid, conferenceSid, masterMsId, masterMsBridgeEpId, masterMsCnfEpId, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether);
         }
 
-		public Sid getCallSid() {
-			return callSid;
-		}
+        public Sid getCallSid() {
+            return callSid;
+        }
 
-		public Sid getConferenceSid() {
-			return conferenceSid;
-		}
+        public Sid getConferenceSid() {
+            return conferenceSid;
+        }
 
-		public String getMasterMsId() {
-			return masterMsId;
-		}
+        public String getMasterMsId() {
+            return masterMsId;
+        }
 
-		public String getMasterMsBridgeEpId() {
-			return masterMsBridgeEpId;
-		}
+        public String getMasterMsBridgeEpId() {
+            return masterMsBridgeEpId;
+        }
 
-		public String getMasterMsCnfEpId() {
-			return masterMsCnfEpId;
-		}
+        public String getMasterMsCnfEpId() {
+            return masterMsCnfEpId;
+        }
 
-		public String getSlaveMsId() {
-			return slaveMsId;
-		}
+        public String getSlaveMsId() {
+            return slaveMsId;
+        }
 
-		public String getSlaveMsBridgeEpId() {
-			return slaveMsBridgeEpId;
-		}
+        public String getSlaveMsBridgeEpId() {
+            return slaveMsBridgeEpId;
+        }
 
-		public String getSlaveMsCnfEpId() {
-			return slaveMsCnfEpId;
-		}
+        public String getSlaveMsCnfEpId() {
+            return slaveMsCnfEpId;
+        }
 
-		public boolean isBridgedTogether() {
-			return isBridgedTogether;
-		}
+        public boolean isBridgedTogether() {
+            return isBridgedTogether;
+        }
     }
 }
