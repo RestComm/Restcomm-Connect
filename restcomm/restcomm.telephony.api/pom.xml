@@ -10,6 +10,11 @@
 	<name>restcomm.telephony.api</name>
 
 	<dependencies>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
@@ -34,13 +39,6 @@
 		<dependency>
 			<groupId>com.telestax.servlet</groupId>
 			<artifactId>restcomm.dao</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.telestax.servlet</groupId>
-			<artifactId>restcomm.mgcp</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>

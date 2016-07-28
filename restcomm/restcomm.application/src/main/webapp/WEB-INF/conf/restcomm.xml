@@ -312,7 +312,7 @@
                 <response-timeout>500</response-timeout>
                 <external-address><null/></external-address>
             </mgcp-server>
-            <mgcp-server>
+            <!-- <mgcp-server>
             	<ms-id>rms2</ms-id>
                 <local-address>127.0.0.1</local-address>
                 <local-port>2727</local-port>
@@ -320,7 +320,7 @@
                 <remote-port>2428</remote-port>
                 <response-timeout>500</response-timeout>
                 <external-address><null/></external-address>
-            </mgcp-server>
+            </mgcp-server>  -->
         </mgcp-servers>
 	</media-server-manager>
 	<!-- media-server-routing Defines routing rules for media server traffic with following parameters:

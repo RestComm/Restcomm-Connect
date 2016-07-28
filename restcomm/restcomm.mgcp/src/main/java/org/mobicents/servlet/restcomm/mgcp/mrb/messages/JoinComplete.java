@@ -17,40 +17,52 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.mscontrol.messages;
+package org.mobicents.servlet.restcomm.mgcp.mrb.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.mgcp.MediaSession;
+
+import akka.actor.ActorRef;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
 public final class JoinComplete {
 
-    private final Object endpoint;
+    private final ActorRef cnfEndpoint;
     private final Sid callSid;
+    private final Sid conferenceSid;
+    private final String conferenceName;
+    private final MediaSession mediaSession;
 
-    public JoinComplete(final Object endpoint, final Sid callSid) {
+    public JoinComplete(final ActorRef cnfEndpoint, final Sid callSid, final Sid conferenceSid, final String conferenceName, final MediaSession mediaSession) {
         super();
-        this.endpoint = endpoint;
+        this.cnfEndpoint = cnfEndpoint;
         this.callSid = callSid;
+        this.conferenceSid = conferenceSid;
+        this.conferenceName = conferenceName;
+        this.mediaSession = mediaSession;
     }
 
-    public JoinComplete(final Object endpoint) {
-        this(endpoint, null);
-    }
-
-    public JoinComplete() {
-        this(null);
-    }
-
-    public Object endpoint() {
-        return endpoint;
+    public ActorRef cnfEndpoint() {
+        return cnfEndpoint;
     }
 
     public Sid callSid() {
         return callSid;
     }
 
+    public Sid conferenceSid() {
+        return conferenceSid;
+    }
+
+    public String conferenceName() {
+        return conferenceName;
+    }
+
+    public MediaSession mediaSession() {
+        return mediaSession;
+    }
 }

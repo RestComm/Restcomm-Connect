@@ -79,7 +79,6 @@ public final class Conference extends UntypedActor {
     private final Sid sid;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
-    private ActorRef mediaGateway;
 
     private boolean moderatorPresent = false;
 
@@ -212,8 +211,10 @@ public final class Conference extends UntypedActor {
             final Observe observe = new Observe(super.source);
             mscontroller.tell(observe, super.source);
 
+            ConferenceInfo information = createConferenceInfo();
+            logger.info("ConferenceInfo: "+information);
             // Initialize the MS Controller
-            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid());
+            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid(), information);
             mscontroller.tell(createMediaSession, super.source);
         }
 
@@ -330,15 +331,21 @@ public final class Conference extends UntypedActor {
     }
 
     private void onGetConferenceInfo(GetConferenceInfo message, ActorRef self, ActorRef sender) throws Exception {
+        sender.tell(new ConferenceResponse<ConferenceInfo>(createConferenceInfo()), self);
+    }
+
+    private ConferenceInfo createConferenceInfo(){
         ConferenceInfo information = null;
         if (is(waiting)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent, mediaGateway);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_ABSENT, name, moderatorPresent);
         } else if (is(running)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent, mediaGateway);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.RUNNING_MODERATOR_PRESENT, name, moderatorPresent);
         } else if (is(stopped)) {
-            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent, mediaGateway);
+            information = new ConferenceInfo(sid, calls, ConferenceStateChanged.State.COMPLETED, name, moderatorPresent);
+        } else {
+            information = new ConferenceInfo(sid, calls, null, name, moderatorPresent);
         }
-        sender.tell(new ConferenceResponse<ConferenceInfo>(information), self);
+        return information;
     }
 
     private void onStartConference(StartConference message, ActorRef self, ActorRef sender) throws Exception {
@@ -420,14 +427,6 @@ public final class Conference extends UntypedActor {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
-        // if it is first participant
-        if(calls.isEmpty()){
-            this.mediaGateway = message.mediaGateway(); //media gateway of this call.
-            logger.info("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% this.mediaGateway: "+ this.mediaGateway);
-        }else{
-            // change mediagateway of call.
-            //qkwdqisender.tell(message, sender);
-        }
         this.calls.add(sender);
     }
 

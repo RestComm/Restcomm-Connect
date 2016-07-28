@@ -2252,7 +2252,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final ConferenceCenterResponse response = (ConferenceCenterResponse) message;
             conference = response.get();
-            final GetConferenceInfo request = new GetConferenceInfo();
             conference.tell(new Observe(source), source);
             conference.tell(new GetConferenceInfo(), source);
         }
@@ -2346,6 +2345,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 conferenceBuilder.setFriendlyName(conferenceFriendlyName);
                 conferenceDetailRecord = conferenceBuilder.build();
                 conferenceDao.addConferenceDetailRecord(conferenceDetailRecord);
+            }else{
+                conferenceDetailRecord = conferenceDetailRecord.setStatus(conferenceState.name());
+                conferenceDao.updateConferenceDetailRecord(conferenceDetailRecord);
             }
             // parse mute
             attribute = child.attribute("muted");

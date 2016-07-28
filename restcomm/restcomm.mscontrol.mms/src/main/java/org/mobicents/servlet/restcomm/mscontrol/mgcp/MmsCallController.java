@@ -25,10 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -52,7 +50,6 @@ import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyLink;
 import org.mobicents.servlet.restcomm.mgcp.EndpointState;
 import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
-import org.mobicents.servlet.restcomm.mgcp.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.GetMediaGatewayInfo;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
@@ -65,6 +62,7 @@ import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.Collect;
@@ -153,7 +151,7 @@ public class MmsCallController extends MediaServerController {
     // MGCP runtime stuff
     //private final ActorRef mediaGateway;
     // TODO rename following variable to 'mediaGateway'
-    private ActorRef mediaGatewayy;
+    private ActorRef mediaGateway;
     private final ActorRef mrb;
     private MediaGatewayInfo gatewayInfo;
     private MediaSession session;
@@ -162,7 +160,6 @@ public class MmsCallController extends MediaServerController {
     private ActorRef internalLink;
     private ActorRef internalLinkEndpoint;
     private ConnectionMode internalLinkMode;
-    private final Map<MediaSession,ActorRef> mediaSessionVSGatewayMap;
 
     // Call Recording
     private Sid accountId;
@@ -268,9 +265,6 @@ public class MmsCallController extends MediaServerController {
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
 
         // MGCP runtime stuff
-        //this.mediaGateway = mediaGateway;
-        //this.mediaGateways = new MediaGateways(mediaGateways , configuration);
-        this.mediaSessionVSGatewayMap = new HashMap<MediaSession,ActorRef>();
         this.mrb = mrb;
 
         // Call runtime stuff
@@ -314,8 +308,6 @@ public class MmsCallController extends MediaServerController {
 
             @Override
             public UntypedActor create() throws Exception {
-                // get media gateway against this session
-                ActorRef mediaGateway = mediaSessionVSGatewayMap.get(session);
                 return new MgcpMediaGroup(mediaGateway, session, bridgeEndpoint);
             }
         }));
@@ -465,7 +457,8 @@ public class MmsCallController extends MediaServerController {
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("got MRB response in call controller");
-        this.mediaGatewayy = (ActorRef) message.get();
+        //TODO: check state here and then do the transition
+        this.mediaGateway = (ActorRef) message.get();
         fsm.transition(message, acquiringMediaGatewayInfo);
 
     }
@@ -762,7 +755,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGatewayy.tell(new GetMediaGatewayInfo(), self());
+            mediaGateway.tell(new GetMediaGatewayInfo(), self());
         }
     }
 
@@ -777,7 +770,7 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<MediaGatewayInfo> response = (MediaGatewayResponse<MediaGatewayInfo>) message;
             gatewayInfo = response.get();
-            mediaGatewayy.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
+            mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
         }
     }
 
@@ -792,9 +785,8 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<MediaSession> response = (MediaGatewayResponse<MediaSession>) message;
             session = response.get();
-            mediaSessionVSGatewayMap.put(session, mediaGatewayy);
             logger.info("AcquiringBridge: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"+session+"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-            mediaGatewayy.tell(new CreateBridgeEndpoint(session), source);
+            mediaGateway.tell(new CreateBridgeEndpoint(session), source);
         }
     }
 
@@ -806,8 +798,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGatewayy = mediaSessionVSGatewayMap.get(session);
-            mediaGatewayy.tell(new CreateConnection(session), source);
+            mediaGateway.tell(new CreateConnection(session), source);
         }
     }
 
@@ -867,7 +858,7 @@ public class MmsCallController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             if (is(updatingInternalLink)) {
-                call.tell(new JoinComplete(null,mediaGatewayy), super.source);
+                call.tell(new JoinComplete(null, callId), super.source);
             } else if (is(closingInternalLink)) {
                 call.tell(new Left(), super.source);
             } else if (is(openingRemoteConnection) || is(updatingRemoteConnection)) {
@@ -875,7 +866,7 @@ public class MmsCallController extends MediaServerController {
                 localSdp = connState.descriptor().toString();
                 MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(),
                         localSdp, remoteSdp);
-                broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE, mediaSessionInfo, gatewayInfo));
+                broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.ACTIVE, mediaSessionInfo));
             }
         }
     }
@@ -892,7 +883,7 @@ public class MmsCallController extends MediaServerController {
             localSdp = connState.descriptor().toString();
             MediaSessionInfo mediaSessionInfo = new MediaSessionInfo(gatewayInfo.useNat(), gatewayInfo.externalIP(), localSdp,
                     remoteSdp);
-            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.PENDING, mediaSessionInfo, gatewayInfo));
+            broadcast(new MediaServerControllerStateChanged(MediaServerControllerState.PENDING, mediaSessionInfo));
         }
 
     }
@@ -908,8 +899,7 @@ public class MmsCallController extends MediaServerController {
             // YES here made a sesssion with master RMS and probably switch everything to that
             // otherwise if nothing is done
             // this will send message to
-            mediaGatewayy = mediaSessionVSGatewayMap.get(session);
-            mediaGatewayy.tell(new CreateLink(session), source);
+            mediaGateway.tell(new CreateLink(session), source);
         }
 
     }
@@ -1063,8 +1053,7 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGatewayy = mediaSessionVSGatewayMap.get(session);
-            mediaGatewayy.tell(new DestroyLink(internalLink), source);
+            mediaGateway.tell(new DestroyLink(internalLink), source);
             internalLink = null;
             internalLinkEndpoint = null;
             internalLinkMode = null;
@@ -1152,8 +1141,7 @@ public class MmsCallController extends MediaServerController {
                     logger.info("Call Controller: " + self().path() + " about to stop bridge endpoint: " + bridgeEndpoint.path());
                 }
 
-            mediaGatewayy = mediaSessionVSGatewayMap.get(session);
-            mediaGatewayy.tell(new DestroyEndpoint(bridgeEndpoint), self());
+            mediaGateway.tell(new DestroyEndpoint(bridgeEndpoint), self());
 
                 context().stop(bridgeEndpoint);
                 bridgeEndpoint = null;

@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
@@ -36,14 +37,15 @@ import org.mobicents.servlet.restcomm.mgcp.CreateConferenceEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.DestroyEndpoint;
 import org.mobicents.servlet.restcomm.mgcp.EndpointState;
 import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
-import org.mobicents.servlet.restcomm.mgcp.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinCall;
+import org.mobicents.servlet.restcomm.mscontrol.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.mscontrol.messages.JoinConference;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupStateChanged;
@@ -59,6 +61,7 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.StopRecording;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
+import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -91,9 +94,6 @@ public final class MmsConferenceController extends MediaServerController {
 
     // MGCP runtime stuff.
     private ActorRef mediaGateway;
-    // TODO rename following variable to 'mediaGateway'
-    //private ActorRef mediaGatewayy;
-    //private final MediaGateways mediaGateways;
     private MediaSession mediaSession;
     private ActorRef cnfEndpoint;
 
@@ -110,6 +110,8 @@ public final class MmsConferenceController extends MediaServerController {
     private final List<ActorRef> observers;
 
     private final ActorRef mrb;
+    private String conferenceName;
+	private Sid conferenceSid;
 
     //public MmsConferenceController(final List<ActorRef> mediaGateways, final Configuration configuration) {
     //public MmsConferenceController(final ActorRef mediaGateway) {
@@ -221,7 +223,14 @@ public final class MmsConferenceController extends MediaServerController {
             onEndpointStateChanged((EndpointStateChanged) message, self, sender);
         } else if (MediaResourceBrokerResponse.class.equals(klass)) {
             onMediaResourceBrokerResponse((MediaResourceBrokerResponse<?>) message, self, sender);
+        } else if(JoinComplete.class.equals(klass)) {
+            onJoinComplete((JoinComplete) message, self, sender);
         }
+    }
+
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+        logger.info("got JoinComplete in conference controller");
+        mrb.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinComplete(this.cnfEndpoint, message.callSid(), this.conferenceSid, this.conferenceName, this.mediaSession), self);
     }
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
@@ -323,7 +332,8 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         // Tell call to join conference by passing reference to the media mixer
-        final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode(), mediaGateway);
+        final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode());
+        // here create conferenceEndpoint
         message.getCall().tell(join, sender);
     }
 
@@ -390,14 +400,19 @@ public final class MmsConferenceController extends MediaServerController {
 
     private final class GetMediaGatewayFromMRB extends AbstractAction {
 
-        public GetMediaGatewayFromMRB(final ActorRef source) {
+		public GetMediaGatewayFromMRB(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
             CreateMediaSession createMediaSession = (CreateMediaSession) message;
-            mrb.tell(new GetMediaGateway(createMediaSession.callSid(), true), self());
+            ConferenceInfo conferenceInfo = createMediaSession.conferenceInfo();
+            conferenceName = conferenceInfo.name();
+            conferenceSid = conferenceInfo.sid();
+            //TODO: temporary log
+            logger.info("MMSConferenceController: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
+            mrb.tell(new GetMediaGateway(createMediaSession.callSid(), createMediaSession.conferenceInfo()), self());
         }
     }
 
@@ -409,7 +424,6 @@ public final class MmsConferenceController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            //mediaGatewayy = mediaGateways.getMediaGateway();
             mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
         }
     }
