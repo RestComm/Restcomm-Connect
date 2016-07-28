@@ -19,10 +19,11 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.servlet.restcomm.mgcp;
+package org.mobicents.servlet.restcomm.mgcp.mrb.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 
 /**
  * @author Maria Farooq (maria.farooq@telestax.com)
@@ -30,34 +31,26 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 @Immutable
 public final class GetMediaGateway {
     private final Sid callSid;
-    private final boolean conference;
-    private final String conferenceName;
+    //private final boolean conference;
+    //private final String conferenceName;
+    private final ConferenceInfo conferenceInfo;
 
-    public GetMediaGateway(final Sid callSid, final boolean conference, final String conferenceName) {
+    public GetMediaGateway(final Sid callSid, final ConferenceInfo conferenceInfo) {
         super();
         this.callSid = callSid;
-        this.conference = conference;
-        this.conferenceName = conferenceName;
-    }
-
-    public GetMediaGateway(final Sid callSid, final boolean conference){
-        this(callSid, conference, null);
+        this.conferenceInfo = conferenceInfo;
     }
 
     public GetMediaGateway(final Sid callSid){
-        this(callSid, false, null);
+        this(callSid, null);
     }
 
     public Sid callSid() {
         return callSid;
     }
 
-    public boolean conference() {
-        return conference;
-    }
-
-    public String conferenceName() {
-        return conferenceName;
+    public ConferenceInfo conferenceInfo() {
+        return conferenceInfo;
     }
 
 }
