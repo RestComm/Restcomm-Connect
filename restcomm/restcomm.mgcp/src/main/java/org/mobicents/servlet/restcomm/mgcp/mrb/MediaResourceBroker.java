@@ -42,11 +42,15 @@ import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
+import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
+import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
-import org.mobicents.servlet.restcomm.mgcp.MediaServerRouter;
+import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
+import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinComplete;
+import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 
 import akka.actor.ActorRef;
@@ -54,6 +58,8 @@ import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 public class MediaResourceBroker extends UntypedActor{
 
@@ -79,18 +85,27 @@ public class MediaResourceBroker extends UntypedActor{
     private final State failed;
 
     private final ActorSystem system;
-    private final Map<String, ActorRef> mediaGatewayMap;
     private final Configuration configuration;
-    private final MediaServerRouter msRouter;
+    private final ActorRef mediaGateway;
+	private String msId;
+    
+	private final Map<String, ActorRef> mediaGatewayMap;
+    //private final MediaServerRouter msRouter;
 
     private String localSdp;
     private String remoteSdp;
+
+    private ActorRef localBridgeEndpoint;
+    private ActorRef remoteBridgeEndpoint;
+    private ActorRef remoteConn;
     
     private final DaoManager storage;
     // Observer pattern
     private final List<ActorRef> observers;
 
-    public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
+
+    //public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
+    public MediaResourceBroker(ActorSystem system, ActorRef mediaGateway, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -125,11 +140,13 @@ public class MediaResourceBroker extends UntypedActor{
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
+        
         this.system = system;
-        this.mediaGatewayMap = gateways;
         this.configuration = configuration;
-        this.msRouter = new MediaServerRouter(gateways, configuration);
         this.storage = storage;
+        this.mediaGateway = mediaGateway;
+        //this.msRouter = new MediaServerRouter(gateways, configuration);
+        this.mediaGatewayMap = gateways;
 
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
@@ -155,21 +172,45 @@ public class MediaResourceBroker extends UntypedActor{
         }
     }
 
-    private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) {
-        // TODO Auto-generated method stub
-        
+    private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
+    	this.localBridgeEndpoint = (ActorRef) message.get();
+        this.localBridgeEndpoint.tell(new Observe(self), self);
+        //TODO: update database
+        fsm.transition(message, this.initializingConnectingBridges);
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         logger.info("conferenceName: "+message.conferenceName()+" callSid: "+message.callSid()+" conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
-        String msId = getMSIdinCallDetailRecord(message.callSid());
-        if(msId == null){
-            logger.info("invalid callsid");
-            return;
-        }
-        ActorRef mediaGateway = mediaGatewayMap.get(msId);
+        //TODO: update database
         mediaGateway.tell(new CreateBridgeEndpoint(message.mediaSession()), sender);
     }
+
+    /*private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
+        final ConferenceInfo conferenceInfo = message.conferenceInfo();
+        final Sid callSid = message.callSid();
+        String msId = null;
+        ActorRef mediaGateway = null;
+
+        // if its not request for conference return media-gateway according to algo.
+        if(conferenceInfo == null){
+            msId = msRouter.getNextMediaServerKey();
+            logger.info("msId: "+msId);
+            mediaGateway = mediaGatewayMap.get(msId);
+            updateMSIdinCallDetailRecord(msId, callSid);
+        }else{
+            // get the call and see where it is connected and return same msId so call and its conferenceEndpoint are on same mediaserver
+            msId = getMSIdinCallDetailRecord(callSid);
+            if(msId == null){
+                //TODO handle it more gracefully
+                logger.info("invalid callSid");
+                return;
+            }
+            mediaGateway = mediaGatewayMap.get(msId);
+            addConferenceDetailRecord(conferenceInfo, msId, callSid);
+        }
+
+        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
+    }*/
 
     private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
         final ConferenceInfo conferenceInfo = message.conferenceInfo();
@@ -197,7 +238,7 @@ public class MediaResourceBroker extends UntypedActor{
 
         sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
     }
-
+    
     private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
         if(callSid == null){
             logger.info("Call Id is not specisfied");
@@ -274,6 +315,7 @@ public class MediaResourceBroker extends UntypedActor{
             final MediaServerEntity.Builder builder = MediaServerEntity.builder();
 
             final String msId = configuration.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
+            this.msId = msId;
             final String msIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
             final String msPort = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
             final String timeOut = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
@@ -356,8 +398,68 @@ public class MediaResourceBroker extends UntypedActor{
         }
 
         @Override
-        public void execute(final Object message) throws Exception {}
+        public void execute(final Object message) throws Exception {
+        	//TODO: daoamanger.getmastermediagateway
+        }
 
+    }
+    private final class AcquiringRemoteConnection extends AbstractAction {
+
+        public AcquiringRemoteConnection(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            mediaGateway.tell(new CreateConnection(session), source);
+        }
+    }
+
+    private final class InitializingRemoteConnection extends AbstractAction {
+
+        public InitializingRemoteConnection(ActorRef source) {
+            super(source);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void execute(final Object message) throws Exception {
+            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
+            remoteConn = response.get();
+            remoteConn.tell(new Observe(source), source);
+            remoteConn.tell(new InitializeConnection(localBridgeEndpoint), source);
+        }
+    }
+
+    private final class OpeningRemoteConnection extends AbstractAction {
+        public OpeningRemoteConnection(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            OpenConnection open = null;
+            if (callOutbound) {
+                open = new OpenConnection(ConnectionMode.SendRecv, webrtc);
+            } else {
+                final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
+                open = new OpenConnection(descriptor, ConnectionMode.SendRecv, webrtc);
+            }
+            remoteConn.tell(open, source);
+        }
+    }
+
+    private final class UpdatingRemoteConnection extends AbstractAction {
+        public UpdatingRemoteConnection(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {
+            final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
+            final UpdateConnection update = new UpdateConnection(descriptor);
+            remoteConn.tell(update, source);
+        }
     }
 
     private final class InitializingInternalLink extends AbstractAction {
@@ -366,9 +468,12 @@ public class MediaResourceBroker extends UntypedActor{
             super(source);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
-        public void execute(Object message) throws Exception {}
+        public void execute(Object message) throws Exception {
+        	//check in DB if bridging is not already under initialization.
+        	//cancel current operation if it is.
+        	
+        }
 
     }
 
