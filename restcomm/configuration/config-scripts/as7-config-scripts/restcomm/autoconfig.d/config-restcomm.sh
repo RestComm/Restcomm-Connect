@@ -473,11 +473,13 @@ otherRestCommConf(){
 
 	if [ -n "$HSQL_DIR" ]; then
   		echo "HSQL_DIR $HSQL_DIR"
-  		FILE=$HSQL_DIR/restcomm.script
+  		FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+        sed -e "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|" $FILE > $FILE.bak
+        mv $FILE.bak $FILE
+
+  		HSQLFILE=$HSQL_DIR/restcomm.script
   		mkdir -p $HSQL_DIR
-  		if [ ! -f $FILE ]; then
-  		    sed -e "s|<data-files>.*</data-files>|<data-files>${HSQL_DIR}</data-files>|" $FILE > $FILE.bak
-  		    mv $FILE.bak $FILE
+  		if [ ! -f $HSQLFILE ]; then
   		    cp $RESTCOMM_DEPLOY/WEB-INF/data/hsql/* $HSQL_DIR
         fi
 	fi
