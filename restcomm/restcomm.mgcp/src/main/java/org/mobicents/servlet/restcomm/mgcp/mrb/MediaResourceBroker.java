@@ -21,6 +21,7 @@
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,46 +37,16 @@ import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.CreateLink;
-import org.mobicents.servlet.restcomm.mgcp.InitializeLink;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaServerRouter;
-import org.mobicents.servlet.restcomm.mgcp.OpenLink;
-import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinComplete;
-import org.mobicents.servlet.restcomm.mscontrol.MediaServerController.AbstractAction;
-import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerControllerStateChanged.MediaServerControllerState;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.AcquiringBridge;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.AcquiringInternalLink;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.AcquiringMediaGatewayInfo;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.AcquiringMediaSession;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.AcquiringRemoteConnection;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.Active;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.ClosingRemoteConnection;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.CreatingMediaGroup;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.EnterClosingInternalLink;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.ExitClosingInternalLink;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.Failed;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.FinalState;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.GetMediaGatewayFromMRB;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.Inactive;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.InitializingInternalLink;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.InitializingRemoteConnection;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.Muting;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.OpeningInternalLink;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.OpeningRemoteConnection;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.Pending;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.Stopping;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.Unmuting;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.UpdatingInternalLink;
-import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsCallController.UpdatingRemoteConnection;
-import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 
 import akka.actor.ActorRef;
@@ -83,7 +54,6 @@ import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 public class MediaResourceBroker extends UntypedActor{
 
@@ -93,9 +63,6 @@ public class MediaResourceBroker extends UntypedActor{
     private final FiniteStateMachine fsm;
     private final State uninitialized;
     private final State providingMediaGateway;
-    private final State active;
-    private final State inactive;
-    private final State failed;
     //Get SDP
     private final State creatingBridge;
     private final State acquiringInternalLink;
@@ -106,26 +73,27 @@ public class MediaResourceBroker extends UntypedActor{
     private final State initializingConnectingBridges;
     //update SDP
     private final State updatingHomeBridge;
+    private final State active;
     private final State stopping;
-    private Boolean fail;
+    private final State inactive;
+    private final State failed;
 
     private final ActorSystem system;
     private final Map<String, ActorRef> mediaGatewayMap;
     private final Configuration configuration;
     private final MediaServerRouter msRouter;
 
+    private String localSdp;
+    private String remoteSdp;
+    
     private final DaoManager storage;
+    // Observer pattern
+    private final List<ActorRef> observers;
 
     public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
-        this.system = system;
-        this.mediaGatewayMap = gateways;
-        this.configuration = configuration;
-        this.msRouter = new MediaServerRouter(gateways, configuration);
-        this.storage = storage;
-
-        saveMediaServersInDB();
-        
-     // Initialize the states for the FSM.
+        super();
+        final ActorRef source = self();
+        // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
         this.providingMediaGateway = new State("providing Media Gateway", new ProvidingMediaGateway(source), null);
         this.creatingBridge = new State("creating bridge", new CreatingBridge(source), null);
@@ -143,11 +111,30 @@ public class MediaResourceBroker extends UntypedActor{
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(this.uninitialized, this.providingMediaGateway));
-
+        transitions.add(new Transition(this.providingMediaGateway, this.creatingBridge));
+        transitions.add(new Transition(this.creatingBridge, this.acquiringInternalLink));
+        transitions.add(new Transition(this.acquiringInternalLink, this.initializingInternalLink));
+        transitions.add(new Transition(this.initializingInternalLink, this.openingInternalLink));
+        transitions.add(new Transition(this.openingInternalLink, this.updatingInternalLink));
+        transitions.add(new Transition(this.updatingInternalLink, this.initializingConnectingBridges));
+        transitions.add(new Transition(this.initializingConnectingBridges, this.updatingHomeBridge));
+        transitions.add(new Transition(this.updatingHomeBridge, this.active));
+        transitions.add(new Transition(this.active, this.stopping));
+        transitions.add(new Transition(this.stopping, this.inactive));
+        transitions.add(new Transition(this.stopping, this.failed));
 
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
+        this.system = system;
+        this.mediaGatewayMap = gateways;
+        this.configuration = configuration;
+        this.msRouter = new MediaServerRouter(gateways, configuration);
+        this.storage = storage;
 
+        // Observers
+        this.observers = new ArrayList<ActorRef>(1);
+
+        saveMediaServersInDB();
     }
 
     @Override
@@ -169,11 +156,11 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) {
-		// TODO Auto-generated method stub
-		
-	}
+        // TODO Auto-generated method stub
+        
+    }
 
-	private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         logger.info("conferenceName: "+message.conferenceName()+" callSid: "+message.callSid()+" conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
         String msId = getMSIdinCallDetailRecord(message.callSid());
         if(msId == null){
@@ -307,6 +294,19 @@ public class MediaResourceBroker extends UntypedActor{
         }
     }
     
+    /*
+     * ACTIONS
+     */
+    protected abstract class AbstractAction implements Action {
+
+        protected final ActorRef source;
+
+        public AbstractAction(final ActorRef source) {
+            super();
+            this.source = source;
+        }
+    }
+
     private final class AcquiringInternalLink extends AbstractAction {
 
         public AcquiringInternalLink(final ActorRef source) {
@@ -314,12 +314,49 @@ public class MediaResourceBroker extends UntypedActor{
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
-            // YES here made a sesssion with master RMS and probably switch everything to that
-            // otherwise if nothing is done
-            // this will send message to
-            mediaGateway.tell(new CreateLink(session), source);
+        public void execute(final Object message) throws Exception {}
+
+    }
+    private final class UpdatingHomeBridge extends AbstractAction {
+
+        public UpdatingHomeBridge(final ActorRef source) {
+            super(source);
         }
+
+        @Override
+        public void execute(final Object message) throws Exception {}
+
+    }
+    private final class CreatingBridge extends AbstractAction {
+
+        public CreatingBridge(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {}
+
+    }
+    
+    private final class ProvidingMediaGateway extends AbstractAction {
+
+        public ProvidingMediaGateway(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {}
+
+    }
+    
+    private final class InitializingConnectingBridges extends AbstractAction {
+
+        public InitializingConnectingBridges(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {}
 
     }
 
@@ -331,46 +368,7 @@ public class MediaResourceBroker extends UntypedActor{
 
         @SuppressWarnings("unchecked")
         @Override
-        public void execute(Object message) throws Exception {
-            final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
-
-            if (self().path().toString().equalsIgnoreCase("akka://RestComm/user/$j")) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("Initializing Internal Link for the Outbound call");
-                }
-            }
-
-            if (bridgeEndpoint != null) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("##################### $$ Bridge for Call " + self().path() + " is terminated: "
-                        + bridgeEndpoint.isTerminated());
-                }
-                if (bridgeEndpoint.isTerminated()) {
-                    // fsm.transition(message, acquiringMediaGatewayInfo);
-                    // return;
-                    if(logger.isInfoEnabled()) {
-                        logger.info("##################### $$ Call :" + self().path() + " bridge is terminated.");
-                    }
-                    // final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
-                    // Future<Object> future = (Future<Object>) akka.pattern.Patterns.ask(gateway, new
-                    // CreateBridgeEndpoint(session), expires);
-                    // MediaGatewayResponse<ActorRef> futureResponse = (MediaGatewayResponse<ActorRef>) Await.result(future,
-                    // Duration.create(10, TimeUnit.SECONDS));
-                    // bridge = futureResponse.get();
-                    // if (!bridge.isTerminated() && bridge != null) {
-                    // logger.info("Bridge for call: "+self().path()+" acquired and is not terminated");
-                    // } else {
-                    // logger.info("Bridge endpoint for call: "+self().path()+" is still terminated or null");
-                    // }
-                }
-            }
-            // if (bridge == null || bridge.isTerminated()) {
-            // System.out.println("##################### $$ Bridge for Call "+self().path()+" is null or terminated: "+bridge.isTerminated());
-            // }
-            internalLink = response.get();
-            internalLink.tell(new Observe(source), source);
-            internalLink.tell(new InitializeLink(bridgeEndpoint, internalLinkEndpoint), source);
-        }
+        public void execute(Object message) throws Exception {}
 
     }
 
@@ -381,9 +379,7 @@ public class MediaResourceBroker extends UntypedActor{
         }
 
         @Override
-        public void execute(Object message) throws Exception {
-            internalLink.tell(new OpenLink(internalLinkMode), source);
-        }
+        public void execute(Object message) throws Exception {}
 
     }
 
@@ -394,17 +390,45 @@ public class MediaResourceBroker extends UntypedActor{
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
-            final UpdateLink update = new UpdateLink(ConnectionMode.SendRecv, UpdateLink.Type.PRIMARY);
-            internalLink.tell(update, source);
-        }
+        public void execute(final Object message) throws Exception {}
 
     }
+
+    private final class Active extends AbstractAction {
+
+        public Active(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(final Object message) throws Exception {}
+    }
     
+    private class Stopping extends AbstractAction {
+
+        public Stopping(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {}
+
+    }
+
+    private abstract class FinalState extends AbstractAction {
+
+        public FinalState(ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute(Object message) throws Exception {}
+   }
+
     private final class Inactive extends FinalState {
 
         public Inactive(final ActorRef source) {
-            super(source, MediaServerControllerState.INACTIVE);
+            super(source);
         }
 
     }
@@ -412,9 +436,22 @@ public class MediaResourceBroker extends UntypedActor{
     private final class Failed extends FinalState {
 
         public Failed(final ActorRef source) {
-            super(source, MediaServerControllerState.FAILED);
+            super(source);
         }
 
     }
 
+    @Override
+    public void postStop() {
+        // Cleanup resources
+        cleanup();
+
+        // Clean observers
+        observers.clear();
+
+        // Terminate actor
+        getContext().stop(self());
+    }
+
+    protected void cleanup() {}
 }
