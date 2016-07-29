@@ -22,6 +22,7 @@ package org.mobicents.servlet.restcomm.dao;
 import java.util.List;
 
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
+import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -32,7 +33,9 @@ public interface MediaResourceBrokerDao {
 
     MediaResourceBrokerEntity getMediaResourceBrokerEntity(String msId);
 
-    List<MediaResourceBrokerEntity> getMediaResources();
+    List<MediaResourceBrokerEntity> getMediaResourceBrokerEntities();
+
+    List<MediaResourceBrokerEntity> getMediaResourceBrokerEntitiesByFilter(MediaResourceBrokerEntityFilter filter);
 
     void removeMediaResourceBrokerEntity(String msId);
 
