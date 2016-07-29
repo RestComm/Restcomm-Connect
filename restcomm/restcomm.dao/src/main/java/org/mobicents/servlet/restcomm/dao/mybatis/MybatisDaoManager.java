@@ -39,6 +39,7 @@ import org.mobicents.servlet.restcomm.dao.GatewaysDao;
 import org.mobicents.servlet.restcomm.dao.HttpCookiesDao;
 import org.mobicents.servlet.restcomm.dao.IncomingPhoneNumbersDao;
 import org.mobicents.servlet.restcomm.dao.InstanceIdDao;
+import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
 import org.mobicents.servlet.restcomm.dao.MediaServersDao;
 import org.mobicents.servlet.restcomm.dao.NotificationsDao;
 import org.mobicents.servlet.restcomm.dao.OutgoingCallerIdsDao;
@@ -80,6 +81,7 @@ public final class MybatisDaoManager implements DaoManager {
     private AnnouncementsDao announcementsDao;
     private InstanceIdDao instanceIdDao;
     private MediaServersDao mediaServersDao;
+    private MediaResourceBrokerDao mediaResourceBrokerDao;
 
     public MybatisDaoManager() {
         super();
@@ -193,6 +195,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public MediaResourceBrokerDao getMediaResourceBrokerDao() {
+        return mediaResourceBrokerDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -260,5 +267,6 @@ public final class MybatisDaoManager implements DaoManager {
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
         mediaServersDao = new MybatisMediaServerDao(sessions);
+        mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
     }
 }
