@@ -87,9 +87,9 @@ public class MediaResourceBroker extends UntypedActor{
     private final ActorSystem system;
     private final Configuration configuration;
     private final ActorRef mediaGateway;
-	private String msId;
+    private String msId;
     
-	private final Map<String, ActorRef> mediaGatewayMap;
+    private final Map<String, ActorRef> mediaGatewayMap;
     //private final MediaServerRouter msRouter;
 
     private String localSdp;
@@ -105,7 +105,7 @@ public class MediaResourceBroker extends UntypedActor{
 
 
     //public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
-    public MediaResourceBroker(ActorSystem system, ActorRef mediaGateway, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
+    public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -144,7 +144,6 @@ public class MediaResourceBroker extends UntypedActor{
         this.system = system;
         this.configuration = configuration;
         this.storage = storage;
-        this.mediaGateway = mediaGateway;
         //this.msRouter = new MediaServerRouter(gateways, configuration);
         this.mediaGatewayMap = gateways;
 
@@ -152,6 +151,7 @@ public class MediaResourceBroker extends UntypedActor{
         this.observers = new ArrayList<ActorRef>(1);
 
         saveMediaServersInDB();
+        this.mediaGateway = mediaGatewayMap.get(this.msId);
     }
 
     @Override
@@ -172,8 +172,22 @@ public class MediaResourceBroker extends UntypedActor{
         }
     }
 
+    private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
+        final ConferenceInfo conferenceInfo = message.conferenceInfo();
+        final Sid callSid = message.callSid();
+
+        // if its not request for conference return home media-gateway (media-server associated with this RC instance)
+        if(conferenceInfo == null){
+            updateMSIdinCallDetailRecord(msId, callSid);
+        }else{
+            addConferenceDetailRecord(conferenceInfo, msId, callSid);
+        }
+
+        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
+    }
+
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
-    	this.localBridgeEndpoint = (ActorRef) message.get();
+        this.localBridgeEndpoint = (ActorRef) message.get();
         this.localBridgeEndpoint.tell(new Observe(self), self);
         //TODO: update database
         fsm.transition(message, this.initializingConnectingBridges);
@@ -183,60 +197,6 @@ public class MediaResourceBroker extends UntypedActor{
         logger.info("conferenceName: "+message.conferenceName()+" callSid: "+message.callSid()+" conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
         //TODO: update database
         mediaGateway.tell(new CreateBridgeEndpoint(message.mediaSession()), sender);
-    }
-
-    /*private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
-        final ConferenceInfo conferenceInfo = message.conferenceInfo();
-        final Sid callSid = message.callSid();
-        String msId = null;
-        ActorRef mediaGateway = null;
-
-        // if its not request for conference return media-gateway according to algo.
-        if(conferenceInfo == null){
-            msId = msRouter.getNextMediaServerKey();
-            logger.info("msId: "+msId);
-            mediaGateway = mediaGatewayMap.get(msId);
-            updateMSIdinCallDetailRecord(msId, callSid);
-        }else{
-            // get the call and see where it is connected and return same msId so call and its conferenceEndpoint are on same mediaserver
-            msId = getMSIdinCallDetailRecord(callSid);
-            if(msId == null){
-                //TODO handle it more gracefully
-                logger.info("invalid callSid");
-                return;
-            }
-            mediaGateway = mediaGatewayMap.get(msId);
-            addConferenceDetailRecord(conferenceInfo, msId, callSid);
-        }
-
-        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
-    }*/
-
-    private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
-        final ConferenceInfo conferenceInfo = message.conferenceInfo();
-        final Sid callSid = message.callSid();
-        String msId = null;
-        ActorRef mediaGateway = null;
-
-        // if its not request for conference return media-gateway according to algo.
-        if(conferenceInfo == null){
-            msId = msRouter.getNextMediaServerKey();
-            logger.info("msId: "+msId);
-            mediaGateway = mediaGatewayMap.get(msId);
-            updateMSIdinCallDetailRecord(msId, callSid);
-        }else{
-            // get the call and see where it is connected and return same msId so call and its conferenceEndpoint are on same mediaserver
-            msId = getMSIdinCallDetailRecord(callSid);
-            if(msId == null){
-                //TODO handle it more gracefully
-                logger.info("invalid callsid");
-                return;
-            }
-            mediaGateway = mediaGatewayMap.get(msId);
-            addConferenceDetailRecord(conferenceInfo, msId, callSid);
-        }
-
-        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
     }
     
     private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
@@ -299,41 +259,6 @@ public class MediaResourceBroker extends UntypedActor{
         CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
 
         return cdr.getMsId();
-    }
-
-    private void saveMediaServersInDB() {
-        MediaServersDao dao = storage.getMediaServersDao();
-
-        List<Object> mgcpMediaServers = configuration.getList("mgcp-servers.mgcp-server.local-address");
-        int mgcpMediaServerListSize = mgcpMediaServers.size();
-
-        //TODO remove this log line after completion
-        logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
-
-        for (int count = 0; count < mgcpMediaServerListSize; count++) {
-
-            final MediaServerEntity.Builder builder = MediaServerEntity.builder();
-
-            final String msId = configuration.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
-            this.msId = msId;
-            final String msIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
-            final String msPort = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
-            final String timeOut = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
-
-            builder.setMsId(msId);
-            builder.setMsIpAddress(msIpAddress);
-            builder.setMsPort(msPort);
-            builder.setTimeOut(timeOut);
-
-            final MediaServerEntity freshMediaServerEntity = builder.build();
-            final MediaServerEntity existingMediaServerEntity = dao.getMediaServerEntity(msId);
-
-            if(existingMediaServerEntity == null){
-                dao.addMediaServer(freshMediaServerEntity);
-            }else{
-                dao.updateMediaServer(freshMediaServerEntity);
-            }
-        }
     }
     
     /*
@@ -399,7 +324,7 @@ public class MediaResourceBroker extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-        	//TODO: daoamanger.getmastermediagateway
+            //TODO: daoamanger.getmastermediagateway
         }
 
     }
@@ -470,9 +395,9 @@ public class MediaResourceBroker extends UntypedActor{
 
         @Override
         public void execute(Object message) throws Exception {
-        	//check in DB if bridging is not already under initialization.
-        	//cancel current operation if it is.
-        	
+            //check in DB if bridging is not already under initialization.
+            //cancel current operation if it is.
+            
         }
 
     }
@@ -559,4 +484,72 @@ public class MediaResourceBroker extends UntypedActor{
     }
 
     protected void cleanup() {}
+
+    private void saveMediaServersInDB() {
+
+        List<Object> mgcpMediaServers = configuration.getList("mgcp-servers.mgcp-server.local-address");
+        int mgcpMediaServerListSize = mgcpMediaServers.size();
+
+        //TODO remove this log line after completion
+        logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
+
+        for (int count = 0; count < mgcpMediaServerListSize; count++) {
+
+            //To which of these MS is relative is considered one to one with this RC instance.
+            String relativeMS = configuration.getString("mgcp-servers.mgcp-server(" + count + ").is-relative-ms");
+
+            if(relativeMS != null && Boolean.parseBoolean(relativeMS)){
+
+            	final String msId = configuration.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
+                final String msIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
+                final String msPort = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
+                final String timeOut = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
+
+                this.msId = msId;
+
+                final MediaServerEntity.Builder builder = MediaServerEntity.builder();
+                builder.setMsId(msId);
+                builder.setMsIpAddress(msIpAddress);
+                builder.setMsPort(msPort);
+                builder.setTimeOut(timeOut);
+
+                MediaServersDao dao = storage.getMediaServersDao();
+                final MediaServerEntity freshMediaServerEntity = builder.build();
+                final MediaServerEntity existingMediaServerEntity = dao.getMediaServerEntity(msId);
+
+                if(existingMediaServerEntity == null){
+                    dao.addMediaServer(freshMediaServerEntity);
+                }else{
+                    dao.updateMediaServer(freshMediaServerEntity);
+                }
+            }
+        }
+    }
+
+    /*private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
+        final ConferenceInfo conferenceInfo = message.conferenceInfo();
+        final Sid callSid = message.callSid();
+        String msId = null;
+        ActorRef mediaGateway = null;
+
+        // if its not request for conference return media-gateway according to algo.
+        if(conferenceInfo == null){
+            msId = msRouter.getNextMediaServerKey();
+            logger.info("msId: "+msId);
+            mediaGateway = mediaGatewayMap.get(msId);
+            updateMSIdinCallDetailRecord(msId, callSid);
+        }else{
+            // get the call and see where it is connected and return same msId so call and its conferenceEndpoint are on same mediaserver
+            msId = getMSIdinCallDetailRecord(callSid);
+            if(msId == null){
+                //TODO handle it more gracefully
+                logger.info("invalid callSid");
+                return;
+            }
+            mediaGateway = mediaGatewayMap.get(msId);
+            addConferenceDetailRecord(conferenceInfo, msId, callSid);
+        }
+
+        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
+    }*/
 }
