@@ -192,7 +192,7 @@ public class MRBShunt extends UntypedActor{
         //TODO: update database
         mediaGateway.tell(new CreateBridgeEndpoint(message.mediaSession()), sender);
     }
-    
+
     private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
         if(callSid == null){
             logger.info("Call Id is not specisfied");

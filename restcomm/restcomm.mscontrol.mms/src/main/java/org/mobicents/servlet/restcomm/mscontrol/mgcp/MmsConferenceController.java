@@ -114,7 +114,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     private final ActorRef mrb;
     private String conferenceName;
-	private Sid conferenceSid;
+    private Sid conferenceSid;
 
     //public MmsConferenceController(final List<ActorRef> mediaGateways, final Configuration configuration) {
     //public MmsConferenceController(final ActorRef mediaGateway) {
@@ -416,7 +416,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     private final class GetMediaGatewayFromMRB extends AbstractAction {
 
-		public GetMediaGatewayFromMRB(final ActorRef source) {
+        public GetMediaGatewayFromMRB(final ActorRef source) {
             super(source);
         }
 
@@ -434,7 +434,7 @@ public final class MmsConferenceController extends MediaServerController {
 
     private final class GettingMRBShunt extends AbstractAction {
 
-		public GettingMRBShunt(final ActorRef source) {
+        public GettingMRBShunt(final ActorRef source) {
             super(source);
         }
 
