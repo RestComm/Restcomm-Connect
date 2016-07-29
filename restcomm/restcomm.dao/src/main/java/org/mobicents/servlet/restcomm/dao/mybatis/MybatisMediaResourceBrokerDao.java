@@ -19,7 +19,10 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readBoolean;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readSid;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.writeSid;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +35,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
+import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -46,8 +50,8 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         this.sessions = sessions;
     }
 
-	@Override
-	public void addMediaResourceBrokerEntity(MediaResourceBrokerEntity ms) {
+    @Override
+    public void addMediaResourceBrokerEntity(MediaResourceBrokerEntity ms) {
         final SqlSession session = sessions.openSession();
         try {
             session.insert(namespace + "addMediaResourceBrokerEntity", toMap(ms));
@@ -57,8 +61,8 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         }
     }
 
-	@Override
-	public void updateMediaResource(MediaResourceBrokerEntity ms) {
+    @Override
+    public void updateMediaResource(MediaResourceBrokerEntity ms) {
         final SqlSession session = sessions.openSession();
         try {
             session.insert(namespace + "updateMediaResource", toMap(ms));
@@ -68,8 +72,8 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         }
     }
 
-	@Override
-	public MediaResourceBrokerEntity getMediaResourceBrokerEntity(String msId) {
+    @Override
+    public MediaResourceBrokerEntity getMediaResourceBrokerEntity(String msId) {
         final SqlSession session = sessions.openSession();
         try {
             final Map<String, Object> result = session.selectOne(namespace + "getMediaResourceBrokerEntity", msId);
@@ -83,8 +87,8 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         }
     }
 
-	@Override
-	public List<MediaResourceBrokerEntity> getMediaResourceBrokerEntities() {
+    @Override
+    public List<MediaResourceBrokerEntity> getMediaResourceBrokerEntities() {
         final SqlSession session = sessions.openSession();
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getMediaServers");
@@ -100,9 +104,9 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         }
     }
 
-	@Override
-	public List<MediaResourceBrokerEntity> getMediaResourceBrokerEntitiesByFilter(
-			MediaResourceBrokerEntityFilter filter) {
+    @Override
+    public List<MediaResourceBrokerEntity> getMediaResourceBrokerEntitiesByFilter(
+            MediaResourceBrokerEntityFilter filter) {
 
         final SqlSession session = sessions.openSession();
 
@@ -122,8 +126,8 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
         }
     }
 
-	@Override
-	public void removeMediaResourceBrokerEntity(String msId) {
+    @Override
+    public void removeMediaResourceBrokerEntity(String msId) {
         final SqlSession session = sessions.openSession();
         try {
             session.delete(namespace + "removeMediaResourceBrokerEntity", msId);
@@ -134,22 +138,34 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
     }
 
     private MediaResourceBrokerEntity toMRBEntity(final Map<String, Object> map) {
-        final String msId = readString(map.get("ms_id"));
-        final String msIpAddress = readString(map.get("ms_ip_address"));
-        final String msPort = readString(map.get("ms_port"));
-        final String compatibility = readString(map.get("compatibility"));
-        final String timeOut = readString(map.get("timeout"));
+        final Sid callSid = readSid(map.get("call_sid"));
+        final Sid conferenceSid = readSid(map.get("conference_sid"));
+        final String masterMsId = readString(map.get("master_ms_id"));
+        final String masterMsBridgeEpId = readString(map.get("master_ms_bridge_ep_id"));
+        final String masterMsCnfEpId = readString(map.get("master_ms_cnf_ep_id"));
+        final String slaveMsId = readString(map.get("slave_ms_id"));
+        final String slaveMsBridgeEpId = readString(map.get("slave_ms_bridge_ep_id"));
+        final String slaveMsCnfEpId = readString(map.get("slave_ms_cnf_ep_id"));
+        final boolean isBridgedTogether = readBoolean(map.get("is_bridged_together"));
+        final String masterMsSDP = readString(map.get("master_ms_sdp"));
+        final String slaveMsSDP = readString(map.get("slave_ms_sdp"));
 
-        return new MediaResourceBrokerEntity(msId, msIpAddress, msPort, compatibility, timeOut);
+        return new MediaResourceBrokerEntity(callSid, conferenceSid, masterMsId, masterMsBridgeEpId, masterMsCnfEpId, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, masterMsSDP, slaveMsSDP);
     }
 
     private Map<String, Object> toMap(final MediaResourceBrokerEntity ms) {
         final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("ms_id", ms.getMsId());
-        map.put("ms_ip_address", ms.getMsIpAddress());
-        map.put("ms_port", ms.getMsPort());
-        map.put("compatibility", ms.getCompatibility());
-        map.put("timeout", ms.getTimeOut());
+        map.put("call_sid", writeSid(ms.getCallSid()));
+        map.put("conference_sid", writeSid(ms.getConferenceSid()));
+        map.put("master_ms_id", ms.getMasterMsId());
+        map.put("master_ms_bridge_ep_id", ms.getMasterMsBridgeEpId());
+        map.put("master_ms_cnf_ep_id", ms.getMasterMsCnfEpId());
+        map.put("slave_ms_id", ms.getSlaveMsId());
+        map.put("slave_ms_bridge_ep_id", ms.getSlaveMsBridgeEpId());
+        map.put("slave_ms_cnf_ep_id", ms.getSlaveMsCnfEpId());
+        map.put("is_bridged_together", ms.isBridgedTogether());
+        map.put("master_ms_sdp", ms.getMasterMsSDP());
+        map.put("slave_ms_sdp", ms.getSlaveMsSDP());
         return map;
     }
 }
