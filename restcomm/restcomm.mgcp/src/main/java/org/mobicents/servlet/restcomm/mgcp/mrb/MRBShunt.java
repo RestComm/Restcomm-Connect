@@ -88,7 +88,6 @@ public class MRBShunt extends UntypedActor{
     private String msId;
     
     private final Map<String, ActorRef> mediaGatewayMap;
-    //private final MediaServerRouter msRouter;
 
     private String localSdp;
     private String remoteSdp;
@@ -101,7 +100,6 @@ public class MRBShunt extends UntypedActor{
     // Observer pattern
     private final List<ActorRef> observers;
 
-    //public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
     public MRBShunt(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
         super();
         final ActorRef source = self();
@@ -139,13 +137,11 @@ public class MRBShunt extends UntypedActor{
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
 
         this.storage = storage;
-        //this.msRouter = new MediaServerRouter(gateways, configuration);
         this.mediaGatewayMap = gateways;
+        this.mediaGateway = mediaGatewayMap.get(this.msId);
 
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
-
-        this.mediaGateway = mediaGatewayMap.get(this.msId);
     }
 
     @Override
@@ -157,27 +153,11 @@ public class MRBShunt extends UntypedActor{
         if (logger.isInfoEnabled()) {
             logger.info(" ********** MediaResourceBroker " + self().path() + " Processing Message: " + klass.getName());
         }
-        if (GetMediaGateway.class.equals(klass)) {
-            onGetMediaGateway((GetMediaGateway) message, self, sender);
-        } else if (JoinComplete.class.equals(klass)){
+        if (JoinComplete.class.equals(klass)){
             onJoinComplete((JoinComplete) message, self, sender);
         } else if (MediaGatewayResponse.class.equals(klass)) {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         }
-    }
-
-    private void onGetMediaGateway(GetMediaGateway message, ActorRef self, ActorRef sender) {
-        final ConferenceInfo conferenceInfo = message.conferenceInfo();
-        final Sid callSid = message.callSid();
-
-        // if its not request for conference return home media-gateway (media-server associated with this RC instance)
-        if(conferenceInfo == null){
-            updateMSIdinCallDetailRecord(msId, callSid);
-        }else{
-            addConferenceDetailRecord(conferenceInfo, msId, callSid);
-        }
-
-        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
     }
 
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
@@ -191,61 +171,6 @@ public class MRBShunt extends UntypedActor{
         logger.info("conferenceName: "+message.conferenceName()+" callSid: "+message.callSid()+" conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
         //TODO: update database
         mediaGateway.tell(new CreateBridgeEndpoint(message.mediaSession()), sender);
-    }
-
-    private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
-        if(callSid == null){
-            logger.info("Call Id is not specisfied");
-        }else{
-            logger.info("msId: "+msId+" callSid: "+ callSid.toString());
-
-            CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
-            CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
-            if(cdr != null){
-                cdr = cdr.setMsId(msId);
-                dao.updateCallDetailRecord(cdr);
-            }else{
-                logger.info("provided call id did not found");
-            }
-        }
-
-    }
-
-    private void addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final String msId, final Sid callSid){
-        if(conferenceInfo == null || conferenceInfo.name() == null){
-            logger.info("provided conference info/sid is null, this can lead to problems in future of this call");
-        }else{
-            CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
-            CallDetailRecord callRecord = callDao.getCallDetailRecord(callSid);
-            if(callRecord != null){
-                logger.info("updateMSIdinConferenceDetailRecord: SID: "+conferenceInfo.sid()+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
-                ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-                ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(conferenceInfo.sid());
-                if(cdr == null){
-                    final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                    conferenceBuilder.setSid(conferenceInfo.sid());
-                    conferenceBuilder.setDateCreated(DateTime.now());
-
-                    String[] cnfNameAndAccount = conferenceInfo.name().split(":");
-                    final Sid accountId = new Sid(cnfNameAndAccount[0]);
-                    conferenceBuilder.setAccountSid(accountId);
-                    conferenceBuilder.setStatus("CONNECTING");
-                    conferenceBuilder.setApiVersion(callRecord.getApiVersion());
-                    final StringBuilder UriBuffer = new StringBuilder();
-                    UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
-                    UriBuffer.append(conferenceInfo.sid());
-                    final URI uri = URI.create(UriBuffer.toString());
-                    conferenceBuilder.setUri(uri);
-                    conferenceBuilder.setFriendlyName(cnfNameAndAccount[1]);
-                    conferenceBuilder.setMsId(msId);
-
-                    cdr = conferenceBuilder.build();
-                    dao.addConferenceDetailRecord(cdr);
-                }
-            }else{
-                logger.info("call record is null");
-            }
-        }
     }
 
     private String getMSIdinCallDetailRecord(Sid callSid){
