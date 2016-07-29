@@ -104,7 +104,7 @@ public class MediaResourceBroker extends UntypedActor{
         if (GetMediaGateway.class.equals(klass)) {
             onGetMediaGateway((GetMediaGateway) message, self, sender);
         } else if (GetMRBShunt.class.equals(klass)){
-        	sender.tell(new MediaResourceBrokerResponse<ActorRef>(getMRBShunt()), self);
+            sender.tell(new MediaResourceBrokerResponse<ActorRef>(getMRBShunt()), self);
         }
     }
 
@@ -192,7 +192,7 @@ public class MediaResourceBroker extends UntypedActor{
 
             if(relativeMS != null && Boolean.parseBoolean(relativeMS)){
 
-            	final String msId = configuration.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
+                final String msId = configuration.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
                 final String msIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
                 final String msPort = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
                 final String timeOut = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
