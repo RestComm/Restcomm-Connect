@@ -954,6 +954,7 @@ public final class CallManager extends UntypedActor {
         SipURI from = null;
         SipURI to = null;
         boolean webRTC = false;
+        boolean isLBPresent = false;
 
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
         final String client = request.to().replaceFirst("client:", "");
@@ -970,13 +971,19 @@ public final class CallManager extends UntypedActor {
             }
             for (Registration registration : registrations) {
                 if (registration.isWebRTC()) {
-                    //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
-                    if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
-                        logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
-                    } else {
+                    if (registration.isLBPresent()) {
                         if (logger.isInfoEnabled())
-                            logger.info("Will add WebRTC registration: "+registration.getLocation()+" to the list to be dialed for client: "+client);
+                            logger.info("WebRTC registration behind LB. Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
                         registrationToDial.add(registration);
+                    } else {
+                        //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
+                        if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
+                            logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
+                        } else {
+                            if (logger.isInfoEnabled())
+                                logger.info("Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
+                            registrationToDial.add(registration);
+                        }
                     }
                 } else {
                     if (logger.isInfoEnabled())

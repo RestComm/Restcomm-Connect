@@ -26,7 +26,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
  */
 @Immutable
 public final class Reject {
-    public Reject() {
-        super();
+    private final String reason;
+
+    public Reject(final String reason) {
+        this.reason = reason;
+    }
+
+    public String getReason() {
+        return reason;
     }
 }
