@@ -121,13 +121,17 @@ MssStackConf(){
 		TRUSTSTORE_LOCATION=$RESTCOMM_HOME/standalone/configuration/$TRUSTSTORE_FILE
 	fi
 
-   sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT='"$HTTPS_PORT"'/ a \
-  \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled\
-  \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
-  \javax.net.ssl.keyStorePassword='" $TRUSTSTORE_PASSWORD"'\
-  \javax.net.ssl.trustStorePassword='"$TRUSTSTORE_PASSWORD"'\
-  \javax.net.ssl.trustStore='"$TRUSTSTORE_LOCATION"'\
-  \javax.net.ssl.keyStoreType=JKS' $RESTCOMM_CONF/mss-sip-stack.properties
+    #check for port offset
+	local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
+
+
+    sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT='"$HTTPS_PORT"'/ a \
+    \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE=Disabled\
+    \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
+    \javax.net.ssl.keyStorePassword='" $TRUSTSTORE_PASSWORD"'\
+    \javax.net.ssl.trustStorePassword='"$TRUSTSTORE_PASSWORD"'\
+    \javax.net.ssl.trustStore='"$TRUSTSTORE_LOCATION"'\
+    \javax.net.ssl.keyStoreType=JKS' $RESTCOMM_CONF/mss-sip-stack.properties
 }
 
 # MAIN

@@ -68,7 +68,6 @@ import org.mobicents.servlet.restcomm.mscontrol.messages.MediaGroupResponse;
 import org.mobicents.servlet.restcomm.mscontrol.messages.StopMediaGroup;
 import org.mobicents.servlet.restcomm.sms.SmsServiceResponse;
 import org.mobicents.servlet.restcomm.sms.SmsSessionResponse;
-import org.mobicents.servlet.restcomm.telephony.Answer;
 import org.mobicents.servlet.restcomm.telephony.CallInfo;
 import org.mobicents.servlet.restcomm.telephony.CallResponse;
 import org.mobicents.servlet.restcomm.telephony.CallStateChanged;
@@ -77,13 +76,13 @@ import org.mobicents.servlet.restcomm.telephony.CreateCall;
 import org.mobicents.servlet.restcomm.telephony.DestroyCall;
 import org.mobicents.servlet.restcomm.telephony.Reject;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
+import org.mobicents.servlet.restcomm.util.UriUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import org.mobicents.servlet.restcomm.util.UriUtils;
 
 /**
  * @author gvagenas@telestax.com
@@ -579,11 +578,7 @@ public final class SubVoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
             // Reject the call.
-            if ("rejected".equals(reason)) {
-                call.tell(new Answer(callRecord.getSid()), source);
-            } else {
-                call.tell(new Reject(), source);
-            }
+            call.tell(new Reject(reason), source);
         }
     }
 
