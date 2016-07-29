@@ -20,7 +20,6 @@
  */
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,30 +27,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
-import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.MediaServersDao;
-import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
-import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
-import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
-import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
 import org.mobicents.servlet.restcomm.fsm.State;
 import org.mobicents.servlet.restcomm.fsm.Transition;
 import org.mobicents.servlet.restcomm.mgcp.CreateBridgeEndpoint;
-import org.mobicents.servlet.restcomm.mgcp.CreateConnection;
 import org.mobicents.servlet.restcomm.mgcp.InitializeConnection;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
-import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
-import org.mobicents.servlet.restcomm.mgcp.OpenConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinComplete;
 import org.mobicents.servlet.restcomm.patterns.Observe;
-import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -59,7 +45,6 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 public class MRBShunt extends UntypedActor{
 
@@ -86,7 +71,7 @@ public class MRBShunt extends UntypedActor{
 
     private final ActorRef mediaGateway;
     private String msId;
-    
+
     private final Map<String, ActorRef> mediaGatewayMap;
 
     private String localSdp;
@@ -95,7 +80,7 @@ public class MRBShunt extends UntypedActor{
     private ActorRef localBridgeEndpoint;
     private ActorRef remoteBridgeEndpoint;
     private ActorRef remoteConn;
-    
+
     private final DaoManager storage;
     // Observer pattern
     private final List<ActorRef> observers;
@@ -173,13 +158,6 @@ public class MRBShunt extends UntypedActor{
         mediaGateway.tell(new CreateBridgeEndpoint(message.mediaSession()), sender);
     }
 
-    private String getMSIdinCallDetailRecord(Sid callSid){
-        CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
-        CallDetailRecord cdr = dao.getCallDetailRecord(callSid);
-
-        return cdr.getMsId();
-    }
-    
     /*
      * ACTIONS
      */
@@ -254,9 +232,7 @@ public class MRBShunt extends UntypedActor{
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
-            mediaGateway.tell(new CreateConnection(session), source);
-        }
+        public void execute(final Object message) throws Exception {}
     }
 
     private final class InitializingRemoteConnection extends AbstractAction {
@@ -281,16 +257,7 @@ public class MRBShunt extends UntypedActor{
         }
 
         @Override
-        public void execute(final Object message) throws Exception {
-            OpenConnection open = null;
-            if (callOutbound) {
-                open = new OpenConnection(ConnectionMode.SendRecv, webrtc);
-            } else {
-                final ConnectionDescriptor descriptor = new ConnectionDescriptor(remoteSdp);
-                open = new OpenConnection(descriptor, ConnectionMode.SendRecv, webrtc);
-            }
-            remoteConn.tell(open, source);
-        }
+        public void execute(final Object message) throws Exception {}
     }
 
     private final class UpdatingRemoteConnection extends AbstractAction {

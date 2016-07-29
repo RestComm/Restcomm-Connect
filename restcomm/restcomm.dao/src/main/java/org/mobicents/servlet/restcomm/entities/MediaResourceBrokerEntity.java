@@ -51,6 +51,8 @@ public final class MediaResourceBrokerEntity {
         this.slaveMsBridgeEpId = slaveMsBridgeEpId;
         this.slaveMsCnfEpId = slaveMsCnfEpId;
         this.isBridgedTogether = isBridgedTogether;
+        this.masterMsSDP = masterMsSDP;
+        this.slaveMsSDP = slaveMsSDP;
     }
 
     public static Builder builder() {
