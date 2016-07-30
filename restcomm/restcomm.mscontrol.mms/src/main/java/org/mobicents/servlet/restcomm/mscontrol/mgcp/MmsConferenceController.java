@@ -70,6 +70,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -84,7 +85,7 @@ public final class MmsConferenceController extends MediaServerController {
     private final FiniteStateMachine fsm;
     private final State uninitialized;
     private final State getMediaGatewayFromMRB;
-    private final State gettingMRBShunt;
+    private final State gettingMRBBridgeConnector;
     private final State active;
     private final State inactive;
     private final State failed;
@@ -103,7 +104,7 @@ public final class MmsConferenceController extends MediaServerController {
     private ActorRef conference;
     private ActorRef mediaGroup;
     private ActorRef mrbBridgeConnector;
-    private boolean bridgeConnectorInitialized = false;
+    private boolean startBridgeConnectorSignalSent = false;
 
     // Runtime media operations
     private Boolean playing;
@@ -117,6 +118,8 @@ public final class MmsConferenceController extends MediaServerController {
     private String conferenceName;
     private Sid conferenceSid;
 
+	private ConnectionMode connectionMode;
+
     //public MmsConferenceController(final List<ActorRef> mediaGateways, final Configuration configuration) {
     //public MmsConferenceController(final ActorRef mediaGateway) {
     public MmsConferenceController(final ActorRef mrb) {
@@ -126,7 +129,7 @@ public final class MmsConferenceController extends MediaServerController {
         // Finite States
         this.uninitialized = new State("uninitialized", null, null);
         this.getMediaGatewayFromMRB = new State("get media gateway from mrb", new GetMediaGatewayFromMRB(source), null);
-        this.gettingMRBShunt = new State("getting MRB Shunt", new GettingMRBShunt(source), null);
+        this.gettingMRBBridgeConnector = new State("getting MRB bridge connector", new GettingMRBBridgeConnector(source), null);
         this.active = new State("active", new Active(source), null);
         this.inactive = new State("inactive", new Inactive(source), null);
         this.failed = new State("failed", new Failed(source), null);
@@ -138,8 +141,8 @@ public final class MmsConferenceController extends MediaServerController {
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, getMediaGatewayFromMRB));
-        transitions.add(new Transition(getMediaGatewayFromMRB, gettingMRBShunt));
-        transitions.add(new Transition(gettingMRBShunt, acquiringMediaSession));
+        transitions.add(new Transition(getMediaGatewayFromMRB, gettingMRBBridgeConnector));
+        transitions.add(new Transition(gettingMRBBridgeConnector, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, acquiringEndpoint));
         transitions.add(new Transition(acquiringMediaSession, inactive));
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
@@ -253,9 +256,9 @@ public final class MmsConferenceController extends MediaServerController {
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         logger.info("got JoinComplete in conference controller");
-        if(!bridgeConnectorInitialized){
-        	bridgeConnectorInitialized = true;
-            mrbBridgeConnector.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector(this.cnfEndpoint, message.callSid(), this.conferenceSid, this.conferenceName, this.mediaSession), self);
+        if(!startBridgeConnectorSignalSent){
+        	startBridgeConnectorSignalSent = true;
+            mrbBridgeConnector.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector(this.cnfEndpoint, this.conferenceSid, this.conferenceName, this.connectionMode), self);
         }
     }
 
@@ -263,8 +266,8 @@ public final class MmsConferenceController extends MediaServerController {
         logger.info("got MRB response in conference controller");
         if(is(getMediaGatewayFromMRB)){
             mediaGateway = (ActorRef) message.get();
-            fsm.transition(message, gettingMRBShunt);
-        }else if(is(gettingMRBShunt)){
+            fsm.transition(message, gettingMRBBridgeConnector);
+        }else if(is(gettingMRBBridgeConnector)){
             mrbBridgeConnector = (ActorRef) message.get();
             mrbBridgeConnector.tell(new Observe(self), self);
             fsm.transition(message, acquiringMediaSession);
@@ -345,8 +348,9 @@ public final class MmsConferenceController extends MediaServerController {
     }
 
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
+    	connectionMode = message.getConnectionMode();
         // Tell call to join conference by passing reference to the media mixer
-        final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode());
+        final JoinConference join = new JoinConference(this.cnfEndpoint, connectionMode);
         message.getCall().tell(join, sender);
     }
 
@@ -429,15 +433,15 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    private final class GettingMRBShunt extends AbstractAction {
+    private final class GettingMRBBridgeConnector extends AbstractAction {
 
-        public GettingMRBShunt(final ActorRef source) {
+        public GettingMRBBridgeConnector(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("MMSConferenceController: GetMRBShunt: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
+            logger.info("MMSConferenceController: GettingMRBBridgeConnector: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
             mrb.tell(new GetBridgeConnector(conferenceName, conferenceSid), self());
         }
     }
