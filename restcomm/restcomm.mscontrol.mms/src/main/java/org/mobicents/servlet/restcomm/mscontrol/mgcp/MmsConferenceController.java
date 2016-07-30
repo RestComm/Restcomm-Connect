@@ -40,7 +40,7 @@ import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetBridgeConnector;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
@@ -85,7 +85,7 @@ public final class MmsConferenceController extends MediaServerController {
     private final FiniteStateMachine fsm;
     private final State uninitialized;
     private final State getMediaGatewayFromMRB;
-    private final State gettingMRBBridgeConnector;
+    private final State gettingCnfMediaResourceController;
     private final State active;
     private final State inactive;
     private final State failed;
@@ -103,7 +103,7 @@ public final class MmsConferenceController extends MediaServerController {
     // Conference runtime stuff
     private ActorRef conference;
     private ActorRef mediaGroup;
-    private ActorRef mrbBridgeConnector;
+    private ActorRef conferenceMediaResourceController;
     private boolean startBridgeConnectorSignalSent = false;
 
     // Runtime media operations
@@ -129,7 +129,7 @@ public final class MmsConferenceController extends MediaServerController {
         // Finite States
         this.uninitialized = new State("uninitialized", null, null);
         this.getMediaGatewayFromMRB = new State("get media gateway from mrb", new GetMediaGatewayFromMRB(source), null);
-        this.gettingMRBBridgeConnector = new State("getting MRB bridge connector", new GettingMRBBridgeConnector(source), null);
+        this.gettingCnfMediaResourceController = new State("getting Cnf Media Resource Controller", new GettingCnfMediaResourceController(source), null);
         this.active = new State("active", new Active(source), null);
         this.inactive = new State("inactive", new Inactive(source), null);
         this.failed = new State("failed", new Failed(source), null);
@@ -141,8 +141,8 @@ public final class MmsConferenceController extends MediaServerController {
         // Initialize the transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, getMediaGatewayFromMRB));
-        transitions.add(new Transition(getMediaGatewayFromMRB, gettingMRBBridgeConnector));
-        transitions.add(new Transition(gettingMRBBridgeConnector, acquiringMediaSession));
+        transitions.add(new Transition(getMediaGatewayFromMRB, gettingCnfMediaResourceController));
+        transitions.add(new Transition(gettingCnfMediaResourceController, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, acquiringEndpoint));
         transitions.add(new Transition(acquiringMediaSession, inactive));
         transitions.add(new Transition(acquiringEndpoint, creatingMediaGroup));
@@ -258,7 +258,7 @@ public final class MmsConferenceController extends MediaServerController {
         logger.info("got JoinComplete in conference controller");
         if(!startBridgeConnectorSignalSent){
         	startBridgeConnectorSignalSent = true;
-            mrbBridgeConnector.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector(this.cnfEndpoint, this.conferenceSid, this.conferenceName, this.connectionMode), self);
+            conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector(this.cnfEndpoint, this.conferenceSid, this.conferenceName, this.connectionMode), self);
         }
     }
 
@@ -266,10 +266,10 @@ public final class MmsConferenceController extends MediaServerController {
         logger.info("got MRB response in conference controller");
         if(is(getMediaGatewayFromMRB)){
             mediaGateway = (ActorRef) message.get();
-            fsm.transition(message, gettingMRBBridgeConnector);
-        }else if(is(gettingMRBBridgeConnector)){
-            mrbBridgeConnector = (ActorRef) message.get();
-            mrbBridgeConnector.tell(new Observe(self), self);
+            fsm.transition(message, gettingCnfMediaResourceController);
+        }else if(is(gettingCnfMediaResourceController)){
+            conferenceMediaResourceController = (ActorRef) message.get();
+            conferenceMediaResourceController.tell(new Observe(self), self);
             fsm.transition(message, acquiringMediaSession);
         }
     }
@@ -433,16 +433,16 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    private final class GettingMRBBridgeConnector extends AbstractAction {
+    private final class GettingCnfMediaResourceController extends AbstractAction {
 
-        public GettingMRBBridgeConnector(final ActorRef source) {
+        public GettingCnfMediaResourceController(final ActorRef source) {
             super(source);
         }
 
         @Override
         public void execute(final Object message) throws Exception {
-            logger.info("MMSConferenceController: GettingMRBBridgeConnector: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
-            mrb.tell(new GetBridgeConnector(conferenceName, conferenceSid), self());
+            logger.info("MMSConferenceController: GettingCnfMediaResourceController: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
+            mrb.tell(new GetConferenceMediaResourceController(conferenceName, conferenceSid), self());
         }
     }
 
