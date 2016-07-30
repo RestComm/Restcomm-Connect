@@ -37,7 +37,7 @@ import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetBridgeConnector;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
@@ -89,7 +89,7 @@ public class MediaResourceBroker extends UntypedActor{
 
             @Override
             public UntypedActor create() throws Exception {
-                return new MRBBridgeConnector(system, mediaGatewayMap, configuration, storage);
+                return new ConferenceMediaResourceController(system, mediaGatewayMap, configuration, storage);
             }
         }));
     }
@@ -105,7 +105,7 @@ public class MediaResourceBroker extends UntypedActor{
         }
         if (GetMediaGateway.class.equals(klass)) {
             onGetMediaGateway((GetMediaGateway) message, self, sender);
-        } else if (GetBridgeConnector.class.equals(klass)){
+        } else if (GetConferenceMediaResourceController.class.equals(klass)){
             sender.tell(new MediaResourceBrokerResponse<ActorRef>(getBridgeConnector()), self);
         }
     }

@@ -51,19 +51,22 @@ import org.mobicents.servlet.restcomm.mgcp.OpenLink;
 import org.mobicents.servlet.restcomm.mgcp.UpdateConnection;
 import org.mobicents.servlet.restcomm.mgcp.UpdateLink;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartSlaveBridgeConnector;
 import org.mobicents.servlet.restcomm.patterns.Observe;
 import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionDescriptor;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
-public class MRBBridgeConnector extends UntypedActor{
+public class ConferenceMediaResourceController extends UntypedActor{
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -129,7 +132,7 @@ public class MRBBridgeConnector extends UntypedActor{
 	private ConnectionMode connectionMode;
 
 
-    public MRBBridgeConnector(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
+    public ConferenceMediaResourceController(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -316,11 +319,7 @@ public class MRBBridgeConnector extends UntypedActor{
                 if (is(openingInternalLink)) {
                     fsm.transition(message, updatingInternalLink);
                 } else if (is(updatingInternalLink)) {
-                	if(isThisMasterBridgeConnector){
-                		fsm.transition(message, active);
-                	}else{
-                		fsm.transition(message, initializingConnectingBridges);
-                	}
+            		fsm.transition(message, initializingConnectingBridges);
                 }
                 break;
 
@@ -331,6 +330,7 @@ public class MRBBridgeConnector extends UntypedActor{
 
     /*
      * ACTIONS
+     * 
      */
     protected abstract class AbstractAction implements Action {
 
@@ -530,9 +530,20 @@ public class MRBBridgeConnector extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-            //TODO: daoamanger.getmastermediagateway
-        }
+            final ActorRef self = self();
 
+
+        	if(isThisMasterBridgeConnector){
+        		//TODO: yahan pay koi job laga do jo db me dekhti rahay slave bridges ki appearance
+        		//TODO: as soon as they come modify connection with their sdp and change isbridge to true;
+        		fsm.transition(message, active);
+        	}else{
+        		
+        	}
+        	ActorRef slaveBridgeConnector = getSlaveBridgeConnector();
+        	slaveBridgeConnector.tell(new Observe(self), self);
+        	slaveBridgeConnector.tell(new StartSlaveBridgeConnector(), self);
+        }
     }
     
     
@@ -648,6 +659,18 @@ public class MRBBridgeConnector extends UntypedActor{
     }
 
 	protected void cleanup() {}
+
+    private ActorRef getSlaveBridgeConnector() {
+        return getContext().actorOf(new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                //Here Here we can pass Gateway where call is connected
+                return new SlaveBridgeConnector(mediaGatewayMap.get(masterMsId));
+            }
+        }));
+    }
 
     /*
      * Database Utility Functions
