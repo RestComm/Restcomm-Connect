@@ -20,7 +20,6 @@
 package org.mobicents.servlet.restcomm.mscontrol.messages;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
-import org.mobicents.servlet.restcomm.entities.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,16 +28,10 @@ import org.mobicents.servlet.restcomm.entities.Sid;
 public final class JoinComplete {
 
     private final Object endpoint;
-    private final Sid callSid;
-
-    public JoinComplete(final Object endpoint, final Sid callSid) {
-        super();
-        this.endpoint = endpoint;
-        this.callSid = callSid;
-    }
 
     public JoinComplete(final Object endpoint) {
-        this(endpoint, null);
+        super();
+        this.endpoint = endpoint;
     }
 
     public JoinComplete() {
@@ -48,9 +41,4 @@ public final class JoinComplete {
     public Object endpoint() {
         return endpoint;
     }
-
-    public Sid callSid() {
-        return callSid;
-    }
-
 }
