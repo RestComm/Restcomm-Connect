@@ -38,10 +38,12 @@ public final class ConferenceDetailRecord {
     private final String friendlyName;
     private final String apiVersion;
     private final URI uri;
-    private final String msId;
+    private final String masterMsId;
+    private final String bridgeId;
+    private final String masterMsSDP;
 
     public ConferenceDetailRecord(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated,
-            final Sid accountSid, final String status, final String friendlyName, final String apiVersion, final URI uri, final String msId) {
+            final Sid accountSid, final String status, final String friendlyName, final String apiVersion, final URI uri, final String msId, final String bridgeId, final String masterMsSDP) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -51,7 +53,9 @@ public final class ConferenceDetailRecord {
         this.friendlyName = friendlyName;
         this.apiVersion = apiVersion;
         this.uri = uri;
-        this.msId = msId;
+        this.masterMsId = msId;
+        this.bridgeId = bridgeId;
+        this.masterMsSDP = masterMsSDP;
     }
 
     public static Builder builder() {
@@ -90,24 +94,32 @@ public final class ConferenceDetailRecord {
         return uri;
     }
 
-    public String getMsId() {
-        return msId;
+    public String getMasterMsId() {
+        return masterMsId;
     }
 
     public ConferenceDetailRecord setStatus(final String status) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, bridgeId, masterMsSDP);
     }
 
     public ConferenceDetailRecord setStartTime(final DateTime startTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, bridgeId, masterMsSDP);
     }
 
     public ConferenceDetailRecord setEndTime(final DateTime endTime) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, bridgeId, masterMsSDP);
     }
 
-    public ConferenceDetailRecord setMsId(final String msId) {
-        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, msId);
+    public ConferenceDetailRecord setMasterMsId(final String masterMsId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, bridgeId, masterMsSDP);
+    }
+
+    public ConferenceDetailRecord setBridgeId(final String bridgeId) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, bridgeId, masterMsSDP);
+    }
+
+    public ConferenceDetailRecord setMasterMsSDP(final String masterMsSDP) {
+        return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid, status, friendlyName, apiVersion, uri, masterMsId, bridgeId, masterMsSDP);
     }
 
     @NotThreadSafe
@@ -120,7 +132,9 @@ public final class ConferenceDetailRecord {
         private String friendlyName;
         private String apiVersion;
         private URI uri;
-        private String msId;
+        private String masterMsId;
+        private String bridgeId;
+        private String masterMsSDP;
 
         private Builder() {
             super();
@@ -132,20 +146,22 @@ public final class ConferenceDetailRecord {
             friendlyName = null;
             apiVersion = null;
             uri = null;
-            msId = null;
+            masterMsId = null;
+            bridgeId = null;
+            masterMsSDP = null;
         }
 
         public ConferenceDetailRecord build() {
             return new ConferenceDetailRecord(sid, dateCreated, DateTime.now(), accountSid,
-                    status, friendlyName, apiVersion, uri, msId);
+                    status, friendlyName, apiVersion, uri, masterMsId, bridgeId, masterMsSDP);
         }
 
         public void setSid(final Sid sid) {
             this.sid = sid;
         }
 
-        public void setMsId(final String msId) {
-            this.msId = msId;
+        public void setMasterMsId(final String msId) {
+            this.masterMsId = msId;
         }
 
         public void setDateCreated(final DateTime dateCreated) {
@@ -170,6 +186,14 @@ public final class ConferenceDetailRecord {
 
         public void setUri(final URI uri) {
             this.uri = uri;
+        }
+
+        public void setBridgeId(final String bridgeId) {
+            this.bridgeId = bridgeId;
+        }
+
+        public void setMasterMsSDP(final String masterMsSDP) {
+            this.masterMsSDP = masterMsSDP;
         }
     }
 }

@@ -29,7 +29,7 @@ import akka.actor.ActorRef;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class JoinComplete {
+public final class StartBridgeConnector {
 
     private final ActorRef cnfEndpoint;
     private final Sid callSid;
@@ -37,7 +37,7 @@ public final class JoinComplete {
     private final String conferenceName;
     private final MediaSession mediaSession;
 
-    public JoinComplete(final ActorRef cnfEndpoint, final Sid callSid, final Sid conferenceSid, final String conferenceName, final MediaSession mediaSession) {
+    public StartBridgeConnector(final ActorRef cnfEndpoint, final Sid callSid, final Sid conferenceSid, final String conferenceName, final MediaSession mediaSession) {
         super();
         this.cnfEndpoint = cnfEndpoint;
         this.callSid = callSid;

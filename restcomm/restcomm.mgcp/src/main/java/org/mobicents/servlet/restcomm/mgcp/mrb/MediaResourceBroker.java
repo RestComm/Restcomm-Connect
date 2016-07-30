@@ -33,12 +33,14 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.MediaServersDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMRBShunt;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetBridgeConnector;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
+import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -56,10 +58,10 @@ public class MediaResourceBroker extends UntypedActor{
     private final Configuration configuration;
     private final ActorRef mediaGateway;
     private String msId;
-    
+
     private final Map<String, ActorRef> mediaGatewayMap;
     //private final MediaServerRouter msRouter;
-    
+
     private final DaoManager storage;
     // Observer pattern
     private final List<ActorRef> observers;
@@ -67,7 +69,7 @@ public class MediaResourceBroker extends UntypedActor{
     //public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
     public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
         super();
-        
+
         this.system = system;
         this.configuration = configuration;
         this.storage = storage;
@@ -81,13 +83,13 @@ public class MediaResourceBroker extends UntypedActor{
         this.mediaGateway = mediaGatewayMap.get(this.msId);
     }
 
-    private ActorRef getMRBShunt() {
+    private ActorRef getBridgeConnector() {
         return getContext().actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new MRBShunt(system, mediaGatewayMap, configuration, storage);
+                return new MRBBridgeConnector(system, mediaGatewayMap, configuration, storage);
             }
         }));
     }
@@ -103,8 +105,8 @@ public class MediaResourceBroker extends UntypedActor{
         }
         if (GetMediaGateway.class.equals(klass)) {
             onGetMediaGateway((GetMediaGateway) message, self, sender);
-        } else if (GetMRBShunt.class.equals(klass)){
-            sender.tell(new MediaResourceBrokerResponse<ActorRef>(getMRBShunt()), self);
+        } else if (GetBridgeConnector.class.equals(klass)){
+            sender.tell(new MediaResourceBrokerResponse<ActorRef>(getBridgeConnector()), self);
         }
     }
 
@@ -116,12 +118,12 @@ public class MediaResourceBroker extends UntypedActor{
         if(conferenceInfo == null){
             updateMSIdinCallDetailRecord(msId, callSid);
         }else{
-            addConferenceDetailRecord(conferenceInfo, msId, callSid);
+            addConferenceDetailRecord(conferenceInfo, callSid);
         }
 
         sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
     }
-    
+
     private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
         if(callSid == null){
             logger.info("Call Id is not specisfied");
@@ -140,39 +142,60 @@ public class MediaResourceBroker extends UntypedActor{
 
     }
 
-    private void addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final String msId, final Sid callSid){
+    private void addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final Sid callSid) {
         if(conferenceInfo == null || conferenceInfo.name() == null){
             logger.info("provided conference info/sid is null, this can lead to problems in future of this call");
         }else{
-            CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
-            CallDetailRecord callRecord = callDao.getCallDetailRecord(callSid);
-            if(callRecord != null){
-                logger.info("updateMSIdinConferenceDetailRecord: SID: "+conferenceInfo.sid()+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
-                ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
-                ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(conferenceInfo.sid());
-                if(cdr == null){
-                    final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                    conferenceBuilder.setSid(conferenceInfo.sid());
-                    conferenceBuilder.setDateCreated(DateTime.now());
+            try{
+                CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
+                CallDetailRecord callRecord = callDao.getCallDetailRecord(callSid);
+                if(callRecord != null){
+                    logger.info("updateMSIdinConferenceDetailRecord: SID: "+conferenceInfo.sid()+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
+                    ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
 
-                    String[] cnfNameAndAccount = conferenceInfo.name().split(":");
-                    final Sid accountId = new Sid(cnfNameAndAccount[0]);
-                    conferenceBuilder.setAccountSid(accountId);
-                    conferenceBuilder.setStatus("CONNECTING");
-                    conferenceBuilder.setApiVersion(callRecord.getApiVersion());
-                    final StringBuilder UriBuffer = new StringBuilder();
-                    UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountId.toString()).append("/Conferences/");
-                    UriBuffer.append(conferenceInfo.sid());
-                    final URI uri = URI.create(UriBuffer.toString());
-                    conferenceBuilder.setUri(uri);
-                    conferenceBuilder.setFriendlyName(cnfNameAndAccount[1]);
-                    conferenceBuilder.setMsId(msId);
+                    // check if a conference with same name/account is running.
+                    final String[] cnfNameAndAccount = conferenceInfo.name().split(":");
+                    final String accountSid = cnfNameAndAccount[0];
+                    final String friendlyName = cnfNameAndAccount[1];
 
-                    cdr = conferenceBuilder.build();
-                    dao.addConferenceDetailRecord(cdr);
+                    ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, null, null, null, friendlyName, 1, 0);
+                    List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
+                    boolean isConferenceRunningOnAnotherInstance = false;
+
+                    for (ConferenceDetailRecord cdr : records){
+                        if( !(cdr.getStatus().equalsIgnoreCase("COMPLETED") || cdr.getStatus().equalsIgnoreCase("FAILED")) ){
+                            isConferenceRunningOnAnotherInstance = true;
+                            break;
+                        }
+                    }
+
+                    // this is first record of this conference on all instances of
+                    if(!isConferenceRunningOnAnotherInstance){
+                        final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
+                        conferenceBuilder.setSid(Sid.generate(Sid.Type.CONFERENCE));
+                        conferenceBuilder.setDateCreated(DateTime.now());
+
+                        conferenceBuilder.setAccountSid(new Sid(accountSid));
+                        conferenceBuilder.setStatus(ConferenceStateChanged.State.INITIALIZING.toString());
+                        conferenceBuilder.setApiVersion(callRecord.getApiVersion());
+                        final StringBuilder UriBuffer = new StringBuilder();
+                        UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
+                        UriBuffer.append(conferenceInfo.sid());
+                        final URI uri = URI.create(UriBuffer.toString());
+                        conferenceBuilder.setUri(uri);
+                        conferenceBuilder.setFriendlyName(friendlyName);
+                        conferenceBuilder.setMasterMsId(msId);
+
+                        ConferenceDetailRecord cdr = conferenceBuilder.build();
+                        dao.addConferenceDetailRecord(cdr);
+                    }else{
+                        logger.info("A conference with same name is running. According to database record.");
+                    }
+                }else{
+                    logger.info("call record is null");
                 }
-            }else{
-                logger.info("call record is null");
+            }catch(Exception e){
+                logger.error("ERROR SAVING CONFERENCE IN DATBASE");
             }
         }
     }
@@ -233,7 +256,7 @@ public class MediaResourceBroker extends UntypedActor{
     protected void cleanup() {}
 
 /*
- * 
+ *
     private String getMSIdinCallDetailRecord(Sid callSid){
         CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
         CallDetailRecord cdr = dao.getCallDetailRecord(callSid);

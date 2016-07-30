@@ -39,7 +39,7 @@ public class MediaResourceBrokerEntityFilter {
     private String slaveMsCnfEpId;
     private boolean isBridgedTogether;
 
-    public MediaResourceBrokerEntityFilter(Sid conferenceSid, String masterMsId, String masterMsBridgeEpId, String masterMsCnfEpId, 
+    public MediaResourceBrokerEntityFilter(Sid conferenceSid, String masterMsId, String masterMsBridgeEpId, String masterMsCnfEpId,
      String slaveMsId, String slaveMsBridgeEpId, String slaveMsCnfEpId, boolean isBridgedTogether) throws ParseException {
         this.conferenceSid = conferenceSid;
         this.masterMsId = masterMsId;

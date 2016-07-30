@@ -200,7 +200,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("friendly_name", cdr.getFriendlyName());
         map.put("api_version", cdr.getApiVersion());
         map.put("uri", writeUri(cdr.getUri()));
-        map.put("ms_id", cdr.getMsId());
+        map.put("ms_id", cdr.getMasterMsId());
         return map;
     }
 }
