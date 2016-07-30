@@ -28,11 +28,11 @@ import org.mobicents.servlet.restcomm.entities.Sid;
  * @author Maria Farooq (maria.farooq@telestax.com)
  */
 @Immutable
-public final class GetMRBShunt {
+public final class GetBridgeConnector {
     private final String conferenceName;
     private final Sid conferenceSid;
 
-    public GetMRBShunt(final String conferenceName, final Sid conferenceSid) {
+    public GetBridgeConnector(final String conferenceName, final Sid conferenceSid) {
         super();
         this.conferenceName = conferenceName;
         this.conferenceSid = conferenceSid;

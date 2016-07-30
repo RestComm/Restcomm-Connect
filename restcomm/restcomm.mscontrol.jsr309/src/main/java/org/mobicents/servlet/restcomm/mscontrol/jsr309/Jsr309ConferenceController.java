@@ -340,7 +340,7 @@ public class Jsr309ConferenceController extends MediaServerController {
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         if (is(active)) {
             // Tell call to join conference by passing reference of the media mixer
-            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode(), null);
+            final JoinConference join = new JoinConference(this.mediaMixer, message.getConnectionMode());
             message.getCall().tell(join, sender);
         }
     }

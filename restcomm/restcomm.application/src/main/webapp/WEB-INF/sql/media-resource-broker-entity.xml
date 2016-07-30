@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author maria.farooq@telestax.com (Maria Farooq)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.MediaResourceBrokerDao">
+
+  <insert id="addMediaResourceBrokerEntity" parameterType="map">
+    INSERT INTO 
+    	"media_resource_broker_entity" 
+    		("call_sid", "conference_sid", "master_ms_id", "master_ms_bridge_ep_id", 
+    		"master_ms_cnf_ep_id", "slave_ms_id", "slave_ms_bridge_ep_id", "slave_ms_cnf_ep_id", 
+    		"is_bridged_together", "master_ms_sdp", "slave_ms_sdp") 
+    	VALUES 
+    		(#{call_sid}, #{conference_sid}, #{master_ms_id}, #{master_ms_bridge_ep_id}, 
+    		#{master_ms_cnf_ep_id}, #{slave_ms_id}, #{slave_ms_bridge_ep_id}, #{slave_ms_cnf_ep_id}, 
+    		#{is_bridged_together}, #{master_ms_sdp}, #{slave_ms_sdp});
+  </insert>
+  <select id="getMediaResourceBrokerEntity" parameterType="string" resultType="hashmap">
+    SELECT * FROM "media_resource_broker_entity" WHERE "call_sid"=#{call_sid};
+  </select>
+  
+  <select id="getMediaResourceBrokerEntities" resultType="hashmap">
+    SELECT * FROM "media_resource_broker_entity";
+  </select>
+  
+  <delete id="removeMediaResourceBrokerEntity" parameterType="string">
+    DELETE FROM "media_resource_broker_entity" WHERE "call_sid"=#{call_sid};
+  </delete>
+  
+  <update id="updateMediaResource" parameterType="map">
+    UPDATE "media_resource_broker_entity" 
+    	SET "conference_sid"=#{conference_sid}, "master_ms_id"=#{master_ms_id}, 
+    		"master_ms_bridge_ep_id"=#{master_ms_bridge_ep_id}, "master_ms_cnf_ep_id"=#{master_ms_cnf_ep_id}, 
+    		"slave_ms_id"=#{slave_ms_id}, "slave_ms_bridge_ep_id"=#{slave_ms_bridge_ep_id}, 
+    		"slave_ms_cnf_ep_id"=#{slave_ms_cnf_ep_id}, "is_bridged_together"=#{is_bridged_together}, 
+    		"master_ms_sdp"=#{master_ms_sdp}, "slave_ms_sdp"=#{slave_ms_sdp} 
+    WHERE "call_sid"=#{call_sid};
+  </update>
+
+</mapper>

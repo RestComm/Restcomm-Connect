@@ -19,14 +19,17 @@
  */
 package org.mobicents.servlet.restcomm.telephony;
 
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
-
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+import org.mobicents.servlet.restcomm.dao.ConferenceDetailRecordsDao;
+import org.mobicents.servlet.restcomm.dao.DaoManager;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
+import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -52,6 +55,7 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -76,7 +80,9 @@ public final class Conference extends UntypedActor {
 
     // Runtime stuff
     private final String name;
-    private final Sid sid;
+    private final String accountSid;
+    private final String friendlyName;
+    private Sid sid;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
 
@@ -85,7 +91,9 @@ public final class Conference extends UntypedActor {
     // Media Session Controller
     private final ActorRef mscontroller;
 
-    public Conference(final String name, final ActorRef msController) {
+    private final DaoManager storage;
+
+    public Conference(final String name, final ActorRef msController, final DaoManager storage) {
         super();
         final ActorRef source = self();
 
@@ -119,7 +127,14 @@ public final class Conference extends UntypedActor {
 
         // Runtime stuff
         this.name = name;
-        this.sid = Sid.generate(Sid.Type.CONFERENCE);
+        final String[] cnfNameAndAccount = name.split(":");
+        accountSid = cnfNameAndAccount[0];
+        friendlyName = cnfNameAndAccount[1];
+
+        this.storage = storage;
+
+        //generate it later at MRB level, by watching if same conference is running on another RC instance.
+        //this.sid = Sid.generate(Sid.Type.CONFERENCE);
         this.mscontroller = msController;
         this.calls = new ArrayList<ActorRef>();
         this.observers = new ArrayList<ActorRef>();
@@ -407,6 +422,8 @@ public final class Conference extends UntypedActor {
         switch (state) {
             case ACTIVE:
                 if (is(initializing)) {
+                    //As MRB have generated Sid for this conference and saved in db.
+                    getConferenceSidFromDB();
                     this.fsm.transition(message, waiting);
                 }
                 break;
@@ -452,4 +469,28 @@ public final class Conference extends UntypedActor {
         }
     }
 
+    /**
+     * get Conference Sid From DataBase:
+     */
+    private void getConferenceSidFromDB(){
+        ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+        ConferenceDetailRecordFilter filter;
+        try {
+            filter = new ConferenceDetailRecordFilter(accountSid, ConferenceStateChanged.State.INITIALIZING.toString(), null, null, friendlyName, 100, 0);
+            List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
+            if(records ==null){
+                logger.warning("this conference is in trouble bcz we did not get its record..");
+            }else{
+                logger.info("records size: "+ records.size());
+                if(records.size()>1){
+                    logger.warning("this conference is in trouble bcz we got more than one record against it..");
+                }else{
+                    ConferenceDetailRecord cdr = records.get(0);
+                    sid = cdr.getSid();
+                }
+            }
+        } catch (ParseException e) {
+            logger.error("Error while creating conference filter",e);
+        }
+    }
 }

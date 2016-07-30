@@ -785,7 +785,6 @@ public class MmsCallController extends MediaServerController {
         public void execute(final Object message) throws Exception {
             final MediaGatewayResponse<MediaSession> response = (MediaGatewayResponse<MediaSession>) message;
             session = response.get();
-            logger.info("AcquiringBridge: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"+session+"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
             mediaGateway.tell(new CreateBridgeEndpoint(session), source);
         }
     }
@@ -896,9 +895,6 @@ public class MmsCallController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            // YES here made a sesssion with master RMS and probably switch everything to that
-            // otherwise if nothing is done
-            // this will send message to
             mediaGateway.tell(new CreateLink(session), source);
         }
 

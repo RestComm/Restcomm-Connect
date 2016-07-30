@@ -40,7 +40,7 @@ import org.mobicents.servlet.restcomm.mgcp.EndpointStateChanged;
 import org.mobicents.servlet.restcomm.mgcp.MediaGatewayResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
-import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMRBShunt;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetBridgeConnector;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
@@ -102,7 +102,8 @@ public final class MmsConferenceController extends MediaServerController {
     // Conference runtime stuff
     private ActorRef conference;
     private ActorRef mediaGroup;
-    private ActorRef mrbShunt;
+    private ActorRef mrbBridgeConnector;
+    private boolean bridgeConnectorInitialized = false;
 
     // Runtime media operations
     private Boolean playing;
@@ -233,22 +234,6 @@ public final class MmsConferenceController extends MediaServerController {
         }
     }
 
-    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
-        logger.info("got JoinComplete in conference controller");
-        mrb.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.JoinComplete(this.cnfEndpoint, message.callSid(), this.conferenceSid, this.conferenceName, this.mediaSession), self);
-    }
-
-    private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
-        logger.info("got MRB response in conference controller");
-        if(is(getMediaGatewayFromMRB)){
-            this.mediaGateway = (ActorRef) message.get();
-            fsm.transition(message, gettingMRBShunt);
-        }else if(is(gettingMRBShunt)){
-            this.mrbShunt = (ActorRef) message.get();
-            fsm.transition(message, acquiringMediaSession);
-        }
-    }
-
     private void onObserve(Observe message, ActorRef self, ActorRef sender) {
         final ActorRef observer = message.observer();
         if (observer != null) {
@@ -263,6 +248,26 @@ public final class MmsConferenceController extends MediaServerController {
         final ActorRef observer = message.observer();
         if (observer != null) {
             this.observers.remove(observer);
+        }
+    }
+
+    private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+        logger.info("got JoinComplete in conference controller");
+        if(!bridgeConnectorInitialized){
+        	bridgeConnectorInitialized = true;
+            mrbBridgeConnector.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector(this.cnfEndpoint, message.callSid(), this.conferenceSid, this.conferenceName, this.mediaSession), self);
+        }
+    }
+
+    private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
+        logger.info("got MRB response in conference controller");
+        if(is(getMediaGatewayFromMRB)){
+            mediaGateway = (ActorRef) message.get();
+            fsm.transition(message, gettingMRBShunt);
+        }else if(is(gettingMRBShunt)){
+            mrbBridgeConnector = (ActorRef) message.get();
+            mrbBridgeConnector.tell(new Observe(self), self);
+            fsm.transition(message, acquiringMediaSession);
         }
     }
 
@@ -342,14 +347,6 @@ public final class MmsConferenceController extends MediaServerController {
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
         // Tell call to join conference by passing reference to the media mixer
         final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode());
-        // here create conferenceEndpoint
-        message.getCall().tell(join, sender);
-    }
-
-    private void onMRBShuntRecieved(JoinCall message, ActorRef self, ActorRef sender) {
-        // Tell call to join conference by passing reference to the media mixer
-        final JoinConference join = new JoinConference(this.cnfEndpoint, message.getConnectionMode());
-        // here create conferenceEndpoint
         message.getCall().tell(join, sender);
     }
 
@@ -441,7 +438,7 @@ public final class MmsConferenceController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             logger.info("MMSConferenceController: GetMRBShunt: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
-            mrb.tell(new GetMRBShunt(conferenceName, conferenceSid), self());
+            mrb.tell(new GetBridgeConnector(conferenceName, conferenceSid), self());
         }
     }
 
