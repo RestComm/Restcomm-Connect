@@ -31,20 +31,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 public class MediaResourceBrokerEntityFilter {
 
     private final Sid conferenceSid;
-    private String masterMsId;
-    private String masterMsBridgeEpId;
-    private String masterMsCnfEpId;
     private String slaveMsId;
     private String slaveMsBridgeEpId;
     private String slaveMsCnfEpId;
     private boolean isBridgedTogether;
 
-    public MediaResourceBrokerEntityFilter(Sid conferenceSid, String masterMsId, String masterMsBridgeEpId, String masterMsCnfEpId,
-     String slaveMsId, String slaveMsBridgeEpId, String slaveMsCnfEpId, boolean isBridgedTogether) throws ParseException {
+    public MediaResourceBrokerEntityFilter(Sid conferenceSid, String slaveMsId, String slaveMsBridgeEpId, String slaveMsCnfEpId, boolean isBridgedTogether) throws ParseException {
         this.conferenceSid = conferenceSid;
-        this.masterMsId = masterMsId;
-        this.masterMsBridgeEpId = masterMsBridgeEpId;
-        this.masterMsCnfEpId = masterMsCnfEpId;
         this.slaveMsId = slaveMsId;
         this.slaveMsBridgeEpId = slaveMsBridgeEpId;
         this.slaveMsCnfEpId = slaveMsCnfEpId;
@@ -53,18 +46,6 @@ public class MediaResourceBrokerEntityFilter {
 
     public Sid getConferenceSid() {
         return conferenceSid;
-    }
-
-    public String getMasterMsId() {
-        return masterMsId;
-    }
-
-    public String getMasterMsBridgeEpId() {
-        return masterMsBridgeEpId;
-    }
-
-    public String getMasterMsCnfEpId() {
-        return masterMsCnfEpId;
     }
 
     public String getSlaveMsId() {

@@ -138,33 +138,23 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
     }
 
     private MediaResourceBrokerEntity toMRBEntity(final Map<String, Object> map) {
-        final Sid callSid = readSid(map.get("call_sid"));
         final Sid conferenceSid = readSid(map.get("conference_sid"));
-        final String masterMsId = readString(map.get("master_ms_id"));
-        final String masterMsBridgeEpId = readString(map.get("master_ms_bridge_ep_id"));
-        final String masterMsCnfEpId = readString(map.get("master_ms_cnf_ep_id"));
         final String slaveMsId = readString(map.get("slave_ms_id"));
         final String slaveMsBridgeEpId = readString(map.get("slave_ms_bridge_ep_id"));
         final String slaveMsCnfEpId = readString(map.get("slave_ms_cnf_ep_id"));
         final boolean isBridgedTogether = readBoolean(map.get("is_bridged_together"));
-        final String masterMsSDP = readString(map.get("master_ms_sdp"));
         final String slaveMsSDP = readString(map.get("slave_ms_sdp"));
 
-        return new MediaResourceBrokerEntity(callSid, conferenceSid, masterMsId, masterMsBridgeEpId, masterMsCnfEpId, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, masterMsSDP, slaveMsSDP);
+        return new MediaResourceBrokerEntity(conferenceSid, slaveMsId, slaveMsBridgeEpId, slaveMsCnfEpId, isBridgedTogether, slaveMsSDP);
     }
 
     private Map<String, Object> toMap(final MediaResourceBrokerEntity ms) {
         final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("call_sid", writeSid(ms.getCallSid()));
         map.put("conference_sid", writeSid(ms.getConferenceSid()));
-        map.put("master_ms_id", ms.getMasterMsId());
-        map.put("master_ms_bridge_ep_id", ms.getMasterMsBridgeEpId());
-        map.put("master_ms_cnf_ep_id", ms.getMasterMsCnfEpId());
         map.put("slave_ms_id", ms.getSlaveMsId());
         map.put("slave_ms_bridge_ep_id", ms.getSlaveMsBridgeEpId());
         map.put("slave_ms_cnf_ep_id", ms.getSlaveMsCnfEpId());
         map.put("is_bridged_together", ms.isBridgedTogether());
-        map.put("master_ms_sdp", ms.getMasterMsSDP());
         map.put("slave_ms_sdp", ms.getSlaveMsSDP());
         return map;
     }

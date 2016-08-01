@@ -35,7 +35,7 @@ public final class MediaResourceBrokerEntity {
     private String slaveMsSDP;
 
     public MediaResourceBrokerEntity(final Sid conferenceSid, final String slaveMsId, final String slaveMsBridgeEpId,
-    		final String slaveMsCnfEpId, final Boolean isBridgedTogether, String slaveMsSDP) {
+        final String slaveMsCnfEpId, final Boolean isBridgedTogether, String slaveMsSDP) {
         super();
         this.conferenceSid = conferenceSid;
         this.slaveMsId = slaveMsId;
