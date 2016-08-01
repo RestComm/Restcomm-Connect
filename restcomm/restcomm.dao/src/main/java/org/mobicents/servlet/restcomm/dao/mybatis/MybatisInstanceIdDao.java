@@ -54,8 +54,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public InstanceId getInstanceId() {
         final SqlSession session = sessions.openSession();
         try {
-        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
-        	final Map<String, Object> result = mapper.getInstanceId();
+            InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+            final Map<String, Object> result = mapper.getInstanceId();
             if (result != null) {
                 return toInstanceId(result);
             } else {
@@ -70,8 +70,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public InstanceId getInstanceIdByHost(String host) {
         final SqlSession session = sessions.openSession();
         try {
-        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
-        	final Map<String, Object> result = mapper.getInstanceIdByHost(host);
+            InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+            final Map<String, Object> result = mapper.getInstanceIdByHost(host);
             if (result != null) {
                 return toInstanceId(result);
             } else {
@@ -89,8 +89,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public void addInstancecId(InstanceId instanceId) {
         final SqlSession session = sessions.openSession();
         try {
-        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
-        	mapper.addInstanceId(toMap(instanceId));
+            InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+            mapper.addInstanceId(toMap(instanceId));
             session.commit();
         } finally {
             session.close();
@@ -101,8 +101,8 @@ public class MybatisInstanceIdDao implements InstanceIdDao{
     public void updateInstanceId(InstanceId instanceId) {
         final SqlSession session = sessions.openSession();
         try {
-        	InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
-        	mapper.updateInstanceId(toMap(instanceId));
+            InstanceIdMapper mapper=session.getMapper(InstanceIdMapper.class);
+            mapper.updateInstanceId(toMap(instanceId));
             session.commit();
         } finally {
             session.close();

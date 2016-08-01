@@ -55,10 +55,10 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
     public void addAvailablePhoneNumber(final AvailablePhoneNumber availablePhoneNumber) {
         final SqlSession session = sessions.openSession();
         try {
-        	AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
+            AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
             //session.insert(namespace + "addAvailablePhoneNumber", toMap(availablePhoneNumber));
             mapper.addAvailablePhoneNumber(toMap(availablePhoneNumber));
-        	session.commit();
+            session.commit();
         } finally {
             session.close();
         }
@@ -87,9 +87,9 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
 
     @Override
     public List<AvailablePhoneNumber> getAvailablePhoneNumbers() {
-    	 final SqlSession session = sessions.openSession();
+         final SqlSession session = sessions.openSession();
          try {
-        	 AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
+             AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
              List<Map<String, Object>> results = mapper.getAvailablePhoneNumbers();
              final List<AvailablePhoneNumber> availablePhoneNumbers = new ArrayList<AvailablePhoneNumber>();
              if (results != null && !results.isEmpty()) {
@@ -108,7 +108,7 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
         final String phoneNumber = new StringBuilder().append("+1").append(areaCode).append("_______").toString();
         final SqlSession session = sessions.openSession();
         try {
-       	 AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
+            AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
             List<Map<String, Object>> results = mapper.getAvailablePhoneNumbersByAreaCode(phoneNumber);
             final List<AvailablePhoneNumber> availablePhoneNumbers = new ArrayList<AvailablePhoneNumber>();
             if (results != null && !results.isEmpty()) {
@@ -126,7 +126,7 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
     public List<AvailablePhoneNumber> getAvailablePhoneNumbersByPattern(final String pattern) throws IllegalArgumentException {
         final SqlSession session = sessions.openSession();
         try {
-       	 AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
+            AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
             List<Map<String, Object>> results = mapper.getAvailablePhoneNumbersByPattern(normalizePattern(pattern));
             final List<AvailablePhoneNumber> availablePhoneNumbers = new ArrayList<AvailablePhoneNumber>();
             if (results != null && !results.isEmpty()) {
@@ -142,9 +142,9 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
 
     @Override
     public List<AvailablePhoneNumber> getAvailablePhoneNumbersByRegion(final String region) {
-    	final SqlSession session = sessions.openSession();
+        final SqlSession session = sessions.openSession();
         try {
-       	 AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
+            AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
             List<Map<String, Object>> results = mapper.getAvailablePhoneNumbersByRegion(region);
             final List<AvailablePhoneNumber> availablePhoneNumbers = new ArrayList<AvailablePhoneNumber>();
             if (results != null && !results.isEmpty()) {
@@ -160,9 +160,9 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
 
     @Override
     public List<AvailablePhoneNumber> getAvailablePhoneNumbersByPostalCode(final int postalCode) {
-    	final SqlSession session = sessions.openSession();
+        final SqlSession session = sessions.openSession();
         try {
-       	    AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
+               AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
             List<Map<String, Object>> results = mapper.getAvailablePhoneNumbersByPostalCode(postalCode);
             final List<AvailablePhoneNumber> availablePhoneNumbers = new ArrayList<AvailablePhoneNumber>();
             if (results != null && !results.isEmpty()) {
@@ -202,8 +202,8 @@ public final class MybatisAvailablePhoneNumbersDao implements AvailablePhoneNumb
     public void removeAvailablePhoneNumber(final String phoneNumber) {
         final SqlSession session = sessions.openSession();
         try {
-        	AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
-        	mapper.removeAvailablePhoneNumber(phoneNumber);
+            AvailablePhoneNumberMapper mapper=session.getMapper(AvailablePhoneNumberMapper.class);
+            mapper.removeAvailablePhoneNumber(phoneNumber);
             session.commit();
         } finally {
             session.close();

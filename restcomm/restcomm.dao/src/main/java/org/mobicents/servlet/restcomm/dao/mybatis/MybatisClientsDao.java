@@ -56,8 +56,8 @@ public final class MybatisClientsDao implements ClientsDao {
         final SqlSession session = sessions.openSession();
         try {
             //session.insert(namespace + "addClient", toMap(client));
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
-        	mapper.addClient(toMap(client));
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.addClient(toMap(client));
             session.commit();
         } finally {
             session.close();
@@ -68,7 +68,7 @@ public final class MybatisClientsDao implements ClientsDao {
     public Client getClient(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
             final Map<String, Object> result = mapper.getClient(sid.toString());
             if (result != null) {
                 return toClient(result);
@@ -84,7 +84,7 @@ public final class MybatisClientsDao implements ClientsDao {
     public Client getClient(final String login) {
         final SqlSession session = sessions.openSession();
         try {
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
             final Map<String, Object> result = mapper.getClientByLogin(login);
             if (result != null) {
                 return toClient(result);
@@ -100,7 +100,7 @@ public final class MybatisClientsDao implements ClientsDao {
     public List<Client> getClients(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
             final List<Map<String, Object>> results = mapper.getClients(accountSid.toString());
             final List<Client> clients = new ArrayList<Client>();
             if (results != null && !results.isEmpty()) {
@@ -118,8 +118,8 @@ public final class MybatisClientsDao implements ClientsDao {
     public List<Client> getAllClients() {
         final SqlSession session = sessions.openSession();
         try {
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
-        	final List<Map<String, Object>> results = mapper.getAllClients();
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            final List<Map<String, Object>> results = mapper.getAllClients();
             final List<Client> clients = new ArrayList<Client>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -136,8 +136,8 @@ public final class MybatisClientsDao implements ClientsDao {
     public void removeClient(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
-        	mapper.removeClient(sid.toString());
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.removeClient(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -148,8 +148,8 @@ public final class MybatisClientsDao implements ClientsDao {
     public void removeClients(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
-        	mapper.removeClients(accountSid.toString());
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.removeClients(accountSid.toString());
             session.commit();
         } finally {
             session.close();
@@ -160,8 +160,8 @@ public final class MybatisClientsDao implements ClientsDao {
     public void updateClient(final Client client) {
         final SqlSession session = sessions.openSession();
         try {
-        	ClientsMapper mapper=session.getMapper(ClientsMapper.class);
-        	mapper.updateClient(toMap(client));
+            ClientsMapper mapper=session.getMapper(ClientsMapper.class);
+            mapper.updateClient(toMap(client));
             session.commit();
         } finally {
             session.close();

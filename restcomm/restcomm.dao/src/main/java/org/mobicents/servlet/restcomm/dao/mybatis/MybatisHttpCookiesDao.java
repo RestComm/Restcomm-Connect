@@ -54,7 +54,7 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
         final SqlSession session = sessions.openSession();
         try {
             HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
-        	mapper.addCookie(toMap(sid, cookie));
+            mapper.addCookie(toMap(sid, cookie));
             session.commit();
         } finally {
             session.close();
@@ -65,8 +65,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public List<Cookie> getCookies(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
-        	final List<Map<String, Object>> results = mapper.getCookies();
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            final List<Map<String, Object>> results = mapper.getCookies();
             final List<Cookie> cookies = new ArrayList<Cookie>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -83,8 +83,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public boolean hasCookie(final Sid sid, final Cookie cookie) {
         final SqlSession session = sessions.openSession();
         try {
-        	HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
-        	final Integer result = mapper.hasCookie(toMap(sid, cookie));
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            final Integer result = mapper.hasCookie(toMap(sid, cookie));
             if (result > 0) {
                 return true;
             } else {
@@ -99,8 +99,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public boolean hasExpiredCookies(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
-        	final Integer result = mapper.hasExpiredCookies(sid.toString());
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            final Integer result = mapper.hasExpiredCookies(sid.toString());
             if (result > 0) {
                 return true;
             } else {
@@ -127,8 +127,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public void removeExpiredCookies(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
-        	mapper.removeExpiredCookies(sid.toString());
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            mapper.removeExpiredCookies(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -139,8 +139,8 @@ public final class MybatisHttpCookiesDao implements HttpCookiesDao {
     public void updateCookie(final Sid sid, final Cookie cookie) {
         final SqlSession session = sessions.openSession();
         try {
-        	HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
-        	mapper.updateCookie( toMap(sid, cookie));
+            HttpCookiesMapper mapper=session.getMapper(HttpCookiesMapper.class);
+            mapper.updateCookie( toMap(sid, cookie));
             session.commit();
         } finally {
             session.close();

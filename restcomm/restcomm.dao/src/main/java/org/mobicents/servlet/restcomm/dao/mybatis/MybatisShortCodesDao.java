@@ -67,7 +67,7 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     public ShortCode getShortCode(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
             final Map<String, Object> result = mapper.getShortCode(sid.toString());
             if (result != null) {
                 return toShortCode(result);
@@ -83,8 +83,8 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     public List<ShortCode> getShortCodes(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
-        	final List<Map<String, Object>> results =mapper.getShortCodes(accountSid.toString());
+            ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            final List<Map<String, Object>> results =mapper.getShortCodes(accountSid.toString());
             final List<ShortCode> shortCodes = new ArrayList<ShortCode>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -101,7 +101,7 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     public void removeShortCode(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
             mapper.removeShortCode(sid.toString());
             session.commit();
         } finally {
@@ -126,8 +126,8 @@ public final class MybatisShortCodesDao implements ShortCodesDao {
     public void updateShortCode(final ShortCode shortCode) {
         final SqlSession session = sessions.openSession();
         try {
-        	ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
-        	mapper.updateShortCode(toMap(shortCode));
+            ShortCodesMapper mapper= session.getMapper(ShortCodesMapper.class);
+            mapper.updateShortCode(toMap(shortCode));
             session.commit();
         } finally {
             session.close();

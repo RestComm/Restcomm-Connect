@@ -3,16 +3,11 @@ package org.mobicents.servlet.restcomm.mappers;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ibatis.annotations.Arg;
+
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.ResultMap;
-import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import org.mobicents.servlet.restcomm.entities.Account;
 
 /**
  * @author zahid.med@gmail.com (ZAHID Mohammed)
@@ -40,38 +35,34 @@ public interface AccountsMapper {
     + ")";
     String DELETE_ACCOUNT="DELETE FROM \"restcomm_accounts\" WHERE \"sid\"=#{sid}";
     String UPDATE_ACCOUNT="UPDATE \"restcomm_accounts\" SET "
-	+ " \"date_updated\"=#{date_updated},"
-	+ " \"email_address\"=#{email_address},"
-	+ " \"friendly_name\"=#{friendly_name},"
-	+ " \"type\"=#{type},"
-	+ " \"status\"=#{status},"
-	+ " \"auth_token\"=#{auth_token},"
-	+ " \"role\"=#{role}"
-	+ " WHERE"
-	+ " \"sid\"=#{sid}";
-    
-    
-    
-	@Select(SELECT_ACOUNT)
-	Map<String,Object> getAccount(String sid);
-	
+    + " \"date_updated\"=#{date_updated},"
+    + " \"email_address\"=#{email_address},"
+    + " \"friendly_name\"=#{friendly_name},"
+    + " \"type\"=#{type},"
+    + " \"status\"=#{status},"
+    + " \"auth_token\"=#{auth_token},"
+    + " \"role\"=#{role}"
+    + " WHERE"
+    + " \"sid\"=#{sid}";
 
-	@Select(SELECT_ACCOUNT_BY_FREINDLY_NAME)
-	Map<String,Object> getAccountByFriendlyName(String name);
-	
-	@Select(SELECT_ACCOUNT_BY_EMAIL)
-	Map<String,Object> getAccountByEmail(String email);
-	
-	@Select(SELECT_ACCOUNT_BY_ACCOUNT_SID)
-	List<Map<String, Object>>  getAccounts(String accountSid);
-	
-	
-	@Insert(INSERT_ACCOUNT)
-	void addAccount(Map map);
-	
-	@Delete(DELETE_ACCOUNT)
-	void removeAccount(String sid);
-	
-	@Update(UPDATE_ACCOUNT)
-	void updateAccount(Map map);
+    @Select(SELECT_ACOUNT)
+    Map<String,Object> getAccount(String sid);
+
+    @Select(SELECT_ACCOUNT_BY_FREINDLY_NAME)
+    Map<String,Object> getAccountByFriendlyName(String name);
+
+    @Select(SELECT_ACCOUNT_BY_EMAIL)
+    Map<String,Object> getAccountByEmail(String email);
+
+    @Select(SELECT_ACCOUNT_BY_ACCOUNT_SID)
+    List<Map<String, Object>>  getAccounts(String accountSid);
+
+    @Insert(INSERT_ACCOUNT)
+    void addAccount(Map map);
+
+    @Delete(DELETE_ACCOUNT)
+    void removeAccount(String sid);
+
+    @Update(UPDATE_ACCOUNT)
+    void updateAccount(Map map);
 }

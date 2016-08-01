@@ -30,30 +30,30 @@ public interface NotificationsMapper {
     String DELETE_NOTIFICATION_BY_CALL="DELETE FROM \"restcomm_notifications\" WHERE \"call_sid\"=#{callSid}";
 
     @Insert(INSERT_NOTIFICATION)
-    public void addNotification(Map map);
+    void addNotification(Map map);
 
     @Select(SELECT_NOTIFICATION)
-    public Map<String, Object> getNotification(String sid);
+    Map<String, Object> getNotification(String sid);
 
     @Select(SELECT_NOTIFICATION_BY_ACCOUNT)
-    public List<Map<String, Object>> getNotifications(String accountSid);
+    List<Map<String, Object>> getNotifications(String accountSid);
 
     @Select(SELECT_NOTIFICATION_BY_CALL)
-    public List<Map<String, Object>> getNotificationsByCall(String callSid);
+    List<Map<String, Object>> getNotificationsByCall(String callSid);
 
     @Select(SELECT_NOTIFICATION_BY_LOG_LEVEL)
-    public List<Map<String, Object>> getNotificationsByLogLevel(int log);
+    List<Map<String, Object>> getNotificationsByLogLevel(int log);
 
     @Select(SELECT_NOTIFICATION_BY_MESSAGE_DATe)
-    public List<Map<String, Object>> getNotificationsByMessageDate(Map map);
+    List<Map<String, Object>> getNotificationsByMessageDate(Map map);
 
     @Delete(DELETE_NOTIFICATION)
-    public void removeNotification(String sid);
+    void removeNotification(String sid);
 
     @Delete(DELETE_NOTIFICATION_BY_ACCOUNT)
-    public void removeNotifications(String accountSid);
+    void removeNotifications(String accountSid);
 
     @Delete(DELETE_NOTIFICATION_BY_CALL)
-    public void removeNotificationsByCall(String callSid);
+    void removeNotificationsByCall(String callSid);
 
 }

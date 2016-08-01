@@ -9,7 +9,7 @@
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="org.hsqldb.jdbcDriver"/>
-        <property name="url" value="jdbc:hsqldb:file:/C:/var/resources/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
+        <property name="url" value="jdbc:hsqldb:file:./src/test/resources/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
         <property name="username" value="sa"/>
         <property name="password" value=""/>
       </dataSource>
@@ -22,6 +22,7 @@
     <mapper class="org.mobicents.servlet.restcomm.mappers.AnnouncementsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.ApplicationsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.AvailablePhoneNumberMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.CallDetailRecordsDaoTest" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.ClientsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.GatewaysMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.HttpCookiesMapper" />
@@ -32,25 +33,8 @@
     <mapper class="org.mobicents.servlet.restcomm.mappers.RecordingsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.RegistrationsMapper" />
     <mapper class="org.mobicents.servlet.restcomm.mappers.ShortCodesMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.SmsMessagesMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.TranscriptionsMapper" />
+    <mapper class="org.mobicents.servlet.restcomm.mappers.UsageMapper" />
   </mappers>
-  <!-- <mappers>
-    <mapper resource="accounts.xml"/>
-    <mapper resource="applications.xml"/>
-    <mapper resource="available-phone-numbers.xml"/>
-    <mapper resource="call-detail-records.xml"/>
-    <mapper resource="conference-detail-records.xml"/>    
-    <mapper resource="clients.xml"/>
-    <mapper resource="http-cookies.xml"/>
-    <mapper resource="incoming-phone-numbers.xml"/>
-    <mapper resource="notifications.xml"/>
-    <mapper resource="outgoing-caller-ids.xml"/>
-    <mapper resource="registrations.xml"/>
-    <mapper resource="recordings.xml"/>
-    <mapper resource="sand-boxes.xml"/>
-    <mapper resource="short-codes.xml"/>
-    <mapper resource="sms-messages.xml"/>
-    <mapper resource="transcriptions.xml"/>
-    <mapper resource="gateways.xml"/>
-    <mapper resource="announcements.xml"/>
-  </mappers> -->
 </configuration>

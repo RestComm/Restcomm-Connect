@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.util.Currency;
-import java.util.Date;
 
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.entities.Account;

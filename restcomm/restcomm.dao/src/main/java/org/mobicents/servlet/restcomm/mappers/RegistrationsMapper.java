@@ -47,6 +47,5 @@ public interface RegistrationsMapper {
 
     @Update(UPDATE_REGISTRATION)
     void updateRegistration(Map map);
-    
-    
+
 }
