@@ -118,7 +118,7 @@ public final class MmsConferenceController extends MediaServerController {
     private String conferenceName;
     private Sid conferenceSid;
 
-	private ConnectionMode connectionMode;
+    private ConnectionMode connectionMode;
 
     //public MmsConferenceController(final List<ActorRef> mediaGateways, final Configuration configuration) {
     //public MmsConferenceController(final ActorRef mediaGateway) {
@@ -257,7 +257,7 @@ public final class MmsConferenceController extends MediaServerController {
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
         logger.info("got JoinComplete in conference controller");
         if(!startBridgeConnectorSignalSent){
-        	startBridgeConnectorSignalSent = true;
+            startBridgeConnectorSignalSent = true;
             conferenceMediaResourceController.tell(new org.mobicents.servlet.restcomm.mgcp.mrb.messages.StartBridgeConnector(this.cnfEndpoint, this.conferenceSid, this.conferenceName, this.connectionMode), self);
         }
     }
@@ -348,7 +348,7 @@ public final class MmsConferenceController extends MediaServerController {
     }
 
     private void onJoinCall(JoinCall message, ActorRef self, ActorRef sender) {
-    	connectionMode = message.getConnectionMode();
+        connectionMode = message.getConnectionMode();
         // Tell call to join conference by passing reference to the media mixer
         final JoinConference join = new JoinConference(this.cnfEndpoint, connectionMode);
         message.getCall().tell(join, sender);
@@ -428,7 +428,7 @@ public final class MmsConferenceController extends MediaServerController {
             conferenceName = conferenceInfo.name();
             conferenceSid = conferenceInfo.sid();
             //TODO: temporary log
-            logger.info("MMSConferenceController: GetMediaGatewayFromMRB: conferenceName = "+conferenceName+" conferenceSid: "+conferenceSid);
+            logger.info( "MMSConferenceController: GetMediaGatewayFromMRB: conferenceName = " + conferenceName + " conferenceSid: " + conferenceSid );
             mrb.tell(new GetMediaGateway(createMediaSession.callSid(), createMediaSession.conferenceInfo()), self());
         }
     }

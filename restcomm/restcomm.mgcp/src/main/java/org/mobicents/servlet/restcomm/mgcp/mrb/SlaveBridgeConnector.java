@@ -49,7 +49,7 @@ public class SlaveBridgeConnector extends UntypedActor{
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
-	private final State initializing;
+    private final State initializing;
 
     // Observer pattern
     private final List<ActorRef> observers;
@@ -69,7 +69,7 @@ public class SlaveBridgeConnector extends UntypedActor{
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         this.initializing = new State("initializing", new Initializing(source), null);
-        
+
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
         this.masterMediaGateway = masterMediaGateway;
@@ -94,11 +94,11 @@ public class SlaveBridgeConnector extends UntypedActor{
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
         } else if (StartSlaveBridgeConnector.class.equals(klass)){
-        	onStartSlaveBridgeConnector((StartSlaveBridgeConnector) message, self, sender);
+            onStartSlaveBridgeConnector((StartSlaveBridgeConnector) message, self, sender);
         }
     }
 
-	private void onObserve(Observe message, ActorRef self, ActorRef sender) {
+    private void onObserve(Observe message, ActorRef self, ActorRef sender) {
         final ActorRef observer = message.observer();
         if (observer != null) {
             synchronized (this.observers) {
@@ -116,12 +116,12 @@ public class SlaveBridgeConnector extends UntypedActor{
     }
 
     private void onStartSlaveBridgeConnector(StartSlaveBridgeConnector message, ActorRef self, ActorRef sender) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
-		fsm.transition(message, initializing);
-	}
+        fsm.transition(message, initializing);
+    }
 
     /*
      * ACTIONS
-     * 
+     *
      */
 
     protected abstract class AbstractAction implements Action {
@@ -142,7 +142,7 @@ public class SlaveBridgeConnector extends UntypedActor{
 
         @Override
         public void execute(final Object msg) throws Exception {
-        	
+
         }
 
     }
