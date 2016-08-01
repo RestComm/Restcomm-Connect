@@ -45,7 +45,7 @@ import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
-import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponse;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponses;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -172,7 +172,7 @@ public class RvdController extends SecuredRestService {
 
     // Web Trigger -----
 
-    private RestcommCreateCallResponse executeAction(String projectName, HttpServletRequest request, String toParam,
+    private RestcommCreateCallResponses executeAction(String projectName, HttpServletRequest request, String toParam,
                                                      String fromParam, String accessToken, UriInfo ui, AccountProvider accountProvider) throws StorageException, CallControlException {
         if(logger.isInfoEnabled()) {
             logger.info( "WebTrigger: Application '" + projectName + "' initiated. User request URL: " + ui.getRequestUri().toString());
@@ -295,9 +295,9 @@ public class RvdController extends SecuredRestService {
                 accountSid = accountResponse.getSid();
             }
             // Create the call
-            RestcommCreateCallResponse response = restcommClient.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
+            RestcommCreateCallResponses response = restcommClient.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
                     .addParam("From", from).addParam("To", to).addParam("Url", rcmlUrl)
-                    .done(marshaler.getGson(), RestcommCreateCallResponse.class);
+                    .done(marshaler.getGson(), RestcommCreateCallResponses.class);
 
             if(logger.isInfoEnabled()) {
                 logger.info("WebTrigger: joined " + to + " with " + rcmlUrl);
@@ -318,10 +318,18 @@ public class RvdController extends SecuredRestService {
         try {
             rvdContext.setProjectName(projectName);
             AccountProvider accountProvider = AccountProvider.getInstance();
-            RestcommCreateCallResponse createCallResponse = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
+            RestcommCreateCallResponses calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
+            // build call-sid part of message
+            StringBuffer messageBuffer = new StringBuffer("[");
+            for (int i=0; i<calls.size(); i++) {
+                messageBuffer.append(calls.get(i).getSid());
+                if (i < calls.size()-1)
+                    messageBuffer.append(",");
+            }
+            messageBuffer.append("]");
             return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "success",
-                    "Created call with SID " + createCallResponse.getSid() + " from " + createCallResponse.getFrom() + " to "
-                            + createCallResponse.getTo(), 200);
+                    "Created call with SID " + messageBuffer.toString() + " from " + calls.get(0).getFrom() + " to "
+                            + calls.get(0).getTo(), 200);
         } catch (UnauthorizedCallControlAccess e) {
             logger.warn(e);
             return buildWebTriggerHtmlResponse("Web Trigger", "Create call", "failure", "Authentication error", 401);
@@ -350,8 +358,8 @@ public class RvdController extends SecuredRestService {
         try {
             rvdContext.setProjectName(projectName);
             AccountProvider accountProvider = AccountProvider.getInstance();
-            RestcommCreateCallResponse createCallResponse = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider );
-            return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.success, 200, createCallResponse);
+            RestcommCreateCallResponses calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
+            return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.success, 200, calls);
         } catch (UnauthorizedCallControlAccess e) {
             logger.warn(e);
             return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.failure, 401, null);

@@ -31,6 +31,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -161,7 +164,28 @@ public class RestcommClient {
                                 throw new RestcommClientException("Error invoking Restcomm REST api").setStatusCode(statusCode);
                         }
                         String content = IOUtils.toString(apiResponse.getEntity().getContent());
-                        return gson.fromJson(content, resultClass);
+
+                        // handle WebTrigger Create Call responses in a special way.
+                        if ( resultClass.equals(RestcommCreateCallResponses.class) ) {
+                            // we need to take care of two different types of responses i.e. object and array
+                            RestcommCreateCallResponses calls = new RestcommCreateCallResponses();
+                            JsonParser parser = new JsonParser();
+                            JsonElement element = parser.parse(content);
+                            if (element.isJsonObject()) {
+                                RestcommCreateCallResponse call = gson.fromJson(content,RestcommCreateCallResponse.class);
+                                calls.add(call);
+                            } else
+                            if (element.isJsonArray()) {
+                                JsonArray array = element.getAsJsonArray();
+                                for (int i = 0; i < array.size(); i++) {
+                                    calls.add(gson.fromJson(array.get(i), RestcommCreateCallResponse.class));
+                                }
+                            } else {
+                                throw new RuntimeException("Invalid response format returned from Restcomm");
+                            }
+                            return (T) calls;
+                        } else
+                            return gson.fromJson(content, resultClass);
                     } finally {
                         apiResponse.close();
                     }
