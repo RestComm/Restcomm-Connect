@@ -218,6 +218,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         map.put("user_agent", registration.getUserAgent());
         map.put("ttl", registration.getTimeToLive());
         map.put("webrtc", registration.isWebRTC());
+        map.put("isLBPresent", registration.isLBPresent());
         return map;
     }
 
@@ -234,7 +235,11 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final String userAgent = readString(map.get("user_agent"));
         final Integer timeToLive = readInteger(map.get("ttl"));
         final Boolean webRTC = readBoolean(map.get("webrtc"));
+        Boolean isLBPresent = false;
+        if (readBoolean(map.get("isLBPresent")) != null) {
+            isLBPresent = readBoolean(map.get("isLBPresent"));
+        }
         return new Registration(sid, instanceId, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
-                timeToLive, location, webRTC);
+                timeToLive, location, webRTC, isLBPresent);
     }
 }
