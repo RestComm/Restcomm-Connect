@@ -19,18 +19,17 @@ public interface InstanceIdMapper {
     String DELETE_INSTANCEID="DELETE FROM \"restcomm_instance_id\" WHERE \"instance_id\"=#{instance_id}";
 
     @Insert(INSERT_INSTANCEID)
-    public void addInstanceId(Map map);
+    void addInstanceId(Map map);
 
     @Select(SELECT_INSTANCEID)
-    public Map<String, Object> getInstanceId();
+    Map<String, Object> getInstanceId();
 
     @Select(SELECT_INSTANCEID_BY_HOST)
-    public Map<String, Object> getInstanceIdByHost(String host);
+    Map<String, Object> getInstanceIdByHost(String host);
 
     @Update(UPDATE_INSTANCEID)
-    public void updateInstanceId(Map map);
+    void updateInstanceId(Map map);
 
     @Delete(DELETE_INSTANCEID)
-    public void removeInstanceId(String instance_id);
-    
+    void removeInstanceId(String instance_id);
 }

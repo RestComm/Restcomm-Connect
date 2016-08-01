@@ -81,8 +81,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         }
         final SqlSession session = sessions.openSession();
         try {
-        	RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
-        	mapper.addRecording(toMap(recording));
+            RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
+            mapper.addRecording(toMap(recording));
             session.commit();
         } finally {
             session.close();
@@ -102,8 +102,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     public Recording getRecording(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
-        	final Map<String, Object> result = mapper.getRecording(sid.toString());
+            RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
+            final Map<String, Object> result = mapper.getRecording(sid.toString());
             if (result != null) {
                 return toRecording(result);
             } else {
@@ -118,8 +118,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     public Recording getRecordingByCall(final Sid callSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
-        	final Map<String, Object> result = mapper.getRecordingByCall(callSid.toString());
+            RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
+            final Map<String, Object> result = mapper.getRecordingByCall(callSid.toString());
             if (result != null) {
                 return toRecording(result);
             } else {
@@ -134,8 +134,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     public List<Recording> getRecordingsByCall(Sid callSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
-        	final List<Map<String, Object>> results = mapper.getRecordingsByCall(callSid.toString());
+            RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
+            final List<Map<String, Object>> results = mapper.getRecordingsByCall(callSid.toString());
             final List<Recording> recordings = new ArrayList<Recording>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -152,8 +152,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     public List<Recording> getRecordings(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
-        	final List<Map<String, Object>> results = mapper.getRecordings(accountSid.toString());
+            RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
+            final List<Map<String, Object>> results = mapper.getRecordings(accountSid.toString());
             final List<Recording> recordings = new ArrayList<Recording>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -170,8 +170,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     public void removeRecording(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
-        	mapper.removeRecording(sid.toString());
+            RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
+            mapper.removeRecording(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -182,8 +182,8 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     public void removeRecordings(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
-        	mapper.removeRecordings(accountSid.toString());
+            RecordingsMapper mapper=session.getMapper(RecordingsMapper.class);
+            mapper.removeRecordings(accountSid.toString());
             session.commit();
         } finally {
             session.close();

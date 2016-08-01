@@ -55,8 +55,8 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public void addNotification(final Notification notification) {
         final SqlSession session = sessions.openSession();
         try {
-        	NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
-        	mapper.addNotification(toMap(notification));
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.addNotification(toMap(notification));
             session.commit();
         } finally {
             session.close();
@@ -67,8 +67,8 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public Notification getNotification(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
-        	final Map<String, Object> result = mapper.getNotification(sid.toString());
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            final Map<String, Object> result = mapper.getNotification(sid.toString());
             if (result != null) {
                 return toNotification(result);
             } else {
@@ -81,9 +81,9 @@ public final class MybatisNotificationsDao implements NotificationsDao {
 
     @Override
     public List<Notification> getNotifications(final Sid accountSid) {
-    	 final SqlSession session = sessions.openSession();
+         final SqlSession session = sessions.openSession();
          try {
-        	 NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+             NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
              final List<Map<String, Object>> results = mapper.getNotifications(accountSid.toString());
              final List<Notification> notifications = new ArrayList<Notification>();
              if (results != null && !results.isEmpty()) {
@@ -101,7 +101,7 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public List<Notification> getNotificationsByCall(final Sid callSid) {
         final SqlSession session = sessions.openSession();
         try {
-       	    NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+               NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
             final List<Map<String, Object>> results = mapper.getNotificationsByCall(callSid.toString());
             final List<Notification> notifications = new ArrayList<Notification>();
             if (results != null && !results.isEmpty()) {
@@ -119,7 +119,7 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public List<Notification> getNotificationsByLogLevel(final int logLevel) {
         final SqlSession session = sessions.openSession();
         try {
-       	    NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+               NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
             final List<Map<String, Object>> results = mapper.getNotificationsByLogLevel(logLevel);
             final List<Notification> notifications = new ArrayList<Notification>();
             if (results != null && !results.isEmpty()) {
@@ -140,7 +140,7 @@ public final class MybatisNotificationsDao implements NotificationsDao {
         parameters.put("end_date", messageDate.plusDays(1).toDate());
         final SqlSession session = sessions.openSession();
         try {
-       	    NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+               NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
             final List<Map<String, Object>> results = mapper.getNotificationsByMessageDate(parameters);
             final List<Notification> notifications = new ArrayList<Notification>();
             if (results != null && !results.isEmpty()) {
@@ -158,8 +158,8 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public void removeNotification(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
-        	mapper.removeNotification(sid.toString());
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.removeNotification(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -170,8 +170,8 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public void removeNotifications(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
-        	mapper.removeNotifications(accountSid.toString());
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.removeNotifications(accountSid.toString());
             session.commit();
         } finally {
             session.close();
@@ -182,8 +182,8 @@ public final class MybatisNotificationsDao implements NotificationsDao {
     public void removeNotificationsByCall(final Sid callSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
-        	mapper.removeNotificationsByCall(callSid.toString());
+            NotificationsMapper mapper=session.getMapper(NotificationsMapper.class);
+            mapper.removeNotificationsByCall(callSid.toString());
             session.commit();
         } finally {
             session.close();

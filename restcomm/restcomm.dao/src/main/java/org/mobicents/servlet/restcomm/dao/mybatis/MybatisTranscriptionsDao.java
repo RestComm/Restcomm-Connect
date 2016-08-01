@@ -36,6 +36,7 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.Transcription;
+import org.mobicents.servlet.restcomm.mappers.TranscriptionsMapper;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
@@ -55,7 +56,8 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
     public void addTranscription(final Transcription transcription) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addTranscription", toMap(transcription));
+            TranscriptionsMapper mapper= session.getMapper(TranscriptionsMapper.class);
+            mapper.addTranscription(toMap(transcription));
             session.commit();
         } finally {
             session.close();
@@ -64,18 +66,26 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
 
     @Override
     public Transcription getTranscription(final Sid sid) {
-        return getTranscription(namespace + "getTranscription", sid);
+        final SqlSession session = sessions.openSession();
+        try {
+            TranscriptionsMapper mapper= session.getMapper(TranscriptionsMapper.class);
+            final Map<String, Object> result = mapper.getTranscription(sid.toString());
+            if (result != null) {
+                return toTranscription(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public Transcription getTranscriptionByRecording(final Sid recordingSid) {
-        return getTranscription(namespace + "getTranscriptionByRecording", recordingSid);
-    }
-
-    private Transcription getTranscription(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(selector, sid.toString());
+            TranscriptionsMapper mapper= session.getMapper(TranscriptionsMapper.class);
+            final Map<String, Object> result = mapper.getTranscriptionByRecording(recordingSid.toString());
             if (result != null) {
                 return toTranscription(result);
             } else {
@@ -90,8 +100,8 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
     public List<Transcription> getTranscriptions(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session
-                    .selectList(namespace + "getTranscriptions", accountSid.toString());
+            TranscriptionsMapper mapper= session.getMapper(TranscriptionsMapper.class);
+            final List<Map<String, Object>> results = mapper.getTranscriptions(accountSid.toString());
             final List<Transcription> transcriptions = new ArrayList<Transcription>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -106,18 +116,10 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
 
     @Override
     public void removeTranscription(final Sid sid) {
-        removeTranscriptions(namespace + "removeTranscription", sid);
-    }
-
-    @Override
-    public void removeTranscriptions(final Sid accountSid) {
-        removeTranscriptions(namespace + "removeTranscriptions", accountSid);
-    }
-
-    private void removeTranscriptions(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(selector, sid.toString());
+            TranscriptionsMapper mapper= session.getMapper(TranscriptionsMapper.class);
+            mapper.removeTranscription(sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -125,10 +127,24 @@ public final class MybatisTranscriptionsDao implements TranscriptionsDao {
     }
 
     @Override
+    public void removeTranscriptions(final Sid accountSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            TranscriptionsMapper mapper= session.getMapper(TranscriptionsMapper.class);
+            mapper.removeTranscriptions(accountSid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+
+    @Override
     public void updateTranscription(final Transcription transcription) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateTranscription", toMap(transcription));
+            TranscriptionsMapper mapper= session.getMapper(TranscriptionsMapper.class);
+            mapper.updateTranscription(toMap(transcription));
             session.commit();
         } finally {
             session.close();

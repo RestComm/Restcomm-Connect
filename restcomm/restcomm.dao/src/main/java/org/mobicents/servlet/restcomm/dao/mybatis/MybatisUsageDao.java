@@ -27,6 +27,7 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 import org.mobicents.servlet.restcomm.dao.UsageDao;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.Usage;
+import org.mobicents.servlet.restcomm.mappers.UsageMapper;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -57,27 +58,118 @@ public final class MybatisUsageDao implements UsageDao {
 
   @Override
   public List<Usage> getUsage(final Sid accountSid) {
-    return getUsageCalls(accountSid, null, null, null, "getAllTimeCalls");
+    final SqlSession session = sessions.openSession();
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("sid", accountSid.toString());
+    try {
+      UsageMapper mapper= session.getMapper(UsageMapper.class);
+      final List<Map<String, Object>> results = mapper.getAllTimeCalls(params);
+      final List<Usage> usageRecords = new ArrayList<Usage>();
+      if (results != null && !results.isEmpty()) {
+        for (final Map<String, Object> result : results) {
+          usageRecords.add(toUsageRecord(accountSid, result));
+        }
+      }
+      return usageRecords;
+    } finally {
+      session.close();
+    }
   }
 
   @Override
   public List<Usage> getUsageDaily(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getDailyCalls");
+    long startTime = System.currentTimeMillis();
+    final SqlSession session = sessions.openSession();
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("sid", accountSid.toString());
+    params.put("startDate", new Date(startDate.getMillis()));
+    params.put("endDate", new Date(endDate.getMillis()));
+    fillParametersByCategory(category, params);
+    try {
+      UsageMapper mapper= session.getMapper(UsageMapper.class);
+      final List<Map<String, Object>> results = mapper.getDailyCalls(params);
+      final List<Usage> usageRecords = new ArrayList<Usage>();
+      if (results != null && !results.isEmpty()) {
+        for (final Map<String, Object> result : results) {
+          usageRecords.add(toUsageRecord(accountSid, result));
+        }
+      }
+      return usageRecords;
+    } finally {
+      session.close();
+    }
   }
 
   @Override
   public List<Usage> getUsageMonthly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getMonthlyCalls");
+    long startTime = System.currentTimeMillis();
+    final SqlSession session = sessions.openSession();
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("sid", accountSid.toString());
+    params.put("startDate", new Date(startDate.getMillis()));
+    params.put("endDate", new Date(endDate.getMillis()));
+    fillParametersByCategory(category, params);
+    try {
+      UsageMapper mapper= session.getMapper(UsageMapper.class);
+      final List<Map<String, Object>> results = mapper.getMonthlyCalls(params);
+      final List<Usage> usageRecords = new ArrayList<Usage>();
+      if (results != null && !results.isEmpty()) {
+        for (final Map<String, Object> result : results) {
+          usageRecords.add(toUsageRecord(accountSid, result));
+        }
+      }
+      return usageRecords;
+    } finally {
+      session.close();
+    }
   }
 
   @Override
   public List<Usage> getUsageYearly(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getYearlyCalls");
+    long startTime = System.currentTimeMillis();
+    final SqlSession session = sessions.openSession();
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("sid", accountSid.toString());
+    params.put("startDate", new Date(startDate.getMillis()));
+    params.put("endDate", new Date(endDate.getMillis()));
+    fillParametersByCategory(category, params);
+    try {
+      UsageMapper mapper= session.getMapper(UsageMapper.class);
+      final List<Map<String, Object>> results = mapper.getYearlyCalls(params);
+      final List<Usage> usageRecords = new ArrayList<Usage>();
+      if (results != null && !results.isEmpty()) {
+        for (final Map<String, Object> result : results) {
+          usageRecords.add(toUsageRecord(accountSid, result));
+        }
+      }
+      return usageRecords;
+    } finally {
+      session.close();
+    }
   }
 
   @Override
   public List<Usage> getUsageAllTime(final Sid accountSid, Usage.Category category, DateTime startDate, DateTime endDate) {
-    return getUsageCalls(accountSid, category, startDate, endDate, "getAllTimeCalls");
+    long startTime = System.currentTimeMillis();
+    final SqlSession session = sessions.openSession();
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("sid", accountSid.toString());
+    params.put("startDate", new Date(startDate.getMillis()));
+    params.put("endDate", new Date(endDate.getMillis()));
+    fillParametersByCategory(category, params);
+    try {
+      UsageMapper mapper= session.getMapper(UsageMapper.class);
+      final List<Map<String, Object>> results = mapper.getAllTimeCalls(params);
+      final List<Usage> usageRecords = new ArrayList<Usage>();
+      if (results != null && !results.isEmpty()) {
+        for (final Map<String, Object> result : results) {
+          usageRecords.add(toUsageRecord(accountSid, result));
+        }
+      }
+      return usageRecords;
+    } finally {
+      session.close();
+    }
   }
 
   /*

@@ -67,7 +67,7 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     public Application getApplication(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
             final Map<String, Object> result = mapper.getApplication(sid.toString());
             if (result != null) {
                 return toApplication(result);
@@ -83,7 +83,7 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     public Application getApplication(final String friendlyName) {
         final SqlSession session = sessions.openSession();
         try {
-        	ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
+            ApplicationsMapper mapper=session.getMapper(ApplicationsMapper.class);
             final Map<String, Object> result = mapper.getApplicationByFriendlyName(friendlyName);
             if (result != null) {
                 return toApplication(result);

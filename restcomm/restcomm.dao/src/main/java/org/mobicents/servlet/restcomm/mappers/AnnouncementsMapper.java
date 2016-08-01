@@ -12,12 +12,12 @@ import org.apache.ibatis.annotations.Select;
  */
 public interface AnnouncementsMapper {
 
-	String SELECT_ANNOUNCEMENT="SELECT * FROM \"restcomm_announcements\" WHERE \"sid\"=#{sid}";
-	String SELECT_ANNOUNCEMENTS="SELECT * FROM \"restcomm_announcements\" WHERE \"account_sid\"=#{account_sid}";
-	String INSERT_ANNOUNCEMENT="INSERT INTO \"restcomm_announcements\" (\"sid\", \"date_created\", \"account_sid\", \"gender\", \"language\", \"text\", \"uri\")"
+    String SELECT_ANNOUNCEMENT="SELECT * FROM \"restcomm_announcements\" WHERE \"sid\"=#{sid}";
+    String SELECT_ANNOUNCEMENTS="SELECT * FROM \"restcomm_announcements\" WHERE \"account_sid\"=#{account_sid}";
+    String INSERT_ANNOUNCEMENT="INSERT INTO \"restcomm_announcements\" (\"sid\", \"date_created\", \"account_sid\", \"gender\", \"language\", \"text\", \"uri\")"
         + "VALUES(#{sid}, #{date_created}, #{account_sid}, #{gender}, #{language}, #{text}, #{uri})";
-	String DELETE_ANNOUNCEMENT="DELETE FROM \"restcomm_announcements\" WHERE \"sid\"=#{sid}";
-	String DELETE_ANNOUNCEMENTS="DELETE FROM \"restcomm_announcements\" WHERE \"account_sid\"=#{accountSid}";
+    String DELETE_ANNOUNCEMENT="DELETE FROM \"restcomm_announcements\" WHERE \"sid\"=#{sid}";
+    String DELETE_ANNOUNCEMENTS="DELETE FROM \"restcomm_announcements\" WHERE \"account_sid\"=#{accountSid}";
 
     @Select(SELECT_ANNOUNCEMENT)
     Map<String,Object> getAnnouncement(String sid);
@@ -30,7 +30,7 @@ public interface AnnouncementsMapper {
 
     @Delete(DELETE_ANNOUNCEMENT)
     void removeAnnouncement(String sid);
-    
+
     @Delete(DELETE_ANNOUNCEMENTS)
     void removeAnnouncements(String accountSid);
 }

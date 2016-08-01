@@ -65,7 +65,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final SqlSession session = sessions.openSession();
         try {
             RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
-        	mapper.addRegistration(toMap(registration));
+            mapper.addRegistration(toMap(registration));
             session.commit();
         } finally {
             session.close();
@@ -80,7 +80,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
             RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
-        	final List<Map<String, Object>> results =mapper.getRegistration(user);
+            final List<Map<String, Object>> results =mapper.getRegistration(user);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -139,7 +139,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
             RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
-        	final List<Map<String, Object>> results = mapper.getRegistration(user);
+            final List<Map<String, Object>> results = mapper.getRegistration(user);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -164,7 +164,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final SqlSession session = sessions.openSession();
         try {
             RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
-        	final List<Map<String, Object>> results = mapper.getRegistrations();
+            final List<Map<String, Object>> results = mapper.getRegistrations();
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -182,7 +182,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final SqlSession session = sessions.openSession();
         try {
             RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
-        	final Integer result = mapper.hasRegistration(toMap(registration));
+            final Integer result = mapper.hasRegistration(toMap(registration));
             return result != null && result > 0;
         } finally {
             session.close();
@@ -194,7 +194,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         final SqlSession session = sessions.openSession();
         try {
             RegistrationsMapper mapper=session.getMapper(RegistrationsMapper.class);
-        	mapper.removeRegistration(toMap(registration));
+            mapper.removeRegistration(toMap(registration));
             session.commit();
         } finally {
             session.close();

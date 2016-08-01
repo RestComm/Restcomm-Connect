@@ -48,7 +48,7 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
     public Announcement getAnnouncement(Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
             final Map<String, Object> result = mapper.getAnnouncement(sid.toString());
             if (result != null) {
                 return toAnnouncement(result);
@@ -64,7 +64,7 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
     public List<Announcement> getAnnouncements(Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
             final List<Map<String, Object>> results = mapper.getAnnouncements(accountSid.toString());
             final List<Announcement> announcements = new ArrayList<Announcement>();
             if (results != null && !results.isEmpty()) {
@@ -82,7 +82,7 @@ public final class MybatisAnnouncementsDao implements AnnouncementsDao {
     public void removeAnnouncement(Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
+            AnnouncementsMapper mapper=session.getMapper(AnnouncementsMapper.class);
             mapper.removeAnnouncement(sid.toString());
             session.commit();
          } finally {

@@ -55,8 +55,8 @@ public final class MybatisAccountsDao implements AccountsDao {
     public void addAccount(final Account account) {
         final SqlSession session = sessions.openSession();
         try {
-        	AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	mapper.addAccount(toMap(account));
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            mapper.addAccount(toMap(account));
             session.commit();
         } finally {
             session.close();
@@ -65,10 +65,10 @@ public final class MybatisAccountsDao implements AccountsDao {
 
     @Override
     public Account getAccount(final Sid sid) {
-    	final SqlSession session = sessions.openSession();
+        final SqlSession session = sessions.openSession();
         try {
-        	AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	final Map<String, Object> result = mapper.getAccount(sid.toString());
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccount(sid.toString());
             if (result != null) {
                 return toAccount(result);
             } else {
@@ -77,7 +77,6 @@ public final class MybatisAccountsDao implements AccountsDao {
         } finally {
             session.close();
         }
-    	
         //return getAccount(namespace + "getAccount", sid.toString());
     }
 
@@ -111,8 +110,8 @@ public final class MybatisAccountsDao implements AccountsDao {
     private Account getAccountByFriendlyName(final String name) {
         final SqlSession session = sessions.openSession();
         try {
-        	AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	final Map<String, Object> result = mapper.getAccountByFriendlyName(name);
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccountByFriendlyName(name);
             if (result != null) {
                 return toAccount(result);
             } else {
@@ -126,8 +125,8 @@ public final class MybatisAccountsDao implements AccountsDao {
     private Account getAccountByEmail(final String email) {
         final SqlSession session = sessions.openSession();
         try {
-        	AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	final Map<String, Object> result = mapper.getAccountByEmail(email);
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccountByEmail(email);
             if (result != null) {
                 return toAccount(result);
             } else {
@@ -141,8 +140,8 @@ public final class MybatisAccountsDao implements AccountsDao {
     private Account getAccountBySid(final String sid) {
         final SqlSession session = sessions.openSession();
         try {
-        	AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	final Map<String, Object> result = mapper.getAccount(sid);
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final Map<String, Object> result = mapper.getAccount(sid);
             if (result != null) {
                 return toAccount(result);
             } else {
@@ -152,7 +151,7 @@ public final class MybatisAccountsDao implements AccountsDao {
             session.close();
         }
     }
-    
+
     //deleted because this method was splited
 /*
     private Account getAccount(final String selector, final Object parameters) {
@@ -175,8 +174,8 @@ public final class MybatisAccountsDao implements AccountsDao {
         final SqlSession session = sessions.openSession();
         try {
             //final List<Map<String, Object>> results = session.selectList(namespace + "getAccounts", accountSid.toString());
-        	AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	final List<Map<String, Object>> results =mapper.getAccounts(accountSid.toString());
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            final List<Map<String, Object>> results =mapper.getAccounts(accountSid.toString());
             final List<Account> accounts = new ArrayList<Account>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -191,15 +190,14 @@ public final class MybatisAccountsDao implements AccountsDao {
 
     @Override
     public void removeAccount(final Sid sid) {
-    	 final SqlSession session = sessions.openSession();
+         final SqlSession session = sessions.openSession();
          try {
-        	 AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	 mapper.removeAccount(sid.toString());
+             AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+             mapper.removeAccount(sid.toString());
              session.commit();
          } finally {
              session.close();
          }
-        
     }
 
 /*
@@ -216,10 +214,10 @@ public final class MybatisAccountsDao implements AccountsDao {
 
     @Override
     public void updateAccount(final Account account) {
-    	final SqlSession session = sessions.openSession();
+        final SqlSession session = sessions.openSession();
         try {
-        	AccountsMapper mapper = session.getMapper(AccountsMapper.class);
-        	mapper.updateAccount(toMap(account));
+            AccountsMapper mapper = session.getMapper(AccountsMapper.class);
+            mapper.updateAccount(toMap(account));
             session.commit();
         } finally {
             session.close();

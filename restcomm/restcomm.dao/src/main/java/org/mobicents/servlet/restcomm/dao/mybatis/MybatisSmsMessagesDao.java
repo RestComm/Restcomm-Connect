@@ -36,6 +36,7 @@ import static org.mobicents.servlet.restcomm.dao.DaoUtils.*;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.entities.SmsMessage;
+import org.mobicents.servlet.restcomm.mappers.SmsMessagesMapper;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
 /**
@@ -55,7 +56,8 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
     public void addSmsMessage(final SmsMessage smsMessage) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addSmsMessage", toMap(smsMessage));
+            SmsMessagesMapper mapper=session.getMapper(SmsMessagesMapper.class);
+            mapper.addSmsMessage( toMap(smsMessage));
             session.commit();
         } finally {
             session.close();
@@ -66,7 +68,8 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
     public SmsMessage getSmsMessage(final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getSmsMessage", sid.toString());
+            SmsMessagesMapper mapper=session.getMapper(SmsMessagesMapper.class);
+            final Map<String, Object> result = mapper.getSmsMessage(sid.toString());
             if (result != null) {
                 return toSmsMessage(result);
             } else {
@@ -81,7 +84,8 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
     public List<SmsMessage> getSmsMessages(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getSmsMessages", accountSid.toString());
+            SmsMessagesMapper mapper=session.getMapper(SmsMessagesMapper.class);
+            final List<Map<String, Object>> results = mapper.getSmsMessages(accountSid.toString());
             final List<SmsMessage> smsMessages = new ArrayList<SmsMessage>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -96,18 +100,22 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
 
     @Override
     public void removeSmsMessage(final Sid sid) {
-        deleteSmsMessage(namespace + "removeSmsMessage", sid);
+        final SqlSession session = sessions.openSession();
+        try {
+            SmsMessagesMapper mapper=session.getMapper(SmsMessagesMapper.class);
+            mapper.removeSmsMessage(sid.toString());
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void removeSmsMessages(final Sid accountSid) {
-        deleteSmsMessage(namespace + "removeSmsMessages", accountSid);
-    }
-
-    private void deleteSmsMessage(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(selector, sid.toString());
+            SmsMessagesMapper mapper=session.getMapper(SmsMessagesMapper.class);
+            mapper.removeSmsMessages(accountSid.toString());
             session.commit();
         } finally {
             session.close();
@@ -117,7 +125,8 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
     public void updateSmsMessage(final SmsMessage smsMessage) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateSmsMessage", toMap(smsMessage));
+            SmsMessagesMapper mapper=session.getMapper(SmsMessagesMapper.class);
+            mapper.updateSmsMessage(toMap(smsMessage));
             session.commit();
         } finally {
             session.close();

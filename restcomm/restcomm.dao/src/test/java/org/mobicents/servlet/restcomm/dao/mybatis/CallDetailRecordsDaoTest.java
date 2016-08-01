@@ -32,7 +32,6 @@ import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.dao.CallDetailRecordsDao;
 import org.mobicents.servlet.restcomm.entities.CallDetailRecord;
 import org.mobicents.servlet.restcomm.entities.Sid;
@@ -358,7 +357,7 @@ public class CallDetailRecordsDaoTest {
         cdrs.addCallDetailRecord(cdr);
         // Validate the results.
         assertTrue(cdrs.getCallDetailRecordsByEndTime(now).size() == 1);
-        assertTrue(cdrs.getCallDetailRecordsByStarTimeAndEndTime(now).size() == 1);
+        assertTrue(cdrs.getCallDetailRecordsByStarTimeAndEndTime(now,now).size() == 1);
         // Delete the CDR.
         cdrs.removeCallDetailRecord(sid);
         // Validate that the CDRs were removed.

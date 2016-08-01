@@ -37,7 +37,7 @@ public interface ApplicationsMapper {
     Map<String,Object> getApplicationByFriendlyName(String friendlyName);
 
     @Select(SELECT_APPLICATINS)
-	List<Map<String, Object>>  getApplications(String accountSid);
+    List<Map<String, Object>>  getApplications(String accountSid);
 
     @Delete(DELETE_APPLICATION)
     void removeApplication(String sid);
