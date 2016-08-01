@@ -75,17 +75,21 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
-rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService, RCommAccounts, md5) {
+rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications) {
   //$scope.sid = SessionService.get('sid');
 
   var accountBackup;
-
-  $scope.$watch('account', function() {
-    if (!angular.equals($scope.account, accountBackup)) {
-      $scope.accountChanged = true;
-      // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
-    }
-  }, true);
+  var loggedUserAccount = AuthService.getAccount();
+  $scope.currentAccountRole = loggedUserAccount.role;
+   $scope.$watch('account', function() {
+     if (!angular.equals($scope.account, accountBackup)) {
+       $scope.accountChanged = true;
+       // console.log('CHANGED: ' + $scope.accountChanged + ' => VALID:' + $scope.profileForm.$valid);
+     }
+      if ( $scope.accountChanged  && angular.equals(accountBackup.sid, loggedUserAccount.sid)) {
+         Notifications.warn("You will loose some privileges due to this change.");
+     }
+   }, true);
 
   $scope.newPassword = $scope.newPassword2 = '';
 
@@ -112,7 +116,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   };
 
   $scope.updateProfile = function() {
-    var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status};
+    var params = {FriendlyName: $scope.account.friendly_name, Type: $scope.account.type, Status: $scope.account.status,Role: $scope.account.role};
 
     if($scope.newPassword != '' && $scope.profileForm.newPassword.$valid) {
       params['Auth_Token'] = md5.createHash($scope.newPassword);
@@ -166,7 +170,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
 var RegisterAccountModalCtrl = function ($scope, $modalInstance, RCommAccounts, Notifications) {
 
   $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
-  $scope.newAccount = {role: 'Administrator'};
+  $scope.newAccount = {role: $scope.currentAccount.role};
   $scope.createAccount = function(account) {
     if(account.email && account.password) {
       // Numbers.register({PhoneNumber:number.number});

@@ -160,6 +160,7 @@ public final class Call extends UntypedActor {
 
     // Call runtime stuff.
     private final Sid id;
+    private final String instanceId;
     private CallStateChanged.State external;
     private String direction;
     private String forwardedFrom;
@@ -285,6 +286,7 @@ public final class Call extends UntypedActor {
 
         // Initialize the runtime stuff.
         this.id = Sid.generate(Sid.Type.CALL);
+        this.instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
         this.created = DateTime.now();
         this.observers = Collections.synchronizedList(new ArrayList<ActorRef>());
         this.receivedBye = false;
@@ -456,6 +458,14 @@ public final class Call extends UntypedActor {
         }
     }
 
+    private void addCustomHeaders(SipServletMessage message) {
+        if (apiVersion != null)
+            message.addHeader("X-RestComm-ApiVersion", apiVersion);
+        if (accountId != null)
+            message.addHeader("X-RestComm-AccountSid", accountId.toString());
+        message.addHeader("X-RestComm-CallSid", id.toString()+"-"+instanceId);
+    }
+
     // Allow updating of the callInfo at the VoiceInterpreter so that we can do Dial SIP Screening
     // (https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out) accurately from latest response
     // received
@@ -467,6 +477,7 @@ public final class Call extends UntypedActor {
 
     private void processInfo(final SipServletRequest request) throws IOException {
         final SipServletResponse okay = request.createResponse(SipServletResponse.SC_OK);
+        addCustomHeaders(okay);
         okay.send();
         String digits = null;
         if (request.getContentType().equalsIgnoreCase("application/dtmf-relay")) {
@@ -626,9 +637,10 @@ public final class Call extends UntypedActor {
                     invite.addHeader("X-" + entry.getKey(), entry.getValue());
                 }
             }
-            invite.addHeader("X-RestComm-ApiVersion", apiVersion);
-            invite.addHeader("X-RestComm-AccountSid", accountId.toString());
-            invite.addHeader("X-RestComm-CallSid", id.toString());
+            addCustomHeaders(invite);
+//            invite.addHeader("X-RestComm-ApiVersion", apiVersion);
+//            invite.addHeader("X-RestComm-AccountSid", accountId.toString());
+//            invite.addHeader("X-RestComm-CallSid", id.toString());
             final SipSession session = invite.getSession();
             session.setHandler("CallManager");
             // Issue: https://telestax.atlassian.net/browse/RESTCOMM-608
@@ -676,7 +688,8 @@ public final class Call extends UntypedActor {
                 try {
                     // Send a ringing response
                     final SipServletResponse ringing = invite.createResponse(SipServletResponse.SC_RINGING);
-                    ringing.addHeader("X-RestComm-CallSid", id.toString());
+                    addCustomHeaders(ringing);
+//                    ringing.addHeader("X-RestComm-CallSid", id.toString());
                     ringing.send();
                 } catch (IllegalStateException exception) {
                     if(logger.isDebugEnabled()) {
@@ -730,6 +743,7 @@ public final class Call extends UntypedActor {
                     final UntypedActorContext context = getContext();
                     context.setReceiveTimeout(Duration.Undefined());
                     final SipServletRequest cancel = invite.createCancel();
+                    addCustomHeaders(cancel);
                     cancel.send();
                 }
             } catch (Exception e) {
@@ -827,8 +841,15 @@ public final class Call extends UntypedActor {
 
             // Send SIP BUSY to remote peer
             if (Reject.class.equals(klass) && is(ringing) && isInbound()) {
-                final SipServletResponse busy = invite.createResponse(SipServletResponse.SC_BUSY_HERE);
-                busy.send();
+                Reject reject = (Reject) message;
+                SipServletResponse rejectResponse;
+                if (reject.getReason().equalsIgnoreCase("busy")) {
+                    rejectResponse = invite.createResponse(SipServletResponse.SC_BUSY_HERE);
+                } else {
+                    rejectResponse = invite.createResponse(SipServletResponse.SC_DECLINE);
+                }
+                addCustomHeaders(rejectResponse);
+                rejectResponse.send();
             }
 
             // Explicitly invalidate the application session.
@@ -869,6 +890,7 @@ public final class Call extends UntypedActor {
             // Send SIP NOT_FOUND to remote peer
             if (org.mobicents.servlet.restcomm.telephony.NotFound.class.equals(klass) && isInbound()) {
                 final SipServletResponse notFound = invite.createResponse(SipServletResponse.SC_NOT_FOUND);
+                addCustomHeaders(notFound);
                 notFound.send();
             }
 
@@ -925,6 +947,7 @@ public final class Call extends UntypedActor {
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
                 SipServletResponse resp = invite.createResponse(503, "Problem to setup services");
+                addCustomHeaders(resp);
                 if (message instanceof CallFail) {
                     String reason = ((CallFail) message).getReason();
                     if (reason != null)
@@ -1027,6 +1050,7 @@ public final class Call extends UntypedActor {
                     }
                 }
                 final SipServletRequest ack = response.createAck();
+                addCustomHeaders(ack);
                 SipSession session = response.getSession();
 
                 if (initialIpBeforeLB != null ) {
@@ -1527,6 +1551,7 @@ public final class Call extends UntypedActor {
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
                 resp.addHeader("Reason",hangup.getMessage());
             }
+            addCustomHeaders(resp);
             resp.send();
             fsm.transition(hangup, completed);
             return;
@@ -1535,11 +1560,13 @@ public final class Call extends UntypedActor {
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
                 cancel.addHeader("Reason",hangup.getMessage());
             }
+            addCustomHeaders(cancel);
             cancel.send();
             fsm.transition(hangup, completed);
             return;
         } else {
             final SipServletRequest bye = session.createRequest("BYE");
+            addCustomHeaders(bye);
             if (hangup.getMessage() != null && !hangup.getMessage().equals("")) {
                 bye.addHeader("Reason",hangup.getMessage());
             }
@@ -1650,13 +1677,15 @@ public final class Call extends UntypedActor {
                         // https://bitbucket.org/telestax/telscale-restcomm/issue/215/restcomm-adds-extra-newline-to-sdp
                         answer = SdpUtils.endWithNewLine(answer);
                         okay.setContent(answer, "application/sdp");
-                        okay.addHeader("X-RestComm-CallSid",id.toString());
+//                        okay.addHeader("X-RestComm-CallSid",id.toString());
+                        addCustomHeaders(okay);
                         okay.send();
                         waitForAck = true;
                     } else if (SipSession.State.CONFIRMED.equals(sessionState) && is(inProgress)) {
                         // We have an ongoing call and Restcomm executes new RCML app on that
                         // If the sipSession state is Confirmed, then update SDP with the new SDP from MMS
                         SipServletRequest reInvite = invite.getSession().createRequest("INVITE");
+                        addCustomHeaders(reInvite);
                         mediaSessionInfo = message.getMediaSession();
                         final byte[] sdp = mediaSessionInfo.getLocalSdp().getBytes();
                         String answer = null;
