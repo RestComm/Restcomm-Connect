@@ -17,7 +17,7 @@ var rcMod = angular.module('rcApp', [
   'ui.router'
 ]);
 
-// For all states that that have resolve sections that rely on a determined authorization status (AuthService.checkAccess()) and are children of 'restcomm' state, the 'authorize' value should be injected in the dependent 'resolve' values. See state 'restcomm.incoming-phone / localApps'.
+// For all states that that have resolve sections that rely on a determined authorization status (AuthService.evaluateAccess()) and are children of 'restcomm' state, the 'authorize' value should be injected in the dependent 'resolve' values. See state 'restcomm.incoming-phone / localApps'.
 rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
   $stateProvider.state('public',{
     templateUrl:'templates/public-state.html',
@@ -45,8 +45,18 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
             return IdentityConfig.getIdentity();
         },
         uninitialized: function (AuthService,$q) {
+            AuthService.evaluateAccess().then(function (accessStatus) {
+                if (accessStatus == 'LOGGED_ACCOUNT')
+                    throw 'ACCOUNT_ALREADY_INITIALIZED';
+                else
+                if (accessStatus == 'RESTCOMM_ACCOUNT_NOT_INITIALIZED' )
+                    return;
+                else
+                    throw accessStatus;
+            });
+        /*
             try {
-                return $q.when(AuthService.checkAccess()).then(function () {
+                return $q.when(AuthService.evaluateAccess()).then(function () {
                     throw 'ACCOUNT_ALREADY_INITIALIZED';
                 });
             } catch (err) {
@@ -55,6 +65,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
                 else
                     throw err; // raise again
             }
+            */
         }
     }
   });
@@ -71,25 +82,32 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
             templateUrl: 'modules/identity-account-unlinked.html',
             controller: 'AccountUnlinkedCtrl',
             resolve: {
-                init: function (AuthService, $stateParams) {
-                    if ($stateParams.evaluateAccess)
-                        return AuthService.assertUnlinked();
-                    // otherwise return nothing. Controller can rely on existing state of AuthService.
+                init: function (AuthService) {
+                    return AuthService.evaluateAccess().then(function (accessStatus) {
+                        if (accessStatus == 'KEYCLCOAK_NO_LINKED_ACCOUNT') {
+                            return;
+                        } else
+                            throw accessStatus;
+                    });
                 }
             }
         }
-    },
-    params: { evaluateAccess: true }
+    }
   })
-  .state('root.noaccount', {
-    url:'/noaccount',
+  .state('root.auth-error', {
+    url:'/auth-error',
     views: {
         'content': {
-            templateUrl: 'modules/identity-noaccount.html',
-            controller: 'NoAccountCtrl',
+            templateUrl: 'modules/auth-error.html',
+            controller: 'AuthErrorCtrl',
             resolve: {
-                enter: function (AuthService) {
-                    return AuthService.assertNoAccount(); // if there is indeed no account we're at the right place
+                errorType: function (AuthService) {
+                    return AuthService.evaluateAccess().then(function (accessStatus) {
+                        if (accessStatus == 'KEYCLOAK_ORGANIZATION_ACCESS_FORBIDDEN' || accessStatus == 'KEYCLOAK_NO_ACCOUNT')
+                            return accessStatus;
+                        else
+                            throw accessStatus;
+                    });
                 }
             }
         }
@@ -101,7 +119,10 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller:'RestcommCtrl',
     resolve: {
         authorize: function (AuthService) {
-            return AuthService.checkAccess();
+            return AuthService.evaluateAccess().then(function (accessStatus) {
+                if (accessStatus != 'LOGGED_ACCOUNT')
+                    throw accessStatus;
+            });
         },
         identity: function (IdentityConfig) {
             return IdentityConfig.getIdentity();
@@ -114,7 +135,10 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller: 'IdentityRegistrationCtrl',
     resolve: {
         authorize: function (AuthService) {
-            return AuthService.checkAccess();
+            return AuthService.evaluateAccess().then(function (accessStatus) {
+                if (!accessStatus == 'LOGGED_ACCOUNT')
+                    throw accessStatus;
+            });
         },
         noIdentity: function (identity) {
 			if (identity)
@@ -128,7 +152,10 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller: 'IdentityEditCtrl',
     resolve: {
         authorize: function (AuthService) {
-            return AuthService.checkAccess();
+            return AuthService.evaluateAccess().then(function (accessStatus) {
+                if (!accessStatus == 'LOGGED_ACCOUNT')
+                    throw accessStatus;
+            });
         },
         hasIdentity: function (identity) {
             if (!identity)

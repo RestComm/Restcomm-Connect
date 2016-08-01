@@ -82,5 +82,13 @@ angular.module('rcApp').controller('IdentityRegistrationCtrl', function ($scope,
     $scope.logoutKeycloak = function () {
         keycloakLogout(); // defined in restcomm.js
     }
-});
+})
+.controller('AuthErrorCtrl', function ($scope, AuthService, errorType) {
+    $scope.tokenUsername = AuthService.getKeycloakUsername();
+    $scope.errorType = errorType;
+    $scope.logoutKeycloak = function () {
+        keycloakLogout(); // defined in restcomm.js
+    }
+})
+;
 

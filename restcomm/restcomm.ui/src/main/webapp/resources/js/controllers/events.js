@@ -29,7 +29,10 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, AuthServi
 	$rootScope.$on('$stateChangeError',  function(event, toState, toParams, fromState, fromParams, error){
 	    event.preventDefault();
 	    console.log("Error switching state: " + fromState.name + " -> " + toState.name);
-	    // see AuthService.checkAccess() for error definitions
+	    // see AuthService.evaluateAccess() for error definitions
+	    if (error == 'LOGGED_ACCOUNT') { // attempt to navigate to a view for not-logged users while logged
+	        $state.go('restcomm.dashboard');
+	    } else
 	    if (error == "MISSING_ACCOUNT_SID")
 	        $state.go("public.login");
 	    else
@@ -68,6 +71,12 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, AuthServi
 	    } else
 	    if (error == 'KEYCLOAK_NO_ACCOUNT') {
 	        $state.go('root.noaccount');
+	    } else
+	    if (error == 'KEYCLOAK_ORGANIZATION_ACCESS_FORBIDDEN') {
+	        $state.go('root.auth-error');
+	    } else
+	    if (error == 'GENERIC_AUTHORIZATION_ERROR') {
+	        $state.go('root.auth-error');
 	    }
 	});
 
@@ -77,6 +86,7 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, AuthServi
             if ( $state.$current.name != 'unlinked' ) {
                 console.log('redirecting to unlinked state');
                 AuthService.clear();
+                //$state.go('root.unlinked', {evaluateAccess:false});
                 $state.go('root.unlinked', {evaluateAccess:false});
             }
 	    } else {

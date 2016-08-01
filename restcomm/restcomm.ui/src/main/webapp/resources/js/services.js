@@ -42,7 +42,7 @@ rcServices.factory('SessionService', function() {
 rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth){
     var account = null;
     var uninitialized = null;
-    var accessEvaluated = false; // used internally
+    var accessEvaluation = false; // used internally
 
     function getAccountSid() {
         if (!!account)
@@ -79,109 +79,105 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //      UNKNOWN_ERROR - an unknown server error has occured
     //      KEYCLOAK_ACCOUNT_ALREADY_LINKED
     //      KEYCLOAK_NO_ACCOUNT - there is no mapped account whatsoever. user should not be allowed access to the instance
-    //
+    //      KEYCLOAK_ORGANIZATION_ACCESS_FORBIDDEN - user is not authorized to access organization
+    //      GENERIC_AUTHORIZATION_ERROR -
+    //      LOGGED_ACCOUNT - a valid logged account is logged in. Use getAccount() to retrieve it.
     //  - resolved: returns a valid Restcomm account for the logged user
-    function checkAccess() {
-        //var role; // undefined - it should be provided as a function parameter
-        if (IdentityConfig.securedByKeycloak()) {
-            if (!KeycloakAuth.loggedIn) {
-                throw "KEYCLOAK_NOT_LOGGED_IN"; // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
-            }
-            var username = getKeycloakUsername();  // since we're logged in, there MUST be a username available
-            var promisedAccount = $q.defer();
-            if (!account) {
-                if (!accessEvaluated) {
+
+    /*
+        Evaluates current access status
+    */
+    function evaluateAccess() {
+        var promisedStatus = $q.defer();
+
+        if ( accessEvaluation === false ) {
+            // we need to evaluate
+            //var role; // undefined - it should be provided as a function parameter
+            if (IdentityConfig.securedByKeycloak()) {
+                if (!KeycloakAuth.loggedIn) {
+                    accessEvaluation = 'KEYCLOAK_NOT_LOGGED_IN'; // this normally won't occur as keycloak adapter is supposed to detect it and redirect automatically
+                } else {
+                    var username = getKeycloakUsername();  // since we're logged in, there MUST be a username available
                     $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
-                    .success(function (data,status) {
+                    .success(function (fetchedAccount,status) {
                         // TODO we need to handle UNINITIALIZED accounts
-                        promisedAccount.resolve(data);
+                        if (username.toLowerCase() == fetchedAccount.email_address.toLowerCase()) {
+                            setActiveAccount(fetchedAccount);
+                            promisedStatus.resolve('LOGGED_ACCOUNT');
+                        } else {
+                            promisedStatus.resolve('KEYCLOAK_NO_ACCOUNT'); // TODO CHECK if this status is correct !!!
+                        }
                     })
                     .error(function (data,status) {
                         if (status == 403) {
-                            if (data.error == 'ACCOUNT_NOT_LINKED')
-                                promisedAccount.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
+                            if (data.error == 'ACCOUNT_NOT_LINKED') {
+                                promisedStatus.resolve('KEYCLCOAK_NO_LINKED_ACCOUNT');
+                            }
                             else
-                            if (data.error == 'NO_MAPPED_ACCOUNT')
-                                promisedAccount.reject('KEYCLOAK_NO_ACCOUNT');
+                            if (data.error == 'NO_MAPPED_ACCOUNT') {
+                                promisedStatus.resolve( 'KEYCLOAK_NO_ACCOUNT');
+                            }
+                            else
+                            if (data.error == "ORGANIZATION_ACCESS_FORBIDDEN") {
+                                promisedStatus.resolve('KEYCLOAK_ORGANIZATION_ACCESS_FORBIDDEN');
+                            }
+                            else {
+                                promisedStatus.resolve('GENERIC_AUTHORIZATION_ERROR');
+                            }
                         }
                     });
+                }
+            } else
+            if (IdentityConfig.securedByRestcomm()) {
+                if (!!getAccountSid()) { // get account sid from js application (not from session storage) - if F5 is pressed this is lost
+                    if (!isUninitialized())
+                        promisedStatus.resolve('LOGGED_ACCOUNT');
+                     else
+                        promisedStatus.resolve('RESTCOMM_ACCOUNT_NOT_INITIALIZED');
                 } else {
-                    promisedAccount.reject('KEYCLOAK_NO_ACCOUNT');
+                    // maybe we have stored the credentials in the session storage
+                    var creds = SessionService.getStoredCredentials();
+                    if (creds) {
+                        return login(creds.sid, creds.token, true).then(function (status) {
+                            if (status == 'OK')
+                                promisedStatus.resolve('LOGGED_ACCOUNT');
+                            else if (status == 'UNINITIALIZED')
+                                promisedStatus.resolve('RESTCOMM_ACCOUNT_NOT_INITIALIZED');
+                            else
+                                promisedStatus.resolve('UNKNOWN_ERROR');
+                        }, function (status) {
+                            promisedStatus.resolve('RESTCOMM_AUTH_FAILED');
+                        });
+                    } else
+                        promisedStatus.resolve('RESTCOMM_NOT_AUTHENTICATED');
                 }
-            } else {
-                promisedAccount.resolve(account);
             }
-
-            // when the account becomes available, make sure the username/email_address match
-            return promisedAccount.promise.then(function (fetchedAccount) {
-                if (username.toLowerCase() == fetchedAccount.email_address.toLowerCase()) {
-                    setActiveAccount(fetchedAccount);
-                }
-            });
-            // if chained promisedAccount is rejected the returned promise is rejected too since to error callback was defined
-
-        } else
-        if (IdentityConfig.securedByRestcomm()) {
-            if (!!getAccountSid()) { // get account sid from js application (not from session storage) - if F5 is pressed this is lost
-                if (!isUninitialized())
-                    return;
-                 else
-                    throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
-            } else {
-                // maybe we have stored the credentials in the session storage
-                var creds = SessionService.getStoredCredentials();
-                if (creds) {
-                    return login(creds.sid, creds.token, true).then(function (status) {
-                        if (status == 'OK')
-                            return account;
-                        else if (status == 'UNINITIALIZED')
-                            throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
-                        else
-                            throw 'UNKNOWN_ERROR';
-                    }, function (status) {
-                        throw 'RESTCOMM_AUTH_FAILED';
-                    });
-                } else
-                    throw 'RESTCOMM_NOT_AUTHENTICATED';
-            }
+        } else {
+            promisedStatus.resolve(accessEvaluation);
         }
-//        else {
-//            // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
-//            throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
-//        }
 
-        accessEvaluated = true; // we should evaluate access only once
-        return deferred.promise;
+        return promisedStatus.promise.then(function (status) {
+            accessEvaluation = status;
+            return status;
+        });
     }
 
     function reload() {
-        accessEvaluated = false;
+        accessEvaluation = false;
         account = null;
         uninitialized = null;
         SessionService.clearStoredCredentials();
-        return checkAccess();
+        return evaluateAccess();
     }
 
-    function assertUnlinked() {
-        try {
-            return checkAccess().then(function (existingLinkedAccount) {
-                // if the account is already linked, make this an error
-                throw 'KEYCLOAK_ACCOUNT_ALREADY_LINKED';
-                return existingLinkedAccount;
-            });
-        } catch (error) {
-            if (error == 'KEYCLCOAK_NO_LINKED_ACCOUNT')
-                return; // not really an error if we're checking for Unlinked
-            else
-                throw error; // re-throw
-        }
-    }
-
-    function assertNoAccount() {
-        return checkAccess().catch(function (error) {
-            if (error == 'KEYCLOAK_NO_ACCOUNT')
-                return; // ok, no account
+    function assertAuthError() {
+        return evaluateAccess().catch(function (error) {
+            if (error == 'KEYCLOAK_ORGANIZATION_ACCESS_FORBIDDEN' || error == 'KEYCLOAK_NO_ACCOUNT') {
+                return error; // ok, there is indeed an authorization error
+            } else
+                throw error;
         });
+
     }
 
     // updates all necessary state
@@ -318,9 +314,10 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         getAccountSid: getAccountSid,
         getAccount: getAccount,
         getFrientlyName: getFriendlyName,
-        checkAccess: checkAccess,
-        assertUnlinked: assertUnlinked,
-        assertNoAccount: assertNoAccount,
+        evaluateAccess: evaluateAccess,
+        //assertUnlinked: assertUnlinked,
+        //assertNoAccount: assertNoAccount,
+        assertAuthError: assertAuthError,
         isUninitialized: isUninitialized,
         onAuthError: onAuthError,
         onError403: onError403,
