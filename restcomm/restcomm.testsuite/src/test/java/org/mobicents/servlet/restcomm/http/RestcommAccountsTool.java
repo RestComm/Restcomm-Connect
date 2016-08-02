@@ -66,6 +66,18 @@ public class RestcommAccountsTool {
     }
 
     public JsonObject updateAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
+        JsonParser parser = new JsonParser();
+        JsonObject jsonResponse = null;
+        try {
+            ClientResponse clientResponse = updateAccountResponse(deploymentUrl,adminUsername,adminAuthToken,accountSid, friendlyName, password, authToken, role, status);
+            jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+        } catch (Exception e) {
+            logger.info("Exception: "+e);
+        }
+        return jsonResponse;
+    }
+
+    public ClientResponse updateAccountResponse(String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
@@ -81,17 +93,13 @@ public class RestcommAccountsTool {
             params.add("Password", password);
         if (authToken != null)
             params.add("Auth_Token", authToken);
-        // role update is not supported yet!
         if (role != null)
             params.add("Role", role);
         if (status != null)
             params.add("Status", status);
 
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
-        JsonParser parser = new JsonParser();
-        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-
-        return jsonResponse;
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        return response;
     }
 
     public JsonObject createAccount(String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,

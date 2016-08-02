@@ -19,11 +19,11 @@ Restcomm is here to change that! Joining a wave of innovating companies and serv
 Downloads
 ========
 
-Use [the Docker image](http://www.telestax.com/rapid-webrtc-application-development-with-restcomm-and-docker/). It only takes a few minutes to set it up and running.
+Use [the Docker image](http://documentation.telestax.com/connect/configuration/docker/Restcomm%20-%20Docker%20Quick%20Start%20Guide.html#restcomm-docker/). It only takes a few minutes to set it up and running.
 
 Documentation
 ========
-Read the [Online RestComm Documentation](http://docs.telestax.com/restcomm-pages) or it is also contained in the download binary
+Read the [Online RestComm Documentation](http://documentation.telestax.com/connect/) or it is also contained in the download binary
 
 Want to Contribute ? 
 ========
