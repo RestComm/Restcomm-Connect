@@ -226,12 +226,17 @@ public class MediaResourceBroker extends UntypedActor{
 
                 MediaServersDao dao = storage.getMediaServersDao();
                 final MediaServerEntity freshMediaServerEntity = builder.build();
-                final MediaServerEntity existingMediaServerEntity = dao.getMediaServerEntity(msId);
+                final List<MediaServerEntity> existingMediaServersForSameIP = dao.getMediaServerEntityByIP(msIpAddress);
 
-                if(existingMediaServerEntity == null){
+                if(existingMediaServersForSameIP == null || existingMediaServersForSameIP.size()==0){
                     dao.addMediaServer(freshMediaServerEntity);
+                    final List<MediaServerEntity> newMediaServerEntity = dao.getMediaServerEntityByIP(msIpAddress);
+                    this.msId = newMediaServerEntity.get(0).getMsId();
                 }else{
+                    this.msId = existingMediaServersForSameIP.get(0).getMsId();
                     dao.updateMediaServer(freshMediaServerEntity);
+                    if(existingMediaServersForSameIP.size()>1)
+                        logger.error("in DB: there are multiple media servers registered for same IP addres");
                 }
             }
         }

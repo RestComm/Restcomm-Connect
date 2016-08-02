@@ -68,15 +68,17 @@ public final class MybatisMediaServerDao implements MediaServersDao {
     }
 
     @Override
-    public MediaServerEntity getMediaServerEntity(final String msId) {
+    public List<MediaServerEntity> getMediaServerEntityByIP(final String msIPAddress) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getMediaServerEntity", msId);
-            if (result != null) {
-                return toMediaServer(result);
-            } else {
-                return null;
+            final List<Map<String, Object>> results = session.selectList(namespace + "getMediaServers", msIPAddress);
+            final List<MediaServerEntity> msList = new ArrayList<MediaServerEntity>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    msList.add(toMediaServer(result));
+                }
             }
+            return msList;
         } finally {
             session.close();
         }
