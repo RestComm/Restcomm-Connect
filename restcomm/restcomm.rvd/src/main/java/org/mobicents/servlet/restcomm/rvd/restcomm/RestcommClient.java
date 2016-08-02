@@ -166,19 +166,19 @@ public class RestcommClient {
                         String content = IOUtils.toString(apiResponse.getEntity().getContent());
 
                         // handle WebTrigger Create Call responses in a special way.
-                        if ( resultClass.equals(RestcommCreateCallResponses.class) ) {
+                        if ( resultClass.equals(RestcommCallArray.class) ) {
                             // we need to take care of two different types of responses i.e. object and array
-                            RestcommCreateCallResponses calls = new RestcommCreateCallResponses();
+                            RestcommCallArray calls = new RestcommCallArray();
                             JsonParser parser = new JsonParser();
                             JsonElement element = parser.parse(content);
                             if (element.isJsonObject()) {
-                                RestcommCreateCallResponse call = gson.fromJson(content,RestcommCreateCallResponse.class);
+                                RestcommCall call = gson.fromJson(content,RestcommCall.class);
                                 calls.add(call);
                             } else
                             if (element.isJsonArray()) {
                                 JsonArray array = element.getAsJsonArray();
                                 for (int i = 0; i < array.size(); i++) {
-                                    calls.add(gson.fromJson(array.get(i), RestcommCreateCallResponse.class));
+                                    calls.add(gson.fromJson(array.get(i), RestcommCall.class));
                                 }
                             } else {
                                 throw new RuntimeException("Invalid response format returned from Restcomm");
