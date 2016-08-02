@@ -231,9 +231,9 @@ public class MediaResourceBroker extends UntypedActor{
                 if(existingMediaServersForSameIP == null || existingMediaServersForSameIP.size()==0){
                     dao.addMediaServer(freshMediaServerEntity);
                     final List<MediaServerEntity> newMediaServerEntity = dao.getMediaServerEntityByIP(msIpAddress);
-                    this.msId = newMediaServerEntity.get(0).getMsId();
+                    this.msId = newMediaServerEntity.get(0).getMsId()+"";
                 }else{
-                    this.msId = existingMediaServersForSameIP.get(0).getMsId();
+                    this.msId = existingMediaServersForSameIP.get(0).getMsId()+"";
                     dao.updateMediaServer(freshMediaServerEntity);
                     if(existingMediaServersForSameIP.size()>1)
                         logger.error("in DB: there are multiple media servers registered for same IP addres");
