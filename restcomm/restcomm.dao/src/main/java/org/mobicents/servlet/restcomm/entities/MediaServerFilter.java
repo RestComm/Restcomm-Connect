@@ -17,25 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.dao;
+package org.mobicents.servlet.restcomm.entities;
 
-import java.util.List;
+import java.text.ParseException;
 
-import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
-import org.mobicents.servlet.restcomm.entities.MediaServerFilter;
+import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
 
 /**
- * @author maria.farooq@telestax.com (Maria Farooq)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
-public interface MediaServersDao {
 
-    void addMediaServer(MediaServerEntity ms);
+@Immutable
+public class MediaServerFilter {
 
-    MediaServerEntity getMediaServerEntity(String msId);
+    private final String msIpAddress;
+    private final String msPort;
 
-    List<MediaServerEntity> getMediaServers(MediaServerFilter msf);
+    public MediaServerFilter(final String msIpAddress, final String msPort) throws ParseException {
+        this.msIpAddress = msIpAddress;
+        this.msPort = msPort;
+    }
 
-    void removeMediaServerEntity(String msId);
+    public String getMsIpAddress() {
+        return msIpAddress;
+    }
 
-    void updateMediaServer(MediaServerEntity ms);
+    public String getMsPort() {
+        return msPort;
+    }
+
 }

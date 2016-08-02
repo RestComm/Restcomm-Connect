@@ -299,3 +299,12 @@ CREATE TABLE "media_servers" (
 "compatibility" VARCHAR(34), 
 "timeout" VARCHAR(34)
 );
+
+CREATE TABLE "media_resource_broker_entity" (
+"conference_sid" VARCHAR(34) NOT NULL, 
+"slave_ms_id" VARCHAR(34) NOT NULL, 
+"slave_ms_bridge_ep_id" VARCHAR(34) NOT NULL,
+"slave_ms_cnf_ep_id" VARCHAR(34) NOT NULL,
+"is_bridged_together" BOOLEAN NOT NULL DEFAULT FALSE, 
+"slave_ms_sdp" VARCHAR(2000) NOT NULL
+);

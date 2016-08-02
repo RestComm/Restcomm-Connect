@@ -307,11 +307,20 @@ date_executed DATETIME NOT NULL
 );
 
 CREATE TABLE media_servers (
-ms_id VARCHAR(34) NOT NULL PRIMARY KEY, 
+ms_id INT PRIMARY KEY AUTO_INCREMENT, 
 ms_ip_address VARCHAR(34), 
 ms_port VARCHAR(34), 
 compatibility VARCHAR(34), 
 timeout VARCHAR(34)
+);
+
+CREATE TABLE media_resource_broker_entity (
+conference_sid VARCHAR(34) NOT NULL, 
+slave_ms_id VARCHAR(34) NOT NULL, 
+slave_ms_bridge_ep_id VARCHAR(34) NOT NULL,
+slave_ms_cnf_ep_id VARCHAR(34) NOT NULL,
+is_bridged_together BOOLEAN NOT NULL DEFAULT FALSE, 
+slave_ms_sdp VARCHAR(2000) NOT NULL
 );
 
 INSERT INTO restcomm_accounts VALUES (

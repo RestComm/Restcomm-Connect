@@ -1,3 +1,4 @@
+- change msid to auto-increament
 - remove callsid from mrb table
 - convert all logs into checked logger. (if info enabled bla bla)
 1. powering on mediagateways via DB not via config

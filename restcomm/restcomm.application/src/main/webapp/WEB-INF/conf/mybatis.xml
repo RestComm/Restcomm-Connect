@@ -4,8 +4,8 @@
   @author thomas.quintana@telestax.com (Thomas Quintana)
 -->
 <configuration>
-  <environments default="production">
-    <environment id="production">
+<environments default="mariadb">
+      <!-- <environment id="production">
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="org.hsqldb.jdbcDriver"/>
@@ -13,7 +13,17 @@
         <property name="username" value="sa"/>
         <property name="password" value=""/>
       </dataSource>
+    </environment> -->
+    <environment id="mariadb">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://192.168.8.102:3306/restcomm"/>
+        <property name="username" value="root"/>
+        <property name="password" value="1234"/>
+      </dataSource>
     </environment>
+    
   </environments>
   
   

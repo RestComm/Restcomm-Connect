@@ -42,8 +42,6 @@ public interface ConferenceDetailRecordsDao {
 
     List<ConferenceDetailRecord> getConferenceDetailRecordsByDateUpdated(DateTime dateUpdated);
 
-    List<ConferenceDetailRecord> getConferenceDetailRecordsByMsId(String msId);
-
     Integer getTotalConferenceDetailRecords(ConferenceDetailRecordFilter filter);
 
     void addConferenceDetailRecord(ConferenceDetailRecord cdr);

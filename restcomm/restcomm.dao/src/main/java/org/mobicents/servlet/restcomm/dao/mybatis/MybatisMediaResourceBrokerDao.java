@@ -73,21 +73,6 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
     }
 
     @Override
-    public MediaResourceBrokerEntity getMediaResourceBrokerEntity(Sid callSid) {
-        final SqlSession session = sessions.openSession();
-        try {
-            final Map<String, Object> result = session.selectOne(namespace + "getMediaResourceBrokerEntity", callSid);
-            if (result != null) {
-                return toMRBEntity(result);
-            } else {
-                return null;
-            }
-        } finally {
-            session.close();
-        }
-    }
-
-    @Override
     public List<MediaResourceBrokerEntity> getMediaResourceBrokerEntities() {
         final SqlSession session = sessions.openSession();
         try {
@@ -127,10 +112,10 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
     }
 
     @Override
-    public void removeMediaResourceBrokerEntity(Sid callSid) {
+    public void removeMediaResourceBrokerEntity(MediaResourceBrokerEntityFilter filter) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + "removeMediaResourceBrokerEntity", callSid);
+            session.delete(namespace + "removeMediaResourceBrokerEntity", filter);
             session.commit();
         } finally {
             session.close();
