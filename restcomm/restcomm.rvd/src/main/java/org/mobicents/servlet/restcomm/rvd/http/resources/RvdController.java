@@ -45,7 +45,7 @@ import org.mobicents.servlet.restcomm.rvd.model.callcontrol.CallControlStatus;
 import org.mobicents.servlet.restcomm.rvd.model.client.StateHeader;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommAccountInfoResponse;
 import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommClient;
-import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCreateCallResponses;
+import org.mobicents.servlet.restcomm.rvd.restcomm.RestcommCallArray;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.ProfileDao;
 import org.mobicents.servlet.restcomm.rvd.storage.FsProjectStorage;
@@ -172,8 +172,8 @@ public class RvdController extends SecuredRestService {
 
     // Web Trigger -----
 
-    private RestcommCreateCallResponses executeAction(String projectName, HttpServletRequest request, String toParam,
-                                                     String fromParam, String accessToken, UriInfo ui, AccountProvider accountProvider) throws StorageException, CallControlException {
+    private RestcommCallArray executeAction(String projectName, HttpServletRequest request, String toParam,
+                                            String fromParam, String accessToken, UriInfo ui, AccountProvider accountProvider) throws StorageException, CallControlException {
         if(logger.isInfoEnabled()) {
             logger.info( "WebTrigger: Application '" + projectName + "' initiated. User request URL: " + ui.getRequestUri().toString());
         }
@@ -295,9 +295,9 @@ public class RvdController extends SecuredRestService {
                 accountSid = accountResponse.getSid();
             }
             // Create the call
-            RestcommCreateCallResponses response = restcommClient.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
+            RestcommCallArray response = restcommClient.post("/restcomm/2012-04-24/Accounts/" + accountSid + "/Calls.json")
                     .addParam("From", from).addParam("To", to).addParam("Url", rcmlUrl)
-                    .done(marshaler.getGson(), RestcommCreateCallResponses.class);
+                    .done(marshaler.getGson(), RestcommCallArray.class);
 
             if(logger.isInfoEnabled()) {
                 logger.info("WebTrigger: joined " + to + " with " + rcmlUrl);
@@ -318,7 +318,7 @@ public class RvdController extends SecuredRestService {
         try {
             rvdContext.setProjectName(projectName);
             AccountProvider accountProvider = AccountProvider.getInstance();
-            RestcommCreateCallResponses calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
+            RestcommCallArray calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
             // build call-sid part of message
             StringBuffer messageBuffer = new StringBuffer("[");
             for (int i=0; i<calls.size(); i++) {
@@ -358,7 +358,7 @@ public class RvdController extends SecuredRestService {
         try {
             rvdContext.setProjectName(projectName);
             AccountProvider accountProvider = AccountProvider.getInstance();
-            RestcommCreateCallResponses calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
+            RestcommCallArray calls = executeAction(projectName, request, toParam, fromParam, accessToken, ui, accountProvider);
             return buildWebTriggerJsonResponse(CallControlAction.createCall, CallControlStatus.success, 200, calls);
         } catch (UnauthorizedCallControlAccess e) {
             logger.warn(e);

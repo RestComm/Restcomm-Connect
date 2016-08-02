@@ -25,6 +25,6 @@ import java.util.ArrayList;
 /**
  * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
-public class RestcommCreateCallResponses extends ArrayList<RestcommCreateCallResponse> {
+public class RestcommCallArray extends ArrayList<RestcommCall> {
 
 }
