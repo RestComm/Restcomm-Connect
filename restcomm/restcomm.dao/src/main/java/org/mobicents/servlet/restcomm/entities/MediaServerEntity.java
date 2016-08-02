@@ -27,13 +27,13 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
  */
 @Immutable
 public final class MediaServerEntity {
-    private final String msId;
+    private final int msId;
     private final String msIpAddress;
     private final String msPort;
     private final String compatibility;
     private final String timeOut;
 
-    public MediaServerEntity(final String msId, final String msIpAddress, final String msPort,
+    public MediaServerEntity(final int msId, final String msIpAddress, final String msPort,
             final String compatibility, final String timeOut) {
         super();
         this.msId = msId;
@@ -47,7 +47,7 @@ public final class MediaServerEntity {
         return new Builder();
     }
 
-    public String getMsId() {
+    public int getMsId() {
         return msId;
     }
 
@@ -69,7 +69,7 @@ public final class MediaServerEntity {
 
     @NotThreadSafe
     public static final class Builder {
-        private String msId;
+        private int msId;
         private String msIpAddress;
         private String msPort;
         private String compatibility;
@@ -77,7 +77,6 @@ public final class MediaServerEntity {
 
         private Builder() {
             super();
-            msId = null;
             msIpAddress = null;
             msPort = null;
             compatibility = null;
@@ -86,10 +85,6 @@ public final class MediaServerEntity {
 
         public MediaServerEntity build() {
             return new MediaServerEntity(msId, msIpAddress, msPort, compatibility, timeOut);
-        }
-
-        public void setMsId(String msId) {
-            this.msId = msId;
         }
 
         public void setMsIpAddress(String msIpAddress) {

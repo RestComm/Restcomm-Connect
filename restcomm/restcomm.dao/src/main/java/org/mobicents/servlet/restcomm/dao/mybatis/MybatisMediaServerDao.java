@@ -19,6 +19,7 @@
  */
 package org.mobicents.servlet.restcomm.dao.mybatis;
 
+import static org.mobicents.servlet.restcomm.dao.DaoUtils.readInteger;
 import static org.mobicents.servlet.restcomm.dao.DaoUtils.readString;
 
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public final class MybatisMediaServerDao implements MediaServersDao {
     }
 
     private MediaServerEntity toMediaServer(final Map<String, Object> map) {
-        final String msId = readString(map.get("ms_id"));
+        final int msId = readInteger(map.get("ms_id"));
         final String msIpAddress = readString(map.get("ms_ip_address"));
         final String msPort = readString(map.get("ms_port"));
         final String compatibility = readString(map.get("compatibility"));
