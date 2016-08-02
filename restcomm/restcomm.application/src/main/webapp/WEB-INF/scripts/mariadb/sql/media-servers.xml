@@ -10,8 +10,8 @@
     VALUES (#{ms_id}, #{ms_ip_address}, #{ms_port}, #{compatibility}, #{timeout});
   </insert>
   
-  <select id="getMediaServerEntity" parameterType="string" resultType="hashmap">
-    SELECT * FROM media_servers WHERE ms_id=#{ms_id};
+  <select id="getMediaServerEntityByIP" parameterType="string" resultType="hashmap">
+    SELECT * FROM media_servers WHERE ms_ip_address=#{ms_ip_address};
   </select>
   
   <select id="getMediaServers" resultType="hashmap">

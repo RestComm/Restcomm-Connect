@@ -22,7 +22,6 @@ package org.mobicents.servlet.restcomm.dao;
 import java.util.List;
 
 import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
-import org.mobicents.servlet.restcomm.entities.MediaServerFilter;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -31,9 +30,9 @@ public interface MediaServersDao {
 
     void addMediaServer(MediaServerEntity ms);
 
-    MediaServerEntity getMediaServerEntity(String msId);
+    List<MediaServerEntity> getMediaServerEntityByIP(String msIPAddres);
 
-    List<MediaServerEntity> getMediaServers(MediaServerFilter msf);
+    List<MediaServerEntity> getMediaServers();
 
     void removeMediaServerEntity(String msId);
 
