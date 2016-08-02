@@ -1513,6 +1513,55 @@ public final class Call extends UntypedActor {
             }
             default: {
                 if (code >= 400 && code != 487) {
+                    if (code == 487 && isOutbound()) {
+                            String initialIpBeforeLB = null;
+                            String initialPortBeforeLB = null;
+                            try {
+                                initialIpBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                                initialPortBeforeLB = message.getHeader("X-Sip-Balancer-InitialRemotePort");
+                            } catch (Exception e) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Exception during check of LB custom headers for IP address and port");
+                                }
+                            }
+                        final SipServletRequest ack = message.createAck();
+                        addCustomHeaders(ack);
+                        SipSession session = message.getSession();
+
+                        if (initialIpBeforeLB != null ) {
+                            if (initialPortBeforeLB == null)
+                                initialPortBeforeLB = "5060";
+                            if(logger.isInfoEnabled()) {
+                                logger.info("We are behind load balancer, will use: " + initialIpBeforeLB + ":"
+                                        + initialPortBeforeLB + " for ACK message, ");
+                            }
+                            String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                            SipURI uri = factory.createSipURI(null, realIP);
+                            ack.setRequestURI(uri);
+                        } else if (!ack.getHeaders("Route").hasNext()) {
+                            final SipServletRequest originalInvite = message.getRequest();
+                            final SipURI realInetUri = (SipURI) originalInvite.getRequestURI();
+                            if ((SipURI) session.getAttribute("realInetUri") == null) {
+                                session.setAttribute("realInetUri", realInetUri);
+                            }
+                            final InetAddress ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
+                            final int ackRURIPort = ((SipURI) ack.getRequestURI()).getPort();
+
+                            if (realInetUri != null
+                                    && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())
+                                    && (ackRURIPort != realInetUri.getPort())) {
+                                if(logger.isInfoEnabled()) {
+                                    logger.info("Using the real ip address and port of the sip client " + realInetUri.toString()
+                                            + " as a request uri of the ACK");
+                                }
+                                ack.setRequestURI(realInetUri);
+                            }
+                        }
+                        ack.send();
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Just sent out ACK : " + ack.toString());
+                        }
+                    }
                     this.fail = true;
                     fsm.transition(message, stopping);
                 }

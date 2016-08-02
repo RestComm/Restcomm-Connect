@@ -449,7 +449,10 @@
              return;
          }
          // forward the response
-         response.getSession().setAttribute(B2BUA_LAST_RESPONSE, response);
+         if (response.getSession() != null &&
+                 (!response.getSession().getState().equals(SipSession.State.TERMINATED))) {
+             response.getSession().setAttribute(B2BUA_LAST_RESPONSE, response);
+         }
          SipServletRequest linkedRequest = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
          SipServletResponse clonedResponse = linkedRequest.createResponse(response.getStatus());
          SipURI originalURI = null;
