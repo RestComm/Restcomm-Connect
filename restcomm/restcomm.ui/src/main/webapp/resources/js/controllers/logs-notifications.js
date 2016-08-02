@@ -32,6 +32,17 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
     }, 10);
   };
 
+  // make sure no nulls remain in the 'query' filter.
+  $scope.$watchCollection("query", function (query, oldvalue) {
+    if (query) {
+        if (query.error_code === null)
+          delete query.error_code;
+        if (query.date_created === null)
+          delete query.date_created;
+    }
+    return query;
+  });
+
   // Modal : Notification Details
   $scope.showNotificationDetailsModal = function (notification) {
     $modal.open({
