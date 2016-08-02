@@ -18,9 +18,6 @@
     <select id="getConferenceDetailRecordsByStatus" parameterType="string" resultType="hashmap">
        SELECT * FROM restcomm_conference_detail_records WHERE status=#{status};
     </select>
-    <select id="getConferenceDetailRecordsByMsId" parameterType="string" resultType="hashmap">
-       SELECT * FROM restcomm_conference_detail_records WHERE ms_id=#{ms_id};
-    </select>
     <select id="getConferenceDetailRecordsByDateCreated" parameterType="date" resultType="hashmap">
         SELECT * FROM restcomm_conference_detail_records WHERE date_created&gt;=#{date_created} AND date_created&lt;DATE_ADD(#{date_created},INTERVAL 1 DAY);
     </select>

@@ -136,11 +136,6 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
-    public List<ConferenceDetailRecord> getConferenceDetailRecordsByMsId(final String msId) {
-        return getConferenceDetailRecords(namespace + "getConferenceDetailRecordsByMsId", msId);
-    }
-
-    @Override
     public void updateConferenceDetailRecord(ConferenceDetailRecord cdr) {
         final SqlSession session = sessions.openSession();
         try {

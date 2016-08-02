@@ -252,11 +252,16 @@
 		<port></port>
 	</smtp-service>
 
-	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
+	<!-- <dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
 		<configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
 		<data-files>${restcomm:home}/WEB-INF/data/hsql</data-files>
 		<sql-files>${restcomm:home}/WEB-INF/sql</sql-files>
-	</dao-manager>
+	</dao-manager> -->
+	<dao-manager class="org.mobicents.servlet.restcomm.dao.mybatis.MybatisDaoManager">
+        <configuration-file>${restcomm:home}/WEB-INF/conf/mybatis.xml</configuration-file>
+        <data-files></data-files>
+        <sql-files>${restcomm:home}/WEB-INF/scripts/mariadb/sql</sql-files>
+    </dao-manager>
 
 	<amazon-s3>
 		<enabled>false</enabled>
@@ -304,23 +309,12 @@
 		<!-- mgcp-servers defines: multiple mgcp-server entities -->
 		<mgcp-servers class="org.mobicents.servlet.restcomm.mgcp.MediaGateway" name="Mobicents Media Server">
             <mgcp-server>
-            	<ms-id>rms1</ms-id>
             	<!-- is-relative-ms = true for one MS, which is relative and is considered one to one with this RC instance. -->
             	<is-relative-ms>true</is-relative-ms>
                 <local-address>192.168.8.102</local-address>
                 <local-port>2727</local-port>
                 <remote-address>192.168.8.102</remote-address>
                 <remote-port>2427</remote-port>
-                <response-timeout>500</response-timeout>
-                <external-address><null/></external-address>
-            </mgcp-server>
-            <mgcp-server>
-            	<ms-id>rms2</ms-id>
-            	<is-relative-ms>false</is-relative-ms>
-                <local-address>127.0.0.1</local-address>
-                <local-port>2727</local-port>
-                <remote-address>127.0.0.1</remote-address>
-                <remote-port>2428</remote-port>
                 <response-timeout>500</response-timeout>
                 <external-address><null/></external-address>
             </mgcp-server>

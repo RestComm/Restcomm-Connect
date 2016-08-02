@@ -215,15 +215,11 @@ public class MediaResourceBroker extends UntypedActor{
 
             if(relativeMS != null && Boolean.parseBoolean(relativeMS)){
 
-                final String msId = configuration.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
                 final String msIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
                 final String msPort = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
                 final String timeOut = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
 
-                this.msId = msId;
-
                 final MediaServerEntity.Builder builder = MediaServerEntity.builder();
-                builder.setMsId(msId);
                 builder.setMsIpAddress(msIpAddress);
                 builder.setMsPort(msPort);
                 builder.setTimeOut(timeOut);
