@@ -60,6 +60,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
       },
       function () {
         // what to do on modal dismiss...
+    	  $scope.subAccountsList = accountsList;
       }
     );
   };
@@ -75,7 +76,48 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
+rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RCommAccounts,Notifications) {
+	$scope.predicate = 'name';  
+    $scope.reverse = false;  
+    $scope.currentPage = 1;  
+     $scope.maxSize = 5; //pagination max size
+    $scope.entryLimit = 10; //max rows for data table
+     $scope.order = function (predicate) {  
+    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;  
+     $scope.predicate = predicate; 
+    };  
+  
+    var subAccountsList = RCommAccounts.query(function(list) {
+		// remove logged (parent) account from the list
+		var i = 0;
+		while (i < list.length) {
+			if (list[i].sid == $scope.sid )
+			  list.splice(i,1)
+			else
+			  i ++;
+		}
+      $scope.subAccountsList = list;
+      $scope.totalItems = list.length;
+    });;
+    
+    $scope.setEntryLimit = function(limit) {
+        $scope.entryLimit = limit;
+        $scope.numPerPage = Math.ceil($scope.subAccountsList.length / $scope.entryLimit);
+      }; 
+  
+    $scope.paginate = function (value) {  
+      var begin, end, index;  
+      begin = ($scope.currentPage - 1) * $scope.entryLimit;  
+      end = begin + $scope.entryLimit;  
+      index = $scope.subAccountsList.indexOf(value);  
+      return (begin <= index && index < end);  
+    };  
+  }); 
+
+
+
 rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications) {
+
   //$scope.sid = SessionService.get('sid');
 
   var accountBackup;
