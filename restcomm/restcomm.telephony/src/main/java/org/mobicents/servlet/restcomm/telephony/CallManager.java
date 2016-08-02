@@ -1252,7 +1252,7 @@ public final class CallManager extends UntypedActor {
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
 
-            if (!clonedBye.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+            if (patchForNatB2BUASessions) {
                 // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                 SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
                 SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
@@ -1281,6 +1281,28 @@ public final class CallManager extends UntypedActor {
                             + " as a request uri of the CloneBye request");
                     }
                     clonedBye.setRequestURI(fromInetUri);
+                } else if (toInetUri == null
+                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
+                    }
+                    final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                    String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
+                    if (initialIpBeforeLB != null) {
+                        if (initialPortBeforeLB == null)
+                            initialPortBeforeLB = "5060";
+                        if (logger.isInfoEnabled()) {
+                            logger.info("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for the cloned BYE request");
+                        }
+                        String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                        SipURI uri = sipFactory.createSipURI(null, realIP);
+                        clonedBye.setRequestURI(uri);
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("LB Headers are also null");
+                        }
+                    }
                 }
             }
             B2BUAHelper.updateCDR(request, CallStateChanged.State.COMPLETED);
