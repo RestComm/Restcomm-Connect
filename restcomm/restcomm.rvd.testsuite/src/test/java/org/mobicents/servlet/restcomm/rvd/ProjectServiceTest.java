@@ -54,7 +54,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 public class ProjectServiceTest {
 
     private final static Logger logger = Logger.getLogger(ProjectServiceTest.class);
-    private static final String version = "7.9.0-SNAPSHOT"; //org.mobicents.servlet.restcomm.Version.getVersion();
+    private static final String version = org.mobicents.servlet.restcomm.Version.getVersion();
 
     static final String username = "administrator@company.com";
     static final String password = "adminpass";
