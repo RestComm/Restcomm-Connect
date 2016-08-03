@@ -122,7 +122,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     public boolean keepLookingForSlaves = true;
 
 
-    public ConferenceMediaResourceController( Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
+    public ConferenceMediaResourceController(final String localMsId, final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage){
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.
@@ -149,20 +149,20 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
-        transitions.add(new Transition(this.uninitialized, this.initializing));
-        transitions.add(new Transition(this.initializing, this.acquiringMediaSession));
-        transitions.add(new Transition(this.acquiringMediaSession, this.creatingBridgeEndpoint));
-        transitions.add(new Transition(this.creatingBridgeEndpoint, this.acquiringRemoteConnection));
-        transitions.add(new Transition(this.acquiringRemoteConnection, this.initializingRemoteConnection));
-        transitions.add(new Transition(this.initializingRemoteConnection, this.openingRemoteConnection));
-        transitions.add(new Transition(this.openingRemoteConnection, this.failed));
-        transitions.add(new Transition(this.openingRemoteConnection, this.pending));
-        transitions.add(new Transition(this.pending, this.acquiringInternalLink));
-        transitions.add(new Transition(this.acquiringInternalLink, this.initializingInternalLink));
-        transitions.add(new Transition(this.initializingInternalLink, this.openingInternalLink));
-        transitions.add(new Transition(this.openingInternalLink, this.updatingInternalLink));
-        transitions.add(new Transition(this.updatingInternalLink, this.active));
-        transitions.add(new Transition(this.updatingInternalLink, this.initializingConnectingBridges));
+        transitions.add(new Transition(uninitialized, initializing));
+        transitions.add(new Transition(initializing, acquiringMediaSession));
+        transitions.add(new Transition(acquiringMediaSession, creatingBridgeEndpoint));
+        transitions.add(new Transition(creatingBridgeEndpoint, acquiringRemoteConnection));
+        transitions.add(new Transition(acquiringRemoteConnection, initializingRemoteConnection));
+        transitions.add(new Transition(initializingRemoteConnection, openingRemoteConnection));
+        transitions.add(new Transition(openingRemoteConnection, failed));
+        transitions.add(new Transition(openingRemoteConnection, pending));
+        transitions.add(new Transition(pending, acquiringInternalLink));
+        transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
+        transitions.add(new Transition(initializingInternalLink, openingInternalLink));
+        transitions.add(new Transition(openingInternalLink, updatingInternalLink));
+        transitions.add(new Transition(updatingInternalLink, active));
+        transitions.add(new Transition(updatingInternalLink, initializingConnectingBridges));
 
         /*transitions.add(new Transition(this.updatingInternalLink, this.initializingConnectingBridges));
         transitions.add(new Transition(this.initializingConnectingBridges, this.updatingHomeBridge));
@@ -176,6 +176,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         this.storage = storage;
         this.mediaGatewayMap = gateways;
+        this.localMsId = localMsId;
         this.mediaGateway = mediaGatewayMap.get(this.localMsId);
 
         // Observers
@@ -191,9 +192,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
         final Class<?> klass = message.getClass();
         final ActorRef sender = sender();
         ActorRef self = self();
+        final State state = fsm.state();
 
         if (logger.isInfoEnabled()) {
             logger.info(" ********** MRBBridgeConnector " + self().path() + " Processing Message: " + klass.getName());
+            logger.info(" ********** MRBBridgeConnector " + self().path() + " Current State: \"" + state.toString());
         }
 
         if (Observe.class.equals(klass)) {
@@ -230,7 +233,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private void onStartBridgeConnector(StartBridgeConnector message, ActorRef self, ActorRef sender) throws Exception{
         if (is(uninitialized)) {
-            logger.info("conferenceName: "+message.conferenceName()+" connectionMode: "+message.connectionMode()+" conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
+            logger.info("onStartBridgeConnector: conferenceName: "+message.conferenceName()+" connectionMode: "+message.connectionMode()+" conferenceSid: "+message.conferenceSid()+" cnfEndpoint: "+message.cnfEndpoint());
             this.localConfernceEndpoint = message.cnfEndpoint();
             conferenceSid = message.conferenceSid();
             conferenceName = message.conferenceName();
@@ -331,7 +334,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object msg) throws Exception {
-
+        	logger.info("current state is: "+fsm.state());
             //check master MS info from DB
             final ConferenceDetailRecordsDao conferenceDetailRecordsDao = storage.getConferenceDetailRecordsDao();
             cdr = conferenceDetailRecordsDao.getConferenceDetailRecord(conferenceSid);
@@ -341,7 +344,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             }else{
                 //msId in conference record is master msId
                 masterMsId = cdr.getMasterMsId();
-                if(localMsId == masterMsId){
+                if(localMsId.equalsIgnoreCase(masterMsId)){
                     logger.info("first participant Joined on master MS and sent StartBridgeConnector message to BridgeConnector");
                     isThisMasterBridgeConnector = true;
                 }else{

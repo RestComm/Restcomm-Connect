@@ -145,7 +145,7 @@ public class MediaResourceBroker extends UntypedActor{
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceMediaResourceController(mediaGatewayMap, configuration, storage);
+                return new ConferenceMediaResourceController(msId, mediaGatewayMap, configuration, storage);
             }
         }));
     }
