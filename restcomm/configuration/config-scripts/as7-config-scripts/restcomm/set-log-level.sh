@@ -16,10 +16,25 @@ changelog() {
 EOT
 }
 
+changelogROOT() {
+    cat <<EOT >> $CLIFILE
+    /subsystem=logging/root-logger=$1:write-attribute(name=level,value=$2)
+EOT
+}
+
+changelogCONSOLE() {
+    cat <<EOT >> $CLIFILE
+    /subsystem=logging/console-handler=$1:write-attribute(name=level,value=$2)
+EOT
+}
+
+
 listlog(){
     cat <<EOT >> $CLIFILE
 /subsystem=logging/logger=org.mobicents.servlet:read-resource
 /subsystem=logging/logger=gov.nist:read-resource
+/subsystem=logging/console-handler=CONSOLE:read-resource
+/subsystem=logging/root-logger=ROOT:read-resource
 EOT
 }
 
@@ -42,11 +57,19 @@ for compt in $arr
                 COMPONENT=gov.nist
                 changelog $COMPONENT $2
                 ;;
+             root)
+                 COMPONENT=ROOT
+                changelogROOT $COMPONENT $2
+                ;;
+             console)
+                 COMPONENT=CONSOLE
+                changelogCONSOLE $COMPONENT $2
+                ;;
             list)
                 listlog
                 ;;
             *)
-                echo "Usage: $0 \"servlet govnist\" DEBUG"
+                echo "Usage: $0 \"servlet govnist console root\" DEBUG. Can also set each element individually"
                 echo "Usage: $0 list (To list the actual log levels)"
                 exit 1
     esac
