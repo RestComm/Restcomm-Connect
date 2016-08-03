@@ -6,8 +6,8 @@
 
     <insert id="addConferenceDetailRecord" parameterType="map">
         INSERT INTO restcomm_conference_detail_records (sid, date_created, date_updated, account_sid, status,
-        friendly_name, api_version, uri, ms_id) VALUES (#{sid},
-		#{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{ms_id});
+        friendly_name, api_version, uri, master_ms_id, master_ms_sdp) VALUES (#{sid},
+		#{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id}, #{master_ms_sdp});
     </insert>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records WHERE sid=#{sid};
@@ -38,9 +38,6 @@
 		<if test="dateUpdated != null">
 			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
-		<if test="msId != null">
-			AND ms_id like #{ms_id}
-		</if>
 
 	</select>
 	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter" resultType="hashmap">
@@ -57,9 +54,6 @@
 		<if test="dateUpdated != null">
 			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
-		<if test="msId != null">
-			AND ms_id like #{ms_id}
-		</if>
 
 		LIMIT #{limit} OFFSET #{offset}
 	</select>
@@ -74,7 +68,7 @@
         UPDATE 
         	restcomm_conference_detail_records 
         	SET 
-        		date_updated=#{date_updated}, status=#{status}, ms_id=#{ms_id} 
+        		date_updated=#{date_updated}, status=#{status}, master_ms_id=#{master_ms_id}, master_ms_sdp=#{master_ms_sdp} 
         	WHERE sid=#{sid};
     </update>
 

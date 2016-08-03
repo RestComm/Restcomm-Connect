@@ -44,6 +44,7 @@ import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.MediaGatewayForConference;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
 import org.mobicents.servlet.restcomm.telephony.ConferenceStateChanged;
 
@@ -172,11 +173,11 @@ public class MediaResourceBroker extends UntypedActor{
         // if its not request for conference return home media-gateway (media-server associated with this RC instance)
         if(conferenceInfo == null){
             updateMSIdinCallDetailRecord(msId, callSid);
+            sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
         }else{
-            addConferenceDetailRecord(conferenceInfo, callSid);
+            final Sid conferenceSid = addConferenceDetailRecord(conferenceInfo, callSid);
+            sender.tell(new MediaResourceBrokerResponse<MediaGatewayForConference>(new MediaGatewayForConference(conferenceSid, mediaGateway)), self);
         }
-
-        sender.tell(new MediaResourceBrokerResponse<ActorRef>(mediaGateway), self);
     }
 
     private void updateMSIdinCallDetailRecord(final String msId, final Sid callSid){
@@ -197,7 +198,8 @@ public class MediaResourceBroker extends UntypedActor{
 
     }
 
-    private void addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final Sid callSid) {
+    private Sid addConferenceDetailRecord(final ConferenceInfo conferenceInfo, final Sid callSid) {
+       Sid sid = null;
         if(conferenceInfo == null || conferenceInfo.name() == null){
             logger.info("provided conference info/sid is null, this can lead to problems in future of this call");
         }else{
@@ -227,7 +229,8 @@ public class MediaResourceBroker extends UntypedActor{
                     // this is first record of this conference on all instances of
                     if(!isConferenceRunningOnAnotherInstance){
                         final ConferenceDetailRecord.Builder conferenceBuilder = ConferenceDetailRecord.builder();
-                        conferenceBuilder.setSid(Sid.generate(Sid.Type.CONFERENCE));
+                        sid = Sid.generate(Sid.Type.CONFERENCE);
+                        conferenceBuilder.setSid(sid);
                         conferenceBuilder.setDateCreated(DateTime.now());
 
                         conferenceBuilder.setAccountSid(new Sid(accountSid));
@@ -235,7 +238,7 @@ public class MediaResourceBroker extends UntypedActor{
                         conferenceBuilder.setApiVersion(callRecord.getApiVersion());
                         final StringBuilder UriBuffer = new StringBuilder();
                         UriBuffer.append("/").append(callRecord.getApiVersion()).append("/Accounts/").append(accountSid).append("/Conferences/");
-                        UriBuffer.append(conferenceInfo.sid());
+                        UriBuffer.append(sid);
                         final URI uri = URI.create(UriBuffer.toString());
                         conferenceBuilder.setUri(uri);
                         conferenceBuilder.setFriendlyName(friendlyName);
@@ -253,6 +256,7 @@ public class MediaResourceBroker extends UntypedActor{
                 logger.error("ERROR SAVING CONFERENCE IN DATBASE");
             }
         }
+        return sid;
     }
 
     private void uoloadLocalMediaServersInDataBase() {

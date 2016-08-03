@@ -158,7 +158,8 @@ status VARCHAR(100) NOT NULL,
 friendly_name VARCHAR(60),
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL, 
-ms_id VARCHAR(34)
+master_ms_id VARCHAR(34),
+master_ms_sdp VARCHAR(2000)
 );
 
 CREATE TABLE restcomm_clients (
@@ -312,7 +313,7 @@ local_ip VARCHAR(34) NOT NULL,
 local_port INT NOT NULL,
 remote_ip VARCHAR(34) NOT NULL UNIQUE,
 remote_port INT NOT NULL, 
-compatibility VARCHAR(34), 
+compatibility VARCHAR(34) DEFAULT 'mms', 
 response_timeout VARCHAR(34),
 external_address VARCHAR(34)
 );

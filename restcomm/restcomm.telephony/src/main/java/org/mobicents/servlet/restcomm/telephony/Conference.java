@@ -444,6 +444,7 @@ public final class Conference extends UntypedActor {
     }
 
     private void onJoinComplete(JoinComplete message, ActorRef self, ActorRef sender) {
+        this.mscontroller.tell(message, sender);
         this.calls.add(sender);
     }
 

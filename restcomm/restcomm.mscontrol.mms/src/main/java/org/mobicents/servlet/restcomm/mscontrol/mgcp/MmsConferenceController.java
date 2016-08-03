@@ -42,6 +42,7 @@ import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
 import org.mobicents.servlet.restcomm.mgcp.MediaSession;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
+import org.mobicents.servlet.restcomm.mgcp.mrb.messages.MediaGatewayForConference;
 import org.mobicents.servlet.restcomm.mscontrol.MediaServerController;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CloseMediaSession;
 import org.mobicents.servlet.restcomm.mscontrol.messages.CreateMediaSession;
@@ -265,7 +266,9 @@ public final class MmsConferenceController extends MediaServerController {
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("got MRB response in conference controller");
         if(is(getMediaGatewayFromMRB)){
-            mediaGateway = (ActorRef) message.get();
+        	MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
+        	mediaGateway = mgc.mediaGateway();
+        	this.conferenceSid = mgc.conferenceSid();
             fsm.transition(message, gettingCnfMediaResourceController);
         }else if(is(gettingCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
