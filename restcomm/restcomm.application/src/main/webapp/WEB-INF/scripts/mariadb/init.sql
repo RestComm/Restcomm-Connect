@@ -308,10 +308,12 @@ date_executed DATETIME NOT NULL
 
 CREATE TABLE media_servers (
 ms_id INT PRIMARY KEY AUTO_INCREMENT, 
-ms_ip_address VARCHAR(34), 
-ms_port VARCHAR(34), 
+local_ip VARCHAR(34) NOT NULL, 
+local_port INT NOT NULL,
+remote_ip VARCHAR(34) NOT NULL UNIQUE,
+remote_port INT NOT NULL, 
 compatibility VARCHAR(34), 
-timeout VARCHAR(34)
+response_timeout VARCHAR(34)
 );
 
 CREATE TABLE media_resource_broker_entity (

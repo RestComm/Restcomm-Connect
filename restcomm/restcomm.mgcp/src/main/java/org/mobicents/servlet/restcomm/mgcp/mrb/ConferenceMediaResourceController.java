@@ -59,7 +59,6 @@ import org.mobicents.servlet.restcomm.patterns.Observing;
 import org.mobicents.servlet.restcomm.patterns.StopObserving;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -123,7 +122,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     public boolean keepLookingForSlaves = true;
 
 
-    public ConferenceMediaResourceController(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
+    public ConferenceMediaResourceController( Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
         super();
         final ActorRef source = self();
         // Initialize the states for the FSM.

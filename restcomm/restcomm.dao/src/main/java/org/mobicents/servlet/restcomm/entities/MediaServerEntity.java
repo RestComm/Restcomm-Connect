@@ -28,19 +28,25 @@ import org.mobicents.servlet.restcomm.annotations.concurrency.NotThreadSafe;
 @Immutable
 public final class MediaServerEntity {
     private final int msId;
-    private final String msIpAddress;
-    private final String msPort;
     private final String compatibility;
-    private final String timeOut;
+    private final String localIpAddress;
+    private final int localPort;
+    private final String remoteIpAddress;
+    private final int remotePort;
+    private final String responseTimeout;
+    private final String externalAddress;
 
-    public MediaServerEntity(final int msId, final String msIpAddress, final String msPort,
-            final String compatibility, final String timeOut) {
+    public MediaServerEntity(final int msId, final String compatibility,final String localIpAddress, final int localPort,
+    final String remoteIpAddress, final int remotePort, final String responseTimeout, final String externalAddress) {
         super();
         this.msId = msId;
-        this.msIpAddress = msIpAddress;
-        this.msPort = msPort;
         this.compatibility = compatibility;
-        this.timeOut = timeOut;
+        this.localIpAddress = localIpAddress;
+        this.localPort = localPort;
+        this.remoteIpAddress = remoteIpAddress;
+        this.remotePort = remotePort;
+        this.responseTimeout = responseTimeout;
+        this.externalAddress = externalAddress;
     }
 
     public static Builder builder() {
@@ -51,56 +57,90 @@ public final class MediaServerEntity {
         return msId;
     }
 
-    public String getMsIpAddress() {
-        return msIpAddress;
-    }
-
-    public String getMsPort() {
-        return msPort;
-    }
-
     public String getCompatibility() {
         return compatibility;
     }
 
-    public String getTimeOut() {
-        return timeOut;
+    public String getLocalIpAddress() {
+        return localIpAddress;
     }
+
+    public int getLocalPort() {
+        return localPort;
+    }
+
+    public String getRemoteIpAddress() {
+        return remoteIpAddress;
+    }
+
+    public int getRemotePort() {
+        return remotePort;
+    }
+
+    public String getResponseTimeout() {
+        return responseTimeout;
+    }
+
+    public String getExternalAddress() {
+        return externalAddress;
+    }
+
+
 
     @NotThreadSafe
     public static final class Builder {
         private int msId;
-        private String msIpAddress;
-        private String msPort;
         private String compatibility;
-        private String timeOut;
+        private String localIpAddress;
+        private int localPort;
+        private String remoteIpAddress;
+        private int remotePort;
+        private String responseTimeout;
+        private String externalAddress;
 
         private Builder() {
             super();
-            msIpAddress = null;
-            msPort = null;
             compatibility = null;
-            timeOut = null;
+            localIpAddress = null;
+            remoteIpAddress = null;
+            responseTimeout = null;
+            externalAddress = null;
         }
 
         public MediaServerEntity build() {
-            return new MediaServerEntity(msId, msIpAddress, msPort, compatibility, timeOut);
+            return new MediaServerEntity(msId, compatibility, localIpAddress, localPort, remoteIpAddress, remotePort, responseTimeout, externalAddress);
         }
 
-        public void setMsIpAddress(String msIpAddress) {
-            this.msIpAddress = msIpAddress;
-        }
-
-        public void setMsPort(String msPort) {
-            this.msPort = msPort;
+        public void setMsId(int msId) {
+            this.msId = msId;
         }
 
         public void setCompatibility(String compatibility) {
             this.compatibility = compatibility;
         }
 
-        public void setTimeOut(String timeOut) {
-            this.timeOut = timeOut;
+        public void setLocalIpAddress(String localIpAddress) {
+            this.localIpAddress = localIpAddress;
+        }
+
+        public void setLocalPort(int localPort) {
+            this.localPort = localPort;
+        }
+
+        public void setRemoteIpAddress(String remoteIpAddress) {
+            this.remoteIpAddress = remoteIpAddress;
+        }
+
+        public void setRemotePort(int remotePort) {
+            this.remotePort = remotePort;
+        }
+
+        public void setResponseTimeout(String responseTimeout) {
+            this.responseTimeout = responseTimeout;
+        }
+
+        public void setExternalAddress(String externalAddress) {
+            this.externalAddress = externalAddress;
         }
     }
 }

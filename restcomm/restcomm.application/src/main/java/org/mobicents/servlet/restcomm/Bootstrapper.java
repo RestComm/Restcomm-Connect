@@ -79,12 +79,11 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         MediaServerControllerFactory factory;
         switch (compatibility) {
             case "mms":
-                //List<ActorRef> gateways;
                 Map<String, ActorRef> gateways;
                 try {
                     settings = configuration.subset("media-server-manager");
-                    gateways = gateways(settings, loader);
-                    ActorRef mrb = mediaResourceBroker(gateways, settings, storage);
+                    //gateways = gateways(settings, loader);
+                    ActorRef mrb = mediaResourceBroker(settings, storage, loader);
                     factory = new MmsControllerFactory(this.system, mrb, configuration.subset("media-server-routing"));
                 } catch (UnknownHostException e) {
                     throw new ServletException(e);
@@ -195,13 +194,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return result;
     }
 
-    private ActorRef mediaResourceBroker(final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage) {
+    //private ActorRef mediaResourceBroker(final Map<String, ActorRef> gateways, final Configuration configuration, final DaoManager storage) {
+    private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader) throws UnknownHostException{
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new MediaResourceBroker(system, gateways, configuration, storage);
+                return new MediaResourceBroker(configuration, storage, loader);
             }
         }));
     }
