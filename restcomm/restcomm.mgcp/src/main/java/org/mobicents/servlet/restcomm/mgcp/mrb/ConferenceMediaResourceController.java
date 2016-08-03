@@ -245,20 +245,25 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         if(is(acquiringMediaSession)){
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             this.mediaSession = (MediaSession) message.get();
             this.fsm.transition(message, creatingBridgeEndpoint);
         } else if (is(creatingBridgeEndpoint)){
-            this.localBridgeEndpoint = (ActorRef) message.get();
+        	this.localBridgeEndpoint = (ActorRef) message.get();
             this.localBridgeEndpoint.tell(new Observe(self), self);
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - creatingBridgeEndpoint - received localBridgeEndpoint:"+localBridgeEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, acquiringRemoteConnection);
         } else if (is(acquiringRemoteConnection)){
+        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringRemoteConnection ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, initializingRemoteConnection);
         } else if (is(acquiringInternalLink)) {
+        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringInternalLink ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, initializingInternalLink);
         }
     }
 
     private void onConnectionStateChanged(ConnectionStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+    	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onConnectionStateChanged - received connection STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case CLOSED:
                 if (is(initializingRemoteConnection)) {
@@ -285,6 +290,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onLinkStateChanged(LinkStateChanged message, ActorRef self, ActorRef sender) throws Exception {
+    	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onLinkStateChanged - received link STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case CLOSED:
                 if (is(initializingInternalLink)) {
@@ -367,6 +373,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
         }
     }
@@ -379,6 +386,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
+        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CreatingBridgeEndpoint - current fsm STATE is"+fsm.state()+" media session ="+mediaSession+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             mediaGateway.tell(new CreateBridgeEndpoint(mediaSession), source);
         }
 
@@ -408,6 +416,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             final MediaGatewayResponse<ActorRef> response = (MediaGatewayResponse<ActorRef>) message;
             connectionWithLocalBridgeEndpoint = response.get();
             connectionWithLocalBridgeEndpoint.tell(new Observe(source), source);
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ InitializingRemoteConnection -  - received connectionWithLocalBridgeEndpoint:"+connectionWithLocalBridgeEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             connectionWithLocalBridgeEndpoint.tell(new InitializeConnection(localBridgeEndpoint), source);
         }
     }
