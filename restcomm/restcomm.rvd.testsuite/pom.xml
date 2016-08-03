@@ -24,9 +24,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>restcomm.rvd.testsuite</artifactId>
-    <groupId>com.telestax.servlet</groupId>
-    <version>7.9.0-SNAPSHOT</version>
 
+    <parent>
+        <groupId>com.telestax.servlet</groupId>
+        <artifactId>restcomm</artifactId>
+        <version>7.9.0-SNAPSHOT</version>
+    </parent>
+<!--
+    <groupId>com.telestax.servlet</groupId>
+    <version>7.9.0-SNAPSHOT</version>-->
+
+<!--
     <properties>
         <log4j.version>1.2.16</log4j.version>
         <slf4j.version>1.5.5</slf4j.version>
@@ -38,7 +46,7 @@
         <shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
         <tomcat7.version>7.0.64</tomcat7.version>
     </properties>
-
+-->
 
     <dependencies>
         <dependency>
