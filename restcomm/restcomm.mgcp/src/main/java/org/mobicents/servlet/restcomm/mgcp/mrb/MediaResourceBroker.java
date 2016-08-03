@@ -80,12 +80,12 @@ public class MediaResourceBroker extends UntypedActor{
         this.storage = storage;
         this.loader = loader;
         //this.msRouter = new MediaServerRouter(gateways, configuration);
-        
+
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
 
         uoloadLocalMediaServersInDataBase();
-        
+
         this.mediaGatewayMap = turnOnMediaGateways();
         this.mediaGateway = mediaGatewayMap.get(this.msId);
     }

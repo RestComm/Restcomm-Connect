@@ -201,7 +201,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             @Override
             public UntypedActor create() throws Exception {
-                return new MediaResourceBroker(configuration, storage, loader);
+                return new MediaResourceBroker(system, configuration, storage, loader);
             }
         }));
     }
