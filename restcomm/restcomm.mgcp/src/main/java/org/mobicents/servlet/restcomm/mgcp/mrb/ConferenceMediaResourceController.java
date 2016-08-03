@@ -150,6 +150,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, initializing));
+        transitions.add(new Transition(uninitialized, acquiringMediaSession));
         transitions.add(new Transition(initializing, acquiringMediaSession));
         transitions.add(new Transition(acquiringMediaSession, creatingBridgeEndpoint));
         transitions.add(new Transition(creatingBridgeEndpoint, acquiringRemoteConnection));
@@ -334,12 +335,12 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object msg) throws Exception {
-        	logger.info("current state is: "+fsm.state());
+            logger.info("current state is: "+fsm.state());
             //check master MS info from DB
             final ConferenceDetailRecordsDao conferenceDetailRecordsDao = storage.getConferenceDetailRecordsDao();
             cdr = conferenceDetailRecordsDao.getConferenceDetailRecord(conferenceSid);
             if(cdr == null){
-                logger.error("this is no information available in DB to proceed with this bridge connector");
+                logger.error("there is no information available in DB to proceed with this bridge connector");
                 fsm.transition(msg, failed);
             }else{
                 //msId in conference record is master msId
