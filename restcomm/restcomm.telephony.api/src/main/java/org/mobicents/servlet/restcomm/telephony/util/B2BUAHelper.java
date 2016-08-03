@@ -161,9 +161,9 @@
                  builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
                  builder.setDateCreated(DateTime.now());
                  builder.setAccountSid(client.getAccountSid());
-                 builder.setTo(toClient.getFriendlyName());
+                 builder.setTo(toClient.getLogin());
                  builder.setCallerName(client.getFriendlyName());
-                 builder.setFrom(client.getFriendlyName());
+                 builder.setFrom(client.getLogin());
                  // builder.setForwardedFrom(callInfo.forwardedFrom());
                  // builder.setPhoneNumberSid(phoneId);
                  builder.setStatus(CallStateChanged.State.QUEUED.name());
@@ -449,7 +449,10 @@
              return;
          }
          // forward the response
-         response.getSession().setAttribute(B2BUA_LAST_RESPONSE, response);
+         if (response.getSession() != null &&
+                 (!response.getSession().getState().equals(SipSession.State.TERMINATED))) {
+             response.getSession().setAttribute(B2BUA_LAST_RESPONSE, response);
+         }
          SipServletRequest linkedRequest = (SipServletRequest) getLinkedSession(response).getAttribute(B2BUA_LAST_REQUEST);
          SipServletResponse clonedResponse = linkedRequest.createResponse(response.getStatus());
          SipURI originalURI = null;

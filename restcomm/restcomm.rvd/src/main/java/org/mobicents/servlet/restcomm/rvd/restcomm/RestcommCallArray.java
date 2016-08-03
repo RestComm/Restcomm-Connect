@@ -1,6 +1,6 @@
 /*
  * TeleStax, Open Source Cloud Communications
- * Copyright 2011-2014, Telestax Inc and individual contributors
+ * Copyright 2011-2016, Telestax Inc and individual contributors
  * by the @authors tag.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,22 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.mobicents.servlet.restcomm.telephony;
 
-import org.mobicents.servlet.restcomm.annotations.concurrency.Immutable;
+package org.mobicents.servlet.restcomm.rvd.restcomm;
+
+import java.util.ArrayList;
 
 /**
- * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
-@Immutable
-public final class Reject {
-    private final String reason;
+public class RestcommCallArray extends ArrayList<RestcommCall> {
 
-    public Reject(final String reason) {
-        this.reason = reason;
-    }
-
-    public String getReason() {
-        return reason;
-    }
 }
