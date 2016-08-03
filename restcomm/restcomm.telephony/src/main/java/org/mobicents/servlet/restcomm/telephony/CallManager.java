@@ -755,7 +755,8 @@ public final class CallManager extends UntypedActor {
         // if this is an ACK that belongs to a B2BUA session, then we proxy it to the other client
         if (response != null) {
             SipServletRequest ack = response.createAck();
-            if (!ack.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+//            if (!ack.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+            if (patchForNatB2BUASessions) {
                 InetAddress ackRURI = null;
                 try {
                     ackRURI = InetAddress.getByName(((SipURI) ack.getRequestURI()).getHost());
@@ -776,6 +777,28 @@ public final class CallManager extends UntypedActor {
                             + " as a request uri of the ACK request");
                     }
                     ack.setRequestURI(toInetUri);
+                } else if (toInetUri == null
+                        && (ackRURI.isSiteLocalAddress() || ackRURI.isAnyLocalAddress() || ackRURI.isLoopbackAddress())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
+                    }
+                    final String initialIpBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                    String initialPortBeforeLB = response.getHeader("X-Sip-Balancer-InitialRemotePort");
+                    if (initialIpBeforeLB != null) {
+                        if (initialPortBeforeLB == null)
+                            initialPortBeforeLB = "5060";
+                        if (logger.isInfoEnabled()) {
+                            logger.info("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for the ACK request");
+                        }
+                        String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                        SipURI uri = sipFactory.createSipURI(null, realIP);
+                        ack.setRequestURI(uri);
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("LB Headers are also null");
+                        }
+                    }
                 }
             }
             ack.send();
@@ -954,6 +977,7 @@ public final class CallManager extends UntypedActor {
         SipURI from = null;
         SipURI to = null;
         boolean webRTC = false;
+        boolean isLBPresent = false;
 
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
         final String client = request.to().replaceFirst("client:", "");
@@ -970,13 +994,19 @@ public final class CallManager extends UntypedActor {
             }
             for (Registration registration : registrations) {
                 if (registration.isWebRTC()) {
-                    //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
-                    if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
-                        logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
-                    } else {
+                    if (registration.isLBPresent()) {
                         if (logger.isInfoEnabled())
-                            logger.info("Will add WebRTC registration: "+registration.getLocation()+" to the list to be dialed for client: "+client);
+                            logger.info("WebRTC registration behind LB. Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
                         registrationToDial.add(registration);
+                    } else {
+                        //If this is a WebRTC client registration, check that the InstanceId of the registration is for the current Restcomm instance
+                        if ((registration.getInstanceId() != null && !registration.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId()))) {
+                            logger.warning("Cannot create call for user agent: " + registration.getLocation() + " since this is a webrtc client registered in another Restcomm instance.");
+                        } else {
+                            if (logger.isInfoEnabled())
+                                logger.info("Will add WebRTC registration: " + registration.getLocation() + " to the list to be dialed for client: " + client);
+                            registrationToDial.add(registration);
+                        }
                     }
                 } else {
                     if (logger.isInfoEnabled())
@@ -1222,7 +1252,7 @@ public final class CallManager extends UntypedActor {
             SipServletRequest clonedBye = linkedB2BUASession.createRequest("BYE");
             linkedB2BUASession.setAttribute(B2BUAHelper.B2BUA_LAST_REQUEST, clonedBye);
 
-            if (!clonedBye.getHeaders("Route").hasNext() && patchForNatB2BUASessions) {
+            if (patchForNatB2BUASessions) {
                 // Issue #307: https://telestax.atlassian.net/browse/RESTCOMM-307
                 SipURI toInetUri = (SipURI) request.getSession().getAttribute("toInetUri");
                 SipURI fromInetUri = (SipURI) request.getSession().getAttribute("fromInetUri");
@@ -1251,6 +1281,28 @@ public final class CallManager extends UntypedActor {
                             + " as a request uri of the CloneBye request");
                     }
                     clonedBye.setRequestURI(fromInetUri);
+                } else if (toInetUri == null
+                        && (byeRURI.isSiteLocalAddress() || byeRURI.isAnyLocalAddress() || byeRURI.isLoopbackAddress())) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Public IP toInetUri from SipSession is null, will check LB headers from last Response");
+                    }
+                    final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+                    String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
+                    if (initialIpBeforeLB != null) {
+                        if (initialPortBeforeLB == null)
+                            initialPortBeforeLB = "5060";
+                        if (logger.isInfoEnabled()) {
+                            logger.info("We are behind load balancer, will use Initial Remote Address " + initialIpBeforeLB + ":"
+                                    + initialPortBeforeLB + " for the cloned BYE request");
+                        }
+                        String realIP = initialIpBeforeLB + ":" + initialPortBeforeLB;
+                        SipURI uri = sipFactory.createSipURI(null, realIP);
+                        clonedBye.setRequestURI(uri);
+                    } else {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("LB Headers are also null");
+                        }
+                    }
                 }
             }
             B2BUAHelper.updateCDR(request, CallStateChanged.State.COMPLETED);

@@ -34,6 +34,7 @@ import org.mobicents.servlet.restcomm.mscontrol.MediaServerInfo;
 import org.mobicents.servlet.restcomm.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.mobicents.servlet.restcomm.mscontrol.mgcp.MmsControllerFactory;
 import org.mobicents.servlet.restcomm.telephony.config.ConfigurationStringLookup;
+import org.mobicents.servlet.sip.SipConnector;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -369,6 +370,16 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
             RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
+            // https://github.com/RestComm/Restcomm-Connect/issues/1285 Pass InstanceId to the Load Balancer for LCM stickiness
+            SipConnector[] connectors = (SipConnector[]) context.getAttribute("org.mobicents.servlet.sip.SIP_CONNECTORS");
+            Properties loadBalancerCustomInfo = new Properties();
+            loadBalancerCustomInfo.setProperty("Restcomm-Instance-Id", instanceId.getId().toString());
+            for (SipConnector sipConnector : connectors) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Passing InstanceId " + instanceId.getId().toString() + " to connector " + sipConnector);
+                }
+                sipConnector.setLoadBalancerCustomInformation(loadBalancerCustomInfo);
+            }
             //Depreciated
 //            Ping ping = new Ping(xml, context);
 //            ping.sendPing();
