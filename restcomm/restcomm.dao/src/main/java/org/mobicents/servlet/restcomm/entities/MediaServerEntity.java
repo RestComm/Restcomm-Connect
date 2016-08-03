@@ -54,38 +54,36 @@ public final class MediaServerEntity {
     }
 
     public int getMsId() {
-        return msId;
+        return this.msId;
     }
 
     public String getCompatibility() {
-        return compatibility;
+        return this.compatibility;
     }
 
     public String getLocalIpAddress() {
-        return localIpAddress;
+        return this.localIpAddress;
     }
 
     public int getLocalPort() {
-        return localPort;
+        return this.localPort;
     }
 
     public String getRemoteIpAddress() {
-        return remoteIpAddress;
+        return this.remoteIpAddress;
     }
 
     public int getRemotePort() {
-        return remotePort;
+        return this.remotePort;
     }
 
     public String getResponseTimeout() {
-        return responseTimeout;
+        return this.responseTimeout;
     }
 
     public String getExternalAddress() {
-        return externalAddress;
+        return this.externalAddress;
     }
-
-
 
     @NotThreadSafe
     public static final class Builder {
