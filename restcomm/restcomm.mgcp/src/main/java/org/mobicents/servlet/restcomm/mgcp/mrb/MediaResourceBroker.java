@@ -90,17 +90,16 @@ public class MediaResourceBroker extends UntypedActor{
         this.mediaGateway = mediaGatewayMap.get(this.msId);
     }
 
-    private Map<String, ActorRef> turnOnMediaGateways() {
-        // List of available gateways
-        //List<ActorRef> gateways = new ArrayList<ActorRef>(1);
+    private Map<String, ActorRef> turnOnMediaGateways() throws UnknownHostException {
         Map<String, ActorRef> gateways = new HashMap<String, ActorRef>();
 
-        List<Object> mgcpMediaServers = configuration.getList("mgcp-servers.mgcp-server.local-address");
-        int mgcpMediaServerListSize = mgcpMediaServers.size();
-        //TODO remove this log line after completion
-        logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
+        MediaServersDao dao = storage.getMediaServersDao();
+        List<MediaServerEntity> mgcpMediaServers = dao.getMediaServers();
 
-        for (int count = 0; count < mgcpMediaServerListSize; count++) {
+        int mgcpMediaServerListSize = mgcpMediaServers.size();
+        logger.info("total available Media Server in database are: "+mgcpMediaServerListSize);
+
+        for (MediaServerEntity mse : mgcpMediaServers) {
             final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
@@ -110,41 +109,36 @@ public class MediaResourceBroker extends UntypedActor{
                     return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
                 }
             }));
+
             final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
             builder.setName(configuration.getString("mgcp-servers[@name]"));
-            String address = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").local-address: "+address);
-            builder.setLocalIP(InetAddress.getByName(address));
-            String port = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").local-port: "+port);
-            builder.setLocalPort(Integer.parseInt(port));
-            address = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-address: "+address);
-            builder.setRemoteIP(InetAddress.getByName(address));
-            port = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-port: "+port);
-            builder.setRemotePort(Integer.parseInt(port));
-            address = configuration.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
-            logger.info("mgcp-servers.mgcp-server(" + count + ").external-address: "+ address);
-            if (address != null) {
-                builder.setExternalIP(InetAddress.getByName(address));
+
+            builder.setLocalIP(InetAddress.getByName(mse.getLocalIpAddress()));
+
+            builder.setLocalPort(mse.getLocalPort());
+
+            builder.setRemoteIP(InetAddress.getByName(mse.getRemoteIpAddress()));
+
+            builder.setRemotePort(mse.getRemotePort());
+
+            if (mse.getExternalAddress() != null) {
+                builder.setExternalIP(InetAddress.getByName(mse.getExternalAddress()));
                 builder.setUseNat(true);
             } else {
                 builder.setUseNat(false);
             }
-            final String timeout = settings.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
-            builder.setTimeout(Long.parseLong(timeout));
+
+            builder.setTimeout(Long.parseLong(mse.getResponseTimeout()));
             final PowerOnMediaGateway powerOn = builder.build();
             gateway.tell(powerOn, null);
 
-            String msId = settings.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
-            gateways.put(msId, gateway);
+            gateways.put(mse.getMsId()+"", gateway);
         }
 
         return gateways;
     }
 
-	private ActorRef getBridgeConnector() {
+    private ActorRef getBridgeConnector() {
         return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -276,22 +270,28 @@ public class MediaResourceBroker extends UntypedActor{
 
             if(relativeMS != null && Boolean.parseBoolean(relativeMS)){
 
-                final String msIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
-                final String msPort = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
-                final String timeOut = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
+                String localIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
+                int localPort = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port"));
+                String remoteIpAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
+                int remotePort = Integer.parseInt(configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port"));
+                String responseTimeout = configuration.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
+                String externalAddress = configuration.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
 
                 final MediaServerEntity.Builder builder = MediaServerEntity.builder();
-                builder.setMsIpAddress(msIpAddress);
-                builder.setMsPort(msPort);
-                builder.setTimeOut(timeOut);
+                builder.setLocalIpAddress(localIpAddress);
+                builder.setLocalPort(localPort);
+                builder.setRemoteIpAddress(remoteIpAddress);
+                builder.setRemotePort(remotePort);
+                builder.setResponseTimeout(responseTimeout);
+                builder.setExternalAddress(externalAddress);
 
                 MediaServersDao dao = storage.getMediaServersDao();
                 final MediaServerEntity freshMediaServerEntity = builder.build();
-                final List<MediaServerEntity> existingMediaServersForSameIP = dao.getMediaServerEntityByIP(msIpAddress);
+                final List<MediaServerEntity> existingMediaServersForSameIP = dao.getMediaServerEntityByIP(remoteIpAddress);
 
                 if(existingMediaServersForSameIP == null || existingMediaServersForSameIP.size()==0){
                     dao.addMediaServer(freshMediaServerEntity);
-                    final List<MediaServerEntity> newMediaServerEntity = dao.getMediaServerEntityByIP(msIpAddress);
+                    final List<MediaServerEntity> newMediaServerEntity = dao.getMediaServerEntityByIP(remoteIpAddress);
                     this.msId = newMediaServerEntity.get(0).getMsId()+"";
                 }else{
                     this.msId = existingMediaServersForSameIP.get(0).getMsId()+"";

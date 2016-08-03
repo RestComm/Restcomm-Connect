@@ -205,7 +205,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (MediaGatewayResponse.class.equals(klass)) {
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
-        	onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
+            onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
         } else if (LinkStateChanged.class.equals(klass)) {
             onLinkStateChanged((LinkStateChanged) message, self, sender);
         }

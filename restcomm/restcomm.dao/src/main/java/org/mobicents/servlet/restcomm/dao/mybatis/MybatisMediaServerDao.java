@@ -115,21 +115,27 @@ public final class MybatisMediaServerDao implements MediaServersDao {
 
     private MediaServerEntity toMediaServer(final Map<String, Object> map) {
         final int msId = readInteger(map.get("ms_id"));
-        final String msIpAddress = readString(map.get("ms_ip_address"));
-        final String msPort = readString(map.get("ms_port"));
         final String compatibility = readString(map.get("compatibility"));
-        final String timeOut = readString(map.get("timeout"));
+        final String localIpAddress = readString(map.get("local_ip"));
+        final int localPort = readInteger(map.get("local_port"));
+        final String remoteIpAddress = readString(map.get("remote_ip"));
+        final int remotePort = readInteger(map.get("remote_port"));
+        final String responseTimeout = readString(map.get("response_timeout"));
+        final String externalAddress = readString(map.get("external_address"));
 
-        return new MediaServerEntity(msId, msIpAddress, msPort, compatibility, timeOut);
+        return new MediaServerEntity(msId, compatibility, localIpAddress, localPort, remoteIpAddress, remotePort, responseTimeout, externalAddress);
     }
 
     private Map<String, Object> toMap(final MediaServerEntity ms) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("ms_id", ms.getMsId());
-        map.put("ms_ip_address", ms.getMsIpAddress());
-        map.put("ms_port", ms.getMsPort());
         map.put("compatibility", ms.getCompatibility());
-        map.put("timeout", ms.getTimeOut());
+        map.put("local_ip", ms.getLocalIpAddress());
+        map.put("local_port", ms.getLocalPort());
+        map.put("remote_ip", ms.getRemoteIpAddress());
+        map.put("remote_port", ms.getRemotePort());
+        map.put("response_timeout", ms.getResponseTimeout());
+        map.put("external_address", ms.getExternalAddress());
         return map;
     }
 }
