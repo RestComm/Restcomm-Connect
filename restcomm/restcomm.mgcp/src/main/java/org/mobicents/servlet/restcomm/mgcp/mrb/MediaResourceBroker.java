@@ -20,8 +20,11 @@
  */
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +39,9 @@ import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter;
 import org.mobicents.servlet.restcomm.entities.MediaServerEntity;
 import org.mobicents.servlet.restcomm.entities.Sid;
+import org.mobicents.servlet.restcomm.loader.ObjectFactory;
 import org.mobicents.servlet.restcomm.mgcp.MediaResourceBrokerResponse;
+import org.mobicents.servlet.restcomm.mgcp.PowerOnMediaGateway;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetConferenceMediaResourceController;
 import org.mobicents.servlet.restcomm.mgcp.mrb.messages.GetMediaGateway;
 import org.mobicents.servlet.restcomm.telephony.ConferenceInfo;
@@ -56,40 +61,96 @@ public class MediaResourceBroker extends UntypedActor{
 
     private final ActorSystem system;
     private final Configuration configuration;
+    private final DaoManager storage;
+    private final ClassLoader loader;
     private final ActorRef mediaGateway;
     private String msId;
 
     private final Map<String, ActorRef> mediaGatewayMap;
     //private final MediaServerRouter msRouter;
-
-    private final DaoManager storage;
     // Observer pattern
     private final List<ActorRef> observers;
 
     //public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
-    public MediaResourceBroker(ActorSystem system, Map<String, ActorRef> gateways, Configuration configuration, DaoManager storage){
+    public MediaResourceBroker(ActorSystem system, Configuration configuration, DaoManager storage, final ClassLoader loader) throws UnknownHostException{
         super();
 
         this.system = system;
         this.configuration = configuration;
         this.storage = storage;
+        this.loader = loader;
         //this.msRouter = new MediaServerRouter(gateways, configuration);
-        this.mediaGatewayMap = gateways;
-
+        
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
 
-        saveMediaServersInDB();
+        uoloadLocalMediaServersInDataBase();
+        
+        this.mediaGatewayMap = turnOnMediaGateways();
         this.mediaGateway = mediaGatewayMap.get(this.msId);
     }
 
-    private ActorRef getBridgeConnector() {
-        return getContext().actorOf(new Props(new UntypedActorFactory() {
+    private Map<String, ActorRef> turnOnMediaGateways() {
+        // List of available gateways
+        //List<ActorRef> gateways = new ArrayList<ActorRef>(1);
+        Map<String, ActorRef> gateways = new HashMap<String, ActorRef>();
+
+        List<Object> mgcpMediaServers = configuration.getList("mgcp-servers.mgcp-server.local-address");
+        int mgcpMediaServerListSize = mgcpMediaServers.size();
+        //TODO remove this log line after completion
+        logger.info("Available Media gateways are: "+mgcpMediaServerListSize);
+
+        for (int count = 0; count < mgcpMediaServerListSize; count++) {
+            final ActorRef gateway = system.actorOf(new Props(new UntypedActorFactory() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public UntypedActor create() throws Exception {
+                    final String classpath = configuration.getString("mgcp-servers[@class]");
+                    return (UntypedActor) new ObjectFactory(loader).getObjectInstance(classpath);
+                }
+            }));
+            final PowerOnMediaGateway.Builder builder = PowerOnMediaGateway.builder();
+            builder.setName(configuration.getString("mgcp-servers[@name]"));
+            String address = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-address");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").local-address: "+address);
+            builder.setLocalIP(InetAddress.getByName(address));
+            String port = configuration.getString("mgcp-servers.mgcp-server(" + count + ").local-port");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").local-port: "+port);
+            builder.setLocalPort(Integer.parseInt(port));
+            address = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-address");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-address: "+address);
+            builder.setRemoteIP(InetAddress.getByName(address));
+            port = configuration.getString("mgcp-servers.mgcp-server(" + count + ").remote-port");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").remote-port: "+port);
+            builder.setRemotePort(Integer.parseInt(port));
+            address = configuration.getString("mgcp-servers.mgcp-server(" + count + ").external-address");
+            logger.info("mgcp-servers.mgcp-server(" + count + ").external-address: "+ address);
+            if (address != null) {
+                builder.setExternalIP(InetAddress.getByName(address));
+                builder.setUseNat(true);
+            } else {
+                builder.setUseNat(false);
+            }
+            final String timeout = settings.getString("mgcp-servers.mgcp-server(" + count + ").response-timeout");
+            builder.setTimeout(Long.parseLong(timeout));
+            final PowerOnMediaGateway powerOn = builder.build();
+            gateway.tell(powerOn, null);
+
+            String msId = settings.getString("mgcp-servers.mgcp-server(" + count + ").ms-id");
+            gateways.put(msId, gateway);
+        }
+
+        return gateways;
+    }
+
+	private ActorRef getBridgeConnector() {
+        return system.actorOf(new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceMediaResourceController(system, mediaGatewayMap, configuration, storage);
+                return new ConferenceMediaResourceController(mediaGatewayMap, configuration, storage);
             }
         }));
     }
@@ -200,7 +261,7 @@ public class MediaResourceBroker extends UntypedActor{
         }
     }
 
-    private void saveMediaServersInDB() {
+    private void uoloadLocalMediaServersInDataBase() {
 
         List<Object> mgcpMediaServers = configuration.getList("mgcp-servers.mgcp-server.local-address");
         int mgcpMediaServerListSize = mgcpMediaServers.size();
@@ -251,7 +312,7 @@ public class MediaResourceBroker extends UntypedActor{
         observers.clear();
 
         // Terminate actor
-        getContext().stop(self());
+        system.stop(self());
     }
 
     protected void cleanup() {}
