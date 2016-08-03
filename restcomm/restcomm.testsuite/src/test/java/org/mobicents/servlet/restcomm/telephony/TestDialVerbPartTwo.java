@@ -1129,6 +1129,74 @@ public class TestDialVerbPartTwo {
         assertTrue(response == Response.NOT_FOUND);
     }
 
+    private String rejectRejectedRcml = "<Response>" +
+            "<Reject reason=\"rejected\"/>" +
+            "<Dial><Number>131313</Number></Dial>" +
+            "</Response>";
+    @Test
+    public synchronized void testDialNumberRejectRejectedRcml() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(rejectRejectedRcml)));
+
+        // Prepare George phone to receive call
+        georgePhone.setLoopback(true);
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.DECLINE, bobCall.getLastReceivedResponse().getStatusCode());
+    }
+
+    private String rejectBusyRcml = "<Response>" +
+            "<Reject reason=\"busy\"/>" +
+            "<Dial><Number>131313</Number></Dial>" +
+            "</Response>";
+    @Test
+    public synchronized void testDialNumberRejectBusyRcml() throws InterruptedException, ParseException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(rejectBusyRcml)));
+
+        // Prepare George phone to receive call
+        georgePhone.setLoopback(true);
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.BUSY_HERE, bobCall.getLastReceivedResponse().getStatusCode());
+    }
+
     @Deployment(name = "TestDialVerbPartTwo", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

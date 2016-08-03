@@ -1,3 +1,4 @@
+[[participantsapi]]
 = Restcomm API – Participants
 
 == Participants
@@ -27,15 +28,15 @@ A *Participant* represents a single participant currently connected to a running
 |======================================================================================================================================================================
 
 === Supported Operations
-**HTTP GET**. Returns the representation of a Participant resource, including the properties above. 
+**HTTP GET**. Returns the representation of a Participant resource, including the properties above.
 
-**HTTP POST**. 
+**HTTP POST**.
 Not supported
 
-**HTTP PUT**. 
+**HTTP PUT**.
 Not supported
 
-**HTTP DELETE**. 
+**HTTP DELETE**.
 Not supported
 
 == Participant List Resource URI
@@ -45,13 +46,13 @@ Not supported
 ....
 
 === Supported Operations
-**HTTP GET**. Returns the list representation of all the Participant resources for this Account, including the properties above. 
+**HTTP GET**. Returns the list representation of all the Participant resources for this Account, including the properties above.
 
-**HTTP POST**. 
+**HTTP POST**.
 Not supported
 
-**HTTP PUT**. 
+**HTTP PUT**.
 Not supported
 
-**HTTP DELETE**. 
+**HTTP DELETE**.
 Not supported
