@@ -266,9 +266,9 @@ public final class MmsConferenceController extends MediaServerController {
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("got MRB response in conference controller");
         if(is(getMediaGatewayFromMRB)){
-        	MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
-        	mediaGateway = mgc.mediaGateway();
-        	this.conferenceSid = mgc.conferenceSid();
+            MediaGatewayForConference mgc = (MediaGatewayForConference) message.get();
+            mediaGateway = mgc.mediaGateway();
+            this.conferenceSid = mgc.conferenceSid();
             fsm.transition(message, gettingCnfMediaResourceController);
         }else if(is(gettingCnfMediaResourceController)){
             conferenceMediaResourceController = (ActorRef) message.get();
