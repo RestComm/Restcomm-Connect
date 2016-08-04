@@ -513,307 +513,367 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         ActorRef self = self();
 
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString());
-            logger.info(" ********** VoiceInterpreter's " + self().path() + " Processing Message: " + klass.getName());
+            logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString() + "\n"
+            + ", Processing Message: " + klass.getName());
         }
 
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringAsrInfo);
         } else if (AsrResponse.class.equals(klass)) {
-            if (outstandingAsrRequests > 0) {
-                asrResponse(message);
-            } else {
-                fsm.transition(message, acquiringSynthesizerInfo);
-            }
+            onAsrResponse(message);
         } else if (SpeechSynthesizerResponse.class.equals(klass)) {
-            if (acquiringSynthesizerInfo.equals(state)) {
-                fsm.transition(message, acquiringCallInfo);
-            } else if (processingGatherChildren.equals(state) || processingGather) {
-                final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
-                if (response.succeeded()) {
-                    fsm.transition(message, processingGatherChildren);
-                } else {
-                    fsm.transition(message, hangingUp);
-                }
-            } else if (synthesizing.equals(state)) {
-                final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
-                if (response.succeeded()) {
-                    fsm.transition(message, caching);
-                } else {
-                    fsm.transition(message, hangingUp);
-                }
-            }
+            onSpeechSynthesizerResponse(message);
         } else if (CallResponse.class.equals(klass)) {
             onCallResponse(message, state);
         } else if (CallStateChanged.class.equals(klass)) {
             onCallStateChanged(message, state, sender);
         } else if (CallManagerResponse.class.equals(klass)) {
-            final CallManagerResponse<Object> response = (CallManagerResponse<Object>) message;
-            if (response.succeeded()) {
-                if (startDialing.equals(state)) {
-                    fsm.transition(message, processingDialChildren);
-                } else if (processingDialChildren.equals(state)) {
-                    fsm.transition(message, processingDialChildren);
-                }
-            } else {
-                if (dialChildren != null && dialChildren.size() > 1) {
-                    fsm.transition(message, processingDialChildren);
-                } else {
-                    fsm.transition(message, hangingUp);
-                }
-            }
+            onCallManagerResponse(message);
         } else if (StartForking.class.equals(klass)) {
             fsm.transition(message, processingDialChildren);
         } else if (ConferenceCenterResponse.class.equals(klass)) {
-            if (startDialing.equals(state)) {
-                fsm.transition(message, acquiringConferenceInfo);
-            }
+            onConferenceCenterResponse(message);
         } else if (Fork.class.equals(klass)) {
-            if (processingDialChildren.equals(state)) {
-                fsm.transition(message, forking);
-            }
+            onForkMessage(message);
         } else if (ConferenceResponse.class.equals(klass)) {
-            if (acquiringConferenceInfo.equals(state)) {
-                fsm.transition(message, joiningConference);
-            }
+            onConferenceResponse(message);
         } else if (ConferenceStateChanged.class.equals(klass)) {
-            final ConferenceStateChanged event = (ConferenceStateChanged) message;
-            switch (event.state()) {
-                case RUNNING_MODERATOR_PRESENT:
-                    conferenceState = event.state();
-                    conferenceStateModeratorPresent(message);
-                    break;
-                case COMPLETED:
-                    conferenceState = event.state();
-                 // At this point i think we should call finishConferencing,
-                    // who will tell conference center to destroy the conference.
-                    fsm.transition(message, finishConferencing);
-                    break;
-                default:
-                    break;
-            }
-
-            // !!IMPORTANT!!
-            // Do not listen to COMPLETED nor FAILED conference state changes
-            // When a conference stops it will ask all its calls to Leave
-            // Then the call state will change and the voice interpreter will take proper action then
+            onConferenceStateChanged(message);
         } else if (DownloaderResponse.class.equals(klass)) {
             onDownloaderResponse(message, state);
         } else if (DiskCacheResponse.class.equals(klass)) {
-            final DiskCacheResponse response = (DiskCacheResponse) message;
-            if (response.succeeded()) {
-                //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
-                if (playWaitUrlPending) {
-                    if (conferenceWaitUris == null)
-                        conferenceWaitUris = new ArrayList<URI>();
-                    URI waitUrl = response.get();
-                    conferenceWaitUris.add(waitUrl);
-                    final GetNextVerb next = GetNextVerb.instance();
-                    parser.tell(next, self());
-                    return;
-                }
-                if (caching.equals(state) || checkingCache.equals(state)) {
-                    if (play.equals(verb.name()) || say.equals(verb.name())) {
-                        fsm.transition(message, playing);
-                    } else if (fax.equals(verb.name())) {
-                        fsm.transition(message, faxing);
-                    } else if (email.equals(verb.name())) {
-                        fsm.transition(message, sendingEmail);
-                    }
-                } else if (processingGatherChildren.equals(state)) {
-                    fsm.transition(message, processingGatherChildren);
-                }
-            } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("DiskCacheResponse is " + response.toString());
-                }
-                if (checkingCache.equals(state) || processingGatherChildren.equals(state)) {
-                    fsm.transition(message, synthesizing);
-                } else {
-                    fsm.transition(message, hangingUp);
-                }
-            }
+            onDiskCacheResponse(message);
         } else if (ParserFailed.class.equals(klass)) {
-            if(logger.isInfoEnabled()) {
-                logger.info("ParserFailed received. Will stop the call");
-            }
-            isParserFailed = true;
-            fsm.transition(message, hangingUp);
+            onParserFailed(message);
         } else if (Tag.class.equals(klass)) {
-            verb = (Tag) message;
-            if (playWaitUrlPending) {
-                if (!(play.equals(verb.name()) || say.equals(verb.name()))) {
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Tag for waitUrl is neither Play or Say");
-                    }
-                    fsm.transition(message, hangingUp);
-                }
-                if (say.equals(verb.name())) {
-                    fsm.transition(message, checkingCache);
-                } else if (play.equals(verb.name())) {
-                    fsm.transition(message, caching);
-                }
-                return;
-            }
-            if (CallStateChanged.State.RINGING == callState) {
-                if (reject.equals(verb.name())) {
-                    fsm.transition(message, rejecting);
-                } else if (pause.equals(verb.name())) {
-                    fsm.transition(message, pausing);
-                } else {
-                    fsm.transition(message, initializingCall);
-                }
-            } else if (dial.equals(verb.name())) {
-                dialRecordAttribute = verb.attribute("record");
-                fsm.transition(message, startDialing);
-            } else if (fax.equals(verb.name())) {
-                fsm.transition(message, caching);
-            } else if (play.equals(verb.name())) {
-                fsm.transition(message, caching);
-            } else if (say.equals(verb.name())) {
-                // fsm.transition(message, synthesizing);
-                fsm.transition(message, checkingCache);
-            } else if (gather.equals(verb.name())) {
-                gatherVerb = verb;
-                fsm.transition(message, processingGatherChildren);
-            } else if (pause.equals(verb.name())) {
-                fsm.transition(message, pausing);
-            } else if (hangup.equals(verb.name())) {
-                fsm.transition(message, hangingUp);
-            } else if (redirect.equals(verb.name())) {
-                fsm.transition(message, redirecting);
-            } else if (record.equals(verb.name())) {
-                fsm.transition(message, creatingRecording);
-            } else if (sms.equals(verb.name())) {
-                fsm.transition(message, creatingSmsSession);
-            } else if (email.equals(verb.name())) {
-                fsm.transition(message, sendingEmail);
-            } else {
-                invalidVerb(verb);
-            }
+            onTagMessage(message);
         } else if (End.class.equals(klass)) {
-//            Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
-            if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
-                fsm.transition(conferenceWaitUris, conferencing);
-                return;
-            }
-            if (callState.equals(CallStateChanged.State.COMPLETED)) {
-                fsm.transition(message, finished);
-            } else {
-                if (!isParserFailed) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("End tag received will move to hangup the call");
-                    }
-                    fsm.transition(message, hangingUp);
-                } else {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("End tag received but parser failed earlier so hangup would have been already sent to the call");
-                    }
-                }
-
-            }
+            onEndMessage(message);
         } else if (StartGathering.class.equals(klass)) {
             fsm.transition(message, gathering);
         } else if (MediaGroupResponse.class.equals(klass)) {
-            final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
-            if(logger.isInfoEnabled()) {
-                logger.info("MediaGroupResponse, succeeded: " + response.succeeded() + "  " + response.cause());
-            }
-            if (response.succeeded()) {
-                if (playingRejectionPrompt.equals(state)) {
-                    fsm.transition(message, hangingUp);
-                } else if (playing.equals(state)) {
-                    fsm.transition(message, ready);
-                } else if (creatingRecording.equals(state)) {
-                    fsm.transition(message, finishRecording);
-                } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
-                // come later
-                else if (gathering.equals(state) || (finishGathering.equals(state) && !super.dtmfReceived)) {
-                    final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
-                    if (sender == call) {
-                        // DTMF using SIP INFO, check if all digits collected here
-                        collectedDigits.append(dtmfResponse.get());
-                        // Collected digits == requested num of digits the complete the collect digits
-                        if (numberOfDigits != Short.MAX_VALUE) {
-                            if (collectedDigits.length() == numberOfDigits) {
-                                dtmfReceived = true;
-                                fsm.transition(message, finishGathering);
-                            } else {
-                                dtmfReceived = false;
-                                return;
-                            }
-                        } else {
-                            // If collected digits have finish on key at the end then complete the collect digits
-                            if (collectedDigits.toString().endsWith(finishOnKey)) {
-                                dtmfReceived = true;
-                                fsm.transition(message, finishGathering);
-                            } else {
-                                dtmfReceived = false;
-                                return;
-                            }
-                        }
-                    } else {
-                        collectedDigits.append(dtmfResponse.get());
-                        fsm.transition(message, finishGathering);
-                    }
-                } else if (bridging.equals(state)) {
-                    // Finally proceed with call bridging
-                    final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
-                    bridge.tell(bridgeCalls, self);
-                }
-            } else {
-                fsm.transition(message, hangingUp);
-            }
+            onMediaGroupResponse(message);
         } else if (SmsServiceResponse.class.equals(klass)) {
-            final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
-            if (response.succeeded()) {
-                if (creatingSmsSession.equals(state)) {
-                    fsm.transition(message, sendingSms);
-                }
-            } else {
-                fsm.transition(message, hangingUp);
-            }
-        }
-        // else if(AsrResponse.class.equals(klass)) {
-        // asrResponse(message);
-        // }
-        else if (SmsSessionResponse.class.equals(klass)) {
+            onSmsServiceResponse(message);
+        } else if (SmsSessionResponse.class.equals(klass)) {
             smsResponse(message);
         } else if (FaxResponse.class.equals(klass)) {
             fsm.transition(message, ready);
         } else if (EmailResponse.class.equals(klass)) {
-            final EmailResponse response = (EmailResponse) message;
-            if (!response.succeeded()) {
-                logger.error(
-                        "There was an error while sending an email :" + response.error(),
-                        response.cause());
-            }
-            fsm.transition(message, ready);
+            onEmailResponse(message);
         } else if (StopInterpreter.class.equals(klass)) {
-            this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
-            if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
-                fsm.transition(message, hangingUp);
-            } else {
-                fsm.transition(message, finished);
-            }
+            onStopInterpreter(message);
         } else if (message instanceof ReceiveTimeout) {
-            if (pausing.equals(state)) {
-                fsm.transition(message, ready);
-            } else if (conferencing.equals(state)) {
-                fsm.transition(message, finishConferencing);
-            } else if (forking.equals(state)) {
-                fsm.transition(message, finishDialing);
-            } else if (bridged.equals(state)) {
-                fsm.transition(message, finishDialing);
-            } else if (bridging.equals(state)) {
-                fsm.transition(message, finishDialing);
-            }
+            onReceiveTimeout(message);
         } else if (BridgeManagerResponse.class.equals(klass)) {
             onBridgeManagerResponse((BridgeManagerResponse) message, self, sender);
         } else if (BridgeStateChanged.class.equals(klass)) {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (GetRelatedCall.class.equals(klass)) {
             onGetRelatedCall((GetRelatedCall) message, self, sender);
+        }
+    }
+
+    private void onAsrResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (outstandingAsrRequests > 0) {
+            asrResponse(message);
+        } else {
+            fsm.transition(message, acquiringSynthesizerInfo);
+        }
+    }
+
+    private void onForkMessage(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (is(processingDialChildren)) {
+            fsm.transition(message, forking);
+        }
+    }
+
+    private void onConferenceCenterResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (is(startDialing)) {
+            fsm.transition(message, acquiringConferenceInfo);
+        }
+    }
+
+    private void onConferenceResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (is(acquiringConferenceInfo)) {
+            fsm.transition(message, joiningConference);
+        }
+    }
+
+    private void onConferenceStateChanged(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final ConferenceStateChanged event = (ConferenceStateChanged) message;
+        switch (event.state()) {
+            case RUNNING_MODERATOR_PRESENT:
+                conferenceState = event.state();
+                conferenceStateModeratorPresent(message);
+                break;
+            case COMPLETED:
+                conferenceState = event.state();
+             // At this point i think we should call finishConferencing,
+                // who will tell conference center to destroy the conference.
+                fsm.transition(message, finishConferencing);
+                break;
+            default:
+                break;
+        }
+
+        // !!IMPORTANT!!
+        // Do not listen to COMPLETED nor FAILED conference state changes
+        // When a conference stops it will ask all its calls to Leave
+        // Then the call state will change and the voice interpreter will take proper action then
+    }
+
+    private void onParserFailed(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if(logger.isInfoEnabled()) {
+            logger.info("ParserFailed received. Will stop the call");
+        }
+        isParserFailed = true;
+        fsm.transition(message, hangingUp);
+    }
+
+    private void onStopInterpreter(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        this.liveCallModification = ((StopInterpreter) message).isLiveCallModification();
+        if (CallStateChanged.State.IN_PROGRESS.equals(callState) && !liveCallModification) {
+            fsm.transition(message, hangingUp);
+        } else {
+            fsm.transition(message, finished);
+        }
+    }
+
+    private void onReceiveTimeout(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (is(pausing)) {
+            fsm.transition(message, ready);
+        } else if (is(conferencing)) {
+            fsm.transition(message, finishConferencing);
+        } else if (is(forking)) {
+            fsm.transition(message, finishDialing);
+        } else if (is(bridged)) {
+            fsm.transition(message, finishDialing);
+        } else if (is(bridging)) {
+            fsm.transition(message, finishDialing);
+        }
+    }
+
+    private void onEmailResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final EmailResponse response = (EmailResponse) message;
+        if (!response.succeeded()) {
+            logger.error(
+                    "There was an error while sending an email :" + response.error(),
+                    response.cause());
+            return;
+        }
+        fsm.transition(message, ready);
+    }
+
+    private void onSmsServiceResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final SmsServiceResponse<ActorRef> response = (SmsServiceResponse<ActorRef>) message;
+        if (response.succeeded()) {
+            if (is(creatingSmsSession)) {
+                fsm.transition(message, sendingSms);
+            }
+        } else {
+            fsm.transition(message, hangingUp);
+        }
+    }
+
+    private void onMediaGroupResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
+        if(logger.isInfoEnabled()) {
+            logger.info("MediaGroupResponse, succeeded: " + response.succeeded() + "  " + response.cause());
+        }
+        if (response.succeeded()) {
+            if (is(playingRejectionPrompt)) {
+                fsm.transition(message, hangingUp);
+            } else if (is(playing)) {
+                fsm.transition(message, ready);
+            } else if (is(creatingRecording)) {
+                fsm.transition(message, finishRecording);
+            } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
+            // come later
+            else if (is(gathering) || (is(finishGathering) && !super.dtmfReceived)) {
+                final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
+                if (sender == call) {
+                    // DTMF using SIP INFO, check if all digits collected here
+                    collectedDigits.append(dtmfResponse.get());
+                    // Collected digits == requested num of digits the complete the collect digits
+                    if (numberOfDigits != Short.MAX_VALUE) {
+                        if (collectedDigits.length() == numberOfDigits) {
+                            dtmfReceived = true;
+                            fsm.transition(message, finishGathering);
+                        } else {
+                            dtmfReceived = false;
+                            return;
+                        }
+                    } else {
+                        // If collected digits have finish on key at the end then complete the collect digits
+                        if (collectedDigits.toString().endsWith(finishOnKey)) {
+                            dtmfReceived = true;
+                            fsm.transition(message, finishGathering);
+                        } else {
+                            dtmfReceived = false;
+                            return;
+                        }
+                    }
+                } else {
+                    collectedDigits.append(dtmfResponse.get());
+                    fsm.transition(message, finishGathering);
+                }
+            } else if (is(bridging)) {
+                // Finally proceed with call bridging
+                final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
+                bridge.tell(bridgeCalls, self());
+            }
+        } else {
+            fsm.transition(message, hangingUp);
+        }
+    }
+
+    private void onEndMessage(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+        if (playWaitUrlPending && conferenceWaitUris != null && conferenceWaitUris.size() > 0) {
+            fsm.transition(conferenceWaitUris, conferencing);
+            return;
+        }
+        if (callState.equals(CallStateChanged.State.COMPLETED)) {
+            fsm.transition(message, finished);
+        } else {
+            if (!isParserFailed) {
+                if(logger.isInfoEnabled()) {
+                    logger.info("End tag received will move to hangup the call");
+                }
+                fsm.transition(message, hangingUp);
+            } else {
+                if(logger.isInfoEnabled()) {
+                    logger.info("End tag received but parser failed earlier so hangup would have been already sent to the call");
+                }
+            }
+        }
+    }
+
+    private void onTagMessage(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        verb = (Tag) message;
+        if (playWaitUrlPending) {
+            if (!(play.equals(verb.name()) || say.equals(verb.name()))) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Tag for waitUrl is neither Play or Say");
+                }
+                fsm.transition(message, hangingUp);
+            }
+            if (say.equals(verb.name())) {
+                fsm.transition(message, checkingCache);
+            } else if (play.equals(verb.name())) {
+                fsm.transition(message, caching);
+            }
+            return;
+        }
+        if (CallStateChanged.State.RINGING == callState) {
+            if (reject.equals(verb.name())) {
+                fsm.transition(message, rejecting);
+            } else if (pause.equals(verb.name())) {
+                fsm.transition(message, pausing);
+            } else {
+                fsm.transition(message, initializingCall);
+            }
+        } else if (dial.equals(verb.name())) {
+            dialRecordAttribute = verb.attribute("record");
+            fsm.transition(message, startDialing);
+        } else if (fax.equals(verb.name())) {
+            fsm.transition(message, caching);
+        } else if (play.equals(verb.name())) {
+            fsm.transition(message, caching);
+        } else if (say.equals(verb.name())) {
+            // fsm.transition(message, synthesizing);
+            fsm.transition(message, checkingCache);
+        } else if (gather.equals(verb.name())) {
+            gatherVerb = verb;
+            fsm.transition(message, processingGatherChildren);
+        } else if (pause.equals(verb.name())) {
+            fsm.transition(message, pausing);
+        } else if (hangup.equals(verb.name())) {
+            fsm.transition(message, hangingUp);
+        } else if (redirect.equals(verb.name())) {
+            fsm.transition(message, redirecting);
+        } else if (record.equals(verb.name())) {
+            fsm.transition(message, creatingRecording);
+        } else if (sms.equals(verb.name())) {
+            fsm.transition(message, creatingSmsSession);
+        } else if (email.equals(verb.name())) {
+            fsm.transition(message, sendingEmail);
+        } else {
+            invalidVerb(verb);
+        }
+    }
+
+    private void onDiskCacheResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final DiskCacheResponse response = (DiskCacheResponse) message;
+        if (response.succeeded()) {
+            //Because of RMS issue https://github.com/RestComm/mediaserver/issues/158 we cannot have List<URI> for waitUrl
+            if (playWaitUrlPending) {
+                if (conferenceWaitUris == null)
+                    conferenceWaitUris = new ArrayList<URI>();
+                URI waitUrl = response.get();
+                conferenceWaitUris.add(waitUrl);
+                final GetNextVerb next = GetNextVerb.instance();
+                parser.tell(next, self());
+                return;
+            }
+            if (is(caching) || is(checkingCache)) {
+                if (play.equals(verb.name()) || say.equals(verb.name())) {
+                    fsm.transition(message, playing);
+                } else if (fax.equals(verb.name())) {
+                    fsm.transition(message, faxing);
+                } else if (email.equals(verb.name())) {
+                    fsm.transition(message, sendingEmail);
+                }
+            } else if (is(processingGatherChildren)) {
+                fsm.transition(message, processingGatherChildren);
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("DiskCacheResponse is " + response.toString());
+            }
+            if (is(checkingCache) || is(processingGatherChildren)) {
+                fsm.transition(message, synthesizing);
+            } else {
+                fsm.transition(message, hangingUp);
+            }
+        }
+    }
+
+    private void onCallManagerResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        final CallManagerResponse<Object> response = (CallManagerResponse<Object>) message;
+        if (response.succeeded()) {
+            if (is(startDialing)) {
+                fsm.transition(message, processingDialChildren);
+            } else if (is(processingDialChildren)) {
+                fsm.transition(message, processingDialChildren);
+            }
+        } else {
+            if (dialChildren != null && dialChildren.size() > 1) {
+                fsm.transition(message, processingDialChildren);
+            } else {
+                fsm.transition(message, hangingUp);
+            }
+        }
+    }
+
+    private void onSpeechSynthesizerResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
+        if (is(acquiringSynthesizerInfo)) {
+            fsm.transition(message, acquiringCallInfo);
+        } else if (is(processingGatherChildren) || processingGather) {
+            final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
+            if (response.succeeded()) {
+                fsm.transition(message, processingGatherChildren);
+            } else {
+                fsm.transition(message, hangingUp);
+            }
+        } else if (is(synthesizing)) {
+            final SpeechSynthesizerResponse<URI> response = (SpeechSynthesizerResponse<URI>) message;
+            if (response.succeeded()) {
+                fsm.transition(message, caching);
+            } else {
+                fsm.transition(message, hangingUp);
+            }
         }
     }
 
