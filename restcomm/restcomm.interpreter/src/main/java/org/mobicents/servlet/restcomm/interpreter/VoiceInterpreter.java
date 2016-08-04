@@ -19,39 +19,12 @@
  */
 package org.mobicents.servlet.restcomm.interpreter;
 
-import static akka.pattern.Patterns.ask;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
-import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -131,16 +104,41 @@ import org.mobicents.servlet.restcomm.telephony.StopBridge;
 import org.mobicents.servlet.restcomm.telephony.StopConference;
 import org.mobicents.servlet.restcomm.tts.api.SpeechSynthesizerResponse;
 import org.mobicents.servlet.restcomm.util.UriUtils;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
+
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static akka.pattern.Patterns.ask;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.dial;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.email;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.fax;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.gather;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.hangup;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.pause;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.play;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.record;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.redirect;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.reject;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.say;
+import static org.mobicents.servlet.restcomm.interpreter.rcml.Verbs.sms;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -349,10 +347,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(initializingBridge, hangingUp));
         transitions.add(new Transition(bridging, bridged));
         transitions.add(new Transition(bridging, finishDialing));
-        // transitions.add(new Transition(joiningCalls, finishDialing));
-        // transitions.add(new Transition(joiningCalls, bridged));
-        // transitions.add(new Transition(joiningCalls, hangingUp));
-        // transitions.add(new Transition(joiningCalls, finished));
         transitions.add(new Transition(bridged, finishDialing));
         transitions.add(new Transition(bridged, finished));
         transitions.add(new Transition(finishDialing, ready));
@@ -417,31 +411,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.callManager = callManager;
         this.conferenceManager = conferenceManager;
         this.bridgeManager = bridgeManager;
-        this.asrService = asr(configuration.subset("speech-recognizer"));
-        this.faxService = fax(configuration.subset("fax-service"));
         this.smsService = sms;
         this.smsSessions = new HashMap<Sid, ActorRef>();
         this.storage = storage;
-        this.synthesizer = tts(configuration.subset("speech-synthesizer"));
         final Configuration runtime = configuration.subset("runtime-settings");
-        String path = runtime.getString("cache-path");
-        if (!path.endsWith("/")) {
-            path = path + "/";
-        }
-        path = path + accountId.toString();
-        cachePath = path;
-        String uri = runtime.getString("cache-uri");
-        if (!uri.endsWith("/")) {
-            uri = uri + "/";
-        }
-        try {
-            uri = UriUtils.resolve(new URI(uri)).toString();
-        } catch (URISyntaxException e) {
-            logger.error("URISyntaxException while trying to resolve Cache URI: " + e);
-        }
-        uri = uri + accountId.toString();
         playMusicForConference = Boolean.parseBoolean(runtime.getString("play-music-for-conference","false"));
-        this.cache = cache(path, uri);
         this.downloader = downloader();
         this.monitoring = monitoring;
         this.rcml = rcml;
@@ -2818,10 +2792,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 context.stop(mailerNotify);
             if (mailerService != null)
                 context.stop(mailerService);
-            context.stop(asrService);
-            context.stop(faxService);
-            context.stop(cache);
-            context.stop(synthesizer);
+            context.stop(getAsrService());
+            context.stop(getFaxService());
+            context.stop(getCache());
+            context.stop(getSynthesizer());
 
             // Stop the interpreter.
             postCleanup();
