@@ -492,6 +492,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         }
 
         if (StartInterpreter.class.equals(klass)) {
+            final StartInterpreter request = (StartInterpreter) message;
+            call = request.resource();
             fsm.transition(message, acquiringAsrInfo);
         } else if (AsrResponse.class.equals(klass)) {
             onAsrResponse(message);
@@ -861,6 +863,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             if (sender == call) {
                 callInfo = response.get();
             } else {
+                outboundCall = sender;
                 outboundCallInfo = response.get();
             }
         } else if (acquiringCallInfo.equals(state)) {
