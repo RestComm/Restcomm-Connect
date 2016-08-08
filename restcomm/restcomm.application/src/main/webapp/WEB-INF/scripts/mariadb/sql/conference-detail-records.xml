@@ -38,7 +38,7 @@
 		<if test="dateUpdated != null">
 			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
-
+		;
 	</select>
 	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.mobicents.servlet.restcomm.entities.ConferenceDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records AS restcomm_conference_detail_records WHERE account_sid=#{accountSid}
@@ -55,7 +55,7 @@
 			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
 
-		LIMIT #{limit} OFFSET #{offset}
+		LIMIT #{limit} OFFSET #{offset};
 	</select>
   
     <delete id="removeConferenceDetailRecord" parameterType="string">

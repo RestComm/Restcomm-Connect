@@ -207,7 +207,6 @@ public class MediaResourceBroker extends UntypedActor{
                 CallDetailRecordsDao callDao = storage.getCallDetailRecordsDao();
                 CallDetailRecord callRecord = callDao.getCallDetailRecord(callSid);
                 if(callRecord != null){
-                    logger.info("updateMSIdinConferenceDetailRecord: SID: "+conferenceInfo.sid()+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
                     ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
 
                     // check if a conference with same name/account is running.
@@ -246,6 +245,7 @@ public class MediaResourceBroker extends UntypedActor{
 
                         ConferenceDetailRecord cdr = conferenceBuilder.build();
                         dao.addConferenceDetailRecord(cdr);
+                        logger.info("addConferenceDetailRecord: SID: "+sid+" NAME: "+conferenceInfo.name()+" STATE: "+conferenceInfo.state());
                     }else{
                         logger.info("A conference with same name is running. According to database record.");
                     }

@@ -75,7 +75,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final FiniteStateMachine fsm;
     private final State uninitialized;
     private final State initializing;
-    private final State acquiringMediaSession;
     private final State creatingBridgeEndpoint;
     private final State acquiringRemoteConnection;
     private final State initializingRemoteConnection;
@@ -94,7 +93,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final State inactive;
     private final State failed;
 
-    private final Map<String, ActorRef> mediaGatewayMap;
+    private final Map<String, ActorRef> allMediaGateways;
     private final ActorRef mediaGateway;
 
     private String localMsId;
@@ -128,7 +127,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
         // Initialize the states for the FSM.
         this.uninitialized = new State("uninitialized", null, null);
         this.initializing = new State("initializing", new Initializing(source), null);
-        this.acquiringMediaSession = new State("acquiring media session", new AcquiringMediaSession(source), null);
         this.creatingBridgeEndpoint = new State("creating bridge endpoint", new CreatingBridgeEndpoint(source), null);
         this.acquiringRemoteConnection = new State("acquiring connection", new AcquiringRemoteConnection(source), null);
         this.initializingRemoteConnection = new State("initializing connection", new InitializingRemoteConnection(source), null);
@@ -150,9 +148,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         // Transitions for the FSM.
         final Set<Transition> transitions = new HashSet<Transition>();
         transitions.add(new Transition(uninitialized, initializing));
-        transitions.add(new Transition(uninitialized, acquiringMediaSession));
-        transitions.add(new Transition(initializing, acquiringMediaSession));
-        transitions.add(new Transition(acquiringMediaSession, creatingBridgeEndpoint));
+        transitions.add(new Transition(initializing, creatingBridgeEndpoint));
         transitions.add(new Transition(creatingBridgeEndpoint, acquiringRemoteConnection));
         transitions.add(new Transition(acquiringRemoteConnection, initializingRemoteConnection));
         transitions.add(new Transition(initializingRemoteConnection, openingRemoteConnection));
@@ -176,9 +172,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
 
         this.storage = storage;
-        this.mediaGatewayMap = gateways;
+        this.allMediaGateways = gateways;
+        logger.info("localMsId: "+localMsId);
         this.localMsId = localMsId;
-        this.mediaGateway = mediaGatewayMap.get(this.localMsId);
+        this.mediaGateway = allMediaGateways.get(this.localMsId);
 
         // Observers
         this.observers = new ArrayList<ActorRef>(1);
@@ -207,6 +204,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         } else if (StartBridgeConnector.class.equals(klass)){
             onStartBridgeConnector((StartBridgeConnector) message, self, sender);
         } else if (MediaGatewayResponse.class.equals(klass)) {
+            logger.info("going to call onMediaGatewayResponse");
             onMediaGatewayResponse((MediaGatewayResponse<?>) message, self, sender);
         } else if (ConnectionStateChanged.class.equals(klass)) {
             onConnectionStateChanged((ConnectionStateChanged) message, self, sender);
@@ -244,26 +242,27 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onMediaGatewayResponse(MediaGatewayResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
-        if(is(acquiringMediaSession)){
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        logger.info("inside onMediaGatewayResponse: state = "+fsm.state());
+        if(is(initializing)){
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - initializing to acquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             this.mediaSession = (MediaSession) message.get();
             this.fsm.transition(message, creatingBridgeEndpoint);
         } else if (is(creatingBridgeEndpoint)){
-        	this.localBridgeEndpoint = (ActorRef) message.get();
+            this.localBridgeEndpoint = (ActorRef) message.get();
             this.localBridgeEndpoint.tell(new Observe(self), self);
             logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - creatingBridgeEndpoint - received localBridgeEndpoint:"+localBridgeEndpoint+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, acquiringRemoteConnection);
         } else if (is(acquiringRemoteConnection)){
-        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringRemoteConnection ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringRemoteConnection ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, initializingRemoteConnection);
         } else if (is(acquiringInternalLink)) {
-        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringInternalLink ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onMediaGatewayResponse - acquiringInternalLink ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             fsm.transition(message, initializingInternalLink);
         }
     }
 
     private void onConnectionStateChanged(ConnectionStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-    	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onConnectionStateChanged - received connection STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onConnectionStateChanged - received connection STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case CLOSED:
                 if (is(initializingRemoteConnection)) {
@@ -290,7 +289,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onLinkStateChanged(LinkStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-    	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onLinkStateChanged - received link STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onLinkStateChanged - received link STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case CLOSED:
                 if (is(initializingInternalLink)) {
@@ -359,23 +358,11 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     // enter slave record in MRB resource table
                     addNewSlaveRecord();
                 }
-                fsm.transition(msg, acquiringMediaSession);
+                logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), source);
             }
         }
 
-    }
-
-    private final class AcquiringMediaSession extends AbstractAction {
-
-        public AcquiringMediaSession(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AcquiringMediaSession ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-            mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
-        }
     }
 
     private final class CreatingBridgeEndpoint extends AbstractAction {
@@ -386,7 +373,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
 
         @Override
         public void execute(final Object message) throws Exception {
-        	logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CreatingBridgeEndpoint - current fsm STATE is"+fsm.state()+" media session ="+mediaSession+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CreatingBridgeEndpoint - current fsm STATE is"+fsm.state()+" media session ="+mediaSession+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             mediaGateway.tell(new CreateBridgeEndpoint(mediaSession), source);
         }
 
@@ -541,10 +528,10 @@ public class ConferenceMediaResourceController extends UntypedActor{
                     }
                 }
             }else{
+                ActorRef slaveBridgeConnector = getSlaveBridgeConnector();
+                slaveBridgeConnector.tell(new Observe(self), self);
+                slaveBridgeConnector.tell(new StartSlaveBridgeConnector(), self);
             }
-            ActorRef slaveBridgeConnector = getSlaveBridgeConnector();
-            slaveBridgeConnector.tell(new Observe(self), self);
-            slaveBridgeConnector.tell(new StartSlaveBridgeConnector(), self);
         }
     }
 
@@ -616,7 +603,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
             @Override
             public UntypedActor create() throws Exception {
                 //Here Here we can pass Gateway where call is connected
-                return new SlaveBridgeConnector(mediaGatewayMap.get(masterMsId));
+                return new SlaveBridgeConnector(allMediaGateways.get(masterMsId));
             }
         }));
     }
