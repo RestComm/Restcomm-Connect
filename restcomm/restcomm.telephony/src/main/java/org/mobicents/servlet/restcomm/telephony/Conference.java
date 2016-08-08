@@ -479,7 +479,7 @@ public final class Conference extends UntypedActor {
         try {
             filter = new ConferenceDetailRecordFilter(accountSid, ConferenceStateChanged.State.INITIALIZING.toString(), null, null, friendlyName, 100, 0);
             List<ConferenceDetailRecord> records = dao.getConferenceDetailRecords(filter);
-            if(records ==null){
+            if(records == null || records.size() == 0){
                 logger.warning("this conference is in trouble bcz we did not get its record..");
             }else{
                 logger.info("records size: "+ records.size());

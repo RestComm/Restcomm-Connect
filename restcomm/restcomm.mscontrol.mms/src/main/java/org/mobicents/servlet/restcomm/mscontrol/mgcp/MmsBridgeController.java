@@ -98,7 +98,7 @@ public class MmsBridgeController extends MediaServerController {
     // MGCP runtime stuff
     //private final ActorRef mediaGateway;
     // TODO rename following variable to 'mediaGateway'
-    private ActorRef mediaGatewayy;
+    private ActorRef mediaGateway;
     private MediaSession mediaSession;
     private ActorRef endpoint;
     private final ActorRef mrb;
@@ -256,7 +256,7 @@ public class MmsBridgeController extends MediaServerController {
 
     private void onMediaResourceBrokerResponse(MediaResourceBrokerResponse<?> message, ActorRef self, ActorRef sender) throws Exception {
         logger.info("got MRB response in bridge controller");
-        this.mediaGatewayy = (ActorRef) message.get();
+        this.mediaGateway = (ActorRef) message.get();
         fsm.transition(message, acquiringMediaSession);
 
     }
@@ -413,7 +413,7 @@ public class MmsBridgeController extends MediaServerController {
 
         @Override
         public void execute(final Object message) throws Exception {
-            mediaGatewayy.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
+            mediaGateway.tell(new org.mobicents.servlet.restcomm.mgcp.CreateMediaSession(), super.source);
         }
     }
 
@@ -426,7 +426,7 @@ public class MmsBridgeController extends MediaServerController {
         @Override
         public void execute(final Object message) throws Exception {
             final CreateConferenceEndpoint createEndpoint = new CreateConferenceEndpoint(mediaSession);
-            mediaGatewayy.tell(createEndpoint, super.source);
+            mediaGateway.tell(createEndpoint, super.source);
         }
     }
 
@@ -442,7 +442,7 @@ public class MmsBridgeController extends MediaServerController {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new MgcpMediaGroup(mediaGatewayy, mediaSession, endpoint);
+                    return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
                 }
             }));
         }
@@ -525,7 +525,7 @@ public class MmsBridgeController extends MediaServerController {
         public void execute(Object message) throws Exception {
             // Cleanup resources
             if (endpoint != null) {
-                mediaGatewayy.tell(new DestroyEndpoint(endpoint), super.source);
+                mediaGateway.tell(new DestroyEndpoint(endpoint), super.source);
                 endpoint = null;
             }
 
