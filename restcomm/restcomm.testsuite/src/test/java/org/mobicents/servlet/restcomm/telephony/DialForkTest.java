@@ -163,7 +163,6 @@ public class DialForkTest {
         if (fotiniSipStack != null) {
             fotiniSipStack.dispose();
         }
-        Thread.sleep(3000);
         wireMockRule.resetRequests();
         Thread.sleep(2000);
     }
@@ -473,6 +472,8 @@ public class DialForkTest {
         assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "OK-Henrique", 3600, receivedBody, "application", "sdp",
                 null, null));
         assertTrue(henriqueCall.waitForAck(50 * 1000));
+
+        Thread.sleep(2000);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
