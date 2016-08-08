@@ -90,14 +90,13 @@ public final class MybatisMediaResourceBrokerDao implements MediaResourceBrokerD
     }
 
     @Override
-    public List<MediaResourceBrokerEntity> getMediaResourceBrokerEntitiesByFilter(
-            MediaResourceBrokerEntityFilter filter) {
+    public List<MediaResourceBrokerEntity> getUnConnectedSlaveEntitiesByConfSid(Sid conferenceSid) {
 
         final SqlSession session = sessions.openSession();
 
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getMediaResourceBrokerEntitiesByFilter",
-                    filter);
+            final List<Map<String, Object>> results = session.selectList(namespace + "getUnConnectedSlaveEntitiesByConfSid",
+                    conferenceSid);
             final List<MediaResourceBrokerEntity> entities = new ArrayList<MediaResourceBrokerEntity>();
 
             if (results != null && !results.isEmpty()) {

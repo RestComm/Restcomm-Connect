@@ -20,7 +20,6 @@
  */
 package org.mobicents.servlet.restcomm.mgcp.mrb;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +32,6 @@ import org.mobicents.servlet.restcomm.dao.DaoManager;
 import org.mobicents.servlet.restcomm.dao.MediaResourceBrokerDao;
 import org.mobicents.servlet.restcomm.entities.ConferenceDetailRecord;
 import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntity;
-import org.mobicents.servlet.restcomm.entities.MediaResourceBrokerEntityFilter;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.fsm.Action;
 import org.mobicents.servlet.restcomm.fsm.FiniteStateMachine;
@@ -79,8 +77,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private final State acquiringRemoteConnection;
     private final State initializingRemoteConnection;
     private final State openingRemoteConnection;
-    //Get SDP
-    private final State pending;
     private final State acquiringInternalLink;
     //connect bridge with conference endpoint
     private final State initializingInternalLink;
@@ -131,7 +127,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
         this.acquiringRemoteConnection = new State("acquiring connection", new AcquiringRemoteConnection(source), null);
         this.initializingRemoteConnection = new State("initializing connection", new InitializingRemoteConnection(source), null);
         this.openingRemoteConnection = new State("opening connection", new OpeningRemoteConnection(source), null);
-        this.pending = new State("pending", new Pending(source), null);
         this.acquiringInternalLink = new State("acquiring internal link", new AcquiringInternalLink(source), null);
         this.initializingInternalLink = new State("acquiring media bridge", new InitializingInternalLink(source), null);
         this.openingInternalLink = new State("creating media group", new OpeningInternalLink(source), null);
@@ -153,8 +148,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
         transitions.add(new Transition(acquiringRemoteConnection, initializingRemoteConnection));
         transitions.add(new Transition(initializingRemoteConnection, openingRemoteConnection));
         transitions.add(new Transition(openingRemoteConnection, failed));
-        transitions.add(new Transition(openingRemoteConnection, pending));
-        transitions.add(new Transition(pending, acquiringInternalLink));
+        transitions.add(new Transition(openingRemoteConnection, acquiringInternalLink));
         transitions.add(new Transition(acquiringInternalLink, initializingInternalLink));
         transitions.add(new Transition(initializingInternalLink, openingInternalLink));
         transitions.add(new Transition(openingInternalLink, updatingInternalLink));
@@ -262,7 +256,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onConnectionStateChanged(ConnectionStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onConnectionStateChanged - received connection STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onConnectionStateChanged - received connection STATE is: "+message.state()+" current fsm STATE is: "+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case CLOSED:
                 if (is(initializingRemoteConnection)) {
@@ -275,7 +269,18 @@ public class ConferenceMediaResourceController extends UntypedActor{
                 break;
 
             case HALF_OPEN:
-                fsm.transition(message, pending);
+                ConnectionStateChanged connState = (ConnectionStateChanged) message;
+                localMediaServerSdp = connState.descriptor().toString();
+                logger.info("localMediaServerSdp: "+localMediaServerSdp);
+                if(isThisMasterBridgeConnector){
+                    setMasterMediaServerSDP();
+                    logger.info("A bridge has been create on master media server");
+                }else{
+                    setSlaveMediaServerSDP();
+                    logger.info("A bridge has been create on slave media server");
+                }
+                logger.info("Let's connect this bridge with local conference endpoint");
+                fsm.transition(message, acquiringInternalLink);
                 break;
 
             case OPEN:
@@ -289,7 +294,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void onLinkStateChanged(LinkStateChanged message, ActorRef self, ActorRef sender) throws Exception {
-        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onLinkStateChanged - received link STATE is"+message.state()+" current fsm STATE is"+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ onLinkStateChanged - received link STATE is: "+message.state()+" current fsm STATE is: "+fsm.state()+" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
         switch (message.state()) {
             case CLOSED:
                 if (is(initializingInternalLink)) {
@@ -417,30 +422,6 @@ public class ConferenceMediaResourceController extends UntypedActor{
         public void execute(final Object message) throws Exception {
             OpenConnection open = new OpenConnection(ConnectionMode.SendRecv, false);
             connectionWithLocalBridgeEndpoint.tell(open, source);
-        }
-    }
-
-    private final class Pending extends AbstractAction {
-
-        public Pending(final ActorRef source) {
-            super(source);
-        }
-
-        @Override
-        public void execute(final Object message) throws Exception {
-            ConnectionStateChanged connState = (ConnectionStateChanged) message;
-            localMediaServerSdp = connState.descriptor().toString();
-            if(entity != null){
-                if(isThisMasterBridgeConnector){
-                    setMasterMediaServerSDP();
-                    logger.info("A bridge has been create on master media server");
-                }else{
-                    setSlaveMediaServerSDP();
-                    logger.info("A bridge has been create on slave media server");
-                }
-                logger.info("Let's connect this bridge with local conference endpoint");
-                fsm.transition(message, acquiringInternalLink);
-            }
         }
     }
 
@@ -631,6 +612,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     }
 
     private void setMasterMediaServerSDP() {
+        logger.info("inside setMasterMediaServerSDP: localMediaServerSdp="+localMediaServerSdp);
         final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
         cdr = cdr.setMasterMsSDP(localMediaServerSdp);
         dao.updateConferenceDetailRecord(cdr);
@@ -639,11 +621,7 @@ public class ConferenceMediaResourceController extends UntypedActor{
     private List<MediaResourceBrokerEntity> searchForUnConnectedSlaves(){
         final MediaResourceBrokerDao dao= storage.getMediaResourceBrokerDao();
         List<MediaResourceBrokerEntity> slaveEntities = null;
-        try {
-            slaveEntities = dao.getMediaResourceBrokerEntitiesByFilter(new MediaResourceBrokerEntityFilter(conferenceSid, null, null, null, false));
-        } catch (ParseException e) {
-            logger.error("");
-        }
+        slaveEntities = dao.getUnConnectedSlaveEntitiesByConfSid(conferenceSid);
         return slaveEntities;
     }
 }
