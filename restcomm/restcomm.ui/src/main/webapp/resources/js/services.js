@@ -779,7 +779,7 @@ rcServices.factory('RCommJMX', function($resource) {
   );
 });
 
-rcServices.factory('RCommIdentityInstances', function ($resource,$http) {
+rcServices.factory('RCommOrgIdentities', function ($resource,$http) {
     var instance = {};
     //instance.resource = $resource('/restcomm/2012-04-24/Identity/Instances');
     instance.register = function (data, authorizationHeader) {

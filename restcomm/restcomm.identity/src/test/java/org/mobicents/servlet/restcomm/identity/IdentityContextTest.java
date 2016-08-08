@@ -23,7 +23,6 @@ package org.mobicents.servlet.restcomm.identity;
 import junit.framework.Assert;
 import org.apache.shiro.authz.SimpleRole;
 import org.junit.Test;
-import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
 import org.mobicents.servlet.restcomm.identity.shiro.RestcommRoles;
 
 import java.util.HashMap;

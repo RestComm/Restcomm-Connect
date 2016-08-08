@@ -38,6 +38,6 @@
     <mapper url="file://${sql}/announcements.xml"/>
     <mapper url="file://${sql}/usage.xml"/>
     <mapper url="file://${sql}/instanceId.xml"/>
-    <mapper url="file://${sql}/identity-instances.xml"/>
+    <mapper url="file://${sql}/org-identities.xml"/>
   </mappers>
 </configuration>

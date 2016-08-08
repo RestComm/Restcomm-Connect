@@ -25,9 +25,9 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.dao.DaoUtils;
-import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance.Status;
+import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity.Status;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 import java.util.HashMap;
@@ -37,21 +37,21 @@ import java.util.Map;
 /**
  * @author Orestis Tsakiridis
  */
-public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
+public class MybatisOrgIdentityDao implements OrgIdentityDao {
 
-    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.IdentityInstancesDao.";
+    private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.OrgIdentityDao.";
     private final SqlSessionFactory sessions;
 
-    public MybatisIdentityInstancesDao(final SqlSessionFactory sessions) {
+    public MybatisOrgIdentityDao(final SqlSessionFactory sessions) {
         super();
         this.sessions = sessions;
     }
 
     @Override
-    public void addIdentityInstance(final IdentityInstance instance) {
+    public void addOrgIdentity(final OrgIdentity instance) {
         final SqlSession session = sessions.openSession();
         try {
-            session.insert(namespace + "addIdentityInstance", toMap(instance));
+            session.insert(namespace + "addOrgIdentity", toMap(instance));
             session.commit();
         } finally {
             session.close();
@@ -60,12 +60,12 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
     }
 
     @Override
-    public IdentityInstance getIdentityInstance(Sid sid) {
+    public OrgIdentity getOrgIdentity(Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getIdentityInstance", sid.toString());
+            final Map<String, Object> result = session.selectOne(namespace + "getOrgIdentity", sid.toString());
             if (result != null) {
-                return toIdentityInstance(result);
+                return toOrgIdentity(result);
             } else {
                 return null;
             }
@@ -75,13 +75,13 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
     }
 
     @Override
-    public IdentityInstance getIdentityInstanceByName(String name) {
+    public OrgIdentity getOrgIdentityByName(String name) {
         final SqlSession session = sessions.openSession();
         try {
             // TODO see what happens if the query returns more than one results (an exception will be thrown)
-            final Map<String, Object> result = session.selectOne(namespace + "getIdentityInstanceByName", name);
+            final Map<String, Object> result = session.selectOne(namespace + "getOrgIdentityByName", name);
             if (result != null) {
-                return toIdentityInstance(result);
+                return toOrgIdentity(result);
             } else {
                 return null;
             }
@@ -91,12 +91,12 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
     }
 
     @Override
-    public IdentityInstance getIdentityInstanceByOrganizationSid(Sid organizationSid) {
+    public OrgIdentity getOrgIdentityByOrganizationSid(Sid organizationSid) {
         final SqlSession session = sessions.openSession();
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "getIdentityInstanceByOrganizationSid", organizationSid.toString());
+            final Map<String, Object> result = session.selectOne(namespace + "getOrgIdentityByOrganizationSid", organizationSid.toString());
             if (result != null) {
-                return toIdentityInstance(result);
+                return toOrgIdentity(result);
             } else {
                 return null;
             }
@@ -106,15 +106,15 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
     }
 
     @Override
-    public List<IdentityInstance> getIdentityInstances() {
+    public List<OrgIdentity> getOrgIdentities() {
         throw new NotImplementedException();
     }
 
     @Override
-    public void removeIdentityInstance(Sid sid) {
+    public void removeOrgIdentity(Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
-            session.delete(namespace + "removeIdentityInstance", sid.toString());
+            session.delete(namespace + "removeOrgIdentity", sid.toString());
             session.commit();
         } finally {
             session.close();
@@ -122,17 +122,17 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
     }
 
     @Override
-    public void updateIdentityInstance(IdentityInstance instance) {
+    public void updateOrgIdentity(OrgIdentity instance) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateIdentityInstance", toMap(instance));
+            session.update(namespace + "updateOrgIdentity", toMap(instance));
             session.commit();
         } finally {
             session.close();
         }
     }
 
-    private IdentityInstance toIdentityInstance(final Map<String, Object> map) {
+    private OrgIdentity toOrgIdentity(final Map<String, Object> map) {
         final Sid sid = DaoUtils.readSid(map.get("sid"));
         final Sid organizationSid = DaoUtils.readSid(map.get("organization_sid"));
         final String name = DaoUtils.readString(map.get("name"));
@@ -144,10 +144,10 @@ public class MybatisIdentityInstancesDao implements IdentityInstancesDao {
         final Status restcommRestStatus = Status.getValueOf(DaoUtils.readString(map.get("restcomm_status")));
         final String restcommRestClientSecret = DaoUtils.readString(map.get("restcomm_client_secret"));
 
-        return new IdentityInstance(sid,organizationSid,name, dateCreated, dateUpdated, restcommRestRAT,restcommRestLastRegistrationDate,restcommRestStatus, restcommRestClientSecret);
+        return new OrgIdentity(sid,organizationSid,name, dateCreated, dateUpdated, restcommRestRAT,restcommRestLastRegistrationDate,restcommRestStatus, restcommRestClientSecret);
     }
 
-    private Map<String, Object> toMap(final IdentityInstance instance) {
+    private Map<String, Object> toMap(final OrgIdentity instance) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", DaoUtils.writeSid(instance.getSid()));
         map.put("organization_sid",DaoUtils.writeSid(instance.getOrganizationSid()));

@@ -178,7 +178,7 @@ angular.element(document).ready(['$http',function ($http) {
   });
   //serverPromise.resolve(null);
 
-  // try to retrieve IdentityInstance
+  // try to retrieve OrgIdentity
   var instancePromise = $q.defer();
   $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
     instancePromise.resolve(instance);

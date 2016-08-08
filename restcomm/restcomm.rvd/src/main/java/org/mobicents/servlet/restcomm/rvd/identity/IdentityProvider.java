@@ -9,7 +9,7 @@ import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.mobicents.servlet.restcomm.rvd.RvdConfiguration;
-import org.mobicents.servlet.restcomm.rvd.restcomm.IdentityInstanceResponse;
+import org.mobicents.servlet.restcomm.rvd.restcomm.OrgIdentityResponse;
 
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
@@ -27,7 +27,7 @@ import java.util.Map;
  * - An incoming request arrives under http://wonderland.com:8080/restcomm-rvd. Its *origin* is extracted,
  * - The provider is not aware of it so it contacts restcomm at http://wonderland.com:8080/.../Identity/Instances/current
  *   to fetch an identity if exists (this restcomm method is public and returns only minimal info).
- * - Restcomm finds and returns the respective identity (see IdentityInstancesEndpointJson.java:getCurrentIdentityInstance()).
+ * - Restcomm finds and returns the respective identity (see OrgIdentityEndpointJson.java:getCurrentOrgIdentity()).
  * - Now that the provider has an identity instance ID is checks for cached keycloak deployments.
  * - If no such deployment is found a new one is created and stored in a hash table.
  * - The (cached or created) keycloak deployment is returned.
@@ -64,8 +64,8 @@ public class IdentityProvider {
             // ok, there is indeed an instance id. That MUST be a keycloak deployment too. Let's return it.
             return deploymentsByInstanceId.get(instanceId);
         } else {
-            URI uri = buildIdentityInstanceQueryUrl(parsedOrigin);
-            IdentityInstanceResponse identity = fetchIdentityInstance(uri);
+            URI uri = buildOrgIdentityQueryUrl(parsedOrigin);
+            OrgIdentityResponse identity = fetchOrgIdentity(uri);
             if (identity == null)
                 return null;
             instanceId = identity.getName();
@@ -100,7 +100,7 @@ public class IdentityProvider {
      * @param origin
      * @return
      */
-    private URI buildIdentityInstanceQueryUrl(String origin) {
+    private URI buildOrgIdentityQueryUrl(String origin) {
         try {
             URI uri = new URIBuilder(origin + "/restcomm/2012-04-24/Identity/Instances/current").build();
             return uri;
@@ -110,14 +110,14 @@ public class IdentityProvider {
         }
     }
 
-    private IdentityInstanceResponse fetchIdentityInstance(URI uri) {
+    private OrgIdentityResponse fetchOrgIdentity(URI uri) {
         Client jerseyClient = Client.create();
         WebResource webResource = jerseyClient.resource(uri);
         ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
         if (response.getStatus() == 200) {
             String string_response = response.getEntity(String.class);
             Gson gson = new Gson();
-            return gson.fromJson(string_response, IdentityInstanceResponse.class);
+            return gson.fromJson(string_response, OrgIdentityResponse.class);
         } else {
             if (response.getStatus() == 404)
                 return null;

@@ -38,7 +38,7 @@ import javax.ws.rs.core.Response;
  * @author Orestis Tsakiridis.
  */
 @Path("/Identity/Instances")
-public class IdentityInstancesJsonEndpoint extends IdentityInstancesEndpoint {
+public class OrgIdentityJsonEndpoint extends OrgIdentityEndpoint {
 
     /**
      *
@@ -47,8 +47,8 @@ public class IdentityInstancesJsonEndpoint extends IdentityInstancesEndpoint {
      * @return
      */
     @POST
-    public Response registerIdentityInstance(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl, @FormParam("KeycloakBaseUrl") String keycloakBaseUrl) throws AuthServerAuthorizationError {
-        return registerIdentityInstanceWithIAT(initialAccessToken, redirectUrl, keycloakBaseUrl);
+    public Response registerOrgIdentity(@FormParam("InitialAccessToken") String initialAccessToken, @FormParam("RedirectUrl") String redirectUrl, @FormParam("KeycloakBaseUrl") String keycloakBaseUrl) throws AuthServerAuthorizationError {
+        return registerOrgIdentityWithIAT(initialAccessToken, redirectUrl, keycloakBaseUrl);
     }
 
     /**
@@ -58,26 +58,26 @@ public class IdentityInstancesJsonEndpoint extends IdentityInstancesEndpoint {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getIdentityInstances() {
+    public Response getOrgIdentities() {
         throw new NotImplementedException();
     }
 
     /**
      * Returns the current instance based the active organization specified in url (domain name). If no identity
-     * instances have been created 404 is returned. Otherwise a small subset of IdentityInstance entity is returned:
+     * instances have been created 404 is returned. Otherwise a small subset of OrgIdentity entity is returned:
      *
      * {sid:II123123, organizationSid, name:abq1231231, dateCreated, dateUpdated}
      *
      * Access to this function will be public if the instance (or the organizatio) is not registered. Otherwise a bearer
      * token will be required.
      *
-     * @return 404 or an IdentityInstance subset
+     * @return 404 or an OrgIdentity subset
      */
     @GET
     @Path("/current")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getCurrentIdentityInstance() {
-        return super.getCurrentIdentityInstance();
+    public Response getCurrentOrgIdentity() {
+        return super.getCurrentOrgIdentity();
     }
     /**
      * Returns a single Identity Instance. Only (super) administrators can access this.
@@ -86,15 +86,15 @@ public class IdentityInstancesJsonEndpoint extends IdentityInstancesEndpoint {
     @Path("/{identityInstanceSid}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getIdentityInstanceBySid() {
+    public Response getOrgIdentityBySid() {
         throw new NotImplementedException();
     }
 
     @Path("/{identityInstanceSid}")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateIdentityInstanceBySid(@PathParam("identityInstanceSid") String identityInstanceId, @FormParam("client-suffix") String clientSuffix, @FormParam("token") String registrationToken) {
-        return updateIdentityInstanceRAT(identityInstanceId,clientSuffix,registrationToken);
+    public Response updateOrgIdentityBySid(@PathParam("identityInstanceSid") String identityInstanceId, @FormParam("client-suffix") String clientSuffix, @FormParam("token") String registrationToken) {
+        return updateOrgIdentityRAT(identityInstanceId,clientSuffix,registrationToken);
     }
 
     /**
@@ -105,9 +105,9 @@ public class IdentityInstancesJsonEndpoint extends IdentityInstancesEndpoint {
      */
     @DELETE
     @Path("/{identityInstanceSid}")
-    public Response unregisterIdentityInstance(@PathParam("identityInstanceSid") String identityInstanceSid) {
+    public Response unregisterOrgIdentity(@PathParam("identityInstanceSid") String identityInstanceSid) {
         if (mainConfig.getIdentityAuthServerUrl() != null)
-            return super.unregisterIdentityInstance(identityInstanceSid);
+            return super.unregisterOrgIdentity(identityInstanceSid);
         else
             return Response.status(Response.Status.NOT_FOUND).build();
     }

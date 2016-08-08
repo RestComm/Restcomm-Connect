@@ -28,11 +28,11 @@ import org.apache.commons.lang.StringUtils;
 import org.mobicents.servlet.restcomm.configuration.RestcommConfiguration;
 import org.mobicents.servlet.restcomm.configuration.sets.MainConfigurationSet;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 import org.mobicents.servlet.restcomm.entities.RestCommResponse;
 import org.mobicents.servlet.restcomm.entities.Sid;
-import org.mobicents.servlet.restcomm.http.converter.IdentityInstanceConverter;
+import org.mobicents.servlet.restcomm.http.converter.OrgIdentityConverter;
 import org.mobicents.servlet.restcomm.http.converter.RestCommResponseConverter;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.identity.IdentityRegistrationTool;
@@ -53,12 +53,12 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
  *
  * @author Orestis Tsakiridis
  */
-public class IdentityInstancesEndpoint extends SecuredEndpoint {
+public class OrgIdentityEndpoint extends SecuredEndpoint {
 
     @Context
     protected ServletContext context;
     MainConfigurationSet mainConfig;
-    IdentityInstancesDao identityInstancesDao;
+    OrgIdentityDao orgIdentityDao;
     protected Gson gson;
     protected XStream xstream;
 
@@ -69,12 +69,12 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
         final DaoManager daos = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        this.identityInstancesDao = daos.getIdentityInstancesDao();
+        this.orgIdentityDao = daos.getOrgIdentityDao();
         mainConfig = RestcommConfiguration.getInstance().getMain();
         // converters
-        final IdentityInstanceConverter converter = new IdentityInstanceConverter(configuration);
+        final OrgIdentityConverter converter = new OrgIdentityConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(IdentityInstance.class, converter);
+        builder.registerTypeAdapter(OrgIdentity.class, converter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -85,22 +85,22 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
     }
 
 
-    protected Response registerIdentityInstanceWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) {
+    protected Response registerOrgIdentityWithIAT(String initialAccessToken, String redirectUrl, String keycloakBaseUrlParam) {
         String clientSecret = generateClientSecret();
         // determine keycloakBaseUrl based on configuration and defaults
         String keycloakBaseUrl = keycloakBaseUrlParam;
         if (StringUtils.isEmpty(keycloakBaseUrl))
             keycloakBaseUrl = mainConfig.getIdentityAuthServerUrl();
-        // is there an IdentityInstance already for this organization ?
-        if (getIdentityInstance() == null) {
+        // is there an OrgIdentity already for this organization ?
+        if (getOrgIdentity() == null) {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(keycloakBaseUrl, mainConfig.getIdentityRealm());
-            IdentityInstance storedInstance;
+            OrgIdentity storedInstance;
             String orgIdentityName = null;
             try {
                 orgIdentityName = pickOrganizationIdentityName();
-                IdentityInstance instance = tool.registerInstanceWithIAT(orgIdentityName, initialAccessToken, redirectUrl, clientSecret);
+                OrgIdentity instance = tool.registerOrgIdentityWithIAT(orgIdentityName, initialAccessToken, redirectUrl, clientSecret);
                 instance.setOrganizationSid(getCurrentOrganizationSid());
-                identityInstancesDao.addIdentityInstance(instance);
+                orgIdentityDao.addOrgIdentity(instance);
                 storedInstance = instance;
             } catch (AuthServerAuthorizationError e) {
                 logger.error(e);
@@ -121,16 +121,16 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
             return Response.status(Response.Status.CONFLICT).build();
     }
 
-    protected Response getCurrentIdentityInstance() {
+    protected Response getCurrentOrgIdentity() {
         // TODO use a proper converter here
-        if (getIdentityInstance() == null)
+        if (getOrgIdentity() == null)
             return Response.status(Response.Status.NOT_FOUND).build();
         else {
-            return Response.ok(gson.toJson(getIdentityInstance()), APPLICATION_JSON).build();
+            return Response.ok(gson.toJson(getOrgIdentity()), APPLICATION_JSON).build();
         }
     }
 
-    protected Response unregisterIdentityInstance(String sid) {
+    protected Response unregisterOrgIdentity(String sid) {
         if ( ! hasAccountRole(getAdministratorRole()) )
             throw new AuthorizationException();
         Sid instanceSid;
@@ -139,11 +139,11 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         } catch (Exception e) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        IdentityInstance instance = identityInstancesDao.getIdentityInstance(instanceSid);
+        OrgIdentity instance = orgIdentityDao.getOrgIdentity(instanceSid);
         if (instance != null) {
             IdentityRegistrationTool tool = new IdentityRegistrationTool(mainConfig.getIdentityAuthServerUrl(), mainConfig.getIdentityRealm());
-            tool.unregisterInstanceWithRAT(instance);
-            identityInstancesDao.removeIdentityInstance(instanceSid);
+            tool.unregisterOrgIdentityWithRAT(instance);
+            orgIdentityDao.removeOrgIdentity(instanceSid);
             if (logger.isInfoEnabled())
                 logger.info("Removed identity instance " + instanceSid);
             return Response.ok().build();
@@ -152,16 +152,16 @@ public class IdentityInstancesEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response updateIdentityInstanceRAT(String sid, String clientSuffix, String registrationToken) {
+    protected Response updateOrgIdentityRAT(String sid, String clientSuffix, String registrationToken) {
         if (StringUtils.isEmpty(clientSuffix) || StringUtils.isEmpty(registrationToken) || StringUtils.isEmpty(sid))
             return Response.status(Response.Status.BAD_REQUEST).build();
         if (! (clientSuffix.equals(IdentityRegistrationTool.RESTCOMM_CLIENT_SUFFIX) ) )
             return Response.status(Response.Status.BAD_REQUEST).build();
         Sid instanceSid = new Sid(sid);
-        IdentityInstance ii = identityInstancesDao.getIdentityInstance(instanceSid);
+        OrgIdentity ii = orgIdentityDao.getOrgIdentity(instanceSid);
         if (ii != null) {
             IdentityRegistrationTool.setRATForClientSuffix(ii, clientSuffix, registrationToken);
-            identityInstancesDao.updateIdentityInstance(ii);
+            orgIdentityDao.updateOrgIdentity(ii);
             return Response.ok(gson.toJson(ii), APPLICATION_JSON).build();
         } else
             return Response.status(Response.Status.NOT_FOUND).build();

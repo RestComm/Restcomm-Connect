@@ -20,7 +20,7 @@
 
 package org.mobicents.servlet.restcomm.dao;
 
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 import org.mobicents.servlet.restcomm.entities.Sid;
 
 import java.util.List;
@@ -28,18 +28,18 @@ import java.util.List;
 /**
  * @author Orestis Tsakiridis
  */
-public interface IdentityInstancesDao {
-    void addIdentityInstance(IdentityInstance instance);
+public interface OrgIdentityDao {
+    void addOrgIdentity(OrgIdentity instance);
 
-    IdentityInstance getIdentityInstance(Sid sid);
+    OrgIdentity getOrgIdentity(Sid sid);
 
-    IdentityInstance getIdentityInstanceByName(String name);
+    OrgIdentity getOrgIdentityByName(String name);
 
-    IdentityInstance getIdentityInstanceByOrganizationSid(Sid organizationSid); // TODO convert this to an SID
+    OrgIdentity getOrgIdentityByOrganizationSid(Sid organizationSid); // TODO convert this to an SID
 
-    List<IdentityInstance> getIdentityInstances();
+    List<OrgIdentity> getOrgIdentities();
 
-    void removeIdentityInstance(Sid sid);
+    void removeOrgIdentity(Sid sid);
 
-    void updateIdentityInstance(IdentityInstance instance);
+    void updateOrgIdentity(OrgIdentity instance);
 }

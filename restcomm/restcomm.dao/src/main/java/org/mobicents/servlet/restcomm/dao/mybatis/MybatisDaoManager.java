@@ -47,7 +47,7 @@ import org.mobicents.servlet.restcomm.dao.ShortCodesDao;
 import org.mobicents.servlet.restcomm.dao.SmsMessagesDao;
 import org.mobicents.servlet.restcomm.dao.TranscriptionsDao;
 import org.mobicents.servlet.restcomm.dao.UsageDao;
-import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
+import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
 import org.mobicents.servlet.restcomm.amazonS3.S3AccessTool;
 import org.mobicents.servlet.restcomm.annotations.concurrency.ThreadSafe;
 
@@ -79,7 +79,7 @@ public final class MybatisDaoManager implements DaoManager {
     private GatewaysDao gatewaysDao;
     private AnnouncementsDao announcementsDao;
     private InstanceIdDao instanceIdDao;
-    private IdentityInstancesDao identityInstancesDao;
+    private OrgIdentityDao orgIdentityDao;
 
     public MybatisDaoManager() {
         super();
@@ -187,9 +187,8 @@ public final class MybatisDaoManager implements DaoManager {
         return instanceIdDao;
     }
 
-    @Override
-    public IdentityInstancesDao getIdentityInstancesDao() {
-        return identityInstancesDao;
+    public OrgIdentityDao getOrgIdentityDao() {
+        return orgIdentityDao;
     }
 
     @Override
@@ -259,6 +258,6 @@ public final class MybatisDaoManager implements DaoManager {
         transcriptionsDao = new MybatisTranscriptionsDao(sessions);
         gatewaysDao = new MybatisGatewaysDao(sessions);
         instanceIdDao = new MybatisInstanceIdDao(sessions);
-        identityInstancesDao = new MybatisIdentityInstancesDao(sessions);
+        orgIdentityDao = new MybatisOrgIdentityDao(sessions);
     }
 }

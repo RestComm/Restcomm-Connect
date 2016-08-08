@@ -4,11 +4,11 @@ package org.mobicents.servlet.restcomm.rvd.restcomm;
  *
  * @author Orestis Tsakiridis
  */
-public class IdentityInstanceResponse {
+public class OrgIdentityResponse {
     String sid;
     String name;
 
-    public IdentityInstanceResponse(String sid, String name) {
+    public OrgIdentityResponse(String sid, String name) {
         this.sid = sid;
         this.name = name;
     }

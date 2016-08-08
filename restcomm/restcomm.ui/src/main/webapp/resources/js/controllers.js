@@ -13,7 +13,7 @@ angular.module('rcApp.controllers').controller('RestcommCtrl', function ($scope,
     $scope.sid = AuthService.getAccountSid();
 });
 
-angular.module('rcApp.controllers').controller('IdentityRegistrationCtrl', function ($scope, RCommIdentityInstances) {
+angular.module('rcApp.controllers').controller('IdentityRegistrationCtrl', function ($scope, RCommOrgIdentities) {
     $scope.info = {
         InitialAccessToken: "",
         RedirectUrl: "",
@@ -26,7 +26,7 @@ angular.module('rcApp.controllers').controller('IdentityRegistrationCtrl', funct
 
     $scope.registerInstance = function(info, accountInfo) {
         var authHeader = "Basic " + btoa(accountInfo.username + ":" + accountInfo.password);
-        RCommIdentityInstances.register(info, authHeader).success(function (data, status) {
+        RCommOrgIdentities.register(info, authHeader).success(function (data, status) {
             console.log("successfully registered instance");
         }).error(function (data, status) {
             console.log("error registering instance");

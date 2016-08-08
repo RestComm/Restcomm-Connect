@@ -27,15 +27,15 @@ import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 
 import java.lang.reflect.Type;
 
 /**
  * @author orestis.tsakiridis@company.com - Orestis Tsakiridis
  */
-public class IdentityInstanceConverter extends AbstractConverter implements JsonSerializer<IdentityInstance> {
-    public IdentityInstanceConverter(Configuration configuration) {
+public class OrgIdentityConverter extends AbstractConverter implements JsonSerializer<OrgIdentity> {
+    public OrgIdentityConverter(Configuration configuration) {
         super(configuration);
     }
 
@@ -46,22 +46,22 @@ public class IdentityInstanceConverter extends AbstractConverter implements Json
 
     @Override
     public void marshal(Object object, HierarchicalStreamWriter writer, MarshallingContext context) {
-        final IdentityInstance identityInstance = (IdentityInstance) object;
+        final OrgIdentity orgIdentity = (OrgIdentity) object;
 
         writer.startNode("Sid");
-        writer.setValue(identityInstance.getSid().toString());
+        writer.setValue(orgIdentity.getSid().toString());
         writer.endNode();
 
         writer.startNode("Name");
-        writer.setValue(identityInstance.getName());
+        writer.setValue(orgIdentity.getName());
         writer.endNode();
     }
 
     @Override
-    public JsonElement serialize(IdentityInstance identityInstance, Type type, JsonSerializationContext jsonSerializationContext) {
+    public JsonElement serialize(OrgIdentity orgIdentity, Type type, JsonSerializationContext jsonSerializationContext) {
         JsonObject result = new JsonObject();
-        result.addProperty("Sid", identityInstance.getSid().toString());
-        result.addProperty("Name", identityInstance.getName());
+        result.addProperty("Sid", orgIdentity.getSid().toString());
+        result.addProperty("Name", orgIdentity.getName());
         return result;
     }
 }

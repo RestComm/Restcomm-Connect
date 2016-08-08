@@ -62,7 +62,7 @@ public class MainConfigurationSet extends ConfigurationSet {
     private String identityAuthServerUrl;
     private String identityRealmPublicKey;
     private String identityRealm;
-    private String orgIdentityNamingMode; // this is not yet in restcomm.xml
+    private String orgIdentityNamingMode; // one of: random|domain|query   - this is not yet in restcomm.xml :
 
 
     public MainConfigurationSet(ConfigurationSource source) {

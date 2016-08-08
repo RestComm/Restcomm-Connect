@@ -304,7 +304,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Create high-level restcomm configuration
             RestcommConfiguration.createOnce(xml);
             // Initialize identityContext
-            IdentityContext identityContext = new IdentityContext(xml, RestcommConfiguration.getInstance().getMain(), storage.getIdentityInstancesDao());
+            IdentityContext identityContext = new IdentityContext(xml, RestcommConfiguration.getInstance().getMain(), storage.getOrgIdentityDao());
             context.setAttribute(IdentityContext.class.getName(), identityContext);
             if (identityContext.getAuthServerUrl() != null) {
                 if (logger.isInfoEnabled())

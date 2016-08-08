@@ -31,9 +31,9 @@ import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.representations.AccessToken;
 import org.mobicents.servlet.restcomm.dao.AccountsDao;
 import org.mobicents.servlet.restcomm.dao.DaoManager;
-import org.mobicents.servlet.restcomm.dao.IdentityInstancesDao;
+import org.mobicents.servlet.restcomm.dao.OrgIdentityDao;
 import org.mobicents.servlet.restcomm.entities.Account;
-import org.mobicents.servlet.restcomm.entities.IdentityInstance;
+import org.mobicents.servlet.restcomm.entities.OrgIdentity;
 import org.mobicents.servlet.restcomm.entities.Sid;
 import org.mobicents.servlet.restcomm.http.exceptions.AuthorizationException;
 import org.mobicents.servlet.restcomm.http.exceptions.InsufficientPermission;
@@ -78,7 +78,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected UserIdentityContext userIdentityContext;
     protected AccountsDao accountsDao;
     protected IdentityContext identityContext;
-    private IdentityInstance identityInstance;
+    private OrgIdentity orgIdentity;
     @Context
     protected ServletContext context;
     @Context
@@ -93,10 +93,10 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
-        this.identityInstance = findCurrentIdentityInstance(request, storage.getIdentityInstancesDao());
+        this.orgIdentity = findCurrentOrgIdentity(request, storage.getOrgIdentityDao());
         KeycloakDeployment deployment = null;
-        if (this.identityInstance != null)
-            deployment = identityContext.getDeployment(identityInstance.getSid());
+        if (this.orgIdentity != null)
+            deployment = identityContext.getDeployment(orgIdentity.getSid());
         this.userIdentityContext = new UserIdentityContext(deployment, request, accountsDao);
         checkOrganizationIdentity(); // check bearer-based access to organization in all Secured endpoints
     }
@@ -137,8 +137,8 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      */
     protected void checkOrganizationIdentity() {
         if (userIdentityContext.getAuthKind() == AuthKind.KeycloakAuth) {
-            String neededRole = IdentityRegistrationTool.buildKeycloakClientRole(identityInstance.getName()); // the following role should be present in the bearer token in order to allow access to the instance
-            String keycloakClientName = IdentityRegistrationTool.buildKeycloakClientName(identityInstance.getName());
+            String neededRole = IdentityRegistrationTool.buildKeycloakClientRole(orgIdentity.getName()); // the following role should be present in the bearer token in order to allow access to the instance
+            String keycloakClientName = IdentityRegistrationTool.buildKeycloakClientName(orgIdentity.getName());
             AccessToken oauthToken = userIdentityContext.getOauthToken();
             try {
                 if (oauthToken == null) {
@@ -391,34 +391,34 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
 
     /**
-     * Returns an IdentityInstance for a request. If in restcomm-auth mode it returns null.
+     * Returns an OrgIdentity for a request. If in restcomm-auth mode it returns null.
      *
      * It tries to determine the organization from the request and then map this organization to an
-     * IdentityInstance. Since organization support is not yet ready, all requests are mapped to
+     * OrgIdentity. Since organization support is not yet ready, all requests are mapped to
      * a fixed organization SID by default.
      *.
      * @param request
-     * @param identityInstancesDao
-     * @return the IdentityInstance object mapped or null
+     * @param orgIdentityDao
+     * @return the OrgIdentity object mapped or null
      */
-    private IdentityInstance findCurrentIdentityInstance(HttpServletRequest request, IdentityInstancesDao identityInstancesDao) {
+    private OrgIdentity findCurrentOrgIdentity(HttpServletRequest request, OrgIdentityDao orgIdentityDao) {
         if (identityContext.getAuthServerUrl() != null) {
             // TODO here determine current organization based on request, conf etc.
             Sid organizationSid = getCurrentOrganizationSid();
             // TODO throw an error if organizationSid is not found. There has to be one, right ?
             // ...
-            IdentityInstance identityInstance = identityInstancesDao.getIdentityInstanceByOrganizationSid(organizationSid);
-            return identityInstance;
+            OrgIdentity orgIdentity = orgIdentityDao.getOrgIdentityByOrganizationSid(organizationSid);
+            return orgIdentity;
         } else
             return null;
     }
 
-    protected IdentityInstance getIdentityInstance() {
-        return this.identityInstance;
+    protected OrgIdentity getOrgIdentity() {
+        return this.orgIdentity;
     }
 
-    protected void setIdentityInstance(IdentityInstance instance) {
-        this.identityInstance = instance;
+    protected void setOrgIdentity(OrgIdentity instance) {
+        this.orgIdentity = instance;
     }
 
     protected Sid getCurrentOrganizationSid() {
